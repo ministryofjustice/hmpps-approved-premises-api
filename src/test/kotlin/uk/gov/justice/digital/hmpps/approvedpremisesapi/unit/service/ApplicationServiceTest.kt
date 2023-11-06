@@ -72,6 +72,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Mana
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -80,6 +81,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import java.sql.Timestamp
@@ -101,6 +103,8 @@ class ApplicationServiceTest {
   private val mockUserService = mockk<UserService>()
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
+  private val mockApplicationTimelineNoteService = mockk<ApplicationTimelineNoteService>()
+  private val mockApplicationTimelineNoteTransformer = mockk<ApplicationTimelineNoteTransformer>()
   private val mockDomainEventService = mockk<DomainEventService>()
   private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
@@ -120,6 +124,8 @@ class ApplicationServiceTest {
     mockUserService,
     mockAssessmentService,
     mockOfflineApplicationRepository,
+    mockApplicationTimelineNoteService,
+    mockApplicationTimelineNoteTransformer,
     mockDomainEventService,
     mockCas3DomainEventService,
     mockCommunityApiClient,
@@ -794,7 +800,6 @@ class ApplicationServiceTest {
       applicationService.updateTemporaryAccommodationApplication(
         applicationId = applicationId,
         data = "{}",
-        username = username,
       ) is AuthorisableActionResult.NotFound,
     ).isTrue
   }
@@ -832,7 +837,6 @@ class ApplicationServiceTest {
       applicationService.updateTemporaryAccommodationApplication(
         applicationId = applicationId,
         data = "{}",
-        username = username,
       ) is AuthorisableActionResult.Unauthorised,
     ).isTrue
   }
@@ -868,7 +872,6 @@ class ApplicationServiceTest {
     val result = applicationService.updateTemporaryAccommodationApplication(
       applicationId = applicationId,
       data = "{}",
-      username = username,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -914,7 +917,6 @@ class ApplicationServiceTest {
     val result = applicationService.updateTemporaryAccommodationApplication(
       applicationId = applicationId,
       data = "{}",
-      username = username,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -967,7 +969,6 @@ class ApplicationServiceTest {
     val result = applicationService.updateTemporaryAccommodationApplication(
       applicationId = applicationId,
       data = updatedData,
-      username = username,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue

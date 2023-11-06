@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Probati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
@@ -46,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import java.time.Instant
@@ -59,6 +61,7 @@ import javax.transaction.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService as Cas3DomainEventService
 
 @Service
+@Suppress("LongParameterList", "TooManyFunctions", "ReturnCount", "ThrowsCount", "CyclomaticComplexMethod")
 class ApplicationService(
   private val userRepository: UserRepository,
   private val applicationRepository: ApplicationRepository,
@@ -68,6 +71,8 @@ class ApplicationService(
   private val userService: UserService,
   private val assessmentService: AssessmentService,
   private val offlineApplicationRepository: OfflineApplicationRepository,
+  private val applicationTimelineNoteService: ApplicationTimelineNoteService,
+  private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
   private val domainEventService: DomainEventService,
   private val cas3DomainEventService: Cas3DomainEventService,
   private val communityApiClient: CommunityApiClient,
@@ -104,21 +109,34 @@ class ApplicationService(
 
   private fun getAllTemporaryAccommodationApplicationsForUser(user: UserEntity): List<ApplicationSummary> {
     return when (userAccessService.getTemporaryAccommodationApplicationAccessLevelForUser(user)) {
-      TemporaryAccommodationApplicationAccessLevel.SUBMITTED_IN_REGION -> applicationRepository.findAllSubmittedTemporaryAccommodationSummariesByRegion(user.probationRegion.id)
-      TemporaryAccommodationApplicationAccessLevel.SELF -> applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
+      TemporaryAccommodationApplicationAccessLevel.SUBMITTED_IN_REGION ->
+        applicationRepository.findAllSubmittedTemporaryAccommodationSummariesByRegion(user.probationRegion.id)
+      TemporaryAccommodationApplicationAccessLevel.SELF ->
+        applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
       TemporaryAccommodationApplicationAccessLevel.NONE -> emptyList()
     }
   }
 
-  fun getAllOfflineApplicationsForUsername(deliusUsername: String, serviceName: ServiceName): List<OfflineApplicationEntity> {
+  fun getAllOfflineApplicationsForUsername(
+    deliusUsername: String,
+    serviceName: ServiceName,
+  ): List<OfflineApplicationEntity> {
     val userEntity = userRepository.findByDeliusUsername(deliusUsername)
       ?: return emptyList()
 
-    val applications = if (userEntity.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER)) {
-      offlineApplicationRepository.findAllByService(serviceName.value)
-    } else {
-      emptyList()
-    }
+    val applications =
+      if (
+        userEntity.hasAnyRole(
+          UserRole.CAS1_WORKFLOW_MANAGER,
+          UserRole.CAS1_ASSESSOR,
+          UserRole.CAS1_MATCHER,
+          UserRole.CAS1_MANAGER,
+        )
+      ) {
+        offlineApplicationRepository.findAllByService(serviceName.value)
+      } else {
+        emptyList()
+      }
 
     return applications
       .filter {
@@ -126,7 +144,10 @@ class ApplicationService(
       }
   }
 
-  fun getApplicationForUsername(applicationId: UUID, userDistinguishedName: String): AuthorisableActionResult<ApplicationEntity> {
+  fun getApplicationForUsername(
+    applicationId: UUID,
+    userDistinguishedName: String,
+  ): AuthorisableActionResult<ApplicationEntity> {
     val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -142,14 +163,22 @@ class ApplicationService(
     }
   }
 
-  fun getOfflineApplicationForUsername(applicationId: UUID, deliusUsername: String): AuthorisableActionResult<OfflineApplicationEntity> {
+  fun getOfflineApplicationForUsername(
+    applicationId: UUID,
+    deliusUsername: String,
+  ): AuthorisableActionResult<OfflineApplicationEntity> {
     val applicationEntity = offlineApplicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
     val userEntity = userRepository.findByDeliusUsername(deliusUsername)
       ?: throw RuntimeException("Could not get user")
 
-    if (userEntity.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_MANAGER) &&
+    if (userEntity.hasAnyRole(
+        UserRole.CAS1_WORKFLOW_MANAGER,
+        UserRole.CAS1_ASSESSOR,
+        UserRole.CAS1_MATCHER,
+        UserRole.CAS1_MANAGER,
+      ) &&
       offenderService.canAccessOffender(deliusUsername, applicationEntity.crn)
     ) {
       return AuthorisableActionResult.Success(applicationEntity)
@@ -267,11 +296,15 @@ class ApplicationService(
 
     return AuthorisableActionResult.Success(
       validated {
-        val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)) {
-          is AuthorisableActionResult.NotFound -> return@validated "$.crn" hasSingleValidationError "doesNotExist"
-          is AuthorisableActionResult.Unauthorised -> return@validated "$.crn" hasSingleValidationError "userPermission"
-          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-        }
+        val offenderDetails =
+          when (
+            val offenderDetailsResult = offenderService.getOffenderByCrn(crn, user.deliusUsername)
+          ) {
+            is AuthorisableActionResult.NotFound -> return@validated "$.crn" hasSingleValidationError "doesNotExist"
+            is AuthorisableActionResult.Unauthorised ->
+              return@validated "$.crn" hasSingleValidationError "userPermission"
+            is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+          }
 
         if (convictionId == null) {
           "$.convictionId" hasValidationError "empty"
@@ -295,8 +328,10 @@ class ApplicationService(
           val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, user.deliusUsername)
 
           riskRatings = when (riskRatingsResult) {
-            is AuthorisableActionResult.NotFound -> return@validated "$.crn" hasSingleValidationError "doesNotExist"
-            is AuthorisableActionResult.Unauthorised -> return@validated "$.crn" hasSingleValidationError "userPermission"
+            is AuthorisableActionResult.NotFound ->
+              return@validated "$.crn" hasSingleValidationError "doesNotExist"
+            is AuthorisableActionResult.Unauthorised ->
+              return@validated "$.crn" hasSingleValidationError "userPermission"
             is AuthorisableActionResult.Success -> riskRatingsResult.entity
           }
         }
@@ -308,7 +343,9 @@ class ApplicationService(
             createdByUser = user,
             data = null,
             document = null,
-            schemaVersion = jsonSchemaService.getNewestSchema(TemporaryAccommodationApplicationJsonSchemaEntity::class.java),
+            schemaVersion = jsonSchemaService.getNewestSchema(
+              TemporaryAccommodationApplicationJsonSchemaEntity::class.java,
+            ),
             createdAt = OffsetDateTime.now(),
             submittedAt = null,
             convictionId = convictionId!!,
@@ -381,7 +418,11 @@ class ApplicationService(
       this.isEmergencyApplication = isEmergencyApplication
       this.isEsapApplication = isEsapApplication
       this.releaseType = releaseType
-      this.arrivalDate = if (arrivalDate !== null) OffsetDateTime.of(arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC) else null
+      this.arrivalDate = if (arrivalDate !== null) {
+        OffsetDateTime.of(arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
+      } else {
+        null
+      }
       this.data = data
     }
 
@@ -424,7 +465,11 @@ class ApplicationService(
           application.apply {
             this.isWithdrawn = true
             this.withdrawalReason = withdrawalReason
-            this.otherWithdrawalReason = if (withdrawalReason == WithdrawalReason.other.value) { otherReason } else { null }
+            this.otherWithdrawalReason = if (withdrawalReason == WithdrawalReason.other.value) {
+              otherReason
+            } else {
+              null
+            }
           },
         )
 
@@ -500,7 +545,6 @@ class ApplicationService(
   fun updateTemporaryAccommodationApplication(
     applicationId: UUID,
     data: String,
-    username: String,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
@@ -541,8 +585,15 @@ class ApplicationService(
   }
 
   @Transactional
-  fun submitApprovedPremisesApplication(applicationId: UUID, submitApplication: SubmitApprovedPremisesApplication, username: String, jwt: String): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
-    var application = applicationRepository.findByIdOrNullWithWriteLock(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
+  fun submitApprovedPremisesApplication(
+    applicationId: UUID,
+    submitApplication: SubmitApprovedPremisesApplication,
+    username: String,
+    jwt: String,
+  ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
+    var application = applicationRepository.findByIdOrNullWithWriteLock(
+      applicationId,
+    )?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
@@ -586,9 +637,6 @@ class ApplicationService(
       )
     }
 
-    val schema = application.schemaVersion as? ApprovedPremisesApplicationJsonSchemaEntity
-      ?: throw RuntimeException("Incorrect type of JSON schema referenced by AP Application")
-
     application.apply {
       isWomensApplication = submitApplication.isWomensApplication
       isPipeApplication = submitApplication.isPipeApplication
@@ -598,7 +646,11 @@ class ApplicationService(
       document = serializedTranslatedDocument
       releaseType = submitApplication.releaseType.toString()
       targetLocation = submitApplication.targetLocation
-      arrivalDate = if (submitApplication.arrivalDate !== null) OffsetDateTime.of(submitApplication.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC) else null
+      arrivalDate = if (submitApplication.arrivalDate !== null) {
+        OffsetDateTime.of(submitApplication.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
+      } else {
+        null
+      }
     }
 
     assessmentService.createApprovedPremisesAssessment(application)
@@ -628,8 +680,11 @@ class ApplicationService(
     applicationId: UUID,
     submitApplication: SubmitTemporaryAccommodationApplication,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
-    var application = applicationRepository.findByIdOrNullWithWriteLock(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
-      ?: return AuthorisableActionResult.NotFound()
+    var application =
+      applicationRepository.findByIdOrNullWithWriteLock(
+        applicationId,
+      )?.let(jsonSchemaService::checkSchemaOutdated)
+        ?: return AuthorisableActionResult.NotFound()
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
 
@@ -672,9 +727,6 @@ class ApplicationService(
       )
     }
 
-    val schema = application.schemaVersion as? TemporaryAccommodationApplicationJsonSchemaEntity
-      ?: throw RuntimeException("Incorrect type of JSON schema referenced by TA Application")
-
     application.apply {
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
@@ -699,21 +751,32 @@ class ApplicationService(
     )
   }
 
-  private fun createApplicationSubmittedEvent(application: ApprovedPremisesApplicationEntity, submitApplication: SubmitApprovedPremisesApplication, username: String, jwt: String) {
+  private fun createApplicationSubmittedEvent(
+    application: ApprovedPremisesApplicationEntity,
+    submitApplication: SubmitApprovedPremisesApplication,
+    username: String,
+    jwt: String,
+  ) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = OffsetDateTime.now()
 
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, username, true)) {
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Submitted Domain Event: Unauthorised")
-      is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Submitted Domain Event: Not Found")
-    }
+    val offenderDetails =
+      when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, username, true)) {
+        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        is AuthorisableActionResult.Unauthorised ->
+          throw RuntimeException("Unable to get Offender Details when creating Application Submitted Domain Event: Unauthorised")
+        is AuthorisableActionResult.NotFound ->
+          throw RuntimeException("Unable to get Offender Details when creating Application Submitted Domain Event: Not Found")
+      }
 
-    val risks = when (val riskResult = offenderService.getRiskByCrn(application.crn, jwt, username)) {
-      is AuthorisableActionResult.Success -> riskResult.entity
-      is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Risks when creating Application Submitted Domain Event: Unauthorised")
-      is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Risks when creating Application Submitted Domain Event: Not Found")
-    }
+    val risks =
+      when (val riskResult = offenderService.getRiskByCrn(application.crn, jwt, username)) {
+        is AuthorisableActionResult.Success -> riskResult.entity
+        is AuthorisableActionResult.Unauthorised ->
+          throw RuntimeException("Unable to get Risks when creating Application Submitted Domain Event: Unauthorised")
+        is AuthorisableActionResult.NotFound ->
+          throw RuntimeException("Unable to get Risks when creating Application Submitted Domain Event: Not Found")
+      }
 
     val mappaLevel = risks.mappa.value?.level
 
@@ -809,6 +872,7 @@ class ApplicationService(
     }.toMutableList()
 
     timelineEvents += getAllInformationRequestEventsForApplication(applicationId)
+    timelineEvents += getAllApplicationTimelineNotesByApplicationId(applicationId)
 
     return timelineEvents
   }
@@ -819,5 +883,21 @@ class ApplicationService(
     return allClarifications.map {
       assessmentClarificationNoteTransformer.transformToTimelineEvent(it)
     }
+  }
+
+  fun getAllApplicationTimelineNotesByApplicationId(applicationId: UUID): List<TimelineEvent> {
+    val noteEntities = applicationTimelineNoteService.getApplicationTimelineNotesByApplicationId(applicationId)
+    return noteEntities.map {
+      applicationTimelineNoteTransformer.transformToTimelineEvents(it)
+    }
+  }
+
+  fun addNoteToApplication(
+    applicationId: UUID,
+    applicationTimelineNote: ApplicationTimelineNote,
+  ): ApplicationTimelineNote {
+    println("$applicationId, $applicationTimelineNote")
+    val savedNote = applicationTimelineNoteService.saveApplicationTimelineNotes(applicationId, applicationTimelineNote)
+    return applicationTimelineNoteTransformer.transformJpaToApi(savedNote)
   }
 }

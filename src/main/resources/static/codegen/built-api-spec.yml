@@ -1868,6 +1868,46 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
+  /applications/{applicationId}/notes:
+    post:
+      tags:
+        - Add a note on applications
+      summary: Add a note on applications
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: the note to add
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/ApplicationTimelineNote'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApplicationTimelineNote'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid applicationId
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /applications/{applicationId}/timeline:
     get:
       tags:
@@ -5773,6 +5813,24 @@ components:
         - withdrawn
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
+    ApplicationTimelineNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdByUserId:
+          type: string
+          format: uuid
+        note:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - createdByUserId
+        - note
+      description: Notes added to an application
     NewApplication:
       type: object
       properties:
@@ -6917,6 +6975,10 @@ components:
         occurredAt:
           type: string
           format: date-time
+        content:
+          type: string
+        createdBy:
+          type: string
     TimelineEventType:
       type: string
       enum:
@@ -6933,6 +6995,7 @@ components:
         - approved_premises_information_request
         - cas3_person_arrived
         - cas3_person_departed
+        - application_timeline_note
     SeedRequest:
       type: object
       properties:

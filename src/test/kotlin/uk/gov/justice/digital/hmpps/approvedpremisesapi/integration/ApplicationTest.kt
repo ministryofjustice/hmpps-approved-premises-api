@@ -19,6 +19,7 @@ import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
@@ -2004,6 +2005,14 @@ class ApplicationTest : IntegrationTestBase() {
   inner class ApplicationTimeline {
     val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
+    val note1Id = UUID.randomUUID()
+    val note2Id = UUID.randomUUID()
+    val note3Id = UUID.randomUUID()
+
+    val note1CreatedAt = LocalDate.of(2023, 10, 1).toLocalDateTime()
+    val note2CreatedAt = LocalDate.of(2023, 10, 1).toLocalDateTime()
+    val note3CreatedAt = LocalDate.of(2023, 10, 3).toLocalDateTime()
+
     @Test
     fun `Get application timeline without JWT returns 401`() {
       webTestClient.get()
@@ -2115,6 +2124,83 @@ class ApplicationTest : IntegrationTestBase() {
       }
     }
 
+    @Test
+    fun `Get application timeline returns correct manually added application timeline notes`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withApplicationSchema(applicationSchema)
+          withId(applicationId)
+          withCreatedByUser(user)
+        }
+
+        applicationTimelineNoteEntityFactory.produceAndPersist {
+          withApplicationId(applicationId)
+          withBody("note1")
+          withId(note1Id)
+          withCreatedAtDate(note1CreatedAt)
+          withCreatedBy(user)
+        }
+
+        applicationTimelineNoteEntityFactory.produceAndPersist {
+          withApplicationId(applicationId)
+          withBody("note2")
+          withId(note2Id)
+          withCreatedAtDate(note2CreatedAt)
+          withCreatedBy(user)
+        }
+
+        applicationTimelineNoteEntityFactory.produceAndPersist {
+          withApplicationId(applicationId)
+          withBody("note3")
+          withId(note3Id)
+          withCreatedAtDate(note3CreatedAt)
+          withCreatedBy(user)
+        }
+
+        val notes = createThreeTimelineEventsOfType(user.id.toString())
+
+        webTestClient.get()
+          .uri("/applications/$applicationId/timeline")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(objectMapper.writeValueAsString(notes))
+      }
+    }
+
+    private fun createThreeTimelineEventsOfType(userId: String): List<TimelineEvent> {
+      return listOf(
+        TimelineEvent(
+          TimelineEventType.applicationTimelineNote,
+          note1Id.toString(),
+          note1CreatedAt.toInstant(),
+          "note1",
+          userId,
+        ),
+        TimelineEvent(
+          TimelineEventType.applicationTimelineNote,
+          note2Id.toString(),
+          note2CreatedAt.toInstant(),
+          "note2",
+          userId,
+        ),
+        TimelineEvent(
+          TimelineEventType.applicationTimelineNote,
+          note3Id.toString(),
+          note3CreatedAt.toInstant(),
+          "note3",
+          userId,
+        ),
+      )
+    }
+
     private fun createAssessment(user: UserEntity, year: Int, month: Int): ApprovedPremisesAssessmentEntity {
       val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
         withPermissiveSchema()
@@ -2199,6 +2285,53 @@ class ApplicationTest : IntegrationTestBase() {
         informationRequest7, informationRequest8, informationRequest9,
         informationRequest10,
       )
+    }
+  }
+
+  @Nested
+  inner class TimelineNotesForApplication {
+    @Test
+    fun `post ApplicationTimelineNote without JWT returns 401`() {
+      webTestClient.post()
+        .uri("/applications/${UUID.randomUUID()}/notes")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `post ApplicationTimelineNote with JWT returns 200`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        val applicationId = UUID.randomUUID()
+
+        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withId(applicationId)
+          withCreatedByUser(user)
+          withApplicationSchema(applicationSchema)
+        }
+        val body = ApplicationTimelineNote(user.id, "some note")
+        webTestClient.post()
+          .uri("/applications/$applicationId/notes")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            body,
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        val savedNote =
+          applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(applicationId)
+        savedNote.map {
+          assertThat(it.body).isEqualTo("some note")
+          assertThat(it.applicationId).isEqualTo(applicationId)
+          assertThat(it.createdBy).isEqualTo(user.id)
+        }
+      }
     }
   }
 
