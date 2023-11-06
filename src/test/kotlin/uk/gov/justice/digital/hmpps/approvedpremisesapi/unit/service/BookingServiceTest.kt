@@ -2229,9 +2229,9 @@ class BookingServiceTest {
     }
   }
 
-  @Test
-  fun `createExtension returns Success with correct result when an Approved Premises booking has a new departure date before the existing departure date`() {
-    val premises = ApprovedPremisesEntityFactory()
+  @Nested
+  inner class CreateExtension {
+    val approvedPremises = ApprovedPremisesEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
           .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -2240,45 +2240,15 @@ class BookingServiceTest {
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .produce()
 
-    val room = RoomEntityFactory()
-      .withPremises(premises)
+    private val approvedPremisesRoom = RoomEntityFactory()
+      .withPremises(approvedPremises)
       .produce()
 
-    val bed = BedEntityFactory()
-      .withRoom(room)
+    private val approvedPremisesBed = BedEntityFactory()
+      .withRoom(approvedPremisesRoom)
       .produce()
 
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-10"))
-      .withDepartureDate(LocalDate.parse("2022-08-26"))
-      .withPremises(premises)
-      .withBed(bed)
-      .produce()
-
-    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-    every { mockExtensionRepository.save(any()) } answers { it.invocation.args[0] as ExtensionEntity }
-
-    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
-
-    val result = bookingService.createExtension(
-      booking = bookingEntity,
-      newDepartureDate = LocalDate.parse("2022-08-25"),
-      notes = "notes",
-      user = user,
-    )
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-    result as ValidatableActionResult.Success
-    assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
-    assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-26"))
-    assertThat(result.entity.notes).isEqualTo("notes")
-  }
-
-  @Test
-  fun `createExtension returns Success with correct result when a Temporary Accommodation booking has a new departure date before the existing departure date`() {
-    val premises = TemporaryAccommodationPremisesEntityFactory()
+    private val temporaryAccommodationPremises = TemporaryAccommodationPremisesEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
           .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -2287,301 +2257,317 @@ class BookingServiceTest {
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .produce()
 
-    val room = RoomEntityFactory()
-      .withPremises(premises)
+    private val temporaryAccommodationRoom = RoomEntityFactory()
+      .withPremises(temporaryAccommodationPremises)
       .produce()
 
-    val bed = BedEntityFactory()
-      .withRoom(room)
+    private val temporaryAccommodationBed = BedEntityFactory()
+      .withRoom(temporaryAccommodationRoom)
       .produce()
 
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-10"))
-      .withDepartureDate(LocalDate.parse("2022-08-26"))
-      .withPremises(premises)
-      .withBed(bed)
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .produce()
+    @BeforeEach
+    fun setup() {
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+      every { mockExtensionRepository.save(any()) } answers { it.invocation.args[0] as ExtensionEntity }
 
-    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-    every { mockExtensionRepository.save(any()) } answers { it.invocation.args[0] as ExtensionEntity }
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
+      every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
+    }
 
-    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
+    @Test
+    fun `createExtension returns Success with correct result when an Approved Premises booking has a new departure date before the existing departure date`() {
+      val bookingEntity = BookingEntityFactory()
+        .withArrivalDate(LocalDate.parse("2022-08-10"))
+        .withDepartureDate(LocalDate.parse("2022-08-26"))
+        .withPremises(approvedPremises)
+        .withBed(approvedPremisesBed)
+        .produce()
 
-    val result = bookingService.createExtension(
-      booking = bookingEntity,
-      newDepartureDate = LocalDate.parse("2022-08-25"),
-      notes = "notes",
-      user = user,
-    )
+      val result = bookingService.createExtension(
+        booking = bookingEntity,
+        newDepartureDate = LocalDate.parse("2022-08-25"),
+        notes = "notes",
+        user = user,
+      )
 
-    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-    result as ValidatableActionResult.Success
-    assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
-    assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-26"))
-    assertThat(result.entity.notes).isEqualTo("notes")
-  }
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-26"))
+      assertThat(result.entity.notes).isEqualTo("notes")
+    }
 
-  @Test
-  fun `createExtension returns FieldValidationError with correct param to message map when a Temporary Accommodation booking has a new departure date before the arrival date`() {
-    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
+    @Test
+    fun `createExtension returns Success with correct result when a Temporary Accommodation booking has a new departure date before the existing departure date`() {
+      val bookingEntity = BookingEntityFactory()
+        .withArrivalDate(LocalDate.parse("2022-08-10"))
+        .withDepartureDate(LocalDate.parse("2022-08-26"))
+        .withPremises(temporaryAccommodationPremises)
+        .withBed(temporaryAccommodationBed)
+        .withServiceName(ServiceName.temporaryAccommodation)
+        .produce()
 
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
+      val result = bookingService.createExtension(
+        booking = bookingEntity,
+        newDepartureDate = LocalDate.parse("2022-08-25"),
+        notes = "notes",
+        user = user,
+      )
 
-    val room = RoomEntityFactory()
-      .withPremises(premises)
-      .produce()
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-26"))
+      assertThat(result.entity.notes).isEqualTo("notes")
+    }
 
-    val bed = BedEntityFactory()
-      .withRoom(room)
-      .produce()
+    @Test
+    fun `createExtension returns FieldValidationError with correct param to message map when a Temporary Accommodation booking has a new departure date before the arrival date`() {
+      val bookingEntity = BookingEntityFactory()
+        .withArrivalDate(LocalDate.parse("2022-08-26"))
+        .withPremises(temporaryAccommodationPremises)
+        .withBed(temporaryAccommodationBed)
+        .withServiceName(ServiceName.temporaryAccommodation)
+        .produce()
 
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-26"))
-      .withPremises(premises)
-      .withBed(bed)
-      .withServiceName(ServiceName.temporaryAccommodation)
-      .produce()
+      val result = bookingService.createExtension(
+        booking = bookingEntity,
+        newDepartureDate = LocalDate.parse("2022-08-25"),
+        notes = "notes",
+        user = user,
+      )
 
-    val result = bookingService.createExtension(
-      booking = bookingEntity,
-      newDepartureDate = LocalDate.parse("2022-08-25"),
-      notes = "notes",
-      user = user,
-    )
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.newDepartureDate", "beforeBookingArrivalDate"),
-    )
-  }
-
-  @Test
-  fun `createExtension returns Success with correct result when validation passed`() {
-    val premises = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
-
-    val room = RoomEntityFactory()
-      .withPremises(premises)
-      .produce()
-
-    val bed = BedEntityFactory()
-      .withRoom(room)
-      .produce()
-
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-20"))
-      .withDepartureDate(LocalDate.parse("2022-08-24"))
-      .withPremises(premises)
-      .withBed(bed)
-      .produce()
-
-    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-    every { mockExtensionRepository.save(any()) } answers { it.invocation.args[0] as ExtensionEntity }
-
-    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
-
-    val result = bookingService.createExtension(
-      booking = bookingEntity,
-      newDepartureDate = LocalDate.parse("2022-08-25"),
-      notes = "notes",
-      user = user,
-    )
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-    result as ValidatableActionResult.Success
-    assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
-    assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-24"))
-    assertThat(result.entity.notes).isEqualTo("notes")
-  }
-
-  @Test
-  fun `createExtension emits domain event when Booking has associated Application`() {
-    val premises = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
-
-    val room = RoomEntityFactory()
-      .withPremises(premises)
-      .produce()
-
-    val bed = BedEntityFactory()
-      .withRoom(room)
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .produce()
-
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-20"))
-      .withDepartureDate(LocalDate.parse("2022-08-24"))
-      .withPremises(premises)
-      .withBed(bed)
-      .withApplication(application)
-      .withCrn(application.crn)
-      .produce()
-
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCrn(application.crn)
-      .produce()
-
-    val staffUserDetails = StaffUserDetailsFactory()
-      .withUsername(user.deliusUsername)
-      .withForenames("John Jacob")
-      .withSurname("Johnson")
-      .produce()
-
-    every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
-    every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
-
-    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-    every { mockExtensionRepository.save(any()) } answers { it.invocation.args[0] as ExtensionEntity }
-
-    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
-
-    every { mockDomainEventService.saveBookingChangedEvent(any()) } just Runs
-
-    val newDepartureDate = LocalDate.parse("2022-08-25")
-
-    val result = bookingService.createExtension(
-      booking = bookingEntity,
-      newDepartureDate = newDepartureDate,
-      notes = "notes",
-      user = user,
-    )
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-    result as ValidatableActionResult.Success
-    assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
-    assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-24"))
-    assertThat(result.entity.notes).isEqualTo("notes")
-
-    verify(exactly = 1) {
-      mockDomainEventService.saveBookingChangedEvent(
-        match {
-          val data = (it.data as BookingChangedEnvelope).eventDetails
-
-          it.applicationId == application.id &&
-            it.crn == application.crn &&
-            data.applicationId == application.id &&
-            data.applicationUrl == "http://frontend/applications/${application.id}" &&
-            data.personReference == PersonReference(
-            crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!,
-          ) &&
-            data.deliusEventNumber == application.eventNumber &&
-            data.premises == Premises(
-            id = premises.id,
-            name = premises.name,
-            apCode = premises.apCode,
-            legacyApCode = premises.qCode,
-            localAuthorityAreaName = premises.localAuthorityArea!!.name,
-          ) &&
-            data.arrivalOn == bookingEntity.arrivalDate &&
-            data.departureOn == newDepartureDate
-        },
+      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+        entry("$.newDepartureDate", "beforeBookingArrivalDate"),
       )
     }
-  }
 
-  @Test
-  fun `createExtension does not emit domain event when Booking has associated Application without an eventNumber`() {
-    val premises = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
+    @Test
+    fun `createExtension returns Success with correct result when validation passed`() {
+      val bookingEntity = BookingEntityFactory()
+        .withArrivalDate(LocalDate.parse("2022-08-20"))
+        .withDepartureDate(LocalDate.parse("2022-08-24"))
+        .withPremises(approvedPremises)
+        .withBed(approvedPremisesBed)
+        .produce()
+
+      val result = bookingService.createExtension(
+        booking = bookingEntity,
+        newDepartureDate = LocalDate.parse("2022-08-25"),
+        notes = "notes",
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-24"))
+      assertThat(result.entity.notes).isEqualTo("notes")
+    }
+
+    @Test
+    fun `createExtension emits domain event when Booking has associated Application`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val bookingEntity = BookingEntityFactory()
+        .withArrivalDate(LocalDate.parse("2022-08-20"))
+        .withDepartureDate(LocalDate.parse("2022-08-24"))
+        .withPremises(approvedPremises)
+        .withBed(approvedPremisesBed)
+        .withApplication(application)
+        .withCrn(application.crn)
+        .produce()
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(application.crn)
+        .produce()
+
+      val staffUserDetails = StaffUserDetailsFactory()
+        .withUsername(user.deliusUsername)
+        .withForenames("John Jacob")
+        .withSurname("Johnson")
+        .produce()
+
+      every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+
+      every { mockDomainEventService.saveBookingChangedEvent(any()) } just Runs
+
+      val newDepartureDate = LocalDate.parse("2022-08-25")
+
+      val result = bookingService.createExtension(
+        booking = bookingEntity,
+        newDepartureDate = newDepartureDate,
+        notes = "notes",
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-24"))
+      assertThat(result.entity.notes).isEqualTo("notes")
+
+      verify(exactly = 1) {
+        mockDomainEventService.saveBookingChangedEvent(
+          match {
+            val data = (it.data as BookingChangedEnvelope).eventDetails
+
+            it.applicationId == application.id &&
+              it.crn == application.crn &&
+              data.applicationId == application.id &&
+              data.applicationUrl == "http://frontend/applications/${application.id}" &&
+              data.personReference == PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!,
+            ) &&
+              data.deliusEventNumber == application.eventNumber &&
+              data.premises == Premises(
+              id = approvedPremises.id,
+              name = approvedPremises.name,
+              apCode = approvedPremises.apCode,
+              legacyApCode = approvedPremises.qCode,
+              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+            ) &&
+              data.arrivalOn == bookingEntity.arrivalDate &&
+              data.departureOn == newDepartureDate
+          },
+        )
       }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
+    }
 
-    val room = RoomEntityFactory()
-      .withPremises(premises)
-      .produce()
+    @Test
+    fun `createExtension emits domain event when Booking has associated offline Application`() {
+      val application = OfflineApplicationEntityFactory()
+        .withEventNumber("123")
+        .produce()
 
-    val bed = BedEntityFactory()
-      .withRoom(room)
-      .produce()
+      val bookingEntity = BookingEntityFactory()
+        .withArrivalDate(LocalDate.parse("2022-08-20"))
+        .withDepartureDate(LocalDate.parse("2022-08-24"))
+        .withPremises(approvedPremises)
+        .withBed(approvedPremisesBed)
+        .withOfflineApplication(application)
+        .withCrn(application.crn)
+        .produce()
 
-    val application = OfflineApplicationEntityFactory()
-      .withEventNumber(null)
-      .produce()
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(application.crn)
+        .produce()
 
-    val bookingEntity = BookingEntityFactory()
-      .withArrivalDate(LocalDate.parse("2022-08-20"))
-      .withDepartureDate(LocalDate.parse("2022-08-24"))
-      .withPremises(premises)
-      .withBed(bed)
-      .withOfflineApplication(application)
-      .withCrn(application.crn)
-      .produce()
+      val staffUserDetails = StaffUserDetailsFactory()
+        .withUsername(user.deliusUsername)
+        .withForenames("John Jacob")
+        .withSurname("Johnson")
+        .produce()
 
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withCrn(application.crn)
-      .produce()
+      every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
 
-    val staffUserDetails = StaffUserDetailsFactory()
-      .withUsername(user.deliusUsername)
-      .withForenames("John Jacob")
-      .withSurname("Johnson")
-      .produce()
+      every { mockDomainEventService.saveBookingChangedEvent(any()) } just Runs
 
-    every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
-    every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+      val newDepartureDate = LocalDate.parse("2022-08-25")
 
-    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-    every { mockExtensionRepository.save(any()) } answers { it.invocation.args[0] as ExtensionEntity }
+      val result = bookingService.createExtension(
+        booking = bookingEntity,
+        newDepartureDate = newDepartureDate,
+        notes = "notes",
+        user = user,
+      )
 
-    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
-    every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
-    every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-24"))
+      assertThat(result.entity.notes).isEqualTo("notes")
 
-    every { mockDomainEventService.saveBookingChangedEvent(any()) } just Runs
+      verify(exactly = 1) {
+        mockDomainEventService.saveBookingChangedEvent(
+          match {
+            val data = (it.data as BookingChangedEnvelope).eventDetails
 
-    val newDepartureDate = LocalDate.parse("2022-08-25")
+            it.applicationId == application.id &&
+              it.crn == application.crn &&
+              data.applicationId == application.id &&
+              data.applicationUrl == "http://frontend/applications/${application.id}" &&
+              data.personReference == PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!,
+            ) &&
+              data.deliusEventNumber == application.eventNumber &&
+              data.premises == Premises(
+              id = approvedPremises.id,
+              name = approvedPremises.name,
+              apCode = approvedPremises.apCode,
+              legacyApCode = approvedPremises.qCode,
+              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+            ) &&
+              data.arrivalOn == bookingEntity.arrivalDate &&
+              data.departureOn == newDepartureDate
+          },
+        )
+      }
+    }
 
-    val result = bookingService.createExtension(
-      booking = bookingEntity,
-      newDepartureDate = newDepartureDate,
-      notes = "notes",
-      user = user,
-    )
+    @Test
+    fun `createExtension does not emit domain event when Booking has associated Application without an eventNumber`() {
+      val application = OfflineApplicationEntityFactory()
+        .withEventNumber(null)
+        .produce()
 
-    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-    result as ValidatableActionResult.Success
-    assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
-    assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-24"))
-    assertThat(result.entity.notes).isEqualTo("notes")
+      val bookingEntity = BookingEntityFactory()
+        .withArrivalDate(LocalDate.parse("2022-08-20"))
+        .withDepartureDate(LocalDate.parse("2022-08-24"))
+        .withPremises(approvedPremises)
+        .withBed(approvedPremisesBed)
+        .withOfflineApplication(application)
+        .withCrn(application.crn)
+        .produce()
 
-    verify(exactly = 0) {
-      mockDomainEventService.saveBookingChangedEvent(any())
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(application.crn)
+        .produce()
+
+      val staffUserDetails = StaffUserDetailsFactory()
+        .withUsername(user.deliusUsername)
+        .withForenames("John Jacob")
+        .withSurname("Johnson")
+        .produce()
+
+      every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+      every { mockExtensionRepository.save(any()) } answers { it.invocation.args[0] as ExtensionEntity }
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
+      every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
+
+      every { mockDomainEventService.saveBookingChangedEvent(any()) } just Runs
+
+      val newDepartureDate = LocalDate.parse("2022-08-25")
+
+      val result = bookingService.createExtension(
+        booking = bookingEntity,
+        newDepartureDate = newDepartureDate,
+        notes = "notes",
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.newDepartureDate).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.entity.previousDepartureDate).isEqualTo(LocalDate.parse("2022-08-24"))
+      assertThat(result.entity.notes).isEqualTo("notes")
+
+      verify(exactly = 0) {
+        mockDomainEventService.saveBookingChangedEvent(any())
+      }
     }
   }
 
@@ -5099,6 +5085,82 @@ class BookingServiceTest {
           },
         )
       }
+
+      verify(exactly = 1) {
+        mockDomainEventService.saveBookingChangedEvent(
+          match {
+            val data = (it.data as BookingChangedEnvelope).eventDetails
+
+            it.applicationId == application.id &&
+              it.crn == application.crn &&
+              data.applicationId == application.id &&
+              data.applicationUrl == "http://frontend/applications/${application.id}" &&
+              data.personReference == PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!,
+            ) &&
+              data.deliusEventNumber == application.eventNumber &&
+              data.premises == Premises(
+              id = approvedPremises.id,
+              name = approvedPremises.name,
+              apCode = approvedPremises.apCode,
+              legacyApCode = approvedPremises.qCode,
+              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+            ) &&
+              data.arrivalOn == newArrivalDate &&
+              data.departureOn == newDepartureDate
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `emits domain event when booking has associated offline application with an event number`() {
+      val application = OfflineApplicationEntityFactory()
+        .withEventNumber("123")
+        .produce()
+
+      val booking = BookingEntityFactory()
+        .withPremises(approvedPremises)
+        .withBed(approvedPremisesBed)
+        .withServiceName(ServiceName.approvedPremises)
+        .withArrivalDate(LocalDate.parse("2023-07-14"))
+        .withDepartureDate(LocalDate.parse("2023-07-16"))
+        .withOfflineApplication(application)
+        .withCrn(application.crn)
+        .produce()
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(application.crn)
+        .produce()
+
+      val staffUserDetails = StaffUserDetailsFactory()
+        .withUsername(user.deliusUsername)
+        .withForenames("John Jacob")
+        .withSurname("Johnson")
+        .produce()
+
+      every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+      every { mockDomainEventService.saveBookingChangedEvent(any()) } just Runs
+
+      val newArrivalDate = LocalDate.parse("2023-07-18")
+      val newDepartureDate = LocalDate.parse("2023-07-22")
+
+      val result = bookingService.createDateChange(
+        booking = booking,
+        user = user,
+        newArrivalDate = newArrivalDate,
+        newDepartureDate = newDepartureDate,
+      )
+
+      assertThat(result is ValidatableActionResult.Success).isTrue
+      result as ValidatableActionResult.Success
 
       verify(exactly = 1) {
         mockDomainEventService.saveBookingChangedEvent(

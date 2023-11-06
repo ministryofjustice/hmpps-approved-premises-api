@@ -554,11 +554,15 @@ class BookingService(
 
   private fun saveBookingChangedDomainEvent(
     booking: BookingEntity,
-    application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
     bookingChangedAt: OffsetDateTime,
   ) {
     val domainEventId = UUID.randomUUID()
+    val application = (booking.application as ApprovedPremisesApplicationEntity?)
+    val offlineApplication = booking.offlineApplication
+
+    val applicationId = application?.id ?: offlineApplication?.id as UUID
+    val eventNumber = application?.eventNumber ?: offlineApplication?.eventNumber as String
 
     val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, true)) {
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
@@ -576,7 +580,7 @@ class BookingService(
     domainEventService.saveBookingChangedEvent(
       DomainEvent(
         id = domainEventId,
-        applicationId = application.id,
+        applicationId = applicationId,
         crn = booking.crn,
         occurredAt = bookingChangedAt.toInstant(),
         data = BookingChangedEnvelope(
@@ -584,14 +588,14 @@ class BookingService(
           timestamp = bookingChangedAt.toInstant(),
           eventType = "approved-premises.booking.changed",
           eventDetails = BookingChanged(
-            applicationId = application.id,
-            applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
+            applicationId = applicationId,
+            applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
             bookingId = booking.id,
             personReference = PersonReference(
               crn = booking.application?.crn ?: booking.offlineApplication!!.crn,
               noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
             ),
-            deliusEventNumber = application.eventNumber,
+            deliusEventNumber = eventNumber,
             changedAt = bookingChangedAt.toInstant(),
             changedBy = StaffMember(
               staffCode = staffDetails.staffCode,
@@ -1458,7 +1462,6 @@ class BookingService(
     if (shouldCreateDomainEventForBooking(booking, user)) {
       saveBookingChangedDomainEvent(
         booking = booking,
-        application = booking.application!! as ApprovedPremisesApplicationEntity,
         user = user!!,
         bookingChangedAt = OffsetDateTime.now(),
       )
@@ -1529,7 +1532,6 @@ class BookingService(
     if (shouldCreateDomainEventForBooking(booking, user)) {
       saveBookingChangedDomainEvent(
         booking = booking,
-        application = booking.application!! as ApprovedPremisesApplicationEntity,
         user = user,
         bookingChangedAt = OffsetDateTime.now(),
       )
