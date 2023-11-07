@@ -2226,6 +2226,11 @@ paths:
           required: false
           schema:
             $ref: "_shared.yml#/components/schemas/BookingSearchSortField"
+        - name: page
+          in: query
+          description: Page number of results to return. If blank, returns all results
+          schema:
+            type: integer
         - name: X-Service-Name
           in: header
           required: true
@@ -2239,6 +2244,15 @@ paths:
             'application/json':
               schema:
                 $ref: '_shared.yml#/components/schemas/BookingSearchResults'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
         400:
           description: invalid params
           content:
