@@ -56,6 +56,7 @@ class PlacementMetricsReportGeneratorTest {
       createTimelinessEntity("A1", LocalDateTime.now(), LocalDateTime.now(), 7, 3),
       createTimelinessEntity("A1", LocalDateTime.now(), LocalDateTime.now(), 3, 4),
       createTimelinessEntity("A1", LocalDateTime.now(), LocalDateTime.now(), 1, 1),
+      createTimelinessEntity("A1", LocalDateTime.now(), LocalDateTime.now(), null, null),
     )
 
     every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 1
