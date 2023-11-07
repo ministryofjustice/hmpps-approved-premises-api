@@ -84,3 +84,88 @@
       '135812b4-e6c0-4ccf-9502-4bfea66f3bd3'
     )
   on conflict(id) do nothing;
+
+--      Premises 4 South West
+  insert into
+    rooms ("id", "name", "notes", "premises_id")
+  values
+    (
+      '7a2efcd0-77c4-4fd0-aa23-5f59ff212dea',
+      'ROOM 1',
+      NULL,
+      'b9ae343d-38b4-46db-9ca6-46572a347791'
+    )
+  on conflict(id) do nothing;
+
+  insert into
+    beds ("id", "name", "room_id")
+  values
+    (
+      'f45a897a-5831-49d8-81bd-050368fd3bf2',
+      'BED 1',
+      '7a2efcd0-77c4-4fd0-aa23-5f59ff212dea'
+    )
+  on conflict(id) do nothing;
+
+  insert into
+    rooms ("id", "name", "notes", "premises_id")
+  values
+    (
+      '97dafa5b-d52c-425a-a3a6-db50ba760eca',
+      'ROOM 2',
+      NULL,
+      'b9ae343d-38b4-46db-9ca6-46572a347791'
+    )
+  on conflict(id) do nothing;
+
+  insert into
+    beds ("id", "name", "room_id")
+  values
+    (
+      '47c8aa9c-b024-43db-b3d2-4bc867fd4f73',
+      'BED 1',
+      '97dafa5b-d52c-425a-a3a6-db50ba760eca'
+    )
+  on conflict(id) do nothing;
+
+  insert into
+    rooms ("id", "name", "notes", "premises_id")
+  values
+    (
+      'bceb1b63-18f7-4ec7-9010-60d820393915',
+      'ROOM 3',
+      NULL,
+      'b9ae343d-38b4-46db-9ca6-46572a347791'
+    )
+  on conflict(id) do nothing;
+
+  insert into
+    beds ("id", "name", "room_id")
+  values
+    (
+      'a1ae650f-862e-4347-9440-8b84086f7ca3',
+      'BED 1',
+      'bceb1b63-18f7-4ec7-9010-60d820393915'
+    )
+  on conflict(id) do nothing;
+
+  insert into
+    rooms ("id", "name", "notes", "premises_id")
+  values
+    (
+      'ecaef2ee-aac2-4df5-9e5b-666bf90b3ca1',
+      'ROOM 4',
+      NULL,
+      'b9ae343d-38b4-46db-9ca6-46572a347791'
+    )
+  on conflict(id) do nothing;
+
+  insert into
+    beds ("id", "name", "room_id")
+  values
+    (
+      '30f4156d-0ec6-422f-a896-de3c3b256376',
+      'BED 1',
+      'ecaef2ee-aac2-4df5-9e5b-666bf90b3ca1'
+    )
+  on conflict(id) do nothing;
