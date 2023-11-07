@@ -39,8 +39,12 @@ class PlacementMetricsReportGenerator(
     }
 
     val successfulRequests = applications.filter { row -> row.bookingMadeAt !== null }
-    val averageTimeliness = successfulRequests.map { row -> row.overallTimeliness!! }.average()
-    val averagePlacementMatchingTimeliness = successfulRequests.map { row -> row.placementMatchingTimeliness!! }.average()
+    val averageTimeliness = successfulRequests
+      .mapNotNull { row -> row.overallTimeliness }
+      .average()
+    val averagePlacementMatchingTimeliness = successfulRequests
+      .mapNotNull { row -> row.placementMatchingTimeliness }
+      .average()
 
     successfulRequests.map { row ->
       val start = row.applicationSubmittedAt
