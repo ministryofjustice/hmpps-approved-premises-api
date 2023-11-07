@@ -1746,6 +1746,26 @@ components:
           required:
             - createdByUserId
             - status
+    Cas2ApplicationStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+        description:
+          type: string
+          example: 'More information about the application has been requested from the POM (Prison Offender Manager).'
+      required:
+        - id
+        - name
+        - label
+        - description
     Cas2SubmittedApplicationSummary:
       type: object
       properties:
