@@ -1,14 +1,27 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.repository
 
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
 import org.springframework.jdbc.core.ResultSetExtractor
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchSortField.bookingCreatedAt
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchSortField.bookingEndDate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchSortField.bookingStartDate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchSortField.personCrn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.Objects.isNull
 import java.util.UUID
+
+private const val KEY_BOOKING_CREATED_COLUMN_NAME = "booking_created_at"
+private const val KEY_BOOKING_END_DATE_COLUMN_NAME = "booking_end_date"
+private const val KEY_BOOKING_START_DATE_COLUMN_NAME = "booking_start_date"
+private const val KEY_BOOKING_CRN_COLUMN_NAME = "person_crn"
 
 @Repository
 class BookingSearchRepository(private val namedParameterJdbcTemplate: NamedParameterJdbcTemplate) {
@@ -52,7 +65,8 @@ class BookingSearchRepository(private val namedParameterJdbcTemplate: NamedParam
       LEFT JOIN rooms r ON b2.room_id = r.id
       LEFT JOIN premises p ON r.premises_id = p.id
       WHERE b.service = :service
-      #OPTIONAL_FILTERS;
+      #OPTIONAL_FILTERS
+      #LIMITANDSORT;
     """.trimIndent()
 
   private val bookingStatusFilter = """
@@ -67,13 +81,14 @@ class BookingSearchRepository(private val namedParameterJdbcTemplate: NamedParam
     serviceName: ServiceName,
     status: BookingStatus?,
     probationRegionId: UUID?,
-  ): List<BookingSearchResult> {
+    pageable: Pageable?,
+  ): Page<BookingSearchResult> {
     val params = MapSqlParameterSource().apply {
       addValue("service", serviceName.value)
       addValue("booking_status", status?.value)
       addValue("probation_region", probationRegionId)
     }
-
+    val sortAndLimit = buildOrderByAndOffsetClause(pageable)
     var optionalFilters = ""
     if (status != null) {
       optionalFilters += "AND $bookingStatusFilter\n"
@@ -81,8 +96,9 @@ class BookingSearchRepository(private val namedParameterJdbcTemplate: NamedParam
     if (probationRegionId != null) {
       optionalFilters += "AND $probationRegionFilter\n"
     }
-
-    val query = bookingSearchQuery.replace("#OPTIONAL_FILTERS", optionalFilters)
+    val query = bookingSearchQuery
+      .replace("#OPTIONAL_FILTERS", optionalFilters)
+      .replace("#LIMITANDSORT", sortAndLimit)
 
     val result = namedParameterJdbcTemplate.query(
       query,
@@ -91,12 +107,12 @@ class BookingSearchRepository(private val namedParameterJdbcTemplate: NamedParam
         val bookings = mutableListOf<BookingSearchResult>()
 
         while (resultSet.next()) {
-          val personCrn = resultSet.getString("person_crn")
+          val personCrn = resultSet.getString(KEY_BOOKING_CRN_COLUMN_NAME)
           val bookingId = UUID.fromString(resultSet.getString("booking_id"))
           val bookingStatus = resultSet.getString("booking_status")
-          val bookingStartDate = resultSet.getObject("booking_start_date", LocalDate::class.java)
-          val bookingEndDate = resultSet.getObject("booking_end_date", LocalDate::class.java)
-          val bookingCreatedAt = resultSet.getObject("booking_created_at", OffsetDateTime::class.java)
+          val bookingStartDate = resultSet.getObject(KEY_BOOKING_START_DATE_COLUMN_NAME, LocalDate::class.java)
+          val bookingEndDate = resultSet.getObject(KEY_BOOKING_END_DATE_COLUMN_NAME, LocalDate::class.java)
+          val bookingCreatedAt = resultSet.getObject(KEY_BOOKING_CREATED_COLUMN_NAME, OffsetDateTime::class.java)
           val premisesId = UUID.fromString(resultSet.getString("premises_id"))
           val premisesName = resultSet.getString("premises_name")
           val premisesAddressLine1 = resultSet.getString("premises_address_line1")
@@ -133,7 +149,33 @@ class BookingSearchRepository(private val namedParameterJdbcTemplate: NamedParam
       },
     )
 
-    return result ?: emptyList()
+    return PageImpl(
+      result ?: emptyList(),
+      (if (isNull(pageable)) Pageable.unpaged() else pageable)!!,
+      count()?.toLong() ?: 0,
+    )
+  }
+
+  private fun buildOrderByAndOffsetClause(pageable: Pageable?): String {
+    if (pageable != null) {
+      val sortOrder = pageable.sort.first()
+      val sortingBy = when (sortOrder.property) {
+        bookingCreatedAt.value -> KEY_BOOKING_CREATED_COLUMN_NAME
+        bookingEndDate.value -> KEY_BOOKING_END_DATE_COLUMN_NAME
+        bookingStartDate.value -> KEY_BOOKING_START_DATE_COLUMN_NAME
+        personCrn.value -> KEY_BOOKING_CRN_COLUMN_NAME
+        else -> KEY_BOOKING_CREATED_COLUMN_NAME
+      }
+      return StringBuilder()
+        .append(" ORDER BY $sortingBy ${sortOrder.direction.name} ")
+        .append(" LIMIT ${pageable.pageSize} ")
+        .append(" OFFSET ${pageable.offset} ").toString()
+    }
+    return ""
+  }
+
+  fun count(): Int? {
+    return namedParameterJdbcTemplate.jdbcTemplate.queryForObject("SELECT count(*) FROM bookings", Int::class.java)
   }
 }
 
