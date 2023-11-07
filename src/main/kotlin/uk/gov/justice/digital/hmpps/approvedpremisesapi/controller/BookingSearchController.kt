@@ -26,11 +26,12 @@ class BookingSearchController(
     status: BookingStatus?,
     sortOrder: SortOrder?,
     sortField: BookingSearchSortField?,
+    page: Int?,
   ): ResponseEntity<BookingSearchResults> {
     val sortOrder = sortOrder ?: SortOrder.ascending
     val sortField = sortField ?: BookingSearchSortField.bookingCreatedAt
 
-    val authorisationResult = bookingSearchService.findBookings(xServiceName, status, sortOrder, sortField)
+    val (authorisationResult, metadata) = bookingSearchService.findBookings(xServiceName, status, sortOrder, sortField, page)
 
     val validationResult = when (authorisationResult) {
       is AuthorisableActionResult.Success -> authorisationResult.entity
@@ -44,8 +45,10 @@ class BookingSearchController(
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
-    return ResponseEntity.ok(
-      bookingSearchResultTransformer.transformDomainToApi(results),
-    )
+    return ResponseEntity.ok()
+      .headers(metadata?.toHeaders())
+      .body(
+        bookingSearchResultTransformer.transformDomainToApi(results),
+      )
   }
 }
