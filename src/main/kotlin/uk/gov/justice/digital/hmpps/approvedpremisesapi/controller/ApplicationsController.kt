@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -139,41 +140,14 @@ class ApplicationsController(
       is PersonInfoResult.Success.Full -> personInfoResult
     }
 
-    val applicationResult = when (xServiceName ?: ServiceName.approvedPremises) {
-      ServiceName.approvedPremises ->
-        applicationService.createApprovedPremisesApplication(
-          personInfo.offenderDetailSummary,
-          user,
-          deliusPrincipal.token.tokenValue,
-          body.convictionId,
-          body.deliusEventNumber,
-          body.offenceId,
-          createWithRisks,
-        )
-      ServiceName.temporaryAccommodation -> {
-        when (
-          val actionResult =
-            applicationService.createTemporaryAccommodationApplication(
-              body.crn,
-              user,
-              deliusPrincipal.token.tokenValue,
-              body.convictionId,
-              body.deliusEventNumber,
-              body.offenceId,
-              createWithRisks,
-            )
-        ) {
-          is AuthorisableActionResult.NotFound -> throw NotFoundProblem(actionResult.id!!, actionResult.entityType!!)
-          is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-          is AuthorisableActionResult.Success -> actionResult.entity
-        }
-      }
-
-      ServiceName.cas2 -> throw RuntimeException(
-        "CAS2 now has its own " +
-          "Cas2ApplicationsController",
-      )
-    }
+    val applicationResult = createApplication(
+      xServiceName ?: ServiceName.approvedPremises,
+      personInfo,
+      user,
+      deliusPrincipal,
+      body,
+      createWithRisks,
+    )
 
     val application = when (applicationResult) {
       is ValidatableActionResult.GeneralValidationError ->
@@ -188,6 +162,50 @@ class ApplicationsController(
     return ResponseEntity
       .created(URI.create("/applications/${application.id}"))
       .body(applicationsTransformer.transformJpaToApi(application, personInfo))
+  }
+
+  private fun createApplication(
+    serviceName: ServiceName,
+    personInfo: PersonInfoResult.Success.Full,
+    user: UserEntity,
+    deliusPrincipal: AuthAwareAuthenticationToken,
+    body: NewApplication,
+    createWithRisks: Boolean?,
+  ): ValidatableActionResult<ApplicationEntity> = when (serviceName) {
+    ServiceName.approvedPremises ->
+      applicationService.createApprovedPremisesApplication(
+        personInfo.offenderDetailSummary,
+        user,
+        deliusPrincipal.token.tokenValue,
+        body.convictionId,
+        body.deliusEventNumber,
+        body.offenceId,
+        createWithRisks,
+      )
+
+    ServiceName.temporaryAccommodation -> {
+      when (
+        val actionResult =
+          applicationService.createTemporaryAccommodationApplication(
+            body.crn,
+            user,
+            deliusPrincipal.token.tokenValue,
+            body.convictionId,
+            body.deliusEventNumber,
+            body.offenceId,
+            createWithRisks,
+          )
+      ) {
+        is AuthorisableActionResult.NotFound -> throw NotFoundProblem(actionResult.id!!, actionResult.entityType!!)
+        is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+        is AuthorisableActionResult.Success -> actionResult.entity
+      }
+    }
+
+    ServiceName.cas2 -> throw RuntimeException(
+      "CAS2 now has its own " +
+        "Cas2ApplicationsController",
+    )
   }
 
   @Transactional
