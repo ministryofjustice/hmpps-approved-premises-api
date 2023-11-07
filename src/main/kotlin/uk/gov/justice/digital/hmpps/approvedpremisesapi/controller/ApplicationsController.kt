@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -45,9 +46,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getFullInfoForPersonOrThrow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrowInternalServerError
 import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
@@ -135,7 +133,11 @@ class ApplicationsController(
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val user = userService.getUserForRequest()
 
-    val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn, user)
+    val personInfo = when (val personInfoResult = offenderService.getInfoForPerson(body.crn, user.deliusUsername, false)) {
+      is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(personInfoResult.crn, "Offender")
+      is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem()
+      is PersonInfoResult.Success.Full -> personInfoResult
+    }
 
     val applicationResult = when (xServiceName ?: ServiceName.approvedPremises) {
       ServiceName.approvedPremises ->
@@ -349,7 +351,7 @@ class ApplicationsController(
       is AuthorisableActionResult.Success -> applicationResult.entity
     }
 
-    val personInfo = offenderService.getFullInfoForPersonOrThrow(assessment.application.crn, user)
+    val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, false)
 
     return ResponseEntity.ok(assessmentTransformer.transformJpaToApi(assessment, personInfo))
   }
@@ -371,7 +373,7 @@ class ApplicationsController(
   }
 
   private fun getPersonDetailAndTransform(application: ApplicationEntity, user: UserEntity): Application {
-    val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn, user)
+    val personInfo = offenderService.getInfoForPerson(application.crn, user.deliusUsername, false)
 
     return applicationsTransformer.transformJpaToApi(application, personInfo)
   }
@@ -379,19 +381,14 @@ class ApplicationsController(
   private fun getPersonDetailAndTransformToSummary(
     application: JPAApplicationSummary,
     user: UserEntity,
-  ):
-    ApplicationSummary {
-    val personInfo =
-      offenderService.getInfoForPersonOrThrowInternalServerError(
-        application.getCrn(),
-        user,
-      )
+  ): ApplicationSummary {
+    val personInfo = offenderService.getInfoForPerson(application.getCrn(), user.deliusUsername, false)
 
     return applicationsTransformer.transformDomainToApiSummary(application, personInfo)
   }
 
   private fun getPersonDetailAndTransform(offlineApplication: OfflineApplicationEntity, user: UserEntity): Application {
-    val personInfo = offenderService.getInfoForPersonOrThrow(offlineApplication.crn, user)
+    val personInfo = offenderService.getInfoForPerson(offlineApplication.crn, user.deliusUsername, false)
 
     return applicationsTransformer.transformJpaToApi(offlineApplication, personInfo)
   }

@@ -34,8 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentCl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.filterByStatuses
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getFullInfoForPersonOrThrow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.sort
 import java.util.UUID
 import javax.transaction.Transactional
@@ -79,7 +77,7 @@ class AssessmentController(
 
     return ResponseEntity.ok(
       summaries.map {
-        val personInfo = offenderService.getInfoForPersonOrThrow(it.crn, user)
+        val personInfo = offenderService.getInfoForPerson(it.crn, user.deliusUsername, false)
 
         assessmentTransformer.transformDomainToApiSummary(
           it,
@@ -100,7 +98,7 @@ class AssessmentController(
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
     }
 
-    val personInfo = offenderService.getFullInfoForPersonOrThrow(assessment.application.crn, user)
+    val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, false)
 
     return ResponseEntity.ok(
       assessmentTransformer.transformJpaToApi(assessment, personInfo),
@@ -127,7 +125,7 @@ class AssessmentController(
       is ValidatableActionResult.Success -> assessmentValidationResult.entity
     }
 
-    val personInfo = offenderService.getInfoForPersonOrThrow(assessment.application.crn, user)
+    val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, false)
 
     return ResponseEntity.ok(
       assessmentTransformer.transformJpaToApi(assessment, personInfo),
