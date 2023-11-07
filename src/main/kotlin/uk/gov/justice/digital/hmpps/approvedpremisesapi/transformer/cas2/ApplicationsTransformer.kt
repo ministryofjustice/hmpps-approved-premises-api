@@ -15,7 +15,7 @@ class ApplicationsTransformer(
   private val personTransformer: PersonTransformer,
 ) {
 
-  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult.Success):
+  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult):
     Cas2Application {
     return Cas2Application(
       id = jpa.id,

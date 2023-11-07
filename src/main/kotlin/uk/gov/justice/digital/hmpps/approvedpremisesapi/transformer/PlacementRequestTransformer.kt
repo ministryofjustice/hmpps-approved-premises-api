@@ -19,7 +19,7 @@ class PlacementRequestTransformer(
   private val userTransformer: UserTransformer,
   private val bookingSummaryTransformer: BookingSummaryTransformer,
 ) {
-  fun transformJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult.Success): PlacementRequest {
+  fun transformJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult): PlacementRequest {
     return PlacementRequest(
       id = jpa.id,
       gender = jpa.placementRequirements.gender,
