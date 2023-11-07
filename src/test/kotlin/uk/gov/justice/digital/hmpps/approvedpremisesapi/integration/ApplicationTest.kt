@@ -65,6 +65,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentCla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -78,7 +81,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -90,9 +92,6 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var assessmentTransformer: AssessmentTransformer
-
-  @Autowired
-  lateinit var userTransformer: UserTransformer
 
   @Autowired
   lateinit var applicationsTransformer: ApplicationsTransformer
@@ -122,15 +121,15 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get all applications returns 200 with correct body - when user does not have roles returns applications managed by their teams`() {
+  fun `Get all applications returns 200 - when user has no roles returns applications managed by their teams`() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
         withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
       },
     ) { userEntity, jwt ->
       `Given a User` { otherUser, _ ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
-          `Given an Offender` { otherOffenderDetails, otherInmateDetails ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given an Offender` { otherOffenderDetails, _ ->
             approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
             val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -214,7 +213,12 @@ class ApplicationTest : IntegrationTestBase() {
               withData("{}")
             }
 
-            CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+            CommunityAPI_mockOffenderUserAccessCall(
+              userEntity.deliusUsername,
+              offenderDetails.otherIds.crn,
+              inclusion = false,
+              exclusion = false,
+            )
 
             val rawResponseBody = webTestClient.get()
               .uri("/applications")
@@ -226,11 +230,14 @@ class ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
+            val responseBody = objectMapper.readValue(
+              rawResponseBody,
+              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
+            )
 
             assertThat(responseBody).anyMatch {
               outdatedApplicationEntityManagedByTeam.id == it.id &&
-                outdatedApplicationEntityManagedByTeam.crn == it.person?.crn &&
+                outdatedApplicationEntityManagedByTeam.crn == it.person.crn &&
                 outdatedApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
                 outdatedApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
                 outdatedApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt
@@ -238,7 +245,7 @@ class ApplicationTest : IntegrationTestBase() {
 
             assertThat(responseBody).anyMatch {
               upToDateApplicationEntityManagedByTeam.id == it.id &&
-                upToDateApplicationEntityManagedByTeam.crn == it.person?.crn &&
+                upToDateApplicationEntityManagedByTeam.crn == it.person.crn &&
                 upToDateApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
                 upToDateApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
                 upToDateApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt
@@ -254,52 +261,37 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get all applications returns 200 with correct body for Temporary Accommodation - when user has CAS3_ASSESSOR role then returns all submitted applications in region`() {
+  fun `Get all applications returns 200 - when user is CAS3_ASSESSOR then returns submitted applications in region`() {
     `Given a Probation Region` { probationRegion ->
       `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
         `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR), probationRegion = probationRegion) { assessorUser, jwt ->
           `Given an Offender` { offenderDetails, _ ->
             temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-            }
+            val applicationSchema = createApplicationSchema()
 
-            val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(otherUser)
-              withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
-              withCrn(offenderDetails.otherIds.crn)
-              withData("{}")
-              withProbationRegion(probationRegion)
-            }
+            val dateTime = OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00")
+            val application =
+              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, dateTime)
 
-            val notSubmittedApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(otherUser)
-              withSubmittedAt(null)
-              withCrn(offenderDetails.otherIds.crn)
-              withData("{}")
-              withProbationRegion(probationRegion)
-            }
+            val notSubmittedApplication =
+              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
 
-            val notInRegionApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(otherUser)
-              withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
-              withCrn(offenderDetails.otherIds.crn)
-              withData("{}")
-              withYieldedProbationRegion {
-                probationRegionEntityFactory.produceAndPersist {
-                  withYieldedApArea {
-                    apAreaEntityFactory.produceAndPersist()
-                  }
-                }
+            val otherProbationRegion = probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea {
+                apAreaEntityFactory.produceAndPersist()
               }
             }
 
-            CommunityAPI_mockOffenderUserAccessCall(assessorUser.deliusUsername, offenderDetails.otherIds.crn, false, false)
+            val notInRegionApplication =
+              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, otherProbationRegion, dateTime)
+
+            CommunityAPI_mockOffenderUserAccessCall(
+              assessorUser.deliusUsername,
+              offenderDetails.otherIds.crn,
+              inclusion = false,
+              exclusion = false,
+            )
 
             val rawResponseBody = webTestClient.get()
               .uri("/applications")
@@ -313,11 +305,13 @@ class ApplicationTest : IntegrationTestBase() {
               .blockFirst()
 
             val responseBody =
-              objectMapper.readValue(rawResponseBody, object : TypeReference<List<TemporaryAccommodationApplicationSummary>>() {})
+              objectMapper.readValue(
+                rawResponseBody,
+                object : TypeReference<List<TemporaryAccommodationApplicationSummary>>() {},
+              )
 
             assertThat(responseBody).anyMatch {
-              application.id == it.id &&
-                application.crn == it.person.crn &&
+              application.id == it.id && application.crn == it.person.crn &&
                 application.createdAt.toInstant() == it.createdAt &&
                 application.createdByUser.id == it.createdByUserId &&
                 application.submittedAt?.toInstant() == it.submittedAt
@@ -336,8 +330,32 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
+  private fun createTempApplicationEntity(
+    applicationSchema: TemporaryAccommodationApplicationJsonSchemaEntity,
+    user: UserEntity,
+    offenderDetails: OffenderDetailSummary,
+    probationRegion: ProbationRegionEntity,
+    submittedAt: OffsetDateTime?,
+  ): TemporaryAccommodationApplicationEntity {
+    return temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+      withApplicationSchema(applicationSchema)
+      withCreatedByUser(user)
+      withSubmittedAt(submittedAt)
+      withCrn(offenderDetails.otherIds.crn)
+      withData("{}")
+      withProbationRegion(probationRegion)
+    }
+  }
+
+  private fun createApplicationSchema(): TemporaryAccommodationApplicationJsonSchemaEntity {
+    return temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withAddedAt(OffsetDateTime.now())
+      withId(UUID.randomUUID())
+    }
+  }
+
   @Test
-  fun `Get all applications returns 200 with correct body for Temporary Accommodation - when user has CAS3_REFERRER role then returns all applications created by user`() {
+  fun `Get all applications returns 200 for TA - when user is CAS3_REFERRER then returns all applications for user`() {
     `Given a Probation Region` { probationRegion ->
       `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
         `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { referrerUser, jwt ->
@@ -349,23 +367,18 @@ class ApplicationTest : IntegrationTestBase() {
               withId(UUID.randomUUID())
             }
 
-            val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(referrerUser)
-              withCrn(offenderDetails.otherIds.crn)
-              withData("{}")
-              withProbationRegion(probationRegion)
-            }
+            val application =
+              createTempApplicationEntity(applicationSchema, referrerUser, offenderDetails, probationRegion, null)
 
-            val anotherUsersApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(otherUser)
-              withCrn(offenderDetails.otherIds.crn)
-              withData("{}")
-              withProbationRegion(probationRegion)
-            }
+            val anotherUsersApplication =
+              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
 
-            CommunityAPI_mockOffenderUserAccessCall(referrerUser.deliusUsername, offenderDetails.otherIds.crn, false, false)
+            CommunityAPI_mockOffenderUserAccessCall(
+              referrerUser.deliusUsername,
+              offenderDetails.otherIds.crn,
+              inclusion = false,
+              exclusion = false,
+            )
 
             val rawResponseBody = webTestClient.get()
               .uri("/applications")
@@ -379,7 +392,10 @@ class ApplicationTest : IntegrationTestBase() {
               .blockFirst()
 
             val responseBody =
-              objectMapper.readValue(rawResponseBody, object : TypeReference<List<TemporaryAccommodationApplicationSummary>>() {})
+              objectMapper.readValue(
+                rawResponseBody,
+                object : TypeReference<List<TemporaryAccommodationApplicationSummary>>() {},
+              )
 
             assertThat(responseBody).anyMatch {
               application.id == it.id &&
@@ -411,7 +427,7 @@ class ApplicationTest : IntegrationTestBase() {
       CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
       loadPreemptiveCacheForOffenderDetails(crn)
 
-      CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, crn, false, false)
+      CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, crn, inclusion = false, exclusion = false)
 
       webTestClient.get()
         .uri("/applications")
@@ -433,10 +449,15 @@ class ApplicationTest : IntegrationTestBase() {
     ) { userEntity, jwt ->
       `Given an Offender`(
         offenderDetailsConfigBlock = { withoutNomsNumber() },
-      ) { offenderDetails, inmateDetails ->
+      ) { offenderDetails, _ ->
         val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+        CommunityAPI_mockOffenderUserAccessCall(
+          userEntity.deliusUsername,
+          offenderDetails.otherIds.crn,
+          inclusion = false,
+          exclusion = false,
+        )
 
         val rawResponseBody = webTestClient.get()
           .uri("/applications")
@@ -480,7 +501,12 @@ class ApplicationTest : IntegrationTestBase() {
         .withNomsNumber("ABC123")
         .produce()
 
-      CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+      CommunityAPI_mockOffenderUserAccessCall(
+        userEntity.deliusUsername,
+        offenderDetails.otherIds.crn,
+        inclusion = false,
+        exclusion = false,
+      )
 
       CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
       loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
@@ -524,7 +550,7 @@ class ApplicationTest : IntegrationTestBase() {
   @Test
   fun `Get single application returns 200 with correct body`() {
     `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+      `Given an Offender` { offenderDetails, _ ->
         approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
         val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -562,7 +588,12 @@ class ApplicationTest : IntegrationTestBase() {
           )
         }
 
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+        CommunityAPI_mockOffenderUserAccessCall(
+          userEntity.deliusUsername,
+          offenderDetails.otherIds.crn,
+          inclusion = false,
+          exclusion = false,
+        )
 
         val rawResponseBody = webTestClient.get()
           .uri("/applications/${applicationEntity.id}")
@@ -577,8 +608,7 @@ class ApplicationTest : IntegrationTestBase() {
         val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
         assertThat(responseBody).matches {
-          applicationEntity.id == it.id &&
-            applicationEntity.crn == it.person.crn &&
+          applicationEntity.id == it.id && applicationEntity.crn == it.person.crn &&
             applicationEntity.createdAt.toInstant() == it.createdAt &&
             applicationEntity.createdByUser.id == it.createdByUserId &&
             applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
@@ -597,12 +627,17 @@ class ApplicationTest : IntegrationTestBase() {
       },
     ) { userEntity, jwt ->
       `Given a User` { otherUser, _ ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
+        `Given an Offender` { offenderDetails, _ ->
           val crn = "X1234"
 
           val application = produceAndPersistBasicApplication(crn, otherUser, "TEAM1")
 
-          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+          CommunityAPI_mockOffenderUserAccessCall(
+            userEntity.deliusUsername,
+            offenderDetails.otherIds.crn,
+            inclusion = false,
+            exclusion = false,
+          )
 
           webTestClient.get()
             .uri("/applications/${application.id}")
@@ -624,10 +659,15 @@ class ApplicationTest : IntegrationTestBase() {
     ) { userEntity, jwt ->
       `Given an Offender`(
         offenderDetailsConfigBlock = { withoutNomsNumber() },
-      ) { offenderDetails, inmateDetails ->
+      ) { offenderDetails, _ ->
         val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+        CommunityAPI_mockOffenderUserAccessCall(
+          userEntity.deliusUsername,
+          offenderDetails.otherIds.crn,
+          inclusion = false,
+          exclusion = false,
+        )
 
         val rawResponseBody = webTestClient.get()
           .uri("/applications/${application.id}")
@@ -676,7 +716,12 @@ class ApplicationTest : IntegrationTestBase() {
       PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
       loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
 
-      CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+      CommunityAPI_mockOffenderUserAccessCall(
+        userEntity.deliusUsername,
+        offenderDetails.otherIds.crn,
+        inclusion = false,
+        exclusion = false,
+      )
 
       val rawResponseBody = webTestClient.get()
         .uri("/applications/${application.id}")
@@ -705,9 +750,9 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get single online application returns 200 with correct body, non-upgradable outdated application marked as such`() {
+  fun `Get single online application returns 200 non-upgradable outdated application marked as such`() {
     `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+      `Given an Offender` { offenderDetails, _ ->
         approvedPremisesApplicationJsonSchemaRepository.deleteAll()
 
         approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -755,7 +800,12 @@ class ApplicationTest : IntegrationTestBase() {
           withData("{}")
         }
 
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+        CommunityAPI_mockOffenderUserAccessCall(
+          userEntity.deliusUsername,
+          offenderDetails.otherIds.crn,
+          inclusion = false,
+          exclusion = false,
+        )
 
         val rawResponseBody = webTestClient.get()
           .uri("/applications/${nonUpgradableApplicationEntity.id}")
@@ -771,7 +821,7 @@ class ApplicationTest : IntegrationTestBase() {
 
         assertThat(responseBody).matches {
           nonUpgradableApplicationEntity.id == it.id &&
-            nonUpgradableApplicationEntity.crn == it.person?.crn &&
+            nonUpgradableApplicationEntity.crn == it.person.crn &&
             nonUpgradableApplicationEntity.createdAt.toInstant() == it.createdAt &&
             nonUpgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
             nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
@@ -807,7 +857,12 @@ class ApplicationTest : IntegrationTestBase() {
           )
         }
 
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+        CommunityAPI_mockOffenderUserAccessCall(
+          userEntity.deliusUsername,
+          offenderDetails.otherIds.crn,
+          inclusion = false,
+          exclusion = false,
+        )
 
         val rawResponseBody = webTestClient.get()
           .uri("/applications/${applicationEntity.id}")
@@ -862,7 +917,12 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+          CommunityAPI_mockOffenderUserAccessCall(
+            userEntity.deliusUsername,
+            offenderDetails.otherIds.crn,
+            inclusion = false,
+            exclusion = false,
+          )
 
           val rawResponseBody = webTestClient.get()
             .uri("/applications/${applicationEntity.id}")
@@ -918,7 +978,12 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+          CommunityAPI_mockOffenderUserAccessCall(
+            userEntity.deliusUsername,
+            offenderDetails.otherIds.crn,
+            inclusion = false,
+            exclusion = false,
+          )
 
           webTestClient.get()
             .uri("/applications/${applicationEntity.id}")
@@ -959,7 +1024,12 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+          CommunityAPI_mockOffenderUserAccessCall(
+            userEntity.deliusUsername,
+            offenderDetails.otherIds.crn,
+            inclusion = false,
+            exclusion = false,
+          )
 
           webTestClient.get()
             .uri("/applications/${applicationEntity.id}")
@@ -997,8 +1067,9 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
+  @Test
   fun `Get placement applications without JWT returns 401`() {
-    `Given a User` { user, jwt ->
+    `Given a User` { user, _ ->
 
       `Given a Placement Application`(
         createdByUser = user,
@@ -1054,12 +1125,17 @@ class ApplicationTest : IntegrationTestBase() {
   @Test
   fun `Get single offline application returns 200 with correct body`() {
     `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+      `Given an Offender` { offenderDetails, _ ->
         val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
         }
 
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+        CommunityAPI_mockOffenderUserAccessCall(
+          userEntity.deliusUsername,
+          offenderDetails.otherIds.crn,
+          inclusion = false,
+          exclusion = false,
+        )
 
         val rawResponseBody = webTestClient.get()
           .uri("/applications/${offlineApplicationEntity.id}")
@@ -1093,7 +1169,7 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Create new application returns 404 when a person cannot be found`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User` { _, jwt ->
       val crn = "X1234"
 
       CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
@@ -1121,13 +1197,9 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create new application returns 500 and does not create Application without team codes when write to team code table fails`() {
-    `Given a User` { userEntity, jwt ->
+  fun `Create new application returns 500 & doesn't create Application without team codes when write to team code table fails`() {
+    `Given a User` { _, jwt ->
       `Given an Offender` { offenderDetails, _ ->
-        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.now())
-          withId(UUID.randomUUID())
-        }
 
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
           offenderDetails.otherIds.crn,
@@ -1160,7 +1232,7 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Create new application returns 201 with correct body and Location header`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User` { _, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withAddedAt(OffsetDateTime.now())
@@ -1209,8 +1281,8 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Create new application without risks returns 201 with correct body and Location header`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    `Given a User` { _, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withAddedAt(OffsetDateTime.now())
           withId(UUID.randomUUID())
@@ -1258,10 +1330,10 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Create new application returns successfully when a person has no NOMS number`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User` { _, jwt ->
       `Given an Offender`(
         offenderDetailsConfigBlock = { withoutNomsNumber() },
-      ) { offenderDetails, inmateDetails ->
+      ) { offenderDetails, _ ->
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
           offenderDetails.otherIds.crn,
           ManagingTeamsResponse(
@@ -1303,7 +1375,7 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Create new application returns successfully when the person cannot be fetched from the prisons API`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User` { _, jwt ->
       val offenderDetails = OffenderDetailsSummaryFactory()
         .withNomsNumber("ABC123")
         .produce()
@@ -1346,7 +1418,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create new application for Temporary Accommodation returns 403 Forbidden when user doesn't have CAS3_REFERRER role`() {
+  fun `Create new application for Temporary Accommodation returns 403 when user isn't  CAS3_REFERRER role`() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         webTestClient.post()
@@ -1479,8 +1551,11 @@ class ApplicationTest : IntegrationTestBase() {
   @Test
   fun `Update existing AP application returns 200 with correct body`() {
     `Given a User` { submittingUser, jwt ->
-      `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), qualifications = listOf(UserQualification.PIPE)) { assessorUser, _ ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
+      `Given a User`(
+        roles = listOf(UserRole.CAS1_ASSESSOR),
+        qualifications = listOf(UserQualification.PIPE),
+      ) { _, _ ->
+        `Given an Offender` { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1550,8 +1625,11 @@ class ApplicationTest : IntegrationTestBase() {
         )
       },
     ) { submittingUser, jwt ->
-      `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { assessorUser, _ ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
+      `Given a User`(
+        roles = listOf(UserRole.CAS1_ASSESSOR),
+        qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      ) { assessorUser, _ ->
+        `Given an Offender` { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1648,13 +1726,14 @@ class ApplicationTest : IntegrationTestBase() {
             .expectStatus()
             .isOk
 
-          val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
+          val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
 
-          assertThat(persistedApplication.isWomensApplication).isTrue
-          assertThat(persistedApplication.isPipeApplication).isTrue
-          assertThat(persistedApplication.targetLocation).isEqualTo("SW1A 1AA")
+          assertThat(persistedApplication?.isWomensApplication).isTrue
+          assertThat(persistedApplication?.isPipeApplication).isTrue
+          assertThat(persistedApplication?.targetLocation).isEqualTo("SW1A 1AA")
 
-          val createdAssessment = approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
+          val createdAssessment =
+            approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
           assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(assessorUser.id)
 
           val persistedDomainEvent = domainEventRepository.findAll().firstOrNull { it.applicationId == applicationId }
@@ -1666,7 +1745,8 @@ class ApplicationTest : IntegrationTestBase() {
           val emittedMessage = inboundMessageListener.blockForMessage()
 
           assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.submitted")
-          assertThat(emittedMessage.description).isEqualTo("An application has been submitted for an Approved Premises placement")
+          val emittedMessageDescription = "An application has been submitted for an Approved Premises placement"
+          assertThat(emittedMessage.description).isEqualTo(emittedMessageDescription)
           assertThat(emittedMessage.detailUrl).matches("http://api/events/application-submitted/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
           assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(applicationId)
           assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
@@ -1689,8 +1769,11 @@ class ApplicationTest : IntegrationTestBase() {
         )
       },
     ) { submittingUser, jwt ->
-      `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS)) { assessorUser, _ ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
+      `Given a User`(
+        roles = listOf(UserRole.CAS1_ASSESSOR),
+        qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      ) { _, _ ->
+        `Given an Offender` { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1827,26 +1910,14 @@ class ApplicationTest : IntegrationTestBase() {
         )
       },
     ) { submittingUser, jwt ->
-      `Given a User` { userEntity, _ ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
+      `Given a User` { _, _ ->
+        `Given an Offender` { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
           val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
             withAddedAt(OffsetDateTime.now())
             withId(UUID.randomUUID())
-            withSchema(
-              """
-              {
-                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                "${"\$id"}": "https://example.com/product.schema.json",
-                "title": "Thing",
-                "description": "A thing",
-                "type": "object",
-                "properties": {},
-                "required": []
-              }
-            """,
-            )
+            withSchema(schemaText())
           }
 
           temporaryAccommodationApplicationEntityFactory.produceAndPersist {
@@ -1890,6 +1961,20 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
+  private fun schemaText(): String {
+    return """
+              {
+                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                "${"\$id"}": "https://example.com/product.schema.json",
+                "title": "Thing",
+                "description": "A thing",
+                "type": "object",
+                "properties": {},
+                "required": []
+              }
+            """
+  }
+
   @Nested
   inner class GetAssessmentForApplication {
     @Test
@@ -1921,7 +2006,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get assessment for application returns an application's assessment when the requesting user is a workflow manager`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { requestUser, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { applicant, _ ->
           `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { assignee, _ ->
             `Given an Offender` { offenderDetails, inmateDetails ->
@@ -1956,7 +2041,7 @@ class ApplicationTest : IntegrationTestBase() {
     fun `Get assessment for an application returns 403 if the user does not have permission`() {
       `Given a User` { applicant, _ ->
         `Given a User` { assignee, _ ->
-          `Given a User` { requestUser, jwt ->
+          `Given a User` { _, jwt ->
             `Given an Offender` { offenderDetails, _ ->
 
               val (application, _) = produceAndPersistApplicationAndAssessment(applicant, assignee, offenderDetails)
@@ -2003,15 +2088,18 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Nested
   inner class ApplicationTimeline {
-    val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+    private val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-    val note1Id = UUID.randomUUID()
-    val note2Id = UUID.randomUUID()
-    val note3Id = UUID.randomUUID()
+    private val note1Id = UUID.randomUUID()
+    private val note2Id = UUID.randomUUID()
+    private val note3Id = UUID.randomUUID()
 
-    val note1CreatedAt = LocalDate.of(2023, 10, 1).toLocalDateTime()
-    val note2CreatedAt = LocalDate.of(2023, 10, 1).toLocalDateTime()
-    val note3CreatedAt = LocalDate.of(2023, 10, 3).toLocalDateTime()
+    private val note1CreatedAt = LocalDate.of(2023, 10, 1).toLocalDateTime()
+    private val note2CreatedAt = LocalDate.of(2023, 10, 1).toLocalDateTime()
+    private val note3CreatedAt = LocalDate.of(2023, 10, 3).toLocalDateTime()
+
+    private val month = 2
+    private val year = 2023
 
     @Test
     fun `Get application timeline without JWT returns 401`() {
@@ -2052,10 +2140,7 @@ class ApplicationTest : IntegrationTestBase() {
     fun `Get application timeline returns correct ten DomainEvents when no information requests`() {
       `Given a User`(roles = listOf(UserRole.CAS1_ADMIN)) { _, jwt ->
 
-        val month = 2
-        val year = 2023
-
-        val domainEvents = createTenDomainEvents(year, month)
+        val domainEvents = createTenDomainEvents()
         val summaries = domainEvents.map {
           TimelineEvent(
             applicationsTransformer.transformDomainEventTypeToTimelineEventType(it.type),
@@ -2084,12 +2169,9 @@ class ApplicationTest : IntegrationTestBase() {
     fun `Get application timeline returns correct twenty DomainEvents when we have ten information requests`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
 
-        val month = 2
-        val year = 2023
+        val assessment = createAssessment(user)
 
-        val assessment = createAssessment(user, year, month)
-
-        val domainEvents = createTenDomainEvents(year, month)
+        val domainEvents = createTenDomainEvents()
         val summaries = domainEvents.map {
           TimelineEvent(
             applicationsTransformer.transformDomainEventTypeToTimelineEventType(it.type),
@@ -2098,7 +2180,7 @@ class ApplicationTest : IntegrationTestBase() {
           )
         }
 
-        val informationRequests = createTenInformationRequests(assessment, user, year, month)
+        val informationRequests = createTenInformationRequests(assessment, user)
         val informationRequestSummaries = informationRequests.map {
           TimelineEvent(
             TimelineEventType.approvedPremisesInformationRequest,
@@ -2201,7 +2283,7 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    private fun createAssessment(user: UserEntity, year: Int, month: Int): ApprovedPremisesAssessmentEntity {
+    private fun createAssessment(user: UserEntity): ApprovedPremisesAssessmentEntity {
       val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
         withPermissiveSchema()
       }
@@ -2227,7 +2309,11 @@ class ApplicationTest : IntegrationTestBase() {
       }
     }
 
-    private fun createAssessmentClarificationNote(assessment: ApprovedPremisesAssessmentEntity, user: UserEntity, year: Int, month: Int, dayOfMonth: Int): AssessmentClarificationNoteEntity {
+    private fun createAssessmentClarificationNote(
+      assessment: ApprovedPremisesAssessmentEntity,
+      user: UserEntity,
+      dayOfMonth: Int,
+    ): AssessmentClarificationNoteEntity {
       return assessmentClarificationNoteEntityFactory.produceAndPersist {
         withAssessment(assessment)
         withCreatedAt(
@@ -2237,7 +2323,7 @@ class ApplicationTest : IntegrationTestBase() {
       }
     }
 
-    private fun createDomainEvent(year: Int, month: Int, dayOfMonth: Int, type: DomainEventType): DomainEventEntity {
+    private fun createDomainEvent(dayOfMonth: Int, type: DomainEventType): DomainEventEntity {
       return domainEventFactory.produceAndPersist {
         withOccurredAt(
           LocalDate.of(year, month, dayOfMonth).toLocalDateTime(),
@@ -2247,17 +2333,17 @@ class ApplicationTest : IntegrationTestBase() {
       }
     }
 
-    private fun createTenDomainEvents(year: Int, month: Int): List<DomainEventEntity> {
-      val domainEvent1 = createDomainEvent(year, month, 2, DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
-      val domainEvent2 = createDomainEvent(year, month, 3, DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
-      val domainEvent3 = createDomainEvent(year, month, 4, DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
-      val domainEvent4 = createDomainEvent(year, month, 5, DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
-      val domainEvent5 = createDomainEvent(year, month, 6, DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED)
-      val domainEvent6 = createDomainEvent(year, month, 7, DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
-      val domainEvent7 = createDomainEvent(year, month, 8, DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE)
-      val domainEvent8 = createDomainEvent(year, month, 9, DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
-      val domainEvent9 = createDomainEvent(year, month, 10, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
-      val domainEvent10 = createDomainEvent(year, month, 11, DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN)
+    private fun createTenDomainEvents(): List<DomainEventEntity> {
+      val domainEvent1 = createDomainEvent(2, DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
+      val domainEvent2 = createDomainEvent(3, DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
+      val domainEvent3 = createDomainEvent(4, DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
+      val domainEvent4 = createDomainEvent(5, DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
+      val domainEvent5 = createDomainEvent(6, DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED)
+      val domainEvent6 = createDomainEvent(7, DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
+      val domainEvent7 = createDomainEvent(8, DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE)
+      val domainEvent8 = createDomainEvent(9, DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
+      val domainEvent9 = createDomainEvent(10, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
+      val domainEvent10 = createDomainEvent(11, DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN)
 
       return listOf(
         domainEvent1, domainEvent2, domainEvent3,
@@ -2267,17 +2353,20 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    private fun createTenInformationRequests(assessment: ApprovedPremisesAssessmentEntity, user: UserEntity, year: Int, month: Int): List<AssessmentClarificationNoteEntity> {
-      val informationRequest1 = createAssessmentClarificationNote(assessment, user, year, month, 11)
-      val informationRequest2 = createAssessmentClarificationNote(assessment, user, year, month, 12)
-      val informationRequest3 = createAssessmentClarificationNote(assessment, user, year, month, 13)
-      val informationRequest4 = createAssessmentClarificationNote(assessment, user, year, month, 14)
-      val informationRequest5 = createAssessmentClarificationNote(assessment, user, year, month, 15)
-      val informationRequest6 = createAssessmentClarificationNote(assessment, user, year, month, 16)
-      val informationRequest7 = createAssessmentClarificationNote(assessment, user, year, month, 17)
-      val informationRequest8 = createAssessmentClarificationNote(assessment, user, year, month, 18)
-      val informationRequest9 = createAssessmentClarificationNote(assessment, user, year, month, 19)
-      val informationRequest10 = createAssessmentClarificationNote(assessment, user, year, month, 20)
+    private fun createTenInformationRequests(
+      assessment: ApprovedPremisesAssessmentEntity,
+      user: UserEntity,
+    ): List<AssessmentClarificationNoteEntity> {
+      val informationRequest1 = createAssessmentClarificationNote(assessment, user, 11)
+      val informationRequest2 = createAssessmentClarificationNote(assessment, user, 12)
+      val informationRequest3 = createAssessmentClarificationNote(assessment, user, 13)
+      val informationRequest4 = createAssessmentClarificationNote(assessment, user, 14)
+      val informationRequest5 = createAssessmentClarificationNote(assessment, user, 15)
+      val informationRequest6 = createAssessmentClarificationNote(assessment, user, 16)
+      val informationRequest7 = createAssessmentClarificationNote(assessment, user, 17)
+      val informationRequest8 = createAssessmentClarificationNote(assessment, user, 18)
+      val informationRequest9 = createAssessmentClarificationNote(assessment, user, 19)
+      val informationRequest10 = createAssessmentClarificationNote(assessment, user, 20)
 
       return listOf(
         informationRequest1, informationRequest2, informationRequest3,
@@ -2389,7 +2478,11 @@ class ApplicationTest : IntegrationTestBase() {
     return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
   }
 
-  private fun produceAndPersistBasicApplication(crn: String, userEntity: UserEntity, managingTeamCode: String): ApplicationEntity {
+  private fun produceAndPersistBasicApplication(
+    crn: String,
+    userEntity: UserEntity,
+    managingTeamCode: String,
+  ): ApplicationEntity {
     val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
       withSchema(

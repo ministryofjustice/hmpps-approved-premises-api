@@ -149,10 +149,6 @@ class ApplicationServiceTest {
 
   @Test
   fun `Get all applications where Probation Officer exists returns applications returned from repository`() {
-    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
     val userId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
     val distinguishedName = "SOMEPERSON"
     val userEntity = UserEntityFactory()
@@ -570,7 +566,6 @@ class ApplicationServiceTest {
         releaseType = null,
         arrivalDate = null,
         data = "{}",
-        username = username,
         isInapplicable = null,
       ) is AuthorisableActionResult.NotFound,
     ).isTrue
@@ -615,7 +610,6 @@ class ApplicationServiceTest {
         releaseType = null,
         arrivalDate = null,
         data = "{}",
-        username = username,
         isInapplicable = null,
       ) is AuthorisableActionResult.Unauthorised,
     ).isTrue
@@ -657,7 +651,6 @@ class ApplicationServiceTest {
       releaseType = null,
       arrivalDate = null,
       data = "{}",
-      username = username,
       isInapplicable = null,
     )
 
@@ -709,7 +702,6 @@ class ApplicationServiceTest {
       releaseType = null,
       arrivalDate = null,
       data = "{}",
-      username = username,
       isInapplicable = null,
     )
 
@@ -768,7 +760,6 @@ class ApplicationServiceTest {
       releaseType = "rotl",
       arrivalDate = LocalDate.parse("2023-04-17"),
       data = updatedData,
-      username = username,
       isInapplicable = false,
     )
 
@@ -791,7 +782,6 @@ class ApplicationServiceTest {
   @Test
   fun `updateTemporaryAccommodationApplication returns NotFound when application doesn't exist`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
 
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
@@ -1178,7 +1168,13 @@ class ApplicationServiceTest {
         )
         .produce()
 
-      every { mockOffenderService.getRiskByCrn(application.crn, any(), user.deliusUsername) } returns AuthorisableActionResult.Success(
+      every {
+        mockOffenderService.getRiskByCrn(
+          application.crn,
+          any(),
+          user.deliusUsername,
+        )
+      } returns AuthorisableActionResult.Success(
         risks,
       )
 
@@ -1205,7 +1201,13 @@ class ApplicationServiceTest {
       every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
       every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
-      val result = applicationService.submitApprovedPremisesApplication(applicationId, submitApprovedPremisesApplication, username, "jwt")
+      val result =
+        applicationService.submitApprovedPremisesApplication(
+          applicationId,
+          submitApprovedPremisesApplication,
+          username,
+          "jwt",
+        )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
