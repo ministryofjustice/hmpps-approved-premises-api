@@ -3,6 +3,9 @@
 #
 # Configure new rules by adding them to this file
 # https://github.com/koral--/detekt/blob/master/detekt-cli/src/main/resources/default-detekt-config.yml
+config:
+  validation: true
+  warningsAsErrors: true
 
 performance:
   CouldBeSequence:
@@ -22,6 +25,11 @@ complexity:
   LargeClass:
     threshold: 1000
   LongParameterList:
-    threshold: 12
+    ignoreAnnotated:
+      # Spring annotations like @Service, @Component, etc.
+      # Classes with these annotations can't have their dependencies grouped into parameter objects easily due to how
+      # autowiring works. Spring beans will therefore require a larger-scale refactoring to reduce the number of
+      # dependencies required by each one that would violate this rule.
+      - org.springframework.stereotype.*
   TooManyFunctions:
     thresholdInClasses: 20
