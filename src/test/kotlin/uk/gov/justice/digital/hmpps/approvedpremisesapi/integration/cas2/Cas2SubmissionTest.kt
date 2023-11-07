@@ -10,6 +10,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
@@ -22,12 +23,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2SubmissionTest : IntegrationTestBase() {
   @SpykBean
   lateinit var realApplicationRepository: ApplicationRepository
+
+  @Autowired
+  lateinit var nomisUserTransformer: NomisUserTransformer
 
   @AfterEach
   fun afterEach() {
@@ -238,11 +243,16 @@ class Cas2SubmissionTest : IntegrationTestBase() {
               Cas2SubmittedApplication::class.java,
             )
 
+            val applicant = nomisUserTransformer.transformJpaToApi(
+              applicationEntity
+                .createdByUser,
+            )
+
             Assertions.assertThat(responseBody).matches {
               applicationEntity.id == it.id &&
                 applicationEntity.crn == it.person.crn &&
                 applicationEntity.createdAt.toInstant() == it.createdAt &&
-                applicationEntity.createdByUser.id == it.createdByUserId &&
+                applicant == it.submittedBy &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.document) ==
                   serializableToJsonNode(it.document) &&

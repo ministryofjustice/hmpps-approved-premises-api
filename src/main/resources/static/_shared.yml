@@ -1602,9 +1602,8 @@ components:
         createdAt:
           type: string
           format: date-time
-        createdByUserId:
-          type: string
-          format: uuid
+        submittedBy:
+          $ref: '#/components/schemas/NomisUser'
         schemaVersion:
           type: string
           format: uuid
@@ -1621,7 +1620,7 @@ components:
         - id
         - person
         - createdAt
-        - createdByUserId
+        - createdBy
         - schemaVersion
         - outdatedSchema
         - status
@@ -2399,6 +2398,29 @@ components:
       required:
         - user
         - taskType
+    NomisUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'Roger Smith'
+        nomisUsername:
+          type: string
+          example: 'SMITHR_GEN'
+        email:
+          type: string
+          example: 'Roger.Smith@justice.gov.uk'
+        isActive:
+          type: boolean
+          example: true
+      required:
+        - id
+        - name
+        - nomisUsername
+        - isActive
     User:
       type: object
       properties:
