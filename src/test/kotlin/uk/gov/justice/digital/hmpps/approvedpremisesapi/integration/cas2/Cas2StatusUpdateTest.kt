@@ -77,5 +77,20 @@ class Cas2StatusUpdateTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `Create status update returns 404 when new status NOT valid`() {
+      `Given a CAS2 Assessor`() { _, jwt ->
+        webTestClient.post()
+          .uri("/cas2/submissions/66f7127a-fe03-4b66-8378-5c0b048490f8/status-updates")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            Cas2ApplicationStatusUpdate(newStatus = "invalidState"),
+          )
+          .exchange()
+          .expectStatus()
+          .isNotFound
+      }
+    }
   }
 }

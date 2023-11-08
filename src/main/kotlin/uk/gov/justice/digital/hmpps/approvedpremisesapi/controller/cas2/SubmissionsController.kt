@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getFullInfoForPersonOrThrow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getInfoForPersonOrThrowInternalServerError
@@ -32,6 +33,7 @@ class SubmissionsController(
   private val applicationsTransformer: ApplicationsTransformer,
   private val offenderService: OffenderService,
   private val externalUserService: ExternalUserService,
+  private val statusUpdateService: StatusUpdateService,
 ) : SubmissionsCas2Delegate {
 
   override fun submissionsGet(): ResponseEntity<List<Cas2SubmittedApplicationSummary>> {
@@ -84,6 +86,9 @@ class SubmissionsController(
     applicationId: UUID,
     statusUpdate: Cas2ApplicationStatusUpdate,
   ): ResponseEntity<Unit> {
+    if (!statusUpdateService.isValidStatus(statusUpdate)) {
+      return ResponseEntity(HttpStatus.NOT_FOUND)
+    }
     return ResponseEntity(HttpStatus.CREATED)
   }
 
