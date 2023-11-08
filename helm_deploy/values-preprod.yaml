@@ -28,7 +28,7 @@ generic-service:
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 20
     DOMAIN-EVENTS_CAS1_EMIT-ENABLED: true
     DOMAIN-EVENTS_CAS2_EMIT-ENABLED: false
-    DOMAIN-EVENTS_CAS3_EMIT-ENABLED: false
+    DOMAIN-EVENTS_CAS3_EMIT-ENABLED:
     HMPPS_SQS_USE_WEB_TOKEN: true
 
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises-preprod.hmpps.service.justice.gov.uk/applications/#id

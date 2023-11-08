@@ -29,7 +29,7 @@ generic-service:
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 20
     DOMAIN-EVENTS_CAS1_EMIT-ENABLED: true
     DOMAIN-EVENTS_CAS2_EMIT-ENABLED: true
-    DOMAIN-EVENTS_CAS3_EMIT-ENABLED: true
+    DOMAIN-EVENTS_CAS3_EMIT-ENABLED: bookingCancelled,bookingConfirmed,bookingProvisionallyMade,personArrived,personDeparted,referralSubmitted
     PREEMPTIVE-CACHE-LOGGING-ENABLED: true
     PREEMPTIVE-CACHE-DELAY-MS: 60000
     SEED_AUTO_ENABLED: true
