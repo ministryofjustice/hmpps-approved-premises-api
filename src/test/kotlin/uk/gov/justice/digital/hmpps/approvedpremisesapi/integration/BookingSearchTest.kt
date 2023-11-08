@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import java.time.LocalDate
 
@@ -31,40 +32,8 @@ class BookingSearchTest : IntegrationTestBase() {
   fun `Searching for Approved Premises bookings returns 200 with correct body`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
-        val allPremises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withProbationRegion(userEntity.probationRegion)
-          withYieldedLocalAuthorityArea {
-            localAuthorityEntityFactory.produceAndPersist()
-          }
-        }
-
-        val allBeds = mutableListOf<BedEntity>()
-        allPremises.forEach { premises ->
-          val rooms = roomEntityFactory.produceAndPersistMultiple(3) {
-            withPremises(premises)
-          }
-
-          rooms.forEach { room ->
-            val bed = bedEntityFactory.produceAndPersist {
-              withRoom(room)
-            }
-
-            allBeds += bed
-          }
-        }
-
-        val allBookings = mutableListOf<BookingEntity>()
-        allBeds.forEach { bed ->
-          val booking = bookingEntityFactory.produceAndPersist {
-            withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
-            withBed(bed)
-            withServiceName(ServiceName.approvedPremises)
-          }
-
-          allBookings += booking
-        }
-
+        val allBookings = createApprovedPremisesBookingEntities(userEntity, offenderDetails)
+        create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val expectedResponse = getExpectedResponse(allBookings, offenderDetails)
 
         webTestClient.get()
@@ -81,43 +50,53 @@ class BookingSearchTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Searching for Approved Premises bookings with pagination`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val allBookings = createApprovedPremisesBookingEntities(userEntity, offenderDetails)
+        create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
+        allBookings.sortBy { it.createdAt }
+        val firstPage = allBookings.subList(0, 10)
+        val secondPage = allBookings.subList(10, allBookings.size)
+        val expectedFirstPageResponse = getExpectedResponse(firstPage, offenderDetails)
+        val expectedSecondPageResponse = getExpectedResponse(secondPage, offenderDetails)
+
+        webTestClient.get()
+          .uri("/bookings/search?page=1")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+          .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+          .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
+          .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+          .expectBody()
+          .json(objectMapper.writeValueAsString(expectedFirstPageResponse))
+
+        webTestClient.get()
+          .uri("/bookings/search?page=2")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+          .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+          .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
+          .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+          .expectBody()
+          .json(objectMapper.writeValueAsString(expectedSecondPageResponse))
+      }
+    }
+  }
+
+  @Test
   fun `Searching for Temporary Accommodation bookings returns 200 with correct body`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
-        val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withProbationRegion(userEntity.probationRegion)
-          withYieldedLocalAuthorityArea {
-            localAuthorityEntityFactory.produceAndPersist()
-          }
-        }
-
-        val allBeds = mutableListOf<BedEntity>()
-        allPremises.forEach { premises ->
-          val rooms = roomEntityFactory.produceAndPersistMultiple(3) {
-            withPremises(premises)
-          }
-
-          rooms.forEach { room ->
-            val bed = bedEntityFactory.produceAndPersist {
-              withRoom(room)
-            }
-
-            allBeds += bed
-          }
-        }
-
-        val allBookings = mutableListOf<BookingEntity>()
-        allBeds.forEach { bed ->
-          val booking = bookingEntityFactory.produceAndPersist {
-            withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
-            withBed(bed)
-            withServiceName(ServiceName.temporaryAccommodation)
-          }
-
-          allBookings += booking
-        }
-
+        val allBookings = create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val expectedResponse = getExpectedResponse(allBookings, offenderDetails)
 
         webTestClient.get()
@@ -238,44 +217,8 @@ class BookingSearchTest : IntegrationTestBase() {
   fun `Results are ordered by the given field and sort order when the query parameters are supplied`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
-        val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withProbationRegion(userEntity.probationRegion)
-          withYieldedLocalAuthorityArea {
-            localAuthorityEntityFactory.produceAndPersist()
-          }
-        }
-
-        val allBeds = mutableListOf<BedEntity>()
-        allPremises.forEach { premises ->
-          val rooms = roomEntityFactory.produceAndPersistMultiple(2) {
-            withPremises(premises)
-          }
-
-          rooms.forEach { room ->
-            val bed = bedEntityFactory.produceAndPersist {
-              withRoom(room)
-            }
-
-            allBeds += bed
-          }
-        }
-
-        val allBookings = mutableListOf<BookingEntity>()
-        allBeds.forEachIndexed { index, bed ->
-          val booking = bookingEntityFactory.produceAndPersist {
-            withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
-            withBed(bed)
-            withServiceName(ServiceName.temporaryAccommodation)
-            withArrivalDate(LocalDate.now().minusDays((60 - index).toLong()))
-            withDepartureDate(LocalDate.now().minusDays((30 - index).toLong()))
-          }
-
-          allBookings += booking
-        }
-
+        val allBookings = create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val expectedBookings = allBookings.sortedByDescending { it.departureDate }
-
         val expectedResponse = getExpectedResponse(expectedBookings, offenderDetails)
 
         webTestClient.get()
@@ -363,43 +306,11 @@ class BookingSearchTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Searching for Temporary Accommodation bookings with pagination`() {
+  fun `Searching for Temporary Accommodation bookings with pagination with pagination returns 200 with correct subset of results`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
-        val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withProbationRegion(userEntity.probationRegion)
-          withYieldedLocalAuthorityArea {
-            localAuthorityEntityFactory.produceAndPersist()
-          }
-        }
-
-        val allBeds = mutableListOf<BedEntity>()
-        allPremises.forEach { premises ->
-          val rooms = roomEntityFactory.produceAndPersistMultiple(3) {
-            withPremises(premises)
-          }
-
-          rooms.forEach { room ->
-            val bed = bedEntityFactory.produceAndPersist {
-              withRoom(room)
-            }
-
-            allBeds += bed
-          }
-        }
-
-        val allBookings = mutableListOf<BookingEntity>()
-        allBeds.forEach { bed ->
-          val booking = bookingEntityFactory.produceAndPersist {
-            withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
-            withBed(bed)
-            withServiceName(ServiceName.temporaryAccommodation)
-          }
-
-          allBookings += booking
-        }
-
+        createApprovedPremisesBookingEntities(userEntity, offenderDetails)
+        val allBookings = create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val sortedBookings = allBookings.sortedByDescending { it.departureDate }
         val firstPage = sortedBookings.subList(0, 10)
         val secondPage = sortedBookings.subList(10, sortedBookings.size)
@@ -441,44 +352,8 @@ class BookingSearchTest : IntegrationTestBase() {
   fun `Results are ordered by the created date and sorted descending order when the query parameters are supplied with Pagination`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
-        val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withProbationRegion(userEntity.probationRegion)
-          withYieldedLocalAuthorityArea {
-            localAuthorityEntityFactory.produceAndPersist()
-          }
-        }
-
-        val allBeds = mutableListOf<BedEntity>()
-        allPremises.forEach { premises ->
-          val rooms = roomEntityFactory.produceAndPersistMultiple(2) {
-            withPremises(premises)
-          }
-
-          rooms.forEach { room ->
-            val bed = bedEntityFactory.produceAndPersist {
-              withRoom(room)
-            }
-
-            allBeds += bed
-          }
-        }
-
-        val allBookings = mutableListOf<BookingEntity>()
-        allBeds.forEachIndexed { index, bed ->
-          val booking = bookingEntityFactory.produceAndPersist {
-            withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
-            withBed(bed)
-            withServiceName(ServiceName.temporaryAccommodation)
-            withArrivalDate(LocalDate.now().minusDays((60 - index).toLong()))
-            withDepartureDate(LocalDate.now().minusDays((30 - index).toLong()))
-          }
-
-          allBookings += booking
-        }
-
+        val allBookings = create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val expectedBookings = allBookings.sortedByDescending { it.createdAt }
-
         val expectedResponse = getExpectedResponse(expectedBookings, offenderDetails)
 
         webTestClient.get()
@@ -488,6 +363,10 @@ class BookingSearchTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isOk
+          .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+          .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+          .expectHeader().valueEquals("X-Pagination-TotalResults", 10)
+          .expectHeader().valueEquals("X-Pagination-PageSize", 10)
           .expectBody()
           .json(objectMapper.writeValueAsString(expectedResponse), true)
       }
@@ -498,44 +377,8 @@ class BookingSearchTest : IntegrationTestBase() {
   fun `Results are ordered by the created date and sorted ascending order when the query parameters are supplied with Pagination`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
-        val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withProbationRegion(userEntity.probationRegion)
-          withYieldedLocalAuthorityArea {
-            localAuthorityEntityFactory.produceAndPersist()
-          }
-        }
-
-        val allBeds = mutableListOf<BedEntity>()
-        allPremises.forEach { premises ->
-          val rooms = roomEntityFactory.produceAndPersistMultiple(2) {
-            withPremises(premises)
-          }
-
-          rooms.forEach { room ->
-            val bed = bedEntityFactory.produceAndPersist {
-              withRoom(room)
-            }
-
-            allBeds += bed
-          }
-        }
-
-        val allBookings = mutableListOf<BookingEntity>()
-        allBeds.forEachIndexed { index, bed ->
-          val booking = bookingEntityFactory.produceAndPersist {
-            withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
-            withBed(bed)
-            withServiceName(ServiceName.temporaryAccommodation)
-            withArrivalDate(LocalDate.now().minusDays((60 - index).toLong()))
-            withDepartureDate(LocalDate.now().minusDays((30 - index).toLong()))
-          }
-
-          allBookings += booking
-        }
-
+        val allBookings = create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         allBookings.sortBy { it.createdAt }
-
         val expectedResponse = getExpectedResponse(allBookings, offenderDetails)
 
         webTestClient.get()
@@ -545,6 +388,10 @@ class BookingSearchTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isOk
+          .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+          .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+          .expectHeader().valueEquals("X-Pagination-TotalResults", 10)
+          .expectHeader().valueEquals("X-Pagination-PageSize", 10)
           .expectBody()
           .json(objectMapper.writeValueAsString(expectedResponse), true)
       }
@@ -555,42 +402,7 @@ class BookingSearchTest : IntegrationTestBase() {
   fun `Results are ordered by the start date and sorted descending order when the query parameters are supplied with Pagination`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
-        val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withProbationRegion(userEntity.probationRegion)
-          withYieldedLocalAuthorityArea {
-            localAuthorityEntityFactory.produceAndPersist()
-          }
-        }
-
-        val allBeds = mutableListOf<BedEntity>()
-        allPremises.forEach { premises ->
-          val rooms = roomEntityFactory.produceAndPersistMultiple(2) {
-            withPremises(premises)
-          }
-
-          rooms.forEach { room ->
-            val bed = bedEntityFactory.produceAndPersist {
-              withRoom(room)
-            }
-
-            allBeds += bed
-          }
-        }
-
-        val allBookings = mutableListOf<BookingEntity>()
-        allBeds.forEachIndexed { index, bed ->
-          val booking = bookingEntityFactory.produceAndPersist {
-            withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
-            withBed(bed)
-            withServiceName(ServiceName.temporaryAccommodation)
-            withArrivalDate(LocalDate.now().minusDays((60 - index).toLong()))
-            withDepartureDate(LocalDate.now().minusDays((30 - index).toLong()))
-          }
-
-          allBookings += booking
-        }
-
+        val allBookings = create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val sortedByDescending = allBookings.sortedByDescending { it.arrivalDate }
         val expectedResponse = getExpectedResponse(sortedByDescending, offenderDetails)
         webTestClient.get()
@@ -600,6 +412,10 @@ class BookingSearchTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isOk
+          .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+          .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+          .expectHeader().valueEquals("X-Pagination-TotalResults", 10)
+          .expectHeader().valueEquals("X-Pagination-PageSize", 10)
           .expectBody()
           .json(objectMapper.writeValueAsString(expectedResponse), true)
       }
@@ -610,42 +426,7 @@ class BookingSearchTest : IntegrationTestBase() {
   fun `Results are ordered by the end date and sorted descending order when the query parameters are supplied with Pagination`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
-        val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withProbationRegion(userEntity.probationRegion)
-          withYieldedLocalAuthorityArea {
-            localAuthorityEntityFactory.produceAndPersist()
-          }
-        }
-
-        val allBeds = mutableListOf<BedEntity>()
-        allPremises.forEach { premises ->
-          val rooms = roomEntityFactory.produceAndPersistMultiple(2) {
-            withPremises(premises)
-          }
-
-          rooms.forEach { room ->
-            val bed = bedEntityFactory.produceAndPersist {
-              withRoom(room)
-            }
-
-            allBeds += bed
-          }
-        }
-
-        val allBookings = mutableListOf<BookingEntity>()
-        allBeds.forEachIndexed { index, bed ->
-          val booking = bookingEntityFactory.produceAndPersist {
-            withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
-            withBed(bed)
-            withServiceName(ServiceName.temporaryAccommodation)
-            withArrivalDate(LocalDate.now().minusDays((60 - index).toLong()))
-            withDepartureDate(LocalDate.now().minusDays((30 - index).toLong()))
-          }
-
-          allBookings += booking
-        }
-
+        val allBookings = create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val sortedByDescending = allBookings.sortedByDescending { it.departureDate }
         val expectedResponse = getExpectedResponse(sortedByDescending, offenderDetails)
 
@@ -656,6 +437,10 @@ class BookingSearchTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isOk
+          .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+          .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+          .expectHeader().valueEquals("X-Pagination-TotalResults", 10)
+          .expectHeader().valueEquals("X-Pagination-PageSize", 10)
           .expectBody()
           .json(objectMapper.writeValueAsString(expectedResponse), true)
       }
@@ -666,52 +451,46 @@ class BookingSearchTest : IntegrationTestBase() {
   fun `Results are ordered by the person crn and sorted descending order when the query parameters are supplied with Pagination`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
-        val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withProbationRegion(userEntity.probationRegion)
-          withYieldedLocalAuthorityArea {
-            localAuthorityEntityFactory.produceAndPersist()
-          }
-        }
-
-        val allBeds = mutableListOf<BedEntity>()
-        allPremises.forEach { premises ->
-          val rooms = roomEntityFactory.produceAndPersistMultiple(2) {
-            withPremises(premises)
-          }
-
-          rooms.forEach { room ->
-            val bed = bedEntityFactory.produceAndPersist {
-              withRoom(room)
-            }
-
-            allBeds += bed
-          }
-        }
-
-        val allBookings = mutableListOf<BookingEntity>()
-        allBeds.forEachIndexed { index, bed ->
-          val booking = bookingEntityFactory.produceAndPersist {
-            withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
-            withBed(bed)
-            withServiceName(ServiceName.temporaryAccommodation)
-            withArrivalDate(LocalDate.now().minusDays((60 - index).toLong()))
-            withDepartureDate(LocalDate.now().minusDays((30 - index).toLong()))
-          }
-
-          allBookings += booking
-        }
-
+        val allBookings = create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
         val sortedByDescending = allBookings.sortedByDescending { it.crn }
         val expectedResponse = getExpectedResponse(sortedByDescending, offenderDetails)
 
         webTestClient.get()
-          .uri("/bookings/search?sortOrder=descending&sortField=crn&page=1")
+          .uri("/bookings/search?sortOrder=descending&sortField=crn&page=1&status=provisional")
           .header("Authorization", "Bearer $jwt")
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
           .isOk
+          .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+          .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+          .expectHeader().valueEquals("X-Pagination-TotalResults", 10)
+          .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+          .expectBody()
+          .json(objectMapper.writeValueAsString(expectedResponse), true)
+      }
+    }
+  }
+
+  @Test
+  fun `No Results returned when searching for cancelled booking status and all existing bookings are confirmed`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val allBookings = create10TestTemporaryAccommodationBookings(userEntity, offenderDetails)
+        allBookings.sortedByDescending { it.crn }
+        val expectedResponse = getExpectedResponse(emptyList(), offenderDetails)
+
+        webTestClient.get()
+          .uri("/bookings/search?sortOrder=descending&sortField=crn&page=1&status=cancelled")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+          .expectHeader().valueEquals("X-Pagination-TotalPages", 0)
+          .expectHeader().valueEquals("X-Pagination-TotalResults", 0)
+          .expectHeader().valueEquals("X-Pagination-PageSize", 10)
           .expectBody()
           .json(objectMapper.writeValueAsString(expectedResponse), true)
       }
@@ -761,5 +540,103 @@ class BookingSearchTest : IntegrationTestBase() {
         )
       },
     )
+  }
+
+  private fun create10TestTemporaryAccommodationBookings(
+    userEntity: UserEntity,
+    offenderDetails: OffenderDetailSummary,
+  ): MutableList<BookingEntity> {
+    return createTestTemporaryAccommodationBookings(userEntity, offenderDetails, 5, 2)
+  }
+
+  private fun create15TestTemporaryAccommodationBookings(
+    userEntity: UserEntity,
+    offenderDetails: OffenderDetailSummary,
+  ): MutableList<BookingEntity> {
+    return createTestTemporaryAccommodationBookings(userEntity, offenderDetails, 5, 3)
+  }
+
+  private fun createTestTemporaryAccommodationBookings(
+    userEntity: UserEntity,
+    offenderDetails: OffenderDetailSummary,
+    numberOfPremises: Int,
+    numberOfBedsInEachPremises: Int,
+  ): MutableList<BookingEntity> {
+    val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(numberOfPremises) {
+      withProbationRegion(userEntity.probationRegion)
+      withYieldedLocalAuthorityArea {
+        localAuthorityEntityFactory.produceAndPersist()
+      }
+    }
+
+    val allBeds = mutableListOf<BedEntity>()
+    allPremises.forEach { premises ->
+      val rooms = roomEntityFactory.produceAndPersistMultiple(numberOfBedsInEachPremises) {
+        withPremises(premises)
+      }
+
+      rooms.forEach { room ->
+        val bed = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+        }
+
+        allBeds += bed
+      }
+    }
+
+    val allBookings = mutableListOf<BookingEntity>()
+    allBeds.forEachIndexed { index, bed ->
+      val booking = bookingEntityFactory.produceAndPersist {
+        withPremises(bed.room.premises)
+        withCrn(offenderDetails.otherIds.crn)
+        withBed(bed)
+        withServiceName(ServiceName.temporaryAccommodation)
+        withArrivalDate(LocalDate.now().minusDays((60 - index).toLong()))
+        withDepartureDate(LocalDate.now().minusDays((30 - index).toLong()))
+      }
+
+      allBookings += booking
+    }
+    return allBookings
+  }
+
+  private fun createApprovedPremisesBookingEntities(
+    userEntity: UserEntity,
+    offenderDetails: OffenderDetailSummary,
+  ): MutableList<BookingEntity> {
+    val allPremises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
+      withProbationRegion(userEntity.probationRegion)
+      withYieldedLocalAuthorityArea {
+        localAuthorityEntityFactory.produceAndPersist()
+      }
+    }
+
+    val allBeds = mutableListOf<BedEntity>()
+    allPremises.forEach { premises ->
+      val rooms = roomEntityFactory.produceAndPersistMultiple(3) {
+        withPremises(premises)
+      }
+
+      rooms.forEach { room ->
+        val bed = bedEntityFactory.produceAndPersist {
+          withRoom(room)
+        }
+
+        allBeds += bed
+      }
+    }
+
+    val allBookings = mutableListOf<BookingEntity>()
+    allBeds.forEach { bed ->
+      val booking = bookingEntityFactory.produceAndPersist {
+        withPremises(bed.room.premises)
+        withCrn(offenderDetails.otherIds.crn)
+        withBed(bed)
+        withServiceName(ServiceName.approvedPremises)
+      }
+
+      allBookings += booking
+    }
+    return allBookings
   }
 }

@@ -14,27 +14,30 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingSearchResultFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingSearchRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSearchResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSearchResultDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 class BookingSearchServiceTest {
-  private val mockBookingSearchRepository = mockk<BookingSearchRepository>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockUserService = mockk<UserService>()
+  private val mockBookingRepository = mockk<BookingRepository>()
 
   private val bookingSearchService = BookingSearchService(
-    mockBookingSearchRepository,
     mockOffenderService,
     mockUserService,
+    mockBookingRepository,
   )
 
   @Test
@@ -48,11 +51,11 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingSearchRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
       listOf(
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
       ),
     )
     every { mockOffenderService.getOffenderByCrn(any(), any()) } returns AuthorisableActionResult.Success(
@@ -76,7 +79,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingSearchRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any())
     }
     verify(exactly = 3) {
       mockOffenderService.getOffenderByCrn(any(), any())
@@ -94,17 +97,14 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingSearchRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
       listOf(
-        BookingSearchResultFactory()
-          .withBookingCreatedAt(OffsetDateTime.now().minusDays(3))
-          .produce(),
-        BookingSearchResultFactory()
-          .withBookingCreatedAt(OffsetDateTime.now().minusDays(2))
-          .produce(),
-        BookingSearchResultFactory()
-          .withBookingCreatedAt(OffsetDateTime.now().minusDays(1))
-          .produce(),
+        TestBookingSearchResult()
+          .withBookingCreatedAt(OffsetDateTime.now().minusDays(3)),
+        TestBookingSearchResult()
+          .withBookingCreatedAt(OffsetDateTime.now().minusDays(2)),
+        TestBookingSearchResult()
+          .withBookingCreatedAt(OffsetDateTime.now().minusDays(1)),
       ),
     )
     every { mockOffenderService.getOffenderByCrn(any(), any()) } returnsMany listOf(
@@ -139,7 +139,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metadata).isNotNull()
     verify(exactly = 1) {
-      mockBookingSearchRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any())
     }
     verify(exactly = 3) {
       mockOffenderService.getOffenderByCrn(any(), any())
@@ -157,17 +157,14 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingSearchRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
       listOf(
-        BookingSearchResultFactory()
-          .withBookingCreatedAt(OffsetDateTime.now().minusDays(3))
-          .produce(),
-        BookingSearchResultFactory()
-          .withBookingCreatedAt(OffsetDateTime.now().minusDays(2))
-          .produce(),
-        BookingSearchResultFactory()
-          .withBookingCreatedAt(OffsetDateTime.now().minusDays(1))
-          .produce(),
+        TestBookingSearchResult()
+          .withBookingCreatedAt(OffsetDateTime.now().minusDays(3)),
+        TestBookingSearchResult()
+          .withBookingCreatedAt(OffsetDateTime.now().minusDays(2)),
+        TestBookingSearchResult()
+          .withBookingCreatedAt(OffsetDateTime.now().minusDays(1)),
       ),
     )
     every { mockOffenderService.getOffenderByCrn(any(), any()) } returnsMany listOf(
@@ -194,7 +191,7 @@ class BookingSearchServiceTest {
     assertThat(validationResult.entity.last().personName).isNull()
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingSearchRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any())
     }
     verify(exactly = 3) {
       mockOffenderService.getOffenderByCrn(any(), any())
@@ -213,11 +210,11 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingSearchRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
       listOf(
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
       ),
     )
     every { mockOffenderService.getOffenderByCrn(any(), any()) } returns AuthorisableActionResult.Success(
@@ -244,7 +241,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metaData).isNull()
     verify(exactly = 1) {
-      mockBookingSearchRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any())
     }
     verify(exactly = 3) {
       mockOffenderService.getOffenderByCrn(any(), any())
@@ -263,11 +260,11 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingSearchRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
       listOf(
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
       ),
     )
     every { mockOffenderService.getOffenderByCrn(any(), any()) } returns AuthorisableActionResult.Success(
@@ -294,7 +291,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingSearchRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any())
     }
     verify(exactly = 3) {
       mockOffenderService.getOffenderByCrn(any(), any())
@@ -305,9 +302,9 @@ class BookingSearchServiceTest {
   @ParameterizedTest
   fun `findBookings returns results sorted according to person CRN`(sortOrder: SortOrder) {
     val bookingSearchResults = listOf(
-      BookingSearchResultFactory().produce(),
-      BookingSearchResultFactory().produce(),
-      BookingSearchResultFactory().produce(),
+      TestBookingSearchResult(),
+      TestBookingSearchResult(),
+      TestBookingSearchResult(),
     )
 
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
@@ -320,7 +317,7 @@ class BookingSearchServiceTest {
       }
       .produce()
     every {
-      mockBookingSearchRepository.findBookings(
+      mockBookingRepository.findBookings(
         any(),
         any(),
         any(),
@@ -343,10 +340,10 @@ class BookingSearchServiceTest {
     assertThat(result.entity is ValidatableActionResult.Success).isTrue
     val validationResult = result.entity as ValidatableActionResult.Success
     assertThat(validationResult.entity).hasSize(3)
-    assertThat(validationResult.entity.map { it.personCrn }).hasSameElementsAs(bookingSearchResults.map { it.personCrn })
+    assertThat(validationResult.entity.map { it.personCrn }).hasSameElementsAs(bookingSearchResults.map { it.getPersonCrn() })
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingSearchRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any())
     }
     verify(exactly = 3) {
       mockOffenderService.getOffenderByCrn(any(), any())
@@ -365,11 +362,11 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingSearchRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
       listOf(
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
       ),
     )
     every { mockOffenderService.getOffenderByCrn(any(), any()) } returns AuthorisableActionResult.Success(
@@ -396,7 +393,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metaData).isNull()
     verify(exactly = 1) {
-      mockBookingSearchRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any())
     }
     verify(exactly = 3) {
       mockOffenderService.getOffenderByCrn(any(), any())
@@ -416,11 +413,11 @@ class BookingSearchServiceTest {
       }
       .produce()
 
-    every { mockBookingSearchRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
       listOf(
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
       ),
     )
     every { mockOffenderService.getOffenderByCrn(any(), any()) } returns AuthorisableActionResult.Success(
@@ -447,7 +444,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metaData).isNull()
     verify(exactly = 1) {
-      mockBookingSearchRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any())
     }
     verify(exactly = 3) {
       mockOffenderService.getOffenderByCrn(any(), any())
@@ -467,11 +464,11 @@ class BookingSearchServiceTest {
       }
       .produce()
 
-    every { mockBookingSearchRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
       listOf(
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
       ),
     )
     every { mockOffenderService.getOffenderByCrn(any(), any()) } returns AuthorisableActionResult.Success(
@@ -498,7 +495,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metaData).isNull()
     verify(exactly = 1) {
-      mockBookingSearchRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any())
     }
     verify(exactly = 3) {
       mockOffenderService.getOffenderByCrn(any(), any())
@@ -517,11 +514,11 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingSearchRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
       listOf(
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
       ),
     )
     every { mockOffenderService.getOffenderByCrn(any(), any()) } returns AuthorisableActionResult.Success(
@@ -548,7 +545,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metaData).isNull()
     verify(exactly = 1) {
-      mockBookingSearchRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any())
     }
     verify(exactly = 3) {
       mockOffenderService.getOffenderByCrn(any(), any())
@@ -558,10 +555,13 @@ class BookingSearchServiceTest {
   @EnumSource(value = SortOrder::class)
   @ParameterizedTest
   fun `findBookings returns results not sorted according to booking creation when page number is given`(sortOrder: SortOrder) {
+    val bookingOne: BookingSearchResult = TestBookingSearchResult()
+    val bookingTwo: BookingSearchResult = TestBookingSearchResult()
+    val bookingThree: BookingSearchResult = TestBookingSearchResult()
     val bookingSearchResults = listOf(
-      BookingSearchResultFactory().produce(),
-      BookingSearchResultFactory().produce(),
-      BookingSearchResultFactory().produce(),
+      bookingOne,
+      bookingTwo,
+      bookingThree,
     )
 
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
@@ -574,15 +574,16 @@ class BookingSearchServiceTest {
       }
       .produce()
     every {
-      mockBookingSearchRepository.findBookings(
+      mockBookingRepository.findBookings(
         any(),
         any(),
         any(),
         any(),
       )
     } returns PageImpl(bookingSearchResults)
+    val offenderDetailSummary = OffenderDetailsSummaryFactory().produce()
     every { mockOffenderService.getOffenderByCrn(any(), any()) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce(),
+      offenderDetailSummary,
     )
 
     val (result, metaData) = bookingSearchService.findBookings(
@@ -598,14 +599,15 @@ class BookingSearchServiceTest {
     val validationResult = result.entity as ValidatableActionResult.Success
     assertThat(validationResult.entity).hasSize(3)
     val sortedBookingResult = when (sortOrder) {
-      SortOrder.ascending -> bookingSearchResults.sortedBy { it.bookingCreatedAt }
-      SortOrder.descending -> bookingSearchResults.sortedByDescending { it.bookingCreatedAt }
+      SortOrder.ascending -> bookingSearchResults.sortedBy { it.getBookingCreatedAt() }
+      SortOrder.descending -> bookingSearchResults.sortedByDescending { it.getBookingCreatedAt() }
     }
+
     assertThat(validationResult.entity).isNotSameAs(sortedBookingResult)
-    assertThat(validationResult.entity).containsExactlyInAnyOrderElementsOf(sortedBookingResult)
+    assertThat(validationResult.entity).containsExactlyInAnyOrderElementsOf(mapToBookingSearchResult(sortedBookingResult, offenderDetailSummary))
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingSearchRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any())
     }
     verify(exactly = 3) {
       mockOffenderService.getOffenderByCrn(any(), any())
@@ -624,11 +626,11 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingSearchRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
       listOf(
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
-        BookingSearchResultFactory().produce(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
+        TestBookingSearchResult(),
       ),
     )
     every { mockOffenderService.getOffenderByCrn(any(), any()) } returns AuthorisableActionResult.Success(
@@ -656,7 +658,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingSearchRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any())
     }
     verify(exactly = 3) {
       mockOffenderService.getOffenderByCrn(any(), any())
@@ -674,7 +676,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingSearchRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(emptyList())
+    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(emptyList())
 
     val (result, metaData) = bookingSearchService.findBookings(
       ServiceName.temporaryAccommodation,
@@ -688,12 +690,9 @@ class BookingSearchServiceTest {
     assertThat(result.entity is ValidatableActionResult.Success).isTrue
     val validationResult = result.entity as ValidatableActionResult.Success
     assertThat(validationResult.entity).hasSize(0)
-    assertThat(validationResult.entity).allMatch {
-      it.personName != null
-    }
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingSearchRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any())
     }
     verify(exactly = 0) {
       mockOffenderService.getOffenderByCrn(any(), any())
@@ -711,7 +710,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingSearchRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(emptyList())
+    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(emptyList())
 
     val (result, metaData) = bookingSearchService.findBookings(
       ServiceName.temporaryAccommodation,
@@ -730,7 +729,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metaData).isNull()
     verify(exactly = 1) {
-      mockBookingSearchRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any())
     }
     verify(exactly = 0) {
       mockOffenderService.getOffenderByCrn(any(), any())
@@ -748,7 +747,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingSearchRepository.findBookings(any(), any(), any(), any()) }.throws(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any()) }.throws(
       DataRetrievalFailureException(
         "some-exception",
       ),
@@ -764,10 +763,37 @@ class BookingSearchServiceTest {
       )
     }
     verify(exactly = 1) {
-      mockBookingSearchRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any())
     }
     verify(exactly = 0) {
       mockOffenderService.getOffenderByCrn(any(), any())
+    }
+  }
+
+  private fun mapToBookingSearchResult(
+    sortedBookingResult: List<BookingSearchResult>,
+    offenderDetailSummary: OffenderDetailSummary,
+  ): List<BookingSearchResultDto> {
+    return sortedBookingResult.mapNotNull { rs ->
+      BookingSearchResultDto(
+        "${offenderDetailSummary.firstName} ${offenderDetailSummary.surname}",
+        rs.getPersonCrn(),
+        rs.getBookingId(),
+        rs.getBookingStatus(),
+        rs.getBookingStartDate(),
+        rs.getBookingEndDate(),
+        OffsetDateTime.ofInstant(rs.getBookingCreatedAt().toInstant(), ZoneOffset.UTC),
+        rs.getPremisesId(),
+        rs.getPremisesName(),
+        rs.getPremisesAddressLine1(),
+        rs.getPremisesAddressLine2(),
+        rs.getPremisesTown(),
+        rs.getPremisesPostcode(),
+        rs.getRoomId(),
+        rs.getRoomName(),
+        rs.getBedId(),
+        rs.getBedName(),
+      )
     }
   }
 }
