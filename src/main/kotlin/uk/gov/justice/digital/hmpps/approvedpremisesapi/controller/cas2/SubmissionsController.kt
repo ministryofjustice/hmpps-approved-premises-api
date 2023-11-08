@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.SubmissionsCas2Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
@@ -77,6 +78,13 @@ class SubmissionsController(
     }
 
     return ResponseEntity(HttpStatus.OK)
+  }
+
+  override fun submissionsApplicationIdStatusUpdatesPost(
+    applicationId: UUID,
+    statusUpdate: Cas2ApplicationStatusUpdate,
+  ): ResponseEntity<Unit> {
+    return ResponseEntity(HttpStatus.CREATED)
   }
 
   private fun ensureExternalUserPersisted() {
