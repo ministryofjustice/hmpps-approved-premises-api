@@ -12,7 +12,7 @@ class NomisUserTransformer {
       id = nomisUserEntity.id,
       nomisUsername = nomisUserEntity.nomisUsername,
       name = nomisUserEntity.name,
-      email = nomisUserEntity.name,
+      email = nomisUserEntity.email,
       isActive = nomisUserEntity.isActive,
     )
   }

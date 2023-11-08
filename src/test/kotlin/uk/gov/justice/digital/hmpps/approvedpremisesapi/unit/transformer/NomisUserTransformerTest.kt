@@ -17,7 +17,7 @@ class NomisUserTransformerTest {
       id = jpaEntity.id,
       nomisUsername = jpaEntity.nomisUsername,
       name = jpaEntity.name,
-      email = jpaEntity.name,
+      email = jpaEntity.email,
       isActive = jpaEntity.isActive,
     )
 
