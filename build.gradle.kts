@@ -22,7 +22,7 @@ configurations.matching { it.name == "detekt" }.all {
 }
 
 val springDocVersion = "1.7.0"
-val sentryVersion = "6.33.0"
+val sentryVersion = "6.33.1"
 
 dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
