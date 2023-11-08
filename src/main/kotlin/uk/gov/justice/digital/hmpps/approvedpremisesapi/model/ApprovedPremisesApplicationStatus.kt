@@ -1,0 +1,15 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.model
+
+enum class ApprovedPremisesApplicationStatus {
+  STARTED,
+  SUBMITTED,
+  REJECTED,
+  AWAITING_ASSESSMENT,
+  UNALLOCATED_ASSESSMENT,
+  ASSESSMENT_IN_PROGRESS,
+  AWAITING_PLACEMENT,
+  PLACEMENT_ALLOCATED,
+  INAPPLICABLE,
+  WITHDRAWN,
+  REQUESTED_FURTHER_INFORMATION,
+}

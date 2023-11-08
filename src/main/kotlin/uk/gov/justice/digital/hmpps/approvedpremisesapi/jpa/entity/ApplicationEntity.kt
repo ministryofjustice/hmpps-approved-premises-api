@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -16,6 +17,7 @@ import javax.persistence.Convert
 import javax.persistence.DiscriminatorColumn
 import javax.persistence.DiscriminatorValue
 import javax.persistence.Entity
+import javax.persistence.Enumerated
 import javax.persistence.Id
 import javax.persistence.Inheritance
 import javax.persistence.InheritanceType
@@ -221,6 +223,8 @@ class ApprovedPremisesApplicationEntity(
   var arrivalDate: OffsetDateTime?,
   var name: String,
   var targetLocation: String?,
+  @Enumerated(EnumType.STRING)
+  var status: ApprovedPremisesApplicationStatus?,
 ) : ApplicationEntity(
   id,
   crn,
