@@ -21,11 +21,66 @@ import javax.persistence.Table
 interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUID> {
   fun findByApplication(application: ApplicationEntity): PlacementRequestEntity?
 
+  // We list out all the fields we need and drop `data` which is a json blob
+  // that we've noticed is causing out of memory issues. We could go back to the
+  // derived query once placement requests are paginated.
+  @Query(
+    """
+    SELECT
+      id,
+      person,
+      risks,
+      applicationId,
+      assessmentId,
+      releaseType,
+      status,
+      assessmentDecision,
+      assessmentDate,
+      applicationDate,
+      assessor,
+      isParole,
+      notes,
+      booking,
+    FROM
+      placement_requests placement_request
+    where
+      placement_request.applicationId = :#{#application.id})
+    """,
+    nativeQuery = true,
+  )
   fun findAllByApplication(application: ApplicationEntity): List<PlacementRequestEntity>
 
   fun findAllByPlacementApplication(placementApplication: PlacementApplicationEntity?): List<PlacementRequestEntity>
 
-  fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(userId: UUID): List<PlacementRequestEntity>
+  // We list out all the fields we need and drop `data` which is a json blob
+  // that we've noticed is causing out of memory issues. We could go back to the
+  // derived query once placement requests are paginated.
+  @Query(
+    """
+    SELECT
+      id,
+      person,
+      risks,
+      applicationId,
+      assessmentId,
+      releaseType,
+      status,
+      assessmentDecision,
+      assessmentDate,
+      applicationDate,
+      assessor,
+      isParole,
+      notes,
+      booking,
+    FROM
+      placement_requests placement_request
+    where
+      placement_request.reallocated_at IS NULL
+      AND placement_request.is_withdrawn is false
+    """,
+    nativeQuery = true,
+  )
+  fun findAllByAllocatedToUserIdAndReallocatedAtNullAndIsWithdrawnFalse(userId: UUID): List<PlacementRequestEntity>
 
   @Query(
     """
