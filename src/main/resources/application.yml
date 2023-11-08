@@ -18,6 +18,10 @@ spring:
       test:
         - "stdout"
 
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+
   flyway:
     repeatable-sql-migration-prefix: "R"
     sql-migration-prefix: ""
@@ -228,4 +232,3 @@ upstream-timeout-ms: 10000
 case-notes-service-upstream-timeout-ms: 30000
 
 max-response-in-memory-size-bytes: 750000
-
