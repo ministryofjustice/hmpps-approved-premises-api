@@ -80,7 +80,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     """,
     nativeQuery = true,
   )
-  fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(userId: UUID): List<PlacementRequestEntity>
+  fun findAllByAllocatedToUserIdAndReallocatedAtNullAndIsWithdrawnFalse(userId: UUID): List<PlacementRequestEntity>
 
   @Query(
     """

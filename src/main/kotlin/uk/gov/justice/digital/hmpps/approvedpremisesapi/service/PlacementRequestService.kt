@@ -60,7 +60,7 @@ class PlacementRequestService(
 ) {
 
   fun getVisiblePlacementRequestsForUser(user: UserEntity): List<PlacementRequestEntity> {
-    return placementRequestRepository.findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(user.id)
+    return placementRequestRepository.findAllByAllocatedToUserIdAndReallocatedAtNullAndIsWithdrawnFalse(user.id)
   }
 
   fun getAllReallocatable(): List<PlacementRequestEntity> {
