@@ -40,11 +40,11 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       assessor,
       isParole,
       notes,
-      booking,
+      booking
     FROM
       placement_requests placement_request
-    where
-      placement_request.applicationId = :#{#application.id})
+    WHERE
+      placement_request.applicationId = :#application.id
     """,
     nativeQuery = true,
   )
@@ -59,24 +59,25 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     """
     SELECT
       id,
-      person,
-      risks,
-      applicationId,
-      assessmentId,
-      releaseType,
-      status,
-      assessmentDecision,
-      assessmentDate,
-      applicationDate,
-      assessor,
-      isParole,
+      expected_arrival,
+      duration,
+      created_at,
+      application_id,
+      allocated_to_user_id,
+      booking_id,
+      reallocated_at,
+      assessment_id,
       notes,
-      booking,
+      placement_requirements_id,
+      is_parole,
+      is_withdrawn,
+      placement_application_id
     FROM
-      placement_requests placement_request
-    where
-      placement_request.reallocated_at IS NULL
-      AND placement_request.is_withdrawn is false
+      placement_requests
+    WHERE
+      allocated_to_user_id = :userId
+      AND reallocated_at IS NULL
+      AND is_withdrawn = false
     """,
     nativeQuery = true,
   )
