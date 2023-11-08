@@ -768,6 +768,8 @@ class AssessmentService(
     clarificationNoteEntity.responseReceivedOn = responseReceivedOn
 
     val savedNote = assessmentClarificationNoteRepository.save(clarificationNoteEntity)
+    // We need to save the assessment here to update the Application's status
+    assessmentRepository.save(clarificationNoteEntity.assessment)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedNote),
