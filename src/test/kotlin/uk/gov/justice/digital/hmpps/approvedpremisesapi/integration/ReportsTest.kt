@@ -8,13 +8,17 @@ import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
@@ -26,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toBookingsReportData
 import java.time.LocalDate
 import java.util.UUID
 
@@ -137,8 +142,24 @@ class ReportsTest : IntegrationTestBase() {
           }
         }
 
+        val caseSummary = CaseSummaryFactory()
+          .fromOffenderDetails(offenderDetails)
+          .produce()
+
+        ApDeliusContext_addResponseToUserAccessCall(
+          CaseAccessFactory()
+            .withCrn(offenderDetails.otherIds.crn)
+            .produce(),
+          userEntity.deliusUsername,
+        )
+
         val expectedDataFrame = BookingsReportGenerator()
-          .createReport(bookings, BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+          .createReport(
+            bookings.toBookingsReportData { crn ->
+              PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+            },
+            BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+          )
 
         webTestClient.get()
           .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
@@ -199,8 +220,24 @@ class ReportsTest : IntegrationTestBase() {
           }
         }
 
+        val caseSummary = CaseSummaryFactory()
+          .fromOffenderDetails(offenderDetails)
+          .produce()
+
+        ApDeliusContext_addResponseToUserAccessCall(
+          CaseAccessFactory()
+            .withCrn(offenderDetails.otherIds.crn)
+            .produce(),
+          userEntity.deliusUsername,
+        )
+
         val expectedDataFrame = BookingsReportGenerator()
-          .createReport(bookings, BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+          .createReport(
+            bookings.toBookingsReportData { crn ->
+              PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+            },
+            BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+          )
 
         webTestClient.get()
           .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
@@ -261,8 +298,24 @@ class ReportsTest : IntegrationTestBase() {
           }
         }
 
+        val caseSummary = CaseSummaryFactory()
+          .fromOffenderDetails(offenderDetails)
+          .produce()
+
+        ApDeliusContext_addResponseToUserAccessCall(
+          CaseAccessFactory()
+            .withCrn(offenderDetails.otherIds.crn)
+            .produce(),
+          userEntity.deliusUsername,
+        )
+
         val expectedDataFrame = BookingsReportGenerator()
-          .createReport(bookings, BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+          .createReport(
+            bookings.toBookingsReportData { crn ->
+              PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+            },
+            BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+          )
 
         webTestClient.get()
           .uri("/reports/bookings?year=2023&month=4")
@@ -362,8 +415,24 @@ class ReportsTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.of(2023, 5, 3))
         }
 
+        val caseSummary = CaseSummaryFactory()
+          .fromOffenderDetails(offenderDetails)
+          .produce()
+
+        ApDeliusContext_addResponseToUserAccessCall(
+          CaseAccessFactory()
+            .withCrn(offenderDetails.otherIds.crn)
+            .produce(),
+          userEntity.deliusUsername,
+        )
+
         val expectedDataFrame = BookingsReportGenerator()
-          .createReport(shouldBeIncludedBookings, BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+          .createReport(
+            shouldBeIncludedBookings.toBookingsReportData { crn ->
+              PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+            },
+            BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+          )
 
         webTestClient.get()
           .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")

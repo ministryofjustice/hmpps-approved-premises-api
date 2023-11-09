@@ -5,6 +5,11 @@ import java.time.LocalDate
 data class BookingsReportRow(
   val referralId: String?,
   val referralDate: LocalDate?,
+  val personName: String?,
+  val pncNumber: String?,
+  val gender: String?,
+  val ethnicity: String?,
+  val dateOfBirth: LocalDate?,
   val riskOfSeriousHarm: String?,
   val sexOffender: Boolean?,
   val needForAccessibleProperty: Boolean?,
