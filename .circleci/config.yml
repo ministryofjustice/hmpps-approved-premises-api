@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  hmpps: ministryofjustice/hmpps@7.5.0
+  hmpps: ministryofjustice/hmpps@7
   mem: circleci/rememborb@0.0.2
   node: circleci/node@5.1.0
   slack: circleci/slack@4.12.5
@@ -346,9 +346,9 @@ workflows:
       - request-preprod-approval:
           type: approval
           requires:
-#            TODO: Uncomment this when we have confirmed the e2es work correctly
-#            - cas1_e2e_tests
-#            - cas3_e2e_tests
+            #            TODO: Uncomment this when we have confirmed the e2es work correctly
+            #            - cas1_e2e_tests
+            #            - cas3_e2e_tests
             - deploy_dev
       - hmpps/deploy_env:
           name: deploy_preprod
