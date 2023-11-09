@@ -84,19 +84,20 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
 
   override fun produce(): PlacementApplicationEntity = PlacementApplicationEntity(
     id = this.id(),
-    createdByUser = this.createdByUser?.invoke() ?: throw RuntimeException("Must provide a createdByUser"),
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
+    createdByUser = this.createdByUser?.invoke() ?: throw RuntimeException("Must provide a createdByUser"),
     schemaVersion = this.schemaVersion(),
+    schemaUpToDate = false,
     data = this.data(),
     document = this.document(),
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
-    schemaUpToDate = false,
     allocatedToUser = this.allocatedToUser(),
     allocatedAt = null,
     reallocatedAt = this.reallocatedAt(),
     decision = this.decision(),
     placementType = this.placementType(),
     placementDates = this.placementDates() ?: mutableListOf(),
+    placementRequests = mutableListOf(),
   )
 }

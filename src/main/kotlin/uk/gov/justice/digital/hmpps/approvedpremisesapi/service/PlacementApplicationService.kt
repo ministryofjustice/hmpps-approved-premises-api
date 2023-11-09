@@ -68,18 +68,19 @@ class PlacementApplicationService(
         id = UUID.randomUUID(),
         application = application,
         createdByUser = user,
+        schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java),
+        schemaUpToDate = true,
         data = null,
         document = null,
-        schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java),
         createdAt = OffsetDateTime.now(),
         submittedAt = null,
-        schemaUpToDate = true,
         allocatedToUser = null,
-        decision = null,
         allocatedAt = null,
         reallocatedAt = null,
-        placementDates = mutableListOf(),
+        decision = null,
         placementType = null,
+        placementDates = mutableListOf(),
+        placementRequests = mutableListOf(),
       ),
     )
 
@@ -332,13 +333,11 @@ class PlacementApplicationService(
   }
 
   private fun withdrawAssociatedPlacementRequests(placementApplicationEntity: PlacementApplicationEntity) {
-    val placementRequests = placementRequestRepository.findAllByPlacementApplication(placementApplicationEntity)
-
-    if (placementRequests.any { it.booking != null }) {
+    if (!placementApplicationEntity.canBeWithdrawn()) {
       throw AssociatedPlacementRequestsHaveAtLeastOneBookingError("The Placement Application already has at least one associated booking")
     }
 
-    placementRequests.forEach {
+    placementApplicationEntity.placementRequests.forEach {
       it.isWithdrawn = true
       placementRequestRepository.save(it)
       val allocatedUser = it.allocatedToUser

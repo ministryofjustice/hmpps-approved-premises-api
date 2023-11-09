@@ -12,7 +12,12 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -78,6 +83,7 @@ class PlacementApplicationTransformerTest {
     assertThat(result.document).isNull()
     assertThat(result.outdatedSchema).isEqualTo(true)
     assertThat(result.submittedAt).isNull()
+    assertThat(result.canBeWithdrawn).isEqualTo(true)
   }
 
   @Test
@@ -96,5 +102,52 @@ class PlacementApplicationTransformerTest {
     assertThat(result.id).isEqualTo(placementApplication.id)
     assertThat(result.data).isEqualTo(objectMapper.readTree(data))
     assertThat(result.document).isEqualTo(objectMapper.readTree(document))
+  }
+
+  @Test
+  fun `transformJpaToApi returns canBeWithdrawn when associated bookings are present`() {
+    val data = "{\"data\": \"something\"}"
+    val document = "{\"document\": \"something\"}"
+    val placementApplication = PlacementApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withApplication(applicationMock)
+      .withData(data)
+      .withDocument(document)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
+          .withApplication(application)
+          .withAssessment(assessment)
+          .produce(),
+      )
+      .withApplication(application)
+      .withPlacementApplication(placementApplication)
+      .withAssessment(assessment)
+      .withAllocatedToUser(user)
+      .produce()
+
+    val premisesEntity = ApprovedPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    placementRequest.booking = BookingEntityFactory()
+      .withYieldedPremises { premisesEntity }
+      .produce()
+
+    placementApplication.placementRequests = mutableListOf(
+      placementRequest,
+    )
+
+    val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
+
+    assertThat(result.id).isEqualTo(placementApplication.id)
+    assertThat(result.canBeWithdrawn).isEqualTo(false)
   }
 }

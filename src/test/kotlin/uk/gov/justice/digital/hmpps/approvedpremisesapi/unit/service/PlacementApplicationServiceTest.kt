@@ -265,16 +265,14 @@ class PlacementApplicationServiceTest {
         .withEmail(null)
         .produce()
 
-      val placementRequest1 = createPlacementRequestForApplication(placementApplication, placementRequestAllocatedUser1)
-      val placementRequest2 = createPlacementRequestForApplication(placementApplication, placementRequestAllocatedUser2)
+      placementApplication.placementRequests = mutableListOf(
+        createPlacementRequestForApplication(placementApplication, placementRequestAllocatedUser1),
+        createPlacementRequestForApplication(placementApplication, placementRequestAllocatedUser2),
+      )
 
       val templateId = UUID.randomUUID().toString()
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { placementRequestRepository.findAllByPlacementApplication(placementApplication) } returns listOf(
-        placementRequest1,
-        placementRequest2,
-      )
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
@@ -368,10 +366,11 @@ class PlacementApplicationServiceTest {
         .withYieldedPremises { premisesEntity }
         .produce()
 
-      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { placementRequestRepository.findAllByPlacementApplication(placementApplication) } returns listOf(
+      placementApplication.placementRequests = mutableListOf(
         placementRequest,
       )
+
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
 
       val result = placementApplicationService.withdrawPlacementApplication(placementApplication.id)
 
