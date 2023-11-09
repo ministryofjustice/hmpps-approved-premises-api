@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Ldu
@@ -115,30 +114,6 @@ class CaseSummaryFactory : Factory<CaseSummary> {
   }
   fun withCurrentRestriction(currentRestriction: Boolean) = apply {
     this.currentRestriction = { currentRestriction }
-  }
-
-  fun fromOffenderDetails(offenderDetails: OffenderDetailSummary) = apply {
-    withCrn(offenderDetails.otherIds.crn)
-    withNomsId(offenderDetails.otherIds.nomsNumber)
-    withName(
-      NameFactory()
-        .withForename(offenderDetails.firstName)
-        .withMiddleNames(offenderDetails.middleNames ?: listOf())
-        .withSurname(offenderDetails.surname)
-        .produce(),
-    )
-    withDateOfBirth(offenderDetails.dateOfBirth)
-    withGender(offenderDetails.gender)
-    withProfile(
-      ProfileFactory()
-        .withEthnicity(offenderDetails.offenderProfile.ethnicity)
-        .withGenderIdentity(offenderDetails.offenderProfile.genderIdentity)
-        .withNationality(offenderDetails.offenderProfile.nationality)
-        .withReligion(offenderDetails.offenderProfile.religion)
-        .produce(),
-    )
-    withCurrentExclusion(offenderDetails.currentExclusion)
-    withCurrentRestriction(offenderDetails.currentRestriction)
   }
 
   override fun produce(): CaseSummary = CaseSummary(

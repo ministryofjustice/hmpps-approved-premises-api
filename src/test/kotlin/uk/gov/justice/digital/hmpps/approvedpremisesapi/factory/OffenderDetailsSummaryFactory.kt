@@ -19,7 +19,6 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
   private var lastName: Yielded<String> = { randomStringUpperCase(10) }
   private var crn: Yielded<String> = { randomStringUpperCase(6) }
   private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
-  private var pncNumber: Yielded<String?> = { null }
   private var gender: Yielded<String> = { randomOf(listOf("Male", "Female", "Other")) }
   private var dateOfBirth: Yielded<LocalDate> = { LocalDate.now().minusYears(20).randomDateBefore() }
   private var currentRestriction: Yielded<Boolean> = { false }
@@ -56,10 +55,6 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
 
   fun withoutNomsNumber() = apply {
     this.nomsNumber = { null }
-  }
-
-  fun withPncNumber(pncNumber: String?) = apply {
-    this.pncNumber = { pncNumber }
   }
 
   fun withGender(gender: String) = apply {
@@ -115,7 +110,7 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
       mostRecentPrisonNumber = null,
       niNumber = null,
       nomsNumber = this.nomsNumber(),
-      pncNumber = this.pncNumber(),
+      pncNumber = null,
     ),
     offenderProfile = OffenderProfile(
       ethnicity = this.ethnicity(),

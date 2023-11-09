@@ -23,7 +23,7 @@ fun authorizeUser(): ChainBuilder {
 fun Simulation.SetUp.withAuthorizedUserHttpProtocol() = apply {
   val protocol = http
     .baseUrl(BASE_URL)
-    .acceptHeader("*/*")
+    .acceptHeader("application/json")
     .contentTypeHeader("application/json")
     .authorizationHeader("Bearer #{access_token}")
 
