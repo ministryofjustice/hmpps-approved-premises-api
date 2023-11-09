@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
@@ -48,8 +47,6 @@ class PlacementRequestService(
   private val userService: UserService,
   private val bookingNotMadeRepository: BookingNotMadeRepository,
   private val domainEventService: DomainEventService,
-  private val emailNotificationService: EmailNotificationService,
-  private val notifyConfig: NotifyConfig,
   private val offenderService: OffenderService,
   private val communityApiClient: CommunityApiClient,
   private val cruService: CruService,
@@ -201,33 +198,6 @@ class PlacementRequestService(
     return AuthorisableActionResult.Success(
       bookingNotMadeRepository.save(bookingNotMade),
     )
-  }
-
-  fun withdrawPlacementRequestWhenPlacementApplicationWithdrawn(placementApplicationEntity: PlacementApplicationEntity, user: UserEntity): AuthorisableActionResult<Unit> {
-    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
-    val placementRequests = placementRequestRepository.findAllByPlacementApplication(placementApplicationEntity)
-
-    placementRequests.map {
-      withdrawPlacementRequest(it.id, user)
-      val allocatedUser = it.allocatedToUser
-      if (allocatedUser != null) {
-        if (allocatedUser.email != null) {
-          emailNotificationService.sendEmail(
-            email = allocatedUser.email!!,
-            templateId = notifyConfig.templates.placementRequestWithdrawn,
-            personalisation = mapOf(
-              "name" to allocatedUser.name,
-              "crn" to it.application.crn,
-            ),
-          )
-        }
-      }
-    }
-
-    return AuthorisableActionResult.Success(Unit)
   }
 
   fun withdrawPlacementRequest(placementRequestId: UUID, user: UserEntity): AuthorisableActionResult<Unit> {

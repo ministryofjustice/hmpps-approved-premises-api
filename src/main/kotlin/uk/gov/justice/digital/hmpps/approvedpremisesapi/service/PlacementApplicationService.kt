@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
@@ -12,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -35,6 +37,9 @@ class PlacementApplicationService(
   private val userService: UserService,
   private val placementDateRepository: PlacementDateRepository,
   private val placementRequestService: PlacementRequestService,
+  private val placementRequestRepository: PlacementRequestRepository,
+  private val emailNotificationService: EmailNotificationService,
+  private val notifyConfig: NotifyConfig,
 ) {
 
   fun getVisiblePlacementApplicationsForUser(user: UserEntity): List<PlacementApplicationEntity> {
@@ -137,7 +142,8 @@ class PlacementApplicationService(
     )
   }
 
-  fun withdrawPlacementApplication(id: UUID, user: UserEntity): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+  @Transactional
+  fun withdrawPlacementApplication(id: UUID): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
 
     when (placementApplicationAuthorisationResult) {
@@ -146,17 +152,8 @@ class PlacementApplicationService(
       is AuthorisableActionResult.Success -> Unit
     }
 
-    val placementApplicationValidationResult = confirmApplicationCanBeUpdatedOrSubmitted(placementApplicationAuthorisationResult.entity)
-
-    if (placementApplicationValidationResult !is ValidatableActionResult.Success) {
-      return AuthorisableActionResult.Success(placementApplicationValidationResult)
-    }
-
-    val placementApplicationEntity = placementApplicationValidationResult.entity
-
-    if (placementApplicationEntity.decision != null) {
-      placementRequestService.withdrawPlacementRequestWhenPlacementApplicationWithdrawn(placementApplicationEntity, user)
-    }
+    val placementApplicationEntity = placementApplicationAuthorisationResult.entity
+    withdrawAssociatedPlacementRequests(placementApplicationEntity)
 
     placementApplicationEntity.decision = PlacementApplicationDecision.WITHDRAWN_BY_PP
 
@@ -324,5 +321,25 @@ class PlacementApplicationService(
     }
 
     return ValidatableActionResult.Success(placementApplicationEntity)
+  }
+
+  private fun withdrawAssociatedPlacementRequests(placementApplicationEntity: PlacementApplicationEntity) {
+    val placementRequests = placementRequestRepository.findAllByPlacementApplication(placementApplicationEntity)
+
+    placementRequests.forEach {
+      it.isWithdrawn = true
+      placementRequestRepository.save(it)
+      val allocatedUser = it.allocatedToUser
+      if (allocatedUser?.email != null) {
+        emailNotificationService.sendEmail(
+          email = allocatedUser.email!!,
+          templateId = notifyConfig.templates.placementRequestWithdrawn,
+          personalisation = mapOf(
+            "name" to allocatedUser.name,
+            "crn" to it.application.crn,
+          ),
+        )
+      }
+    }
   }
 }

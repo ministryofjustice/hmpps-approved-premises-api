@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -28,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -39,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMad
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
@@ -51,7 +48,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -64,8 +60,6 @@ class PlacementRequestServiceTest {
   private val userService = mockk<UserService>()
   private val bookingNotMadeRepository = mockk<BookingNotMadeRepository>()
   private val domainEventService = mockk<DomainEventService>()
-  private val emailNotificationService = mockk<EmailNotificationService>()
-  private val notifyConfig = mockk<NotifyConfig>()
   private val offenderService = mockk<OffenderService>()
   private val communityApiClient = mockk<CommunityApiClient>()
   private val cruService = mockk<CruService>()
@@ -78,8 +72,6 @@ class PlacementRequestServiceTest {
     userService,
     bookingNotMadeRepository,
     domainEventService,
-    emailNotificationService,
-    notifyConfig,
     offenderService,
     communityApiClient,
     cruService,
@@ -532,62 +524,6 @@ class PlacementRequestServiceTest {
     val result = placementRequestService.withdrawPlacementRequest(placementRequestId, user)
 
     assertThat(result is AuthorisableActionResult.NotFound).isTrue
-  }
-
-  @Test
-  fun `withdraw placement request when placement application withdrawn sends one email`() {
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-      .addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .produce()
-
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(application)
-      .withAllocatedToUser(assigneeUser)
-      .produce()
-
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withAllocatedToUser(user)
-      .withDecision(PlacementApplicationDecision.ACCEPTED)
-      .withCreatedByUser(
-        UserEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .produce(),
-      )
-      .produce()
-
-    val placementRequest = PlacementRequestEntityFactory()
-      .withPlacementRequirements(
-        PlacementRequirementsEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .produce(),
-      )
-      .withApplication(application)
-      .withPlacementApplication(placementApplication)
-      .withAssessment(assessment)
-      .withAllocatedToUser(user)
-      .produce()
-
-    every { placementRequestRepository.save(placementRequest) } answers { callOriginal() }
-    every { placementRequestRepository.findAllByPlacementApplication(placementApplication) } returns listOf(placementRequest)
-    every { placementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-    every { notifyConfig.templates.placementRequestWithdrawn } answers { "a5f44549-e849-4a26-abb1-802316081533" }
-    every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
-    placementRequestService.withdrawPlacementRequestWhenPlacementApplicationWithdrawn(placementApplication, user)
-
-    verify(exactly = 1) {
-      emailNotificationService.sendEmail(any(), any(), any())
-    }
   }
 
   @Test

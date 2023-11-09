@@ -1076,7 +1076,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `withdrawing an in-progress placement request application returns successfully and updates placement request isWithdrawn`() {
+    fun `withdrawing a submitted placement request application returns successfully and updates placement request isWithdrawn`() {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { _, _ ->
         `Given a User` { user, jwt ->
           `Given a Placement Application`(
@@ -1084,7 +1084,30 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()
             },
+            decision = null,
+            submittedAt = OffsetDateTime.now(),
           ) { placementApplicationEntity ->
+
+            val placementRequirements = placementRequirementsFactory.produceAndPersist {
+              withApplication(placementApplicationEntity.application)
+              withAssessment(placementApplicationEntity.application.assessments.first())
+              withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+              withDesirableCriteria(
+                characteristicEntityFactory.produceAndPersistMultiple(5),
+              )
+              withEssentialCriteria(
+                characteristicEntityFactory.produceAndPersistMultiple(3),
+              )
+            }
+
+            val placementRequests = placementRequestFactory.produceAndPersistMultiple(4) {
+              withAllocatedToUser(user)
+              withPlacementApplication(placementApplicationEntity)
+              withApplication(placementApplicationEntity.application)
+              withAssessment(placementApplicationEntity.application.assessments.first())
+              withPlacementRequirements(placementRequirements)
+            }
+
             CommunityAPI_mockSuccessfulOffenderDetailsCall(
               OffenderDetailsSummaryFactory()
                 .withCrn(placementApplicationEntity.application.crn)
@@ -1112,11 +1135,10 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
             }
 
-            val updatedPlacementRequests =
-              placementRequestRepository.findAllByPlacementApplication(placementApplicationEntity)
-
-            updatedPlacementRequests.map {
-              assertThat(it.isWithdrawn).isEqualTo(uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAWN_BY_PP)
+            placementRequests.map {
+              val request = placementRequestRepository.findByIdOrNull(it.id)
+              assertThat(request).isNotNull
+              assertThat(request?.isWithdrawn).isEqualTo(true)
             }
           }
         }
