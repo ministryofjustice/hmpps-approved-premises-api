@@ -23,7 +23,7 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
           val nameParts = listOf(it.name.forename) + it.name.middleNames + it.name.surname
           nameParts.joinToString(" ")
         },
-        pncNumber = null,
+        pncNumber = personInfo.tryGetDetails { it.pnc },
         gender = personInfo.tryGetDetails { it.gender },
         ethnicity = personInfo.tryGetDetails { it.profile?.ethnicity },
         dateOfBirth = personInfo.tryGetDetails { it.dateOfBirth },
