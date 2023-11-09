@@ -13,6 +13,7 @@ import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.LockModeType
 import javax.persistence.ManyToOne
+import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Repository
@@ -86,6 +87,9 @@ data class Cas2ApplicationEntity(
   var schemaVersion: JsonSchemaEntity,
   val createdAt: OffsetDateTime,
   var submittedAt: OffsetDateTime?,
+
+  @OneToMany(mappedBy = "application")
+  var statusUpdates: MutableList<Cas2StatusUpdateEntity>? = null,
 
   @Transient
   var schemaUpToDate: Boolean,

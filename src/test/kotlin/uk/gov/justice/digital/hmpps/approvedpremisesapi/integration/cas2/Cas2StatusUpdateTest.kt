@@ -2,24 +2,32 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2
 
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
+import java.time.OffsetDateTime
 
 class Cas2StatusUpdateTest : IntegrationTestBase() {
+
+  @SpykBean
+  lateinit var realStatusUpdateRepository: Cas2StatusUpdateRepository
 
   @AfterEach
   fun afterEach() {
     // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository, causing mocked behaviour
     // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
     // Manually clearing after each test seems to fix this.
+    clearMocks(realStatusUpdateRepository)
   }
 
   @Nested
@@ -56,14 +64,17 @@ class Cas2StatusUpdateTest : IntegrationTestBase() {
   @Nested
   inner class PostToCreate {
     @Test
-    fun `Create status update returns 201 when new status is valid`() {
+    fun `Create status update returns 201 and creates StatusUpdate when given status is valid`() {
       `Given a CAS2 Assessor`() { _, jwt ->
         `Given a CAS2 User` { applicant, _ ->
           val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
           val application = cas2ApplicationEntityFactory.produceAndPersist {
             withCreatedByUser(applicant)
             withApplicationSchema(jsonSchema)
+            withSubmittedAt(OffsetDateTime.now())
           }
+
+          Assertions.assertThat(realStatusUpdateRepository.count()).isEqualTo(0)
 
           webTestClient.post()
             .uri("/cas2/submissions/${application.id}/status-updates")
@@ -74,6 +85,16 @@ class Cas2StatusUpdateTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isCreated
+
+          Assertions.assertThat(realStatusUpdateRepository.count()).isEqualTo(1)
+
+          val persistedStatusUpdate = realStatusUpdateRepository.findFirstByApplicationIdOrderByCreatedAtDesc(application.id)
+          Assertions.assertThat(persistedStatusUpdate).isNotNull
+
+          val appliedStatus = Cas2ApplicationStatusSeeding.statusList()
+            .find { status -> status.id == persistedStatusUpdate?.statusId ?: fail("The expected StatusUpdate was not persisted") }
+
+          Assertions.assertThat(appliedStatus!!.name).isEqualTo("moreInfoRequested")
         }
       }
     }

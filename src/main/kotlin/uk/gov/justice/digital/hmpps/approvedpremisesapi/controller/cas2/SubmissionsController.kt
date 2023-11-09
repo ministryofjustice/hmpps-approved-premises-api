@@ -89,6 +89,12 @@ class SubmissionsController(
     if (!statusUpdateService.isValidStatus(statusUpdate)) {
       return ResponseEntity(HttpStatus.NOT_FOUND)
     }
+    val assessor = externalUserService.getUserForRequest()
+    statusUpdateService.create(
+      applicationId = applicationId,
+      statusUpdate = statusUpdate,
+      assessor = assessor,
+    )
     return ResponseEntity(HttpStatus.CREATED)
   }
 
