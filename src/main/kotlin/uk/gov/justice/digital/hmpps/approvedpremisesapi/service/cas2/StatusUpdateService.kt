@@ -18,9 +18,7 @@ class StatusUpdateService(
 ) {
 
   fun isValidStatus(statusUpdate: Cas2ApplicationStatusUpdate): Boolean {
-    return Cas2ApplicationStatusSeeding.statusList()
-      .map { status -> status.name }
-      .contains(statusUpdate.newStatus)
+    return findStatusByName(statusUpdate.newStatus) != null
   }
 
   fun create(
