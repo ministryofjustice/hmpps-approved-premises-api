@@ -3406,6 +3406,7 @@ components:
       type: string
       enum:
         - update_all_users_from_community_api
+        - update_application_statuses
     PlacementDates:
       type: object
       properties:

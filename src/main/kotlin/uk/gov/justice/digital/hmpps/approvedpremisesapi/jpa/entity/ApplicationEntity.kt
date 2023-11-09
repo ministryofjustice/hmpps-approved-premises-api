@@ -45,6 +45,11 @@ interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
   fun <T : ApplicationEntity> findAllForServiceAndNameNull(type: Class<T>, pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
 
   @Query(
+    "SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type",
+  )
+  fun <T : ApplicationEntity> findAllForService(type: Class<T>, pageable: Pageable?): Slice<ApplicationEntity>
+
+  @Query(
     "SELECT application.created_at as createdAt, CAST(application.created_by_user_id as TEXT) as createdByUserId FROM approved_premises_applications apa " +
       "LEFT JOIN applications application ON application.id = apa.id " +
       "where date_part('month', application.created_at) = :month " +
