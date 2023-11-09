@@ -29,6 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision as JpaPlacementApplicationDecision
 
+class AssociatedPlacementRequestsHaveAtLeastOneBookingError(message: String) : Exception(message)
+
 @Service
 class PlacementApplicationService(
   private val placementApplicationRepository: PlacementApplicationRepository,
@@ -153,10 +155,16 @@ class PlacementApplicationService(
     }
 
     val placementApplicationEntity = placementApplicationAuthorisationResult.entity
-    withdrawAssociatedPlacementRequests(placementApplicationEntity)
+
+    try {
+      withdrawAssociatedPlacementRequests(placementApplicationEntity)
+    } catch (e: AssociatedPlacementRequestsHaveAtLeastOneBookingError) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError(e.message!!),
+      )
+    }
 
     placementApplicationEntity.decision = PlacementApplicationDecision.WITHDRAWN_BY_PP
-
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
 
     return AuthorisableActionResult.Success(
@@ -325,6 +333,10 @@ class PlacementApplicationService(
 
   private fun withdrawAssociatedPlacementRequests(placementApplicationEntity: PlacementApplicationEntity) {
     val placementRequests = placementRequestRepository.findAllByPlacementApplication(placementApplicationEntity)
+
+    if (placementRequests.any { it.booking != null }) {
+      throw AssociatedPlacementRequestsHaveAtLeastOneBookingError("The Placement Application already has at least one associated booking")
+    }
 
     placementRequests.forEach {
       it.isWithdrawn = true

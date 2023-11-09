@@ -12,6 +12,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
@@ -231,6 +234,8 @@ class PlacementApplicationServiceTest {
       application.assessments = mutableListOf(
         assessment,
       )
+
+      every { userService.getUserForRequest() } returns user
     }
 
     @Test
@@ -265,7 +270,6 @@ class PlacementApplicationServiceTest {
 
       val templateId = UUID.randomUUID().toString()
 
-      every { userService.getUserForRequest() } returns user
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { placementRequestRepository.findAllByPlacementApplication(placementApplication) } returns listOf(
         placementRequest1,
@@ -325,12 +329,56 @@ class PlacementApplicationServiceTest {
         )
         .produce()
 
-      every { userService.getUserForRequest() } returns user
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
 
       val result = placementApplicationService.withdrawPlacementApplication(placementApplication.id)
 
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    }
+
+    @Test
+    fun `it does not allow placement applications with bookings to be withdrawn`() {
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce(),
+        )
+        .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementRequest = createPlacementRequestForApplication(placementApplication, user)
+
+      val premisesEntity = ApprovedPremisesEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+        .produce()
+
+      placementRequest.booking = BookingEntityFactory()
+        .withYieldedPremises { premisesEntity }
+        .produce()
+
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { placementRequestRepository.findAllByPlacementApplication(placementApplication) } returns listOf(
+        placementRequest,
+      )
+
+      val result = placementApplicationService.withdrawPlacementApplication(placementApplication.id)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      val validationResult = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(validationResult is ValidatableActionResult.GeneralValidationError).isTrue()
     }
 
     private fun createPlacementRequestForApplication(placementApplication: PlacementApplicationEntity, allocatedUser: UserEntity): PlacementRequestEntity {
