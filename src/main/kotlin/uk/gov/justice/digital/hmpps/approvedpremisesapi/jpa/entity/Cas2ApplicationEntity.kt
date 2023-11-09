@@ -91,7 +91,9 @@ data class Cas2ApplicationEntity(
   var schemaUpToDate: Boolean,
 
   var nomsNumber: String?,
-)
+) {
+  override fun toString() = "Cas2ApplicationEntity: $id"
+}
 
 interface AppSummary {
   fun getId(): UUID
