@@ -18,7 +18,7 @@ class SubmittedApplicationTransformer(
   private val nomisUserTransformer: NomisUserTransformer,
 ) {
 
-  fun transformJpaToSubmittedApplication(
+  fun transformJpaToApiRepresentation(
     jpa: Cas2ApplicationEntity,
     personInfo:
       PersonInfoResult

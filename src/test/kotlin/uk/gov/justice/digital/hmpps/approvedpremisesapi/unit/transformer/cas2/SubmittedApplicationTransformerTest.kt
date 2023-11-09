@@ -56,7 +56,7 @@ class SubmittedApplicationTransformerTest {
     fun `transforms submitted application to API representation with NomisUser and no data`() {
       val jpaEntity = submittedCas2ApplicationFactory.produce()
 
-      val transformation = applicationTransformer.transformJpaToSubmittedApplication(jpaEntity, mockk())
+      val transformation = applicationTransformer.transformJpaToApiRepresentation(jpaEntity, mockk())
 
       assertThat(transformation.submittedBy).isEqualTo(mockNomisUser)
       assertThat(transformation).hasOnlyFields(

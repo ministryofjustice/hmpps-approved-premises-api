@@ -145,7 +145,7 @@ class SubmissionsController(
   ): Cas2SubmittedApplication {
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
 
-    return applicationTransformer.transformJpaToSubmittedApplication(
+    return applicationTransformer.transformJpaToApiRepresentation(
       application,
       personInfo,
     )
