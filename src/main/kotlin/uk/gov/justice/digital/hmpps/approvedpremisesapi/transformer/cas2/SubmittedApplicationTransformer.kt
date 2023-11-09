@@ -38,7 +38,7 @@ class SubmittedApplicationTransformer(
     )
   }
 
-  fun transformJpaSummaryToCas2SubmittedSummary(
+  fun transformJpaSummaryToApiRepresentation(
     jpaSummary: Cas2ApplicationSummary,
     personInfo:
       PersonInfoResult.Success,

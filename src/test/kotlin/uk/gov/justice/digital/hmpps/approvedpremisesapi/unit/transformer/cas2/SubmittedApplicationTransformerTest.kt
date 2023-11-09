@@ -92,7 +92,7 @@ class SubmittedApplicationTransformerTest {
         override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
       }
 
-      val transformation = applicationTransformer.transformJpaSummaryToCas2SubmittedSummary(applicationSummary, mockk())
+      val transformation = applicationTransformer.transformJpaSummaryToApiRepresentation(applicationSummary, mockk())
 
       assertThat(transformation.id).isEqualTo(applicationSummary.getId())
       assertThat(transformation.status).isEqualTo(ApplicationStatus.submitted)

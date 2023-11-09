@@ -134,7 +134,7 @@ class SubmissionsController(
     Cas2SubmittedApplicationSummary {
     val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn())
 
-    return applicationTransformer.transformJpaSummaryToCas2SubmittedSummary(
+    return applicationTransformer.transformJpaSummaryToApiRepresentation(
       application,
       personInfo,
     )
