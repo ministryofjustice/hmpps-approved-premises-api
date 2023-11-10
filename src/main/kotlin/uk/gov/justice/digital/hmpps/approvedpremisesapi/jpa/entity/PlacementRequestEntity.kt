@@ -25,7 +25,44 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
 
   fun findAllByPlacementApplication(placementApplication: PlacementApplicationEntity?): List<PlacementRequestEntity>
 
-  fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(userId: UUID): List<PlacementRequestEntity>
+  @Query(
+    """
+    SELECT
+      pr.id,
+      pr.expected_arrival,
+      pr.duration,
+      pr.created_at,
+      pr.application_id,
+      pr.allocated_to_user_id,
+      pr.booking_id,
+      pr.reallocated_at,
+      pr.assessment_id,
+      pr.notes,
+      pr.placement_requirements_id,
+      pr.is_parole,
+      pr.is_withdrawn,
+      pr.placement_application_id,
+      app.*,
+      papp.*,
+      assessment.*,
+      preq.*
+    FROM
+      placement_requests pr
+    LEFT OUTER JOIN
+      approved_premises_applications app ON pr.application_id = app.id
+    LEFT OUTER JOIN
+      placement_applications papp ON pr.placement_application_id = papp.id
+    LEFT OUTER JOIN
+      assessments assessment ON pr.assessment_id = assessment.id
+    LEFT OUTER JOIN
+      placement_requirements preq ON pr.placement_requirements_id = preq.id
+    WHERE
+      pr.allocated_to_user_id = :userId
+      AND pr.reallocated_at IS NULL
+      AND pr.is_withdrawn = false
+    """,
+    nativeQuery = true,
+  )
   fun findAllByAllocatedToUserIdAndReallocatedAtNullAndIsWithdrawnFalse(userId: UUID): List<PlacementRequestEntity>
 
   @Query(
@@ -85,15 +122,15 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       ) = :#{#status?.toString()})
       AND (:crn IS NULL OR (SELECT COUNT(1) FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crn)) = 1)
       AND (
-        :crnOrName IS NULL OR 
+        :crnOrName IS NULL OR
         (
             ((SELECT COUNT(1) FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crnOrName)) = 1)
             OR
             ((SELECT COUNT(1) FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.name LIKE UPPER('%' || :crnOrName || '%')) = 1)
         )
       )
-      AND (:tier IS NULL OR (SELECT COUNT(1) FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier) = 1) 
-      AND (CAST(:arrivalDateFrom AS date) IS NULL OR pq.expected_arrival >= :arrivalDateFrom) 
+      AND (:tier IS NULL OR (SELECT COUNT(1) FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier) = 1)
+      AND (CAST(:arrivalDateFrom AS date) IS NULL OR pq.expected_arrival >= :arrivalDateFrom)
       AND (CAST(:arrivalDateTo AS date) IS NULL OR pq.expected_arrival <= :arrivalDateTo)
   """,
     nativeQuery = true,
