@@ -3,10 +3,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -16,6 +18,7 @@ class SubmittedApplicationTransformer(
   private val objectMapper: ObjectMapper,
   private val personTransformer: PersonTransformer,
   private val nomisUserTransformer: NomisUserTransformer,
+  private val statusUpdateTransformer: StatusUpdateTransformer,
 ) {
 
   fun transformJpaToApiRepresentation(
@@ -31,6 +34,7 @@ class SubmittedApplicationTransformer(
       submittedBy = nomisUserTransformer.transformJpaToApi(jpa.createdByUser),
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = !jpa.schemaUpToDate,
+      statusUpdates = jpa.statusUpdates?.map { update -> transformUpdate(update) },
       createdAt = jpa.createdAt.toInstant(),
       submittedAt = jpa.submittedAt?.toInstant(),
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
@@ -51,6 +55,10 @@ class SubmittedApplicationTransformer(
       submittedAt = jpaSummary.getSubmittedAt()?.toInstant(),
       status = getStatusFromSummary(jpaSummary),
     )
+  }
+
+  private fun transformUpdate(jpa: Cas2StatusUpdateEntity): Cas2StatusUpdate {
+    return statusUpdateTransformer.transformJpaToApi(jpa)
   }
 
   private fun getStatus(entity: Cas2ApplicationEntity): ApplicationStatus {
