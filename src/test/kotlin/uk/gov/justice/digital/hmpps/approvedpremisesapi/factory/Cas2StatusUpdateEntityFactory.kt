@@ -35,6 +35,10 @@ class Cas2StatusUpdateEntityFactory : Factory<Cas2StatusUpdateEntity> {
     this.statusId = { statusId }
   }
 
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
+  }
+
   fun withLabel(label: String) = apply {
     this.label = { label }
   }
