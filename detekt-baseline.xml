@@ -65,7 +65,7 @@
     <ID>FunctionNaming:BedMoveEntity.kt$BedMoveRepository$@Query("SELECT b FROM BedMoveEntity b WHERE b.booking.id = :bookingId") fun findByBooking_IdOrNull(bookingId: UUID): BedMoveEntity?</ID>
     <ID>FunctionNaming:Cas2ApplicationEntity.kt$Cas2ApplicationRepository$@Query("SELECT a FROM Cas2ApplicationEntity a WHERE a.createdByUser.id = :id") fun findAllByCreatedByUser_Id(id: UUID): List&lt;Cas2ApplicationEntity&gt;</ID>
     <ID>FunctionNaming:PlacementApplicationEntity.kt$PlacementApplicationRepository$fun findAllByAllocatedToUser_IdAndReallocatedAtNull(userId: UUID): List&lt;PlacementApplicationEntity&gt;</ID>
-    <ID>FunctionNaming:PlacementRequestEntity.kt$PlacementRequestRepository$fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(userId: UUID): List&lt;PlacementRequestEntity&gt;</ID>
+    <ID>FunctionNaming:PlacementRequestEntity.kt$PlacementRequestRepository$fun findAllByAllocatedToUserIdAndReallocatedAtNullAndIsWithdrawnFalse(userId: UUID): List&lt;PlacementRequestEntity&gt;</ID>
     <ID>FunctionNaming:PremisesEntity.kt$PremisesRepository$@Query("SELECT p FROM PremisesEntity p WHERE p.probationRegion.id = :probationRegionId AND TYPE(p) = :type") fun &lt;T : PremisesEntity&gt; findAllByProbationRegion_IdAndType(probationRegionId: UUID, type: Class&lt;T&gt;): List&lt;PremisesEntity&gt;</ID>
     <ID>FunctionNaming:PremisesEntity.kt$PremisesRepository$fun findAllByProbationRegion_Id(probationRegionId: UUID): List&lt;PremisesEntity&gt;</ID>
     <ID>FunctionNaming:ProbationDeliveryUnitEntity.kt$ProbationDeliveryUnitRepository$fun findAllByProbationRegion_Id(probationRegionId: UUID): List&lt;ProbationDeliveryUnitEntity&gt;</ID>
