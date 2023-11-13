@@ -24,6 +24,56 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   fun findAllNotCancelledByPremisesIdsAndOverlappingDate(premisesIds: List<UUID>, startDate: LocalDate, endDate: LocalDate): List<BookingEntity>
 
   @Query("SELECT b FROM BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate")
+  @Query(
+    """
+    SELECT
+        booking.crn,
+        app.id,
+        app.submitted_at,
+        cas3_app.risk_ratings,
+        cas3_app.is_registered_sex_offender,
+        cas3_app.needs_accessible_property,
+        cas3_app.has_history_of_arson,
+        cas3_app.is_duty_to_refer_submitted,
+        cas3_app.duty_to_refer_submission_date,
+        cas3_app.is_eligible,
+        cas3_app.eligibility_reason,
+        probation_region.name,
+        arr.arrival_date,
+        arr.expected_departure_date,
+        confirmation.id,
+        departure.date_time,
+        cancellation.id,
+        cancellation_reason.name,
+        move_on_category.name
+    FROM
+        bookings booking
+    LEFT JOIN
+        premises premises ON premises.id = booking.premises_id
+    LEFT JOIN
+        probation_regions probation_region ON probation_region.id = premises.probation_region_id
+    LEFT JOIN
+        applications app ON booking.application_id = app.id
+    LEFT JOIN
+        temporary_accommodation_applications cas3_app ON booking.application_id = cas3_app.id
+    LEFT JOIN
+        confirmations confirmation ON confirmation.booking_id = booking.id
+    LEFT JOIN
+        departures departure ON departure.booking_id = booking.id
+    LEFT JOIN
+        arrivals arr ON arr.booking_id = booking.id
+    LEFT JOIN
+        cancellations cancellation ON cancellation.booking_id = booking.id
+    LEFT JOIN
+        cancellation_reasons cancellation_reason ON cancellation_reason.id = cancellation.cancellation_reason_id
+    LEFT JOIN
+        move_on_categories move_on_category ON move_on_category.id = departure.move_on_category_id
+    WHERE
+        booking.arrival_date <= :endDate
+        AND booking.departure_date >= :startDate
+    """,
+    nativeQuery = true
+  )
   fun findAllByOverlappingDate(startDate: LocalDate, endDate: LocalDate): List<BookingEntity>
 
   @Query("SELECT b FROM BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bed = :bed")

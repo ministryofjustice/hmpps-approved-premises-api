@@ -31,6 +31,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
+        show_sql: true
+        format_sql: true
 
   redis:
     database: 5
@@ -229,3 +231,8 @@ case-notes-service-upstream-timeout-ms: 30000
 
 max-response-in-memory-size-bytes: 750000
 
+logging:
+  level:
+    org:
+      hibernate:
+        type: "trace"
