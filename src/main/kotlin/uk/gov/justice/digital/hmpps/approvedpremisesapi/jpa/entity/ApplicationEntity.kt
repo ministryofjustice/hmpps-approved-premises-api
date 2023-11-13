@@ -15,7 +15,6 @@ import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import java.util.stream.Stream
 import javax.persistence.Convert
 import javax.persistence.DiscriminatorColumn
 import javax.persistence.DiscriminatorValue
@@ -118,7 +117,7 @@ AND apa.is_inapplicable IS NOT TRUE
   @Query(
     "SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type",
   )
-  fun <T : ApplicationEntity> findAllForService(type: Class<T>): Stream<ApplicationEntity>
+  fun <T : ApplicationEntity> findAllForService(type: Class<T>, pageable: Pageable?): Slice<ApplicationEntity>
 
   @Query(
     "SELECT application.created_at as createdAt, CAST(application.created_by_user_id as TEXT) as createdByUserId FROM approved_premises_applications apa " +
