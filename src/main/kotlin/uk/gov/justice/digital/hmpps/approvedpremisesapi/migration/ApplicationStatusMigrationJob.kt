@@ -17,7 +17,9 @@ class ApplicationStatusMigrationJob(
   override val shouldRunInTransaction = true
 
   override fun process() {
-    var slice = getApplications(PageRequest.of(0, pageSize))
+    var page = 0
+    log.info("Starting Migration process...")
+    var slice = getApplications(PageRequest.of(page, pageSize))
     val applications = slice.content
 
     applications.forEach {
@@ -25,6 +27,8 @@ class ApplicationStatusMigrationJob(
     }
 
     while (slice.hasNext()) {
+      page += 1
+      log.info("Getting page $page")
       slice = getApplications(slice.nextPageable())
       slice.get().forEach {
         setStatus(it)
