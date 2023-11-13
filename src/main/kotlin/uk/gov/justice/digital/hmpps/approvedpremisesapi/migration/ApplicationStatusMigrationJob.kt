@@ -9,9 +9,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import javax.persistence.EntityManager
 
 class ApplicationStatusMigrationJob(
   private val applicationRepository: ApplicationRepository,
+  private val entityManager: EntityManager,
   private val pageSize: Int,
 ) : MigrationJob() {
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -28,6 +30,8 @@ class ApplicationStatusMigrationJob(
         setStatus(it)
       }
 
+      entityManager.clear()
+
       while (slice.hasNext()) {
         page += 1
         log.info("Getting page $page")
@@ -35,7 +39,7 @@ class ApplicationStatusMigrationJob(
         slice.get().forEach {
           setStatus(it)
         }
-        applicationRepository.flush()
+        entityManager.clear()
       }
     } catch (e: Exception) {
       Sentry.captureException(e)
@@ -63,6 +67,6 @@ class ApplicationStatusMigrationJob(
     }
 
     log.info("Updating application ${application.id} to ${application.status}")
-    applicationRepository.save(application)
+    applicationRepository.saveAndFlush(application)
   }
 }

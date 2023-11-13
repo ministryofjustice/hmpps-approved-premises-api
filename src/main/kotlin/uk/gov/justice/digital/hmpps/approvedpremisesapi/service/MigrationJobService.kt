@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApplicationSta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
+import javax.persistence.EntityManager
 
 @Service
 class MigrationJobService(
@@ -32,6 +33,7 @@ class MigrationJobService(
         )
         MigrationJobType.applicationStatuses -> ApplicationStatusMigrationJob(
           applicationContext.getBean(ApplicationRepository::class.java),
+          applicationContext.getBean(EntityManager::class.java),
           pageSize,
         )
       }
