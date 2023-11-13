@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.hibernate.annotations.Type
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
@@ -34,6 +35,75 @@ import javax.persistence.Table
 
 @Repository
 interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
+
+  @Query(
+    """
+SELECT
+    CAST(a.id AS TEXT) as id,
+    a.crn,
+    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
+    a.created_at as createdAt,
+    a.submitted_at as submittedAt,
+    ass.submitted_at as latestAssessmentSubmittedAt,
+    ass.decision as latestAssessmentDecision,
+    (SELECT COUNT(1) FROM assessment_clarification_notes acn WHERE acn.assessment_id = ass.id AND acn.response IS NULL) > 0 as latestAssessmentHasClarificationNotesWithoutResponse,
+    (SELECT COUNT(1) FROM placement_requests pr WHERE pr.application_id = apa.id) > 0 as hasPlacementRequest,
+    (SELECT COUNT(1) FROM bookings b WHERE b.application_id = apa.id) > 0 as hasBooking,
+    apa.is_womens_application as isWomensApplication,
+    apa.is_pipe_application as isPipeApplication,
+    apa.arrival_date as arrivalDate,
+    CAST(apa.risk_ratings AS TEXT) as riskRatings
+FROM approved_premises_applications apa
+LEFT JOIN applications a ON a.id = apa.id
+LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
+AND apa.is_inapplicable IS NOT TRUE 
+""",
+    countQuery = """
+    SELECT COUNT(*)
+      FROM approved_premises_applications apa
+      LEFT JOIN applications a ON a.id = apa.id
+      LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
+      AND apa.is_inapplicable IS NOT TRUE 
+    """,
+    nativeQuery = true,
+  )
+  fun findAllApprovedPremisesSummaries(pageable: Pageable?): Page<ApprovedPremisesApplicationSummary>
+
+  @Query(
+    """
+SELECT
+    CAST(a.id AS TEXT) as id,
+    a.crn,
+    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
+    a.created_at as createdAt,
+    a.submitted_at as submittedAt,
+    ass.submitted_at as latestAssessmentSubmittedAt,
+    ass.decision as latestAssessmentDecision,
+    (SELECT COUNT(1) FROM assessment_clarification_notes acn WHERE acn.assessment_id = ass.id AND acn.response IS NULL) > 0 as latestAssessmentHasClarificationNotesWithoutResponse,
+    (SELECT COUNT(1) FROM placement_requests pr WHERE pr.application_id = apa.id) > 0 as hasPlacementRequest,
+    (SELECT COUNT(1) FROM bookings b WHERE b.application_id = apa.id) > 0 as hasBooking,
+    apa.is_womens_application as isWomensApplication,
+    apa.is_pipe_application as isPipeApplication,
+    apa.arrival_date as arrivalDate,
+    CAST(apa.risk_ratings AS TEXT) as riskRatings
+FROM approved_premises_applications apa
+LEFT JOIN applications a ON a.id = apa.id
+LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
+WHERE a.crn = :crn 
+AND apa.is_inapplicable IS NOT TRUE 
+""",
+    countQuery = """
+    SELECT COUNT(*)
+      FROM approved_premises_applications apa
+      LEFT JOIN applications a ON a.id = apa.id
+      LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
+      WHERE a.crn = :crn 
+      AND apa.is_inapplicable IS NOT TRUE 
+    """,
+    nativeQuery = true,
+  )
+  fun findAllApprovedPremisesSummariesFilteredByCrn(pageable: Pageable?, crn: String): Page<ApprovedPremisesApplicationSummary>
+
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")
   fun <T : ApplicationEntity> findAllByCreatedByUser_Id(id: UUID, type: Class<T>): List<ApplicationEntity>
 

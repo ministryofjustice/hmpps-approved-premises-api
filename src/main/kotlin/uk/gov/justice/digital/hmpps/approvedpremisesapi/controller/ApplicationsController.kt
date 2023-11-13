@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
@@ -76,6 +77,28 @@ class ApplicationsController(
     val applications = applicationService.getAllApplicationsForUsername(user.deliusUsername, serviceName)
 
     return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it, user) })
+  }
+
+  override fun applicationsAllGet(
+    xServiceName: ServiceName,
+    page: Int?,
+    crn: String?,
+    sortDirection: SortDirection?,
+  ): ResponseEntity<List<ApplicationSummary>> {
+    if (xServiceName != ServiceName.approvedPremises) {
+      throw ForbiddenProblem()
+    }
+    val user = userService.getUserForRequest()
+    val (applications, metadata) =
+      applicationService.getAllApprovedPremisesApplications(page, crn, sortDirection)
+
+    return ResponseEntity.ok().headers(
+      metadata?.toHeaders(),
+    ).body(
+      applications.map {
+        getPersonDetailAndTransformToSummary(it, user)
+      },
+    )
   }
 
   override fun applicationsApplicationIdGet(applicationId: UUID): ResponseEntity<Application> {

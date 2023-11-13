@@ -1688,6 +1688,57 @@ paths:
         500:
           $ref: '_shared.yml#/components/responses/500Response'
       x-codegen-request-body-name: body
+  /applications/all:
+    get:
+      tags:
+        - Operations on all applications
+      summary: Lists all applications that any user has created
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Only approved premises anything else gets a 400
+          schema:
+            $ref: '_shared.yml#/components/schemas/ServiceName'
+        - name: page
+          in: query
+          description: Page number of results to return. If blank, returns all results
+          schema:
+            type: integer
+        - name: crn
+          in: query
+          description: CRN of applications
+          schema:
+            type: string
+        - name: sortDirection
+          in: query
+          description: The direction to sort the results by. If blank, will sort in descending order
+          schema:
+            $ref: '_shared.yml#/components/schemas/SortDirection'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/ApplicationSummary'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /applications:
     post:
       tags:
@@ -1741,7 +1792,7 @@ paths:
       x-codegen-request-body-name: body
     get:
       tags:
-        - Operations on applications
+        - Operations on all applications
       summary: Lists all applications that the user has created
       parameters:
         - name: X-Service-Name
