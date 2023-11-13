@@ -21,7 +21,7 @@ class MigrationJobService(
   @Async
   fun runMigrationJobAsync(migrationJobType: MigrationJobType) = runMigrationJob(migrationJobType, 50)
 
-  fun runMigrationJob(migrationJobType: MigrationJobType, pageSize: Int = 50) {
+  fun runMigrationJob(migrationJobType: MigrationJobType, pageSize: Int = 10) {
     migrationLogger.info("Starting migration job request: $migrationJobType")
 
     try {
