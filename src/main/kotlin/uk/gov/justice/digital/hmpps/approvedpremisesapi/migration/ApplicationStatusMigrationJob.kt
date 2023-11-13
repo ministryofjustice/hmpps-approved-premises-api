@@ -2,55 +2,33 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
 
 import io.sentry.Sentry
 import org.slf4j.LoggerFactory
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Pageable
-import org.springframework.data.domain.Slice
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import java.util.stream.Stream
 import javax.persistence.EntityManager
 
 class ApplicationStatusMigrationJob(
   private val applicationRepository: ApplicationRepository,
   private val entityManager: EntityManager,
-  private val pageSize: Int,
 ) : MigrationJob() {
   private val log = LoggerFactory.getLogger(this::class.java)
   override val shouldRunInTransaction = true
 
+  @Suppress("UNCHECKED_CAST")
   override fun process() {
     try {
-      var page = 0
-      log.info("Starting Migration process...")
-      var slice = getApplications(PageRequest.of(page, pageSize))
-      val applications = slice.content
-
-      applications.forEach {
+      val applications = applicationRepository.findAllForService(
+        ApprovedPremisesApplicationEntity::class.java,
+      ) as Stream<ApprovedPremisesApplicationEntity>
+      applications.peek(entityManager::detach).forEach {
         setStatus(it)
-      }
-
-      entityManager.clear()
-
-      while (slice.hasNext()) {
-        page += 1
-        log.info("Getting page $page")
-        slice = getApplications(slice.nextPageable())
-        slice.get().forEach {
-          setStatus(it)
-        }
-        entityManager.clear()
       }
     } catch (e: Exception) {
       Sentry.captureException(e)
     }
   }
-
-  @Suppress("UNCHECKED_CAST")
-  private fun getApplications(pageable: Pageable) = applicationRepository.findAllForService(
-    ApprovedPremisesApplicationEntity::class.java,
-    pageable,
-  ) as Slice<ApprovedPremisesApplicationEntity>
 
   private fun setStatus(application: ApprovedPremisesApplicationEntity) {
     val assessment = application.getLatestAssessment()

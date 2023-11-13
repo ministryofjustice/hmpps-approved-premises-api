@@ -117,7 +117,7 @@ class SetApplicationStatusMigrationTest : MigrationJobTestBase() {
 
     createBookingForApplicationAndAssessment(applicationWithBooking, applicationWithBookingAssessment!!)
 
-    migrationJobService.runMigrationJob(MigrationJobType.applicationStatuses, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.applicationStatuses)
 
     assertThat(reloadApplication(applicationWithNoAssessment).status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
     assertThat(reloadApplication(applicationWithAssessmentWithNoData).status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
