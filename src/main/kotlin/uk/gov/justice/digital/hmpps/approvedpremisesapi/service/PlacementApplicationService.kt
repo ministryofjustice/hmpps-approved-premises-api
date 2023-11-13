@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
@@ -12,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -27,6 +29,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision as JpaPlacementApplicationDecision
 
+class AssociatedPlacementRequestsHaveAtLeastOneBookingError(message: String) : Exception(message)
+
 @Service
 class PlacementApplicationService(
   private val placementApplicationRepository: PlacementApplicationRepository,
@@ -35,6 +39,9 @@ class PlacementApplicationService(
   private val userService: UserService,
   private val placementDateRepository: PlacementDateRepository,
   private val placementRequestService: PlacementRequestService,
+  private val placementRequestRepository: PlacementRequestRepository,
+  private val emailNotificationService: EmailNotificationService,
+  private val notifyConfig: NotifyConfig,
 ) {
 
   fun getVisiblePlacementApplicationsForUser(user: UserEntity): List<PlacementApplicationEntity> {
@@ -61,18 +68,19 @@ class PlacementApplicationService(
         id = UUID.randomUUID(),
         application = application,
         createdByUser = user,
+        schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java),
+        schemaUpToDate = true,
         data = null,
         document = null,
-        schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java),
         createdAt = OffsetDateTime.now(),
         submittedAt = null,
-        schemaUpToDate = true,
         allocatedToUser = null,
-        decision = null,
         allocatedAt = null,
         reallocatedAt = null,
-        placementDates = mutableListOf(),
+        decision = null,
         placementType = null,
+        placementDates = mutableListOf(),
+        placementRequests = mutableListOf(),
       ),
     )
 
@@ -137,7 +145,8 @@ class PlacementApplicationService(
     )
   }
 
-  fun withdrawPlacementApplication(id: UUID, user: UserEntity): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+  @Transactional
+  fun withdrawPlacementApplication(id: UUID): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
 
     when (placementApplicationAuthorisationResult) {
@@ -146,20 +155,17 @@ class PlacementApplicationService(
       is AuthorisableActionResult.Success -> Unit
     }
 
-    val placementApplicationValidationResult = confirmApplicationCanBeUpdatedOrSubmitted(placementApplicationAuthorisationResult.entity)
+    val placementApplicationEntity = placementApplicationAuthorisationResult.entity
 
-    if (placementApplicationValidationResult !is ValidatableActionResult.Success) {
-      return AuthorisableActionResult.Success(placementApplicationValidationResult)
-    }
-
-    val placementApplicationEntity = placementApplicationValidationResult.entity
-
-    if (placementApplicationEntity.decision != null) {
-      placementRequestService.withdrawPlacementRequestWhenPlacementApplicationWithdrawn(placementApplicationEntity, user)
+    try {
+      withdrawAssociatedPlacementRequests(placementApplicationEntity)
+    } catch (e: AssociatedPlacementRequestsHaveAtLeastOneBookingError) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError(e.message!!),
+      )
     }
 
     placementApplicationEntity.decision = PlacementApplicationDecision.WITHDRAWN_BY_PP
-
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
 
     return AuthorisableActionResult.Success(
@@ -324,5 +330,27 @@ class PlacementApplicationService(
     }
 
     return ValidatableActionResult.Success(placementApplicationEntity)
+  }
+
+  private fun withdrawAssociatedPlacementRequests(placementApplicationEntity: PlacementApplicationEntity) {
+    if (!placementApplicationEntity.canBeWithdrawn()) {
+      throw AssociatedPlacementRequestsHaveAtLeastOneBookingError("The Placement Application already has at least one associated booking")
+    }
+
+    placementApplicationEntity.placementRequests.forEach {
+      it.isWithdrawn = true
+      placementRequestRepository.save(it)
+      val allocatedUser = it.allocatedToUser
+      if (allocatedUser?.email != null) {
+        emailNotificationService.sendEmail(
+          email = allocatedUser.email!!,
+          templateId = notifyConfig.templates.placementRequestWithdrawn,
+          personalisation = mapOf(
+            "name" to allocatedUser.name,
+            "crn" to it.application.crn,
+          ),
+        )
+      }
+    }
   }
 }

@@ -25,6 +25,7 @@ class PlacementApplicationTransformer(
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
       outdatedSchema = !jpa.schemaUpToDate,
       submittedAt = jpa.submittedAt?.toInstant(),
+      canBeWithdrawn = jpa.canBeWithdrawn(),
     )
   }
 }

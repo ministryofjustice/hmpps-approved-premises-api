@@ -68,7 +68,12 @@ data class PlacementApplicationEntity(
 
   @OneToMany(mappedBy = "placementApplication")
   var placementDates: MutableList<PlacementDateEntity>,
-)
+
+  @OneToMany(mappedBy = "placementApplication")
+  var placementRequests: MutableList<PlacementRequestEntity>,
+) {
+  fun canBeWithdrawn() = placementRequests.all { it.booking == null }
+}
 
 enum class PlacementType {
   ROTL,
