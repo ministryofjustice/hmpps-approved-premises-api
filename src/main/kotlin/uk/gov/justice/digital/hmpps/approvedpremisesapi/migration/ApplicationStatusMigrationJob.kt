@@ -19,11 +19,14 @@ class ApplicationStatusMigrationJob(
   @Suppress("UNCHECKED_CAST")
   override fun process() {
     try {
-      val applications = applicationRepository.findAllForService(
-        ApprovedPremisesApplicationEntity::class.java,
-      ) as Stream<ApprovedPremisesApplicationEntity>
-      applications.peek(entityManager::detach).forEach {
-        setStatus(it)
+      (
+        applicationRepository.findAllForService(
+          ApprovedPremisesApplicationEntity::class.java,
+        ) as Stream<ApprovedPremisesApplicationEntity>
+        ).use { applications ->
+        applications.peek(entityManager::detach).forEach {
+          setStatus(it)
+        }
       }
     } catch (e: Exception) {
       Sentry.captureException(e)
