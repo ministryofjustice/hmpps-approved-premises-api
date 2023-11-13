@@ -71,13 +71,33 @@ class SetApplicationStatusMigrationTest : MigrationJobTestBase() {
       },
     )
 
-    val (applicationWithApprovedAssessment, _) = createApplication(
+    val (applicationWithAwaitingResponseAssessment, awaitingResponseAssessment) = createApplication(
+      assessmentConfigBlock = {
+        withData("{\"some\":\"data\"}")
+        withSubmittedAt(null)
+        withDecision(null)
+      },
+    )
+
+    assessmentClarificationNoteEntityFactory.produceAndPersist {
+      withAssessment(awaitingResponseAssessment!!)
+      withResponse(null)
+      withCreatedBy(user)
+    }
+
+    val (applicationWithApprovedAssessment, approvedAssessment) = createApplication(
       assessmentConfigBlock = {
         withData("{\"some\":\"data\"}")
         withSubmittedAt(OffsetDateTime.now())
         withDecision(AssessmentDecision.ACCEPTED)
       },
     )
+
+    assessmentClarificationNoteEntityFactory.produceAndPersist {
+      withAssessment(approvedAssessment!!)
+      withResponse("Some response")
+      withCreatedBy(user)
+    }
 
     val (applicationWithRejectedAssessment, _) = createApplication(
       assessmentConfigBlock = {
@@ -101,6 +121,7 @@ class SetApplicationStatusMigrationTest : MigrationJobTestBase() {
 
     assertThat(reloadApplication(applicationWithNoAssessment).status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
     assertThat(reloadApplication(applicationWithAssessmentWithNoData).status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
+    assertThat(reloadApplication(applicationWithAwaitingResponseAssessment).status).isEqualTo(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
     assertThat(reloadApplication(applicationWithInProgressAssessment).status).isEqualTo(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
     assertThat(reloadApplication(applicationWithApprovedAssessment).status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
     assertThat(reloadApplication(applicationWithRejectedAssessment).status).isEqualTo(ApprovedPremisesApplicationStatus.REJECTED)
