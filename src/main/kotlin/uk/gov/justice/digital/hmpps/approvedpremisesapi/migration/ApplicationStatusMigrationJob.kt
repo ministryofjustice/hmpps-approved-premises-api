@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
 
+import io.sentry.Sentry
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
@@ -17,22 +18,27 @@ class ApplicationStatusMigrationJob(
   override val shouldRunInTransaction = true
 
   override fun process() {
-    var page = 0
-    log.info("Starting Migration process...")
-    var slice = getApplications(PageRequest.of(page, pageSize))
-    val applications = slice.content
+    try {
+      var page = 0
+      log.info("Starting Migration process...")
+      var slice = getApplications(PageRequest.of(page, pageSize))
+      val applications = slice.content
 
-    applications.forEach {
-      setStatus(it)
-    }
-
-    while (slice.hasNext()) {
-      page += 1
-      log.info("Getting page $page")
-      slice = getApplications(slice.nextPageable())
-      slice.get().forEach {
+      applications.forEach {
         setStatus(it)
       }
+
+      while (slice.hasNext()) {
+        page += 1
+        log.info("Getting page $page")
+        slice = getApplications(slice.nextPageable())
+        slice.get().forEach {
+          setStatus(it)
+        }
+      }
+    } catch (e: Exception) {
+      Sentry.captureException(e)
+      throw e
     }
   }
 
