@@ -34,7 +34,6 @@ class MigrationJobService(
         MigrationJobType.applicationStatuses -> ApplicationStatusMigrationJob(
           applicationContext.getBean(ApplicationRepository::class.java),
           applicationContext.getBean(EntityManager::class.java),
-          pageSize,
         )
       }
 
