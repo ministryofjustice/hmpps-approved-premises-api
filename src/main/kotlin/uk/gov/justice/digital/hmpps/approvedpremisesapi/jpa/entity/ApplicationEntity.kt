@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -16,6 +18,9 @@ import javax.persistence.Convert
 import javax.persistence.DiscriminatorColumn
 import javax.persistence.DiscriminatorValue
 import javax.persistence.Entity
+import javax.persistence.EntityListeners
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
 import javax.persistence.Id
 import javax.persistence.Inheritance
 import javax.persistence.InheritanceType
@@ -38,6 +43,11 @@ interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
     nativeQuery = true,
   )
   fun <T : ApplicationEntity> findAllForServiceAndNameNull(type: Class<T>, pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
+
+  @Query(
+    "SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type",
+  )
+  fun <T : ApplicationEntity> findAllForService(type: Class<T>, pageable: Pageable?): Slice<ApplicationEntity>
 
   @Query(
     "SELECT application.created_at as createdAt, CAST(application.created_by_user_id as TEXT) as createdByUserId FROM approved_premises_applications apa " +
@@ -183,6 +193,7 @@ abstract class ApplicationEntity(
   abstract fun getRequiredQualifications(): List<UserQualification>
 }
 
+@EntityListeners(ApplicationListener::class)
 @Entity
 @DiscriminatorValue("approved-premises")
 @Table(name = "approved_premises_applications")
@@ -221,6 +232,8 @@ class ApprovedPremisesApplicationEntity(
   var arrivalDate: OffsetDateTime?,
   var name: String,
   var targetLocation: String?,
+  @Enumerated(EnumType.STRING)
+  var status: ApprovedPremisesApplicationStatus?,
 ) : ApplicationEntity(
   id,
   crn,

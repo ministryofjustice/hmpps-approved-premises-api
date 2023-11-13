@@ -5,7 +5,9 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApplicationStatusMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
@@ -24,9 +26,13 @@ class MigrationJobService(
 
     try {
       val job: MigrationJob = when (migrationJobType) {
-        MigrationJobType.updateAllUsersFromCommunityApi -> UpdateAllUsersFromCommunityApiJob(
+        MigrationJobType.allUsersFromCommunityApi -> UpdateAllUsersFromCommunityApiJob(
           applicationContext.getBean(UserRepository::class.java),
           applicationContext.getBean(UserService::class.java),
+        )
+        MigrationJobType.applicationStatuses -> ApplicationStatusMigrationJob(
+          applicationContext.getBean(ApplicationRepository::class.java),
+          pageSize,
         )
       }
 
