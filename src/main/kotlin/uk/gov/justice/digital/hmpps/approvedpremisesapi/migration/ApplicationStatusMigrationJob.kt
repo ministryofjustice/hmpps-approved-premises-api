@@ -38,7 +38,6 @@ class ApplicationStatusMigrationJob(
       }
     } catch (e: Exception) {
       Sentry.captureException(e)
-      throw e
     }
   }
 
