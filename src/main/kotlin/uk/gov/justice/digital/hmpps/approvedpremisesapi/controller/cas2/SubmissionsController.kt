@@ -94,9 +94,8 @@ class SubmissionsController(
       assessor = externalUserService.getUserForRequest(),
     )
 
-    val validationResult = processAuthorisationFor(applicationId, result)
-
-    processValidation(validationResult as ValidatableActionResult<Cas2StatusUpdateEntity>)
+    processAuthorisationFor(applicationId, result)
+      .run { processValidation(this as ValidatableActionResult<Cas2StatusUpdateEntity>) }
 
     return ResponseEntity(HttpStatus.CREATED)
   }
