@@ -19,6 +19,7 @@ import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
@@ -230,10 +231,11 @@ class ApplicationTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val responseBody = objectMapper.readValue(
-              rawResponseBody,
-              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
-            )
+            val responseBody =
+              objectMapper.readValue(
+                rawResponseBody,
+                object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
+              )
 
             assertThat(responseBody).anyMatch {
               outdatedApplicationEntityManagedByTeam.id == it.id &&
@@ -1197,7 +1199,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create new application returns 500 & doesn't create Application without team codes when write to team code table fails`() {
+  fun `Create new application returns 500 and does not create Application without team codes when write to team code table fails`() {
     `Given a User` { _, jwt ->
       `Given an Offender` { offenderDetails, _ ->
 
@@ -1726,7 +1728,8 @@ class ApplicationTest : IntegrationTestBase() {
             .expectStatus()
             .isOk
 
-          val persistedApplication = approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
+          val persistedApplication =
+            approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
 
           assertThat(persistedApplication?.isWomensApplication).isTrue
           assertThat(persistedApplication?.isPipeApplication).isTrue
@@ -2058,7 +2061,11 @@ class ApplicationTest : IntegrationTestBase() {
       }
     }
 
-    private fun produceAndPersistApplicationAndAssessment(applicant: UserEntity, assignee: UserEntity, offenderDetails: OffenderDetailSummary): Pair<ApprovedPremisesApplicationEntity, AssessmentEntity> {
+    private fun produceAndPersistApplicationAndAssessment(
+      applicant: UserEntity,
+      assignee: UserEntity,
+      offenderDetails: OffenderDetailSummary,
+    ): Pair<ApprovedPremisesApplicationEntity, AssessmentEntity> {
       val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
         withPermissiveSchema()
       }
@@ -2098,8 +2105,8 @@ class ApplicationTest : IntegrationTestBase() {
     private val note2CreatedAt = LocalDate.of(2023, 10, 1).toLocalDateTime()
     private val note3CreatedAt = LocalDate.of(2023, 10, 3).toLocalDateTime()
 
-    private val month = 2
-    private val year = 2023
+    var year = 2022
+    var month = 3
 
     @Test
     fun `Get application timeline without JWT returns 401`() {
@@ -2471,6 +2478,296 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
+  @Nested
+  inner class ApplicationsAll {
+    @Test
+    fun `Get applications all without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/applications/all")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Get applications all not approved premises service returns 403 forbidden`() {
+      `Given a User` { _, jwt ->
+        webTestClient.get()
+          .uri("/applications/all")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
+    @Test
+    fun `Get applications all returns 200 and correct body`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          approvedPremisesApplicationJsonSchemaRepository.deleteAll()
+
+          val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+            withSchema(
+              """
+        {
+          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+          "${"\$id"}": "https://example.com/product.schema.json",
+          "title": "Thing",
+          "description": "A thing",
+          "type": "object",
+          "properties": {
+            "thingId": {
+              "description": "The unique identifier for a thing",
+              "type": "integer"
+            }
+          },
+          "required": [ "thingId" ]
+        }
+        """,
+            )
+          }
+
+          val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(newestJsonSchema)
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withData(
+              """
+          {
+             "thingId": 123
+          }
+          """,
+            )
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(newestJsonSchema)
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withData(
+              """
+          {
+             "thingId": 123
+          }
+          """,
+            )
+          }
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/all")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody =
+            objectMapper.readValue(
+              rawResponseBody,
+              object : TypeReference<List<ApplicationSummary>>() {},
+            )
+
+          assertThat(responseBody.count()).isEqualTo(2)
+
+          assertThat(responseBody[0]).matches {
+            applicationEntity.id == it.id &&
+              applicationEntity.crn == it.person.crn &&
+              applicationEntity.createdAt.toInstant() == it.createdAt &&
+              applicationEntity.submittedAt?.toInstant() == it.submittedAt
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get applications all returns forty two items if no page parameter passed`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          createTwelveApplications(offenderDetails.otherIds.crn, userEntity)
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/all")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody =
+            objectMapper.readValue(
+              rawResponseBody,
+              object : TypeReference<List<ApplicationSummary>>() {},
+            )
+
+          assertThat(responseBody.count()).isEqualTo(12)
+        }
+      }
+    }
+
+    @Test
+    fun `Get applications all returns ten items if page parameter passed is one`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          createTwelveApplications(offenderDetails.otherIds.crn, userEntity)
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/all?page=1&sortDirection=asc")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody =
+            objectMapper.readValue(
+              rawResponseBody,
+              object : TypeReference<List<ApplicationSummary>>() {},
+            )
+
+          assertThat(responseBody.count()).isEqualTo(10)
+        }
+      }
+    }
+
+    @Test
+    fun `Get applications all returns twelve items if crn parameter passed and no page`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val crn = offenderDetails.otherIds.crn
+          createTwelveApplications(crn, userEntity)
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/all?crn=$crn")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody =
+            objectMapper.readValue(
+              rawResponseBody,
+              object : TypeReference<List<ApplicationSummary>>() {},
+            )
+
+          assertThat(responseBody.count()).isEqualTo(12)
+        }
+      }
+    }
+
+    @Test
+    fun `Get applications all returns twelve items if crn parameter passed and two crns in db no page`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given an Offender` { offenderDetails2, _ ->
+
+            val crn1 = offenderDetails.otherIds.crn
+            createTwelveApplications(crn1, userEntity)
+
+            val crn2 = offenderDetails2.otherIds.crn
+            createTwelveApplications(crn2, userEntity)
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/applications/all?crn=$crn2")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(
+                rawResponseBody,
+                object : TypeReference<List<ApplicationSummary>>() {},
+              )
+
+            assertThat(responseBody.count()).isEqualTo(12)
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get applications all returns two items if crn parameter passed and two crns in db and page one`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given an Offender` { offenderDetails2, _ ->
+
+            val crn1 = offenderDetails.otherIds.crn
+            createTwelveApplications(crn1, userEntity)
+
+            val crn2 = offenderDetails2.otherIds.crn
+            createTwelveApplications(crn2, userEntity)
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/applications/all?page=2&sortDirection=desc&crn=$crn2")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(
+                rawResponseBody,
+                object : TypeReference<List<ApplicationSummary>>() {},
+              )
+
+            assertThat(responseBody.count()).isEqualTo(2)
+          }
+        }
+      }
+    }
+
+    private fun createTwelveApplications(crn: String, user: UserEntity) {
+      val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+      }
+
+      approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
+        withApplicationSchema(applicationSchema)
+        withCrn(crn)
+        withCreatedByUser(user)
+        withData(
+          """
+          {
+             "thingId": 123
+          }
+          """,
+        )
+      }
+    }
+  }
+
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
     if (serializable == null) return NullNode.instance
     if (serializable is String) return objectMapper.readTree(serializable)
@@ -2505,18 +2802,19 @@ class ApplicationTest : IntegrationTestBase() {
       )
     }
 
-    val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(jsonSchema)
-      withCrn(crn)
-      withCreatedByUser(userEntity)
-      withData(
-        """
+    val application =
+      approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(jsonSchema)
+        withCrn(crn)
+        withCreatedByUser(userEntity)
+        withData(
+          """
           {
              "thingId": 123
           }
           """,
-      )
-    }
+        )
+      }
 
     application.teamCodes += applicationTeamCodeRepository.save(
       ApplicationTeamCodeEntity(
