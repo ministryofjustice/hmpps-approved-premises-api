@@ -35,6 +35,7 @@ class ApplicationStatusMigrationJob(
         slice.get().forEach {
           setStatus(it)
         }
+        applicationRepository.flush()
       }
     } catch (e: Exception) {
       Sentry.captureException(e)
