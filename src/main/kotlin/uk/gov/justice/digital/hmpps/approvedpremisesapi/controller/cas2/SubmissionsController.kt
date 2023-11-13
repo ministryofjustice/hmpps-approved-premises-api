@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import org.zalando.problem.AbstractThrowableProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.SubmissionsCas2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
@@ -10,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -92,20 +94,35 @@ class SubmissionsController(
       assessor = externalUserService.getUserForRequest(),
     )
 
-    val validationResult = when (result) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Cas2Application")
-      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.Success -> result.entity
-    }
+    val validationResult = processAuthorisationFor(applicationId, result)
 
-    when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
-      is ValidatableActionResult.Success -> Unit
-    }
+    processValidation(validationResult as ValidatableActionResult<Cas2StatusUpdateEntity>)
 
     return ResponseEntity(HttpStatus.CREATED)
+  }
+
+  private fun processAuthorisationFor(
+    applicationId: UUID,
+    result: AuthorisableActionResult<ValidatableActionResult<Cas2StatusUpdateEntity>>,
+  ): Any {
+    return when (result) {
+      is AuthorisableActionResult.NotFound -> throwProblem(NotFoundProblem(applicationId, "Cas2Application"))
+      is AuthorisableActionResult.Unauthorised -> throwProblem(ForbiddenProblem())
+      is AuthorisableActionResult.Success -> result.entity
+    }
+  }
+
+  private fun processValidation(validationResult: ValidatableActionResult<Cas2StatusUpdateEntity>) {
+    return when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> throwProblem(BadRequestProblem(errorDetail = validationResult.message))
+      is ValidatableActionResult.FieldValidationError -> throwProblem(BadRequestProblem(invalidParams = validationResult.validationMessages))
+      is ValidatableActionResult.ConflictError -> throwProblem(ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message))
+      is ValidatableActionResult.Success -> Unit
+    }
+  }
+
+  private fun throwProblem(problem: AbstractThrowableProblem) {
+    throw problem
   }
 
   private fun ensureExternalUserPersisted() {
