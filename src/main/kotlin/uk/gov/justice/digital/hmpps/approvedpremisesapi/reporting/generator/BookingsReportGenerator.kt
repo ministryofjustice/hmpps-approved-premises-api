@@ -1,50 +1,51 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportData
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
-class BookingsReportGenerator : ReportGenerator<BookingEntity, BookingsReportRow, BookingsReportProperties>(BookingsReportRow::class) {
+class BookingsReportGenerator : ReportGenerator<BookingsReportData, BookingsReportRow, BookingsReportProperties>(BookingsReportRow::class) {
 
-  override val convert: BookingEntity.(properties: BookingsReportProperties) -> List<BookingsReportRow> = {
-    val application = this.application as? TemporaryAccommodationApplicationEntity
-
+  override val convert: BookingsReportData.(properties: BookingsReportProperties) -> List<BookingsReportRow> = {
     listOf(
       BookingsReportRow(
-        referralId = application?.id?.toString(),
-        referralDate = application?.submittedAt?.toLocalDate(),
-        riskOfSeriousHarm = application?.riskRatings?.roshRisks?.value?.overallRisk,
-        sexOffender = application?.isRegisteredSexOffender,
-        needForAccessibleProperty = application?.needsAccessibleProperty,
-        historyOfArsonOffence = application?.hasHistoryOfArson,
-        dutyToReferMade = application?.isDutyToReferSubmitted,
-        dateDutyToReferMade = application?.dutyToReferSubmissionDate,
-        isReferralEligibleForCas3 = application?.isEligible,
-        referralEligibilityReason = application?.eligibilityReason,
-        probationRegion = this.premises.probationRegion.name,
+        bookingId = this.bookingId,
+        referralId = this.referralId,
+        referralDate = this.referralDate,
+        riskOfSeriousHarm = this.riskOfSeriousHarm,
+        sexOffender = this.sexOffender,
+        needForAccessibleProperty = this.needForAccessibleProperty,
+        historyOfArsonOffence = this.historyOfArsonOffence,
+        dutyToReferMade = this.dutyToReferMade,
+        dateDutyToReferMade = this.dateDutyToReferMade,
+        isReferralEligibleForCas3 = this.referralEligibleForCas3,
+        referralEligibilityReason = this.referralEligibilityReason,
+        probationRegion = this.probationRegion,
         crn = this.crn,
-        offerAccepted = this.confirmation != null,
-        isCancelled = this.cancellation != null,
-        cancellationReason = this.cancellation?.reason?.name,
-        startDate = this.arrival?.arrivalDate,
-        endDate = this.arrival?.expectedDepartureDate,
-        actualEndDate = this.departure?.dateTime?.toLocalDate(),
-        currentNightsStayed = if (this.departure != null) {
+        offerAccepted = this.confirmationId != null,
+        isCancelled = this.cancellationId != null,
+        cancellationReason = this.cancellationReason,
+        startDate = this.startDate,
+        endDate = this.endDate,
+        actualEndDate = this.actualEndDate?.toLocalDateTime()?.toLocalDate(),
+        currentNightsStayed = if (this.actualEndDate != null) {
           null
         } else {
-          this.arrival?.arrivalDate?.let { ChronoUnit.DAYS.between(it, LocalDate.now()).toInt() }
+          this.startDate?.let { ChronoUnit.DAYS.between(it, LocalDate.now()).toInt() }
         },
-        actualNightsStayed = if (this.arrival?.arrivalDate == null) null else this.departure?.dateTime?.let { ChronoUnit.DAYS.between(this.arrival?.arrivalDate, it.toLocalDate()).toInt() },
-        accommodationOutcome = this.departure?.moveOnCategory?.name,
+        actualNightsStayed = if (this.startDate == null) {
+          null
+        } else {
+          this.actualEndDate?.let { ChronoUnit.DAYS.between(this.startDate, it.toLocalDateTime()?.toLocalDate()).toInt() }
+        },
+        accommodationOutcome = this.accommodationOutcome,
       ),
     )
   }
 
-  override fun filter(properties: BookingsReportProperties): (BookingEntity) -> Boolean = {
-    it.service == properties.serviceName.value &&
-      (properties.probationRegionId == null || it.premises.probationRegion.id == properties.probationRegionId)
+  override fun filter(properties: BookingsReportProperties): (BookingsReportData) -> Boolean = {
+    true
   }
 }

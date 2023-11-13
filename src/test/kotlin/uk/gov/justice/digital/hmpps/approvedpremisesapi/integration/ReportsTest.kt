@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions
 import org.jetbrains.kotlinx.dataframe.DataFrame
 import org.jetbrains.kotlinx.dataframe.api.ExcessiveColumns
 import org.jetbrains.kotlinx.dataframe.api.convertTo
+import org.jetbrains.kotlinx.dataframe.api.sortBy
 import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toBookingsReportData
 import java.time.LocalDate
 import java.util.UUID
 
@@ -138,7 +140,7 @@ class ReportsTest : IntegrationTestBase() {
         }
 
         val expectedDataFrame = BookingsReportGenerator()
-          .createReport(bookings, BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+          .createReport(bookings.toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
 
         webTestClient.get()
           .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
@@ -152,6 +154,7 @@ class ReportsTest : IntegrationTestBase() {
             val actual = DataFrame
               .readExcel(it.responseBody!!.inputStream())
               .convertTo<BookingsReportRow>(ExcessiveColumns.Remove)
+              .sortBy(BookingsReportRow::bookingId)
             Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
           }
       }
@@ -200,7 +203,7 @@ class ReportsTest : IntegrationTestBase() {
         }
 
         val expectedDataFrame = BookingsReportGenerator()
-          .createReport(bookings, BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+          .createReport(bookings.toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
 
         webTestClient.get()
           .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
@@ -214,6 +217,7 @@ class ReportsTest : IntegrationTestBase() {
             val actual = DataFrame
               .readExcel(it.responseBody!!.inputStream())
               .convertTo<BookingsReportRow>(ExcessiveColumns.Remove)
+              .sortBy(BookingsReportRow::bookingId)
             Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
           }
       }
@@ -262,7 +266,7 @@ class ReportsTest : IntegrationTestBase() {
         }
 
         val expectedDataFrame = BookingsReportGenerator()
-          .createReport(bookings, BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+          .createReport(bookings.toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
 
         webTestClient.get()
           .uri("/reports/bookings?year=2023&month=4")
@@ -276,6 +280,7 @@ class ReportsTest : IntegrationTestBase() {
             val actual = DataFrame
               .readExcel(it.responseBody!!.inputStream())
               .convertTo<BookingsReportRow>(ExcessiveColumns.Remove)
+              .sortBy(BookingsReportRow::bookingId)
             Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
           }
       }
@@ -363,7 +368,7 @@ class ReportsTest : IntegrationTestBase() {
         }
 
         val expectedDataFrame = BookingsReportGenerator()
-          .createReport(shouldBeIncludedBookings, BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+          .createReport(shouldBeIncludedBookings.toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
 
         webTestClient.get()
           .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
@@ -377,6 +382,167 @@ class ReportsTest : IntegrationTestBase() {
             val actual = DataFrame
               .readExcel(it.responseBody!!.inputStream())
               .convertTo<BookingsReportRow>(ExcessiveColumns.Remove)
+              .sortBy(BookingsReportRow::bookingId)
+            Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
+          }
+      }
+    }
+  }
+
+  @Test
+  fun `Get bookings report returns OK with only bookings from the specified service`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
+          withPremises(premises)
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn(offenderDetails.otherIds.crn)
+          withArrivalDate(LocalDate.of(2023, 4, 5))
+          withDepartureDate(LocalDate.of(2023, 4, 7))
+        }
+
+        bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
+        bookings[2].let {
+          it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
+          it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
+          it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
+            withBooking(it)
+            withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
+            withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
+            withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
+          }.toMutableList()
+        }
+        bookings[3].let {
+          it.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
+            withBooking(it)
+            withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+          }.toMutableList()
+        }
+        bookings[4].let {
+          it.nonArrival = nonArrivalEntityFactory.produceAndPersist {
+            withBooking(it)
+            withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
+          }
+        }
+
+        val unexpectedPremises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        // Unexpected bookings
+        bookingEntityFactory.produceAndPersistMultiple(5) {
+          withPremises(unexpectedPremises)
+          withServiceName(ServiceName.approvedPremises)
+          withCrn(offenderDetails.otherIds.crn)
+          withArrivalDate(LocalDate.of(2023, 4, 5))
+          withDepartureDate(LocalDate.of(2023, 4, 7))
+        }
+
+        val expectedDataFrame = BookingsReportGenerator()
+          .createReport(bookings.toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+
+        webTestClient.get()
+          .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .consumeWith {
+            val actual = DataFrame
+              .readExcel(it.responseBody!!.inputStream())
+              .convertTo<BookingsReportRow>(ExcessiveColumns.Remove)
+              .sortBy(BookingsReportRow::bookingId)
+            Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
+          }
+      }
+    }
+  }
+
+  @Test
+  fun `Get bookings report returns OK with only bookings from the specified probation region`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
+          withPremises(premises)
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn(offenderDetails.otherIds.crn)
+          withArrivalDate(LocalDate.of(2023, 4, 5))
+          withDepartureDate(LocalDate.of(2023, 4, 7))
+        }
+
+        bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
+        bookings[2].let {
+          it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
+          it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
+          it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
+            withBooking(it)
+            withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
+            withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
+            withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
+          }.toMutableList()
+        }
+        bookings[3].let {
+          it.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
+            withBooking(it)
+            withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+          }.toMutableList()
+        }
+        bookings[4].let {
+          it.nonArrival = nonArrivalEntityFactory.produceAndPersist {
+            withBooking(it)
+            withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
+          }
+        }
+
+        val unexpectedPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea {
+                apAreaEntityFactory.produceAndPersist()
+              }
+            }
+          }
+        }
+
+        // Unexpected bookings
+        bookingEntityFactory.produceAndPersistMultiple(5) {
+          withPremises(unexpectedPremises)
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn(offenderDetails.otherIds.crn)
+          withArrivalDate(LocalDate.of(2023, 4, 5))
+          withDepartureDate(LocalDate.of(2023, 4, 7))
+        }
+
+        val expectedDataFrame = BookingsReportGenerator()
+          .createReport(bookings.toBookingsReportData(), BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+
+        webTestClient.get()
+          .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .consumeWith {
+            val actual = DataFrame
+              .readExcel(it.responseBody!!.inputStream())
+              .convertTo<BookingsReportRow>(ExcessiveColumns.Remove)
+              .sortBy(BookingsReportRow::bookingId)
             Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
           }
       }
