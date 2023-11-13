@@ -202,6 +202,41 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /submissions/{applicationId}/status-updates:
+    post:
+      tags:
+        - Operations on submitted CAS2 applications (Assessors)
+      summary: Creates a status update on a submitted application
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application whose status is to be updated
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information on the new status to be applied
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas2ApplicationStatusUpdate'
+        required: true
+      responses:
+        200:
+          description: successfully created the status update
+        400:
+          description: status update has already been submitted
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /people/search:
     get:
       tags:
@@ -2126,6 +2161,15 @@ components:
         - name
         - label
         - description
+    Cas2ApplicationStatusUpdate:
+      type: object
+      properties:
+        newStatus:
+          type: string
+          example: 'moreInfoRequired'
+          description: 'The "name" of the new status to be applied'
+      required:
+        - newStatus
     Cas2SubmittedApplicationSummary:
       type: object
       properties:

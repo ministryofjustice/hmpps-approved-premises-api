@@ -13,6 +13,7 @@ import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.LockModeType
 import javax.persistence.ManyToOne
+import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Repository
@@ -87,11 +88,16 @@ data class Cas2ApplicationEntity(
   val createdAt: OffsetDateTime,
   var submittedAt: OffsetDateTime?,
 
+  @OneToMany(mappedBy = "application")
+  var statusUpdates: MutableList<Cas2StatusUpdateEntity>? = null,
+
   @Transient
   var schemaUpToDate: Boolean,
 
   var nomsNumber: String?,
-)
+) {
+  override fun toString() = "Cas2ApplicationEntity: $id"
+}
 
 interface AppSummary {
   fun getId(): UUID

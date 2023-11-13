@@ -1766,6 +1766,15 @@ components:
         - name
         - label
         - description
+    Cas2ApplicationStatusUpdate:
+      type: object
+      properties:
+        newStatus:
+          type: string
+          example: 'moreInfoRequired'
+          description: 'The "name" of the new status to be applied'
+      required:
+        - newStatus
     Cas2SubmittedApplicationSummary:
       type: object
       properties:
