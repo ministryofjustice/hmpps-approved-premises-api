@@ -14,7 +14,7 @@ class ApplicationStatusMigrationJob(
   private val pageSize: Int,
 ) : MigrationJob() {
   private val log = LoggerFactory.getLogger(this::class.java)
-  override val shouldRunInTransaction = false
+  override val shouldRunInTransaction = true
 
   override fun process() {
     var slice = getApplications(PageRequest.of(0, pageSize))
@@ -45,6 +45,7 @@ class ApplicationStatusMigrationJob(
       (assessment == null) -> ApprovedPremisesApplicationStatus.STARTED
       (assessment.allocatedToUser == null) -> ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT
       (assessment.data == null) -> ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT
+      (assessment.clarificationNotes.any { it.response == null }) -> ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION
       (assessment.submittedAt == null) -> ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS
       (assessment.decision == AssessmentDecision.ACCEPTED && application.getLatestBooking() == null) -> ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT
       (assessment.decision == AssessmentDecision.REJECTED) -> ApprovedPremisesApplicationStatus.REJECTED

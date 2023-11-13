@@ -232,7 +232,7 @@ class ApprovedPremisesApplicationEntity(
   var arrivalDate: OffsetDateTime?,
   var name: String,
   var targetLocation: String?,
-  @Enumerated(EnumType.STRING)
+  @Enumerated(value = EnumType.STRING)
   var status: ApprovedPremisesApplicationStatus?,
 ) : ApplicationEntity(
   id,
