@@ -7,14 +7,12 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
-import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import java.time.OffsetDateTime
 
 class Cas2StatusUpdateTest : IntegrationTestBase() {
@@ -100,17 +98,43 @@ class Cas2StatusUpdateTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Create status update returns 404 when new status NOT valid`() {
+    fun `Create status update returns 404 when application not found`() {
       `Given a CAS2 Assessor`() { _, jwt ->
         webTestClient.post()
           .uri("/cas2/submissions/66f7127a-fe03-4b66-8378-5c0b048490f8/status-updates")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            Cas2ApplicationStatusUpdate(newStatus = "invalidState"),
+            Cas2ApplicationStatusUpdate(newStatus = "moreInfoRequested"),
           )
           .exchange()
           .expectStatus()
           .isNotFound
+      }
+    }
+
+    @Test
+    fun `Create status update returns 400 when new status NOT valid`() {
+      `Given a CAS2 Assessor`() { _, jwt ->
+        `Given a CAS2 User` { applicant, _ ->
+          val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
+          val application = cas2ApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(applicant)
+            withApplicationSchema(jsonSchema)
+            withSubmittedAt(OffsetDateTime.now())
+          }
+
+          webTestClient.post()
+            .uri("/cas2/submissions/${application.id}/status-updates")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              Cas2ApplicationStatusUpdate(newStatus = "invalidStatus"),
+            )
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("$.detail").isEqualTo("The status invalidStatus is not valid")
+        }
       }
     }
   }

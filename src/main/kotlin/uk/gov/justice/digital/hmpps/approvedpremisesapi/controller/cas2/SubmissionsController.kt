@@ -86,15 +86,25 @@ class SubmissionsController(
     applicationId: UUID,
     statusUpdate: Cas2ApplicationStatusUpdate,
   ): ResponseEntity<Unit> {
-    if (!statusUpdateService.isValidStatus(statusUpdate)) {
-      return ResponseEntity(HttpStatus.NOT_FOUND)
-    }
-    val assessor = externalUserService.getUserForRequest()
-    statusUpdateService.create(
+    val result = statusUpdateService.create(
       applicationId = applicationId,
       statusUpdate = statusUpdate,
-      assessor = assessor,
+      assessor = externalUserService.getUserForRequest(),
     )
+
+    val validationResult = when (result) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Cas2Application")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> result.entity
+    }
+
+    when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
+      is ValidatableActionResult.Success -> Unit
+    }
+
     return ResponseEntity(HttpStatus.CREATED)
   }
 

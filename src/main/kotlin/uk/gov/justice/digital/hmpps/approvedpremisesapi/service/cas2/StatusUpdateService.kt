@@ -7,8 +7,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.util.UUID
 
 @Service("Cas2StatusUpdateService")
@@ -25,15 +27,19 @@ class StatusUpdateService(
     applicationId: UUID,
     statusUpdate: Cas2ApplicationStatusUpdate,
     assessor: ExternalUserEntity,
-  ) = validated<Cas2StatusUpdateEntity> {
+  ): AuthorisableActionResult<ValidatableActionResult<Cas2StatusUpdateEntity>> {
     val application = applicationRepository.findSubmittedApplicationById(applicationId)
-      ?: return "$.applicationId" hasSingleValidationError "doesNotExist"
+      ?: return AuthorisableActionResult.NotFound()
 
     val status = findStatusByName(statusUpdate.newStatus)
-      ?: return "$.statusUpdate.newStatus" hasSingleValidationError "doesNotExist"
+      ?: return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The status ${statusUpdate.newStatus} is not valid"),
+      )
 
-    if (validationErrors.any()) {
-      return fieldValidationError
+    if (ValidationErrors().any()) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(ValidationErrors()),
+      )
     }
 
     val createdStatusUpdate = statusUpdateRepository.save(
@@ -47,7 +53,9 @@ class StatusUpdateService(
       ),
     )
 
-    return success(createdStatusUpdate)
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(createdStatusUpdate),
+    )
   }
 
   private fun findStatusByName(statusName: String): Cas2ApplicationStatus? {
