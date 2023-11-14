@@ -484,6 +484,7 @@ class ApplicationsTransformerTest {
       override fun getLatestAssessmentDecision() = null
       override fun getLatestAssessmentHasClarificationNotesWithoutResponse() = false
       override fun getHasBooking() = false
+      override fun getTier(): String? = null
     }
 
     val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
@@ -512,6 +513,7 @@ class ApplicationsTransformerTest {
       override fun getLatestAssessmentDecision() = null
       override fun getLatestAssessmentHasClarificationNotesWithoutResponse() = false
       override fun getHasBooking() = false
+      override fun getTier(): String? = null
     }
 
     val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
@@ -540,6 +542,7 @@ class ApplicationsTransformerTest {
       override fun getLatestAssessmentDecision() = null
       override fun getLatestAssessmentHasClarificationNotesWithoutResponse() = true
       override fun getHasBooking() = false
+      override fun getTier(): String? = null
     }
 
     val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
@@ -568,6 +571,7 @@ class ApplicationsTransformerTest {
       override fun getLatestAssessmentDecision() = AssessmentDecision.ACCEPTED
       override fun getLatestAssessmentHasClarificationNotesWithoutResponse() = false
       override fun getHasBooking() = true
+      override fun getTier(): String? = null
     }
 
     val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
@@ -596,6 +600,7 @@ class ApplicationsTransformerTest {
       override fun getLatestAssessmentDecision() = AssessmentDecision.ACCEPTED
       override fun getLatestAssessmentHasClarificationNotesWithoutResponse() = false
       override fun getHasBooking() = false
+      override fun getTier(): String? = null
     }
 
     val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
@@ -624,6 +629,7 @@ class ApplicationsTransformerTest {
       override fun getLatestAssessmentDecision() = AssessmentDecision.ACCEPTED
       override fun getLatestAssessmentHasClarificationNotesWithoutResponse() = false
       override fun getHasBooking() = false
+      override fun getTier(): String? = null
     }
 
     val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary
@@ -652,6 +658,7 @@ class ApplicationsTransformerTest {
       override fun getLatestAssessmentDecision() = AssessmentDecision.REJECTED
       override fun getLatestAssessmentHasClarificationNotesWithoutResponse() = false
       override fun getHasBooking() = false
+      override fun getTier(): String? = null
     }
 
     val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as ApprovedPremisesApplicationSummary

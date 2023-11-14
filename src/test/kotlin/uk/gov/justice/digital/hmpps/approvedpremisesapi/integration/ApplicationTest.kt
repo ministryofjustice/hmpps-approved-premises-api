@@ -54,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
@@ -87,6 +88,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
@@ -2659,7 +2662,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get applications all returns forty two items if no page parameter passed`() {
+    fun `Get applications all returns twenty items if no page parameter passed`() {
       `Given a User` { userEntity, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           createTwelveApplications(offenderDetails.otherIds.crn, userEntity)
@@ -2817,6 +2820,446 @@ class ApplicationTest : IntegrationTestBase() {
 
             assertThat(responseBody.count()).isEqualTo(2)
           }
+        }
+      }
+    }
+
+    @Test
+    fun `Get applications all returns 200 correct body and page one and sorted by createdAt desc`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val crn = offenderDetails.otherIds.crn
+          val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
+          val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
+          val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withCreatedAt(date1)
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withCreatedAt(date2)
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withCreatedAt(date3)
+          }
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/all?page=1&sortDirection=desc&applicationSortField=createdAt")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 3)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody =
+            objectMapper.readValue(
+              rawResponseBody,
+              object : TypeReference<List<ApplicationSummary>>() {},
+            )
+
+          assertThat(responseBody.count()).isEqualTo(3)
+          assertThat(responseBody[0].createdAt).isEqualTo(date3.toInstant())
+          assertThat(responseBody[1].createdAt).isEqualTo(date2.toInstant())
+          assertThat(responseBody[2].createdAt).isEqualTo(date1.toInstant())
+        }
+      }
+    }
+
+    @Test
+    fun `Get applications all returns 200 correct body and page one and sorted by createdAt asc`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val crn = offenderDetails.otherIds.crn
+          val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
+          val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
+          val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withCreatedAt(date1)
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withCreatedAt(date2)
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withCreatedAt(date3)
+          }
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/all?page=1&sortDirection=asc&applicationSortField=createdAt")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 3)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody =
+            objectMapper.readValue(
+              rawResponseBody,
+              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
+            )
+
+          assertThat(responseBody.count()).isEqualTo(3)
+          assertThat(responseBody[0].createdAt).isEqualTo(date1.toInstant())
+          assertThat(responseBody[1].createdAt).isEqualTo(date2.toInstant())
+          assertThat(responseBody[2].createdAt).isEqualTo(date3.toInstant())
+        }
+      }
+    }
+
+    @Test
+    fun `Get applications all returns 200 correct body and page one and sorted by arrivalDate desc`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val crn = offenderDetails.otherIds.crn
+          val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
+          val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
+          val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withArrivalDate(date1)
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withArrivalDate(date2)
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withArrivalDate(date3)
+          }
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/all?page=1&sortDirection=desc&applicationSortField=arrivalDate")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 3)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody =
+            objectMapper.readValue(
+              rawResponseBody,
+              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
+            )
+
+          assertThat(responseBody.count()).isEqualTo(3)
+          assertThat(responseBody[0].arrivalDate).isEqualTo(date3.toInstant())
+          assertThat(responseBody[1].arrivalDate).isEqualTo(date2.toInstant())
+          assertThat(responseBody[2].arrivalDate).isEqualTo(date1.toInstant())
+        }
+      }
+    }
+
+    @Test
+    fun `Get applications all returns 200 correct body and page one and sorted by arrivalDate asc`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val crn = offenderDetails.otherIds.crn
+          val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
+          val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
+          val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withArrivalDate(date1)
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withArrivalDate(date2)
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withArrivalDate(date3)
+          }
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/all?page=1&sortDirection=asc&applicationSortField=arrivalDate")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 3)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody =
+            objectMapper.readValue(
+              rawResponseBody,
+              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
+            )
+
+          assertThat(responseBody.count()).isEqualTo(3)
+          assertThat(responseBody[0].arrivalDate).isEqualTo(date1.toInstant())
+          assertThat(responseBody[1].arrivalDate).isEqualTo(date2.toInstant())
+          assertThat(responseBody[2].arrivalDate).isEqualTo(date3.toInstant())
+        }
+      }
+    }
+
+    @Test
+    fun `Get applications all returns 200 correct body and page one and sorted by tier asc`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val crn = offenderDetails.otherIds.crn
+          val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
+          val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
+          val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val risk1 = PersonRisksFactory()
+            .withTier(
+              RiskWithStatus(
+                RiskTier(
+                  level = "M1",
+                  lastUpdated = LocalDate.parse("2023-06-26"),
+                ),
+              ),
+            )
+            .produce()
+
+          val risk2 = PersonRisksFactory()
+            .withTier(
+              RiskWithStatus(
+                RiskTier(
+                  level = "M2",
+                  lastUpdated = LocalDate.parse("2023-06-26"),
+                ),
+              ),
+            )
+            .produce()
+
+          val risk3 = PersonRisksFactory()
+            .withTier(
+              RiskWithStatus(
+                RiskTier(
+                  level = "M3",
+                  lastUpdated = LocalDate.parse("2023-06-26"),
+                ),
+              ),
+            )
+            .produce()
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withArrivalDate(date1)
+            withRiskRatings(risk1)
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withArrivalDate(date2)
+            withRiskRatings(risk2)
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withArrivalDate(date3)
+            withRiskRatings(risk3)
+          }
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/all?page=1&sortDirection=asc&applicationSortField=tier")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 3)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody =
+            objectMapper.readValue(
+              rawResponseBody,
+              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
+            )
+
+          assertThat(responseBody.count()).isEqualTo(3)
+          assertThat(responseBody[0].tier).isEqualTo("M1")
+          assertThat(responseBody[1].tier).isEqualTo("M2")
+          assertThat(responseBody[2].tier).isEqualTo("M3")
+        }
+      }
+    }
+
+    @Test
+    fun `Get applications all returns 200 correct body and page one and sorted by tier desc`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val crn = offenderDetails.otherIds.crn
+          val date1 = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
+          val date2 = OffsetDateTime.parse("2022-09-24T15:00:00+01:00")
+          val date3 = OffsetDateTime.parse("2022-12-24T15:00:00+01:00")
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val risk1 = PersonRisksFactory()
+            .withTier(
+              RiskWithStatus(
+                RiskTier(
+                  level = "M1",
+                  lastUpdated = LocalDate.parse("2023-06-26"),
+                ),
+              ),
+            )
+            .produce()
+
+          val risk2 = PersonRisksFactory()
+            .withTier(
+              RiskWithStatus(
+                RiskTier(
+                  level = "M2",
+                  lastUpdated = LocalDate.parse("2023-06-26"),
+                ),
+              ),
+            )
+            .produce()
+
+          val risk3 = PersonRisksFactory()
+            .withTier(
+              RiskWithStatus(
+                RiskTier(
+                  level = "M3",
+                  lastUpdated = LocalDate.parse("2023-06-26"),
+                ),
+              ),
+            )
+            .produce()
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withArrivalDate(date1)
+            withRiskRatings(risk1)
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withArrivalDate(date2)
+            withRiskRatings(risk2)
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withArrivalDate(date3)
+            withRiskRatings(risk3)
+          }
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/all?page=1&sortDirection=desc&applicationSortField=tier")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 3)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody =
+            objectMapper.readValue(
+              rawResponseBody,
+              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
+            )
+
+          assertThat(responseBody.count()).isEqualTo(3)
+          assertThat(responseBody[0].tier).isEqualTo("M3")
+          assertThat(responseBody[1].tier).isEqualTo("M2")
+          assertThat(responseBody[2].tier).isEqualTo("M1")
         }
       }
     }
