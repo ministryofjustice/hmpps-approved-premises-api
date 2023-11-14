@@ -62,7 +62,21 @@ class DomainEventServiceTest {
     domainEventRepository = domainEventRepositoryMock,
     domainEventBuilder = domainEventBuilderMock,
     hmppsQueueService = hmppsQueueServiceMock,
-    emitDomainEventsEnabled = true,
+    emitDomainEventsEnabled = EventType.entries,
+    bookingCancelledDetailUrlTemplate = "http://api/events/cas3/booking-cancelled/#eventId",
+    bookingConfirmedDetailUrlTemplate = "http://api/events/cas3/booking-confirmed/#eventId",
+    bookingProvisionallyMadeDetailUrlTemplate = "http://api/events/cas3/booking-provisionally-made/#eventId",
+    personArrivedDetailUrlTemplate = "http://api/events/cas3/person-arrived/#eventId",
+    personDepartedDetailUrlTemplate = "http://api/events/cas3/person-departed/#eventId",
+    referralSubmittedDetailUrlTemplate = "http://api/events/cas3/referral-submitted/#eventId",
+  )
+
+  private val domainEventServiceEmittingDisabled = DomainEventService(
+    objectMapper = objectMapper,
+    domainEventRepository = domainEventRepositoryMock,
+    domainEventBuilder = domainEventBuilderMock,
+    hmppsQueueService = hmppsQueueServiceMock,
+    emitDomainEventsEnabled = listOf(),
     bookingCancelledDetailUrlTemplate = "http://api/events/cas3/booking-cancelled/#eventId",
     bookingConfirmedDetailUrlTemplate = "http://api/events/cas3/booking-confirmed/#eventId",
     bookingProvisionallyMadeDetailUrlTemplate = "http://api/events/cas3/booking-provisionally-made/#eventId",
@@ -116,7 +130,7 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getBookingCancelledEvent persists event, emits event to SNS`() {
+  fun `saveBookingCancelledEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
@@ -203,7 +217,81 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getBookingCancelledEvent does not emit event to SNS if event fails to persist to database`() {
+  fun `saveBookingCancelledEvent persists event, but does not emit event to SNS when event is disabled`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = CAS3BookingCancelledEvent(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = EventType.bookingCancelled,
+        eventDetails = CAS3BookingCancelledEventDetailsFactory().produce(),
+      ),
+    )
+
+    every { domainEventBuilderMock.getBookingCancelledDomainEvent(any()) } returns domainEventToSave
+
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val applicationEntity = TemporaryAccommodationApplicationEntityFactory()
+      .withYieldedCreatedByUser {
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce()
+      }
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withProbationRegion(probationRegion)
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withStaffKeyWorkerCode(null)
+      .withApplication(applicationEntity)
+      .produce()
+
+    domainEventServiceEmittingDisabled.saveBookingCancelledEvent(bookingEntity)
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.CAS3_BOOKING_CANCELLED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 0) {
+      mockHmppsTopic.snsClient.publish(any())
+    }
+  }
+
+  @Test
+  fun `saveBookingCancelledEvent does not emit event to SNS if event fails to persist to database`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
@@ -322,7 +410,7 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getBookingConfirmedEvent persists event, emits event to SNS`() {
+  fun `saveBookingConfirmedEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
@@ -409,7 +497,81 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getBookingConfirmedEvent does not emit event to SNS if event fails to persist to database`() {
+  fun `saveBookingConfirmedEvent persists event, but does not emit event to SNS when event is disabled`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = CAS3BookingConfirmedEvent(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = EventType.bookingConfirmed,
+        eventDetails = CAS3BookingConfirmedEventDetailsFactory().produce(),
+      ),
+    )
+
+    every { domainEventBuilderMock.getBookingConfirmedDomainEvent(any()) } returns domainEventToSave
+
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val applicationEntity = TemporaryAccommodationApplicationEntityFactory()
+      .withYieldedCreatedByUser {
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce()
+      }
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withProbationRegion(probationRegion)
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withStaffKeyWorkerCode(null)
+      .withApplication(applicationEntity)
+      .produce()
+
+    domainEventServiceEmittingDisabled.saveBookingConfirmedEvent(bookingEntity)
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.CAS3_BOOKING_CONFIRMED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 0) {
+      mockHmppsTopic.snsClient.publish(any())
+    }
+  }
+
+  @Test
+  fun `saveBookingConfirmedEvent does not emit event to SNS if event fails to persist to database`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
@@ -528,7 +690,7 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getBookingProvisionallyMadeEvent persists event, emits event to SNS`() {
+  fun `saveBookingProvisionallyMadeEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
@@ -615,7 +777,81 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getBookingProvisionallyMadeEvent does not emit event to SNS if event fails to persist to database`() {
+  fun `saveBookingProvisionallyMadeEvent persists event, but does not emit event to SNS when event is disabled`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = CAS3BookingProvisionallyMadeEvent(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = EventType.bookingProvisionallyMade,
+        eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory().produce(),
+      ),
+    )
+
+    every { domainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(any()) } returns domainEventToSave
+
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val applicationEntity = TemporaryAccommodationApplicationEntityFactory()
+      .withYieldedCreatedByUser {
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce()
+      }
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withProbationRegion(probationRegion)
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withStaffKeyWorkerCode(null)
+      .withApplication(applicationEntity)
+      .produce()
+
+    domainEventServiceEmittingDisabled.saveBookingProvisionallyMadeEvent(bookingEntity)
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 0) {
+      mockHmppsTopic.snsClient.publish(any())
+    }
+  }
+
+  @Test
+  fun `saveBookingProvisionallyMadeEvent does not emit event to SNS if event fails to persist to database`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
@@ -817,6 +1053,80 @@ class DomainEventServiceTest {
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
       )
+    }
+  }
+
+  @Test
+  fun `savePersonArrivedEvent persists event, but does not emit event to SNS when event is disabled`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = CAS3PersonArrivedEvent(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = EventType.personArrived,
+        eventDetails = CAS3PersonArrivedEventDetailsFactory().produce(),
+      ),
+    )
+
+    every { domainEventBuilderMock.getPersonArrivedDomainEvent(any()) } returns domainEventToSave
+
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val applicationEntity = TemporaryAccommodationApplicationEntityFactory()
+      .withYieldedCreatedByUser {
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce()
+      }
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withProbationRegion(probationRegion)
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withStaffKeyWorkerCode(null)
+      .withApplication(applicationEntity)
+      .produce()
+
+    domainEventServiceEmittingDisabled.savePersonArrivedEvent(bookingEntity)
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.CAS3_PERSON_ARRIVED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 0) {
+      mockHmppsTopic.snsClient.publish(any())
     }
   }
 
@@ -1027,6 +1337,80 @@ class DomainEventServiceTest {
   }
 
   @Test
+  fun `savePersonDepartedEvent persists event, but does not emit event to SNS when event is disabled`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = CAS3PersonDepartedEvent(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = EventType.personDeparted,
+        eventDetails = CAS3PersonDepartedEventDetailsFactory().produce(),
+      ),
+    )
+
+    every { domainEventBuilderMock.getPersonDepartedDomainEvent(any()) } returns domainEventToSave
+
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val applicationEntity = TemporaryAccommodationApplicationEntityFactory()
+      .withYieldedCreatedByUser {
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce()
+      }
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val bookingEntity = BookingEntityFactory()
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withProbationRegion(probationRegion)
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withStaffKeyWorkerCode(null)
+      .withApplication(applicationEntity)
+      .produce()
+
+    domainEventServiceEmittingDisabled.savePersonDepartedEvent(bookingEntity)
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.CAS3_PERSON_DEPARTED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 0) {
+      mockHmppsTopic.snsClient.publish(any())
+    }
+  }
+
+  @Test
   fun `savePersonDepartedEvent does not emit event to SNS if event fails to persist to database`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
@@ -1146,7 +1530,7 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getReferralSubmittedEvent persists event, emits event to SNS`() {
+  fun `saveReferralSubmittedEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
@@ -1222,7 +1606,70 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getReferralSubmittedEvent does not emit event to SNS if event fails to persist to database`() {
+  fun `saveReferralSubmittedEvent persists event, but does not emit event to SNS when event is disabled`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = CAS3ReferralSubmittedEvent(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = EventType.referralSubmitted,
+        eventDetails = CAS3ReferralSubmittedEventDetailsFactory().produce(),
+      ),
+    )
+
+    every { domainEventBuilderMock.getReferralSubmittedDomainEvent(any()) } returns domainEventToSave
+
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val applicationEntity = TemporaryAccommodationApplicationEntityFactory()
+      .withYieldedCreatedByUser {
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce()
+      }
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    domainEventServiceEmittingDisabled.saveReferralSubmittedEvent(applicationEntity)
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.CAS3_REFERRAL_SUBMITTED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 0) {
+      mockHmppsTopic.snsClient.publish(any())
+    }
+  }
+
+  @Test
+  fun `saveReferralSubmittedEvent does not emit event to SNS if event fails to persist to database`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
