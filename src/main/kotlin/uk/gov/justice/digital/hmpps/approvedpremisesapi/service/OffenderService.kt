@@ -241,7 +241,7 @@ class OffenderService(
         )
       }
     }
-  } catch (e: Exception) {
+  } catch (ignored: RuntimeException) {
     AuthorisableActionResult.Success(
       PersonRisks(
         roshRisks = getRoshRisksEnvelope(crn),
@@ -501,8 +501,8 @@ class OffenderService(
           }
         }
       }.first()
-  } catch (e: Exception) {
-    PersonInfoResult.Unknown(crn, e)
+  } catch (ignored: RuntimeException) {
+    PersonInfoResult.Unknown(crn, ignored)
   }
 
   private fun getRoshRisksEnvelope(crn: String): RiskWithStatus<RoshRisks> {

@@ -20,6 +20,8 @@ style:
     max: 4
 
 complexity:
+  ComplexCondition:
+    threshold: 5
   LongMethod:
     threshold: 200
   LargeClass:

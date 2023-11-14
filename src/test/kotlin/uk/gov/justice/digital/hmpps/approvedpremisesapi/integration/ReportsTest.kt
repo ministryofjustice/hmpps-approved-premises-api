@@ -401,7 +401,7 @@ class ReportsTest : IntegrationTestBase() {
         val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
           withPremises(premises)
           withServiceName(ServiceName.temporaryAccommodation)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withArrivalDate(LocalDate.of(2023, 4, 5))
           withDepartureDate(LocalDate.of(2023, 4, 7))
         }
@@ -439,7 +439,7 @@ class ReportsTest : IntegrationTestBase() {
         bookingEntityFactory.produceAndPersistMultiple(5) {
           withPremises(unexpectedPremises)
           withServiceName(ServiceName.approvedPremises)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withArrivalDate(LocalDate.of(2023, 4, 5))
           withDepartureDate(LocalDate.of(2023, 4, 7))
         }
@@ -478,7 +478,7 @@ class ReportsTest : IntegrationTestBase() {
         val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
           withPremises(premises)
           withServiceName(ServiceName.temporaryAccommodation)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withArrivalDate(LocalDate.of(2023, 4, 5))
           withDepartureDate(LocalDate.of(2023, 4, 7))
         }
@@ -522,7 +522,7 @@ class ReportsTest : IntegrationTestBase() {
         bookingEntityFactory.produceAndPersistMultiple(5) {
           withPremises(unexpectedPremises)
           withServiceName(ServiceName.temporaryAccommodation)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withArrivalDate(LocalDate.of(2023, 4, 5))
           withDepartureDate(LocalDate.of(2023, 4, 7))
         }

@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.asOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
@@ -70,18 +71,18 @@ class ApplicationStateTest : IntegrationTestBase() {
     }
 
     APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-      offenderDetails.otherIds.crn,
+      offenderDetails.case.crn,
       ManagingTeamsResponse(
         teamCodes = listOf("TEAM1"),
       ),
     )
 
     APOASysContext_mockSuccessfulNeedsDetailsCall(
-      offenderDetails.otherIds.crn,
+      offenderDetails.case.crn,
       NeedsDetailsFactory().produce(),
     )
 
-    this.offenderDetails = offenderDetails
+    this.offenderDetails = offenderDetails.case.asOffenderDetail()
     this.user = user
     this.jwt = jwt
     this.applicationId = createApplication()

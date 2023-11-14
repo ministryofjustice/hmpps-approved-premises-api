@@ -93,7 +93,7 @@ class PlacementRequestsController(
       is AuthorisableActionResult.Success -> authorisationResult.entity
     }
 
-    val personInfo = offenderService.getInfoForPerson(placementRequest.application.crn, user.deliusUsername, false)
+    val personInfo = offenderService.getInfoForPerson(placementRequest.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     return ResponseEntity.ok(
       placementRequestDetailTransformer.transformJpaToApi(placementRequest, personInfo, cancellations),

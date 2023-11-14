@@ -288,10 +288,10 @@ class ApplicationTest : IntegrationTestBase() {
 
             val dateTime = OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00")
             val application =
-              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, dateTime)
+              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails.case.asOffenderDetail(), probationRegion, dateTime)
 
             val notSubmittedApplication =
-              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
+              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails.case.asOffenderDetail(), probationRegion, null)
 
             val otherProbationRegion = probationRegionEntityFactory.produceAndPersist {
               withYieldedApArea {
@@ -300,7 +300,7 @@ class ApplicationTest : IntegrationTestBase() {
             }
 
             val notInRegionApplication =
-              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, otherProbationRegion, dateTime)
+              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails.case.asOffenderDetail(), otherProbationRegion, dateTime)
 
             mockOffenderUserAccessCall(offenderDetails.case.crn, false, false)
 
@@ -379,10 +379,10 @@ class ApplicationTest : IntegrationTestBase() {
             }
 
             val application =
-              createTempApplicationEntity(applicationSchema, referrerUser, offenderDetails, probationRegion, null)
+              createTempApplicationEntity(applicationSchema, referrerUser, offenderDetails.case.asOffenderDetail(), probationRegion, null)
 
             val anotherUsersApplication =
-              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
+              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails.case.asOffenderDetail(), probationRegion, null)
 
             mockOffenderUserAccessCall(
               offenderDetails.case.crn,
@@ -539,8 +539,8 @@ class ApplicationTest : IntegrationTestBase() {
 
       APDeliusContext_mockSuccessfulCaseSummaryCall(listOf(offenderDetails.crn), CaseSummaries(listOf(offenderDetails)))
       mockOffenderUserAccessCall(offenderDetails.crn, false, false)
-      PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
-      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
+      PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.nomsId!!)
+      loadPreemptiveCacheForInmateDetails(offenderDetails.nomsId!!)
 
       val rawResponseBody = webTestClient.get()
         .uri("/applications")
@@ -655,10 +655,10 @@ class ApplicationTest : IntegrationTestBase() {
       },
     ) { _, jwt ->
       `Given a User` { otherUser, _ ->
-        `Given an Offender` { offenderDetails, _ ->
+        `Given an Offender`(offenderDetailsConfigBlock = { withCurrentExclusion(true) }) { offenderDetails, _ ->
 
           mockOffenderUserAccessCall(offenderDetails.case.crn, false, true)
-          val application = produceAndPersistBasicApplication(crn, otherUser, "TEAM1")
+          val application = produceAndPersistBasicApplication(offenderDetails.case.crn, otherUser, "TEAM1")
 
           webTestClient.get()
             .uri("/applications/${application.id}")
@@ -733,8 +733,8 @@ class ApplicationTest : IntegrationTestBase() {
 
       APDeliusContext_mockSuccessfulCaseSummaryCall(listOf(crn), CaseSummaries(listOf(offenderDetails)))
       mockOffenderUserAccessCall(offenderDetails.crn, false, false)
-      PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
-      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
+      PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.nomsId!!)
+      loadPreemptiveCacheForInmateDetails(offenderDetails.nomsId!!)
 
       val rawResponseBody = webTestClient.get()
         .uri("/applications/${application.id}")
@@ -1207,11 +1207,11 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Create new application returns 404 when a person cannot be found`() {
-    `Given a User` { _, jwt ->
+    `Given a User` { user, jwt ->
       val crn = "X1234"
 
       APDeliusContext_mockSuccessfulCaseSummaryCall(listOf(crn), CaseSummaries(listOf()))
-      APDeliusContext_mockUserAccessCall(listOf(crn), userEntity.deliusUsername, UserAccess(listOf()))
+      APDeliusContext_mockUserAccessCall(listOf(crn), user.deliusUsername, UserAccess(listOf()))
       loadPreemptiveCacheForOffenderDetails(crn)
 
       approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2581,7 +2581,7 @@ class ApplicationTest : IntegrationTestBase() {
 
           val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withApplicationSchema(newestJsonSchema)
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withCreatedByUser(userEntity)
             withData(
               """
@@ -2594,7 +2594,7 @@ class ApplicationTest : IntegrationTestBase() {
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
             withApplicationSchema(newestJsonSchema)
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withCreatedByUser(userEntity)
             withData(
               """
@@ -2638,7 +2638,7 @@ class ApplicationTest : IntegrationTestBase() {
     fun `Get applications all returns forty two items if no page parameter passed`() {
       `Given a User` { userEntity, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          createTwelveApplications(offenderDetails.otherIds.crn, userEntity)
+          createTwelveApplications(offenderDetails.case.crn, userEntity)
 
           val rawResponseBody = webTestClient.get()
             .uri("/applications/all")
@@ -2666,7 +2666,7 @@ class ApplicationTest : IntegrationTestBase() {
     fun `Get applications all returns ten items if page parameter passed is one`() {
       `Given a User` { userEntity, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          createTwelveApplications(offenderDetails.otherIds.crn, userEntity)
+          createTwelveApplications(offenderDetails.case.crn, userEntity)
 
           val rawResponseBody = webTestClient.get()
             .uri("/applications/all?page=1&sortDirection=asc")
@@ -2698,7 +2698,7 @@ class ApplicationTest : IntegrationTestBase() {
     fun `Get applications all returns twelve items if crn parameter passed and no page`() {
       `Given a User` { userEntity, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          val crn = offenderDetails.otherIds.crn
+          val crn = offenderDetails.case.crn
           createTwelveApplications(crn, userEntity)
 
           val rawResponseBody = webTestClient.get()
@@ -2729,10 +2729,10 @@ class ApplicationTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, _ ->
           `Given an Offender` { offenderDetails2, _ ->
 
-            val crn1 = offenderDetails.otherIds.crn
+            val crn1 = offenderDetails.case.crn
             createTwelveApplications(crn1, userEntity)
 
-            val crn2 = offenderDetails2.otherIds.crn
+            val crn2 = offenderDetails2.case.crn
             createTwelveApplications(crn2, userEntity)
 
             val rawResponseBody = webTestClient.get()
@@ -2764,10 +2764,10 @@ class ApplicationTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, _ ->
           `Given an Offender` { offenderDetails2, _ ->
 
-            val crn1 = offenderDetails.otherIds.crn
+            val crn1 = offenderDetails.case.crn
             createTwelveApplications(crn1, userEntity)
 
-            val crn2 = offenderDetails2.otherIds.crn
+            val crn2 = offenderDetails2.case.crn
             createTwelveApplications(crn2, userEntity)
 
             val rawResponseBody = webTestClient.get()

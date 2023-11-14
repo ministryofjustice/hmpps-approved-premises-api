@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -98,7 +99,7 @@ class AssessmentController(
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
     }
 
-    val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, false)
+    val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
 
     return ResponseEntity.ok(
       assessmentTransformer.transformJpaToApi(assessment, personInfo),
