@@ -1717,6 +1717,8 @@ components:
               format: uuid
             status:
               $ref: '#/components/schemas/ApplicationStatus'
+            tier:
+              type: string
           required:
             - createdByUserId
             - status
@@ -3868,6 +3870,12 @@ components:
       enum:
         - asc
         - desc
+    ApplicationSortField:
+      type: string
+      enum:
+        - tier
+        - createdAt
+        - arrivalDate
     RiskTierLevel:
       type: string
       enum:

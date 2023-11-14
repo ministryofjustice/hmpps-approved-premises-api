@@ -178,6 +178,7 @@ class ApplicationServiceTest {
         override fun getLatestAssessmentDecision(): AssessmentDecision? = null
         override fun getLatestAssessmentHasClarificationNotesWithoutResponse(): Boolean = false
         override fun getHasBooking(): Boolean = false
+        override fun getTier(): String? = null
       },
     )
 

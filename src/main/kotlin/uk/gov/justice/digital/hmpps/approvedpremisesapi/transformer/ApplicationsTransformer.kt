@@ -110,6 +110,7 @@ class ApplicationsTransformer(
         risks = if (riskRatings != null) risksTransformer.transformDomainToApi(riskRatings, domain.getCrn()) else null,
         status = getStatusFromSummary(domain),
         type = "CAS1",
+        tier = domain.getTier(),
       )
     }
 

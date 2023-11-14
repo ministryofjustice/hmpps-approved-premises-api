@@ -56,7 +56,8 @@ SELECT
     apa.is_womens_application as isWomensApplication,
     apa.is_pipe_application as isPipeApplication,
     apa.arrival_date as arrivalDate,
-    CAST(apa.risk_ratings AS TEXT) as riskRatings
+    CAST(apa.risk_ratings AS TEXT) as riskRatings,
+    apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier
 FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
 LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
@@ -89,7 +90,8 @@ SELECT
     apa.is_womens_application as isWomensApplication,
     apa.is_pipe_application as isPipeApplication,
     apa.arrival_date as arrivalDate,
-    CAST(apa.risk_ratings AS TEXT) as riskRatings
+    CAST(apa.risk_ratings AS TEXT) as riskRatings,
+    apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier
 FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
 LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
@@ -436,6 +438,7 @@ interface ApprovedPremisesApplicationSummary : ApplicationSummary {
   fun getIsEsapApplication(): Boolean?
   fun getArrivalDate(): Timestamp?
   fun getRiskRatings(): String?
+  fun getTier(): String?
 }
 
 interface TemporaryAccommodationApplicationSummary : ApplicationSummary {

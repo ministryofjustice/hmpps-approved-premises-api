@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Probati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
@@ -122,8 +123,14 @@ class ApplicationService(
     page: Int?,
     crn: String?,
     sortDirection: SortDirection?,
+    applicationSortField: ApplicationSortField?,
   ): Pair<List<ApprovedPremisesApplicationSummary>, PaginationMetadata?> {
-    val sortField = "a.submitted_at"
+    val sortField = when (applicationSortField) {
+      ApplicationSortField.arrivalDate -> "arrivalDate"
+      ApplicationSortField.createdAt -> "a.created_at"
+      ApplicationSortField.tier -> "tier"
+      else -> "a.created_at"
+    }
     val pageable = getPageable(sortField, sortDirection, page)
 
     val response = if (crn == null) {
