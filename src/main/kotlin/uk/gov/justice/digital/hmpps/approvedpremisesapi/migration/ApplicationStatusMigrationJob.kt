@@ -38,7 +38,6 @@ class ApplicationStatusMigrationJob(
   }
 
   private fun setStatus(application: ApprovedPremisesApplicationEntity) {
-    entityManager.detach(application)
     val assessment = application.getLatestAssessment()
 
     application.status = when {
@@ -53,6 +52,7 @@ class ApplicationStatusMigrationJob(
     }
 
     log.info("Updating application ${application.id} to ${application.status}")
+    entityManager.detach(application)
     applicationRepository.updateStatus(application.id, application.status!!)
   }
 }
