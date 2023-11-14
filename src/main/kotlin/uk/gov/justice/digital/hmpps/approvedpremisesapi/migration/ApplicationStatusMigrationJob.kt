@@ -1,9 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
 
-import io.sentry.Sentry
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -20,37 +18,24 @@ class ApplicationStatusMigrationJob(
   override val shouldRunInTransaction = true
 
   override fun process() {
-    try {
-      var page = 0
-      log.info("Starting Migration process...")
-      var slice = getApplications(PageRequest.of(page, pageSize))
-      val applications = slice.content
+    log.info("Starting Migration process...")
 
-      applications.forEach {
+    var page = 1
+    var hasNext = true
+    var slice: Slice<ApprovedPremisesApplicationEntity>
+
+    while (hasNext) {
+      log.info("Getting page $page")
+      slice = applicationRepository.findAllWithNullStatus(PageRequest.of(0, pageSize))
+      slice.content.forEach {
         setStatus(it)
       }
-
       entityManager.clear()
-
-      while (slice.hasNext()) {
-        page += 1
-        log.info("Getting page $page")
-        slice = getApplications(slice.nextPageable())
-        slice.get().forEach {
-          setStatus(it)
-        }
-        entityManager.clear()
-      }
-    } catch (e: Exception) {
-      Sentry.captureException(e)
+      hasNext = slice.hasNext()
+      page += 1
     }
+    log.info("Migration process complete!")
   }
-
-  @Suppress("UNCHECKED_CAST")
-  private fun getApplications(pageable: Pageable) = applicationRepository.findAllForService(
-    ApprovedPremisesApplicationEntity::class.java,
-    pageable,
-  ) as Slice<ApprovedPremisesApplicationEntity>
 
   private fun setStatus(application: ApprovedPremisesApplicationEntity) {
     val assessment = application.getLatestAssessment()
