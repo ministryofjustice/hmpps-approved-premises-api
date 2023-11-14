@@ -192,6 +192,10 @@ class SetApplicationStatusMigrationTest : MigrationJobTestBase() {
       )
     }
 
+    application.status = null
+
+    approvedPremisesApplicationRepository.save(application)
+
     return Pair(application, assessment)
   }
 

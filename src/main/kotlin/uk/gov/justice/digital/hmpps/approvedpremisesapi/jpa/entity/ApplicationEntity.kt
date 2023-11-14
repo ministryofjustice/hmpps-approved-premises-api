@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
@@ -34,6 +35,10 @@ import javax.persistence.Table
 
 @Repository
 interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
+
+  @Modifying
+  @Query("UPDATE ApprovedPremisesApplicationEntity ap set ap.status = :status where ap.id = :applicationId")
+  fun updateStatus(applicationId: UUID, status: ApprovedPremisesApplicationStatus)
 
   @Query(
     """
