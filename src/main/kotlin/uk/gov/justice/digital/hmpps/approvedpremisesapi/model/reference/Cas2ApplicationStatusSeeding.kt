@@ -11,7 +11,7 @@ object Cas2ApplicationStatusSeeding {
         id = UUID.fromString("c989f05f-c574-49a2-8381-11d332d98d40"),
         name = "received",
         label = "Received",
-        description = "The application has been received and is yet to be processed",
+        description = "The application has been received and is yet to be processed.",
       ),
       Cas2ApplicationStatus(
         id = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905"),
