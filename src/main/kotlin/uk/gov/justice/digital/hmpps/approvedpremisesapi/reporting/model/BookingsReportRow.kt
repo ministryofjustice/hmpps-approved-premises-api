@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model
 import java.time.LocalDate
 
 data class BookingsReportRow(
+  val bookingId: String?,
   val referralId: String?,
   val referralDate: LocalDate?,
   val riskOfSeriousHarm: String?,

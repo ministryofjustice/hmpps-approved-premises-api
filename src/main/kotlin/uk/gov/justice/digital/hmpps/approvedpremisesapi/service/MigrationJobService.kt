@@ -1,14 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import io.sentry.Sentry
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApplicationStatusMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
+import javax.persistence.EntityManager
 
 @Service
 class MigrationJobService(
@@ -19,14 +23,19 @@ class MigrationJobService(
   @Async
   fun runMigrationJobAsync(migrationJobType: MigrationJobType) = runMigrationJob(migrationJobType, 50)
 
-  fun runMigrationJob(migrationJobType: MigrationJobType, pageSize: Int = 50) {
+  fun runMigrationJob(migrationJobType: MigrationJobType, pageSize: Int = 10) {
     migrationLogger.info("Starting migration job request: $migrationJobType")
 
     try {
       val job: MigrationJob = when (migrationJobType) {
-        MigrationJobType.updateAllUsersFromCommunityApi -> UpdateAllUsersFromCommunityApiJob(
+        MigrationJobType.allUsersFromCommunityApi -> UpdateAllUsersFromCommunityApiJob(
           applicationContext.getBean(UserRepository::class.java),
           applicationContext.getBean(UserService::class.java),
+        )
+        MigrationJobType.applicationStatuses -> ApplicationStatusMigrationJob(
+          applicationContext.getBean(ApplicationRepository::class.java),
+          applicationContext.getBean(EntityManager::class.java),
+          pageSize,
         )
       }
 
@@ -38,6 +47,7 @@ class MigrationJobService(
 
       migrationLogger.info("Finished migration job: $migrationJobType")
     } catch (exception: Exception) {
+      Sentry.captureException(exception)
       migrationLogger.error("Unable to complete Migration Job", exception)
     }
   }

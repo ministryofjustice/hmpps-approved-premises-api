@@ -41,7 +41,7 @@ class DomainEventService(
   private val domainEventRepository: DomainEventRepository,
   private val domainEventBuilder: DomainEventBuilder,
   private val hmppsQueueService: HmppsQueueService,
-  @Value("\${domain-events.cas3.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
+  @Value("\${domain-events.cas3.emit-enabled}") private val emitDomainEventsEnabled: List<EventType>,
   @Value("\${url-templates.api.cas3.booking-cancelled-event-detail}") private val bookingCancelledDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas3.booking-confirmed-event-detail}") private val bookingConfirmedDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas3.booking-provisionally-made-event-detail}") private val bookingProvisionallyMadeDetailUrlTemplate: String,
@@ -192,7 +192,7 @@ class DomainEventService(
       ),
     )
 
-    if (emitDomainEventsEnabled) {
+    if (emitDomainEventsEnabled.contains(domainEvent.data.eventType)) {
       val personReferenceIdentifiers = when (nomsNumber) {
         null -> listOf(
           SnsEventPersonReference("CRN", crn),
@@ -225,7 +225,7 @@ class DomainEventService(
 
       log.info("Emitted SNS event (Message Id: ${publishResult.messageId}, Sequence Id: ${publishResult.sequenceNumber}) for Domain Event: ${domainEvent.id} of type: ${snsEvent.eventType}")
     } else {
-      log.info("Not emitting SNS event for domain event because domain-events.cas3.emit-enabled is not enabled")
+      log.info("Not emitting SNS event for domain event because domain-events.cas3.emit-enabled does not contain '${domainEvent.data.eventType}'")
     }
   }
 

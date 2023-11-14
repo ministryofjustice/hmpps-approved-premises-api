@@ -3,12 +3,15 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import org.zalando.problem.AbstractThrowableProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.SubmissionsCas2Delegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -19,7 +22,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmittedApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getFullInfoForPersonOrThrow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getInfoForPersonOrThrowInternalServerError
 import java.util.UUID
@@ -28,9 +32,10 @@ import java.util.UUID
 class SubmissionsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
-  private val applicationsTransformer: ApplicationsTransformer,
+  private val applicationTransformer: SubmittedApplicationTransformer,
   private val offenderService: OffenderService,
   private val externalUserService: ExternalUserService,
+  private val statusUpdateService: StatusUpdateService,
 ) : SubmissionsCas2Delegate {
 
   override fun submissionsGet(): ResponseEntity<List<Cas2SubmittedApplicationSummary>> {
@@ -79,6 +84,46 @@ class SubmissionsController(
     return ResponseEntity(HttpStatus.OK)
   }
 
+  override fun submissionsApplicationIdStatusUpdatesPost(
+    applicationId: UUID,
+    statusUpdate: Cas2ApplicationStatusUpdate,
+  ): ResponseEntity<Unit> {
+    val result = statusUpdateService.create(
+      applicationId = applicationId,
+      statusUpdate = statusUpdate,
+      assessor = externalUserService.getUserForRequest(),
+    )
+
+    processAuthorisationFor(applicationId, result)
+      .run { processValidation(this as ValidatableActionResult<Cas2StatusUpdateEntity>) }
+
+    return ResponseEntity(HttpStatus.CREATED)
+  }
+
+  private fun processAuthorisationFor(
+    applicationId: UUID,
+    result: AuthorisableActionResult<ValidatableActionResult<Cas2StatusUpdateEntity>>,
+  ): Any {
+    return when (result) {
+      is AuthorisableActionResult.NotFound -> throwProblem(NotFoundProblem(applicationId, "Cas2Application"))
+      is AuthorisableActionResult.Unauthorised -> throwProblem(ForbiddenProblem())
+      is AuthorisableActionResult.Success -> result.entity
+    }
+  }
+
+  private fun processValidation(validationResult: ValidatableActionResult<Cas2StatusUpdateEntity>) {
+    return when (validationResult) {
+      is ValidatableActionResult.GeneralValidationError -> throwProblem(BadRequestProblem(errorDetail = validationResult.message))
+      is ValidatableActionResult.FieldValidationError -> throwProblem(BadRequestProblem(invalidParams = validationResult.validationMessages))
+      is ValidatableActionResult.ConflictError -> throwProblem(ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message))
+      is ValidatableActionResult.Success -> Unit
+    }
+  }
+
+  private fun throwProblem(problem: AbstractThrowableProblem) {
+    throw problem
+  }
+
   private fun ensureExternalUserPersisted() {
     externalUserService.getUserForRequest()
   }
@@ -89,7 +134,7 @@ class SubmissionsController(
     Cas2SubmittedApplicationSummary {
     val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn())
 
-    return applicationsTransformer.transformJpaSummaryToCas2SubmittedSummary(
+    return applicationTransformer.transformJpaSummaryToApiRepresentation(
       application,
       personInfo,
     )
@@ -100,7 +145,7 @@ class SubmissionsController(
   ): Cas2SubmittedApplication {
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
 
-    return applicationsTransformer.transformJpaToSubmittedApplication(
+    return applicationTransformer.transformJpaToApiRepresentation(
       application,
       personInfo,
     )

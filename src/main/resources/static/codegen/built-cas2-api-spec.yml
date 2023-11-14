@@ -202,6 +202,41 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /submissions/{applicationId}/status-updates:
+    post:
+      tags:
+        - Operations on submitted CAS2 applications (Assessors)
+      summary: Creates a status update on a submitted application
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application whose status is to be updated
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information on the new status to be applied
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/Cas2ApplicationStatusUpdate'
+        required: true
+      responses:
+        200:
+          description: successfully created the status update
+        400:
+          description: status update has already been submitted
+          content:
+            'application/problem+json':
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /people/search:
     get:
       tags:
@@ -336,6 +371,26 @@ paths:
             'application/json':
               schema:
                 $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /reference-data/application-status:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all application status update choices
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cas2ApplicationStatus'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
 components:
@@ -1942,9 +1997,8 @@ components:
         createdAt:
           type: string
           format: date-time
-        createdByUserId:
-          type: string
-          format: uuid
+        submittedBy:
+          $ref: '#/components/schemas/NomisUser'
         schemaVersion:
           type: string
           format: uuid
@@ -1957,11 +2011,15 @@ components:
         submittedAt:
           type: string
           format: date-time
+        statusUpdates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2StatusUpdate'
       required:
         - id
         - person
         - createdAt
-        - createdByUserId
+        - createdBy
         - schemaVersion
         - outdatedSchema
         - status
@@ -2087,6 +2145,35 @@ components:
           required:
             - createdByUserId
             - status
+    Cas2ApplicationStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+        description:
+          type: string
+          example: 'More information about the application has been requested from the POM (Prison Offender Manager).'
+      required:
+        - id
+        - name
+        - label
+        - description
+    Cas2ApplicationStatusUpdate:
+      type: object
+      properties:
+        newStatus:
+          type: string
+          example: 'moreInfoRequired'
+          description: 'The "name" of the new status to be applied'
+      required:
+        - newStatus
     Cas2SubmittedApplicationSummary:
       type: object
       properties:
@@ -2112,6 +2199,31 @@ components:
         - id
         - person
         - createdAt
+    Cas2StatusUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+        description:
+          type: string
+          example: 'More information about the application has been requested from the POM (Prison Offender Manager).'
+        updatedBy:
+          $ref: '#/components/schemas/ExternalUser'
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - label
+        - description
     ApplicationStatus:
       type: string
       enum:
@@ -2126,6 +2238,24 @@ components:
         - withdrawn
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
+    ApplicationTimelineNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdByUserId:
+          type: string
+          format: uuid
+        note:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - createdByUserId
+        - note
+      description: Notes added to an application
     NewApplication:
       type: object
       properties:
@@ -2721,6 +2851,44 @@ components:
       required:
         - user
         - taskType
+    ExternalUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+          example: 'CAS2_ASSESSOR_USER'
+        origin:
+          type: string
+          example: 'NACRO'
+      required:
+        - id
+        - username
+    NomisUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'Roger Smith'
+        nomisUsername:
+          type: string
+          example: 'SMITHR_GEN'
+        email:
+          type: string
+          example: 'Roger.Smith@justice.gov.uk'
+        isActive:
+          type: boolean
+          example: true
+      required:
+        - id
+        - name
+        - nomisUsername
+        - isActive
     User:
       type: object
       properties:
@@ -3270,6 +3438,10 @@ components:
         occurredAt:
           type: string
           format: date-time
+        content:
+          type: string
+        createdBy:
+          type: string
     TimelineEventType:
       type: string
       enum:
@@ -3286,6 +3458,7 @@ components:
         - approved_premises_information_request
         - cas3_person_arrived
         - cas3_person_departed
+        - application_timeline_note
     SeedRequest:
       type: object
       properties:
@@ -3321,6 +3494,7 @@ components:
       type: string
       enum:
         - update_all_users_from_community_api
+        - update_application_statuses
     PlacementDates:
       type: object
       properties:
@@ -3394,6 +3568,8 @@ components:
               $ref: '#/components/schemas/AnyValue'
             document:
               $ref: '#/components/schemas/AnyValue'
+            canBeWithdrawn:
+              type: boolean
           required:
             - id
             - createdByUserId

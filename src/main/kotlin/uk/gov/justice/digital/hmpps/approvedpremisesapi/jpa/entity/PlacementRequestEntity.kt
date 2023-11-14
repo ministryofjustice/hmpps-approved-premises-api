@@ -23,7 +23,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
 
   fun findAllByApplication(application: ApplicationEntity): List<PlacementRequestEntity>
 
-  fun findAllByPlacementApplication(placementApplication: PlacementApplicationEntity?): List<PlacementRequestEntity>
+  fun findAllByPlacementApplication(placementApplication: PlacementApplicationEntity): List<PlacementRequestEntity>
 
   fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(userId: UUID): List<PlacementRequestEntity>
 

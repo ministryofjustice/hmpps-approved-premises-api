@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.hibernate.annotations.OrderBy
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
@@ -13,6 +14,7 @@ import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.LockModeType
 import javax.persistence.ManyToOne
+import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Repository
@@ -87,11 +89,17 @@ data class Cas2ApplicationEntity(
   val createdAt: OffsetDateTime,
   var submittedAt: OffsetDateTime?,
 
+  @OneToMany(mappedBy = "application")
+  @OrderBy(clause = "createdAt DESC")
+  var statusUpdates: MutableList<Cas2StatusUpdateEntity>? = null,
+
   @Transient
   var schemaUpToDate: Boolean,
 
   var nomsNumber: String?,
-)
+) {
+  override fun toString() = "Cas2ApplicationEntity: $id"
+}
 
 interface AppSummary {
   fun getId(): UUID

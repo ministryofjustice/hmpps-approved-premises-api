@@ -55,7 +55,7 @@ domain-events:
   cas2:
     emit-enabled: true
   cas3:
-    emit-enabled: true
+    emit-enabled: bookingCancelled,bookingConfirmed,bookingProvisionallyMade,personArrived,personDeparted,referralSubmitted
 
 hmpps:
   auth:

@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationTeamCodeEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationTimelineNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -47,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CharacteristicEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConfirmationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DateChangeEntityFactory
@@ -86,6 +88,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserQualificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -105,6 +109,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
@@ -173,6 +178,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CancellationR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CancellationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2ApplicationJsonSchemaTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2ApplicationTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.Cas2StatusUpdateTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ConfirmationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.DepartureTestRepository
@@ -363,6 +369,9 @@ abstract class IntegrationTestBase {
   lateinit var cas2ApplicationRepository: Cas2ApplicationTestRepository
 
   @Autowired
+  lateinit var cas2StatusUpdateRepository: Cas2StatusUpdateTestRepository
+
+  @Autowired
   lateinit var temporaryAccommodationApplicationRepository: TemporaryAccommodationApplicationTestRepository
 
   @Autowired
@@ -403,6 +412,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var approvedPremisesAssessmentRepository: ApprovedPremisesAssessmentTestRepository
+
+  @Autowired
+  lateinit var applicationTimelineNoteRepository: ApplicationTimelineNoteRepository
 
   @Autowired
   lateinit var temporaryAccommodationAssessmentRepository: TemporaryAccommodationAssessmentTestRepository
@@ -481,6 +493,7 @@ abstract class IntegrationTestBase {
   lateinit var nonArrivalReasonEntityFactory: PersistedFactory<NonArrivalReasonEntity, UUID, NonArrivalReasonEntityFactory>
   lateinit var approvedPremisesApplicationEntityFactory: PersistedFactory<ApprovedPremisesApplicationEntity, UUID, ApprovedPremisesApplicationEntityFactory>
   lateinit var cas2ApplicationEntityFactory: PersistedFactory<Cas2ApplicationEntity, UUID, Cas2ApplicationEntityFactory>
+  lateinit var cas2StatusUpdateEntityFactory: PersistedFactory<Cas2StatusUpdateEntity, UUID, Cas2StatusUpdateEntityFactory>
   lateinit var temporaryAccommodationApplicationEntityFactory: PersistedFactory<TemporaryAccommodationApplicationEntity, UUID, TemporaryAccommodationApplicationEntityFactory>
   lateinit var offlineApplicationEntityFactory: PersistedFactory<OfflineApplicationEntity, UUID, OfflineApplicationEntityFactory>
   lateinit var approvedPremisesApplicationJsonSchemaEntityFactory: PersistedFactory<ApprovedPremisesApplicationJsonSchemaEntity, UUID, ApprovedPremisesApplicationJsonSchemaEntityFactory>
@@ -513,6 +526,7 @@ abstract class IntegrationTestBase {
   lateinit var placementApplicationFactory: PersistedFactory<PlacementApplicationEntity, UUID, PlacementApplicationEntityFactory>
   lateinit var placementDateFactory: PersistedFactory<PlacementDateEntity, UUID, PlacementDateEntityFactory>
   lateinit var probationAreaProbationRegionMappingFactory: PersistedFactory<ProbationAreaProbationRegionMappingEntity, UUID, ProbationAreaProbationRegionMappingEntityFactory>
+  lateinit var applicationTimelineNoteEntityFactory: PersistedFactory<ApplicationTimelineNoteEntity, UUID, ApplicationTimelineNoteEntityFactory>
 
   private var clientCredentialsCallMocked = false
 
@@ -569,6 +583,7 @@ abstract class IntegrationTestBase {
     approvedPremisesApplicationEntityFactory =
       PersistedFactory({ ApprovedPremisesApplicationEntityFactory() }, approvedPremisesApplicationRepository)
     cas2ApplicationEntityFactory = PersistedFactory({ Cas2ApplicationEntityFactory() }, cas2ApplicationRepository)
+    cas2StatusUpdateEntityFactory = PersistedFactory({ Cas2StatusUpdateEntityFactory() }, cas2StatusUpdateRepository)
     temporaryAccommodationApplicationEntityFactory = PersistedFactory(
       { TemporaryAccommodationApplicationEntityFactory() },
       temporaryAccommodationApplicationRepository,
@@ -634,6 +649,7 @@ abstract class IntegrationTestBase {
       { ProbationAreaProbationRegionMappingEntityFactory() },
       probationAreaProbationRegionMappingRepository,
     )
+    applicationTimelineNoteEntityFactory = PersistedFactory({ ApplicationTimelineNoteEntityFactory() }, applicationTimelineNoteRepository)
   }
 
   fun mockClientCredentialsJwtRequest(

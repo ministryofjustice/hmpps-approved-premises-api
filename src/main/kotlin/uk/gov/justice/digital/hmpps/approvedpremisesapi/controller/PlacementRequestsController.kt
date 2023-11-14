@@ -36,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NewPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrow
 import java.time.LocalDate
 import java.util.UUID
 
@@ -60,7 +59,7 @@ class PlacementRequestsController(
 
     return ResponseEntity.ok(
       requests.map {
-        val personInfo = offenderService.getInfoForPersonOrThrow(it.application.crn, user)
+        val personInfo = offenderService.getInfoForPerson(it.application.crn, user.deliusUsername, false)
 
         placementRequestTransformer.transformJpaToApi(it, personInfo)
       },
@@ -94,7 +93,7 @@ class PlacementRequestsController(
       is AuthorisableActionResult.Success -> authorisationResult.entity
     }
 
-    val personInfo = offenderService.getInfoForPersonOrThrow(placementRequest.application.crn, user)
+    val personInfo = offenderService.getInfoForPerson(placementRequest.application.crn, user.deliusUsername, false)
 
     return ResponseEntity.ok(
       placementRequestDetailTransformer.transformJpaToApi(placementRequest, personInfo, cancellations),

@@ -1690,6 +1690,57 @@ paths:
         500:
           $ref: '#/components/responses/500Response'
       x-codegen-request-body-name: body
+  /applications/all:
+    get:
+      tags:
+        - Operations on all applications
+      summary: Lists all applications that any user has created
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          description: Only approved premises anything else gets a 400
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+        - name: page
+          in: query
+          description: Page number of results to return. If blank, returns all results
+          schema:
+            type: integer
+        - name: crn
+          in: query
+          description: CRN of applications
+          schema:
+            type: string
+        - name: sortDirection
+          in: query
+          description: The direction to sort the results by. If blank, will sort in descending order
+          schema:
+            $ref: '#/components/schemas/SortDirection'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApplicationSummary'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /applications:
     post:
       tags:
@@ -1743,7 +1794,7 @@ paths:
       x-codegen-request-body-name: body
     get:
       tags:
-        - Operations on applications
+        - Operations on all applications
       summary: Lists all applications that the user has created
       parameters:
         - name: X-Service-Name
@@ -1855,6 +1906,46 @@ paths:
       responses:
         200:
           description: successful operation
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid applicationId
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
+  /applications/{applicationId}/notes:
+    post:
+      tags:
+        - Add a note on applications
+      summary: Add a note on applications
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: the note to add
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/ApplicationTimelineNote'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/ApplicationTimelineNote'
         401:
           $ref: '#/components/responses/401Response'
         403:
@@ -5589,9 +5680,8 @@ components:
         createdAt:
           type: string
           format: date-time
-        createdByUserId:
-          type: string
-          format: uuid
+        submittedBy:
+          $ref: '#/components/schemas/NomisUser'
         schemaVersion:
           type: string
           format: uuid
@@ -5604,11 +5694,15 @@ components:
         submittedAt:
           type: string
           format: date-time
+        statusUpdates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2StatusUpdate'
       required:
         - id
         - person
         - createdAt
-        - createdByUserId
+        - createdBy
         - schemaVersion
         - outdatedSchema
         - status
@@ -5734,6 +5828,35 @@ components:
           required:
             - createdByUserId
             - status
+    Cas2ApplicationStatus:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+        description:
+          type: string
+          example: 'More information about the application has been requested from the POM (Prison Offender Manager).'
+      required:
+        - id
+        - name
+        - label
+        - description
+    Cas2ApplicationStatusUpdate:
+      type: object
+      properties:
+        newStatus:
+          type: string
+          example: 'moreInfoRequired'
+          description: 'The "name" of the new status to be applied'
+      required:
+        - newStatus
     Cas2SubmittedApplicationSummary:
       type: object
       properties:
@@ -5759,6 +5882,31 @@ components:
         - id
         - person
         - createdAt
+    Cas2StatusUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+        description:
+          type: string
+          example: 'More information about the application has been requested from the POM (Prison Offender Manager).'
+        updatedBy:
+          $ref: '#/components/schemas/ExternalUser'
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - label
+        - description
     ApplicationStatus:
       type: string
       enum:
@@ -5773,6 +5921,24 @@ components:
         - withdrawn
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
+    ApplicationTimelineNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdByUserId:
+          type: string
+          format: uuid
+        note:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - createdByUserId
+        - note
+      description: Notes added to an application
     NewApplication:
       type: object
       properties:
@@ -6368,6 +6534,44 @@ components:
       required:
         - user
         - taskType
+    ExternalUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+          example: 'CAS2_ASSESSOR_USER'
+        origin:
+          type: string
+          example: 'NACRO'
+      required:
+        - id
+        - username
+    NomisUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'Roger Smith'
+        nomisUsername:
+          type: string
+          example: 'SMITHR_GEN'
+        email:
+          type: string
+          example: 'Roger.Smith@justice.gov.uk'
+        isActive:
+          type: boolean
+          example: true
+      required:
+        - id
+        - name
+        - nomisUsername
+        - isActive
     User:
       type: object
       properties:
@@ -6917,6 +7121,10 @@ components:
         occurredAt:
           type: string
           format: date-time
+        content:
+          type: string
+        createdBy:
+          type: string
     TimelineEventType:
       type: string
       enum:
@@ -6933,6 +7141,7 @@ components:
         - approved_premises_information_request
         - cas3_person_arrived
         - cas3_person_departed
+        - application_timeline_note
     SeedRequest:
       type: object
       properties:
@@ -6968,6 +7177,7 @@ components:
       type: string
       enum:
         - update_all_users_from_community_api
+        - update_application_statuses
     PlacementDates:
       type: object
       properties:
@@ -7041,6 +7251,8 @@ components:
               $ref: '#/components/schemas/AnyValue'
             document:
               $ref: '#/components/schemas/AnyValue'
+            canBeWithdrawn:
+              type: boolean
           required:
             - id
             - createdByUserId

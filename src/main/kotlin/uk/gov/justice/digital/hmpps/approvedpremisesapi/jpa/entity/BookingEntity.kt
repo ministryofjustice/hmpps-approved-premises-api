@@ -3,11 +3,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.BookingListener
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
 import javax.persistence.Entity
+import javax.persistence.EntityListeners
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
@@ -22,9 +24,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
 
   @Query("SELECT b FROM BookingEntity b WHERE b.premises.id IN :premisesIds AND b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND SIZE(b.cancellations) = 0")
   fun findAllNotCancelledByPremisesIdsAndOverlappingDate(premisesIds: List<UUID>, startDate: LocalDate, endDate: LocalDate): List<BookingEntity>
-
-  @Query("SELECT b FROM BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate")
-  fun findAllByOverlappingDate(startDate: LocalDate, endDate: LocalDate): List<BookingEntity>
 
   @Query("SELECT b FROM BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bed = :bed")
   fun findAllByOverlappingDateForBed(startDate: LocalDate, endDate: LocalDate, bed: BedEntity): List<BookingEntity>
@@ -70,6 +69,7 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   fun findByApplication(application: ApplicationEntity): BookingEntity
 }
 
+@EntityListeners(BookingListener::class)
 @Entity
 @Table(name = "bookings")
 data class BookingEntity(

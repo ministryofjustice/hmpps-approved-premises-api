@@ -4,6 +4,8 @@ import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentListener
 import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -13,6 +15,7 @@ import javax.persistence.ConstructorResult
 import javax.persistence.DiscriminatorColumn
 import javax.persistence.DiscriminatorValue
 import javax.persistence.Entity
+import javax.persistence.EntityListeners
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
 import javax.persistence.Id
@@ -228,6 +231,7 @@ abstract class AssessmentEntity(
   var isWithdrawn: Boolean,
 )
 
+@EntityListeners(AssessmentListener::class)
 @Entity
 @DiscriminatorValue("approved-premises")
 @Table(name = "approved_premises_assessments")
@@ -340,6 +344,7 @@ interface AssessmentClarificationNoteRepository : JpaRepository<AssessmentClarif
   fun findByAssessmentIdAndId(assessmentId: UUID, id: UUID): AssessmentClarificationNoteEntity?
 }
 
+@EntityListeners(AssessmentClarificationNoteListener::class)
 @Entity
 @Table(name = "assessment_clarification_notes")
 data class AssessmentClarificationNoteEntity(

@@ -20,7 +20,7 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
 
   fun findAllByAllocatedToUser_IdAndReallocatedAtNull(userId: UUID): List<PlacementApplicationEntity>
 
-  fun findAllByApplication(application: ApprovedPremisesApplicationEntity): List<PlacementApplicationEntity>
+  fun findAllByApplicationAndDecisionIsNullOrDecisionIsNot(application: ApprovedPremisesApplicationEntity, decision: PlacementApplicationDecision): List<PlacementApplicationEntity>
 }
 
 @Entity
@@ -68,7 +68,12 @@ data class PlacementApplicationEntity(
 
   @OneToMany(mappedBy = "placementApplication")
   var placementDates: MutableList<PlacementDateEntity>,
-)
+
+  @OneToMany(mappedBy = "placementApplication")
+  var placementRequests: MutableList<PlacementRequestEntity>,
+) {
+  fun canBeWithdrawn() = placementRequests.all { it.booking == null }
+}
 
 enum class PlacementType {
   ROTL,

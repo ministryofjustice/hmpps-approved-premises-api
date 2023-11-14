@@ -71,6 +71,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Mana
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -79,6 +80,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import java.sql.Timestamp
@@ -100,6 +102,8 @@ class ApplicationServiceTest {
   private val mockUserService = mockk<UserService>()
   private val mockAssessmentService = mockk<AssessmentService>()
   private val mockOfflineApplicationRepository = mockk<OfflineApplicationRepository>()
+  private val mockApplicationTimelineNoteService = mockk<ApplicationTimelineNoteService>()
+  private val mockApplicationTimelineNoteTransformer = mockk<ApplicationTimelineNoteTransformer>()
   private val mockDomainEventService = mockk<DomainEventService>()
   private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
@@ -119,6 +123,8 @@ class ApplicationServiceTest {
     mockUserService,
     mockAssessmentService,
     mockOfflineApplicationRepository,
+    mockApplicationTimelineNoteService,
+    mockApplicationTimelineNoteTransformer,
     mockDomainEventService,
     mockCas3DomainEventService,
     mockCommunityApiClient,
@@ -143,10 +149,6 @@ class ApplicationServiceTest {
 
   @Test
   fun `Get all applications where Probation Officer exists returns applications returned from repository`() {
-    val newestJsonSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory()
-      .withSchema("{}")
-      .produce()
-
     val userId = UUID.fromString("8a0624b8-8e92-47ce-b645-b65ea5a197d0")
     val distinguishedName = "SOMEPERSON"
     val userEntity = UserEntityFactory()
@@ -564,7 +566,6 @@ class ApplicationServiceTest {
         releaseType = null,
         arrivalDate = null,
         data = "{}",
-        username = username,
         isInapplicable = null,
       ) is AuthorisableActionResult.NotFound,
     ).isTrue
@@ -609,7 +610,6 @@ class ApplicationServiceTest {
         releaseType = null,
         arrivalDate = null,
         data = "{}",
-        username = username,
         isInapplicable = null,
       ) is AuthorisableActionResult.Unauthorised,
     ).isTrue
@@ -651,7 +651,6 @@ class ApplicationServiceTest {
       releaseType = null,
       arrivalDate = null,
       data = "{}",
-      username = username,
       isInapplicable = null,
     )
 
@@ -703,7 +702,6 @@ class ApplicationServiceTest {
       releaseType = null,
       arrivalDate = null,
       data = "{}",
-      username = username,
       isInapplicable = null,
     )
 
@@ -762,7 +760,6 @@ class ApplicationServiceTest {
       releaseType = "rotl",
       arrivalDate = LocalDate.parse("2023-04-17"),
       data = updatedData,
-      username = username,
       isInapplicable = false,
     )
 
@@ -785,7 +782,6 @@ class ApplicationServiceTest {
   @Test
   fun `updateTemporaryAccommodationApplication returns NotFound when application doesn't exist`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
 
     every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
@@ -793,7 +789,6 @@ class ApplicationServiceTest {
       applicationService.updateTemporaryAccommodationApplication(
         applicationId = applicationId,
         data = "{}",
-        username = username,
       ) is AuthorisableActionResult.NotFound,
     ).isTrue
   }
@@ -831,7 +826,6 @@ class ApplicationServiceTest {
       applicationService.updateTemporaryAccommodationApplication(
         applicationId = applicationId,
         data = "{}",
-        username = username,
       ) is AuthorisableActionResult.Unauthorised,
     ).isTrue
   }
@@ -867,7 +861,6 @@ class ApplicationServiceTest {
     val result = applicationService.updateTemporaryAccommodationApplication(
       applicationId = applicationId,
       data = "{}",
-      username = username,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -913,7 +906,6 @@ class ApplicationServiceTest {
     val result = applicationService.updateTemporaryAccommodationApplication(
       applicationId = applicationId,
       data = "{}",
-      username = username,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -966,7 +958,6 @@ class ApplicationServiceTest {
     val result = applicationService.updateTemporaryAccommodationApplication(
       applicationId = applicationId,
       data = updatedData,
-      username = username,
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1177,7 +1168,10 @@ class ApplicationServiceTest {
         )
         .produce()
 
-      every { mockOffenderService.getRiskByCrn(application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+      every { mockOffenderService.getRiskByCrn(application.crn,
+          user.deliusUsername,
+        )
+      } returns AuthorisableActionResult.Success(
         risks,
       )
 
@@ -1204,7 +1198,13 @@ class ApplicationServiceTest {
       every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
       every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
-      val result = applicationService.submitApprovedPremisesApplication(applicationId, submitApprovedPremisesApplication, username, "jwt")
+      val result =
+        applicationService.submitApprovedPremisesApplication(
+          applicationId,
+          submitApprovedPremisesApplication,
+          username,
+          "jwt",
+        )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success

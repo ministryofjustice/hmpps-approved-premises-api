@@ -13,7 +13,7 @@ class PlacementRequestDetailTransformer(
   private val bookingSummaryTransformer: BookingSummaryTransformer,
   private val applicationTransformer: ApplicationsTransformer,
 ) {
-  fun transformJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult.Success, cancellations: List<CancellationEntity>): PlacementRequestDetail {
+  fun transformJpaToApi(jpa: PlacementRequestEntity, personInfo: PersonInfoResult, cancellations: List<CancellationEntity>): PlacementRequestDetail {
     val placementRequest = placementRequestTransformer.transformJpaToApi(jpa, personInfo)
 
     return PlacementRequestDetail(

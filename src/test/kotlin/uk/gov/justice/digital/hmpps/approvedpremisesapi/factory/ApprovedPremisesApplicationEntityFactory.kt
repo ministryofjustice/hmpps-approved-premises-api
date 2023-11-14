@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
@@ -46,6 +47,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
   private var name: Yielded<String> = { "${randomStringUpperCase(4)} ${randomStringUpperCase(6)}" }
   private var targetLocation: Yielded<String?> = { null }
+  private var status: Yielded<ApprovedPremisesApplicationStatus?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -163,6 +165,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.targetLocation = { targetLocation }
   }
 
+  fun withStatus(status: ApprovedPremisesApplicationStatus?) {
+    this.status = { status }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -193,5 +199,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     nomsNumber = this.nomsNumber(),
     name = this.name(),
     targetLocation = this.targetLocation(),
+    status = this.status(),
   )
 }

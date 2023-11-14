@@ -1,12 +1,16 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.hibernate.annotations.Type
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -16,6 +20,9 @@ import javax.persistence.Convert
 import javax.persistence.DiscriminatorColumn
 import javax.persistence.DiscriminatorValue
 import javax.persistence.Entity
+import javax.persistence.EntityListeners
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
 import javax.persistence.Id
 import javax.persistence.Inheritance
 import javax.persistence.InheritanceType
@@ -28,6 +35,79 @@ import javax.persistence.Table
 
 @Repository
 interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
+
+  @Modifying
+  @Query("UPDATE ApprovedPremisesApplicationEntity ap set ap.status = :status where ap.id = :applicationId")
+  fun updateStatus(applicationId: UUID, status: ApprovedPremisesApplicationStatus)
+
+  @Query(
+    """
+SELECT
+    CAST(a.id AS TEXT) as id,
+    a.crn,
+    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
+    a.created_at as createdAt,
+    a.submitted_at as submittedAt,
+    ass.submitted_at as latestAssessmentSubmittedAt,
+    ass.decision as latestAssessmentDecision,
+    (SELECT COUNT(1) FROM assessment_clarification_notes acn WHERE acn.assessment_id = ass.id AND acn.response IS NULL) > 0 as latestAssessmentHasClarificationNotesWithoutResponse,
+    (SELECT COUNT(1) FROM placement_requests pr WHERE pr.application_id = apa.id) > 0 as hasPlacementRequest,
+    (SELECT COUNT(1) FROM bookings b WHERE b.application_id = apa.id) > 0 as hasBooking,
+    apa.is_womens_application as isWomensApplication,
+    apa.is_pipe_application as isPipeApplication,
+    apa.arrival_date as arrivalDate,
+    CAST(apa.risk_ratings AS TEXT) as riskRatings
+FROM approved_premises_applications apa
+LEFT JOIN applications a ON a.id = apa.id
+LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
+AND apa.is_inapplicable IS NOT TRUE 
+""",
+    countQuery = """
+    SELECT COUNT(*)
+      FROM approved_premises_applications apa
+      LEFT JOIN applications a ON a.id = apa.id
+      LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
+      AND apa.is_inapplicable IS NOT TRUE 
+    """,
+    nativeQuery = true,
+  )
+  fun findAllApprovedPremisesSummaries(pageable: Pageable?): Page<ApprovedPremisesApplicationSummary>
+
+  @Query(
+    """
+SELECT
+    CAST(a.id AS TEXT) as id,
+    a.crn,
+    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
+    a.created_at as createdAt,
+    a.submitted_at as submittedAt,
+    ass.submitted_at as latestAssessmentSubmittedAt,
+    ass.decision as latestAssessmentDecision,
+    (SELECT COUNT(1) FROM assessment_clarification_notes acn WHERE acn.assessment_id = ass.id AND acn.response IS NULL) > 0 as latestAssessmentHasClarificationNotesWithoutResponse,
+    (SELECT COUNT(1) FROM placement_requests pr WHERE pr.application_id = apa.id) > 0 as hasPlacementRequest,
+    (SELECT COUNT(1) FROM bookings b WHERE b.application_id = apa.id) > 0 as hasBooking,
+    apa.is_womens_application as isWomensApplication,
+    apa.is_pipe_application as isPipeApplication,
+    apa.arrival_date as arrivalDate,
+    CAST(apa.risk_ratings AS TEXT) as riskRatings
+FROM approved_premises_applications apa
+LEFT JOIN applications a ON a.id = apa.id
+LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
+WHERE a.crn = :crn 
+AND apa.is_inapplicable IS NOT TRUE 
+""",
+    countQuery = """
+    SELECT COUNT(*)
+      FROM approved_premises_applications apa
+      LEFT JOIN applications a ON a.id = apa.id
+      LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
+      WHERE a.crn = :crn 
+      AND apa.is_inapplicable IS NOT TRUE 
+    """,
+    nativeQuery = true,
+  )
+  fun findAllApprovedPremisesSummariesFilteredByCrn(pageable: Pageable?, crn: String): Page<ApprovedPremisesApplicationSummary>
+
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")
   fun <T : ApplicationEntity> findAllByCreatedByUser_Id(id: UUID, type: Class<T>): List<ApplicationEntity>
 
@@ -38,6 +118,14 @@ interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
     nativeQuery = true,
   )
   fun <T : ApplicationEntity> findAllForServiceAndNameNull(type: Class<T>, pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
+
+  @Query(
+    "SELECT * FROM approved_premises_applications apa " +
+      "LEFT JOIN applications a ON a.id = apa.id " +
+      "WHERE apa.status IS NULL",
+    nativeQuery = true,
+  )
+  fun findAllWithNullStatus(pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
 
   @Query(
     "SELECT application.created_at as createdAt, CAST(application.created_by_user_id as TEXT) as createdByUserId FROM approved_premises_applications apa " +
@@ -183,6 +271,7 @@ abstract class ApplicationEntity(
   abstract fun getRequiredQualifications(): List<UserQualification>
 }
 
+@EntityListeners(ApplicationListener::class)
 @Entity
 @DiscriminatorValue("approved-premises")
 @Table(name = "approved_premises_applications")
@@ -221,6 +310,8 @@ class ApprovedPremisesApplicationEntity(
   var arrivalDate: OffsetDateTime?,
   var name: String,
   var targetLocation: String?,
+  @Enumerated(value = EnumType.STRING)
+  var status: ApprovedPremisesApplicationStatus?,
 ) : ApplicationEntity(
   id,
   crn,
