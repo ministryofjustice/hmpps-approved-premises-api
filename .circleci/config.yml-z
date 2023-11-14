@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  hmpps: ministryofjustice/hmpps@5.1
+  hmpps: ministryofjustice/hmpps@7
 
 parameters:
   alerts-slack-channel:
@@ -61,32 +61,32 @@ workflows:
             - validate
             - build_docker
             - helm_lint
-#      - request-preprod-approval:
-#          type: approval
-#          requires:
-#            - deploy_dev
-#      - hmpps/deploy_env:
-#          name: deploy_preprod
-#          env: "preprod"
-#          context:
-#            - hmpps-common-vars
-#            - approved-premises-api-preprod
-#          requires:
-#            - request-preprod-approval
-#      - request-prod-approval:
-#          type: approval
-#          requires:
-#            - deploy_preprod
-#      - hmpps/deploy_env:
-#          name: deploy_prod
-#          env: "prod"
-#          slack_notification: true
-#          slack_channel_name: << pipeline.parameters.releases-slack-channel >>
-#          context:
-#            - hmpps-common-vars
-#            - approved-premises-api-prod
-#          requires:
-#            - request-prod-approval
+  #      - request-preprod-approval:
+  #          type: approval
+  #          requires:
+  #            - deploy_dev
+  #      - hmpps/deploy_env:
+  #          name: deploy_preprod
+  #          env: "preprod"
+  #          context:
+  #            - hmpps-common-vars
+  #            - approved-premises-api-preprod
+  #          requires:
+  #            - request-preprod-approval
+  #      - request-prod-approval:
+  #          type: approval
+  #          requires:
+  #            - deploy_preprod
+  #      - hmpps/deploy_env:
+  #          name: deploy_prod
+  #          env: "prod"
+  #          slack_notification: true
+  #          slack_channel_name: << pipeline.parameters.releases-slack-channel >>
+  #          context:
+  #            - hmpps-common-vars
+  #            - approved-premises-api-prod
+  #          requires:
+  #            - request-prod-approval
 
   security:
     triggers:
@@ -124,5 +124,3 @@ workflows:
           context:
             - veracode-credentials
             - hmpps-common-vars
-
-

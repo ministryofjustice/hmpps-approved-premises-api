@@ -1,4 +1,3 @@
----
 generic-service:
   nameOverride: hmpps-approved-premises-api
 
@@ -9,12 +8,12 @@ generic-service:
 
   image:
     repository: quay.io/hmpps/hmpps-approved-premises-api
-    tag: app_version    # override at deployment time
+    tag: app_version # override at deployment time
     port: 8080
 
   ingress:
     enabled: true
-    host: app-hostname.local    # override per environment
+    host: app-hostname.local # override per environment
     tlsSecretName: hmpps-approved-premises-api-cert
     contextColour: green
     v1_2_enabled: true
@@ -69,14 +68,8 @@ generic-service:
       SPRING_REDIS_PASSWORD: "auth_token"
 
   allowlist:
-    office: "217.33.148.210/32"
-    health-kick: "35.177.252.195/32"
-    petty-france-wifi: "213.121.161.112/28"
-    global-protect: "35.176.93.186/32"
-    mojvpn: "81.134.202.29/32"
-    cloudplatform-live-1: "35.178.209.113/32"
-    cloudplatform-live-2: "3.8.51.207/32"
-    cloudplatform-live-3: "35.177.252.54/32"
+    groups:
+      - internal
 
 generic-prometheus-alerts:
   targetApplication: hmpps-approved-premises-api
