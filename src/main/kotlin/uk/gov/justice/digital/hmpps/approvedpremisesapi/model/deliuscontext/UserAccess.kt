@@ -10,4 +10,6 @@ data class CaseAccess(
   val userRestricted: Boolean,
   val exclusionMessage: String?,
   val restrictionMessage: String?,
-)
+) {
+  fun isLao() = userExcluded || userRestricted
+}

@@ -17,8 +17,8 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
   private var title: Yielded<String> = { randomOf(listOf("Mr", "Mrs", "Miss")) }
   private var firstName: Yielded<String> = { randomStringUpperCase(6) }
   private var lastName: Yielded<String> = { randomStringUpperCase(10) }
-  private var crn: Yielded<String> = { randomStringUpperCase(6) }
-  private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
+  private var crn: Yielded<String> = { randomStringUpperCase(7) }
+  private var nomsNumber: Yielded<String?> = { randomStringUpperCase(7) }
   private var gender: Yielded<String> = { randomOf(listOf("Male", "Female", "Other")) }
   private var dateOfBirth: Yielded<LocalDate> = { LocalDate.now().minusYears(20).randomDateBefore() }
   private var currentRestriction: Yielded<Boolean> = { false }
@@ -94,7 +94,6 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
   }
 
   override fun produce() = OffenderDetailSummary(
-    offenderId = this.offenderId(),
     title = this.title(),
     firstName = this.firstName(),
     middleNames = listOf(),
@@ -134,10 +133,7 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
       selfDescribedGender = this.selfDescribedGenderIdentity(),
     ),
     softDeleted = null,
-    currentDisposal = "",
-    partitionArea = null,
     currentRestriction = this.currentRestriction(),
     currentExclusion = this.currentExclusion(),
-    isActiveProbationManagedSentence = false,
   )
 }

@@ -1,13 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.aResponse
-import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseSummaryCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import java.time.LocalDate
@@ -87,17 +86,12 @@ class PersonSearchTest : IntegrationTestBase() {
   @Test
   fun `Searching for a CRN that does not exist returns 404`() {
     `Given a User` { userEntity, jwt ->
-      wiremockServer.stubFor(
-        get(WireMock.urlEqualTo("/secure/offenders/crn/CRN"))
-          .willReturn(
-            aResponse()
-              .withHeader("Content-Type", "application/json")
-              .withStatus(404),
-          ),
-      )
+      val crn = "T123456"
+      APDeliusContext_mockSuccessfulCaseSummaryCall(listOf(crn), CaseSummaries(listOf()))
+      mockOffenderUserAccessCall(crn, false, false)
 
       webTestClient.get()
-        .uri("/people/search?crn=CRN")
+        .uri("/people/search?crn=$crn")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
@@ -120,7 +114,6 @@ class PersonSearchTest : IntegrationTestBase() {
           withNationality("English")
           withReligionOrBelief("Judaism")
           withGenderIdentity("Prefer to self-describe")
-          withSelfDescribedGenderIdentity("This is a self described identity")
         },
         inmateDetailsConfigBlock = {
           withOffenderNo("NOMS321")
@@ -155,7 +148,7 @@ class PersonSearchTest : IntegrationTestBase() {
                 ethnicity = "White British",
                 nationality = "English",
                 religionOrBelief = "Judaism",
-                genderIdentity = "This is a self described identity",
+                genderIdentity = "Prefer to self-describe",
                 prisonName = "HMP Bristol",
                 isRestricted = false,
               ),
@@ -180,7 +173,6 @@ class PersonSearchTest : IntegrationTestBase() {
           withNationality("English")
           withReligionOrBelief("Judaism")
           withGenderIdentity("Prefer to self-describe")
-          withSelfDescribedGenderIdentity("This is a self described identity")
         },
       ) { offenderDetails, _ ->
         webTestClient.get()
@@ -203,7 +195,7 @@ class PersonSearchTest : IntegrationTestBase() {
                 ethnicity = "White British",
                 nationality = "English",
                 religionOrBelief = "Judaism",
-                genderIdentity = "This is a self described identity",
+                genderIdentity = "Prefer to self-describe",
                 prisonName = null,
                 isRestricted = false,
               ),

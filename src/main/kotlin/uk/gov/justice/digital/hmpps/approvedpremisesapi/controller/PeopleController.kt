@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
@@ -46,7 +45,6 @@ class PeopleController(
   private val alertTransformer: AlertTransformer,
   private val needsDetailsTransformer: NeedsDetailsTransformer,
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
-  private val convictionTransformer: ConvictionTransformer,
   private val userService: UserService,
 ) : PeopleApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -68,7 +66,7 @@ class PeopleController(
   override fun peopleCrnRisksGet(crn: String): ResponseEntity<PersonRisks> {
     val principal = httpAuthService.getDeliusPrincipalOrThrow()
 
-    val risks = when (val risksResult = offenderService.getRiskByCrn(crn, principal.token.tokenValue, principal.name)) {
+    val risks = when (val risksResult = offenderService.getRiskByCrn(crn, principal.name)) {
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
       is AuthorisableActionResult.Success -> risksResult.entity
@@ -228,14 +226,8 @@ class PeopleController(
   }
 
   override fun peopleCrnOffencesGet(crn: String): ResponseEntity<List<ActiveOffence>> {
-    getOffenderDetailsIgnoringLaoQualification(crn)
-
-    val convictionsResult = offenderService.getConvictions(crn)
-    val activeConvictions = getSuccessEntityOrThrow(crn, convictionsResult).filter { it.active }
-
-    return ResponseEntity.ok(
-      activeConvictions.flatMap(convictionTransformer::transformToApi),
-    )
+    val user = userService.getUserForRequest()
+    return ResponseEntity.ok(getSuccessEntityOrThrow(crn, offenderService.getConvictions(user.deliusUsername, crn)))
   }
 
   private fun <T> getSuccessEntityOrThrow(crn: String, authorisableActionResult: AuthorisableActionResult<T>): T = when (authorisableActionResult) {

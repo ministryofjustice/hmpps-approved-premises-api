@@ -13,6 +13,7 @@ data class CaseDetail(
 data class CaseSummary(
   val crn: String,
   val nomsId: String?,
+  val pnc: String?,
   val name: Name,
   val dateOfBirth: LocalDate,
   val gender: String?,
@@ -58,6 +59,7 @@ data class Offence(
 )
 
 data class Registration(
+  val code: String,
   val description: String,
   val startDate: LocalDate,
 )

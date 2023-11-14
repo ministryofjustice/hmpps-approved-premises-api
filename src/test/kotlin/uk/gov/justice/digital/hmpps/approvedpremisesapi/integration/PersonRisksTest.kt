@@ -10,21 +10,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.HMPPSTier_mockSuccessfulTierCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Registration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZonedDateTime
 import java.util.UUID
 
 class PersonRisksTest : IntegrationTestBase() {
@@ -89,7 +90,7 @@ class PersonRisksTest : IntegrationTestBase() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         APOASysContext_mockSuccessfulRoshRatingsCall(
-          offenderDetails.otherIds.crn,
+          offenderDetails.case.crn,
           RoshRatingsFactory().apply {
             withDateCompleted(OffsetDateTime.parse("2022-09-06T15:15:15Z"))
             withAssessmentId(34853487)
@@ -101,7 +102,7 @@ class PersonRisksTest : IntegrationTestBase() {
         )
 
         HMPPSTier_mockSuccessfulTierCall(
-          offenderDetails.otherIds.crn,
+          offenderDetails.case.crn,
           Tier(
             tierScore = "M2",
             calculationId = UUID.randomUUID(),
@@ -109,25 +110,20 @@ class PersonRisksTest : IntegrationTestBase() {
           ),
         )
 
-        CommunityAPI_mockSuccessfulRegistrationsCall(
-          offenderDetails.otherIds.crn,
-          Registrations(
-            registrations = listOf(
-              RegistrationClientResponseFactory()
-                .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
-                .withRegisterCategory(RegistrationKeyValue(code = "C1", description = "C1"))
-                .withRegisterLevel(RegistrationKeyValue(code = "L1", description = "L1"))
-                .withStartDate(LocalDate.parse("2022-09-06"))
-                .produce(),
-              RegistrationClientResponseFactory()
-                .withType(RegistrationKeyValue(code = "FLAG", description = "RISK FLAG"))
-                .produce(),
-            ),
-          ),
+        APDeliusContext_mockSuccessfulCaseDetailCall(
+          offenderDetails.case.crn,
+          CaseDetailFactory()
+            .withRegistrations(listOf(
+              Registration("FLAG", "RISK FLAG", LocalDate.now())
+            ))
+            .withMappaDetail(
+              MappaDetail(1, "L1", 1, "C1", LocalDate.parse("2022-09-06"), ZonedDateTime.parse("2022-09-06T09:02:13.451Z"))
+            )
+            .produce()
         )
 
         webTestClient.get()
-          .uri("/people/${offenderDetails.otherIds.crn}/risks")
+          .uri("/people/${offenderDetails.case.crn}/risks")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -136,7 +132,7 @@ class PersonRisksTest : IntegrationTestBase() {
           .json(
             objectMapper.writeValueAsString(
               PersonRisks(
-                crn = offenderDetails.otherIds.crn,
+                crn = offenderDetails.case.crn,
                 roshRisks = RoshRisksEnvelope(
                   status = RiskEnvelopeStatus.retrieved,
                   value = RoshRisks(

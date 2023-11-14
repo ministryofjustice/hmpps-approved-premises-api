@@ -70,14 +70,14 @@ class TasksTest : IntegrationTestBase() {
             `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               reallocated = true,
             )
 
             `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               reallocated = true,
               isWithdrawn = true,
             )
@@ -85,7 +85,7 @@ class TasksTest : IntegrationTestBase() {
             `Given an Assessment for Temporary Accommodation`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               reallocated = true,
             )
 
@@ -96,7 +96,7 @@ class TasksTest : IntegrationTestBase() {
                 withPermissiveSchema()
               },
               decision = PlacementApplicationDecision.ACCEPTED,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             )
 
             `Given a Placement Application`(
@@ -106,7 +106,7 @@ class TasksTest : IntegrationTestBase() {
                 withPermissiveSchema()
               },
               reallocated = true,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             )
 
             `Given a Placement Application`(
@@ -115,7 +115,7 @@ class TasksTest : IntegrationTestBase() {
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withPermissiveSchema()
               },
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             )
 
             `Given a Placement Request`(
@@ -123,27 +123,27 @@ class TasksTest : IntegrationTestBase() {
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
               reallocated = true,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             )
 
             val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             )
 
             val (allocatablePlacementRequest) = `Given a Placement Request`(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             )
 
             val (placementRequestMarkedAsUnableToMatch) = `Given a Placement Request`(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             )
 
             bookingNotMadeFactory.produceAndPersist {
@@ -156,7 +156,7 @@ class TasksTest : IntegrationTestBase() {
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withPermissiveSchema()
               },
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               submittedAt = OffsetDateTime.now(),
             )
 
@@ -172,15 +172,15 @@ class TasksTest : IntegrationTestBase() {
                   listOf(
                     taskTransformer.transformAssessmentToTask(
                       allocatableAssessment,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                      "${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}",
                     ),
                     taskTransformer.transformPlacementRequestToTask(
                       allocatablePlacementRequest,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                      "${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}",
                     ),
                     taskTransformer.transformPlacementApplicationToTask(
                       allocatablePlacementApplication,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                      "${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}",
                     ),
                   ),
                 ),
@@ -222,7 +222,7 @@ class TasksTest : IntegrationTestBase() {
             val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             )
 
             webTestClient.get()
@@ -237,7 +237,7 @@ class TasksTest : IntegrationTestBase() {
                   listOf(
                     taskTransformer.transformAssessmentToTask(
                       allocatableAssessment,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                      "${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}",
                     ),
                   ),
                 ),
@@ -257,7 +257,7 @@ class TasksTest : IntegrationTestBase() {
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             )
 
             webTestClient.get()
@@ -272,7 +272,7 @@ class TasksTest : IntegrationTestBase() {
                   listOf(
                     taskTransformer.transformPlacementRequestToTask(
                       allocatablePlacementRequest,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                      "${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}",
                     ),
                   ),
                 ),
@@ -294,7 +294,7 @@ class TasksTest : IntegrationTestBase() {
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withPermissiveSchema()
               },
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               submittedAt = OffsetDateTime.now(),
             )
 
@@ -310,7 +310,7 @@ class TasksTest : IntegrationTestBase() {
                   listOf(
                     taskTransformer.transformPlacementApplicationToTask(
                       allocatablePlacementApplication,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                      "${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}",
                     ),
                   ),
                 ),
@@ -341,7 +341,7 @@ class TasksTest : IntegrationTestBase() {
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             )
 
             val placementApplicationAllocatedToMe = `Given a Placement Application`(
@@ -350,21 +350,21 @@ class TasksTest : IntegrationTestBase() {
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withPermissiveSchema()
               },
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             )
 
             `Given a Placement Request`(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             )
 
             `Given a Placement Request`(
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               reallocated = true,
             )
 
@@ -374,7 +374,7 @@ class TasksTest : IntegrationTestBase() {
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withPermissiveSchema()
               },
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             )
 
             `Given a Placement Application`(
@@ -383,7 +383,7 @@ class TasksTest : IntegrationTestBase() {
               schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
                 withPermissiveSchema()
               },
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               reallocated = true,
             )
 
@@ -399,11 +399,11 @@ class TasksTest : IntegrationTestBase() {
                   listOf(
                     taskTransformer.transformPlacementRequestToTask(
                       placementRequestAllocatedToMe,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                      "${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}",
                     ),
                     taskTransformer.transformPlacementApplicationToTask(
                       placementApplicationAllocatedToMe,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                      "${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}",
                     ),
                   ),
                 ),
@@ -432,7 +432,7 @@ class TasksTest : IntegrationTestBase() {
           `Given an Assessment for Approved Premises`(
             allocatedToUser = user,
             createdByUser = user,
-            crn = offenderDetails.otherIds.crn,
+            crn = offenderDetails.case.crn,
           ) { _, application ->
             webTestClient.get()
               .uri("/tasks/unknown-task/${application.id}")
@@ -460,7 +460,7 @@ class TasksTest : IntegrationTestBase() {
                 `Given an Assessment for Approved Premises`(
                   allocatedToUser = user,
                   createdByUser = user,
-                  crn = offenderDetails.otherIds.crn,
+                  crn = offenderDetails.case.crn,
                 ) { assessment, _ ->
                   webTestClient.get()
                     .uri("/tasks/assessment/${assessment.id}")
@@ -472,7 +472,7 @@ class TasksTest : IntegrationTestBase() {
                     .json(
                       objectMapper.writeValueAsString(
                         TaskWrapper(
-                          task = taskTransformer.transformAssessmentToTask(assessment, "${offenderDetails.firstName} ${offenderDetails.surname}"),
+                          task = taskTransformer.transformAssessmentToTask(assessment, "${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}"),
                           users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises)),
                         ),
                       ),
@@ -497,7 +497,7 @@ class TasksTest : IntegrationTestBase() {
                 placementRequestAllocatedTo = user,
                 assessmentAllocatedTo = user,
                 createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
+                crn = offenderDetails.case.crn,
               ) { placementRequest, _ ->
                 webTestClient.get()
                   .uri("/tasks/placement-request/${placementRequest.id}")
@@ -509,7 +509,7 @@ class TasksTest : IntegrationTestBase() {
                   .json(
                     objectMapper.writeValueAsString(
                       TaskWrapper(
-                        task = taskTransformer.transformPlacementRequestToTask(placementRequest, "${offenderDetails.firstName} ${offenderDetails.surname}"),
+                        task = taskTransformer.transformPlacementRequestToTask(placementRequest, "${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}"),
                         users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises)),
                       ),
                     ),
@@ -535,7 +535,7 @@ class TasksTest : IntegrationTestBase() {
                 schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
                   withPermissiveSchema()
                 },
-                crn = offenderDetails.otherIds.crn,
+                crn = offenderDetails.case.crn,
               ) { placementApplication ->
                 webTestClient.get()
                   .uri("/tasks/placement-application/${placementApplication.id}")
@@ -547,7 +547,7 @@ class TasksTest : IntegrationTestBase() {
                   .json(
                     objectMapper.writeValueAsString(
                       TaskWrapper(
-                        task = taskTransformer.transformPlacementApplicationToTask(placementApplication, "${offenderDetails.firstName} ${offenderDetails.surname}"),
+                        task = taskTransformer.transformPlacementApplicationToTask(placementApplication, "${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}"),
                         users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises)),
                       ),
                     ),
@@ -566,7 +566,7 @@ class TasksTest : IntegrationTestBase() {
           `Given an Assessment for Approved Premises`(
             allocatedToUser = user,
             createdByUser = user,
-            crn = offenderDetails.otherIds.crn,
+            crn = offenderDetails.case.crn,
           ) { _, application ->
             webTestClient.get()
               .uri("/tasks/booking-appeal/${application.id}")
@@ -625,7 +625,7 @@ class TasksTest : IntegrationTestBase() {
               `Given an Assessment for Approved Premises`(
                 allocatedToUser = user,
                 createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
+                crn = offenderDetails.case.crn,
               ) { existingAssessment, application ->
 
                 webTestClient.post()
@@ -673,7 +673,7 @@ class TasksTest : IntegrationTestBase() {
               createdByUser = user,
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = user,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             ) { existingPlacementRequest, _ ->
               webTestClient.post()
                 .uri("/tasks/placement-request/${existingPlacementRequest.id}/allocations")
@@ -728,7 +728,7 @@ class TasksTest : IntegrationTestBase() {
                 schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
                   withPermissiveSchema()
                 },
-                crn = offenderDetails.otherIds.crn,
+                crn = offenderDetails.case.crn,
               ) { placementApplication ->
                 val placementDate = placementDateFactory.produceAndPersist {
                   withPlacementApplication(placementApplication)
@@ -804,7 +804,7 @@ class TasksTest : IntegrationTestBase() {
             `Given an Assessment for Temporary Accommodation`(
               allocatedToUser = originalUser,
               createdByUser = originalUser,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             ) { assessment, _ ->
               webTestClient.post()
                 .uri("/tasks/assessment/${assessment.id}/allocations")
@@ -858,7 +858,7 @@ class TasksTest : IntegrationTestBase() {
             `Given an Assessment for Approved Premises`(
               allocatedToUser = user,
               createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             ) { assessment, _ ->
               webTestClient.delete()
                 .uri("/tasks/assessment/${assessment.id}/allocations")
@@ -880,7 +880,7 @@ class TasksTest : IntegrationTestBase() {
           `Given an Assessment for Temporary Accommodation`(
             allocatedToUser = user,
             createdByUser = user,
-            crn = offenderDetails.otherIds.crn,
+            crn = offenderDetails.case.crn,
           ) { existingAssessment, _ ->
 
             webTestClient.delete()

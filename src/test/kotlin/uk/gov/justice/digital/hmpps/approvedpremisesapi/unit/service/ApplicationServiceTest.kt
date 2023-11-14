@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -371,7 +370,7 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(riskRatings)
+    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(riskRatings)
 
     val result = applicationService.createApprovedPremisesApplication(offenderDetails, user, "jwt", 123, "1", "A12HI")
 
@@ -536,7 +535,7 @@ class ApplicationServiceTest {
       )
       .produce()
 
-    every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(riskRatings)
+    every { mockOffenderService.getRiskByCrn(crn, username) } returns AuthorisableActionResult.Success(riskRatings)
 
     val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
 
@@ -1178,7 +1177,7 @@ class ApplicationServiceTest {
         )
         .produce()
 
-      every { mockOffenderService.getRiskByCrn(application.crn, any(), user.deliusUsername) } returns AuthorisableActionResult.Success(
+      every { mockOffenderService.getRiskByCrn(application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
         risks,
       )
 

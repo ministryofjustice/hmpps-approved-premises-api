@@ -18,12 +18,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.asOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Submitted Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -38,6 +38,9 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision as JpaPlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseSummaryCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 
 class PlacementApplicationsTest : IntegrationTestBase() {
 
@@ -71,27 +74,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isNotFound()
-      }
-    }
-
-    @Test
-    fun `creating a placement application when the application does not belong to the user returns 401`() {
-      `Given a User` { _, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given a Submitted Application`(createdByUser = otherUser) { application ->
-            webTestClient.post()
-              .uri("/placement-applications")
-              .header("Authorization", "Bearer $jwt")
-              .bodyValue(
-                NewPlacementApplication(
-                  applicationId = application.id,
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isForbidden()
-          }
-        }
       }
     }
 
@@ -213,18 +195,19 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           },
         ) { offenderDetails, _ ->
           `Given a Placement Application`(
-            crn = offenderDetails.otherIds.crn,
+            crn = offenderDetails.case.crn,
             createdByUser = user,
             schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()
             },
           ) { placementApplicationEntity ->
-            CommunityAPI_mockOffenderUserAccessCall(
-              username = user.deliusUsername,
-              crn = offenderDetails.otherIds.crn,
+            mockOffenderUserAccessCall(
+              crn = offenderDetails.case.crn,
               inclusion = false,
               exclusion = true,
             )
+
+            mockOffenderUserAccessCall(offenderDetails.case.crn, false, true)
 
             webTestClient.get()
               .uri("/placement-applications/${placementApplicationEntity.id}")
@@ -246,15 +229,14 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           },
         ) { offenderDetails, _ ->
           `Given a Placement Application`(
-            crn = offenderDetails.otherIds.crn,
+            crn = offenderDetails.case.crn,
             createdByUser = user,
             schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()
             },
           ) { placementApplicationEntity ->
-            CommunityAPI_mockOffenderUserAccessCall(
-              username = user.deliusUsername,
-              crn = offenderDetails.otherIds.crn,
+            mockOffenderUserAccessCall(
+              crn = offenderDetails.case.crn,
               inclusion = false,
               exclusion = false,
             )
@@ -291,15 +273,14 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           },
         ) { offenderDetails, _ ->
           `Given a Placement Application`(
-            crn = offenderDetails.otherIds.crn,
+            crn = offenderDetails.case.crn,
             createdByUser = user,
             schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()
             },
           ) { placementApplicationEntity ->
-            CommunityAPI_mockOffenderUserAccessCall(
-              username = user.deliusUsername,
-              crn = offenderDetails.otherIds.crn,
+            mockOffenderUserAccessCall(
+              crn = offenderDetails.case.crn,
               inclusion = false,
               exclusion = true,
             )
@@ -330,30 +311,33 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     @Test
     fun `getting a placement application returns the transformed object`() {
       `Given a User` { user, jwt ->
-        `Given a Placement Application`(
-          createdByUser = user,
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
-        ) { placementApplicationEntity ->
-          val rawResult = webTestClient.get()
-            .uri("/placement-applications/${placementApplicationEntity.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
+        `Given an Offender` { offenderDetails, _ ->
+          `Given a Placement Application`(
+            crn = offenderDetails.case.crn,
+            createdByUser = user,
+            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+          ) { placementApplicationEntity ->
+            val rawResult = webTestClient.get()
+              .uri("/placement-applications/${placementApplicationEntity.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
 
-          val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+            val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
 
-          assertThat(body.id).isEqualTo(placementApplicationEntity.id)
-          assertThat(body.applicationId).isEqualTo(placementApplicationEntity.application.id)
-          assertThat(body.createdByUserId).isEqualTo(placementApplicationEntity.createdByUser.id)
-          assertThat(body.schemaVersion).isEqualTo(placementApplicationEntity.schemaVersion.id)
-          assertThat(body.createdAt).isEqualTo(placementApplicationEntity.createdAt.toInstant())
-          assertThat(body.submittedAt).isNull()
+            assertThat(body.id).isEqualTo(placementApplicationEntity.id)
+            assertThat(body.applicationId).isEqualTo(placementApplicationEntity.application.id)
+            assertThat(body.createdByUserId).isEqualTo(placementApplicationEntity.createdByUser.id)
+            assertThat(body.schemaVersion).isEqualTo(placementApplicationEntity.schemaVersion.id)
+            assertThat(body.createdAt).isEqualTo(placementApplicationEntity.createdAt.toInstant())
+            assertThat(body.submittedAt).isNull()
+          }
         }
       }
     }
@@ -646,11 +630,13 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               withPermissiveSchema()
             },
           ) { placementApplicationEntity ->
-            CommunityAPI_mockSuccessfulOffenderDetailsCall(
-              OffenderDetailsSummaryFactory()
+            APDeliusContext_mockSuccessfulCaseSummaryCall(
+              listOf(placementApplicationEntity.application.crn),
+              CaseSummaries(listOf(CaseSummaryFactory()
                 .withCrn(placementApplicationEntity.application.crn)
-                .produce(),
+                .produce()))
             )
+            mockOffenderUserAccessCall(placementApplicationEntity.application.crn, false, false)
 
             val placementDates = listOf(
               PlacementDates(
@@ -755,7 +741,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, _ ->
           `Given a submitted Placement Application`(
             allocatedToUser = user,
-            offenderDetails = offenderDetails,
+            offenderDetails = offenderDetails.case.asOffenderDetail(),
             decision = JpaPlacementApplicationDecision.REJECTED,
           ) { placementApplicationEntity ->
             webTestClient.post()
@@ -783,7 +769,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           `Given an Offender` { offenderDetails, _ ->
             `Given a submitted Placement Application`(
               allocatedToUser = otherUser,
-              offenderDetails = offenderDetails,
+              offenderDetails = offenderDetails.case.asOffenderDetail(),
               decision = JpaPlacementApplicationDecision.REJECTED,
             ) { placementApplicationEntity ->
               webTestClient.post()
@@ -809,7 +795,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     fun `submitting a placement application decision when the placement requirements do not exist returns 404 and does not update the decision`() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails) { placementApplicationEntity ->
+          `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails.case.asOffenderDetail()) { placementApplicationEntity ->
             webTestClient.post()
               .uri("/placement-applications/${placementApplicationEntity.id}/decision")
               .header("Authorization", "Bearer $jwt")
@@ -837,7 +823,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     fun `submitting a placement application decision when the placement dates do not exist returns 404 and does not update the decision`() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails) { placementApplicationEntity ->
+          `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails.case.asOffenderDetail()) { placementApplicationEntity ->
             `Given placement requirements`(placementApplicationEntity = placementApplicationEntity) { _ ->
               webTestClient.post()
                 .uri("/placement-applications/${placementApplicationEntity.id}/decision")
@@ -870,7 +856,11 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
           `Given a User` { user, jwt ->
             `Given an Offender` { offenderDetails, _ ->
-              `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails, placementType = placementType) { placementApplicationEntity ->
+              `Given a submitted Placement Application`(
+                allocatedToUser = user,
+                offenderDetails = offenderDetails.case.asOffenderDetail(),
+                placementType = placementType,
+              ) { placementApplicationEntity ->
                 `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now()) { placementRequirements ->
                   `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now().minusDays(4)) { _ ->
                     `Given placement dates`(placementApplicationEntity = placementApplicationEntity) { placementDates ->

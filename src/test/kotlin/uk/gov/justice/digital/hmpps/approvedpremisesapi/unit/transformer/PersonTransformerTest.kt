@@ -64,7 +64,6 @@ class PersonTransformerTest {
     val crn = "CRN123"
 
     val offenderDetailSummary = OffenderDetailSummary(
-      offenderId = 547839,
       title = "Mr",
       firstName = "Greggory",
       middleNames = listOf(),
@@ -104,11 +103,8 @@ class PersonTransformerTest {
         selfDescribedGender = null,
       ),
       softDeleted = null,
-      currentDisposal = "",
-      partitionArea = null,
       currentRestriction = false,
       currentExclusion = false,
-      isActiveProbationManagedSentence = false,
     )
 
     val personInfoResult = PersonInfoResult.Success.Full(
@@ -145,7 +141,6 @@ class PersonTransformerTest {
     val crn = "CRN123"
 
     val offenderDetailSummary = OffenderDetailSummary(
-      offenderId = 547839,
       title = "Mr",
       firstName = "Greggory",
       middleNames = listOf(),
@@ -185,11 +180,8 @@ class PersonTransformerTest {
         selfDescribedGender = null,
       ),
       softDeleted = null,
-      currentDisposal = "",
-      partitionArea = null,
       currentRestriction = false,
       currentExclusion = false,
-      isActiveProbationManagedSentence = false,
     )
 
     val inmateDetail = InmateDetail(
@@ -345,7 +337,7 @@ class PersonTransformerTest {
     assertThat(result.crn).isEqualTo(crn)
     assertThat(result is FullPerson).isTrue
     result as FullPerson
-    assertThat(result.genderIdentity).isEqualTo("Other")
+    assertThat(result.genderIdentity).isEqualTo("Prefer to self-describe")
   }
 
   @Test

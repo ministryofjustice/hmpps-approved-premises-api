@@ -95,7 +95,7 @@ class ApplicationService(
 
     return applicationSummaries
       .filter {
-        offenderService.canAccessOffender(userDistinguishedName, it.getCrn())
+        offenderService.canAccessOffender(userEntity.deliusUsername, it.getCrn())
       }
   }
 
@@ -193,7 +193,7 @@ class ApplicationService(
     var riskRatings: PersonRisks? = null
 
     if (createWithRisks == true) {
-      val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, user.deliusUsername)
+      val riskRatingsResult = offenderService.getRiskByCrn(crn, user.deliusUsername)
 
       riskRatings = when (riskRatingsResult) {
         is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
@@ -292,7 +292,7 @@ class ApplicationService(
         var riskRatings: PersonRisks? = null
 
         if (createWithRisks == true) {
-          val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, user.deliusUsername)
+          val riskRatingsResult = offenderService.getRiskByCrn(crn, user.deliusUsername)
 
           riskRatings = when (riskRatingsResult) {
             is AuthorisableActionResult.NotFound -> return@validated "$.crn" hasSingleValidationError "doesNotExist"
@@ -709,7 +709,7 @@ class ApplicationService(
       is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Submitted Domain Event: Not Found")
     }
 
-    val risks = when (val riskResult = offenderService.getRiskByCrn(application.crn, jwt, username)) {
+    val risks = when (val riskResult = offenderService.getRiskByCrn(application.crn, username)) {
       is AuthorisableActionResult.Success -> riskResult.entity
       is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Risks when creating Application Submitted Domain Event: Unauthorised")
       is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Risks when creating Application Submitted Domain Event: Not Found")

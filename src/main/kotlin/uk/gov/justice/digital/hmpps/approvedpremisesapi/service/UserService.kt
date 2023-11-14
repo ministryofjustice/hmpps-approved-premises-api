@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UserAllocationsEngine
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -55,7 +54,6 @@ class UserService(
   private val userQualificationAssignmentRepository: UserQualificationAssignmentRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingRepository,
-  private val userTransformer: UserTransformer,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -116,7 +114,7 @@ class UserService(
   }
 
   fun getUsersWithQualificationsAndRolesPassingLAO(crn: String, qualifications: List<UserQualification>?, roles: List<UserRole>?): List<UserEntity> {
-    val isLao = offenderService.isLao(crn)
+    val isLao = offenderService.isLao(httpAuthService.getDeliusPrincipalOrThrow().name, crn)
 
     return userRepository.findAll(hasQualificationsAndRoles(qualifications, roles, true), Sort.by(Sort.Direction.ASC, "name")).filter {
       !isLao || it.hasQualification(UserQualification.LAO) || offenderService.getOffenderByCrn(crn, it.deliusUsername) is AuthorisableActionResult.Success
@@ -125,7 +123,7 @@ class UserService(
 
   fun getUserForAssessmentAllocation(application: ApplicationEntity): UserEntity? {
     val qualifications = application.getRequiredQualifications().toMutableList()
-    val isLao = offenderService.isLao(application.crn)
+    val isLao = offenderService.isLao(httpAuthService.getDeliusPrincipalOrThrow().name, application.crn)
 
     val allocationsEngine = UserAllocationsEngine(this.userRepository, AllocationType.Assessment, qualifications, isLao)
 
@@ -133,7 +131,7 @@ class UserService(
   }
 
   fun getUserForPlacementRequestAllocation(crn: String): UserEntity? {
-    val isLao = offenderService.isLao(crn)
+    val isLao = offenderService.isLao(httpAuthService.getDeliusPrincipalOrThrow().name, crn)
 
     val allocationsEngine = UserAllocationsEngine(this.userRepository, AllocationType.PlacementRequest, emptyList(), isLao)
 
@@ -141,7 +139,7 @@ class UserService(
   }
 
   fun getUserForPlacementApplicationAllocation(crn: String): UserEntity? {
-    val isLao = offenderService.isLao(crn)
+    val isLao = offenderService.isLao(httpAuthService.getDeliusPrincipalOrThrow().name, crn)
 
     val allocationsEngine = UserAllocationsEngine(this.userRepository, AllocationType.PlacementApplication, emptyList(), isLao)
 
@@ -194,7 +192,7 @@ class UserService(
       user.telephoneNumber = deliusUser.telephoneNumber
       user.deliusStaffCode = deliusUser.staffCode
 
-      deliusUser.probationArea?.let { probationArea ->
+      deliusUser.probationArea.let { probationArea ->
         findProbationRegionFromArea(probationArea)?.let { probationRegion ->
           user.probationRegion = probationRegion
         }
@@ -253,25 +251,6 @@ class UserService(
         isActive = true,
       ),
     )
-  }
-
-  private fun updateUserFromCommunityApi(user: UserEntity): UserEntity {
-    val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)
-
-    val staffUserDetails = when (staffUserDetailsResponse) {
-      is ClientResult.Success -> staffUserDetailsResponse.body
-      is ClientResult.Failure -> staffUserDetailsResponse.throwException()
-    }
-
-    user.apply {
-      name = "${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}"
-      deliusStaffIdentifier = staffUserDetails.staffIdentifier
-      deliusStaffCode = staffUserDetails.staffCode
-      email = staffUserDetails.email
-      telephoneNumber = staffUserDetails.telephoneNumber
-    }
-
-    return userRepository.save(user)
   }
 
   private fun findProbationRegionFromArea(probationArea: StaffProbationArea): ProbationRegionEntity? {

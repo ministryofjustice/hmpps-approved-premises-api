@@ -19,13 +19,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.asOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
@@ -71,7 +74,7 @@ class BookingTest : IntegrationTestBase() {
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withStaffKeyWorkerCode(keyWorker.code)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withServiceName(ServiceName.approvedPremises)
         }
 
@@ -86,7 +89,7 @@ class BookingTest : IntegrationTestBase() {
             objectMapper.writeValueAsString(
               bookingTransformer.transformJpaToApi(
                 booking,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
                 keyWorker,
               ),
             ),
@@ -106,10 +109,14 @@ class BookingTest : IntegrationTestBase() {
       val keyWorker = ContextStaffMemberFactory().produce()
       APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
+      val crn = "T123456"
+      APDeliusContext_mockSuccessfulCaseSummaryCall(listOf(crn), CaseSummaries(listOf()))
+      mockOffenderUserAccessCall(crn, false, false)
+
       val booking = bookingEntityFactory.produceAndPersist {
         withPremises(premises)
         withStaffKeyWorkerCode(keyWorker.code)
-        withCrn("SOME-CRN")
+        withCrn(crn)
         withServiceName(ServiceName.approvedPremises)
       }
 
@@ -124,7 +131,7 @@ class BookingTest : IntegrationTestBase() {
           objectMapper.writeValueAsString(
             bookingTransformer.transformJpaToApi(
               booking,
-              PersonInfoResult.NotFound("SOME-CRN"),
+              PersonInfoResult.NotFound(crn),
               keyWorker,
             ),
           ),
@@ -151,7 +158,7 @@ class BookingTest : IntegrationTestBase() {
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withStaffKeyWorkerCode(keyWorker.code)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withNomsNumber(null)
           withServiceName(ServiceName.approvedPremises)
         }
@@ -167,7 +174,7 @@ class BookingTest : IntegrationTestBase() {
             objectMapper.writeValueAsString(
               bookingTransformer.transformJpaToApi(
                 booking,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null),
+                PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), null),
                 keyWorker,
               ),
             ),
@@ -197,7 +204,7 @@ class BookingTest : IntegrationTestBase() {
 
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withServiceName(ServiceName.temporaryAccommodation)
           withYieldedBed { bed }
         }
@@ -213,7 +220,7 @@ class BookingTest : IntegrationTestBase() {
             objectMapper.writeValueAsString(
               bookingTransformer.transformJpaToApi(
                 booking,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
                 null,
               ),
             ),
@@ -250,7 +257,7 @@ class BookingTest : IntegrationTestBase() {
 
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withServiceName(ServiceName.temporaryAccommodation)
           withYieldedBed { bed }
         }
@@ -325,7 +332,7 @@ class BookingTest : IntegrationTestBase() {
         val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
           withPremises(premises)
           withStaffKeyWorkerCode(keyWorker.code)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
         }
 
         bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
@@ -356,7 +363,7 @@ class BookingTest : IntegrationTestBase() {
           bookings.map {
             bookingTransformer.transformJpaToApi(
               it,
-              PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+              PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
               keyWorker,
             )
           },
@@ -387,10 +394,14 @@ class BookingTest : IntegrationTestBase() {
       val keyWorker = ContextStaffMemberFactory().produce()
       APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
+      val crn = "T123456"
+      APDeliusContext_mockSuccessfulCaseSummaryCall(listOf(crn), CaseSummaries(listOf()))
+      mockOffenderUserAccessCall(crn, false, false)
+
       val booking = bookingEntityFactory.produceAndPersist {
         withPremises(premises)
         withStaffKeyWorkerCode(keyWorker.code)
-        withCrn("SOME-CRN")
+        withCrn(crn)
         withServiceName(ServiceName.approvedPremises)
       }
 
@@ -398,7 +409,7 @@ class BookingTest : IntegrationTestBase() {
         listOf(
           bookingTransformer.transformJpaToApi(
             booking,
-            PersonInfoResult.NotFound("SOME-CRN"),
+            PersonInfoResult.NotFound(crn),
             keyWorker,
           ),
         ),
@@ -433,7 +444,7 @@ class BookingTest : IntegrationTestBase() {
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
           withStaffKeyWorkerCode(keyWorker.code)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withServiceName(ServiceName.approvedPremises)
         }
 
@@ -442,8 +453,8 @@ class BookingTest : IntegrationTestBase() {
             bookingTransformer.transformJpaToApi(
               booking,
               PersonInfoResult.Success.Full(
-                crn = offenderDetails.otherIds.crn,
-                offenderDetailSummary = offenderDetails,
+                crn = offenderDetails.case.crn,
+                offenderDetailSummary = offenderDetails.case.asOffenderDetail(),
                 inmateDetail = null,
               ),
               keyWorker,
@@ -479,7 +490,7 @@ class BookingTest : IntegrationTestBase() {
 
         val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
           withPremises(premises)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
         }
 
         bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
@@ -554,7 +565,7 @@ class BookingTest : IntegrationTestBase() {
         }
 
         val linkedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
           withSubmittedAt(OffsetDateTime.now())
@@ -573,7 +584,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewBooking(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               arrivalDate = LocalDate.parse("2022-08-12"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.approvedPremises,
@@ -585,8 +596,8 @@ class BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.person.crn").isEqualTo(offenderDetails.case.crn)
+          .jsonPath("$.person.name").isEqualTo("${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}")
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
           .jsonPath("$.departureDate").isEqualTo("2022-08-30")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
@@ -609,8 +620,8 @@ class BookingTest : IntegrationTestBase() {
         assertThat(emittedMessage.detailUrl).matches("http://api/events/booking-made/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
         assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(linkedApplication.id)
         assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
-          SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-          SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
+          SnsEventPersonReference("CRN", offenderDetails.case.crn),
+          SnsEventPersonReference("NOMS", offenderDetails.case.nomsId!!),
         )
       }
     }
@@ -632,7 +643,7 @@ class BookingTest : IntegrationTestBase() {
         }
 
         val linkedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
           withSubmittedAt(OffsetDateTime.now())
@@ -651,7 +662,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewBooking(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               arrivalDate = LocalDate.parse("2022-08-12"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.approvedPremises,
@@ -663,8 +674,8 @@ class BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.person.crn").isEqualTo(offenderDetails.case.crn)
+          .jsonPath("$.person.name").isEqualTo("${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}")
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
           .jsonPath("$.departureDate").isEqualTo("2022-08-30")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
@@ -710,7 +721,7 @@ class BookingTest : IntegrationTestBase() {
 
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withProbationRegion(userEntity.probationRegion)
           withApplicationSchema(applicationSchema)
         }
@@ -731,7 +742,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewBooking(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               arrivalDate = LocalDate.parse("2022-08-12"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
@@ -743,8 +754,8 @@ class BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.person.crn").isEqualTo(offenderDetails.case.crn)
+          .jsonPath("$.person.name").isEqualTo("${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}")
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
           .jsonPath("$.departureDate").isEqualTo("2022-08-30")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
@@ -793,7 +804,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewBooking(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               arrivalDate = LocalDate.parse("2022-08-12"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
@@ -805,8 +816,8 @@ class BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.person.crn").isEqualTo(offenderDetails.case.crn)
+          .jsonPath("$.person.name").isEqualTo("${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}")
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
           .jsonPath("$.departureDate").isEqualTo("2022-08-30")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
@@ -859,7 +870,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewBooking(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               arrivalDate = LocalDate.parse("2022-08-12"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
@@ -870,8 +881,8 @@ class BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.person.crn").isEqualTo(offenderDetails.case.crn)
+          .jsonPath("$.person.name").isEqualTo("${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}")
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
           .jsonPath("$.departureDate").isEqualTo("2022-08-30")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
@@ -909,7 +920,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewBooking(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               arrivalDate = LocalDate.parse("2022-08-12"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
@@ -954,7 +965,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewBooking(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               arrivalDate = LocalDate.parse("2022-09-30"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
@@ -1008,7 +1019,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewBooking(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               arrivalDate = LocalDate.parse("2022-08-01"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
@@ -1071,7 +1082,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewBooking(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               arrivalDate = LocalDate.parse("2022-08-22"),
               departureDate = LocalDate.parse("2022-09-30"),
               serviceName = ServiceName.temporaryAccommodation,
@@ -1112,7 +1123,7 @@ class BookingTest : IntegrationTestBase() {
 
         val existingBooking = bookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withYieldedPremises { premises }
           withYieldedBed { bed }
           withArrivalDate(LocalDate.parse("2022-07-15"))
@@ -1132,7 +1143,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewBooking(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               arrivalDate = LocalDate.parse("2022-08-01"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
@@ -1143,8 +1154,8 @@ class BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.person.crn").isEqualTo(offenderDetails.case.crn)
+          .jsonPath("$.person.name").isEqualTo("${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}")
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-01")
           .jsonPath("$.departureDate").isEqualTo("2022-08-30")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-01")
@@ -1200,7 +1211,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewBooking(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               arrivalDate = LocalDate.parse("2022-08-01"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
@@ -1255,7 +1266,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewBooking(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               arrivalDate = LocalDate.parse("2022-06-13"),
               departureDate = LocalDate.parse("2022-07-13"),
               serviceName = ServiceName.temporaryAccommodation,
@@ -1317,7 +1328,7 @@ class BookingTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewBooking(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               arrivalDate = LocalDate.parse("2022-08-01"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
@@ -1328,8 +1339,8 @@ class BookingTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.person.crn").isEqualTo(offenderDetails.case.crn)
+          .jsonPath("$.person.name").isEqualTo("${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}")
           .jsonPath("$.arrivalDate").isEqualTo("2022-08-01")
           .jsonPath("$.departureDate").isEqualTo("2022-08-30")
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-01")
@@ -1379,7 +1390,7 @@ class BookingTest : IntegrationTestBase() {
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewBooking(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               arrivalDate = LocalDate.parse("2022-08-12"),
               departureDate = LocalDate.parse("2022-08-30"),
               serviceName = ServiceName.temporaryAccommodation,
@@ -1443,7 +1454,7 @@ class BookingTest : IntegrationTestBase() {
 
         val booking = bookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withYieldedPremises { premises }
           withYieldedBed { bed }
           withArrivalDate(LocalDate.parse("2022-06-14"))
@@ -1506,7 +1517,7 @@ class BookingTest : IntegrationTestBase() {
 
         val booking = bookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withYieldedPremises { premises }
           withYieldedBed { bed }
           withArrivalDate(LocalDate.parse("2022-06-14"))
@@ -1730,7 +1741,7 @@ class BookingTest : IntegrationTestBase() {
         }
 
         val booking = bookingEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withPremises(premises)
           withBed(bed)
           withArrivalDate(LocalDate.parse("2022-08-10"))
@@ -1792,7 +1803,7 @@ class BookingTest : IntegrationTestBase() {
         }
 
         val booking = bookingEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withYieldedPremises { premises }
           withYieldedBed { bed }
           withServiceName(ServiceName.temporaryAccommodation)
@@ -1856,7 +1867,7 @@ class BookingTest : IntegrationTestBase() {
         }
 
         val booking = bookingEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withYieldedPremises { premises }
           withYieldedBed { bed }
           withServiceName(ServiceName.temporaryAccommodation)
@@ -1968,7 +1979,7 @@ class BookingTest : IntegrationTestBase() {
         }
 
         val booking = bookingEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withPremises(premises)
           withBed(bed)
           withServiceName(ServiceName.approvedPremises)
@@ -2082,7 +2093,7 @@ class BookingTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val booking = bookingEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withYieldedPremises {
             temporaryAccommodationPremisesEntityFactory.produceAndPersist {
               withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -2143,7 +2154,7 @@ class BookingTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val booking = bookingEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withYieldedPremises {
             temporaryAccommodationPremisesEntityFactory.produceAndPersist {
               withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -2205,7 +2216,7 @@ class BookingTest : IntegrationTestBase() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val booking = bookingEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withYieldedPremises {
             temporaryAccommodationPremisesEntityFactory.produceAndPersist {
               withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -2483,7 +2494,7 @@ class BookingTest : IntegrationTestBase() {
 
         val booking = bookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withYieldedPremises { premises }
           withYieldedBed { bed }
           withArrivalDate(LocalDate.parse("2022-06-14"))
@@ -2544,7 +2555,7 @@ class BookingTest : IntegrationTestBase() {
 
         val booking = bookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withYieldedPremises { premises }
           withYieldedBed { bed }
           withArrivalDate(LocalDate.parse("2022-06-12"))
@@ -2612,7 +2623,7 @@ class BookingTest : IntegrationTestBase() {
 
         val booking = bookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withYieldedPremises { premises }
           withYieldedBed { bed }
           withArrivalDate(LocalDate.parse("2022-06-14"))
@@ -2672,7 +2683,7 @@ class BookingTest : IntegrationTestBase() {
 
         val booking = bookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withYieldedPremises { premises }
           withYieldedBed { bed }
           withArrivalDate(LocalDate.parse("2022-06-12"))

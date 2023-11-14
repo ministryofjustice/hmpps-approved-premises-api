@@ -1,18 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConvictionFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceFactory
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulConvictionsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTransformer
 
 class PersonOffencesTest : IntegrationTestBase() {
-  @Autowired
-  lateinit var convictionTransformer: ConvictionTransformer
 
   @Test
   fun `Getting offences by CRN without a JWT returns 401`() {
@@ -55,11 +48,9 @@ class PersonOffencesTest : IntegrationTestBase() {
 
   @Test
   fun `Getting offences for a CRN that does not exist returns 404`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User` { _, jwt ->
       val crn = "CRN123"
-
-      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-      loadPreemptiveCacheForOffenderDetails(crn)
+      mockUnsuccessfulGetCall("/probation-cases/$crn/details", HttpStatus.NOT_FOUND.value())
 
       webTestClient.get()
         .uri("/people/$crn/offences")
@@ -72,61 +63,20 @@ class PersonOffencesTest : IntegrationTestBase() {
 
   @Test
   fun `Getting offences for a CRN returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
-
-        val activeConviction = ConvictionFactory()
-          .withConvictionId(12345)
-          .withIndex("5")
-          .withActive(true)
-          .withOffences(
-            listOf(
-              OffenceFactory()
-                .withOffenceId("1")
-                .withMainCategoryDescription("Main Category 1")
-                .withSubCategoryDescription("Sub Category 1")
-                .produce(),
-              OffenceFactory()
-                .withOffenceId("2")
-                .withMainCategoryDescription("Main Category 2")
-                .withSubCategoryDescription("Sub Category 2")
-                .produce(),
-            ),
-          )
-          .produce()
-
-        val inactiveConviction = ConvictionFactory()
-          .withConvictionId(6789)
-          .withIndex("2")
-          .withActive(false)
-          .withOffences(
-            listOf(
-              OffenceFactory()
-                .withOffenceId("3")
-                .withMainCategoryDescription("Main Category 1")
-                .withSubCategoryDescription("Sub Category 1")
-                .produce(),
-              OffenceFactory()
-                .withOffenceId("4")
-                .withMainCategoryDescription("Main Category 2")
-                .withSubCategoryDescription("Sub Category 2")
-                .produce(),
-            ),
-          )
-          .produce()
-
-        CommunityAPI_mockSuccessfulConvictionsCall(offenderDetails.otherIds.crn, listOf(activeConviction, inactiveConviction))
+    `Given a User` { _, jwt ->
+      `Given an Offender`(offenderDetailsConfigBlock = {
+        withCurrentExclusion(false).withCurrentRestriction(false)
+      }) { offenderDetails, _ ->
+        val offence = offenderDetails.offences.first()
 
         webTestClient.get()
-          .uri("/people/${offenderDetails.otherIds.crn}/offences")
+          .uri("/people/${offenderDetails.case.crn}/offences")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
           .expectBody()
-          .json(
-            objectMapper.writeValueAsString(convictionTransformer.transformToApi(activeConviction)),
-          )
+          .json("[{\"deliusEventNumber\":\"${offence.eventNumber}\",\"offenceDescription\":\"${offence.description}\",\"offenceId\":\"\",\"convictionId\":0,\"offenceDate\":\"${offence.date.toString()}\"}]")
       }
     }
   }

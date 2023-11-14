@@ -5,8 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AlertFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulAlertsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
 
 class PersonAcctAlertsTest : IntegrationTestBase() {
@@ -57,8 +58,7 @@ class PersonAcctAlertsTest : IntegrationTestBase() {
     `Given a User` { _, jwt ->
       val crn = "CRN123"
 
-      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-      loadPreemptiveCacheForOffenderDetails(crn)
+      APDeliusContext_mockSuccessfulCaseSummaryCall(listOf(crn), CaseSummaries(listOf()))
 
       webTestClient.get()
         .uri("/people/$crn/acct-alerts")
@@ -79,10 +79,10 @@ class PersonAcctAlertsTest : IntegrationTestBase() {
           AlertFactory().produce(),
         )
 
-        PrisonAPI_mockSuccessfulAlertsCall(offenderDetails.otherIds.nomsNumber!!, alerts)
+        PrisonAPI_mockSuccessfulAlertsCall(offenderDetails.case.nomsId!!, alerts)
 
         webTestClient.get()
-          .uri("/people/${offenderDetails.otherIds.crn}/acct-alerts")
+          .uri("/people/${offenderDetails.case.crn}/acct-alerts")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -107,7 +107,7 @@ class PersonAcctAlertsTest : IntegrationTestBase() {
       ) { offenderDetails, _ ->
 
         webTestClient.get()
-          .uri("/people/${offenderDetails.otherIds.crn}/acct-alerts")
+          .uri("/people/${offenderDetails.case.crn}/acct-alerts")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()

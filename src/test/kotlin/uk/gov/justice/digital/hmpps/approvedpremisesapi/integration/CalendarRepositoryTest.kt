@@ -222,7 +222,7 @@ class CalendarRepositoryTest : IntegrationTestBase() {
           withPremises(premises)
           withBed(bed)
           withServiceName(ServiceName.approvedPremises)
-          withCrn(offenderDetailsOne.otherIds.crn)
+          withCrn(offenderDetailsOne.case.crn)
           withArrivalDate(LocalDate.of(2023, 6, 15))
           withDepartureDate(LocalDate.of(2023, 6, 20))
         }
@@ -231,7 +231,7 @@ class CalendarRepositoryTest : IntegrationTestBase() {
           withPremises(premises)
           withBed(bed)
           withServiceName(ServiceName.approvedPremises)
-          withCrn(offenderDetailsTwo.otherIds.crn)
+          withCrn(offenderDetailsTwo.case.crn)
           withArrivalDate(LocalDate.of(2023, 6, 21))
           withDepartureDate(LocalDate.of(2023, 6, 30))
         }
@@ -255,14 +255,14 @@ class CalendarRepositoryTest : IntegrationTestBase() {
             startDate = bookingOne.arrivalDate,
             endDate = bookingOne.departureDate,
             bookingId = bookingOne.id,
-            crn = offenderDetailsOne.otherIds.crn,
+            crn = offenderDetailsOne.case.crn,
             personName = null,
           ),
           CalendarBookingInfo(
             startDate = bookingTwo.arrivalDate,
             endDate = bookingTwo.departureDate,
             bookingId = bookingTwo.id,
-            crn = offenderDetailsTwo.otherIds.crn,
+            crn = offenderDetailsTwo.case.crn,
             personName = null,
           ),
         )
@@ -307,7 +307,7 @@ class CalendarRepositoryTest : IntegrationTestBase() {
         withPremises(premises)
         withBed(bed)
         withServiceName(ServiceName.approvedPremises)
-        withCrn(offenderDetailsOne.otherIds.crn)
+        withCrn(offenderDetailsOne.case.crn)
         withArrivalDate(LocalDate.of(2023, 6, 9))
         withDepartureDate(LocalDate.of(2023, 6, 10))
       }
@@ -331,7 +331,7 @@ class CalendarRepositoryTest : IntegrationTestBase() {
           startDate = booking.arrivalDate,
           endDate = booking.departureDate,
           bookingId = booking.id,
-          crn = offenderDetailsOne.otherIds.crn,
+          crn = offenderDetailsOne.case.crn,
           personName = null,
         ),
       )
@@ -376,7 +376,7 @@ class CalendarRepositoryTest : IntegrationTestBase() {
           withPremises(premises)
           withBed(bed)
           withServiceName(ServiceName.approvedPremises)
-          withCrn(offenderDetailsOne.otherIds.crn)
+          withCrn(offenderDetailsOne.case.crn)
           withArrivalDate(LocalDate.of(2023, 6, 15))
           withDepartureDate(LocalDate.of(2023, 6, 26))
         }
@@ -385,7 +385,7 @@ class CalendarRepositoryTest : IntegrationTestBase() {
           withPremises(premises)
           withBed(bed)
           withServiceName(ServiceName.approvedPremises)
-          withCrn(offenderDetailsTwo.otherIds.crn)
+          withCrn(offenderDetailsTwo.case.crn)
           withArrivalDate(LocalDate.of(2023, 6, 21))
           withDepartureDate(LocalDate.of(2023, 6, 30))
         }
@@ -409,14 +409,14 @@ class CalendarRepositoryTest : IntegrationTestBase() {
             startDate = bookingOne.arrivalDate,
             endDate = bookingOne.departureDate,
             bookingId = bookingOne.id,
-            crn = offenderDetailsOne.otherIds.crn,
+            crn = offenderDetailsOne.case.crn,
             personName = null,
           ),
           CalendarBookingInfo(
             startDate = bookingTwo.arrivalDate,
             endDate = bookingTwo.departureDate,
             bookingId = bookingTwo.id,
-            crn = offenderDetailsTwo.otherIds.crn,
+            crn = offenderDetailsTwo.case.crn,
             personName = null,
           ),
         )

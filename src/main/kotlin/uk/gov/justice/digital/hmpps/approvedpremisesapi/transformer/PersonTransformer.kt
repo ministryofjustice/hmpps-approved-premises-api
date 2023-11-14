@@ -23,10 +23,7 @@ class PersonTransformer {
       ethnicity = personInfoResult.offenderDetailSummary.offenderProfile.ethnicity,
       nationality = personInfoResult.offenderDetailSummary.offenderProfile.nationality,
       religionOrBelief = personInfoResult.offenderDetailSummary.offenderProfile.religion,
-      genderIdentity = when (personInfoResult.offenderDetailSummary.offenderProfile.genderIdentity) {
-        "Prefer to self-describe" -> personInfoResult.offenderDetailSummary.offenderProfile.selfDescribedGender
-        else -> personInfoResult.offenderDetailSummary.offenderProfile.genderIdentity
-      },
+      genderIdentity = personInfoResult.offenderDetailSummary.offenderProfile.genderIdentity,
       prisonName = inOutStatusToPersonInfoApiStatus(personInfoResult.inmateDetail?.inOutStatus).takeIf { it == FullPerson.Status.inCustody }?.let {
         personInfoResult.inmateDetail?.assignedLivingUnit?.agencyName ?: personInfoResult.inmateDetail?.assignedLivingUnit?.agencyId
       },

@@ -158,14 +158,14 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             val cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(userEntity)
-              withCrn(offenderDetails.otherIds.crn)
+              withCrn(offenderDetails.case.crn)
               withData("{}")
             }
 
             val otherCas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(otherUser)
-              withCrn(offenderDetails.otherIds.crn)
+              withCrn(offenderDetails.case.crn)
               withData("{}")
             }
 
@@ -299,7 +299,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
           val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
             withApplicationSchema(newestJsonSchema)
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withCreatedByUser(userEntity)
             withData(
               """
@@ -403,7 +403,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(
               NewApplication(
-                crn = offenderDetails.otherIds.crn,
+                crn = offenderDetails.case.crn,
               ),
             )
             .exchange()
@@ -416,7 +416,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           }
 
           Assertions.assertThat(result.responseBody.blockFirst()).matches {
-            it.person.crn == offenderDetails.otherIds.crn &&
+            it.person.crn == offenderDetails.case.crn &&
               it.schemaVersion == applicationSchema.id
           }
         }
@@ -486,7 +486,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
           cas2ApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withId(applicationId)
             withApplicationSchema(applicationSchema)
             withCreatedByUser(submittingUser)
@@ -510,7 +510,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
           val result = objectMapper.readValue(resultBody, Application::class.java)
 
-          Assertions.assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
+          Assertions.assertThat(result.person.crn).isEqualTo(offenderDetails.case.crn)
         }
       }
     }

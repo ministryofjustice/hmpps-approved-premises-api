@@ -27,6 +27,20 @@ fun IntegrationTestBase.APDeliusContext_mockSuccessfulCaseDetailCall(crn: String
     responseBody = response,
   )
 
+fun IntegrationTestBase.APDeliusContext_mockSuccessfulCaseSummaryCall(crns: List<String>, response: CaseSummaries) =
+  mockSuccessfulGetCallWithJsonResponse(
+    url = "/probation-cases/summaries",
+    responseBody = response,
+    requestBody = crns,
+  )
+
+fun IntegrationTestBase.APDeliusContext_mockUserAccessCall(crns: List<String>, deliusUsername: String, userAccess: UserAccess) =
+  mockSuccessfulGetCallWithJsonResponse(
+    url = "/users/access?username=$deliusUsername",
+    responseBody = userAccess,
+    requestBody = crns,
+  )
+
 fun IntegrationTestBase.APDeliusContext_mockSuccessfulStaffDetailsCall(staffCode: String, staffUserDetails: StaffUserDetails) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/staff/staffCode/$staffCode",

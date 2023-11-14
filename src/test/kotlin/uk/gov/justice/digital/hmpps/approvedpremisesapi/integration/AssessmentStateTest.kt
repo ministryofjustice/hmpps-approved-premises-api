@@ -26,7 +26,7 @@ class AssessmentStateTest : IntegrationTestBase() {
         }
 
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(applicationSchema)
           withProbationRegion(userEntity.probationRegion)

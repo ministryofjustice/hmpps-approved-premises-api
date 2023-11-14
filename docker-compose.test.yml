@@ -1,7 +1,7 @@
 version: "3"
 services:
   integration_test_database:
-    image: "postgis/postgis"
+    image: "ghcr.io/baosystems/postgis:15-3.3"
     environment:
       - POSTGRES_USER=integration_test
       - POSTGRES_PASSWORD=integration_test_password

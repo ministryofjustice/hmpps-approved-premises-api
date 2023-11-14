@@ -79,13 +79,13 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
     `Given a CAS2 User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
-        APOASysContext_mockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
+        APOASysContext_mockSuccessfulOffenceDetailsCall(offenderDetails.case.crn, offenceDetails)
 
         val rosh = RoshSummaryFactory().produce()
-        APOASysContext_mockSuccessfulRoSHSummaryCall(offenderDetails.otherIds.crn, rosh)
+        APOASysContext_mockSuccessfulRoSHSummaryCall(offenderDetails.case.crn, rosh)
 
         webTestClient.get()
-          .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/rosh")
+          .uri("/cas2/people/${offenderDetails.case.crn}/oasys/rosh")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -108,10 +108,10 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
     `Given a CAS2 User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val rosh = RoshSummaryFactory().produce()
-        APOASysContext_mockUnsuccessfulRoshCallWithDelay(offenderDetails.otherIds.crn, rosh, 2500)
+        APOASysContext_mockUnsuccessfulRoshCallWithDelay(offenderDetails.case.crn, rosh, 2500)
 
         webTestClient.get()
-          .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/rosh")
+          .uri("/cas2/people/${offenderDetails.case.crn}/oasys/rosh")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()

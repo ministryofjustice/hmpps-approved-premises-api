@@ -129,7 +129,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
               .produceAndPersist {
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(user)
-                withCrn(offenderDetails.otherIds.crn)
+                withCrn(offenderDetails.case.crn)
                 withSubmittedAt(OffsetDateTime.parse("2023-01-01T09:00:00+01:00"))
                 withData("{}")
               }
@@ -138,7 +138,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
               .produceAndPersist {
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(user)
-                withCrn(offenderDetails.otherIds.crn)
+                withCrn(offenderDetails.case.crn)
                 withSubmittedAt(null)
                 withData("{}")
               }
@@ -211,7 +211,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
 
             val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(newestJsonSchema)
-              withCrn(offenderDetails.otherIds.crn)
+              withCrn(offenderDetails.case.crn)
               withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
               withData(
@@ -285,7 +285,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
 
             val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(newestJsonSchema)
-              withCrn(offenderDetails.otherIds.crn)
+              withCrn(offenderDetails.case.crn)
               withCreatedByUser(user)
               withSubmittedAt(null)
               withData(
@@ -338,7 +338,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
               }
 
             cas2ApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
+              withCrn(offenderDetails.case.crn)
               withId(applicationId)
               withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
@@ -394,7 +394,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
             }
 
           cas2ApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withId(applicationId)
             withApplicationSchema(applicationSchema)
             withCreatedByUser(submittingUser)

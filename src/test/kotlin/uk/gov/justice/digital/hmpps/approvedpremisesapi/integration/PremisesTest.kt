@@ -23,11 +23,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
@@ -1538,7 +1543,7 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER" ])
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER"])
   fun `Get Premises Summary by ID that does not exist returns 404`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { _, jwt ->
       val id = UUID.randomUUID()
@@ -1578,19 +1583,12 @@ class PremisesTest : IntegrationTestBase() {
         )
       }
 
-      bookings.forEach {
-        ApDeliusContext_addCaseSummaryToBulkResponse(
-          CaseSummaryFactory()
-            .withCrn(it.crn)
-            .produce(),
-        )
-        ApDeliusContext_addResponseToUserAccessCall(
-          CaseAccessFactory()
-            .withCrn(it.crn)
-            .produce(),
-          user.deliusUsername,
-        )
-      }
+      val crns = bookings.map { it.crn }
+      val summaries = crns.map { CaseSummaryFactory().withCrn(it).produce() }
+      val caseAccesses = crns.map { CaseAccess(it, false, false, null, null) }
+
+      APDeliusContext_mockSuccessfulCaseSummaryCall(crns, CaseSummaries(summaries))
+      APDeliusContext_mockUserAccessCall(crns, user.deliusUsername, UserAccess(caseAccesses))
 
       val cancelledBooking = bookingEntityFactory.produceAndPersist() {
         withNomsNumber("1234")
@@ -1693,8 +1691,10 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-  fun `Get Approved Premises Staff where delius team cannot be found returns 500 when use has one of roles MANAGER, MATCHER`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+  fun `Get Approved Premises Staff where delius team cannot be found returns 500 when use has one of roles MANAGER, MATCHER`(
+    role: UserRole,
+  ) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val qCode = "NOTFOUND"
 
@@ -1769,8 +1769,10 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-  fun `Get Approved Premises Staff for Approved Premises returns 200 with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+  fun `Get Approved Premises Staff for Approved Premises returns 200 with correct body when user has one of roles MANAGER, MATCHER`(
+    role: UserRole,
+  ) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val qCode = "FOUND"
 
@@ -1822,7 +1824,7 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   @Disabled
   fun `Get Approved Premises Staff caches response when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
@@ -2793,6 +2795,7 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("invalid-params[0].errorType").isEqualTo("isNotAPositiveInteger")
     }
   }
+
   private companion object {
     @JvmStatic
     fun turnaroundWorkingDayCountProvider() = Stream.of(

@@ -390,7 +390,7 @@ class ApplicationServiceTest {
 
     private val submitCas2Application = SubmitCas2Application(
       translatedDocument = {},
-      applicationId = applicationId
+      applicationId = applicationId,
     )
 
     @BeforeEach

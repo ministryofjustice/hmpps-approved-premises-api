@@ -1,11 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.junit.jupiter.api.AfterEach
@@ -144,11 +148,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppsauth.GetTokenResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ApAreaTestRepository
@@ -541,57 +545,95 @@ abstract class IntegrationTestBase {
     apAreaEntityFactory = PersistedFactory({ ApAreaEntityFactory() }, apAreaRepository)
     localAuthorityEntityFactory = PersistedFactory({ LocalAuthorityEntityFactory() }, localAuthorityAreaRepository)
     approvedPremisesEntityFactory = PersistedFactory({ ApprovedPremisesEntityFactory() }, approvedPremisesRepository)
-    temporaryAccommodationPremisesEntityFactory = PersistedFactory({ TemporaryAccommodationPremisesEntityFactory() }, temporaryAccommodationPremisesRepository)
+    temporaryAccommodationPremisesEntityFactory =
+      PersistedFactory({ TemporaryAccommodationPremisesEntityFactory() }, temporaryAccommodationPremisesRepository)
     bookingEntityFactory = PersistedFactory({ BookingEntityFactory() }, bookingRepository)
     arrivalEntityFactory = PersistedFactory({ ArrivalEntityFactory() }, arrivalRepository)
     confirmationEntityFactory = PersistedFactory({ ConfirmationEntityFactory() }, confirmationRepository)
     departureEntityFactory = PersistedFactory({ DepartureEntityFactory() }, departureRepository)
-    destinationProviderEntityFactory = PersistedFactory({ DestinationProviderEntityFactory() }, destinationProviderRepository)
+    destinationProviderEntityFactory =
+      PersistedFactory({ DestinationProviderEntityFactory() }, destinationProviderRepository)
     departureReasonEntityFactory = PersistedFactory({ DepartureReasonEntityFactory() }, departureReasonRepository)
     moveOnCategoryEntityFactory = PersistedFactory({ MoveOnCategoryEntityFactory() }, moveOnCategoryRepository)
     nonArrivalEntityFactory = PersistedFactory({ NonArrivalEntityFactory() }, nonArrivalRepository)
     cancellationEntityFactory = PersistedFactory({ CancellationEntityFactory() }, cancellationRepository)
-    cancellationReasonEntityFactory = PersistedFactory({ CancellationReasonEntityFactory() }, cancellationReasonRepository)
+    cancellationReasonEntityFactory =
+      PersistedFactory({ CancellationReasonEntityFactory() }, cancellationReasonRepository)
     lostBedsEntityFactory = PersistedFactory({ LostBedsEntityFactory() }, lostBedsRepository)
     lostBedReasonEntityFactory = PersistedFactory({ LostBedReasonEntityFactory() }, lostBedReasonRepository)
-    lostBedCancellationEntityFactory = PersistedFactory({ LostBedCancellationEntityFactory() }, lostBedCancellationRepository)
+    lostBedCancellationEntityFactory =
+      PersistedFactory({ LostBedCancellationEntityFactory() }, lostBedCancellationRepository)
     extensionEntityFactory = PersistedFactory({ ExtensionEntityFactory() }, extensionRepository)
     dateChangeEntityFactory = PersistedFactory({ DateChangeEntityFactory() }, dateChangeRepository)
     nonArrivalReasonEntityFactory = PersistedFactory({ NonArrivalReasonEntityFactory() }, nonArrivalReasonRepository)
-    approvedPremisesApplicationEntityFactory = PersistedFactory({ ApprovedPremisesApplicationEntityFactory() }, approvedPremisesApplicationRepository)
+    approvedPremisesApplicationEntityFactory =
+      PersistedFactory({ ApprovedPremisesApplicationEntityFactory() }, approvedPremisesApplicationRepository)
     cas2ApplicationEntityFactory = PersistedFactory({ Cas2ApplicationEntityFactory() }, cas2ApplicationRepository)
-    temporaryAccommodationApplicationEntityFactory = PersistedFactory({ TemporaryAccommodationApplicationEntityFactory() }, temporaryAccommodationApplicationRepository)
-    offlineApplicationEntityFactory = PersistedFactory({ OfflineApplicationEntityFactory() }, offlineApplicationRepository)
-    approvedPremisesApplicationJsonSchemaEntityFactory = PersistedFactory({ ApprovedPremisesApplicationJsonSchemaEntityFactory() }, approvedPremisesApplicationJsonSchemaRepository)
-    cas2ApplicationJsonSchemaEntityFactory = PersistedFactory({ Cas2ApplicationJsonSchemaEntityFactory() }, cas2ApplicationJsonSchemaRepository)
-    temporaryAccommodationApplicationJsonSchemaEntityFactory = PersistedFactory({ TemporaryAccommodationApplicationJsonSchemaEntityFactory() }, temporaryAccommodationApplicationJsonSchemaRepository)
-    approvedPremisesAssessmentJsonSchemaEntityFactory = PersistedFactory({ ApprovedPremisesAssessmentJsonSchemaEntityFactory() }, approvedPremisesAssessmentJsonSchemaRepository)
-    temporaryAccommodationAssessmentJsonSchemaEntityFactory = PersistedFactory({ TemporaryAccommodationAssessmentJsonSchemaEntityFactory() }, temporaryAccommodationAssessmentJsonSchemaRepository)
-    approvedPremisesPlacementApplicationJsonSchemaEntityFactory = PersistedFactory({ ApprovedPremisesPlacementApplicationJsonSchemaEntityFactory() }, approvedPremisesPlacementApplicationJsonSchemaRepository)
+    temporaryAccommodationApplicationEntityFactory = PersistedFactory(
+      { TemporaryAccommodationApplicationEntityFactory() },
+      temporaryAccommodationApplicationRepository,
+    )
+    offlineApplicationEntityFactory =
+      PersistedFactory({ OfflineApplicationEntityFactory() }, offlineApplicationRepository)
+    approvedPremisesApplicationJsonSchemaEntityFactory = PersistedFactory(
+      { ApprovedPremisesApplicationJsonSchemaEntityFactory() },
+      approvedPremisesApplicationJsonSchemaRepository,
+    )
+    cas2ApplicationJsonSchemaEntityFactory =
+      PersistedFactory({ Cas2ApplicationJsonSchemaEntityFactory() }, cas2ApplicationJsonSchemaRepository)
+    temporaryAccommodationApplicationJsonSchemaEntityFactory = PersistedFactory(
+      { TemporaryAccommodationApplicationJsonSchemaEntityFactory() },
+      temporaryAccommodationApplicationJsonSchemaRepository,
+    )
+    approvedPremisesAssessmentJsonSchemaEntityFactory = PersistedFactory(
+      { ApprovedPremisesAssessmentJsonSchemaEntityFactory() },
+      approvedPremisesAssessmentJsonSchemaRepository,
+    )
+    temporaryAccommodationAssessmentJsonSchemaEntityFactory = PersistedFactory(
+      { TemporaryAccommodationAssessmentJsonSchemaEntityFactory() },
+      temporaryAccommodationAssessmentJsonSchemaRepository,
+    )
+    approvedPremisesPlacementApplicationJsonSchemaEntityFactory = PersistedFactory(
+      { ApprovedPremisesPlacementApplicationJsonSchemaEntityFactory() },
+      approvedPremisesPlacementApplicationJsonSchemaRepository,
+    )
     nomisUserEntityFactory = PersistedFactory({ NomisUserEntityFactory() }, nomisUserRepository)
     externalUserEntityFactory = PersistedFactory({ ExternalUserEntityFactory() }, externalUserRepository)
     userEntityFactory = PersistedFactory({ UserEntityFactory() }, userRepository)
-    userRoleAssignmentEntityFactory = PersistedFactory({ UserRoleAssignmentEntityFactory() }, userRoleAssignmentRepository)
-    userQualificationAssignmentEntityFactory = PersistedFactory({ UserQualificationAssignmentEntityFactory() }, userQualificationAssignmentRepository)
-    approvedPremisesAssessmentEntityFactory = PersistedFactory({ ApprovedPremisesAssessmentEntityFactory() }, approvedPremisesAssessmentRepository)
-    temporaryAccommodationAssessmentEntityFactory = PersistedFactory({ TemporaryAccommodationAssessmentEntityFactory() }, temporaryAccommodationAssessmentRepository)
-    assessmentClarificationNoteEntityFactory = PersistedFactory({ AssessmentClarificationNoteEntityFactory() }, assessmentClarificationNoteRepository)
-    assessmentReferralHistoryUserNoteEntityFactory = PersistedFactory({ AssessmentReferralHistoryUserNoteEntityFactory() }, assessmentReferralUserNoteRepository)
-    assessmentReferralHistorySystemNoteEntityFactory = PersistedFactory({ AssessmentReferralHistorySystemNoteEntityFactory() }, assessmentReferralSystemNoteRepository)
+    userRoleAssignmentEntityFactory =
+      PersistedFactory({ UserRoleAssignmentEntityFactory() }, userRoleAssignmentRepository)
+    userQualificationAssignmentEntityFactory =
+      PersistedFactory({ UserQualificationAssignmentEntityFactory() }, userQualificationAssignmentRepository)
+    approvedPremisesAssessmentEntityFactory =
+      PersistedFactory({ ApprovedPremisesAssessmentEntityFactory() }, approvedPremisesAssessmentRepository)
+    temporaryAccommodationAssessmentEntityFactory =
+      PersistedFactory({ TemporaryAccommodationAssessmentEntityFactory() }, temporaryAccommodationAssessmentRepository)
+    assessmentClarificationNoteEntityFactory =
+      PersistedFactory({ AssessmentClarificationNoteEntityFactory() }, assessmentClarificationNoteRepository)
+    assessmentReferralHistoryUserNoteEntityFactory =
+      PersistedFactory({ AssessmentReferralHistoryUserNoteEntityFactory() }, assessmentReferralUserNoteRepository)
+    assessmentReferralHistorySystemNoteEntityFactory =
+      PersistedFactory({ AssessmentReferralHistorySystemNoteEntityFactory() }, assessmentReferralSystemNoteRepository)
     characteristicEntityFactory = PersistedFactory({ CharacteristicEntityFactory() }, characteristicRepository)
     roomEntityFactory = PersistedFactory({ RoomEntityFactory() }, roomRepository)
     bedEntityFactory = PersistedFactory({ BedEntityFactory() }, bedRepository)
     domainEventFactory = PersistedFactory({ DomainEventEntityFactory() }, domainEventRepository)
     postCodeDistrictFactory = PersistedFactory({ PostCodeDistrictEntityFactory() }, postCodeDistrictRepository)
     placementRequestFactory = PersistedFactory({ PlacementRequestEntityFactory() }, placementRequestRepository)
-    placementRequirementsFactory = PersistedFactory({ PlacementRequirementsEntityFactory() }, placementRequirementsRepository)
+    placementRequirementsFactory =
+      PersistedFactory({ PlacementRequirementsEntityFactory() }, placementRequirementsRepository)
     bookingNotMadeFactory = PersistedFactory({ BookingNotMadeEntityFactory() }, bookingNotMadeRepository)
-    probationDeliveryUnitFactory = PersistedFactory({ ProbationDeliveryUnitEntityFactory() }, probationDeliveryUnitRepository)
+    probationDeliveryUnitFactory =
+      PersistedFactory({ ProbationDeliveryUnitEntityFactory() }, probationDeliveryUnitRepository)
     applicationTeamCodeFactory = PersistedFactory({ ApplicationTeamCodeEntityFactory() }, applicationTeamCodeRepository)
     turnaroundFactory = PersistedFactory({ TurnaroundEntityFactory() }, turnaroundRepository)
-    placementApplicationFactory = PersistedFactory({ PlacementApplicationEntityFactory() }, placementApplicationRepository)
+    placementApplicationFactory =
+      PersistedFactory({ PlacementApplicationEntityFactory() }, placementApplicationRepository)
     placementDateFactory = PersistedFactory({ PlacementDateEntityFactory() }, placementDateRepository)
-    probationAreaProbationRegionMappingFactory = PersistedFactory({ ProbationAreaProbationRegionMappingEntityFactory() }, probationAreaProbationRegionMappingRepository)
+    probationAreaProbationRegionMappingFactory = PersistedFactory(
+      { ProbationAreaProbationRegionMappingEntityFactory() },
+      probationAreaProbationRegionMappingRepository,
+    )
   }
 
   fun mockClientCredentialsJwtRequest(
@@ -627,56 +669,35 @@ abstract class IntegrationTestBase {
     )
   }
 
-  fun mockOffenderDetailsCommunityApiCall(offenderDetails: OffenderDetailSummary) = wiremockServer.stubFor(
-    WireMock.get(urlEqualTo("/secure/offenders/crn/${offenderDetails.otherIds.crn}"))
-      .willReturn(
-        WireMock.aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-          .withBody(
-            objectMapper.writeValueAsString(offenderDetails),
-          ),
-      ),
-  )
+  fun UserAccess.replace(caseAccess: CaseAccess) {
+    access = access.filter { it.crn != caseAccess.crn } + caseAccess
+  }
 
-  fun mockOffenderUserAccessCommunityApiCall(username: String, crn: String, inclusion: Boolean, exclusion: Boolean) {
-    if (!inclusion && !exclusion) {
-      wiremockServer.stubFor(
-        WireMock.get(urlEqualTo("/secure/offenders/crn/$crn/user/$username/userAccess"))
-          .willReturn(
-            aResponse()
-              .withHeader("Content-Type", "application/json")
-              .withStatus(200)
-              .withBody(
-                objectMapper.writeValueAsString(
-                  UserOffenderAccess(
-                    userRestricted = false,
-                    userExcluded = false,
-                    restrictionMessage = null,
-                  ),
-                ),
-              ),
-          ),
-      )
-      return
+  fun mockOffenderUserAccessCall(crn: String, inclusion: Boolean, exclusion: Boolean) {
+    val exclusionMessage = if (exclusion) "Excluded from Access" else null
+    val inclusionMessage = if (inclusion) "Restricted Access" else null
+    val caseAccess = CaseAccess(crn, exclusion, inclusion, exclusionMessage, inclusionMessage)
+
+    val existingMock = wiremockServer.listAllStubMappings().mappings.find { it.request.urlMatcher == urlPathMatching("/users/access.*") }
+    val response = if (existingMock != null) {
+      val responseBody = objectMapper.readValue<UserAccess>(existingMock.response.body)
+      responseBody.replace(caseAccess)
+      responseBody
+    } else {
+      UserAccess(listOf(caseAccess))
     }
 
     wiremockServer.stubFor(
-      WireMock.get(urlEqualTo("/secure/offenders/crn/$crn/user/$username/userAccess"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(403)
-            .withBody(
-              objectMapper.writeValueAsString(
-                UserOffenderAccess(
-                  userRestricted = inclusion,
-                  userExcluded = exclusion,
-                  restrictionMessage = null,
-                ),
-              ),
-            ),
-        ),
+      get(urlPathMatching("/users/access.*")).apply {
+        if (existingMock?.id != null) {
+          withId(existingMock.id)
+        }
+      }.willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
     )
   }
 
@@ -738,18 +759,21 @@ abstract class IntegrationTestBase {
       ),
   )
 
-  fun mockSuccessfulGetCallWithJsonResponse(url: String, responseBody: Any, responseStatus: Int = 200) =
+  fun mockSuccessfulGetCallWithJsonResponse(url: String, responseBody: Any, responseStatus: Int = 200, requestBody: Any? = null) =
     mockOAuth2ClientCredentialsCallIfRequired {
       wiremockServer.stubFor(
-        WireMock.get(urlEqualTo(url))
-          .willReturn(
-            aResponse()
-              .withHeader("Content-Type", "application/json")
-              .withStatus(responseStatus)
-              .withBody(
-                objectMapper.writeValueAsString(responseBody),
-              ),
-          ),
+        WireMock.get(urlEqualTo(url)).apply {
+          if (requestBody != null) {
+            withRequestBody(equalTo(objectMapper.writeValueAsString(requestBody)))
+          }
+        }.willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(responseStatus)
+            .withBody(
+              objectMapper.writeValueAsString(responseBody),
+            ),
+        ),
       )
     }
 

@@ -10,11 +10,11 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.asOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
@@ -62,7 +62,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             }
 
             val application1 = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails1.otherIds.crn)
+              withCrn(offenderDetails1.case.crn)
               withCreatedByUser(user)
               withApplicationSchema(applicationSchema)
               withSubmittedAt(OffsetDateTime.now())
@@ -78,7 +78,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             }
 
             val application2 = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails2.otherIds.crn)
+              withCrn(offenderDetails2.case.crn)
               withCreatedByUser(user)
               withSubmittedAt(OffsetDateTime.now())
               withApplicationSchema(applicationSchema)
@@ -134,7 +134,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   listOf(
                     placementRequestTransformer.transformJpaToApi(
                       placementRequest,
-                      PersonInfoResult.Success.Full(offenderDetails1.otherIds.crn, offenderDetails1, inmateDetails1),
+                      PersonInfoResult.Success.Full(offenderDetails1.case.crn, offenderDetails1.case.asOffenderDetail(), inmateDetails1),
                     ),
                   ),
                 ),
@@ -177,7 +177,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
-            crn = unmatchedOffender.otherIds.crn,
+            crn = unmatchedOffender.case.crn,
           ) { unmatchedPlacementRequest, _ ->
             webTestClient.get()
               .uri("/placement-requests/dashboard")
@@ -191,7 +191,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   listOf(
                     placementRequestTransformer.transformJpaToApi(
                       unmatchedPlacementRequest,
-                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
+                      PersonInfoResult.Success.Full(unmatchedOffender.case.crn, unmatchedOffender.case.asOffenderDetail(), unmatchedInmate),
                     ),
                   ),
                 ),
@@ -209,7 +209,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
-            crn = unmatchedOffender.otherIds.crn,
+            crn = unmatchedOffender.case.crn,
           ) { unmatchedPlacementRequest, _ ->
             webTestClient.get()
               .uri("/placement-requests/dashboard?status=notMatched")
@@ -223,7 +223,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   listOf(
                     placementRequestTransformer.transformJpaToApi(
                       unmatchedPlacementRequest,
-                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
+                      PersonInfoResult.Success.Full(unmatchedOffender.case.crn, unmatchedOffender.case.asOffenderDetail(), unmatchedInmate),
                     ),
                   ),
                 ),
@@ -241,7 +241,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
-            crn = matchedOffender.otherIds.crn,
+            crn = matchedOffender.case.crn,
           ) { matchedPlacementRequest, _ ->
             val premises = approvedPremisesEntityFactory.produceAndPersist {
               withProbationRegion(
@@ -281,7 +281,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   listOf(
                     placementRequestTransformer.transformJpaToApi(
                       matchedPlacementRequest,
-                      PersonInfoResult.Success.Full(matchedOffender.otherIds.crn, matchedOffender, matchedInmate),
+                      PersonInfoResult.Success.Full(matchedOffender.case.crn, matchedOffender.case.asOffenderDetail(), matchedInmate),
                     ),
                   ),
                 ),
@@ -299,7 +299,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,
             createdByUser = user,
-            crn = unableToMatchOffender.otherIds.crn,
+            crn = unableToMatchOffender.case.crn,
           ) { unableToMatchPlacementRequest, _ ->
             unableToMatchPlacementRequest.bookingNotMades = mutableListOf(
               bookingNotMadeFactory.produceAndPersist {
@@ -319,7 +319,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   listOf(
                     placementRequestTransformer.transformJpaToApi(
                       unableToMatchPlacementRequest,
-                      PersonInfoResult.Success.Full(unableToMatchOffender.otherIds.crn, unableToMatchOffender, unableToMatchInmate),
+                      PersonInfoResult.Success.Full(unableToMatchOffender.case.crn, unableToMatchOffender.case.asOffenderDetail(), unableToMatchInmate),
                     ),
                   ),
                 ),
@@ -333,7 +333,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     fun `It returns paginated placement requests when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
-          val placementRequest = createPlacementRequest(offenderDetails, user)
+          val placementRequest = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user)
 
           webTestClient.get()
             .uri("/placement-requests/dashboard?page=1")
@@ -351,7 +351,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 listOf(
                   placementRequestTransformer.transformJpaToApi(
                     placementRequest,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
                   ),
                 ),
               ),
@@ -363,13 +363,14 @@ class PlacementRequestsTest : IntegrationTestBase() {
     @Test
     fun `It searches by name when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given an Offender`(offenderDetailsConfigBlock = {
-          withFirstName("JOHN")
-          withLastName("SMITH")
-        },) { offenderDetails, inmateDetails ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withFirstName("JOHN")
+            withLastName("SMITH")
+          },) { offenderDetails, inmateDetails ->
           `Given an Offender` { otherOffenderDetails, _ ->
-            val placementRequest = createPlacementRequest(offenderDetails, user)
-            createPlacementRequest(otherOffenderDetails, user)
+            val placementRequest = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user)
+            createPlacementRequest(otherOffenderDetails.case.asOffenderDetail(), user)
 
             webTestClient.get()
               .uri("/placement-requests/dashboard?crnOrName=john")
@@ -383,7 +384,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   listOf(
                     placementRequestTransformer.transformJpaToApi(
                       placementRequest,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
                     ),
                   ),
                 ),
@@ -398,11 +399,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { otherOffenderDetails, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
-            val placementRequest = createPlacementRequest(offenderDetails, user)
-            createPlacementRequest(otherOffenderDetails, user)
+            val placementRequest = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user)
+            createPlacementRequest(otherOffenderDetails.case.asOffenderDetail(), user)
 
             webTestClient.get()
-              .uri("/placement-requests/dashboard?crnOrName=${offenderDetails.otherIds.crn}")
+              .uri("/placement-requests/dashboard?crnOrName=${offenderDetails.case.crn}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -413,7 +414,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   listOf(
                     placementRequestTransformer.transformJpaToApi(
                       placementRequest,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
                     ),
                   ),
                 ),
@@ -427,9 +428,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
     fun `It sorts by duration when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          val placementRequestWithOneDayDuration = createPlacementRequest(offenderDetails, user, duration = 1)
-          val placementRequestWithFiveDayDuration = createPlacementRequest(offenderDetails, user, duration = 5)
-          val placementRequestWithTwelveDayDuration = createPlacementRequest(offenderDetails, user, duration = 12)
+          val placementRequestWithOneDayDuration = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user, duration = 1)
+          val placementRequestWithFiveDayDuration = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user, duration = 5)
+          val placementRequestWithTwelveDayDuration = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user, duration = 12)
 
           webTestClient.get()
             .uri("/placement-requests/dashboard?page=1&sortBy=duration")
@@ -460,9 +461,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
     fun `It sorts by expectedArrival when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          val placementRequestWithExpectedArrivalOfToday = createPlacementRequest(offenderDetails, user)
-          val placementRequestWithExpectedArrivalInTwelveDays = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.now().plusDays(12))
-          val placementRequestWithExpectedArrivalInThirtyDays = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.now().plusDays(30))
+          val placementRequestWithExpectedArrivalOfToday = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user)
+          val placementRequestWithExpectedArrivalInTwelveDays = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user, expectedArrival = LocalDate.now().plusDays(12))
+          val placementRequestWithExpectedArrivalInThirtyDays = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user, expectedArrival = LocalDate.now().plusDays(30))
 
           webTestClient.get()
             .uri("/placement-requests/dashboard?page=1&sortBy=expected_arrival")
@@ -493,9 +494,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
     fun `It sorts by createdAt when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          val placementRequestCreatedToday = createPlacementRequest(offenderDetails, user)
-          val placementRequestCreatedFiveDaysAgo = createPlacementRequest(offenderDetails, user, createdAt = OffsetDateTime.now().minusDays(5))
-          val placementRequestCreatedThirtyDaysAgo = createPlacementRequest(offenderDetails, user, createdAt = OffsetDateTime.now().minusDays(30))
+          val placementRequestCreatedToday = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user)
+          val placementRequestCreatedFiveDaysAgo = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user, createdAt = OffsetDateTime.now().minusDays(5))
+          val placementRequestCreatedThirtyDaysAgo = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user, createdAt = OffsetDateTime.now().minusDays(30))
 
           webTestClient.get()
             .uri("/placement-requests/dashboard?page=1&sortBy=created_at")
@@ -526,9 +527,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
     fun `It sorts by applicationSubmittedAt when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          val placementRequestWithApplicationCreatedToday = createPlacementRequest(offenderDetails, user)
-          val placementRequestWithApplicationCreatedTwelveDaysAgo = createPlacementRequest(offenderDetails, user, applicationDate = OffsetDateTime.now().minusDays(12))
-          val placementRequestWithApplicationCreatedThirtyDaysAgo = createPlacementRequest(offenderDetails, user, applicationDate = OffsetDateTime.now().minusDays(30))
+          val placementRequestWithApplicationCreatedToday = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user)
+          val placementRequestWithApplicationCreatedTwelveDaysAgo = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user, applicationDate = OffsetDateTime.now().minusDays(12))
+          val placementRequestWithApplicationCreatedThirtyDaysAgo = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user, applicationDate = OffsetDateTime.now().minusDays(30))
 
           webTestClient.get()
             .uri("/placement-requests/dashboard?page=1&sortBy=application_date")
@@ -639,7 +640,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
+                crn = offenderDetails.case.crn,
               ) { placementRequest, _ ->
                 webTestClient.get()
                   .uri("/placement-requests/${placementRequest.id}")
@@ -663,7 +664,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             ) { placementRequest, _ ->
               webTestClient.get()
                 .uri("/placement-requests/${placementRequest.id}")
@@ -676,7 +677,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToApi(
                       placementRequest,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
                       listOf(),
                     ),
                   ),
@@ -700,11 +701,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             ) { placementRequest, _ ->
-              CommunityAPI_mockOffenderUserAccessCall(
-                username = user.deliusUsername,
-                crn = offenderDetails.otherIds.crn,
+              mockOffenderUserAccessCall(
+                crn = offenderDetails.case.crn,
                 inclusion = false,
                 exclusion = true,
               )
@@ -737,11 +737,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             ) { placementRequest, _ ->
-              CommunityAPI_mockOffenderUserAccessCall(
-                username = user.deliusUsername,
-                crn = offenderDetails.otherIds.crn,
+              mockOffenderUserAccessCall(
+                crn = offenderDetails.case.crn,
                 inclusion = false,
                 exclusion = false,
               )
@@ -757,7 +756,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToApi(
                       placementRequest,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
                       listOf(),
                     ),
                   ),
@@ -781,11 +780,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             ) { placementRequest, _ ->
-              CommunityAPI_mockOffenderUserAccessCall(
-                username = user.deliusUsername,
-                crn = offenderDetails.otherIds.crn,
+              mockOffenderUserAccessCall(
+                crn = offenderDetails.case.crn,
                 inclusion = false,
                 exclusion = true,
               )
@@ -801,7 +799,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToApi(
                       placementRequest,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
                       listOf(),
                     ),
                   ),
@@ -821,7 +819,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
             ) { placementRequest, _ ->
               val premises = approvedPremisesEntityFactory.produceAndPersist {
                 withProbationRegion(
@@ -844,7 +842,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
               val booking = bookingEntityFactory.produceAndPersist {
                 withPremises(premises)
-                withCrn(offenderDetails.otherIds.crn)
+                withCrn(offenderDetails.case.crn)
                 withBed(bed)
                 withServiceName(ServiceName.approvedPremises)
                 withApplication(placementRequest.application)
@@ -866,7 +864,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToApi(
                       placementRequest,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
                       cancellations,
                     ),
                   ),
@@ -906,7 +904,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
+                crn = offenderDetails.case.crn,
               ) { placementRequest, _ ->
                 webTestClient.post()
                   .uri("/placement-requests/${placementRequest.id}/booking")
@@ -938,7 +936,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 placementRequestAllocatedTo = user,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
+                crn = offenderDetails.case.crn,
               ) { placementRequest, _ ->
                 val premises = approvedPremisesEntityFactory.produceAndPersist {
                   withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -985,7 +983,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 placementRequestAllocatedTo = user,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
+                crn = offenderDetails.case.crn,
               ) { placementRequest, _ ->
                 val premises = approvedPremisesEntityFactory.produceAndPersist {
                   withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1025,7 +1023,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 placementRequestAllocatedTo = user,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
+                crn = offenderDetails.case.crn,
               ) { placementRequest, _ ->
                 val premises = approvedPremisesEntityFactory.produceAndPersist {
                   withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1082,7 +1080,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
+                crn = offenderDetails.case.crn,
               ) { placementRequest, _ ->
                 webTestClient.post()
                   .uri("/placement-requests/${placementRequest.id}/booking-not-made")
@@ -1137,7 +1135,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 placementRequestAllocatedTo = user,
                 assessmentAllocatedTo = user,
                 createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
+                crn = offenderDetails.case.crn,
               ) { placementRequest, _ ->
                 webTestClient.post()
                   .uri("/placement-requests/${placementRequest.id}/withdrawal")

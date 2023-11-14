@@ -2,6 +2,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderIds
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Ldu
@@ -21,10 +25,22 @@ class CaseDetailFactory : Factory<CaseDetail> {
   var case: Yielded<CaseSummary> = { CaseSummaryFactory().produce() }
   var offences: Yielded<List<Offence>> = { listOf(CaseDetailOffenceFactory().produce()) }
   var registrations: Yielded<List<Registration>> = { listOf(RegistrationFactory().produce()) }
-  var mappaDetail: Yielded<MappaDetail> = { MappaDetailFactory().produce() }
+  var mappaDetail: Yielded<MappaDetail?> = { MappaDetailFactory().produce() }
 
   fun withCase(case: CaseSummary) = apply {
     this.case = { case }
+  }
+
+  fun withRegistrations(registrations: List<Registration>) = apply {
+    this.registrations = { registrations }
+  }
+
+  fun withMappaDetail(mappaDetail: MappaDetail?) = apply {
+    this.mappaDetail = { mappaDetail }
+  }
+
+  fun withOffences(offences: List<Offence>) = apply {
+    this.offences = { offences }
   }
 
   override fun produce(): CaseDetail = CaseDetail(
@@ -50,10 +66,12 @@ class CaseDetailOffenceFactory : Factory<Offence> {
 }
 
 class RegistrationFactory : Factory<Registration> {
+  var code: Yielded<String> = { randomStringLowerCase(6) }
   var description: Yielded<String> = { randomStringLowerCase(10) }
-  var startDate: Yielded<LocalDate> = { LocalDate.now() }
+  var startDate: Yielded<LocalDate> = { LocalDate.now().minusDays(1) }
 
   override fun produce(): Registration = Registration(
+    code = this.code(),
     description = this.description(),
     startDate = this.startDate(),
   )
@@ -78,8 +96,9 @@ class MappaDetailFactory : Factory<MappaDetail> {
 }
 
 class CaseSummaryFactory : Factory<CaseSummary> {
-  var crn: Yielded<String> = { randomStringUpperCase(10) }
-  var nomsId: Yielded<String?> = { randomStringUpperCase(10) }
+  var crn: Yielded<String> = { randomStringUpperCase(7) }
+  var nomsId: Yielded<String?> = { randomStringUpperCase(7) }
+  var pnc: Yielded<String?> = { randomStringUpperCase(10) }
   var name: Yielded<Name> = { NameFactory().produce() }
   var dateOfBirth: Yielded<LocalDate> = { LocalDate.now() }
   var gender: Yielded<String> = { randomStringUpperCase(10) }
@@ -119,6 +138,7 @@ class CaseSummaryFactory : Factory<CaseSummary> {
   override fun produce(): CaseSummary = CaseSummary(
     crn = this.crn(),
     nomsId = this.nomsId(),
+    pnc = this.pnc(),
     name = this.name(),
     dateOfBirth = this.dateOfBirth(),
     gender = this.gender(),
@@ -207,3 +227,22 @@ class LduFactory : Factory<Ldu> {
     name = this.name(),
   )
 }
+
+fun CaseSummary.asOffenderDetail() = OffenderDetailSummary(
+  firstName = name.forename,
+  middleNames = name.middleNames,
+  surname = name.surname,
+  dateOfBirth = dateOfBirth,
+  gender = gender ?: "",
+  otherIds = OffenderIds(crn = crn, nomsNumber = nomsId, pncNumber = pnc),
+  offenderProfile = OffenderProfile(
+    ethnicity = profile?.ethnicity,
+    nationality = profile?.nationality,
+    genderIdentity = profile?.genderIdentity,
+    religion = profile?.religion,
+    offenderLanguages = OffenderLanguages(),
+  ),
+  softDeleted = false,
+  currentExclusion = currentExclusion ?: false,
+  currentRestriction = currentRestriction ?: false,
+)

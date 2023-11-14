@@ -35,12 +35,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UserAllocationsEngine
 import java.util.UUID
 import javax.servlet.http.HttpServletRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
+import org.mockito.kotlin.whenever
+import org.springframework.security.oauth2.jwt.Jwt
+import java.time.Instant
 
 class UserServiceTest {
   private val mockCurrentRequest = mockk<HttpServletRequest>()
@@ -52,7 +54,7 @@ class UserServiceTest {
   private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
   private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
   private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
-  private val mockUserTransformer = mockk<UserTransformer>()
+  private val mockAuthAwareAuthenticationToken = mockk<AuthAwareAuthenticationToken>()
 
   private val userService = UserService(
     false,
@@ -65,8 +67,12 @@ class UserServiceTest {
     mockUserQualificationAssignmentRepository,
     mockProbationRegionRepository,
     mockProbationAreaProbationRegionMappingRepository,
-    mockUserTransformer,
   )
+
+  @BeforeEach
+  fun setup() {
+    every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockAuthAwareAuthenticationToken
+  }
 
   @Test
   fun `getUserForRequest returns existing User when exists, does not call Community API or save`() {
@@ -265,7 +271,8 @@ class UserServiceTest {
       .withCreatedByUser(createdByUser)
       .produce()
 
-    every { mockOffenderService.isLao(application.crn) } returns true
+    every { mockAuthAwareAuthenticationToken.name } returns userForAllocation.deliusUsername
+    every { mockOffenderService.isLao(userForAllocation.deliusUsername, application.crn) } returns true
 
     mockkConstructor(UserAllocationsEngine::class)
 
@@ -297,7 +304,8 @@ class UserServiceTest {
       .withIsPipeApplication(true)
       .produce()
 
-    every { mockOffenderService.isLao(application.crn) } returns false
+    every { mockAuthAwareAuthenticationToken.name } returns userForAllocation.deliusUsername
+    every { mockOffenderService.isLao(userForAllocation.deliusUsername, application.crn) } returns false
 
     mockkConstructor(UserAllocationsEngine::class)
 
@@ -321,7 +329,8 @@ class UserServiceTest {
 
     val crn = "CRN123"
 
-    every { mockOffenderService.isLao(crn) } returns true
+    every { mockAuthAwareAuthenticationToken.name } returns userForAllocation.deliusUsername
+    every { mockOffenderService.isLao(userForAllocation.deliusUsername, crn) } returns true
 
     mockkConstructor(UserAllocationsEngine::class)
 
@@ -345,7 +354,8 @@ class UserServiceTest {
 
     val crn = "CRN123"
 
-    every { mockOffenderService.isLao(crn) } returns false
+    every { mockAuthAwareAuthenticationToken.name } returns userForAllocation.deliusUsername
+    every { mockOffenderService.isLao(userForAllocation.deliusUsername, crn) } returns false
 
     mockkConstructor(UserAllocationsEngine::class)
 
@@ -369,7 +379,8 @@ class UserServiceTest {
 
     val crn = "CRN123"
 
-    every { mockOffenderService.isLao(crn) } returns true
+    every { mockAuthAwareAuthenticationToken.name } returns userForAllocation.deliusUsername
+    every { mockOffenderService.isLao(userForAllocation.deliusUsername, crn) } returns true
 
     mockkConstructor(UserAllocationsEngine::class)
 
@@ -393,7 +404,8 @@ class UserServiceTest {
 
     val crn = "CRN123"
 
-    every { mockOffenderService.isLao(crn) } returns false
+    every { mockAuthAwareAuthenticationToken.name } returns userForAllocation.deliusUsername
+    every { mockOffenderService.isLao(userForAllocation.deliusUsername, crn) } returns false
 
     mockkConstructor(UserAllocationsEngine::class)
 
@@ -467,7 +479,6 @@ class UserServiceTest {
     private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
     private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
     private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
-    private val mockUserTransformer = mockk<UserTransformer>()
 
     private val userService = UserService(
       false,
@@ -480,7 +491,6 @@ class UserServiceTest {
       mockUserQualificationAssignmentRepository,
       mockProbationRegionRepository,
       mockProbationAreaProbationRegionMappingRepository,
-      mockUserTransformer,
     )
 
     private val id = UUID.fromString("21b61d19-3a96-4b88-8df9-a5e89bc6fe73")
@@ -703,7 +713,6 @@ class UserServiceTest {
     private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
     private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
     private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
-    private val mockUserTransformer = mockk<UserTransformer>()
 
     private val userService = UserService(
       false,
@@ -716,7 +725,6 @@ class UserServiceTest {
       mockUserQualificationAssignmentRepository,
       mockProbationRegionRepository,
       mockProbationAreaProbationRegionMappingRepository,
-      mockUserTransformer,
     )
 
     private val userFactory = UserEntityFactory()
@@ -770,7 +778,6 @@ class UserServiceTest {
     private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
     private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
     private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
-    private val mockUserTransformer = mockk<UserTransformer>()
 
     private val userService = UserService(
       false,
@@ -783,7 +790,6 @@ class UserServiceTest {
       mockUserQualificationAssignmentRepository,
       mockProbationRegionRepository,
       mockProbationAreaProbationRegionMappingRepository,
-      mockUserTransformer,
     )
 
     private val userFactory = UserEntityFactory()

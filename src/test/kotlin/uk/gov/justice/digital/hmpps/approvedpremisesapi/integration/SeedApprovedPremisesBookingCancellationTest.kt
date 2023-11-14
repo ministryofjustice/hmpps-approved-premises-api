@@ -63,7 +63,7 @@ class SeedApprovedPremisesBookingCancellationTest : SeedTestBase() {
 
       val booking = bookingEntityFactory.produceAndPersist {
         withPremises(premises)
-        withCrn(offenderDetails.otherIds.crn)
+        withCrn(offenderDetails.case.crn)
         withServiceName(ServiceName.temporaryAccommodation)
         withYieldedBed { bed }
       }
@@ -117,7 +117,7 @@ class SeedApprovedPremisesBookingCancellationTest : SeedTestBase() {
 
       val booking = bookingEntityFactory.produceAndPersist {
         withPremises(premises)
-        withCrn(offenderDetails.otherIds.crn)
+        withCrn(offenderDetails.case.crn)
         withServiceName(ServiceName.approvedPremises)
         withYieldedBed { bed }
       }

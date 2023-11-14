@@ -81,31 +81,31 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
   fun `Searching for a CRN returns OK with correct body`() {
     `Given a CAS2 User` { userEntity, jwt ->
       `Given an Offender`(
-        offenderDetailsConfigBlock = {
-          withCrn("CRN")
-          withDateOfBirth(LocalDate.parse("1985-05-05"))
-          withNomsNumber("NOMS321")
-          withFirstName("James")
-          withLastName("Someone")
-          withGender("Male")
-          withEthnicity("White British")
-          withNationality("English")
-          withReligionOrBelief("Judaism")
-          withGenderIdentity("Prefer to self-describe")
-          withSelfDescribedGenderIdentity("This is a self described identity")
-        },
-        inmateDetailsConfigBlock = {
-          withOffenderNo("NOMS321")
-          withInOutStatus(InOutStatus.IN)
-          withAssignedLivingUnit(
-            AssignedLivingUnit(
-              agencyId = "BRI",
-              locationId = 5,
-              description = "B-2F-004",
-              agencyName = "HMP Bristol",
-            ),
-          )
-        },
+          offenderDetailsConfigBlock = {
+            withCrn("CRN")
+            withDateOfBirth(LocalDate.parse("1985-05-05"))
+            withNomsNumber("NOMS321")
+            withFirstName("James")
+            withLastName("Someone")
+            withGender("Male")
+            withEthnicity("White British")
+            withNationality("English")
+            withReligionOrBelief("Judaism")
+            withGenderIdentity("Prefer to self-describe")
+            withSelfDescribedGenderIdentity("This is a self described identity")
+          },
+          inmateDetailsConfigBlock = {
+            withOffenderNo("NOMS321")
+            withInOutStatus(InOutStatus.IN)
+            withAssignedLivingUnit(
+              AssignedLivingUnit(
+                agencyId = "BRI",
+                locationId = 5,
+                description = "B-2F-004",
+                agencyName = "HMP Bristol",
+              ),
+            )
+          },
       ) { offenderDetails, inmateDetails ->
         webTestClient.get()
           .uri("/cas2/people/search?crn=CRN")
@@ -127,7 +127,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
                 ethnicity = "White British",
                 nationality = "English",
                 religionOrBelief = "Judaism",
-                genderIdentity = "This is a self described identity",
+                genderIdentity = "Prefer to self-describe",
                 prisonName = "HMP Bristol",
                 isRestricted = false,
               ),
@@ -141,19 +141,18 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
   fun `Searching for a CRN without a NomsNumber returns OK with correct body`() {
     `Given a CAS2 User` { userEntity, jwt ->
       `Given an Offender`(
-        offenderDetailsConfigBlock = {
-          withCrn("CRN")
-          withDateOfBirth(LocalDate.parse("1985-05-05"))
-          withNomsNumber(null)
-          withFirstName("James")
-          withLastName("Someone")
-          withGender("Male")
-          withEthnicity("White British")
-          withNationality("English")
-          withReligionOrBelief("Judaism")
-          withGenderIdentity("Prefer to self-describe")
-          withSelfDescribedGenderIdentity("This is a self described identity")
-        },
+          offenderDetailsConfigBlock = {
+            withCrn("CRN")
+            withDateOfBirth(LocalDate.parse("1985-05-05"))
+            withNomsNumber(null)
+            withFirstName("James")
+            withLastName("Someone")
+            withGender("Male")
+            withEthnicity("White British")
+            withNationality("English")
+            withReligionOrBelief("Judaism")
+            withGenderIdentity("Prefer to self-describe")
+          },
       ) { offenderDetails, _ ->
         webTestClient.get()
           .uri("/cas2/people/search?crn=CRN")
@@ -175,7 +174,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
                 ethnicity = "White British",
                 nationality = "English",
                 religionOrBelief = "Judaism",
-                genderIdentity = "This is a self described identity",
+                genderIdentity = "Prefer to self-describe",
                 prisonName = null,
                 isRestricted = false,
               ),

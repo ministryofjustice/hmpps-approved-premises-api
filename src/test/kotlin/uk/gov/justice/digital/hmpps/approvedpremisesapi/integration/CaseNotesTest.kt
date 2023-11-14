@@ -1,12 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CaseNotesAPI_mockSuccessfulCaseNotesCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import java.time.LocalDate
@@ -60,14 +62,15 @@ class CaseNotesTest : IntegrationTestBase() {
       val crn = "CRN345"
 
       wiremockServer.stubFor(
-        WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/$crn"))
+        WireMock.get(WireMock.urlEqualTo("/probation-cases/summaries"))
+          .withRequestBody(equalTo(objectMapper.writeValueAsString(listOf(crn))))
           .willReturn(
             WireMock.aResponse()
               .withHeader("Content-Type", "application/json")
-              .withStatus(404),
+              .withStatus(200)
+              .withBody(objectMapper.writeValueAsString(CaseSummaries(listOf()))),
           ),
       )
-      loadPreemptiveCacheForOffenderDetails(crn)
 
       webTestClient.get()
         .uri("/people/$crn/prison-case-notes")
@@ -88,7 +91,7 @@ class CaseNotesTest : IntegrationTestBase() {
       ) { offenderDetails, _ ->
 
         webTestClient.get()
-          .uri("/people/${offenderDetails.otherIds.crn}/prison-case-notes")
+          .uri("/people/${offenderDetails.case.crn}/prison-case-notes")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -111,7 +114,7 @@ class CaseNotesTest : IntegrationTestBase() {
         CaseNotesAPI_mockSuccessfulCaseNotesCall(
           0,
           LocalDate.now().minusDays(365),
-          offenderDetails.otherIds.nomsNumber!!,
+          offenderDetails.case.nomsId!!,
           CaseNotesPage(
             totalElements = 4,
             totalPages = 1,
@@ -121,7 +124,7 @@ class CaseNotesTest : IntegrationTestBase() {
         )
 
         webTestClient.get()
-          .uri("/people/${offenderDetails.otherIds.crn}/prison-case-notes")
+          .uri("/people/${offenderDetails.case.crn}/prison-case-notes")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()

@@ -22,6 +22,6 @@ complexity:
   LargeClass:
     threshold: 1000
   LongParameterList:
-    threshold: 12
+    constructorThreshold: 12
   TooManyFunctions:
     thresholdInClasses: 20

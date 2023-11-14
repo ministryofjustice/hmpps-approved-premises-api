@@ -5,9 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockUnsuccessfulNeedsDetailsCallWithDelay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
 
 class PersonOASysSelectionTest : IntegrationTestBase() {
@@ -58,8 +59,7 @@ class PersonOASysSelectionTest : IntegrationTestBase() {
     `Given a User` { userEntity, jwt ->
       val crn = "CRN123"
 
-      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-      loadPreemptiveCacheForOffenderDetails(crn)
+      APDeliusContext_mockSuccessfulCaseSummaryCall(listOf(crn), CaseSummaries(listOf()))
 
       webTestClient.get()
         .uri("/people/$crn/oasys/selection")
@@ -81,10 +81,10 @@ class PersonOASysSelectionTest : IntegrationTestBase() {
           withFinanceIssuesDetails(null, null, null)
         }.produce()
 
-        APOASysContext_mockSuccessfulNeedsDetailsCall(offenderDetails.otherIds.crn, needsDetails)
+        APOASysContext_mockSuccessfulNeedsDetailsCall(offenderDetails.case.crn, needsDetails)
 
         webTestClient.get()
-          .uri("/people/${offenderDetails.otherIds.crn}/oasys/selection")
+          .uri("/people/${offenderDetails.case.crn}/oasys/selection")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -110,10 +110,10 @@ class PersonOASysSelectionTest : IntegrationTestBase() {
           withFinanceIssuesDetails(null, null, null)
         }.produce()
 
-        APOASysContext_mockUnsuccessfulNeedsDetailsCallWithDelay(offenderDetails.otherIds.crn, needsDetails, 2500)
+        APOASysContext_mockUnsuccessfulNeedsDetailsCallWithDelay(offenderDetails.case.crn, needsDetails, 2500)
 
         webTestClient.get()
-          .uri("/people/${offenderDetails.otherIds.crn}/oasys/selection")
+          .uri("/people/${offenderDetails.case.crn}/oasys/selection")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()

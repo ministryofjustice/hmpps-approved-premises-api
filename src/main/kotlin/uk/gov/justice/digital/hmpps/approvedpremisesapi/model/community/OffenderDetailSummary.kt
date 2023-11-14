@@ -3,57 +3,53 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community
 import java.time.LocalDate
 
 data class OffenderDetailSummary(
-  val offenderId: Long,
-  val title: String?,
+  val title: String? = null,
   val firstName: String,
   val middleNames: List<String>?,
   val surname: String,
-  val previousSurname: String?,
-  val preferredName: String?,
+  val previousSurname: String? = null,
+  val preferredName: String? = null,
   val dateOfBirth: LocalDate,
   val gender: String,
   val otherIds: OffenderIds,
   val offenderProfile: OffenderProfile,
   val softDeleted: Boolean?,
-  val currentDisposal: String,
-  val partitionArea: String?,
   val currentRestriction: Boolean,
   val currentExclusion: Boolean,
-  val isActiveProbationManagedSentence: Boolean,
 )
 
 data class OffenderIds(
   val crn: String,
-  val croNumber: String?,
-  val immigrationNumber: String?,
-  val mostRecentPrisonNumber: String?,
-  val niNumber: String?,
-  val nomsNumber: String?,
-  val pncNumber: String?,
+  val croNumber: String? = null,
+  val immigrationNumber: String? = null,
+  val mostRecentPrisonNumber: String? = null,
+  val niNumber: String? = null,
+  val nomsNumber: String? = null,
+  val pncNumber: String? = null,
 )
 
 data class OffenderProfile(
   val ethnicity: String?,
   val nationality: String?,
-  val secondaryNationality: String?,
-  val notes: String?,
-  val immigrationStatus: String?,
+  val secondaryNationality: String? = null,
+  val notes: String? = null,
+  val immigrationStatus: String? = null,
   val offenderLanguages: OffenderLanguages,
-  val religion: String?,
-  val sexualOrientation: String?,
-  val offenderDetails: String?,
-  val remandStatus: String?,
-  val riskColour: String?,
-  val disabilities: List<Disability>?,
+  val religion: String? = null,
+  val sexualOrientation: String? = null,
+  val offenderDetails: String? = null,
+  val remandStatus: String? = null,
+  val riskColour: String? = null,
+  val disabilities: List<Disability>? = null,
   val genderIdentity: String?,
-  val selfDescribedGender: String?,
+  val selfDescribedGender: String? = null,
 )
 
 data class OffenderLanguages(
-  val primaryLanguage: String?,
-  val otherLanguages: List<String>?,
-  val languageConcerns: String?,
-  val requiresInterpreter: Boolean?,
+  val primaryLanguage: String? = null,
+  val otherLanguages: List<String>? = null,
+  val languageConcerns: String? = null,
+  val requiresInterpreter: Boolean? = null,
 )
 
 data class Disability(

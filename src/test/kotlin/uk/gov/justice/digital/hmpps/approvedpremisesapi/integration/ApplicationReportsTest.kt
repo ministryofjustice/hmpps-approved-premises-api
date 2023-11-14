@@ -28,14 +28,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -57,8 +55,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserTeamMembership
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationReportRow
@@ -287,25 +283,10 @@ class ApplicationReportsTest : IntegrationTestBase() {
   private fun createAndSubmitApplication(apType: ApType): ApprovedPremisesApplicationEntity {
     val (referrer, jwt) = referrerDetails
     val (offenderDetails, _) = `Given an Offender`()
-
-    CommunityAPI_mockSuccessfulRegistrationsCall(
-      offenderDetails.otherIds.crn,
-      Registrations(
-        registrations = listOf(
-          RegistrationClientResponseFactory()
-            .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
-            .withRegisterCategory(RegistrationKeyValue(code = "M2", description = "M2"))
-            .withRegisterLevel(RegistrationKeyValue(code = "M2", description = "M2"))
-            .withStartDate(LocalDate.parse("2022-09-06"))
-            .produce(),
-        ),
-      ),
-    )
-
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCreatedByUser(referrer)
-      withCrn(offenderDetails.otherIds.crn)
-      withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
+      withCrn(offenderDetails.case.crn)
+      withNomsNumber(offenderDetails.case.nomsId!!)
       withApplicationSchema(applicationSchema)
       withData(
         objectMapper.writeValueAsString(

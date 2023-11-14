@@ -80,13 +80,13 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
     `Given a CAS2 User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
-        APOASysContext_mockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
+        APOASysContext_mockSuccessfulOffenceDetailsCall(offenderDetails.case.crn, offenceDetails)
 
         val risksToTheIndividual = RiskToTheIndividualFactory().produce()
-        APOASysContext_mockSuccessfulRiskToTheIndividualCall(offenderDetails.otherIds.crn, risksToTheIndividual)
+        APOASysContext_mockSuccessfulRiskToTheIndividualCall(offenderDetails.case.crn, risksToTheIndividual)
 
         webTestClient.get()
-          .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")
+          .uri("/cas2/people/${offenderDetails.case.crn}/oasys/risk-to-self")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -109,10 +109,10 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
     `Given a CAS2 User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val risksToTheIndividual = RiskToTheIndividualFactory().produce()
-        APOASysContext_mockUnsuccessfulRisksToTheIndividualCallWithDelay(offenderDetails.otherIds.crn, risksToTheIndividual, 2500)
+        APOASysContext_mockUnsuccessfulRisksToTheIndividualCallWithDelay(offenderDetails.case.crn, risksToTheIndividual, 2500)
 
         webTestClient.get()
-          .uri("/cas2/people/${offenderDetails.otherIds.crn}/oasys/risk-to-self")
+          .uri("/cas2/people/${offenderDetails.case.crn}/oasys/risk-to-self")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()

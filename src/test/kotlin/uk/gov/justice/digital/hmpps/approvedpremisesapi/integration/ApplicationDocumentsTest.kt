@@ -33,7 +33,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withConvictionId(12345)
           withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
         }
@@ -62,7 +62,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
           )
           .produce()
 
-        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.case.crn, groupedDocuments)
 
         webTestClient.get()
           .uri("/applications/${application.id}/documents")
@@ -86,7 +86,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, _ ->
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withConvictionId(12345)
           withApplicationSchema(temporaryAccommodationApplicationJsonSchemaRepository.findAll().first())
           withProbationRegion(userEntity.probationRegion)
@@ -116,7 +116,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
           )
           .produce()
 
-        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.case.crn, groupedDocuments)
 
         webTestClient.get()
           .uri("/applications/${application.id}/documents")
@@ -141,7 +141,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withConvictionId(12345)
           withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
         }
@@ -170,7 +170,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
           )
           .produce()
 
-        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.case.crn, groupedDocuments)
 
         webTestClient.get()
           .uri("/documents/${application.crn}/ace0baaf-d7ee-4ea0-9010-da588387c880")
@@ -188,7 +188,7 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCreatedByUser(userEntity)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withConvictionId(12345)
           withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
         }
@@ -217,11 +217,11 @@ class ApplicationDocumentsTest : IntegrationTestBase() {
           )
           .produce()
 
-        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.otherIds.crn, groupedDocuments)
+        CommunityAPI_mockSuccessfulDocumentsCall(offenderDetails.case.crn, groupedDocuments)
 
         val fileContents = this::class.java.classLoader.getResourceAsStream("mock_document.txt").readAllBytes()
 
-        CommunityAPI_mockSuccessfulDocumentDownloadCall(offenderDetails.otherIds.crn, "457af8a5-82b1-449a-ad03-032b39435865", fileContents)
+        CommunityAPI_mockSuccessfulDocumentDownloadCall(offenderDetails.case.crn, "457af8a5-82b1-449a-ad03-032b39435865", fileContents)
 
         val result = webTestClient.get()
           .uri("/documents/${application.crn}/457af8a5-82b1-449a-ad03-032b39435865")

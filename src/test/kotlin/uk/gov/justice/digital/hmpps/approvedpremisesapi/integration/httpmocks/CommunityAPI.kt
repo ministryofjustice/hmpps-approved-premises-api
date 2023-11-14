@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 
 fun IntegrationTestBase.CommunityAPI_mockSuccessfulStaffUserDetailsCall(staffUserDetails: StaffUserDetails) =
   mockSuccessfulGetCallWithJsonResponse(
@@ -69,45 +68,3 @@ fun IntegrationTestBase.CommunityAPI_mockSuccessfulRegistrationsCall(crn: String
     url = "/secure/offenders/crn/$crn/registrations?activeOnly=true",
     responseBody = response,
   )
-
-fun IntegrationTestBase.CommunityAPI_mockOffenderUserAccessCall(username: String, crn: String, inclusion: Boolean, exclusion: Boolean) =
-  mockOAuth2ClientCredentialsCallIfRequired {
-    if (!inclusion && !exclusion) {
-      wiremockServer.stubFor(
-        WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/$crn/user/$username/userAccess"))
-          .willReturn(
-            WireMock.aResponse()
-              .withHeader("Content-Type", "application/json")
-              .withStatus(200)
-              .withBody(
-                objectMapper.writeValueAsString(
-                  UserOffenderAccess(
-                    userRestricted = false,
-                    userExcluded = false,
-                    restrictionMessage = null,
-                  ),
-                ),
-              ),
-          ),
-      )
-      return@mockOAuth2ClientCredentialsCallIfRequired
-    }
-
-    wiremockServer.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/secure/offenders/crn/$crn/user/$username/userAccess"))
-        .willReturn(
-          WireMock.aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(403)
-            .withBody(
-              objectMapper.writeValueAsString(
-                UserOffenderAccess(
-                  userRestricted = inclusion,
-                  userExcluded = exclusion,
-                  restrictionMessage = null,
-                ),
-              ),
-            ),
-        ),
-    )
-  }

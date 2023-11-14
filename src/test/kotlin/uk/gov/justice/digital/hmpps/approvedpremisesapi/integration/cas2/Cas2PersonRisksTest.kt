@@ -81,7 +81,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
     `Given a CAS2 User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         APOASysContext_mockSuccessfulRoshRatingsCall(
-          offenderDetails.otherIds.crn,
+          offenderDetails.case.crn,
           RoshRatingsFactory().apply {
             withDateCompleted(OffsetDateTime.parse("2022-09-06T15:15:15Z"))
             withAssessmentId(34853487)
@@ -93,7 +93,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
         )
 
         webTestClient.get()
-          .uri("/cas2/people/${offenderDetails.otherIds.crn}/risks")
+          .uri("/cas2/people/${offenderDetails.case.crn}/risks")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -102,7 +102,7 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
           .json(
             objectMapper.writeValueAsString(
               PersonRisks(
-                crn = offenderDetails.otherIds.crn,
+                crn = offenderDetails.case.crn,
                 roshRisks = RoshRisksEnvelope(
                   status = RiskEnvelopeStatus.retrieved,
                   value = RoshRisks(

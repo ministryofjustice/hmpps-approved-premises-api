@@ -45,7 +45,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           }
 
           val applicationCreatedByDifferentUser = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withCreatedByUser(differentUser)
             withApplicationSchema(applicationSchema)
             withIsPipeApplication(true)
@@ -55,7 +55,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           }
 
           val nonSubmittedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withCreatedByUser(user)
             withApplicationSchema(applicationSchema)
             withIsPipeApplication(true)
@@ -66,7 +66,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           }
 
           val withdrawnApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withCreatedByUser(user)
             withApplicationSchema(applicationSchema)
             withIsPipeApplication(true)
@@ -78,14 +78,14 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           }
 
           val inapplicableApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withCreatedByUser(user)
             withApplicationSchema(applicationSchema)
             withIsInapplicable(true)
           }
 
           val submittedApplication = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withCreatedByUser(user)
             withApplicationSchema(applicationSchema)
             withIsPipeApplication(true)
@@ -202,7 +202,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           }
 
           val nonSubmittedApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withCreatedByUser(user)
             withApplicationSchema(applicationSchema)
             withSubmittedAt(null)
@@ -210,7 +210,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
           }
 
           val submittedApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withCreatedByUser(user)
             withApplicationSchema(applicationSchema)
             withSubmittedAt(OffsetDateTime.parse("2023-04-19T09:34:00+01:00"))

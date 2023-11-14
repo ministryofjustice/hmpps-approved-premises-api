@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
+import io.mockk.InternalPlatformDsl.toStr
 import io.mockk.clearMocks
 import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
@@ -38,20 +39,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.asOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -72,12 +73,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -89,9 +91,6 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var assessmentTransformer: AssessmentTransformer
-
-  @Autowired
-  lateinit var userTransformer: UserTransformer
 
   @Autowired
   lateinit var applicationsTransformer: ApplicationsTransformer
@@ -172,7 +171,7 @@ class ApplicationTest : IntegrationTestBase() {
 
             val upToDateApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(newestJsonSchema)
-              withCrn(offenderDetails.otherIds.crn)
+              withCrn(offenderDetails.case.crn)
               withCreatedByUser(userEntity)
               withData(
                 """
@@ -194,7 +193,7 @@ class ApplicationTest : IntegrationTestBase() {
             val outdatedApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(olderJsonSchema)
               withCreatedByUser(userEntity)
-              withCrn(offenderDetails.otherIds.crn)
+              withCrn(offenderDetails.case.crn)
               withData("{}")
             }
 
@@ -209,11 +208,11 @@ class ApplicationTest : IntegrationTestBase() {
             val outdatedApplicationEntityNotManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(olderJsonSchema)
               withCreatedByUser(otherUser)
-              withCrn(otherOffenderDetails.otherIds.crn)
+              withCrn(otherOffenderDetails.case.crn)
               withData("{}")
             }
 
-            CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+            mockOffenderUserAccessCall(offenderDetails.case.crn, false, false)
 
             val rawResponseBody = webTestClient.get()
               .uri("/applications")
@@ -269,7 +268,7 @@ class ApplicationTest : IntegrationTestBase() {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(otherUser)
               withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
-              withCrn(offenderDetails.otherIds.crn)
+              withCrn(offenderDetails.case.crn)
               withData("{}")
               withProbationRegion(probationRegion)
             }
@@ -278,7 +277,7 @@ class ApplicationTest : IntegrationTestBase() {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(otherUser)
               withSubmittedAt(null)
-              withCrn(offenderDetails.otherIds.crn)
+              withCrn(offenderDetails.case.crn)
               withData("{}")
               withProbationRegion(probationRegion)
             }
@@ -287,7 +286,7 @@ class ApplicationTest : IntegrationTestBase() {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(otherUser)
               withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
-              withCrn(offenderDetails.otherIds.crn)
+              withCrn(offenderDetails.case.crn)
               withData("{}")
               withYieldedProbationRegion {
                 probationRegionEntityFactory.produceAndPersist {
@@ -298,7 +297,7 @@ class ApplicationTest : IntegrationTestBase() {
               }
             }
 
-            CommunityAPI_mockOffenderUserAccessCall(assessorUser.deliusUsername, offenderDetails.otherIds.crn, false, false)
+            mockOffenderUserAccessCall(offenderDetails.case.crn, false, false)
 
             val rawResponseBody = webTestClient.get()
               .uri("/applications")
@@ -351,7 +350,7 @@ class ApplicationTest : IntegrationTestBase() {
             val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(referrerUser)
-              withCrn(offenderDetails.otherIds.crn)
+              withCrn(offenderDetails.case.crn)
               withData("{}")
               withProbationRegion(probationRegion)
             }
@@ -359,12 +358,12 @@ class ApplicationTest : IntegrationTestBase() {
             val anotherUsersApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(otherUser)
-              withCrn(offenderDetails.otherIds.crn)
+              withCrn(offenderDetails.case.crn)
               withData("{}")
               withProbationRegion(probationRegion)
             }
 
-            CommunityAPI_mockOffenderUserAccessCall(referrerUser.deliusUsername, offenderDetails.otherIds.crn, false, false)
+            mockOffenderUserAccessCall(offenderDetails.case.crn, false, false)
 
             val rawResponseBody = webTestClient.get()
               .uri("/applications")
@@ -406,11 +405,10 @@ class ApplicationTest : IntegrationTestBase() {
     ) { userEntity, jwt ->
       val crn = "X1234"
 
+      APDeliusContext_mockSuccessfulCaseSummaryCall(listOf(crn), CaseSummaries(listOf()))
+      mockOffenderUserAccessCall(crn, false, false)
       produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
-      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
       loadPreemptiveCacheForOffenderDetails(crn)
-
-      CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, crn, false, false)
 
       webTestClient.get()
         .uri("/applications")
@@ -433,9 +431,9 @@ class ApplicationTest : IntegrationTestBase() {
       `Given an Offender`(
         offenderDetailsConfigBlock = { withoutNomsNumber() },
       ) { offenderDetails, inmateDetails ->
-        val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
+        val application = produceAndPersistBasicApplication(offenderDetails.case.crn, userEntity, "TEAM1")
 
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+        mockOffenderUserAccessCall(offenderDetails.case.crn, false, false)
 
         val rawResponseBody = webTestClient.get()
           .uri("/applications")
@@ -474,17 +472,15 @@ class ApplicationTest : IntegrationTestBase() {
 
       val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
+      val offenderDetails = CaseSummaryFactory()
         .withCrn(crn)
-        .withNomsNumber("ABC123")
+        .withNomsId("ABC123")
         .produce()
 
-      CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
-
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
-      loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
-      PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
-      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
+      APDeliusContext_mockSuccessfulCaseSummaryCall(listOf(offenderDetails.crn), CaseSummaries(listOf(offenderDetails)))
+      mockOffenderUserAccessCall(offenderDetails.crn, false, false)
+      PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.nomsId!!)
+      loadPreemptiveCacheForInmateDetails(offenderDetails.nomsId!!)
 
       val rawResponseBody = webTestClient.get()
         .uri("/applications")
@@ -550,7 +546,7 @@ class ApplicationTest : IntegrationTestBase() {
 
         val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withApplicationSchema(newestJsonSchema)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withData(
             """
@@ -561,7 +557,7 @@ class ApplicationTest : IntegrationTestBase() {
           )
         }
 
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+        mockOffenderUserAccessCall(offenderDetails.case.crn, false, false)
 
         val rawResponseBody = webTestClient.get()
           .uri("/applications/${applicationEntity.id}")
@@ -594,14 +590,12 @@ class ApplicationTest : IntegrationTestBase() {
       staffUserDetailsConfigBlock = {
         withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM2").produce()))
       },
-    ) { userEntity, jwt ->
+    ) { _, jwt ->
       `Given a User` { otherUser, _ ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
-          val crn = "X1234"
+        `Given an Offender` { offenderDetails, _ ->
 
-          val application = produceAndPersistBasicApplication(crn, otherUser, "TEAM1")
-
-          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+          mockOffenderUserAccessCall(offenderDetails.case.crn, false, true)
+          val application = produceAndPersistBasicApplication(offenderDetails.case.crn, otherUser, "TEAM1")
 
           webTestClient.get()
             .uri("/applications/${application.id}")
@@ -624,9 +618,9 @@ class ApplicationTest : IntegrationTestBase() {
       `Given an Offender`(
         offenderDetailsConfigBlock = { withoutNomsNumber() },
       ) { offenderDetails, inmateDetails ->
-        val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
+        val application = produceAndPersistBasicApplication(offenderDetails.case.crn, userEntity, "TEAM1")
 
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+        mockOffenderUserAccessCall(offenderDetails.case.crn, false, false)
 
         val rawResponseBody = webTestClient.get()
           .uri("/applications/${application.id}")
@@ -665,17 +659,15 @@ class ApplicationTest : IntegrationTestBase() {
 
       val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
+      val offenderDetails = CaseSummaryFactory()
         .withCrn(crn)
-        .withNomsNumber("ABC123")
+        .withNomsId("ABC123")
         .produce()
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
-      loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
-      PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
-      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
-
-      CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+      APDeliusContext_mockSuccessfulCaseSummaryCall(listOf(crn), CaseSummaries(listOf(offenderDetails)))
+      mockOffenderUserAccessCall(offenderDetails.crn, false, false)
+      PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.nomsId!!)
+      loadPreemptiveCacheForInmateDetails(offenderDetails.nomsId!!)
 
       val rawResponseBody = webTestClient.get()
         .uri("/applications/${application.id}")
@@ -749,12 +741,12 @@ class ApplicationTest : IntegrationTestBase() {
 
         val nonUpgradableApplicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withApplicationSchema(olderJsonSchema)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withData("{}")
         }
 
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+        mockOffenderUserAccessCall(offenderDetails.case.crn, false, false)
 
         val rawResponseBody = webTestClient.get()
           .uri("/applications/${nonUpgradableApplicationEntity.id}")
@@ -794,7 +786,7 @@ class ApplicationTest : IntegrationTestBase() {
 
         val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
           withApplicationSchema(newestJsonSchema)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withProbationRegion(userEntity.probationRegion)
           withData(
@@ -806,7 +798,7 @@ class ApplicationTest : IntegrationTestBase() {
           )
         }
 
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+        mockOffenderUserAccessCall(offenderDetails.case.crn, false, false)
 
         val rawResponseBody = webTestClient.get()
           .uri("/applications/${applicationEntity.id}")
@@ -848,7 +840,7 @@ class ApplicationTest : IntegrationTestBase() {
 
           val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
             withApplicationSchema(newestJsonSchema)
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withCreatedByUser(createdByUser)
             withProbationRegion(createdByUser.probationRegion)
             withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
@@ -861,7 +853,7 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+          mockOffenderUserAccessCall(offenderDetails.case.crn, false, false)
 
           val rawResponseBody = webTestClient.get()
             .uri("/applications/${applicationEntity.id}")
@@ -904,7 +896,7 @@ class ApplicationTest : IntegrationTestBase() {
 
           val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
             withApplicationSchema(newestJsonSchema)
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withCreatedByUser(createdByUser)
             withProbationRegion(createdByUser.probationRegion)
             withSubmittedAt(OffsetDateTime.now())
@@ -917,7 +909,7 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+          mockOffenderUserAccessCall(offenderDetails.case.crn, false, false)
 
           webTestClient.get()
             .uri("/applications/${applicationEntity.id}")
@@ -945,7 +937,7 @@ class ApplicationTest : IntegrationTestBase() {
 
           val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
             withApplicationSchema(newestJsonSchema)
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withCreatedByUser(createdByUser)
             withProbationRegion(createdByUser.probationRegion)
             withSubmittedAt(OffsetDateTime.now())
@@ -958,7 +950,7 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+          mockOffenderUserAccessCall(offenderDetails.case.crn, false, false)
 
           webTestClient.get()
             .uri("/applications/${applicationEntity.id}")
@@ -1055,10 +1047,10 @@ class ApplicationTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val offlineApplicationEntity = offlineApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
         }
 
-        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, offenderDetails.otherIds.crn, false, false)
+        mockOffenderUserAccessCall(offenderDetails.case.crn, false, false)
 
         val rawResponseBody = webTestClient.get()
           .uri("/applications/${offlineApplicationEntity.id}")
@@ -1095,7 +1087,8 @@ class ApplicationTest : IntegrationTestBase() {
     `Given a User` { userEntity, jwt ->
       val crn = "X1234"
 
-      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+      APDeliusContext_mockSuccessfulCaseSummaryCall(listOf(crn), CaseSummaries(listOf()))
+      APDeliusContext_mockUserAccessCall(listOf(crn), userEntity.deliusUsername, UserAccess(listOf()))
       loadPreemptiveCacheForOffenderDetails(crn)
 
       approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1129,9 +1122,9 @@ class ApplicationTest : IntegrationTestBase() {
         }
 
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn,
+          offenderDetails.case.crn,
           ManagingTeamsResponse(
-            teamCodes = listOf(offenderDetails.otherIds.crn),
+            teamCodes = listOf(offenderDetails.case.crn),
           ),
         )
 
@@ -1142,7 +1135,7 @@ class ApplicationTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewApplication(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               convictionId = 123,
               deliusEventNumber = "1",
               offenceId = "789",
@@ -1152,7 +1145,7 @@ class ApplicationTest : IntegrationTestBase() {
           .expectStatus()
           .is5xxServerError
 
-        assertThat(approvedPremisesApplicationRepository.findAll().none { it.crn == offenderDetails.otherIds.crn })
+        assertThat(approvedPremisesApplicationRepository.findAll().none { it.crn == offenderDetails.case.crn })
       }
     }
   }
@@ -1167,14 +1160,14 @@ class ApplicationTest : IntegrationTestBase() {
         }
 
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn,
+          offenderDetails.case.crn,
           ManagingTeamsResponse(
             teamCodes = listOf("TEAM1"),
           ),
         )
 
         APOASysContext_mockSuccessfulNeedsDetailsCall(
-          offenderDetails.otherIds.crn,
+          offenderDetails.case.crn,
           NeedsDetailsFactory().produce(),
         )
 
@@ -1183,7 +1176,7 @@ class ApplicationTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewApplication(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               convictionId = 123,
               deliusEventNumber = "1",
               offenceId = "789",
@@ -1199,7 +1192,7 @@ class ApplicationTest : IntegrationTestBase() {
         }
 
         assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn &&
+          it.person.crn == offenderDetails.case.crn &&
             it.schemaVersion == applicationSchema.id
         }
       }
@@ -1216,14 +1209,14 @@ class ApplicationTest : IntegrationTestBase() {
         }
 
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn,
+          offenderDetails.case.crn,
           ManagingTeamsResponse(
             teamCodes = listOf("TEAM1"),
           ),
         )
 
         APOASysContext_mockSuccessfulNeedsDetailsCall(
-          offenderDetails.otherIds.crn,
+          offenderDetails.case.crn,
           NeedsDetailsFactory().produce(),
         )
 
@@ -1232,7 +1225,7 @@ class ApplicationTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewApplication(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               convictionId = 123,
               deliusEventNumber = "1",
               offenceId = "789",
@@ -1248,7 +1241,7 @@ class ApplicationTest : IntegrationTestBase() {
         }
 
         assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn &&
+          it.person.crn == offenderDetails.case.crn &&
             it.schemaVersion == applicationSchema.id
         }
       }
@@ -1262,9 +1255,9 @@ class ApplicationTest : IntegrationTestBase() {
         offenderDetailsConfigBlock = { withoutNomsNumber() },
       ) { offenderDetails, inmateDetails ->
         APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn,
+          offenderDetails.case.crn,
           ManagingTeamsResponse(
-            teamCodes = listOf(offenderDetails.otherIds.crn),
+            teamCodes = listOf(offenderDetails.case.crn),
           ),
         )
 
@@ -1278,7 +1271,7 @@ class ApplicationTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewApplication(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               convictionId = 123,
               deliusEventNumber = "1",
               offenceId = "789",
@@ -1294,7 +1287,7 @@ class ApplicationTest : IntegrationTestBase() {
         }
 
         assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn
+          it.person.crn == offenderDetails.case.crn
         }
       }
     }
@@ -1303,18 +1296,18 @@ class ApplicationTest : IntegrationTestBase() {
   @Test
   fun `Create new application returns successfully when the person cannot be fetched from the prisons API`() {
     `Given a User` { userEntity, jwt ->
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withNomsNumber("ABC123")
-        .produce()
+      val offenderDetails = CaseSummaryFactory().produce()
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
-      loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
-      offenderDetails.otherIds.nomsNumber?.let { PrisonAPI_mockNotFoundInmateDetailsCall(it) }
-      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
+      APDeliusContext_mockSuccessfulCaseSummaryCall(listOf(offenderDetails.crn), CaseSummaries(listOf(offenderDetails)))
+      mockOffenderUserAccessCall(offenderDetails.crn, false, false)
+      offenderDetails.nomsId?.let {
+        PrisonAPI_mockNotFoundInmateDetailsCall(it)
+        loadPreemptiveCacheForInmateDetails(it)
+      }
       APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-        offenderDetails.otherIds.crn,
+        offenderDetails.crn,
         ManagingTeamsResponse(
-          teamCodes = listOf(offenderDetails.otherIds.crn),
+          teamCodes = listOf(offenderDetails.crn),
         ),
       )
 
@@ -1323,7 +1316,7 @@ class ApplicationTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .bodyValue(
           NewApplication(
-            crn = offenderDetails.otherIds.crn,
+            crn = offenderDetails.crn,
             convictionId = 123,
             deliusEventNumber = "1",
             offenceId = "789",
@@ -1339,7 +1332,7 @@ class ApplicationTest : IntegrationTestBase() {
       }
 
       assertThat(result.responseBody.blockFirst()).matches {
-        it.person.crn == offenderDetails.otherIds.crn
+        it.person.crn == offenderDetails.crn
       }
     }
   }
@@ -1354,7 +1347,7 @@ class ApplicationTest : IntegrationTestBase() {
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewApplication(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               convictionId = 123,
               deliusEventNumber = "1",
               offenceId = "789",
@@ -1384,7 +1377,7 @@ class ApplicationTest : IntegrationTestBase() {
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewApplication(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               convictionId = 123,
               deliusEventNumber = "1",
               offenceId = offenceId,
@@ -1400,7 +1393,7 @@ class ApplicationTest : IntegrationTestBase() {
         }
 
         assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn &&
+          it.person.crn == offenderDetails.case.crn &&
             it.schemaVersion == applicationSchema.id &&
             it.offenceId == offenceId
         }
@@ -1419,7 +1412,7 @@ class ApplicationTest : IntegrationTestBase() {
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewApplication(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               convictionId = 123,
               deliusEventNumber = "1",
               offenceId = "789",
@@ -1451,7 +1444,7 @@ class ApplicationTest : IntegrationTestBase() {
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewApplication(
-              crn = offenderDetails.otherIds.crn,
+              crn = offenderDetails.case.crn,
               convictionId = 123,
               deliusEventNumber = "1",
               offenceId = offenceId,
@@ -1467,7 +1460,7 @@ class ApplicationTest : IntegrationTestBase() {
         }
 
         assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn &&
+          it.person.crn == offenderDetails.case.crn &&
             it.schemaVersion == applicationSchema.id &&
             it.offenceId == offenceId
         }
@@ -1506,7 +1499,7 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withId(applicationId)
             withApplicationSchema(applicationSchema)
             withCreatedByUser(submittingUser)
@@ -1532,7 +1525,7 @@ class ApplicationTest : IntegrationTestBase() {
 
           val result = objectMapper.readValue(resultBody, Application::class.java)
 
-          assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
+          assertThat(result.person.crn).isEqualTo(offenderDetails.case.crn)
         }
       }
     }
@@ -1581,7 +1574,7 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withId(applicationId)
             withApplicationSchema(applicationSchema)
             withCreatedByUser(submittingUser)
@@ -1596,7 +1589,7 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           CommunityAPI_mockSuccessfulRegistrationsCall(
-            offenderDetails.otherIds.crn,
+            offenderDetails.case.crn,
             Registrations(
               registrations = listOf(
                 RegistrationClientResponseFactory()
@@ -1624,7 +1617,7 @@ class ApplicationTest : IntegrationTestBase() {
           )
 
           APDeliusContext_mockSuccessfulCaseDetailCall(
-            offenderDetails.otherIds.crn,
+            offenderDetails.case.crn,
             CaseDetailFactory().produce(),
           )
 
@@ -1659,7 +1652,7 @@ class ApplicationTest : IntegrationTestBase() {
           val persistedDomainEvent = domainEventRepository.findAll().firstOrNull { it.applicationId == applicationId }
 
           assertThat(persistedDomainEvent).isNotNull
-          assertThat(persistedDomainEvent!!.crn).isEqualTo(offenderDetails.otherIds.crn)
+          assertThat(persistedDomainEvent!!.crn).isEqualTo(offenderDetails.case.crn)
           assertThat(persistedDomainEvent.type).isEqualTo(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
 
           val emittedMessage = inboundMessageListener.blockForMessage()
@@ -1669,8 +1662,8 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(emittedMessage.detailUrl).matches("http://api/events/application-submitted/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
           assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(applicationId)
           assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
-            SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-            SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
+            SnsEventPersonReference("CRN", offenderDetails.case.crn),
+            SnsEventPersonReference("NOMS", offenderDetails.case.nomsId!!),
           )
         }
       }
@@ -1720,7 +1713,7 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withId(applicationId)
             withApplicationSchema(applicationSchema)
             withCreatedByUser(submittingUser)
@@ -1735,7 +1728,7 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           CommunityAPI_mockSuccessfulRegistrationsCall(
-            offenderDetails.otherIds.crn,
+            offenderDetails.case.crn,
             Registrations(
               registrations = listOf(
                 RegistrationClientResponseFactory()
@@ -1768,7 +1761,7 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           APDeliusContext_mockSuccessfulCaseDetailCall(
-            offenderDetails.otherIds.crn,
+            offenderDetails.case.crn,
             CaseDetailFactory().produce(),
           )
 
@@ -1849,7 +1842,7 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withId(applicationId)
             withApplicationSchema(applicationSchema)
             withCreatedByUser(submittingUser)
@@ -1860,6 +1853,12 @@ class ApplicationTest : IntegrationTestBase() {
             """,
             )
           }
+
+          mockOffenderUserAccessCall(
+            offenderDetails.case.crn,
+            offenderDetails.case.currentRestriction ?: false,
+            offenderDetails.case.currentExclusion ?: false,
+          )
 
           webTestClient.post()
             .uri("/applications/$applicationId/submission")
@@ -1896,7 +1895,13 @@ class ApplicationTest : IntegrationTestBase() {
       `Given a User` { applicant, _ ->
         `Given a User` { user, jwt ->
           `Given an Offender` { offenderDetails, inmateDetails ->
-            val (application, assessment) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
+            val (application, assessment) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails.case.asOffenderDetail())
+
+            mockOffenderUserAccessCall(
+              offenderDetails.case.crn,
+              offenderDetails.case.currentRestriction ?: false,
+              offenderDetails.case.currentExclusion ?: false,
+            )
 
             webTestClient.get()
               .uri("/applications/${application.id}/assessment")
@@ -1909,7 +1914,7 @@ class ApplicationTest : IntegrationTestBase() {
                 objectMapper.writeValueAsString(
                   assessmentTransformer.transformJpaToApi(
                     assessment,
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
                   ),
                 ),
               )
@@ -1927,7 +1932,7 @@ class ApplicationTest : IntegrationTestBase() {
               val (application, assessment) = produceAndPersistApplicationAndAssessment(
                 applicant,
                 assignee,
-                offenderDetails,
+                offenderDetails.case.asOffenderDetail(),
               )
 
               webTestClient.get()
@@ -1941,7 +1946,7 @@ class ApplicationTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     assessmentTransformer.transformJpaToApi(
                       assessment,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
                     ),
                   ),
                 )
@@ -1958,7 +1963,7 @@ class ApplicationTest : IntegrationTestBase() {
           `Given a User` { requestUser, jwt ->
             `Given an Offender` { offenderDetails, _ ->
 
-              val (application, _) = produceAndPersistApplicationAndAssessment(applicant, assignee, offenderDetails)
+              val (application, _) = produceAndPersistApplicationAndAssessment(applicant, assignee, offenderDetails.case.asOffenderDetail())
 
               webTestClient.get()
                 .uri("/applications/${application.id}/assessment")

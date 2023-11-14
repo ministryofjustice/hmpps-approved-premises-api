@@ -7,8 +7,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPag
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseSummaryCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.AdjudicationsAPI_mockSuccessfulAdjudicationsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 
 class PersonAdjudicationsTest : IntegrationTestBase() {
@@ -59,8 +60,7 @@ class PersonAdjudicationsTest : IntegrationTestBase() {
     `Given a User` { userEntity, jwt ->
       val crn = "CRN123"
 
-      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-      loadPreemptiveCacheForOffenderDetails(crn)
+      APDeliusContext_mockSuccessfulCaseSummaryCall(listOf(crn), CaseSummaries(listOf()))
 
       webTestClient.get()
         .uri("/people/$crn/adjudications")
@@ -81,7 +81,7 @@ class PersonAdjudicationsTest : IntegrationTestBase() {
       ) { offenderDetails, _ ->
 
         webTestClient.get()
-          .uri("/people/${offenderDetails.otherIds.crn}/acct-alerts")
+          .uri("/people/${offenderDetails.case.crn}/acct-alerts")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
@@ -109,10 +109,10 @@ class PersonAdjudicationsTest : IntegrationTestBase() {
           )
           .produce()
 
-        AdjudicationsAPI_mockSuccessfulAdjudicationsCall(offenderDetails.otherIds.nomsNumber!!, 0, 30, adjudicationsResponse)
+        AdjudicationsAPI_mockSuccessfulAdjudicationsCall(offenderDetails.case.nomsId!!, 0, 30, adjudicationsResponse)
 
         webTestClient.get()
-          .uri("/people/${offenderDetails.otherIds.crn}/adjudications")
+          .uri("/people/${offenderDetails.case.crn}/adjudications")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()

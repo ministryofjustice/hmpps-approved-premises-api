@@ -47,7 +47,7 @@ class CalendarTest : IntegrationTestBase() {
           val booking = bookingEntityFactory.produceAndPersist {
             withBed(bed)
             withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withArrivalDate(LocalDate.of(2023, 6, 8))
             withDepartureDate(LocalDate.of(2023, 6, 10))
           }
@@ -68,7 +68,7 @@ class CalendarTest : IntegrationTestBase() {
                     schedule = listOf(
                       BedOccupancyBookingEntry(
                         bookingId = booking.id,
-                        personName = "${offenderDetails.firstName} ${offenderDetails.surname}",
+                        personName = "${offenderDetails.case.name.forename} ${offenderDetails.case.name.surname}",
                         type = BedOccupancyEntryType.booking,
                         length = 3,
                         startDate = LocalDate.of(2023, 6, 8),

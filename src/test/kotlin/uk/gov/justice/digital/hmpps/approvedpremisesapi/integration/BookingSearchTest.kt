@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchResults
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.asOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
@@ -57,7 +58,7 @@ class BookingSearchTest : IntegrationTestBase() {
         allBeds.forEach { bed ->
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withBed(bed)
             withServiceName(ServiceName.approvedPremises)
           }
@@ -65,7 +66,7 @@ class BookingSearchTest : IntegrationTestBase() {
           allBookings += booking
         }
 
-        val expectedResponse = getExpectedResponse(allBookings, offenderDetails)
+        val expectedResponse = getExpectedResponse(allBookings, offenderDetails.case.asOffenderDetail())
 
         webTestClient.get()
           .uri("/bookings/search")
@@ -110,7 +111,7 @@ class BookingSearchTest : IntegrationTestBase() {
         allBeds.forEach { bed ->
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withBed(bed)
             withServiceName(ServiceName.temporaryAccommodation)
           }
@@ -118,7 +119,7 @@ class BookingSearchTest : IntegrationTestBase() {
           allBookings += booking
         }
 
-        val expectedResponse = getExpectedResponse(allBookings, offenderDetails)
+        val expectedResponse = getExpectedResponse(allBookings, offenderDetails.case.asOffenderDetail())
 
         webTestClient.get()
           .uri("/bookings/search")
@@ -163,7 +164,7 @@ class BookingSearchTest : IntegrationTestBase() {
         allBeds.forEachIndexed { index, bed ->
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withBed(bed)
             withServiceName(ServiceName.temporaryAccommodation)
           }
@@ -219,7 +220,7 @@ class BookingSearchTest : IntegrationTestBase() {
 
         val expectedBookings = allBookings.filter { it.cancellation != null }
 
-        val expectedResponse = getExpectedResponse(expectedBookings, offenderDetails)
+        val expectedResponse = getExpectedResponse(expectedBookings, offenderDetails.case.asOffenderDetail())
 
         webTestClient.get()
           .uri("/bookings/search?status=cancelled")
@@ -264,7 +265,7 @@ class BookingSearchTest : IntegrationTestBase() {
         allBeds.forEachIndexed { index, bed ->
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withBed(bed)
             withServiceName(ServiceName.temporaryAccommodation)
             withArrivalDate(LocalDate.now().minusDays((60 - index).toLong()))
@@ -276,7 +277,7 @@ class BookingSearchTest : IntegrationTestBase() {
 
         val expectedBookings = allBookings.sortedByDescending { it.departureDate }
 
-        val expectedResponse = getExpectedResponse(expectedBookings, offenderDetails)
+        val expectedResponse = getExpectedResponse(expectedBookings, offenderDetails.case.asOffenderDetail())
 
         webTestClient.get()
           .uri("/bookings/search?sortOrder=descending&sortField=endDate")
@@ -336,7 +337,7 @@ class BookingSearchTest : IntegrationTestBase() {
         allBeds.forEach { bed ->
           val booking = bookingEntityFactory.produceAndPersist {
             withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withBed(bed)
             withServiceName(ServiceName.temporaryAccommodation)
           }
@@ -347,7 +348,7 @@ class BookingSearchTest : IntegrationTestBase() {
         val expectedPremisesIds = expectedPremises.map { it.id }
         val expectedBookings = allBookings.filter { expectedPremisesIds.contains(it.premises.id) }
 
-        val expectedResponse = getExpectedResponse(expectedBookings, offenderDetails)
+        val expectedResponse = getExpectedResponse(expectedBookings, offenderDetails.case.asOffenderDetail())
 
         webTestClient.get()
           .uri("/bookings/search")

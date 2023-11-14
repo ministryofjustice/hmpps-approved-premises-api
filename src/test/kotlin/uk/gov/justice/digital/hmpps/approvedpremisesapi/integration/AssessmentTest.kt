@@ -30,12 +30,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeySet
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.asOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given Some Offenders`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -93,7 +93,7 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(user)
           withApplicationSchema(applicationSchema)
         }
@@ -139,7 +139,7 @@ class AssessmentTest : IntegrationTestBase() {
               listOf(
                 assessmentTransformer.transformDomainToApiSummary(
                   toAssessmentSummaryEntity(assessment),
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
                 ),
               ),
             ),
@@ -175,7 +175,7 @@ class AssessmentTest : IntegrationTestBase() {
       `Given an Offender` { offenderDetails, inmateDetails ->
         givenAnAssessment(
           user,
-          offenderDetails.otherIds.crn,
+          offenderDetails.case.crn,
         ) { assessment, application ->
           // Simulate https://ministryofjustice.sentry.io/issues/4479884804 by deleting the data key from the cache while
           // preserving the metadata key.
@@ -195,7 +195,7 @@ class AssessmentTest : IntegrationTestBase() {
                 listOf(
                   assessmentTransformer.transformDomainToApiSummary(
                     toAssessmentSummaryEntity(assessment),
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null),
+                    PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), null),
                   ),
                 ),
               ),
@@ -221,7 +221,7 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(user)
           withApplicationSchema(applicationSchema)
         }
@@ -264,7 +264,12 @@ class AssessmentTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails))),
+              listOf(
+                assessmentTransformer.transformDomainToApiSummary(
+                  toAssessmentSummaryEntity(assessment),
+                  PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
+                ),
+              ),
             ),
             true,
           )
@@ -529,7 +534,7 @@ class AssessmentTest : IntegrationTestBase() {
 
         otherAssessment.schemaUpToDate = true
 
-        mockOffenderUserAccessCommunityApiCall(user.deliusUsername, otherOffender.first.otherIds.crn, true, true)
+        mockOffenderUserAccessCall(otherOffender.first.otherIds.crn, true, true)
 
         webTestClient.get()
           .uri("/assessments")
@@ -625,7 +630,7 @@ class AssessmentTest : IntegrationTestBase() {
           }
 
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
+            withCrn(offenderDetails.case.crn)
             withCreatedByUser(userEntity)
             withApplicationSchema(applicationSchema)
           }
@@ -649,7 +654,7 @@ class AssessmentTest : IntegrationTestBase() {
               objectMapper.writeValueAsString(
                 assessmentTransformer.transformJpaToApi(
                   assessment,
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
                 ),
               ),
             )
@@ -665,10 +670,9 @@ class AssessmentTest : IntegrationTestBase() {
         offenderDetailsConfigBlock = {
           withCurrentExclusion(true)
         },
-      ) { offenderDetails, inmateDetails ->
-        CommunityAPI_mockOffenderUserAccessCall(
-          username = userEntity.deliusUsername,
-          crn = offenderDetails.otherIds.crn,
+      ) { offenderDetails, _ ->
+        mockOffenderUserAccessCall(
+          crn = offenderDetails.case.crn,
           inclusion = false,
           exclusion = true,
         )
@@ -683,7 +687,7 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(applicationSchema)
         }
@@ -714,9 +718,8 @@ class AssessmentTest : IntegrationTestBase() {
           withCurrentExclusion(true)
         },
       ) { offenderDetails, inmateDetails ->
-        CommunityAPI_mockOffenderUserAccessCall(
-          username = userEntity.deliusUsername,
-          crn = offenderDetails.otherIds.crn,
+        mockOffenderUserAccessCall(
+          crn = offenderDetails.case.crn,
           inclusion = false,
           exclusion = false,
         )
@@ -731,7 +734,7 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(applicationSchema)
         }
@@ -755,7 +758,7 @@ class AssessmentTest : IntegrationTestBase() {
             objectMapper.writeValueAsString(
               assessmentTransformer.transformJpaToApi(
                 assessment,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
               ),
             ),
           )
@@ -771,9 +774,8 @@ class AssessmentTest : IntegrationTestBase() {
           withCurrentRestriction(true)
         },
       ) { offenderDetails, inmateDetails ->
-        CommunityAPI_mockOffenderUserAccessCall(
-          username = userEntity.deliusUsername,
-          crn = offenderDetails.otherIds.crn,
+        mockOffenderUserAccessCall(
+          crn = offenderDetails.case.crn,
           inclusion = true,
           exclusion = false,
         )
@@ -788,7 +790,7 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(applicationSchema)
         }
@@ -812,7 +814,7 @@ class AssessmentTest : IntegrationTestBase() {
             objectMapper.writeValueAsString(
               assessmentTransformer.transformJpaToApi(
                 assessment,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                PersonInfoResult.Success.Full(offenderDetails.case.crn, offenderDetails.case.asOffenderDetail(), inmateDetails),
               ),
             ),
           )
@@ -834,7 +836,7 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(applicationSchema)
           withProbationRegion(userEntity.probationRegion)
@@ -931,7 +933,7 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(applicationSchema)
           withProbationRegion(userEntity.probationRegion)
@@ -1001,7 +1003,7 @@ class AssessmentTest : IntegrationTestBase() {
             }
 
             val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
+              withCrn(offenderDetails.case.crn)
               withCreatedByUser(userEntity)
               withApplicationSchema(applicationSchema)
             }
@@ -1053,8 +1055,8 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
             assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
             assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
-              SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-              SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
+              SnsEventPersonReference("CRN", offenderDetails.case.crn),
+              SnsEventPersonReference("NOMS", offenderDetails.case.nomsId!!),
             )
 
             val persistedPlacementRequest = placementRequestRepository.findByApplication(application)!!
@@ -1098,7 +1100,7 @@ class AssessmentTest : IntegrationTestBase() {
             }
 
             val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
+              withCrn(offenderDetails.case.crn)
               withCreatedByUser(userEntity)
               withApplicationSchema(applicationSchema)
             }
@@ -1145,8 +1147,8 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
             assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
             assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
-              SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-              SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
+              SnsEventPersonReference("CRN", offenderDetails.case.crn),
+              SnsEventPersonReference("NOMS", offenderDetails.case.nomsId!!),
             )
 
             assertThat(placementRequestRepository.findByApplication(application)).isNull()
@@ -1173,7 +1175,7 @@ class AssessmentTest : IntegrationTestBase() {
     ) { userEntity, jwt ->
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
         `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Offender` { offenderDetails, _ ->
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()
             }
@@ -1184,7 +1186,7 @@ class AssessmentTest : IntegrationTestBase() {
             }
 
             val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
+              withCrn(offenderDetails.case.crn)
               withCreatedByUser(userEntity)
               withApplicationSchema(applicationSchema)
             }
@@ -1257,7 +1259,7 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(applicationSchema)
         }
@@ -1290,8 +1292,8 @@ class AssessmentTest : IntegrationTestBase() {
         assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
         assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
         assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
-          SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-          SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
+          SnsEventPersonReference("CRN", offenderDetails.case.crn),
+          SnsEventPersonReference("NOMS", offenderDetails.case.nomsId!!),
         )
       }
     }
@@ -1321,7 +1323,7 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(applicationSchema)
           withProbationRegion(userEntity.probationRegion)
@@ -1363,7 +1365,7 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(applicationSchema)
         }
@@ -1404,7 +1406,7 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(applicationSchema)
         }
@@ -1452,7 +1454,7 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(applicationSchema)
           withIsWithdrawn(true)
@@ -1493,7 +1495,7 @@ class AssessmentTest : IntegrationTestBase() {
         }
 
         val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withCreatedByUser(userEntity)
           withApplicationSchema(applicationSchema)
           withProbationRegion(userEntity.probationRegion)

@@ -1291,7 +1291,7 @@ class LostBedsTest : IntegrationTestBase() {
 
         val existingBooking = bookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withYieldedPremises { premises }
           withYieldedBed { bed }
           withArrivalDate(LocalDate.parse("2022-07-15"))
@@ -1563,7 +1563,7 @@ class LostBedsTest : IntegrationTestBase() {
 
         val existingBooking = bookingEntityFactory.produceAndPersist {
           withServiceName(ServiceName.temporaryAccommodation)
-          withCrn(offenderDetails.otherIds.crn)
+          withCrn(offenderDetails.case.crn)
           withYieldedPremises { premises }
           withYieldedBed { bed }
           withArrivalDate(LocalDate.parse("2022-07-15"))

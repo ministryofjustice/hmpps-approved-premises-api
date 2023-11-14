@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ActiveOffence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AdjudicationsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
@@ -28,11 +29,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Adju
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Results
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Conviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderIds
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
@@ -88,14 +91,12 @@ class OffenderService(
   fun getOffenderSummariesByCrns(crns: List<String>, userDistinguishedName: String, ignoreLao: Boolean = false): List<PersonSummaryInfoResult> {
     val offenders = when (val response = apDeliusContextApiClient.getSummariesForCrns(crns)) {
       is ClientResult.Success -> response.body
-      is ClientResult.Failure.StatusCode -> response.throwException()
       is ClientResult.Failure -> response.throwException()
     }
 
     val laoResponse = if (!ignoreLao) {
       when (val response = apDeliusContextApiClient.getUserAccessForCrns(userDistinguishedName, crns)) {
         is ClientResult.Success -> response.body
-        is ClientResult.Failure.StatusCode -> response.throwException()
         is ClientResult.Failure -> response.throwException()
       }
     } else {
@@ -120,81 +121,53 @@ class OffenderService(
     }
   }
 
-  fun getOffenderByCrn(crn: String, userDistinguishedName: String, ignoreLao: Boolean = false): AuthorisableActionResult<OffenderDetailSummary> {
-    var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
-
-    if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
-      offenderResponse = communityApiClient.getOffenderDetailSummaryWithCall(crn)
-    }
-
-    val offender = when (offenderResponse) {
-      is ClientResult.Success -> offenderResponse.body
-      is ClientResult.Failure.StatusCode -> if (offenderResponse.status == HttpStatus.NOT_FOUND) return AuthorisableActionResult.NotFound() else offenderResponse.throwException()
-      is ClientResult.Failure -> offenderResponse.throwException()
-    }
-
-    if (!ignoreLao) {
-      if (offender.currentExclusion || offender.currentRestriction) {
-        val access =
-          when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(userDistinguishedName, crn)) {
-            is ClientResult.Success -> accessResponse.body
-            is ClientResult.Failure.StatusCode -> {
-              if (accessResponse.status == HttpStatus.FORBIDDEN) {
-                try {
-                  accessResponse.deserializeTo<UserOffenderAccess>()
-                  return AuthorisableActionResult.Unauthorised()
-                } catch (exception: Exception) {
-                  accessResponse.throwException()
-                }
-              }
-
-              accessResponse.throwException()
-            }
-            is ClientResult.Failure -> accessResponse.throwException()
-          }
-
-        if (access.userExcluded || access.userRestricted) {
-          return AuthorisableActionResult.Unauthorised()
-        }
+  fun getOffenderByCrn(
+    crn: String,
+    userDistinguishedName: String,
+    ignoreLao: Boolean = false,
+  ): AuthorisableActionResult<OffenderDetailSummary> =
+    when (val response = apDeliusContextApiClient.getSummariesForCrns(listOf(crn))) {
+      is ClientResult.Success -> response.body
+      is ClientResult.Failure.StatusCode -> response.throwException()
+      is ClientResult.Failure -> response.throwException()
+    }.cases.firstOrNull { it.crn == crn }?.let {
+      if (
+        !ignoreLao &&
+        (it.currentExclusion == true || it.currentRestriction == true) &&
+        isLao(userDistinguishedName, crn)
+      ) {
+        AuthorisableActionResult.Unauthorised()
+      } else {
+        AuthorisableActionResult.Success(it.asOffenderDetail())
       }
-    }
+    } ?: AuthorisableActionResult.NotFound("Person", crn)
 
-    return AuthorisableActionResult.Success(offender)
-  }
+  fun CaseSummary.asOffenderDetail() = OffenderDetailSummary(
+    firstName = name.forename,
+    middleNames = name.middleNames,
+    surname = name.surname,
+    dateOfBirth = dateOfBirth,
+    gender = gender ?: "",
+    otherIds = OffenderIds(crn = crn, nomsNumber = nomsId, pncNumber = pnc),
+    offenderProfile = OffenderProfile(
+      ethnicity = profile?.ethnicity,
+      nationality = profile?.nationality,
+      genderIdentity = profile?.genderIdentity,
+      religion = profile?.religion,
+      offenderLanguages = OffenderLanguages(),
+    ),
+    softDeleted = false,
+    currentExclusion = currentExclusion ?: false,
+    currentRestriction = currentRestriction ?: false,
+  )
 
-  fun isLao(crn: String): Boolean {
-    var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
+  fun isLao(deliusUsername: String, crn: String): Boolean =
+    when (val response = apDeliusContextApiClient.getUserAccessForCrns(deliusUsername, listOf(crn))) {
+      is ClientResult.Success -> response.body
+      is ClientResult.Failure -> response.throwException()
+    }.access.firstOrNull { it.crn == crn }?.isLao() ?: throw NotFoundProblem(crn, "Person")
 
-    if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
-      offenderResponse = communityApiClient.getOffenderDetailSummaryWithCall(crn)
-    }
-
-    val offender = when (offenderResponse) {
-      is ClientResult.Success -> offenderResponse.body
-      is ClientResult.Failure -> offenderResponse.throwException()
-    }
-
-    return offender.currentExclusion || offender.currentRestriction
-  }
-
-  fun canAccessOffender(username: String, crn: String): Boolean {
-    return when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(username, crn)) {
-      is ClientResult.Success -> !accessResponse.body.userExcluded && !accessResponse.body.userRestricted
-      is ClientResult.Failure.StatusCode -> {
-        if (accessResponse.status == HttpStatus.FORBIDDEN) {
-          try {
-            accessResponse.deserializeTo<UserOffenderAccess>()
-            return false
-          } catch (exception: Exception) {
-            accessResponse.throwException()
-          }
-        }
-
-        accessResponse.throwException()
-      }
-      is ClientResult.Failure -> accessResponse.throwException()
-    }
-  }
+  fun canAccessOffender(username: String, crn: String): Boolean = !isLao(username, crn)
 
   fun getInmateDetailByNomsNumber(crn: String, nomsNumber: String): AuthorisableActionResult<InmateDetail?> {
     var inmateDetailResponse = prisonsApiClient.getInmateDetailsWithWait(nomsNumber)
@@ -228,25 +201,70 @@ class OffenderService(
     return AuthorisableActionResult.Success(inmateDetail)
   }
 
-  fun getRiskByCrn(crn: String, jwt: String, userDistinguishedName: String): AuthorisableActionResult<PersonRisks> {
-    return when (getOffenderByCrn(crn, userDistinguishedName)) {
-      is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
-      is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.Success -> {
-        val registrationsResponse = communityApiClient.getRegistrationsForOffenderCrn(crn)
+  fun getCaseDetail(crn: String, userDistinguishedName: String) =
+    when (val res = apDeliusContextApiClient.getCaseDetail(crn)) {
+      is ClientResult.Success -> res.body
+      is ClientResult.Failure.StatusCode -> if (res.status == HttpStatus.NOT_FOUND) null else res.throwException()
+      is ClientResult.Failure -> res.throwException()
+    }?.let {
+      if (
+        (it.case.currentExclusion == true || it.case.currentRestriction == true) &&
+        isLao(userDistinguishedName, crn)
+      ) {
+        AuthorisableActionResult.Unauthorised()
+      } else {
+        AuthorisableActionResult.Success(it)
+      }
+    } ?: AuthorisableActionResult.NotFound("Person", crn)
 
-        val risks = PersonRisks(
-          roshRisks = getRoshRisksEnvelope(crn, jwt),
-          mappa = getMappaEnvelope(registrationsResponse),
-          tier = getRiskTierEnvelope(crn),
-          flags = getFlagsEnvelope(registrationsResponse),
-        )
-
+  fun getRiskByCrn(crn: String, userDistinguishedName: String): AuthorisableActionResult<PersonRisks> = try {
+    when (val res = apDeliusContextApiClient.getCaseDetail(crn)) {
+      is ClientResult.Success -> res.body
+      is ClientResult.Failure.StatusCode -> if (res.status == HttpStatus.NOT_FOUND) null else res.throwException()
+      is ClientResult.Failure -> res.throwException()
+    }.let {
+      if (it == null) AuthorisableActionResult.NotFound("Person", crn)
+      else if (
+        (it.case.currentExclusion == true || it.case.currentRestriction == true) &&
+        isLao(userDistinguishedName, crn)
+      ) {
+        AuthorisableActionResult.Unauthorised()
+      } else {
         AuthorisableActionResult.Success(
-          risks,
+          PersonRisks(
+            roshRisks = getRoshRisksEnvelope(crn),
+            mappa = it.mappaForRisks(),
+            tier = getRiskTierEnvelope(crn),
+            flags = it.flags(),
+          ),
         )
       }
     }
+  } catch (e: Exception) {
+    AuthorisableActionResult.Success(
+      PersonRisks(
+        roshRisks = getRoshRisksEnvelope(crn),
+        mappa = RiskWithStatus(status = RiskStatus.Error),
+        tier = getRiskTierEnvelope(crn),
+        flags = RiskWithStatus(status = RiskStatus.Error),
+      ),
+    )
+  }
+
+  fun CaseDetail.mappaForRisks(): RiskWithStatus<Mappa> =
+    mappaDetail?.let {
+      RiskWithStatus(
+        Mappa(
+          "CAT ${mappaDetail.categoryDescription}/LEVEL ${mappaDetail.levelDescription}",
+          mappaDetail.lastUpdated.toLocalDate(),
+        ),
+      )
+    } ?: RiskWithStatus(status = RiskStatus.NotFound)
+
+  fun CaseDetail.flags(): RiskWithStatus<List<String>> {
+    val registrations = registrations.filter { !ignoredRegisterTypesForFlags.contains(it.code) }
+    return if (registrations.isEmpty()) RiskWithStatus(status = RiskStatus.NotFound)
+    else RiskWithStatus(registrations.map { it.description })
   }
 
   fun getPrisonCaseNotesByNomsNumber(nomsNumber: String): AuthorisableActionResult<List<CaseNote>> {
@@ -421,21 +439,22 @@ class OffenderService(
     return AuthorisableActionResult.Success(riskToTheIndividual)
   }
 
-  fun getConvictions(crn: String): AuthorisableActionResult<List<Conviction>> {
-    val convictionsResult = communityApiClient.getConvictions(crn)
-
-    val convictions = when (convictionsResult) {
-      is ClientResult.Success -> convictionsResult.body
-      is ClientResult.Failure.StatusCode -> when (convictionsResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
-        else -> convictionsResult.throwException()
-      }
-      is ClientResult.Failure -> convictionsResult.throwException()
+  fun getConvictions(deliusUsername: String, crn: String): AuthorisableActionResult<List<ActiveOffence>> =
+    when (val caseDetail = getCaseDetail(crn, deliusUsername)) {
+      is AuthorisableActionResult.Success -> AuthorisableActionResult.Success(
+        caseDetail.entity.offences.map {
+          ActiveOffence(
+            deliusEventNumber = it.eventNumber,
+            offenceDescription = it.description,
+            "",
+            0,
+            offenceDate = it.date,
+          )
+        },
+      )
+      is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
+      is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
     }
-
-    return AuthorisableActionResult.Success(convictions)
-  }
 
   fun getDocuments(crn: String): AuthorisableActionResult<GroupedDocuments> {
     val documentsResult = communityApiClient.getDocuments(crn)
@@ -455,66 +474,34 @@ class OffenderService(
 
   fun getDocument(crn: String, documentId: String, outputStream: OutputStream) = communityApiClient.getDocument(crn, documentId, outputStream)
 
-  fun getInfoForPerson(crn: String, deliusUsername: String, ignoreLao: Boolean): PersonInfoResult {
-    var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
-
-    if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
-      offenderResponse = communityApiClient.getOffenderDetailSummaryWithCall(crn)
-    }
-
-    val offender = when (offenderResponse) {
-      is ClientResult.Success -> offenderResponse.body
-
-      is ClientResult.Failure.StatusCode -> if (offenderResponse.status == HttpStatus.NOT_FOUND) {
-        return PersonInfoResult.NotFound(crn)
-      } else {
-        return PersonInfoResult.Unknown(crn, offenderResponse.toException())
-      }
-
-      is ClientResult.Failure -> return PersonInfoResult.Unknown(crn, offenderResponse.toException())
-    }
-
-    if (!ignoreLao) {
-      if (offender.currentExclusion || offender.currentRestriction) {
-        val access =
-          when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn)) {
-            is ClientResult.Success -> accessResponse.body
-            is ClientResult.Failure.StatusCode -> {
-              if (accessResponse.status == HttpStatus.FORBIDDEN) {
-                try {
-                  accessResponse.deserializeTo<UserOffenderAccess>()
-                  return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)
-                } catch (exception: Exception) {
-                  accessResponse.throwException()
-                }
+  fun getInfoForPerson(crn: String, deliusUsername: String, ignoreLao: Boolean): PersonInfoResult = try {
+    getOffenderSummariesByCrns(listOf(crn), deliusUsername, ignoreLao)
+      .filter { it.crn == crn }
+      .map {
+        when (it) {
+          is PersonSummaryInfoResult.NotFound -> PersonInfoResult.NotFound(it.crn)
+          is PersonSummaryInfoResult.Unknown -> PersonInfoResult.Unknown(it.crn)
+          is PersonSummaryInfoResult.Success.Restricted -> PersonInfoResult.Success.Restricted(it.crn, it.nomsNumber)
+          is PersonSummaryInfoResult.Success.Full -> {
+            val inmateDetails = it.summary.nomsId?.let { nomsNumber ->
+              when (val inmateDetailsResult = getInmateDetailByNomsNumber(it.crn, nomsNumber)) {
+                is AuthorisableActionResult.Success -> inmateDetailsResult.entity
+                else -> null
               }
-
-              accessResponse.throwException()
             }
-            is ClientResult.Failure -> accessResponse.throwException()
+            PersonInfoResult.Success.Full(
+              it.crn,
+              it.summary.asOffenderDetail(),
+              inmateDetails,
+            )
           }
-
-        if (access.userExcluded || access.userRestricted) {
-          return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)
         }
-      }
-    }
-
-    val inmateDetails = offender.otherIds.nomsNumber?.let { nomsNumber ->
-      when (val inmateDetailsResult = getInmateDetailByNomsNumber(offender.otherIds.crn, nomsNumber)) {
-        is AuthorisableActionResult.Success -> inmateDetailsResult.entity
-        else -> null
-      }
-    }
-
-    return PersonInfoResult.Success.Full(
-      crn = crn,
-      offenderDetailSummary = offender,
-      inmateDetail = inmateDetails,
-    )
+      }.first()
+  } catch (e: Exception) {
+    PersonInfoResult.Unknown(crn, e)
   }
 
-  private fun getRoshRisksEnvelope(crn: String, jwt: String): RiskWithStatus<RoshRisks> {
+  private fun getRoshRisksEnvelope(crn: String): RiskWithStatus<RoshRisks> {
     when (val roshRisksResponse = apOASysContextApiClient.getRoshRatings(crn)) {
       is ClientResult.Success -> {
         val summary = roshRisksResponse.body.rosh
@@ -554,47 +541,6 @@ class OffenderService(
         status = RiskStatus.Error,
         value = null,
       )
-    }
-  }
-
-  private fun getMappaEnvelope(registrationsResponse: ClientResult<Registrations>): RiskWithStatus<Mappa> {
-    when (registrationsResponse) {
-      is ClientResult.Success -> {
-        return RiskWithStatus(
-          value = registrationsResponse.body.registrations.firstOrNull { it.type.code == "MAPP" }?.let { registration ->
-            Mappa(
-              level = "CAT ${registration.registerCategory!!.code}/LEVEL ${registration.registerLevel!!.code}",
-              lastUpdated = registration.registrationReviews?.filter { it.completed }?.maxOfOrNull { it.reviewDate } ?: registration.startDate,
-            )
-          },
-        )
-      }
-      is ClientResult.Failure.StatusCode -> return if (registrationsResponse.status == HttpStatus.NOT_FOUND) {
-        RiskWithStatus(status = RiskStatus.NotFound)
-      } else {
-        RiskWithStatus(status = RiskStatus.Error)
-      }
-      is ClientResult.Failure -> {
-        return RiskWithStatus(status = RiskStatus.Error)
-      }
-    }
-  }
-
-  private fun getFlagsEnvelope(registrationsResponse: ClientResult<Registrations>): RiskWithStatus<List<String>> {
-    when (registrationsResponse) {
-      is ClientResult.Success -> {
-        return RiskWithStatus(
-          value = registrationsResponse.body.registrations.filter { !ignoredRegisterTypesForFlags.contains(it.type.code) }.map { it.type.description },
-        )
-      }
-      is ClientResult.Failure.StatusCode -> return if (registrationsResponse.status == HttpStatus.NOT_FOUND) {
-        RiskWithStatus(status = RiskStatus.NotFound)
-      } else {
-        RiskWithStatus(status = RiskStatus.Error)
-      }
-      is ClientResult.Failure -> {
-        return RiskWithStatus(status = RiskStatus.Error)
-      }
     }
   }
 
