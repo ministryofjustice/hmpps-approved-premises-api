@@ -13,10 +13,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
@@ -31,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.AP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -47,12 +50,14 @@ class ApplicationStateTest : IntegrationTestBase() {
 
   lateinit var jwt: String
 
+  lateinit var user: UserEntity
+
   lateinit var applicationId: UUID
 
   @BeforeEach
   fun setup() {
     val (offenderDetails) = `Given an Offender`()
-    val (_, jwt) = `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER))
+    val (user, jwt) = `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_WORKFLOW_MANAGER))
     approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
@@ -77,6 +82,7 @@ class ApplicationStateTest : IntegrationTestBase() {
     )
 
     this.offenderDetails = offenderDetails
+    this.user = user
     this.jwt = jwt
     this.applicationId = createApplication()
   }
@@ -96,6 +102,15 @@ class ApplicationStateTest : IntegrationTestBase() {
 
     createBooking()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+  }
+
+  @Test
+  fun `a CAS1 application status changes correctly when an assessment gets reallocated`() {
+    submitApplication()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
+
+    reallocateAssessment()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
   }
 
   @Test
@@ -348,5 +363,23 @@ class ApplicationStateTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
+  }
+
+  private fun reallocateAssessment() {
+    val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
+    val assessment = application.getLatestAssessment()!!
+
+    webTestClient.post()
+      .uri("/tasks/assessment/${assessment.id}/allocations")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", ServiceName.approvedPremises.value)
+      .bodyValue(
+        NewReallocation(
+          userId = user.id,
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isCreated
   }
 }

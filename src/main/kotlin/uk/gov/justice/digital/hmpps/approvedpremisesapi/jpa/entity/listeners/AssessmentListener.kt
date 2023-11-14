@@ -25,7 +25,7 @@ class AssessmentListener {
       (assessment.application as ApprovedPremisesApplicationEntity).status = ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS
     } else if (assessment.decision == AssessmentDecision.ACCEPTED) {
       (assessment.application as ApprovedPremisesApplicationEntity).status = ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT
-    } else {
+    } else if (assessment.decision == AssessmentDecision.REJECTED) {
       (assessment.application as ApprovedPremisesApplicationEntity).status = ApprovedPremisesApplicationStatus.REJECTED
     }
   }
