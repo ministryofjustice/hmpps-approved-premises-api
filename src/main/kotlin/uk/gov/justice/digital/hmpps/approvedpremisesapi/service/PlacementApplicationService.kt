@@ -50,7 +50,7 @@ class PlacementApplicationService(
 
   fun getAllPlacementApplicationEntitiesForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
     val application = applicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
-    return placementApplicationRepository.findAllByApplication(application)
+    return placementApplicationRepository.findAllByApplicationAndDecisionIsNullOrDecisionIsNot(application, PlacementApplicationDecision.WITHDRAWN_BY_PP)
   }
 
   fun createApplication(
