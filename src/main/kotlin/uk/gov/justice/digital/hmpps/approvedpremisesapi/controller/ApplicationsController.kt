@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.ApplicationsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
@@ -83,13 +84,14 @@ class ApplicationsController(
     page: Int?,
     crn: String?,
     sortDirection: SortDirection?,
+    applicationSortField: ApplicationSortField?,
   ): ResponseEntity<List<ApplicationSummary>> {
     if (xServiceName != ServiceName.approvedPremises) {
       throw ForbiddenProblem()
     }
     val user = userService.getUserForRequest()
     val (applications, metadata) =
-      applicationService.getAllApprovedPremisesApplications(page, crn, sortDirection)
+      applicationService.getAllApprovedPremisesApplications(page, crn, sortDirection, applicationSortField)
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
