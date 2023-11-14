@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmittedApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getFullInfoForPersonOrThrow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getInfoForPersonOrThrowInternalServerError
 import java.util.UUID
@@ -32,7 +32,7 @@ import java.util.UUID
 class SubmissionsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
-  private val applicationsTransformer: ApplicationsTransformer,
+  private val applicationTransformer: SubmittedApplicationTransformer,
   private val offenderService: OffenderService,
   private val externalUserService: ExternalUserService,
   private val statusUpdateService: StatusUpdateService,
@@ -134,7 +134,7 @@ class SubmissionsController(
     Cas2SubmittedApplicationSummary {
     val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn())
 
-    return applicationsTransformer.transformJpaSummaryToCas2SubmittedSummary(
+    return applicationTransformer.transformJpaSummaryToApiRepresentation(
       application,
       personInfo,
     )
@@ -145,7 +145,7 @@ class SubmissionsController(
   ): Cas2SubmittedApplication {
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
 
-    return applicationsTransformer.transformJpaToSubmittedApplication(
+    return applicationTransformer.transformJpaToApiRepresentation(
       application,
       personInfo,
     )

@@ -5,6 +5,11 @@ import java.util.UUID
 
 object Cas2ApplicationStatusSeeding {
 
+  fun getById(id: UUID): Cas2ApplicationStatus {
+    return statusList().find { status -> status.id == id }
+      ?: error("Status with id $id not found")
+  }
+
   fun statusList(): List<Cas2ApplicationStatus> {
     return listOf(
       Cas2ApplicationStatus(

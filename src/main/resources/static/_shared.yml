@@ -1616,6 +1616,10 @@ components:
         submittedAt:
           type: string
           format: date-time
+        statusUpdates:
+          type: array
+          items:
+            $ref: '_shared.yml#/components/schemas/Cas2StatusUpdate'
       required:
         - id
         - person
@@ -1800,6 +1804,31 @@ components:
         - id
         - person
         - createdAt
+    Cas2StatusUpdate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+        description:
+          type: string
+          example: 'More information about the application has been requested from the POM (Prison Offender Manager).'
+        updatedBy:
+          $ref: '#/components/schemas/ExternalUser'
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - label
+        - description
     ApplicationStatus:
       type: string
       enum:
@@ -2427,6 +2456,21 @@ components:
       required:
         - user
         - taskType
+    ExternalUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+          example: 'CAS2_ASSESSOR_USER'
+        origin:
+          type: string
+          example: 'NACRO'
+      required:
+        - id
+        - username
     NomisUser:
       type: object
       properties:
