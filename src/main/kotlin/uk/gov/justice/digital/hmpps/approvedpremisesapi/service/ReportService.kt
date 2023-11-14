@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Dai
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementMetricsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ReferralsMetricsProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.io.OutputStream
 import java.time.LocalDate
@@ -49,13 +50,19 @@ class ReportService(
   private val domainEventRepository: DomainEventRepository,
   private val assessmentRepository: AssessmentRepository,
   private val timelinessEntityRepository: ApplicationTimelinessEntityRepository,
+  private val bookingsReportRepository: BookingsReportRepository,
   private val objectMapper: ObjectMapper,
 ) {
   fun createBookingsReport(properties: BookingsReportProperties, outputStream: OutputStream) {
     val startOfMonth = LocalDate.of(properties.year, properties.month, 1)
     val endOfMonth = LocalDate.of(properties.year, properties.month, startOfMonth.month.length(startOfMonth.isLeapYear))
 
-    val bookingsInScope = bookingRepository.findAllByOverlappingDate(startOfMonth, endOfMonth)
+    val bookingsInScope = bookingsReportRepository.findAllByOverlappingDate(
+      startOfMonth,
+      endOfMonth,
+      properties.serviceName.value,
+      properties.probationRegionId,
+    )
 
     BookingsReportGenerator()
       .createReport(bookingsInScope, properties)
