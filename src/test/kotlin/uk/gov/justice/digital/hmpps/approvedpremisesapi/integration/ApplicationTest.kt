@@ -11,6 +11,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.NullSource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
@@ -75,6 +78,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentCla
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
@@ -1129,14 +1133,17 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Get placement applications returns the transformed objects`() {
+  @ParameterizedTest
+  @NullSource
+  @EnumSource(value = PlacementApplicationDecision::class, names = ["WITHDRAWN_BY_PP"], mode = EnumSource.Mode.EXCLUDE)
+  fun `Get placement applications returns the transformed objects`(decision: PlacementApplicationDecision?) {
     `Given a User` { user, jwt ->
       `Given a Placement Application`(
         createdByUser = user,
         schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         },
+        decision = decision,
       ) { placementApplicationEntity ->
 
         val applicationId = placementApplicationEntity.application.id
@@ -1158,6 +1165,34 @@ class ApplicationTest : IntegrationTestBase() {
         assertThat(body[0].schemaVersion).isEqualTo(placementApplicationEntity.schemaVersion.id)
         assertThat(body[0].createdAt).isEqualTo(placementApplicationEntity.createdAt.toInstant())
         assertThat(body[0].submittedAt).isNull()
+      }
+    }
+  }
+
+  @Test
+  fun `Get placement applications does not return withdrawn placement applications`() {
+    `Given a User` { user, jwt ->
+      `Given a Placement Application`(
+        createdByUser = user,
+        schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        },
+        decision = PlacementApplicationDecision.WITHDRAWN_BY_PP,
+      ) { placementApplicationEntity ->
+        val applicationId = placementApplicationEntity.application.id
+        val rawResult = webTestClient.get()
+          .uri("/applications/$applicationId/placement-applications")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val body = objectMapper.readValue(rawResult, object : TypeReference<List<PlacementApplication>>() {})
+        assertThat(body.size).isEqualTo(0)
       }
     }
   }
