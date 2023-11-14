@@ -59,7 +59,8 @@ class DomainEventBuilder(
             noms = booking.nomsNumber,
           ),
           cancellationReason = cancellation.reason.name,
-          cancellationContext = cancellation.notes,
+          notes = cancellation.notes,
+          cancelledAt = cancellation.date,
         ),
       ),
     )

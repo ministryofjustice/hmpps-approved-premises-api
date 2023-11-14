@@ -82,9 +82,10 @@ class DomainEventBuilderTest {
         data.bookingId == booking.id &&
         data.bookingUrl.toString() == "http://api/premises/${premises.id}/bookings/${booking.id}" &&
         data.cancellationReason == cancellationReasonName &&
-        data.cancellationContext == cancellationNotes &&
+        data.notes == cancellationNotes &&
         data.applicationId == application.id &&
         data.applicationUrl.toString() == "http://api/applications/${application.id}"
+      data.cancelledAt == booking.cancellation?.date
     }
   }
 
