@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
-import io.mockk.InternalPlatformDsl.toStr
 import io.mockk.clearMocks
 import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
@@ -230,7 +229,8 @@ class ApplicationTest : IntegrationTestBase() {
               withData("{}")
             }
 
-            mockOffenderUserAccessCall(offenderDetails.case.crn,
+            mockOffenderUserAccessCall(
+              offenderDetails.case.crn,
               inclusion = false,
               exclusion = false,
             )
@@ -489,7 +489,8 @@ class ApplicationTest : IntegrationTestBase() {
       ) { offenderDetails, _ ->
         val application = produceAndPersistBasicApplication(offenderDetails.case.crn, userEntity, "TEAM1")
 
-        mockOffenderUserAccessCall(offenderDetails.case.crn,
+        mockOffenderUserAccessCall(
+          offenderDetails.case.crn,
           inclusion = false,
           exclusion = false,
         )
@@ -616,7 +617,8 @@ class ApplicationTest : IntegrationTestBase() {
           )
         }
 
-        mockOffenderUserAccessCall(offenderDetails.case.crn,
+        mockOffenderUserAccessCall(
+          offenderDetails.case.crn,
           inclusion = false,
           exclusion = false,
         )
@@ -681,7 +683,8 @@ class ApplicationTest : IntegrationTestBase() {
       ) { offenderDetails, _ ->
         val application = produceAndPersistBasicApplication(offenderDetails.case.crn, userEntity, "TEAM1")
 
-        mockOffenderUserAccessCall(offenderDetails.case.crn,
+        mockOffenderUserAccessCall(
+          offenderDetails.case.crn,
           inclusion = false,
           exclusion = false,
         )
@@ -810,7 +813,8 @@ class ApplicationTest : IntegrationTestBase() {
           withData("{}")
         }
 
-        mockOffenderUserAccessCall(offenderDetails.case.crn,
+        mockOffenderUserAccessCall(
+          offenderDetails.case.crn,
           inclusion = false,
           exclusion = false,
         )
@@ -865,7 +869,8 @@ class ApplicationTest : IntegrationTestBase() {
           )
         }
 
-        mockOffenderUserAccessCall(offenderDetails.case.crn,
+        mockOffenderUserAccessCall(
+          offenderDetails.case.crn,
           inclusion = false,
           exclusion = false,
         )
@@ -923,7 +928,8 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          mockOffenderUserAccessCall(offenderDetails.case.crn,
+          mockOffenderUserAccessCall(
+            offenderDetails.case.crn,
             inclusion = false,
             exclusion = false,
           )
@@ -982,7 +988,8 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          mockOffenderUserAccessCall(offenderDetails.case.crn,
+          mockOffenderUserAccessCall(
+            offenderDetails.case.crn,
             inclusion = false,
             exclusion = false,
           )
@@ -1026,7 +1033,8 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          mockOffenderUserAccessCall(offenderDetails.case.crn,
+          mockOffenderUserAccessCall(
+            offenderDetails.case.crn,
             inclusion = false,
             exclusion = false,
           )
@@ -1161,7 +1169,8 @@ class ApplicationTest : IntegrationTestBase() {
           withCrn(offenderDetails.case.crn)
         }
 
-        mockOffenderUserAccessCall(offenderDetails.case.crn,
+        mockOffenderUserAccessCall(
+          offenderDetails.case.crn,
           inclusion = false,
           exclusion = false,
         )

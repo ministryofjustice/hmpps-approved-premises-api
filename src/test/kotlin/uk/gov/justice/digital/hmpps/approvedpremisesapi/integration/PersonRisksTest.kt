@@ -113,13 +113,15 @@ class PersonRisksTest : IntegrationTestBase() {
         APDeliusContext_mockSuccessfulCaseDetailCall(
           offenderDetails.case.crn,
           CaseDetailFactory()
-            .withRegistrations(listOf(
-              Registration("FLAG", "RISK FLAG", LocalDate.now())
-            ))
-            .withMappaDetail(
-              MappaDetail(1, "L1", 1, "C1", LocalDate.parse("2022-09-06"), ZonedDateTime.parse("2022-09-06T09:02:13.451Z"))
+            .withRegistrations(
+              listOf(
+                Registration("FLAG", "RISK FLAG", LocalDate.now()),
+              ),
             )
-            .produce()
+            .withMappaDetail(
+              MappaDetail(1, "L1", 1, "C1", LocalDate.parse("2022-09-06"), ZonedDateTime.parse("2022-09-06T09:02:13.451Z")),
+            )
+            .produce(),
         )
 
         webTestClient.get()

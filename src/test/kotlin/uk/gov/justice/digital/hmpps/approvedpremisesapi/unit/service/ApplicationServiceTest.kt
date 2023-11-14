@@ -1168,7 +1168,9 @@ class ApplicationServiceTest {
         )
         .produce()
 
-      every { mockOffenderService.getRiskByCrn(application.crn,
+      every {
+        mockOffenderService.getRiskByCrn(
+          application.crn,
           user.deliusUsername,
         )
       } returns AuthorisableActionResult.Success(

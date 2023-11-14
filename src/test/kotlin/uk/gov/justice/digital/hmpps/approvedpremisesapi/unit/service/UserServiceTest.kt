@@ -40,9 +40,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UserAllocationsEngi
 import java.util.UUID
 import javax.servlet.http.HttpServletRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
-import org.mockito.kotlin.whenever
-import org.springframework.security.oauth2.jwt.Jwt
-import java.time.Instant
 
 class UserServiceTest {
   private val mockCurrentRequest = mockk<HttpServletRequest>()

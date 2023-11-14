@@ -367,7 +367,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
           offenderDetailsConfigBlock = {
             withFirstName("JOHN")
             withLastName("SMITH")
-          },) { offenderDetails, inmateDetails ->
+          },
+        ) { offenderDetails, inmateDetails ->
           `Given an Offender` { otherOffenderDetails, _ ->
             val placementRequest = createPlacementRequest(offenderDetails.case.asOffenderDetail(), user)
             createPlacementRequest(otherOffenderDetails.case.asOffenderDetail(), user)

@@ -110,11 +110,11 @@ class OffenderServiceTest {
     val crn = "N123456"
     every { mockApDeliusContextApiClient.getSummariesForCrns(listOf(crn)) } returns Success(
       status = HttpStatus.OK,
-      body = CaseSummaries(listOf())
+      body = CaseSummaries(listOf()),
     )
     every { mockApDeliusContextApiClient.getUserAccessForCrns("deliusUsername", listOf(crn)) } returns Success(
       status = HttpStatus.OK,
-      body = UserAccess(listOf())
+      body = UserAccess(listOf()),
     )
 
     assertThat(offenderService.getOffenderByCrn(crn, "distinguished.name") is AuthorisableActionResult.NotFound).isTrue
@@ -146,7 +146,7 @@ class OffenderServiceTest {
 
     every { mockApDeliusContextApiClient.getSummariesForCrns(listOf(crn)) } returns Success(
       status = HttpStatus.OK,
-      body = CaseSummaries(listOf(resultBody))
+      body = CaseSummaries(listOf(resultBody)),
     )
 
     val result = offenderService.getOffenderByCrn(crn, "distinguished.name")
@@ -168,7 +168,7 @@ class OffenderServiceTest {
 
     every { mockApDeliusContextApiClient.getSummariesForCrns(listOf(resultBody.crn)) } returns Success(
       status = HttpStatus.OK,
-      body = CaseSummaries(listOf(resultBody))
+      body = CaseSummaries(listOf(resultBody)),
     )
 
     every {
@@ -203,7 +203,7 @@ class OffenderServiceTest {
 
     every { mockApDeliusContextApiClient.getSummariesForCrns(listOf(resultBody.crn)) } returns Success(
       status = HttpStatus.OK,
-      body = CaseSummaries(listOf(resultBody))
+      body = CaseSummaries(listOf(resultBody)),
     )
 
     every {
@@ -239,7 +239,7 @@ class OffenderServiceTest {
 
     every { mockApDeliusContextApiClient.getSummariesForCrns(listOf(resultBody.crn)) } returns Success(
       status = HttpStatus.OK,
-      body = CaseSummaries(listOf(resultBody))
+      body = CaseSummaries(listOf(resultBody)),
     )
 
     every {
@@ -275,7 +275,7 @@ class OffenderServiceTest {
 
     every { mockApDeliusContextApiClient.getSummariesForCrns(listOf(resultBody.crn)) } returns Success(
       status = HttpStatus.OK,
-      body = CaseSummaries(listOf(resultBody))
+      body = CaseSummaries(listOf(resultBody)),
     )
 
     every {
@@ -316,16 +316,25 @@ class OffenderServiceTest {
 
   @Test
   fun `getRisksByCrn returns Unauthorised result when distinguished name is excluded from viewing`() {
-    val detail = CaseDetailFactory().withCase(CaseSummaryFactory()
-      .withCrn("R123456")
-      .withName(NameFactory().withForename("Bob").withSurname("Doe").produce())
-      .withCurrentExclusion(true)
-      .produce()
+    val detail = CaseDetailFactory().withCase(
+      CaseSummaryFactory()
+        .withCrn("R123456")
+        .withName(NameFactory().withForename("Bob").withSurname("Doe").produce())
+        .withCurrentExclusion(true)
+        .produce(),
     ).produce()
 
-    val accessBody = UserAccess(listOf(CaseAccess(
-      crn = detail.case.crn, userRestricted = false, userExcluded = true, restrictionMessage = null, exclusionMessage = "Excluded"
-    )))
+    val accessBody = UserAccess(
+      listOf(
+        CaseAccess(
+          crn = detail.case.crn,
+          userRestricted = false,
+          userExcluded = true,
+          restrictionMessage = null,
+          exclusionMessage = "Excluded",
+        ),
+      ),
+    )
 
     every { mockApDeliusContextApiClient.getCaseDetail(detail.case.crn) } returns Success(HttpStatus.OK, detail)
     every { mockApDeliusContextApiClient.getUserAccessForCrns("distinguished.name", listOf(detail.case.crn)) } returns Success(HttpStatus.OK, accessBody)
@@ -402,13 +411,15 @@ class OffenderServiceTest {
     mock200Registrations(
       crn,
       CaseDetailFactory()
-        .withRegistrations(listOf(
-          Registration("FLAG", "RISK FLAG", LocalDate.now())
-        ))
-        .withMappaDetail(
-          MappaDetail(1, "L1", 1, "C1", LocalDate.parse("2022-09-06"), ZonedDateTime.parse("2022-09-06T09:02:13.451Z"))
+        .withRegistrations(
+          listOf(
+            Registration("FLAG", "RISK FLAG", LocalDate.now()),
+          ),
         )
-        .produce()
+        .withMappaDetail(
+          MappaDetail(1, "L1", 1, "C1", LocalDate.parse("2022-09-06"), ZonedDateTime.parse("2022-09-06T09:02:13.451Z")),
+        )
+        .produce(),
     )
 
     val result = offenderService.getRiskByCrn(crn, distinguishedName)
@@ -762,7 +773,11 @@ class OffenderServiceTest {
       val deliusUsername = "USER"
 
       every { mockApDeliusContextApiClient.getSummariesForCrns(listOf(crn)) } returns StatusCode(
-        HttpMethod.GET, "/probation-cases/summaries", HttpStatus.INTERNAL_SERVER_ERROR, null, false
+        HttpMethod.GET,
+        "/probation-cases/summaries",
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        null,
+        false,
       )
 
       val result = offenderService.getInfoForPerson(crn, deliusUsername, false)
@@ -783,7 +798,7 @@ class OffenderServiceTest {
 
       every { mockApDeliusContextApiClient.getSummariesForCrns(listOf(crn)) } returns Success(
         status = HttpStatus.OK,
-        body = CaseSummaries(listOf(offenderDetails))
+        body = CaseSummaries(listOf(offenderDetails)),
       )
 
       every {
@@ -825,7 +840,7 @@ class OffenderServiceTest {
 
       every { mockApDeliusContextApiClient.getSummariesForCrns(listOf(crn)) } returns Success(
         status = HttpStatus.OK,
-        body = CaseSummaries(listOf(offenderDetails))
+        body = CaseSummaries(listOf(offenderDetails)),
       )
 
       every {
@@ -869,7 +884,7 @@ class OffenderServiceTest {
 
       every { mockApDeliusContextApiClient.getSummariesForCrns(listOf(crn)) } returns Success(
         status = HttpStatus.OK,
-        body = CaseSummaries(listOf(offenderDetails))
+        body = CaseSummaries(listOf(offenderDetails)),
       )
 
       every {
@@ -914,7 +929,7 @@ class OffenderServiceTest {
 
       every { mockApDeliusContextApiClient.getSummariesForCrns(listOf(crn)) } returns Success(
         status = HttpStatus.OK,
-        body = CaseSummaries(listOf(offenderDetails))
+        body = CaseSummaries(listOf(offenderDetails)),
       )
 
       every {
@@ -1101,7 +1116,8 @@ class OffenderServiceTest {
       .produce()
 
     every { mockApDeliusContextApiClient.getSummariesForCrns(listOf(detail.crn)) } returns Success(
-      HttpStatus.OK, CaseSummaries(listOf(detail))
+      HttpStatus.OK,
+      CaseSummaries(listOf(detail)),
     )
   }
 
@@ -1109,7 +1125,7 @@ class OffenderServiceTest {
   private fun mock404Tier(crn: String) = every { mockHMPPSTierApiClient.getTier(crn) } returns StatusCode(HttpMethod.GET, "/crn/a-crn/tier", HttpStatus.NOT_FOUND, body = null)
   private fun mock404Registrations(crn: String) = every { mockApDeliusContextApiClient.getCaseDetail(crn) } returns Success(
     status = HttpStatus.OK,
-    body = CaseDetailFactory().withCase(CaseSummaryFactory().withCrn(crn).produce()).withRegistrations(listOf()).withMappaDetail(null).produce()
+    body = CaseDetailFactory().withCase(CaseSummaryFactory().withCrn(crn).produce()).withRegistrations(listOf()).withMappaDetail(null).produce(),
   )
 
   private fun mock500RoSH(crn: String) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns StatusCode(HttpMethod.GET, "/rosh/a-crn", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
@@ -1120,6 +1136,6 @@ class OffenderServiceTest {
   private fun mock200Tier(crn: String, body: Tier) = every { mockHMPPSTierApiClient.getTier(crn) } returns Success(HttpStatus.OK, body = body)
   private fun mock200Registrations(crn: String, body: CaseDetail) = every { mockApDeliusContextApiClient.getCaseDetail(crn) } returns Success(
     HttpStatus.OK,
-    body = body
+    body = body,
   )
 }

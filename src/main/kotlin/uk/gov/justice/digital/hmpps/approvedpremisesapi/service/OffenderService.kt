@@ -223,8 +223,9 @@ class OffenderService(
       is ClientResult.Failure.StatusCode -> if (res.status == HttpStatus.NOT_FOUND) null else res.throwException()
       is ClientResult.Failure -> res.throwException()
     }.let {
-      if (it == null) AuthorisableActionResult.NotFound("Person", crn)
-      else if (
+      if (it == null) {
+        AuthorisableActionResult.NotFound("Person", crn)
+      } else if (
         (it.case.currentExclusion == true || it.case.currentRestriction == true) &&
         isLao(userDistinguishedName, crn)
       ) {
@@ -263,8 +264,11 @@ class OffenderService(
 
   fun CaseDetail.flags(): RiskWithStatus<List<String>> {
     val registrations = registrations.filter { !ignoredRegisterTypesForFlags.contains(it.code) }
-    return if (registrations.isEmpty()) RiskWithStatus(status = RiskStatus.NotFound)
-    else RiskWithStatus(registrations.map { it.description })
+    return if (registrations.isEmpty()) {
+      RiskWithStatus(status = RiskStatus.NotFound)
+    } else {
+      RiskWithStatus(registrations.map { it.description })
+    }
   }
 
   fun getPrisonCaseNotesByNomsNumber(nomsNumber: String): AuthorisableActionResult<List<CaseNote>> {

@@ -66,7 +66,7 @@ class PersonOffencesTest : IntegrationTestBase() {
     `Given a User` { _, jwt ->
       `Given an Offender`(offenderDetailsConfigBlock = {
         withCurrentExclusion(false).withCurrentRestriction(false)
-      }) { offenderDetails, _ ->
+      },) { offenderDetails, _ ->
         val offence = offenderDetails.offences.first()
 
         webTestClient.get()
@@ -76,7 +76,7 @@ class PersonOffencesTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .json("[{\"deliusEventNumber\":\"${offence.eventNumber}\",\"offenceDescription\":\"${offence.description}\",\"offenceId\":\"\",\"convictionId\":0,\"offenceDate\":\"${offence.date.toString()}\"}]")
+          .json("[{\"deliusEventNumber\":\"${offence.eventNumber}\",\"offenceDescription\":\"${offence.description}\",\"offenceId\":\"\",\"convictionId\":0,\"offenceDate\":\"${offence.date}\"}]")
       }
     }
   }
