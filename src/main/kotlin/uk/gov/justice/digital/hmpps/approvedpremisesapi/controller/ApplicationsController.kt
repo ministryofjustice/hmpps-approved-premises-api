@@ -22,12 +22,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -45,9 +47,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getFullInfoForPersonOrThrow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getInfoForPersonOrThrowInternalServerError
 import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
@@ -135,43 +134,20 @@ class ApplicationsController(
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val user = userService.getUserForRequest()
 
-    val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn, user)
-
-    val applicationResult = when (xServiceName ?: ServiceName.approvedPremises) {
-      ServiceName.approvedPremises ->
-        applicationService.createApprovedPremisesApplication(
-          personInfo.offenderDetailSummary,
-          user,
-          deliusPrincipal.token.tokenValue,
-          body.convictionId,
-          body.deliusEventNumber,
-          body.offenceId,
-          createWithRisks,
-        )
-      ServiceName.temporaryAccommodation -> {
-        when (
-          val actionResult =
-            applicationService.createTemporaryAccommodationApplication(
-              body.crn,
-              user,
-              deliusPrincipal.token.tokenValue,
-              body.convictionId,
-              body.deliusEventNumber,
-              body.offenceId,
-              createWithRisks,
-            )
-        ) {
-          is AuthorisableActionResult.NotFound -> throw NotFoundProblem(actionResult.id!!, actionResult.entityType!!)
-          is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-          is AuthorisableActionResult.Success -> actionResult.entity
-        }
-      }
-
-      ServiceName.cas2 -> throw RuntimeException(
-        "CAS2 now has its own " +
-          "Cas2ApplicationsController",
-      )
+    val personInfo = when (val personInfoResult = offenderService.getInfoForPerson(body.crn, user.deliusUsername, false)) {
+      is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(personInfoResult.crn, "Offender")
+      is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem()
+      is PersonInfoResult.Success.Full -> personInfoResult
     }
+
+    val applicationResult = createApplication(
+      xServiceName ?: ServiceName.approvedPremises,
+      personInfo,
+      user,
+      deliusPrincipal,
+      body,
+      createWithRisks,
+    )
 
     val application = when (applicationResult) {
       is ValidatableActionResult.GeneralValidationError ->
@@ -186,6 +162,50 @@ class ApplicationsController(
     return ResponseEntity
       .created(URI.create("/applications/${application.id}"))
       .body(applicationsTransformer.transformJpaToApi(application, personInfo))
+  }
+
+  private fun createApplication(
+    serviceName: ServiceName,
+    personInfo: PersonInfoResult.Success.Full,
+    user: UserEntity,
+    deliusPrincipal: AuthAwareAuthenticationToken,
+    body: NewApplication,
+    createWithRisks: Boolean?,
+  ): ValidatableActionResult<ApplicationEntity> = when (serviceName) {
+    ServiceName.approvedPremises ->
+      applicationService.createApprovedPremisesApplication(
+        personInfo.offenderDetailSummary,
+        user,
+        deliusPrincipal.token.tokenValue,
+        body.convictionId,
+        body.deliusEventNumber,
+        body.offenceId,
+        createWithRisks,
+      )
+
+    ServiceName.temporaryAccommodation -> {
+      when (
+        val actionResult =
+          applicationService.createTemporaryAccommodationApplication(
+            body.crn,
+            user,
+            deliusPrincipal.token.tokenValue,
+            body.convictionId,
+            body.deliusEventNumber,
+            body.offenceId,
+            createWithRisks,
+          )
+      ) {
+        is AuthorisableActionResult.NotFound -> throw NotFoundProblem(actionResult.id!!, actionResult.entityType!!)
+        is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+        is AuthorisableActionResult.Success -> actionResult.entity
+      }
+    }
+
+    ServiceName.cas2 -> throw RuntimeException(
+      "CAS2 now has its own " +
+        "Cas2ApplicationsController",
+    )
   }
 
   @Transactional
@@ -349,7 +369,7 @@ class ApplicationsController(
       is AuthorisableActionResult.Success -> applicationResult.entity
     }
 
-    val personInfo = offenderService.getFullInfoForPersonOrThrow(assessment.application.crn, user)
+    val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, false)
 
     return ResponseEntity.ok(assessmentTransformer.transformJpaToApi(assessment, personInfo))
   }
@@ -371,7 +391,7 @@ class ApplicationsController(
   }
 
   private fun getPersonDetailAndTransform(application: ApplicationEntity, user: UserEntity): Application {
-    val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn, user)
+    val personInfo = offenderService.getInfoForPerson(application.crn, user.deliusUsername, false)
 
     return applicationsTransformer.transformJpaToApi(application, personInfo)
   }
@@ -379,19 +399,14 @@ class ApplicationsController(
   private fun getPersonDetailAndTransformToSummary(
     application: JPAApplicationSummary,
     user: UserEntity,
-  ):
-    ApplicationSummary {
-    val personInfo =
-      offenderService.getInfoForPersonOrThrowInternalServerError(
-        application.getCrn(),
-        user,
-      )
+  ): ApplicationSummary {
+    val personInfo = offenderService.getInfoForPerson(application.getCrn(), user.deliusUsername, false)
 
     return applicationsTransformer.transformDomainToApiSummary(application, personInfo)
   }
 
   private fun getPersonDetailAndTransform(offlineApplication: OfflineApplicationEntity, user: UserEntity): Application {
-    val personInfo = offenderService.getInfoForPersonOrThrow(offlineApplication.crn, user)
+    val personInfo = offenderService.getInfoForPerson(offlineApplication.crn, user.deliusUsername, false)
 
     return applicationsTransformer.transformJpaToApi(offlineApplication, personInfo)
   }

@@ -801,7 +801,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToApi(
                       placementRequest,
-                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                      PersonInfoResult.Success.Restricted(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber),
                       listOf(),
                     ),
                   ),

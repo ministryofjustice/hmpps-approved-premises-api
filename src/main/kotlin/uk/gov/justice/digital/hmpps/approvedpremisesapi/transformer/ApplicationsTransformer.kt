@@ -33,7 +33,7 @@ class ApplicationsTransformer(
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
 ) {
-  fun transformJpaToApi(jpa: ApplicationEntity, personInfo: PersonInfoResult.Success): Application {
+  fun transformJpaToApi(jpa: ApplicationEntity, personInfo: PersonInfoResult): Application {
     val latestAssessment = jpa.getLatestAssessment()
 
     return when (jpa) {
@@ -93,7 +93,7 @@ class ApplicationsTransformer(
     }
   }
 
-  fun transformDomainToApiSummary(domain: DomainApplicationSummary, personInfo: PersonInfoResult.Success): ApiApplicationSummary = when (domain) {
+  fun transformDomainToApiSummary(domain: DomainApplicationSummary, personInfo: PersonInfoResult): ApiApplicationSummary = when (domain) {
     is DomainApprovedPremisesApplicationSummary -> {
       val riskRatings =
         if (domain.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null
@@ -132,7 +132,7 @@ class ApplicationsTransformer(
     else -> throw RuntimeException("Unrecognised application type when transforming: ${domain::class.qualifiedName}")
   }
 
-  fun transformJpaToApi(jpa: OfflineApplicationEntity, personInfo: PersonInfoResult.Success) = OfflineApplication(
+  fun transformJpaToApi(jpa: OfflineApplicationEntity, personInfo: PersonInfoResult) = OfflineApplication(
     id = jpa.id,
     person = personTransformer.transformModelToPersonApi(personInfo),
     createdAt = jpa.createdAt.toInstant(),

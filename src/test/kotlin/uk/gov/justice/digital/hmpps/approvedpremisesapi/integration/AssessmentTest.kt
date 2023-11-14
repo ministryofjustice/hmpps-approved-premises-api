@@ -812,7 +812,7 @@ class AssessmentTest : IntegrationTestBase() {
             objectMapper.writeValueAsString(
               assessmentTransformer.transformJpaToApi(
                 assessment,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                PersonInfoResult.Success.Restricted(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber),
               ),
             ),
           )

@@ -19,16 +19,24 @@ import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FlagsEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MappaEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskEnvelopeStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
@@ -36,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
@@ -417,7 +426,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get list of applications returns 500 when a person cannot be found`() {
+  fun `Get list of applications returns limited information when a person cannot be found`() {
     `Given a User`(
       staffUserDetailsConfigBlock = {
         withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
@@ -425,7 +434,7 @@ class ApplicationTest : IntegrationTestBase() {
     ) { userEntity, jwt ->
       val crn = "X1234"
 
-      produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+      val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
       CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
       loadPreemptiveCacheForOffenderDetails(crn)
 
@@ -436,9 +445,38 @@ class ApplicationTest : IntegrationTestBase() {
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
-        .is5xxServerError
+        .isOk
         .expectBody()
-        .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
+        .json(
+          objectMapper.writeValueAsString(
+            listOf(
+              ApprovedPremisesApplicationSummary(
+                createdByUserId = userEntity.id,
+                status = ApplicationStatus.inProgress,
+                type = "CAS1",
+                id = application.id,
+                person = UnknownPerson(
+                  crn = crn,
+                  type = PersonType.unknownPerson,
+                ),
+                createdAt = application.createdAt.toInstant(),
+                isWomensApplication = null,
+                isPipeApplication = null,
+                isEmergencyApplication = null,
+                isEsapApplication = null,
+                arrivalDate = null,
+                risks = PersonRisks(
+                  crn = crn,
+                  roshRisks = RoshRisksEnvelope(RiskEnvelopeStatus.notFound),
+                  tier = RiskTierEnvelope(RiskEnvelopeStatus.notFound),
+                  flags = FlagsEnvelope(RiskEnvelopeStatus.notFound),
+                  mappa = MappaEnvelope(RiskEnvelopeStatus.notFound),
+                ),
+                submittedAt = null,
+              ),
+            ),
+          ),
+        )
     }
   }
 
