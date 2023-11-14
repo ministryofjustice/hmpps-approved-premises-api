@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import io.sentry.Sentry
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
@@ -46,6 +47,7 @@ class MigrationJobService(
 
       migrationLogger.info("Finished migration job: $migrationJobType")
     } catch (exception: Exception) {
+      Sentry.captureException(exception)
       migrationLogger.error("Unable to complete Migration Job", exception)
     }
   }
