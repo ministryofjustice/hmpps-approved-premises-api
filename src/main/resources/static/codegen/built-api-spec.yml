@@ -1717,7 +1717,7 @@ paths:
           description: The direction to sort the results by. If blank, will sort in descending order
           schema:
             $ref: '#/components/schemas/SortDirection'
-        - name: applicationSortField
+        - name: sortBy
           in: query
           description: The field to sort the results by.
           schema:
