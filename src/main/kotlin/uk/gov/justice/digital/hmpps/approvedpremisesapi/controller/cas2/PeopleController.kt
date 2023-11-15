@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -34,16 +34,20 @@ class PeopleController(
 ) : PeopleCas2Delegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
+  override fun peopleSearchGet(nomsNumber: String): ResponseEntity<Person> {
     val user = userService.getUserForRequest()
 
-    val personInfo = offenderService.getInfoForPerson(crn)
+    val probationOffenderResult = offenderService.getPersonByNomsNumber(nomsNumber)
 
-    when (personInfo) {
-      is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
-      is PersonInfoResult.Unknown -> throw personInfo.throwable ?: RuntimeException("Could not retrieve person info for CRN: $crn")
-      is PersonInfoResult.Success -> return ResponseEntity.ok(
-        personTransformer.transformModelToPersonApi(personInfo),
+    when (probationOffenderResult) {
+      is ProbationOffenderSearchResult.NotFound -> throw NotFoundProblem(nomsNumber, "Offender")
+      is ProbationOffenderSearchResult.Forbidden -> throw ForbiddenProblem()
+      is ProbationOffenderSearchResult.Unknown ->
+        throw probationOffenderResult.throwable
+          ?: RuntimeException("Could not retrieve person info for Prison Number: $nomsNumber")
+
+      is ProbationOffenderSearchResult.Success.Full -> return ResponseEntity.ok(
+        personTransformer.transformProbationOffenderToPersonApi(probationOffenderResult, nomsNumber),
       )
     }
   }
