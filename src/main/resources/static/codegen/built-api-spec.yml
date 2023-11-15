@@ -5713,8 +5713,6 @@ components:
           type: boolean
         document:
           $ref: '#/components/schemas/AnyValue'
-        status:
-          $ref: '#/components/schemas/ApplicationStatus'
         submittedAt:
           type: string
           format: date-time
@@ -5892,8 +5890,6 @@ components:
         createdByUserId:
           type: string
           format: uuid
-        status:
-          $ref: '#/components/schemas/ApplicationStatus'
         person:
           $ref: '#/components/schemas/Person'
         createdAt:
