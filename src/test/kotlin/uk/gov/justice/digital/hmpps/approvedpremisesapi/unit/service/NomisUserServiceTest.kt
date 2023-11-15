@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
+import org.springframework.security.oauth2.jwt.Jwt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
@@ -45,7 +46,7 @@ class NomisUserServiceTest {
 
       assertThat(userService.getUserForRequest()).isEqualTo(user)
 
-      verify(exactly = 0) { mockNomisUserRolesApiClient.getUserDetails(username) }
+      verify(exactly = 0) { mockNomisUserRolesApiClient.getUserDetails(any()) }
       verify(exactly = 0) { mockUserRepository.save(any()) }
     }
 
@@ -53,14 +54,17 @@ class NomisUserServiceTest {
     fun `returns new User when one does not already exist, does call Nomis-User-Roles API and save`() {
       val username = "SOMEPERSON"
       val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+      val mockToken = mockk<Jwt>()
 
       every { mockHttpAuthService.getNomisPrincipalOrThrow() } returns mockPrincipal
       every { mockPrincipal.name } returns username
+      every { mockPrincipal.token } returns mockToken
+      every { mockToken.tokenValue } returns "abc123"
 
       every { mockUserRepository.findByNomisUsername(username) } returns null
       every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as NomisUserEntity }
 
-      every { mockNomisUserRolesApiClient.getUserDetails(username) } returns ClientResult.Success(
+      every { mockNomisUserRolesApiClient.getUserDetails("abc123") } returns ClientResult.Success(
         HttpStatus.OK,
         NomisUserDetailFactory()
           .withUsername(username)
@@ -76,7 +80,7 @@ class NomisUserServiceTest {
         it.nomisUsername == "SOMEPERSON"
       }
 
-      verify(exactly = 1) { mockNomisUserRolesApiClient.getUserDetails(username) }
+      verify(exactly = 1) { mockNomisUserRolesApiClient.getUserDetails("abc123") }
       verify(exactly = 1) { mockUserRepository.save(any()) }
     }
   }

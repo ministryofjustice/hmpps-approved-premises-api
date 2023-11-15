@@ -29,9 +29,10 @@ class NomisUserService(
     val existingUser = userRepository.findByNomisUsername(normalisedUsername)
     if (existingUser != null) return existingUser
 
-    val nomisUserDetailResponse = nomisUserRolesApiClient.getUserDetails(normalisedUsername)
-
-    val nomisUserDetails = when (nomisUserDetailResponse) {
+    val jwt = httpAuthService.getNomisPrincipalOrThrow().token.tokenValue
+    val nomisUserDetails = when (
+      val nomisUserDetailResponse = nomisUserRolesApiClient.getUserDetails(jwt)
+    ) {
       is ClientResult.Success -> nomisUserDetailResponse.body
       is ClientResult.Failure -> nomisUserDetailResponse.throwException()
     }
