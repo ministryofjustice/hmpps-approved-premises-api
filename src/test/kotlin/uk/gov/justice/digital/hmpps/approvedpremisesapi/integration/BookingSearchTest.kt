@@ -473,6 +473,27 @@ class BookingSearchTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get all results ordered by the person crn in descending order when the query parameters supplied without Pagination`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val allBookings = create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
+        val sortedByDescending = allBookings.sortedByDescending { it.crn }
+        val expectedResponse = getExpectedResponse(sortedByDescending, offenderDetails)
+
+        webTestClient.get()
+          .uri("/bookings/search?sortOrder=descending&sortField=crn&status=provisional")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(objectMapper.writeValueAsString(expectedResponse), true)
+      }
+    }
+  }
+
+  @Test
   fun `No Results returned when searching for cancelled booking status and all existing bookings are confirmed`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->

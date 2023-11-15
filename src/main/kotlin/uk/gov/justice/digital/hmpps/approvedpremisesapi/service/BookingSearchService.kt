@@ -13,11 +13,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSearch
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSearchResultDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import kotlin.Comparator
@@ -34,7 +32,7 @@ class BookingSearchService(
     sortOrder: SortOrder,
     sortField: BookingSearchSortField,
     page: Int?,
-  ): Pair<AuthorisableActionResult.Success<ValidatableActionResult<List<BookingSearchResultDto>>>, PaginationMetadata?> {
+  ): Pair<List<BookingSearchResultDto>, PaginationMetadata?> {
     val user = userService.getUserForRequest()
     val probationRegionId = when (serviceName) {
       ServiceName.temporaryAccommodation -> user.probationRegion.id
@@ -46,14 +44,12 @@ class BookingSearchService(
       probationRegionId,
       buildPage(sortOrder, sortField, page),
     )
-    val results = updatePersonNameFromOffenderDetail(findBookings, user)
-    val sortBookingResult = sortBookingResult(page, sortField, sortOrder, results)
-    val success = AuthorisableActionResult.Success(
-      validated {
-        return@validated success(sortBookingResult)
-      },
-    )
-    return Pair(success, getMetadata(findBookings, page))
+    var results = updatePersonNameFromOffenderDetail(findBookings, user)
+    if (sortField == BookingSearchSortField.personName) {
+      results = sortBookingResultByPersonName(results, sortOrder)
+    }
+
+    return Pair(results, getMetadata(findBookings, page))
   }
 
   private fun updatePersonNameFromOffenderDetail(
@@ -105,7 +101,7 @@ class BookingSearchService(
       else -> SortDirection.desc
     }
     val sortingField = convertSortFieldToDBField(sortField)
-    return getPageable(sortingField, sortDirection, page)
+    return getPageableOrAllPages(sortingField, sortDirection, page)
   }
 
   private fun convertSortFieldToDBField(sortField: BookingSearchSortField) =
@@ -117,29 +113,17 @@ class BookingSearchService(
       else -> "created_at"
     }
 
-  private fun sortBookingResult(
-    page: Int?,
-    sortField: BookingSearchSortField,
-    sortOrder: SortOrder,
+  private fun sortBookingResultByPersonName(
     results: List<BookingSearchResultDto>,
+    sortOrder: SortOrder,
   ): List<BookingSearchResultDto> {
-    if ((page == null) || (sortField == BookingSearchSortField.personName)) {
-      val comparator = Comparator<BookingSearchResultDto> { a, b ->
-        val ascendingCompare = when (sortField) {
-          BookingSearchSortField.personName -> compareValues(a.personName, b.personName)
-          BookingSearchSortField.personCrn -> compareValues(a.personCrn, b.personCrn)
-          BookingSearchSortField.bookingStartDate -> compareValues(a.bookingStartDate, b.bookingStartDate)
-          BookingSearchSortField.bookingEndDate -> compareValues(a.bookingEndDate, b.bookingEndDate)
-          BookingSearchSortField.bookingCreatedAt -> compareValues(a.bookingCreatedAt, b.bookingCreatedAt)
-        }
-
-        when (sortOrder) {
-          SortOrder.ascending -> ascendingCompare
-          SortOrder.descending -> -ascendingCompare
-        }
+    val comparator = Comparator<BookingSearchResultDto> { a, b ->
+      val ascendingCompare = compareValues(a.personName, b.personName)
+      when (sortOrder) {
+        SortOrder.ascending -> ascendingCompare
+        SortOrder.descending -> -ascendingCompare
       }
-      return results.sortedWith(comparator)
     }
-    return results
+    return results.sortedWith(comparator)
   }
 }

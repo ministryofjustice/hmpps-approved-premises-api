@@ -20,6 +20,19 @@ fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?): Page
   }
 }
 
+fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?): Pageable? {
+  return if (page != null) {
+    getPageable(sortBy, sortDirection, page)
+  } else {
+    val sort = if (sortDirection == SortDirection.desc) {
+      Sort.by(sortBy).descending()
+    } else {
+      Sort.by(sortBy).ascending()
+    }
+    PageRequest.of(0, Int.MAX_VALUE, sort)
+  }
+}
+
 fun <T>getMetadata(response: Page<T>, page: Int?): PaginationMetadata? {
   return if (page != null) {
     PaginationMetadata(page, response.totalPages, response.totalElements, 10)
