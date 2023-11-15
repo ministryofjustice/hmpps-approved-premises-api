@@ -227,7 +227,10 @@ components:
           format: uri
         cancellationReason:
           type: string
-        cancellationContext:
+        cancelledAt:
+          type: string
+          format: date
+        notes:
           type: string
       required:
         - personReference
