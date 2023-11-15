@@ -13,7 +13,8 @@ class NomisUserRolesApiClient(
   webClientCache: WebClientCache,
 ) : BaseHMPPSClient(webClient, objectMapper, webClientCache) {
 
-  fun getUserDetails(nomisUsername: String) = getRequest<NomisUserDetail> {
-    path = "/users/$nomisUsername"
+  fun getUserDetails(jwt: String) = getRequest<NomisUserDetail> {
+    withHeader("Authorization", "Bearer $jwt")
+    path = "/me"
   }
 }
