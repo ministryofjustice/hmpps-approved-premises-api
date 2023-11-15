@@ -2,68 +2,90 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingSearchResultFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSearchResultDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingSearchResultTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.TestBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 class BookingSearchTransformerTest {
   private val bookingSearchResultTransformer = BookingSearchResultTransformer()
 
   @Test
   fun `transformDomainToApi transforms correctly`() {
-    val domainResults = listOf(
-      BookingSearchResultFactory()
-        .withPersonName(randomStringMultiCaseWithNumbers(6))
-        .withBookingStatus(BookingStatus.provisional)
-        .produce(),
-      BookingSearchResultFactory()
-        .withBookingStatus(BookingStatus.awaitingMinusArrival)
-        .produce(),
-      BookingSearchResultFactory()
-        .withPersonName(randomStringMultiCaseWithNumbers(6))
-        .withBookingStatus(BookingStatus.confirmed)
-        .produce(),
-      BookingSearchResultFactory()
-        .withBookingStatus(BookingStatus.notMinusArrived)
-        .produce(),
-      BookingSearchResultFactory()
-        .withPersonName(randomStringMultiCaseWithNumbers(6))
-        .withBookingStatus(BookingStatus.arrived)
-        .produce(),
-      BookingSearchResultFactory()
-        .withBookingStatus(BookingStatus.departed)
-        .produce(),
-      BookingSearchResultFactory()
-        .withPersonName(randomStringMultiCaseWithNumbers(6))
-        .withBookingStatus(BookingStatus.cancelled)
-        .produce(),
-    )
-
-    val result = bookingSearchResultTransformer.transformDomainToApi(domainResults)
+    val (domainResults, bookingSearchResultDtos) = buildBookingSearchData()
+    val result = bookingSearchResultTransformer.transformDomainToApi(bookingSearchResultDtos)
 
     assertThat(result.resultsCount).isEqualTo(7)
 
-    result.results.forEachIndexed { index, it ->
+    result.results.forEachIndexed { index: Int, transformedResult: BookingSearchResult ->
       val domainResult = domainResults[index]
 
-      assertThat(it.person.name).isEqualTo(domainResult.personName)
-      assertThat(it.person.crn).isEqualTo(domainResult.personCrn)
-      assertThat(it.booking.id).isEqualTo(domainResult.bookingId)
-      assertThat(it.booking.status.value).isEqualTo(domainResult.bookingStatus)
-      assertThat(it.booking.startDate).isEqualTo(domainResult.bookingStartDate)
-      assertThat(it.booking.endDate).isEqualTo(domainResult.bookingEndDate)
-      assertThat(it.booking.createdAt).isEqualTo(domainResult.bookingCreatedAt.toInstant())
-      assertThat(it.premises.id).isEqualTo(domainResult.premisesId)
-      assertThat(it.premises.name).isEqualTo(domainResult.premisesName)
-      assertThat(it.premises.addressLine1).isEqualTo(domainResult.premisesAddressLine1)
-      assertThat(it.premises.addressLine2).isEqualTo(domainResult.premisesAddressLine2)
-      assertThat(it.premises.town).isEqualTo(domainResult.premisesTown)
-      assertThat(it.premises.postcode).isEqualTo(domainResult.premisesPostcode)
-      assertThat(it.room.id).isEqualTo(domainResult.roomId)
-      assertThat(it.room.name).isEqualTo(domainResult.roomName)
-      assertThat(it.bed.id).isEqualTo(domainResult.bedId)
-      assertThat(it.bed.name).isEqualTo(domainResult.bedName)
+      assertThat(transformedResult.person.name).isEqualTo(domainResult.getPersonName())
+      assertThat(transformedResult.person.crn).isEqualTo(domainResult.getPersonCrn())
+      assertThat(transformedResult.booking.id).isEqualTo(domainResult.getBookingId())
+      assertThat(transformedResult.booking.status.value).isEqualTo(domainResult.getBookingStatus())
+      assertThat(transformedResult.booking.startDate).isEqualTo(domainResult.getBookingStartDate())
+      assertThat(transformedResult.booking.endDate).isEqualTo(domainResult.getBookingEndDate())
+      assertThat(transformedResult.booking.createdAt).isEqualTo(domainResult.getBookingCreatedAt().toInstant())
+      assertThat(transformedResult.premises.id).isEqualTo(domainResult.getPremisesId())
+      assertThat(transformedResult.premises.name).isEqualTo(domainResult.getPremisesName())
+      assertThat(transformedResult.premises.addressLine1).isEqualTo(domainResult.getPremisesAddressLine1())
+      assertThat(transformedResult.premises.addressLine2).isEqualTo(domainResult.getPremisesAddressLine2())
+      assertThat(transformedResult.premises.town).isEqualTo(domainResult.getPremisesTown())
+      assertThat(transformedResult.premises.postcode).isEqualTo(domainResult.getPremisesPostcode())
+      assertThat(transformedResult.room.id).isEqualTo(domainResult.getRoomId())
+      assertThat(transformedResult.room.name).isEqualTo(domainResult.getRoomName())
+      assertThat(transformedResult.bed.id).isEqualTo(domainResult.getBedId())
+      assertThat(transformedResult.bed.name).isEqualTo(domainResult.getBedName())
     }
+  }
+
+  private fun buildBookingSearchData(): Pair<List<TestBookingSearchResult>, List<BookingSearchResultDto>> {
+    val domainResults = listOf(
+      TestBookingSearchResult()
+        .withPersonName(randomStringMultiCaseWithNumbers(6))
+        .withBookingStatus(BookingStatus.provisional),
+      TestBookingSearchResult()
+        .withBookingStatus(BookingStatus.awaitingMinusArrival),
+      TestBookingSearchResult()
+        .withPersonName(randomStringMultiCaseWithNumbers(6))
+        .withBookingStatus(BookingStatus.confirmed),
+      TestBookingSearchResult()
+        .withBookingStatus(BookingStatus.notMinusArrived),
+      TestBookingSearchResult()
+        .withPersonName(randomStringMultiCaseWithNumbers(6))
+        .withBookingStatus(BookingStatus.arrived),
+      TestBookingSearchResult()
+        .withBookingStatus(BookingStatus.departed),
+      TestBookingSearchResult()
+        .withPersonName(randomStringMultiCaseWithNumbers(6))
+        .withBookingStatus(BookingStatus.cancelled),
+    )
+    val bookingSearchResultDtos = domainResults.mapNotNull { rs ->
+      BookingSearchResultDto(
+        rs.getPersonName(),
+        rs.getPersonCrn(),
+        rs.getBookingId(),
+        rs.getBookingStatus(),
+        rs.getBookingStartDate(),
+        rs.getBookingEndDate(),
+        OffsetDateTime.ofInstant(rs.getBookingCreatedAt().toInstant(), ZoneOffset.UTC),
+        rs.getPremisesId(),
+        rs.getPremisesName(),
+        rs.getPremisesAddressLine1(),
+        rs.getPremisesAddressLine2(),
+        rs.getPremisesTown(),
+        rs.getPremisesPostcode(),
+        rs.getRoomId(),
+        rs.getRoomName(),
+        rs.getBedId(),
+        rs.getBedName(),
+      )
+    }
+    return Pair(domainResults, bookingSearchResultDtos)
   }
 }
