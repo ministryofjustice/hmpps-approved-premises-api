@@ -68,6 +68,11 @@ spring:
             client-id: approved-premises-api
             client-secret: clientsecret
             authorization-grant-type: client_credentials
+          probation-offender-search-api:
+            provider: hmpps-auth
+            client-id: approved-premises-api
+            client-secret: clientsecret
+            authorization-grant-type: client_credentials
           case-notes:
             provider: hmpps-auth
             client-id: approved-premises-api
@@ -140,6 +145,8 @@ services:
     base-url: http://localhost:9575
   manage-users-api:
     base-url: http://localhost:9560
+  probation-offender-search-api:
+    base-url: http://localhost:9004
   case-notes:
     base-url: http://localhost:9004
   ap-delius-context-api:

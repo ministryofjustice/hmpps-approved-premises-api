@@ -241,11 +241,11 @@ paths:
     get:
       tags:
         - People operations
-      summary: Searches for a Person by their CRN
+      summary: Searches for a Person by their Prison Number (NOMIS ID)
       parameters:
-        - name: crn
+        - name: nomsNumber
           in: query
-          description: CRN to search for
+          description: Prison Number to search for
           required: true
           schema:
             type: string
