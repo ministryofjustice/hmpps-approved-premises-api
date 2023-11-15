@@ -123,9 +123,9 @@ class ApplicationService(
     page: Int?,
     crn: String?,
     sortDirection: SortDirection?,
-    applicationSortField: ApplicationSortField?,
+    sortBy: ApplicationSortField?,
   ): Pair<List<ApprovedPremisesApplicationSummary>, PaginationMetadata?> {
-    val sortField = when (applicationSortField) {
+    val sortField = when (sortBy) {
       ApplicationSortField.arrivalDate -> "arrivalDate"
       ApplicationSortField.createdAt -> "a.created_at"
       ApplicationSortField.tier -> "tier"

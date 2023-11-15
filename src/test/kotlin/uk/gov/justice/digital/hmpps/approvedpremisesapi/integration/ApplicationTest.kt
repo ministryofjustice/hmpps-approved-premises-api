@@ -2857,7 +2857,7 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           val rawResponseBody = webTestClient.get()
-            .uri("/applications/all?page=1&sortDirection=desc&applicationSortField=createdAt")
+            .uri("/applications/all?page=1&sortDirection=desc&sortBy=createdAt")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
@@ -2918,7 +2918,7 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           val rawResponseBody = webTestClient.get()
-            .uri("/applications/all?page=1&sortDirection=asc&applicationSortField=createdAt")
+            .uri("/applications/all?page=1&sortDirection=asc&sortBy=createdAt")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
@@ -2979,7 +2979,7 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           val rawResponseBody = webTestClient.get()
-            .uri("/applications/all?page=1&sortDirection=desc&applicationSortField=arrivalDate")
+            .uri("/applications/all?page=1&sortDirection=desc&sortBy=arrivalDate")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
@@ -3040,7 +3040,7 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           val rawResponseBody = webTestClient.get()
-            .uri("/applications/all?page=1&sortDirection=asc&applicationSortField=arrivalDate")
+            .uri("/applications/all?page=1&sortDirection=asc&sortBy=arrivalDate")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
@@ -3138,7 +3138,7 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           val rawResponseBody = webTestClient.get()
-            .uri("/applications/all?page=1&sortDirection=asc&applicationSortField=tier")
+            .uri("/applications/all?page=1&sortDirection=asc&sortBy=tier")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
@@ -3236,7 +3236,7 @@ class ApplicationTest : IntegrationTestBase() {
           }
 
           val rawResponseBody = webTestClient.get()
-            .uri("/applications/all?page=1&sortDirection=desc&applicationSortField=tier")
+            .uri("/applications/all?page=1&sortDirection=desc&sortBy=tier")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()

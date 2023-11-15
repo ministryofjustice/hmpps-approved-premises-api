@@ -84,14 +84,14 @@ class ApplicationsController(
     page: Int?,
     crn: String?,
     sortDirection: SortDirection?,
-    applicationSortField: ApplicationSortField?,
+    sortBy: ApplicationSortField?,
   ): ResponseEntity<List<ApplicationSummary>> {
     if (xServiceName != ServiceName.approvedPremises) {
       throw ForbiddenProblem()
     }
     val user = userService.getUserForRequest()
     val (applications, metadata) =
-      applicationService.getAllApprovedPremisesApplications(page, crn, sortDirection, applicationSortField)
+      applicationService.getAllApprovedPremisesApplications(page, crn, sortDirection, sortBy)
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
