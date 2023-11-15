@@ -4,7 +4,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -34,7 +33,6 @@ class AssociatedPlacementRequestsHaveAtLeastOneBookingError(message: String) : E
 @Service
 class PlacementApplicationService(
   private val placementApplicationRepository: PlacementApplicationRepository,
-  private val applicationRepository: ApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val userService: UserService,
   private val placementDateRepository: PlacementDateRepository,
@@ -49,8 +47,7 @@ class PlacementApplicationService(
   }
 
   fun getAllPlacementApplicationEntitiesForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
-    val application = applicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
-    return placementApplicationRepository.findAllByApplicationAndDecisionIsNullOrDecisionIsNot(application, PlacementApplicationDecision.WITHDRAWN_BY_PP)
+    return placementApplicationRepository.findAllSubmittedAndNonWithdrawnApplicationsForApplicationId(applicationId)
   }
 
   fun createApplication(
