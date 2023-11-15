@@ -8,6 +8,7 @@ import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
 import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.within
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -101,6 +102,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class ApplicationTest : IntegrationTestBase() {
@@ -1147,27 +1149,39 @@ class ApplicationTest : IntegrationTestBase() {
           withPermissiveSchema()
         },
         decision = decision,
-      ) { placementApplicationEntity ->
+        submittedAt = OffsetDateTime.now(),
+      ) { _ ->
+        `Given a Placement Application`(
+          createdByUser = user,
+          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          },
+          decision = decision,
+          submittedAt = OffsetDateTime.now(),
+        ) { placementApplicationEntity ->
 
-        val applicationId = placementApplicationEntity.application.id
-        val rawResult = webTestClient.get()
-          .uri("/applications/$applicationId/placement-applications")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
+          val applicationId = placementApplicationEntity.application.id
+          val rawResult = webTestClient.get()
+            .uri("/applications/$applicationId/placement-applications")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
 
-        val body = objectMapper.readValue(rawResult, object : TypeReference<List<PlacementApplication>>() {})
-        assertThat(body[0].id).isEqualTo(placementApplicationEntity.id)
-        assertThat(body[0].applicationId).isEqualTo(placementApplicationEntity.application.id)
-        assertThat(body[0].createdByUserId).isEqualTo(placementApplicationEntity.createdByUser.id)
-        assertThat(body[0].schemaVersion).isEqualTo(placementApplicationEntity.schemaVersion.id)
-        assertThat(body[0].createdAt).isEqualTo(placementApplicationEntity.createdAt.toInstant())
-        assertThat(body[0].submittedAt).isNull()
+          val body = objectMapper.readValue(rawResult, object : TypeReference<List<PlacementApplication>>() {})
+
+          assertThat(body.size).isEqualTo(1)
+          assertThat(body[0].id).isEqualTo(placementApplicationEntity.id)
+          assertThat(body[0].applicationId).isEqualTo(placementApplicationEntity.application.id)
+          assertThat(body[0].createdByUserId).isEqualTo(placementApplicationEntity.createdByUser.id)
+          assertThat(body[0].schemaVersion).isEqualTo(placementApplicationEntity.schemaVersion.id)
+          assertThat(body[0].createdAt).isEqualTo(placementApplicationEntity.createdAt.toInstant())
+          assertThat(body[0].submittedAt).isCloseTo(placementApplicationEntity.submittedAt!!.toInstant(), within(1, ChronoUnit.SECONDS))
+        }
       }
     }
   }
@@ -1181,6 +1195,35 @@ class ApplicationTest : IntegrationTestBase() {
           withPermissiveSchema()
         },
         decision = PlacementApplicationDecision.WITHDRAWN_BY_PP,
+      ) { placementApplicationEntity ->
+        val applicationId = placementApplicationEntity.application.id
+        val rawResult = webTestClient.get()
+          .uri("/applications/$applicationId/placement-applications")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val body = objectMapper.readValue(rawResult, object : TypeReference<List<PlacementApplication>>() {})
+        assertThat(body.size).isEqualTo(0)
+      }
+    }
+  }
+
+  @Test
+  fun `Get placement applications does not return unsubmitted placement applications`() {
+    `Given a User` { user, jwt ->
+      `Given a Placement Application`(
+        createdByUser = user,
+        schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        },
+        decision = PlacementApplicationDecision.WITHDRAWN_BY_PP,
+        submittedAt = null,
       ) { placementApplicationEntity ->
         val applicationId = placementApplicationEntity.application.id
         val rawResult = webTestClient.get()
