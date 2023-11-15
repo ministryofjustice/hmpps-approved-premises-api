@@ -17,16 +17,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ProbationOffenderSearchApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshRatings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import java.time.LocalDate
@@ -36,6 +40,7 @@ class OffenderServiceTest {
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
+  private val mockProbationOffenderSearchClient = mockk<ProbationOffenderSearchApiClient>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -46,6 +51,7 @@ class OffenderServiceTest {
   private val offenderService = OffenderService(
     mockCommunityApiClient,
     mockPrisonsApiClient,
+    mockProbationOffenderSearchClient,
     mockApOASysContextApiClient,
   )
 
@@ -161,6 +167,120 @@ class OffenderServiceTest {
 
       val exception = assertThrows<RuntimeException> { offenderService.getOffenderByCrn("a-crn") }
       assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/a-crn: 400 BAD_REQUEST")
+    }
+  }
+
+  @Nested
+  inner class GetPersonByNomsNumber {
+    val nomsNumber = "DEF123"
+
+    @Test
+    fun `returns NotFound result when Probation Offender Search returns 404`() {
+      every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns StatusCode(HttpMethod.POST, "/search", HttpStatus.NOT_FOUND, null)
+
+      assertThat(offenderService.getPersonByNomsNumber(nomsNumber) is ProbationOffenderSearchResult.NotFound).isTrue
+    }
+
+    @Test
+    fun `returns NotFound result when Probation Offender Search does not return a matching offender`() {
+      every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns ClientResult.Success(HttpStatus.OK, emptyList())
+
+      assertThat(offenderService.getPersonByNomsNumber(nomsNumber) is ProbationOffenderSearchResult.NotFound).isTrue
+    }
+
+    @Test
+    fun `returns Forbidden result when the matching offender has exclusion`() {
+      val offenderDetails = ProbationOffenderDetailFactory()
+        .withCurrentExclusion(true)
+        .withOtherIds(otherIds = IDs(nomsNumber))
+        .produce()
+
+      every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns ClientResult.Success(HttpStatus.OK, listOf(offenderDetails))
+
+      assertThat(offenderService.getPersonByNomsNumber(nomsNumber) is ProbationOffenderSearchResult.Forbidden).isTrue
+    }
+
+    @Test
+    fun `returns Forbidden result when the matching offender has restriction`() {
+      val offenderDetails = ProbationOffenderDetailFactory()
+        .withCurrentRestriction(true)
+        .withOtherIds(otherIds = IDs(nomsNumber))
+        .produce()
+
+      every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns ClientResult.Success(HttpStatus.OK, listOf(offenderDetails))
+
+      assertThat(offenderService.getPersonByNomsNumber(nomsNumber) is ProbationOffenderSearchResult.Forbidden).isTrue
+    }
+
+    @Test
+    fun `returns Unknown if Probation Offender Search responds with a 500`() {
+      every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns StatusCode(HttpMethod.GET, "/search", HttpStatus.INTERNAL_SERVER_ERROR, null, true)
+
+      val result = offenderService.getPersonByNomsNumber(nomsNumber)
+
+      assertThat(result is ProbationOffenderSearchResult.Unknown).isTrue
+      result as ProbationOffenderSearchResult.Unknown
+      assertThat(result.throwable).isNotNull()
+    }
+
+    @Test
+    fun `returns Full Person when Probation Offender Search and Prison API returns a matching offender`() {
+      val crn = "ABC123"
+
+      val offenderDetails = ProbationOffenderDetailFactory()
+        .withOtherIds(otherIds = IDs(crn = crn, nomsNumber = nomsNumber))
+        .produce()
+
+      every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = listOf(offenderDetails),
+      )
+
+      val inmateDetail = InmateDetailFactory()
+        .withOffenderNo(nomsNumber)
+        .produce()
+
+      every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = inmateDetail,
+      )
+
+      val result = offenderService.getPersonByNomsNumber(nomsNumber)
+
+      assertThat(result is ProbationOffenderSearchResult.Success.Full).isTrue
+      result as ProbationOffenderSearchResult.Success.Full
+      assertThat(result.probationOffenderDetail.otherIds.crn).isEqualTo(crn)
+      assertThat(result.probationOffenderDetail.otherIds.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(result.inmateDetail).isEqualTo(inmateDetail)
+      assertThat(result.inmateDetail?.offenderNo).isEqualTo(nomsNumber)
+    }
+
+    @Test
+    fun `does not return inmate details if Prison API does not find a matching offender`() {
+      val crn = "ABC123"
+
+      val offenderDetails = ProbationOffenderDetailFactory()
+        .withOtherIds(otherIds = IDs(crn = crn, nomsNumber = nomsNumber))
+        .produce()
+
+      every { mockProbationOffenderSearchClient.searchOffenderByNomsNumber(nomsNumber) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = listOf(offenderDetails),
+      )
+
+      val inmateDetail = InmateDetailFactory()
+        .withOffenderNo(nomsNumber)
+        .produce()
+
+      every { mockPrisonsApiClient.getInmateDetailsWithWait(nomsNumber) } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber", HttpStatus.BAD_GATEWAY, null)
+
+      val result = offenderService.getPersonByNomsNumber(nomsNumber)
+
+      assertThat(result is ProbationOffenderSearchResult.Success.Full).isTrue
+      result as ProbationOffenderSearchResult.Success.Full
+      assertThat(result.probationOffenderDetail.otherIds.crn).isEqualTo(crn)
+      assertThat(result.probationOffenderDetail.otherIds.nomsNumber).isEqualTo(offenderDetails.otherIds.nomsNumber)
+      assertThat(result.inmateDetail).isNull()
     }
   }
 
