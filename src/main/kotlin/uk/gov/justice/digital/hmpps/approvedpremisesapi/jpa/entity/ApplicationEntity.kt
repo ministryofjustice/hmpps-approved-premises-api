@@ -66,7 +66,7 @@ WHERE apa.is_inapplicable IS NOT TRUE
 AND (
       :crnOrName IS NULL OR 
       (
-        a.crn = UPPER(:crnOrName) OR apa.name LIKE UPPER('%' || :crnOrName || '%')
+        a.crn = UPPER(:crnOrName) OR UPPER(apa.name) LIKE UPPER('%' || :crnOrName || '%')
       )
 )
 AND (
@@ -82,7 +82,7 @@ AND (
       AND (
         :crnOrName IS NULL OR 
         (
-          a.crn = UPPER(:crnOrName) OR apa.name LIKE UPPER('%' || :crnOrName || '%')
+          a.crn = UPPER(:crnOrName) OR UPPER(apa.name) LIKE UPPER('%' || :crnOrName || '%')
         )
       )
       AND (

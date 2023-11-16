@@ -3359,6 +3359,63 @@ class ApplicationTest : IntegrationTestBase() {
       }
     }
 
+    @Test
+    fun `Get applications all returns 200 correct body for a given name`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given an Offender` { offenderDetails2, _ ->
+
+            val crn1 = offenderDetails.otherIds.crn
+
+            val crn2 = offenderDetails2.otherIds.crn
+
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
+              withApplicationSchema(applicationSchema)
+              withName("Gareth")
+              withCrn(crn1)
+              withCreatedByUser(userEntity)
+              withStatus(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
+            }
+
+            approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
+              withApplicationSchema(applicationSchema)
+              withName("Stu")
+              withCrn(crn2)
+              withCreatedByUser(userEntity)
+              withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+            }
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/applications/all?page=1&sortDirection=desc&crnOrName=Gareth")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(
+                rawResponseBody,
+                object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
+              )
+
+            assertThat(responseBody.count()).isEqualTo(10)
+          }
+        }
+      }
+    }
+
     private fun createTwelveApplications(crn: String, user: UserEntity) {
       val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
         withPermissiveSchema()
