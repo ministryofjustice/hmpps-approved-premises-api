@@ -57,6 +57,7 @@ SELECT
     apa.is_pipe_application as isPipeApplication,
     apa.arrival_date as arrivalDate,
     CAST(apa.risk_ratings AS TEXT) as riskRatings,
+    apa.status as status,
     apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier
 FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
@@ -67,6 +68,9 @@ AND (
       (
         a.crn = UPPER(:crnOrName) OR apa.name LIKE UPPER('%' || :crnOrName || '%')
       )
+)
+AND (
+    :status IS NULL OR (apa.status = :#{#status?.toString()})
 )
 """,
     countQuery = """
@@ -81,12 +85,16 @@ AND (
           a.crn = UPPER(:crnOrName) OR apa.name LIKE UPPER('%' || :crnOrName || '%')
         )
       )
+      AND (
+          :status IS NULL OR (apa.status = :#{#status?.toString()})
+      )
     """,
     nativeQuery = true,
   )
   fun findAllApprovedPremisesSummaries(
     pageable: Pageable?,
     crnOrName: String?,
+    status: ApprovedPremisesApplicationStatus?,
   ): Page<ApprovedPremisesApplicationSummary>
 
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")

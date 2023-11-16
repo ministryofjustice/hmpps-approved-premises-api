@@ -1717,6 +1717,11 @@ paths:
           description: The direction to sort the results by. If blank, will sort in descending order
           schema:
             $ref: '#/components/schemas/SortDirection'
+        - name: status
+          in: query
+          description: The application status
+          schema:
+            $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
         - name: sortBy
           in: query
           description: The field to sort the results by.
@@ -5940,6 +5945,20 @@ components:
         - placed
         - inapplicable
         - withdrawn
+    ApprovedPremisesApplicationStatus:
+      type: string
+      enum:
+        - started
+        - submitted
+        - rejected
+        - awaitingAssesment
+        - unallocatedAssesment
+        - assesmentInProgress
+        - awaitingPlacement
+        - placementAllocated
+        - inapplicable
+        - withdrawn
+        - requestedFurtherInformation
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
     ApplicationTimelineNote:

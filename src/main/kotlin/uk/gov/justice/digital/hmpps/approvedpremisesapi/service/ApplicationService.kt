@@ -123,6 +123,7 @@ class ApplicationService(
     page: Int?,
     crnOrName: String?,
     sortDirection: SortDirection?,
+    status: ApprovedPremisesApplicationStatus?,
     sortBy: ApplicationSortField?,
   ): Pair<List<ApprovedPremisesApplicationSummary>, PaginationMetadata?> {
     val sortField = when (sortBy) {
@@ -136,6 +137,7 @@ class ApplicationService(
     val response = applicationRepository.findAllApprovedPremisesSummaries(
       pageable,
       crnOrName,
+      status,
     )
 
     return Pair(response.content, getMetadata(response, page))
