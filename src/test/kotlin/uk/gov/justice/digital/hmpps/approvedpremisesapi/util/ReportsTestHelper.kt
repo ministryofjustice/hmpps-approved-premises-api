@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportData
 import java.sql.Timestamp
 import java.time.LocalDate
@@ -53,3 +55,9 @@ fun List<BookingEntity>.toBookingsReportData(): List<BookingsReportData> = this
     }
   }
   .sortedBy { it.bookingId }
+
+fun List<BookingEntity>.toBookingsReportDataAndPersonInfo(): List<BookingsReportDataAndPersonInfo> =
+  this.toBookingsReportDataAndPersonInfo { PersonSummaryInfoResult.Unknown(it) }
+
+fun List<BookingEntity>.toBookingsReportDataAndPersonInfo(configuration: (crn: String) -> PersonSummaryInfoResult): List<BookingsReportDataAndPersonInfo> =
+  this.toBookingsReportData().map { BookingsReportDataAndPersonInfo(it, configuration(it.crn)) }

@@ -1,51 +1,71 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportData
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
-class BookingsReportGenerator : ReportGenerator<BookingsReportData, BookingsReportRow, BookingsReportProperties>(BookingsReportRow::class) {
+class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo, BookingsReportRow, BookingsReportProperties>(BookingsReportRow::class) {
 
-  override val convert: BookingsReportData.(properties: BookingsReportProperties) -> List<BookingsReportRow> = {
+  override val convert: BookingsReportDataAndPersonInfo.(properties: BookingsReportProperties) -> List<BookingsReportRow> = {
+    val booking = this.bookingsReportData
+    val personInfo = this.personInfoResult
+
     listOf(
       BookingsReportRow(
-        bookingId = this.bookingId,
-        referralId = this.referralId,
-        referralDate = this.referralDate,
-        riskOfSeriousHarm = this.riskOfSeriousHarm,
-        sexOffender = this.sexOffender,
-        needForAccessibleProperty = this.needForAccessibleProperty,
-        historyOfArsonOffence = this.historyOfArsonOffence,
-        dutyToReferMade = this.dutyToReferMade,
-        dateDutyToReferMade = this.dateDutyToReferMade,
-        isReferralEligibleForCas3 = this.referralEligibleForCas3,
-        referralEligibilityReason = this.referralEligibilityReason,
-        probationRegion = this.probationRegion,
-        crn = this.crn,
-        offerAccepted = this.confirmationId != null,
-        isCancelled = this.cancellationId != null,
-        cancellationReason = this.cancellationReason,
-        startDate = this.startDate,
-        endDate = this.endDate,
-        actualEndDate = this.actualEndDate?.toLocalDateTime()?.toLocalDate(),
-        currentNightsStayed = if (this.actualEndDate != null) {
+        bookingId = booking.bookingId,
+        referralId = booking.referralId,
+        referralDate = booking.referralDate,
+        personName = personInfo.tryGetDetails {
+          val nameParts = listOf(it.name.forename) + it.name.middleNames + it.name.surname
+          nameParts.joinToString(" ")
+        },
+        pncNumber = null,
+        gender = personInfo.tryGetDetails { it.gender },
+        ethnicity = personInfo.tryGetDetails { it.profile?.ethnicity },
+        dateOfBirth = personInfo.tryGetDetails { it.dateOfBirth },
+        riskOfSeriousHarm = booking.riskOfSeriousHarm,
+        sexOffender = booking.sexOffender,
+        needForAccessibleProperty = booking.needForAccessibleProperty,
+        historyOfArsonOffence = booking.historyOfArsonOffence,
+        dutyToReferMade = booking.dutyToReferMade,
+        dateDutyToReferMade = booking.dateDutyToReferMade,
+        isReferralEligibleForCas3 = booking.referralEligibleForCas3,
+        referralEligibilityReason = booking.referralEligibilityReason,
+        probationRegion = booking.probationRegion,
+        crn = booking.crn,
+        offerAccepted = booking.confirmationId != null,
+        isCancelled = booking.cancellationId != null,
+        cancellationReason = booking.cancellationReason,
+        startDate = booking.startDate,
+        endDate = booking.endDate,
+        actualEndDate = booking.actualEndDate?.toLocalDateTime()?.toLocalDate(),
+        currentNightsStayed = if (booking.actualEndDate != null) {
           null
         } else {
-          this.startDate?.let { ChronoUnit.DAYS.between(it, LocalDate.now()).toInt() }
+          booking.startDate?.let { ChronoUnit.DAYS.between(it, LocalDate.now()).toInt() }
         },
-        actualNightsStayed = if (this.startDate == null) {
+        actualNightsStayed = if (booking.startDate == null) {
           null
         } else {
-          this.actualEndDate?.let { ChronoUnit.DAYS.between(this.startDate, it.toLocalDateTime()?.toLocalDate()).toInt() }
+          booking.actualEndDate?.let { ChronoUnit.DAYS.between(booking.startDate, it.toLocalDateTime()?.toLocalDate()).toInt() }
         },
-        accommodationOutcome = this.accommodationOutcome,
+        accommodationOutcome = booking.accommodationOutcome,
       ),
     )
   }
 
-  override fun filter(properties: BookingsReportProperties): (BookingsReportData) -> Boolean = {
+  override fun filter(properties: BookingsReportProperties): (BookingsReportDataAndPersonInfo) -> Boolean = {
     true
+  }
+
+  private fun<V> PersonSummaryInfoResult.tryGetDetails(value: (CaseSummary) -> V): V? {
+    return when (this) {
+      is PersonSummaryInfoResult.Success.Full -> value(this.summary)
+      else -> null
+    }
   }
 }
