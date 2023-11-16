@@ -82,7 +82,7 @@ class ApplicationsController(
   override fun applicationsAllGet(
     xServiceName: ServiceName,
     page: Int?,
-    crn: String?,
+    crnOrName: String?,
     sortDirection: SortDirection?,
     sortBy: ApplicationSortField?,
   ): ResponseEntity<List<ApplicationSummary>> {
@@ -91,7 +91,12 @@ class ApplicationsController(
     }
     val user = userService.getUserForRequest()
     val (applications, metadata) =
-      applicationService.getAllApprovedPremisesApplications(page, crn, sortDirection, sortBy)
+      applicationService.getAllApprovedPremisesApplications(
+        page,
+        crnOrName,
+        sortDirection,
+        sortBy,
+      )
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),

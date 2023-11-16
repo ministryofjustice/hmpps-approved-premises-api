@@ -2705,7 +2705,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get applications all returns twenty items if no page parameter passed`() {
+    fun `Get applications all returns twelve items if no page parameter passed`() {
       `Given a User` { userEntity, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           createTwelveApplications(offenderDetails.otherIds.crn, userEntity)
@@ -2772,7 +2772,7 @@ class ApplicationTest : IntegrationTestBase() {
           createTwelveApplications(crn, userEntity)
 
           val rawResponseBody = webTestClient.get()
-            .uri("/applications/all?crn=$crn")
+            .uri("/applications/all?crnOrName=$crn")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
@@ -2806,7 +2806,7 @@ class ApplicationTest : IntegrationTestBase() {
             createTwelveApplications(crn2, userEntity)
 
             val rawResponseBody = webTestClient.get()
-              .uri("/applications/all?crn=$crn2")
+              .uri("/applications/all?crnOrName=$crn2")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
@@ -2841,7 +2841,7 @@ class ApplicationTest : IntegrationTestBase() {
             createTwelveApplications(crn2, userEntity)
 
             val rawResponseBody = webTestClient.get()
-              .uri("/applications/all?page=2&sortDirection=desc&crn=$crn2")
+              .uri("/applications/all?page=2&sortDirection=desc&crnOrName=$crn2")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()

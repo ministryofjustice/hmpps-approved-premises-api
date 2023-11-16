@@ -61,54 +61,33 @@ SELECT
 FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
 LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
-AND apa.is_inapplicable IS NOT TRUE 
+WHERE apa.is_inapplicable IS NOT TRUE 
+AND (
+      :crnOrName IS NULL OR 
+      (
+        a.crn = UPPER(:crnOrName) OR apa.name LIKE UPPER('%' || :crnOrName || '%')
+      )
+)
 """,
     countQuery = """
     SELECT COUNT(*)
       FROM approved_premises_applications apa
       LEFT JOIN applications a ON a.id = apa.id
       LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
-      AND apa.is_inapplicable IS NOT TRUE 
+      WHERE apa.is_inapplicable IS NOT TRUE
+      AND (
+        :crnOrName IS NULL OR 
+        (
+          a.crn = UPPER(:crnOrName) OR apa.name LIKE UPPER('%' || :crnOrName || '%')
+        )
+      )
     """,
     nativeQuery = true,
   )
-  fun findAllApprovedPremisesSummaries(pageable: Pageable?): Page<ApprovedPremisesApplicationSummary>
-
-  @Query(
-    """
-SELECT
-    CAST(a.id AS TEXT) as id,
-    a.crn,
-    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
-    a.created_at as createdAt,
-    a.submitted_at as submittedAt,
-    ass.submitted_at as latestAssessmentSubmittedAt,
-    ass.decision as latestAssessmentDecision,
-    (SELECT COUNT(1) FROM assessment_clarification_notes acn WHERE acn.assessment_id = ass.id AND acn.response IS NULL) > 0 as latestAssessmentHasClarificationNotesWithoutResponse,
-    (SELECT COUNT(1) FROM placement_requests pr WHERE pr.application_id = apa.id) > 0 as hasPlacementRequest,
-    (SELECT COUNT(1) FROM bookings b WHERE b.application_id = apa.id) > 0 as hasBooking,
-    apa.is_womens_application as isWomensApplication,
-    apa.is_pipe_application as isPipeApplication,
-    apa.arrival_date as arrivalDate,
-    CAST(apa.risk_ratings AS TEXT) as riskRatings,
-    apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier
-FROM approved_premises_applications apa
-LEFT JOIN applications a ON a.id = apa.id
-LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
-WHERE a.crn = :crn 
-AND apa.is_inapplicable IS NOT TRUE 
-""",
-    countQuery = """
-    SELECT COUNT(*)
-      FROM approved_premises_applications apa
-      LEFT JOIN applications a ON a.id = apa.id
-      LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
-      WHERE a.crn = :crn 
-      AND apa.is_inapplicable IS NOT TRUE 
-    """,
-    nativeQuery = true,
-  )
-  fun findAllApprovedPremisesSummariesFilteredByCrn(pageable: Pageable?, crn: String): Page<ApprovedPremisesApplicationSummary>
+  fun findAllApprovedPremisesSummaries(
+    pageable: Pageable?,
+    crnOrName: String?,
+  ): Page<ApprovedPremisesApplicationSummary>
 
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")
   fun <T : ApplicationEntity> findAllByCreatedByUser_Id(id: UUID, type: Class<T>): List<ApplicationEntity>

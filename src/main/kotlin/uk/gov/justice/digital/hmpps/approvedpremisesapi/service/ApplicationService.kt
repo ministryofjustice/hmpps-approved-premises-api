@@ -121,7 +121,7 @@ class ApplicationService(
 
   fun getAllApprovedPremisesApplications(
     page: Int?,
-    crn: String?,
+    crnOrName: String?,
     sortDirection: SortDirection?,
     sortBy: ApplicationSortField?,
   ): Pair<List<ApprovedPremisesApplicationSummary>, PaginationMetadata?> {
@@ -133,11 +133,10 @@ class ApplicationService(
     }
     val pageable = getPageable(sortField, sortDirection, page)
 
-    val response = if (crn == null) {
-      applicationRepository.findAllApprovedPremisesSummaries(pageable)
-    } else {
-      applicationRepository.findAllApprovedPremisesSummariesFilteredByCrn(pageable, crn)
-    }
+    val response = applicationRepository.findAllApprovedPremisesSummaries(
+      pageable,
+      crnOrName,
+    )
 
     return Pair(response.content, getMetadata(response, page))
   }
