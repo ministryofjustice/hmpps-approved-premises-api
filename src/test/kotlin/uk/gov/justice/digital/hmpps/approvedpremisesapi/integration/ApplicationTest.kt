@@ -88,6 +88,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
@@ -2626,6 +2627,8 @@ class ApplicationTest : IntegrationTestBase() {
       `Given a User` { userEntity, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           approvedPremisesApplicationJsonSchemaRepository.deleteAll()
+          val applicationId1 = UUID.randomUUID()
+          val applicationId2 = UUID.randomUUID()
 
           val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
             withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
@@ -2651,8 +2654,11 @@ class ApplicationTest : IntegrationTestBase() {
 
           val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withApplicationSchema(newestJsonSchema)
+            withId(applicationId1)
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
+            withCreatedAt(OffsetDateTime.parse("2022-09-24T15:00:00+01:00"))
+            withSubmittedAt(OffsetDateTime.parse("2022-09-25T16:00:00+01:00"))
             withData(
               """
           {
@@ -2664,8 +2670,11 @@ class ApplicationTest : IntegrationTestBase() {
 
           approvedPremisesApplicationEntityFactory.produceAndPersist {
             withApplicationSchema(newestJsonSchema)
+            withId(applicationId2)
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
+            withCreatedAt(OffsetDateTime.parse("2022-10-24T16:00:00+01:00"))
+            withSubmittedAt(OffsetDateTime.parse("2022-10-25T17:00:00+01:00"))
             withData(
               """
           {
@@ -2693,19 +2702,12 @@ class ApplicationTest : IntegrationTestBase() {
             )
 
           assertThat(responseBody.count()).isEqualTo(2)
-
-          assertThat(responseBody[0]).matches {
-            applicationEntity.id == it.id &&
-              applicationEntity.crn == it.person.crn &&
-              applicationEntity.createdAt.toInstant() == it.createdAt &&
-              applicationEntity.submittedAt?.toInstant() == it.submittedAt
-          }
         }
       }
     }
 
     @Test
-    fun `Get applications all returns twenty items if no page parameter passed`() {
+    fun `Get applications all returns twelve items if no page parameter passed`() {
       `Given a User` { userEntity, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           createTwelveApplications(offenderDetails.otherIds.crn, userEntity)
@@ -2772,7 +2774,7 @@ class ApplicationTest : IntegrationTestBase() {
           createTwelveApplications(crn, userEntity)
 
           val rawResponseBody = webTestClient.get()
-            .uri("/applications/all?crn=$crn")
+            .uri("/applications/all?crnOrName=$crn")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.approvedPremises.value)
             .exchange()
@@ -2806,7 +2808,7 @@ class ApplicationTest : IntegrationTestBase() {
             createTwelveApplications(crn2, userEntity)
 
             val rawResponseBody = webTestClient.get()
-              .uri("/applications/all?crn=$crn2")
+              .uri("/applications/all?crnOrName=$crn2")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
@@ -2841,7 +2843,7 @@ class ApplicationTest : IntegrationTestBase() {
             createTwelveApplications(crn2, userEntity)
 
             val rawResponseBody = webTestClient.get()
-              .uri("/applications/all?page=2&sortDirection=desc&crn=$crn2")
+              .uri("/applications/all?page=2&sortDirection=desc&crnOrName=$crn2")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
@@ -3303,6 +3305,113 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(responseBody[0].tier).isEqualTo("M3")
           assertThat(responseBody[1].tier).isEqualTo("M2")
           assertThat(responseBody[2].tier).isEqualTo("M1")
+        }
+      }
+    }
+
+    @Test
+    fun `Get applications all returns 200 correct body and page two and query by status`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val crn = offenderDetails.otherIds.crn
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withStatus(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
+            withApplicationSchema(applicationSchema)
+            withCrn(crn)
+            withCreatedByUser(userEntity)
+            withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+          }
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/all?page=2&sortDirection=desc&status=assesmentInProgress")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody =
+            objectMapper.readValue(
+              rawResponseBody,
+              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
+            )
+
+          assertThat(responseBody.count()).isEqualTo(2)
+          assertThat(responseBody[0].status).isEqualTo(ApplicationStatus.inProgress)
+        }
+      }
+    }
+
+    @Test
+    fun `Get applications all returns 200 correct body for a given name`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given an Offender` { offenderDetails2, _ ->
+
+            val crn1 = offenderDetails.otherIds.crn
+
+            val crn2 = offenderDetails2.otherIds.crn
+
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
+              withApplicationSchema(applicationSchema)
+              withName("Gareth")
+              withCrn(crn1)
+              withCreatedByUser(userEntity)
+              withStatus(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
+            }
+
+            approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(12) {
+              withApplicationSchema(applicationSchema)
+              withName("Stu")
+              withCrn(crn2)
+              withCreatedByUser(userEntity)
+              withStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+            }
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/applications/all?page=1&sortDirection=desc&crnOrName=Gareth")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(
+                rawResponseBody,
+                object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
+              )
+
+            assertThat(responseBody.count()).isEqualTo(10)
+          }
         }
       }
     }

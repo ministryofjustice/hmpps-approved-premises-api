@@ -1843,6 +1843,20 @@ components:
         - placed
         - inapplicable
         - withdrawn
+    ApprovedPremisesApplicationStatus:
+      type: string
+      enum:
+        - started
+        - submitted
+        - rejected
+        - awaitingAssesment
+        - unallocatedAssesment
+        - assesmentInProgress
+        - awaitingPlacement
+        - placementAllocated
+        - inapplicable
+        - withdrawn
+        - requestedFurtherInformation
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
     ApplicationTimelineNote:

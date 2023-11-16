@@ -1705,7 +1705,7 @@ paths:
           description: Page number of results to return. If blank, returns all results
           schema:
             type: integer
-        - name: crn
+        - name: crnOrName
           in: query
           description: CRN of applications
           schema:
@@ -1715,6 +1715,11 @@ paths:
           description: The direction to sort the results by. If blank, will sort in descending order
           schema:
             $ref: '_shared.yml#/components/schemas/SortDirection'
+        - name: status
+          in: query
+          description: The application status
+          schema:
+            $ref: '_shared.yml#/components/schemas/ApprovedPremisesApplicationStatus'
         - name: sortBy
           in: query
           description: The field to sort the results by.
