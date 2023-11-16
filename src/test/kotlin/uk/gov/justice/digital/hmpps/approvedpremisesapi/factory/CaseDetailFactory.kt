@@ -81,6 +81,7 @@ class MappaDetailFactory : Factory<MappaDetail> {
 class CaseSummaryFactory : Factory<CaseSummary> {
   var crn: Yielded<String> = { randomStringUpperCase(10) }
   var nomsId: Yielded<String?> = { randomStringUpperCase(10) }
+  var pnc: Yielded<String?> = { randomStringUpperCase(10) }
   var name: Yielded<Name> = { NameFactory().produce() }
   var dateOfBirth: Yielded<LocalDate> = { LocalDate.now() }
   var gender: Yielded<String> = { randomStringUpperCase(10) }
@@ -94,6 +95,9 @@ class CaseSummaryFactory : Factory<CaseSummary> {
   }
   fun withNomsId(nomsId: String?) = apply {
     this.nomsId = { nomsId }
+  }
+  fun withPnc(pnc: String?) = apply {
+    this.pnc = { pnc }
   }
   fun withName(name: Name) = apply {
     this.name = { name }
@@ -144,6 +148,7 @@ class CaseSummaryFactory : Factory<CaseSummary> {
   override fun produce(): CaseSummary = CaseSummary(
     crn = this.crn(),
     nomsId = this.nomsId(),
+    pnc = this.pnc(),
     name = this.name(),
     dateOfBirth = this.dateOfBirth(),
     gender = this.gender(),

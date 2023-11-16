@@ -728,6 +728,7 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
+    val pnc = "PNC Number"
     val caseSummary = CaseSummaryFactory()
       .withName(
         NameFactory()
@@ -743,6 +744,7 @@ class BookingsReportGeneratorTest {
           .produce(),
       )
       .withDateOfBirth(LocalDate.parse("1571-12-27"))
+      .withPnc(pnc)
       .produce()
 
     val actual = reportGenerator.createReport(
@@ -753,7 +755,7 @@ class BookingsReportGeneratorTest {
     )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::personName]).isEqualTo("Johannes Kepler")
-    assertThat(actual[0][BookingsReportRow::pncNumber]).isNull()
+    assertThat(actual[0][BookingsReportRow::pncNumber]).isEqualTo(pnc)
     assertThat(actual[0][BookingsReportRow::gender]).isEqualTo("Male")
     assertThat(actual[0][BookingsReportRow::ethnicity]).isEqualTo("Other White")
     assertThat(actual[0][BookingsReportRow::dateOfBirth]).isEqualTo("1571-12-27")

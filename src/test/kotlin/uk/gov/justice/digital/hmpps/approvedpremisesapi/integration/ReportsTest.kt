@@ -145,6 +145,7 @@ class ReportsTest : IntegrationTestBase() {
 
         val caseSummary = CaseSummaryFactory()
           .fromOffenderDetails(offenderDetails)
+          .withPnc(offenderDetails.otherIds.pncNumber)
           .produce()
 
         ApDeliusContext_addResponseToUserAccessCall(
@@ -224,6 +225,7 @@ class ReportsTest : IntegrationTestBase() {
 
         val caseSummary = CaseSummaryFactory()
           .fromOffenderDetails(offenderDetails)
+          .withPnc(offenderDetails.otherIds.pncNumber)
           .produce()
 
         ApDeliusContext_addResponseToUserAccessCall(
@@ -303,6 +305,7 @@ class ReportsTest : IntegrationTestBase() {
 
         val caseSummary = CaseSummaryFactory()
           .fromOffenderDetails(offenderDetails)
+          .withPnc(offenderDetails.otherIds.pncNumber)
           .produce()
 
         ApDeliusContext_addResponseToUserAccessCall(
@@ -421,6 +424,7 @@ class ReportsTest : IntegrationTestBase() {
 
         val caseSummary = CaseSummaryFactory()
           .fromOffenderDetails(offenderDetails)
+          .withPnc(offenderDetails.otherIds.pncNumber)
           .produce()
 
         ApDeliusContext_addResponseToUserAccessCall(
@@ -514,6 +518,7 @@ class ReportsTest : IntegrationTestBase() {
 
         val caseSummary = CaseSummaryFactory()
           .fromOffenderDetails(offenderDetails)
+          .withPnc(offenderDetails.otherIds.pncNumber)
           .produce()
 
         ApDeliusContext_addResponseToUserAccessCall(
@@ -613,6 +618,7 @@ class ReportsTest : IntegrationTestBase() {
 
         val caseSummary = CaseSummaryFactory()
           .fromOffenderDetails(offenderDetails)
+          .withPnc(offenderDetails.otherIds.pncNumber)
           .produce()
 
         ApDeliusContext_addResponseToUserAccessCall(

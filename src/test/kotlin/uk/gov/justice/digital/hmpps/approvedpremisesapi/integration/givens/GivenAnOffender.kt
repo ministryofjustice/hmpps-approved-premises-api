@@ -50,6 +50,7 @@ fun IntegrationTestBase.`Given an Offender`(
       .withCrn(offenderDetails.otherIds.crn)
       .withNomsId(offenderDetails.otherIds.nomsNumber)
       .withGender(offenderDetails.gender)
+      .withPnc(offenderDetails.otherIds.pncNumber)
       .withName(
         NameFactory()
           .withForename(offenderDetails.firstName)
