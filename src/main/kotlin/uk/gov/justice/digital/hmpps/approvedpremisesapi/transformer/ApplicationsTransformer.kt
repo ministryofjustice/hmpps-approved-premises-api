@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -15,11 +14,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary as ApiApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as APIApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary as ApiApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary as ApiTemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent as APITimelineEvent
@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary as DomainCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity as DomainTemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary as DomainTemporaryAccommodationApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus as JPAApprovedPremisesApplicationStatus
 @Component
 class ApplicationsTransformer(
   private val objectMapper: ObjectMapper,
@@ -37,23 +36,23 @@ class ApplicationsTransformer(
   private val risksTransformer: RisksTransformer,
 ) {
 
-  fun transformApiApprovedPremisesApplicationStatusToJpa(approvedPremisesApplicationStatus: APIApprovedPremisesApplicationStatus?): JPAApprovedPremisesApplicationStatus? {
-    if (approvedPremisesApplicationStatus == null) return null
+  val applicationStatuses = mapOf(
+    ApiApprovedPremisesApplicationStatus.assesmentInProgress to ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS,
+    ApiApprovedPremisesApplicationStatus.started to ApprovedPremisesApplicationStatus.STARTED,
+    ApiApprovedPremisesApplicationStatus.submitted to ApprovedPremisesApplicationStatus.SUBMITTED,
+    ApiApprovedPremisesApplicationStatus.rejected to ApprovedPremisesApplicationStatus.REJECTED,
+    ApiApprovedPremisesApplicationStatus.awaitingAssesment to ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT,
+    ApiApprovedPremisesApplicationStatus.unallocatedAssesment to ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT,
+    ApiApprovedPremisesApplicationStatus.awaitingPlacement to ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
+    ApiApprovedPremisesApplicationStatus.placementAllocated to ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
+    ApiApprovedPremisesApplicationStatus.inapplicable to ApprovedPremisesApplicationStatus.INAPPLICABLE,
+    ApiApprovedPremisesApplicationStatus.withdrawn to ApprovedPremisesApplicationStatus.WITHDRAWN,
+    ApiApprovedPremisesApplicationStatus.requestedFurtherInformation to ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION,
+  )
 
-    return when (approvedPremisesApplicationStatus) {
-      APIApprovedPremisesApplicationStatus.assesmentInProgress -> JPAApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS
-      ApprovedPremisesApplicationStatus.started -> JPAApprovedPremisesApplicationStatus.STARTED
-      ApprovedPremisesApplicationStatus.submitted -> JPAApprovedPremisesApplicationStatus.SUBMITTED
-      ApprovedPremisesApplicationStatus.rejected -> JPAApprovedPremisesApplicationStatus.REJECTED
-      ApprovedPremisesApplicationStatus.awaitingAssesment -> JPAApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT
-      ApprovedPremisesApplicationStatus.unallocatedAssesment -> JPAApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT
-      ApprovedPremisesApplicationStatus.awaitingPlacement -> JPAApprovedPremisesApplicationStatus.AWAITING_PLACEMENT
-      ApprovedPremisesApplicationStatus.placementAllocated -> JPAApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED
-      ApprovedPremisesApplicationStatus.inapplicable -> JPAApprovedPremisesApplicationStatus.INAPPLICABLE
-      ApprovedPremisesApplicationStatus.withdrawn -> JPAApprovedPremisesApplicationStatus.WITHDRAWN
-      ApprovedPremisesApplicationStatus.requestedFurtherInformation -> JPAApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION
-    }
-  }
+  fun transformApiApprovedPremisesApplicationStatusToJpa(
+    apiStatus: ApiApprovedPremisesApplicationStatus?,
+  ): ApprovedPremisesApplicationStatus? = this.applicationStatuses[apiStatus]
 
   fun transformJpaToApi(jpa: ApplicationEntity, personInfo: PersonInfoResult): Application {
     val latestAssessment = jpa.getLatestAssessment()
@@ -184,31 +183,26 @@ class ApplicationsTransformer(
     }
   }
 
-  private fun getStatusFromSummary(entity: DomainApplicationSummary): ApplicationStatus {
-    if (entity is DomainApprovedPremisesApplicationSummary) {
-      return when {
-        entity.getSubmittedAt() != null && entity.getLatestAssessmentDecision() == AssessmentDecision.REJECTED -> ApplicationStatus.rejected
-        entity.getSubmittedAt() != null && entity.getLatestAssessmentDecision() == AssessmentDecision.ACCEPTED && !entity.getHasPlacementRequest() -> ApplicationStatus.pending
-        entity.getSubmittedAt() != null && entity.getLatestAssessmentDecision() == AssessmentDecision.ACCEPTED && !entity.getHasBooking() -> ApplicationStatus.awaitingPlacement
-        entity.getSubmittedAt() != null && entity.getLatestAssessmentDecision() == AssessmentDecision.ACCEPTED && entity.getHasBooking() -> ApplicationStatus.placed
-        entity.getLatestAssessmentHasClarificationNotesWithoutResponse() -> ApplicationStatus.requestedFurtherInformation
-        entity.getSubmittedAt() !== null -> ApplicationStatus.submitted
-        else -> ApplicationStatus.inProgress
-      }
+  private fun getStatusFromSummary(entity: DomainCas2ApplicationSummary): ApplicationStatus {
+    return when {
+      entity.getSubmittedAt() != null -> ApplicationStatus.submitted
+      else -> ApplicationStatus.inProgress
     }
+  }
 
-    if (entity is DomainCas2ApplicationSummary) {
-      return when {
-        entity.getSubmittedAt() != null -> ApplicationStatus.submitted
-        else -> ApplicationStatus.inProgress
-      }
-    }
-
+  private fun getStatusFromSummary(entity: DomainTemporaryAccommodationApplicationSummary): ApplicationStatus {
     return when {
       entity.getLatestAssessmentHasClarificationNotesWithoutResponse() -> ApplicationStatus.requestedFurtherInformation
       entity.getSubmittedAt() !== null -> ApplicationStatus.submitted
       else -> ApplicationStatus.inProgress
     }
+  }
+
+  private fun getStatusFromSummary(entity: DomainApprovedPremisesApplicationSummary): ApiApprovedPremisesApplicationStatus {
+    val reversedStatusMap: Map<ApprovedPremisesApplicationStatus, ApiApprovedPremisesApplicationStatus> =
+      this.applicationStatuses.entries.associateBy({ it.value }) { it.key }
+    return reversedStatusMap[ApprovedPremisesApplicationStatus.valueOf(entity.getStatus())]
+      ?: throw RuntimeException("Application ${entity.getId()} has no status")
   }
 
   fun transformJpaDecisionToApi(decision: AssessmentDecision?) = when (decision) {

@@ -1714,7 +1714,7 @@ components:
               type: string
               format: uuid
             status:
-              $ref: '#/components/schemas/ApplicationStatus'
+              $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
             tier:
               type: string
           required:
