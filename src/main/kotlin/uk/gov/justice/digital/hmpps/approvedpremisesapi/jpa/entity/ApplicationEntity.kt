@@ -289,7 +289,7 @@ class ApprovedPremisesApplicationEntity(
   var name: String,
   var targetLocation: String?,
   @Enumerated(value = EnumType.STRING)
-  var status: ApprovedPremisesApplicationStatus?,
+  var status: ApprovedPremisesApplicationStatus,
 ) : ApplicationEntity(
   id,
   crn,

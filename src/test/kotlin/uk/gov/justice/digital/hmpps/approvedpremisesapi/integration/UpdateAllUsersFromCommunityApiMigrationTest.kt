@@ -42,7 +42,7 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
     )
 
     val startTime = System.currentTimeMillis()
-    migrationJobService.runMigrationJob(MigrationJobType.allUsersFromCommunityApi, 1)
+    migrationJobService.runMigrationJob(MigrationJobType.updateAllUsersFromCommunityApi, 1)
     val endTime = System.currentTimeMillis()
 
     assertThat(endTime - startTime).isGreaterThan(500 * 2)
@@ -81,7 +81,7 @@ class UpdateAllUsersFromCommunityApiMigrationTest : MigrationJobTestBase() {
         .produce(),
     )
 
-    migrationJobService.runMigrationJob(MigrationJobType.allUsersFromCommunityApi)
+    migrationJobService.runMigrationJob(MigrationJobType.updateAllUsersFromCommunityApi)
 
     val userOneAfterUpdate = userRepository.findByIdOrNull(userOne.id)!!
     val userTwoAfterUpdate = userRepository.findByIdOrNull(userTwo.id)!!
