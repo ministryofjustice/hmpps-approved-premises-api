@@ -1397,6 +1397,8 @@ class BookingService(
       return fieldValidationError
     }
 
+    val isFirstDeparture = booking.departures.isNullOrEmpty()
+
     val departureEntity = departureRepository.save(
       DepartureEntity(
         id = UUID.randomUUID(),
@@ -1409,11 +1411,14 @@ class BookingService(
         createdAt = OffsetDateTime.now(),
       ),
     )
-
+    booking.departures += departureEntity
     booking.departureDate = dateTime.toLocalDate()
     updateBooking(booking)
 
-    cas3DomainEventService.savePersonDepartedEvent(booking)
+    when (isFirstDeparture) {
+      true -> cas3DomainEventService.savePersonDepartedEvent(booking)
+      else -> cas3DomainEventService.savePersonDepartureUpdatedEvent(booking)
+    }
 
     return success(departureEntity)
   }

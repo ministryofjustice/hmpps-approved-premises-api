@@ -216,6 +216,7 @@ url-templates:
       person-arrived-event-detail: http://localhost:3000/events/cas3/person-arrived/#eventId
       person-departed-event-detail: http://localhost:3000/events/cas3/person-departed/#eventId
       referral-submitted-event-detail: http://localhost:3000/events/cas3/referral-submitted/#eventId
+      person-departure-updated-event-detail: http://localhost:3000/events/cas3/person-departure-updated/#eventId
   frontend:
     application: http://localhost:3000/applications/#id
     assessment: http://localhost:3000/assessments/#id

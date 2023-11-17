@@ -63,6 +63,7 @@ generic-service:
     URL-TEMPLATES_API_CAS3_PERSON-ARRIVED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/cas3/person-arrived/#eventId
     URL-TEMPLATES_API_CAS3_PERSON-DEPARTED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/cas3/person-departed/#eventId
     URL-TEMPLATES_API_CAS3_REFERRAL-SUBMITTED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/cas3/referral-submitted/#eventId
+    URL-TEMPLATES_API_CAS3_PERSON-DEPARTURE-UPDATED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/cas3/person-departure-updated/#eventId
     ARRIVED-DEPARTED-DOMAIN-EVENTS-DISABLED: true
 
   namespace_secrets:

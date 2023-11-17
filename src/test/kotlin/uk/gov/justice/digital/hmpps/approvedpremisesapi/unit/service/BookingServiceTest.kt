@@ -97,6 +97,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -826,28 +827,7 @@ class BookingServiceTest {
         .withYieldedApArea { ApAreaEntityFactory().produce() }
         .produce()
 
-      val bookingEntity = BookingEntityFactory()
-        .withArrivalDate(LocalDate.parse("2022-08-22"))
-        .withOfflineApplication(OfflineApplicationEntityFactory().produce())
-        .withYieldedPremises {
-          TemporaryAccommodationPremisesEntityFactory()
-            .withProbationRegion(probationRegion)
-            .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-            .produce()
-        }
-        .withApplication(
-          TemporaryAccommodationApplicationEntityFactory()
-            .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
-            .withProbationRegion(probationRegion)
-            .withCreatedByUser(
-              UserEntityFactory()
-                .withProbationRegion(probationRegion)
-                .produce(),
-            )
-            .produce(),
-        )
-        .withServiceName(ServiceName.temporaryAccommodation)
-        .produce()
+      val bookingEntity = createTemporaryAccommodationBooking(probationRegion)
 
       val reasonEntity = DepartureReasonEntityFactory()
         .withServiceScope("temporary-accommodation")
@@ -899,7 +879,111 @@ class BookingServiceTest {
       verify(exactly = 1) {
         mockCas3DomainEventService.savePersonDepartedEvent(bookingEntity)
       }
+      verify(exactly = 1) {
+        mockCas3DomainEventService.savePersonDepartedEvent(any())
+      }
+      verify(exactly = 0) {
+        mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any())
+      }
     }
+
+    @Test
+    fun `createDeparture for a CAS3 booking successfully create departure update event and saves a domain event`() {
+      val departureReasonId = UUID.fromString("6f3dad50-7246-492c-8f92-6e20540a3631")
+      val moveOnCategoryId = UUID.fromString("cb29c66d-8abc-4583-8a41-e28a43fc65c3")
+      val departureDateTime = OffsetDateTime.parse("2022-08-24T15:00:00+01:00")
+      val notes = "Some notes about the departure"
+      val probationRegion = ProbationRegionEntityFactory()
+        .withYieldedApArea { ApAreaEntityFactory().produce() }
+        .produce()
+
+      val bookingEntity = createTemporaryAccommodationBooking(probationRegion)
+
+      val reasonEntity = DepartureReasonEntityFactory()
+        .withServiceScope("temporary-accommodation")
+        .produce()
+      val moveOnCategoryEntity = MoveOnCategoryEntityFactory()
+        .withServiceScope("temporary-accommodation")
+        .produce()
+
+      val user = UserEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(bookingEntity.crn)
+        .produce()
+
+      val departureEntity = DepartureEntityFactory()
+        .withBooking(bookingEntity)
+        .withDateTime(departureDateTime)
+        .withReason(reasonEntity)
+        .withMoveOnCategory(moveOnCategoryEntity)
+        .withNotes(notes)
+        .produce()
+      bookingEntity.departures += departureEntity
+
+      every { mockDepartureReasonRepository.findByIdOrNull(departureReasonId) } returns reasonEntity
+      every { mockMoveOnCategoryRepository.findByIdOrNull(moveOnCategoryId) } returns moveOnCategoryEntity
+      every { mockDepartureRepository.save(any()) } answers { it.invocation.args[0] as DepartureEntity }
+      every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+      every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+      every { mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any()) } just Runs
+
+      val result = bookingService.createDeparture(
+        booking = bookingEntity,
+        dateTime = departureDateTime,
+        reasonId = departureReasonId,
+        moveOnCategoryId = moveOnCategoryId,
+        destinationProviderId = null,
+        notes = notes,
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.booking).isEqualTo(bookingEntity)
+      assertThat(result.entity.dateTime).isEqualTo(departureDateTime)
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.moveOnCategory).isEqualTo(moveOnCategoryEntity)
+      assertThat(result.entity.destinationProvider).isEqualTo(null)
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.notes).isEqualTo(notes)
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any())
+      }
+      verify(exactly = 0) {
+        mockCas3DomainEventService.savePersonDepartedEvent(any())
+      }
+    }
+  }
+
+  private fun createTemporaryAccommodationBooking(probationRegion: ProbationRegionEntity): BookingEntity {
+    val bookingEntity = BookingEntityFactory()
+      .withArrivalDate(LocalDate.parse("2022-08-22"))
+      .withOfflineApplication(OfflineApplicationEntityFactory().produce())
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withProbationRegion(probationRegion)
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withApplication(
+        TemporaryAccommodationApplicationEntityFactory()
+          .withSubmittedAt(OffsetDateTime.parse("2023-02-15T15:00:00Z"))
+          .withProbationRegion(probationRegion)
+          .withCreatedByUser(
+            UserEntityFactory()
+              .withProbationRegion(probationRegion)
+              .produce(),
+          )
+          .produce(),
+      )
+      .withServiceName(ServiceName.temporaryAccommodation)
+      .produce()
+    return bookingEntity
   }
 
   @Nested
