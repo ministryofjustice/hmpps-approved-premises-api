@@ -1152,7 +1152,7 @@ class BookingService(
     if (validationErrors.any()) {
       return fieldValidationError
     }
-
+    val existingCancellations = cancellationRepository.findAllCancellationByBookingId(booking.id)
     val cancellationEntity = cancellationRepository.save(
       CancellationEntity(
         id = UUID.randomUUID(),
@@ -1166,7 +1166,10 @@ class BookingService(
 
     booking.cancellations += cancellationEntity
 
-    cas3DomainEventService.saveBookingCancelledEvent(booking)
+    when (existingCancellations.isNullOrEmpty()) {
+      true -> cas3DomainEventService.saveBookingCancelledEvent(booking)
+      else -> cas3DomainEventService.saveBookingCancelledUpdatedEvent(booking)
+    }
 
     return success(cancellationEntity)
   }

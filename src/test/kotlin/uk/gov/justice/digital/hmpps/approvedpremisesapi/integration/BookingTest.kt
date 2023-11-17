@@ -2397,7 +2397,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Cancellation on Temporary Accommodation Booking when a cancellation already exists returns OK with correct body`() {
+  fun `Create Cancellation on Temporary Accommodation Booking when a cancellation already exists returns OK with correct body and send cancelled-updated event`() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
@@ -2440,6 +2440,61 @@ class BookingTest : IntegrationTestBase() {
         .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
         .jsonPath(".reason.isActive").isEqualTo(true)
         .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+
+      assertPublishedSNSEvent(
+        booking,
+        "accommodation.cas3.booking.cancelled.updated",
+        "A cancelled booking for a Transitional Accommodation premises has been updated",
+        "http://api/events/cas3/booking-cancelled-updated",
+      )
+    }
+  }
+
+  @Test
+  fun `Create Cancellation on Temporary Accommodation Booking when a no cancellation exists returns OK with correct body and send cancelled event`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      val booking = bookingEntityFactory.produceAndPersist {
+        withYieldedPremises {
+          temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withProbationRegion(userEntity.probationRegion)
+          }
+        }
+      }
+
+      val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+        withServiceScope("*")
+      }
+
+      webTestClient.post()
+        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewCancellation(
+            date = LocalDate.parse("2022-08-18"),
+            reason = cancellationReason.id,
+            notes = "Corrected date",
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+        .jsonPath(".date").isEqualTo("2022-08-18")
+        .jsonPath(".notes").isEqualTo("Corrected date")
+        .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
+        .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
+        .jsonPath(".reason.isActive").isEqualTo(true)
+        .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+
+      assertPublishedSNSEvent(
+        booking,
+        "accommodation.cas3.booking.cancelled",
+        "A booking for a Transitional Accommodation premises has been cancelled",
+        "http://api/events/cas3/booking-cancelled",
+      )
     }
   }
 
@@ -3389,5 +3444,22 @@ class BookingTest : IntegrationTestBase() {
 
     assertThat(actualBooking.departureDate).isEqualTo(LocalDate.parse(newDate))
     assertThat(actualBooking.originalDepartureDate).isEqualTo(booking.departureDate)
+  }
+
+  private fun assertPublishedSNSEvent(
+    booking: BookingEntity,
+    eventType: String,
+    eventDescription: String,
+    detailUrl: String,
+  ) {
+    val emittedMessage = inboundMessageListener.blockForMessage()
+
+    assertThat(emittedMessage.eventType).isEqualTo(eventType)
+    assertThat(emittedMessage.description).isEqualTo(eventDescription)
+    assertThat(emittedMessage.detailUrl).matches("$detailUrl/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+    assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+      SnsEventPersonReference("CRN", booking.crn),
+      SnsEventPersonReference("NOMS", booking.nomsNumber!!),
+    )
   }
 }
