@@ -31,6 +31,33 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /events/cas3/booking-cancelled-updated/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "CAS3 events"
+      summary: A 'booking-cancelled-updated' event
+      responses:
+        200:
+          description: The 'booking-cancelled-updated' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CAS3BookingCancelledUpdatedEvent'
+        404:
+          description: No 'booking-cancelled-updated' event found for the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /events/cas3/booking-confirmed/{eventId}:
     parameters:
       - name: eventId
@@ -221,6 +248,7 @@ components:
         propertyName: eventType
         mapping:
           accommodation.cas3.booking.cancelled: '#/components/schemas/CAS3BookingCancelledEvent'
+          accommodation.cas3.booking.cancelled.updated: '#/components/schemas/CAS3BookingCancelledUpdatedEvent'
           accommodation.cas3.booking.confirmed: '#/components/schemas/CAS3BookingConfirmedEvent'
           accommodation.cas3.booking.provisionally-made: '#/components/schemas/CAS3BookingProvisionallyMadeEvent'
           accommodation.cas3.person.arrived: '#/components/schemas/CAS3PersonArrivedEvent'
@@ -228,6 +256,15 @@ components:
           accommodation.cas3.referral.submitted: '#/components/schemas/CAS3ReferralSubmittedEvent'
           accommodation.cas3.person.departed.updated: '#/components/schemas/CAS3PersonDepartureUpdatedEvent'
     CAS3BookingCancelledEvent:
+      allOf:
+        - $ref: '#/components/schemas/CAS3Event'
+        - type: object
+          properties:
+            eventDetails:
+              $ref: '#/components/schemas/CAS3BookingCancelledEventDetails'
+          required:
+            - eventDetails
+    CAS3BookingCancelledUpdatedEvent:
       allOf:
         - $ref: '#/components/schemas/CAS3Event'
         - type: object
@@ -522,6 +559,7 @@ components:
       type: string
       enum:
         - accommodation.cas3.booking.cancelled
+        - accommodation.cas3.booking.cancelled.updated
         - accommodation.cas3.booking.confirmed
         - accommodation.cas3.booking.provisionally-made
         - accommodation.cas3.person.arrived
@@ -530,6 +568,7 @@ components:
         - accommodation.cas3.person.departed.updated
       x-enum-varnames:
         - bookingCancelled
+        - bookingCancelledUpdated
         - bookingConfirmed
         - bookingProvisionallyMade
         - personArrived
