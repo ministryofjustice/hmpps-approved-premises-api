@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import java.net.URI
@@ -51,19 +52,7 @@ class DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.bookingCancelled,
-        eventDetails = CAS3BookingCancelledEventDetails(
-          applicationId = application?.id,
-          applicationUrl = application.toUrl(),
-          bookingId = booking.id,
-          bookingUrl = booking.toUrl(),
-          personReference = PersonReference(
-            crn = booking.crn,
-            noms = booking.nomsNumber,
-          ),
-          cancellationReason = cancellation.reason.name,
-          notes = cancellation.notes,
-          cancelledAt = cancellation.date,
-        ),
+        eventDetails = buildCAS3BookingCancelledEventDetails(application, booking, cancellation),
       ),
     )
   }
@@ -279,6 +268,24 @@ class DomainEventBuilder(
     applicationId = application?.id,
     applicationUrl = application.toUrl(),
     reasonDetail = null,
+  )
+
+  private fun buildCAS3BookingCancelledEventDetails(
+    application: TemporaryAccommodationApplicationEntity?,
+    booking: BookingEntity,
+    cancellation: CancellationEntity,
+  ) = CAS3BookingCancelledEventDetails(
+    applicationId = application?.id,
+    applicationUrl = application.toUrl(),
+    bookingId = booking.id,
+    bookingUrl = booking.toUrl(),
+    personReference = PersonReference(
+      crn = booking.crn,
+      noms = booking.nomsNumber,
+    ),
+    cancellationReason = cancellation.reason.name,
+    notes = cancellation.notes,
+    cancelledAt = cancellation.date,
   )
 
   private fun TemporaryAccommodationApplicationEntity?.toUrl(): URI? =
