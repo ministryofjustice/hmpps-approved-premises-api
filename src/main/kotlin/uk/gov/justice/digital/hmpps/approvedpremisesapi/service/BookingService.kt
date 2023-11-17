@@ -1152,7 +1152,7 @@ class BookingService(
     if (validationErrors.any()) {
       return fieldValidationError
     }
-    val existingCancellations = cancellationRepository.findAllCancellationByBookingId(booking.id)
+    val isFirstCancellations = booking.cancellations.isNullOrEmpty()
     val cancellationEntity = cancellationRepository.save(
       CancellationEntity(
         id = UUID.randomUUID(),
@@ -1166,7 +1166,7 @@ class BookingService(
 
     booking.cancellations += cancellationEntity
 
-    when (existingCancellations.isNullOrEmpty()) {
+    when (isFirstCancellations) {
       true -> cas3DomainEventService.saveBookingCancelledEvent(booking)
       else -> cas3DomainEventService.saveBookingCancelledUpdatedEvent(booking)
     }

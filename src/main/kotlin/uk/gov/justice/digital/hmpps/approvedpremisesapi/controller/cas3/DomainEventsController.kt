@@ -4,6 +4,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.CAS3EventsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingConfirmedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingProvisionallyMadeEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEvent
@@ -64,6 +65,13 @@ class DomainEventsController(
 
   override fun eventsCas3PersonDepartureUpdatedEventIdGet(eventId: UUID): ResponseEntity<CAS3PersonDepartureUpdatedEvent> {
     val event = domainEventService.getPersonDepartureUpdatedEvent(eventId)
+      ?: throw NotFoundProblem(eventId, "DomainEvent")
+
+    return ResponseEntity.ok(event.data)
+  }
+
+  override fun eventsCas3BookingCancelledUpdatedEventIdGet(eventId: UUID): ResponseEntity<CAS3BookingCancelledUpdatedEvent> {
+    val event = domainEventService.getBookingCancelledUpdatedEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
     return ResponseEntity.ok(event.data)

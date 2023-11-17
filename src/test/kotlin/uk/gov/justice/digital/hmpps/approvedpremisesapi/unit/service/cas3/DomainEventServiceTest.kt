@@ -233,7 +233,7 @@ class DomainEventServiceTest {
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
-    val bookingEntity = createTemporaryAccommodationBookingEntity()
+    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     domainEventServiceEmittingDisabled.saveBookingCancelledEvent(bookingEntity)
 
@@ -447,7 +447,7 @@ class DomainEventServiceTest {
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
-    val bookingEntity = createTemporaryAccommodationBookingEntity()
+    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     domainEventServiceEmittingDisabled.saveBookingConfirmedEvent(bookingEntity)
 
@@ -661,7 +661,7 @@ class DomainEventServiceTest {
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
-    val bookingEntity = createTemporaryAccommodationBookingEntity()
+    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     domainEventServiceEmittingDisabled.saveBookingProvisionallyMadeEvent(bookingEntity)
 
@@ -875,7 +875,7 @@ class DomainEventServiceTest {
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
-    val bookingEntity = createTemporaryAccommodationBookingEntity()
+    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     domainEventServiceEmittingDisabled.savePersonArrivedEvent(bookingEntity)
 
@@ -1089,7 +1089,7 @@ class DomainEventServiceTest {
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
-    val bookingEntity = createTemporaryAccommodationBookingEntity()
+    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     domainEventServiceEmittingDisabled.savePersonDepartedEvent(bookingEntity)
 
@@ -1620,7 +1620,7 @@ class DomainEventServiceTest {
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
     val crn = "CRN"
     val domainEventToSave = createCancelledUpdatedEventEntity(id, applicationId, crn, occurredAt)
-    val bookingEntity = createTemporaryAccommodationBookingEntity()
+    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     val mockHmppsTopic = mockk<HmppsTopic>()
     every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
@@ -1668,7 +1668,7 @@ class DomainEventServiceTest {
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
     val crn = "CRN"
     val domainEventToSave = createCancelledUpdatedEventEntity(id, applicationId, crn, occurredAt)
-    val bookingEntity = createTemporaryAccommodationBookingEntity()
+    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     val mockHmppsTopic = mockk<HmppsTopic>()
     every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
@@ -1701,7 +1701,7 @@ class DomainEventServiceTest {
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
     val crn = "CRN"
     val domainEventToSave = createCancelledUpdatedEventEntity(id, applicationId, crn, occurredAt)
-    val bookingEntity = createTemporaryAccommodationBookingEntity()
+    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     val mockHmppsTopic = mockk<HmppsTopic>()
     every { domainEventRepositoryMock.save(any()) } throws RuntimeException("A database exception")
@@ -1726,6 +1726,50 @@ class DomainEventServiceTest {
     verify(exactly = 0) {
       mockHmppsTopic.snsClient.publish(any())
     }
+  }
+
+  @Test
+  fun `getBookingCancelledUpdatedEvent returns null when event does not exist`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+
+    every { domainEventRepositoryMock.findByIdOrNull(id) } returns null
+
+    assertThat(domainEventService.getBookingCancelledUpdatedEvent(id)).isNull()
+  }
+
+  @Test
+  fun `getBookingCancelledUpdatedEvent returns event`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    val data = CAS3BookingCancelledUpdatedEvent(
+      id = id,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.bookingCancelledUpdated,
+      eventDetails = CAS3BookingCancelledEventDetailsFactory().produce(),
+    )
+
+    every { domainEventRepositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
+      .withId(id)
+      .withApplicationId(applicationId)
+      .withCrn(crn)
+      .withType(DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED)
+      .withData(objectMapper.writeValueAsString(data))
+      .withOccurredAt(occurredAt)
+      .produce()
+
+    val event = domainEventService.getBookingCancelledUpdatedEvent(id)
+    assertThat(event).isEqualTo(
+      DomainEvent(
+        id = id,
+        applicationId = applicationId,
+        crn = "CRN",
+        occurredAt = occurredAt.toInstant(),
+        data = data,
+      ),
+    )
   }
 
   private fun createTemporaryAccommodationPremisesBookingEntity(): BookingEntity {
@@ -1772,4 +1816,24 @@ class DomainEventServiceTest {
       eventDetails = CAS3PersonDepartedEventDetailsFactory().produce(),
     ),
   )
+
+  private fun createCancelledUpdatedEventEntity(
+    id: UUID,
+    applicationId: UUID?,
+    crn: String,
+    occurredAt: OffsetDateTime,
+  ): DomainEvent<CAS3BookingCancelledUpdatedEvent> {
+    return DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = CAS3BookingCancelledUpdatedEvent(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = EventType.bookingCancelledUpdated,
+        eventDetails = CAS3BookingCancelledEventDetailsFactory().produce(),
+      ),
+    )
+  }
 }

@@ -2241,8 +2241,6 @@ class BookingServiceTest {
 
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockCancellationRepository.findAllCancellationByBookingId(any()) } returns emptyList()
-
       every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
 
       val result = bookingService.createCancellation(
@@ -2263,9 +2261,6 @@ class BookingServiceTest {
       verify(exactly = 1) {
         mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
       }
-      verify(exactly = 1) {
-        mockCancellationRepository.findAllCancellationByBookingId(any())
-      }
       verify(exactly = 0) {
         mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
       }
@@ -2277,10 +2272,9 @@ class BookingServiceTest {
       val bookingEntity = createTemporaryAccommodationBookingEntity()
       val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
       val cancellationEntity = CancellationEntityFactory().withBooking(bookingEntity).withReason(reasonEntity).produce()
-
+      bookingEntity.cancellations += cancellationEntity
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockCancellationRepository.findAllCancellationByBookingId(any()) } returns listOf(cancellationEntity)
       every { mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any()) } just Runs
 
       val result = bookingService.createCancellation(
@@ -2300,9 +2294,6 @@ class BookingServiceTest {
 
       verify(exactly = 1) {
         mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(bookingEntity)
-      }
-      verify(exactly = 1) {
-        mockCancellationRepository.findAllCancellationByBookingId(any())
       }
       verify(exactly = 0) {
         mockCas3DomainEventService.saveBookingCancelledEvent(any())

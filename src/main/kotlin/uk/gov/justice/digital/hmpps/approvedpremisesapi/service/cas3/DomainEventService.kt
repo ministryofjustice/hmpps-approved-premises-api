@@ -74,6 +74,8 @@ class DomainEventService(
 
   fun getPersonDepartureUpdatedEvent(id: UUID) = get<CAS3PersonDepartureUpdatedEvent>(id)
 
+  fun getBookingCancelledUpdatedEvent(id: UUID) = get<CAS3BookingCancelledUpdatedEvent>(id)
+
   private inline fun <reified T : CAS3Event> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
 

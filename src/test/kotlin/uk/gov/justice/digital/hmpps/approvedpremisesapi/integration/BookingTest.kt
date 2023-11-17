@@ -3338,23 +3338,6 @@ class BookingTest : IntegrationTestBase() {
     }
   }
 
-  private fun assertPublishedSNSEvent(
-    booking: BookingEntity,
-    eventType: String,
-    eventDescription: String,
-    detailUrl: String,
-  ) {
-    val emittedMessage = inboundMessageListener.blockForMessage()
-
-    assertThat(emittedMessage.eventType).isEqualTo(eventType)
-    assertThat(emittedMessage.description).isEqualTo(eventDescription)
-    assertThat(emittedMessage.detailUrl).matches("$detailUrl/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
-    assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
-      SnsEventPersonReference("CRN", booking.crn),
-      SnsEventPersonReference("NOMS", booking.nomsNumber!!),
-    )
-  }
-
   private fun callPersonDepartureDateAPIAndAssertDepartureDetail(
     url: String,
     requestBody: NewDeparture,
