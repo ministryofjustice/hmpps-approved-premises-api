@@ -19,6 +19,6 @@ data class ApplicationTimelineNoteEntity(
   val id: UUID,
   val applicationId: UUID,
   val createdBy: UUID,
-  val createdAtDate: OffsetDateTime,
+  val createdAt: OffsetDateTime,
   val body: String,
 )
