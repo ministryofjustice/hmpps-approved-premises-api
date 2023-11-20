@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ApplicationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Lost
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.PlacementMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ReferralsMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApprovedPremisesApplicationMetricsSummaryDto
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ReferralsDataDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
@@ -46,6 +48,7 @@ class ReportService(
   private val workingDayCountService: WorkingDayCountService,
   private val applicationEntityReportRowRepository: ApplicationEntityReportRowRepository,
   private val offenderService: OffenderService,
+  private val userService: UserService,
   private val applicationRepository: ApplicationRepository,
   private val domainEventRepository: DomainEventRepository,
   private val assessmentRepository: AssessmentRepository,
@@ -64,8 +67,17 @@ class ReportService(
       properties.probationRegionId,
     )
 
+    val crns = bookingsInScope.map { it.crn }.distinct().sorted()
+    val personInfos = offenderService.getOffenderSummariesByCrns(crns, userService.getUserForRequest().deliusUsername)
+      .associateBy { it.crn }
+
+    val reportData = bookingsInScope.map {
+      val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
+      BookingsReportDataAndPersonInfo(it, personInfo)
+    }
+
     BookingsReportGenerator()
-      .createReport(bookingsInScope, properties)
+      .createReport(reportData, properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
       }

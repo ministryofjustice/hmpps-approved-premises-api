@@ -52,12 +52,14 @@ class CaseDetailFactory : Factory<CaseDetail> {
 }
 
 class CaseDetailOffenceFactory : Factory<Offence> {
+  var code: Yielded<String> = { randomStringLowerCase(6) }
   var description: Yielded<String> = { randomStringLowerCase(10) }
   var date: Yielded<LocalDate> = { LocalDate.now() }
   var main: Yielded<Boolean> = { false }
   var eventNumber: Yielded<String> = { randomStringLowerCase(10) }
 
   override fun produce(): Offence = Offence(
+    code = this.code(),
     description = this.description(),
     date = this.date(),
     main = this.main(),
@@ -113,6 +115,9 @@ class CaseSummaryFactory : Factory<CaseSummary> {
   fun withNomsId(nomsId: String?) = apply {
     this.nomsId = { nomsId }
   }
+  fun withPnc(pnc: String?) = apply {
+    this.pnc = { pnc }
+  }
   fun withName(name: Name) = apply {
     this.name = { name }
   }
@@ -133,6 +138,30 @@ class CaseSummaryFactory : Factory<CaseSummary> {
   }
   fun withCurrentRestriction(currentRestriction: Boolean) = apply {
     this.currentRestriction = { currentRestriction }
+  }
+
+  fun fromOffenderDetails(offenderDetails: OffenderDetailSummary) = apply {
+    withCrn(offenderDetails.otherIds.crn)
+    withNomsId(offenderDetails.otherIds.nomsNumber)
+    withName(
+      NameFactory()
+        .withForename(offenderDetails.firstName)
+        .withMiddleNames(offenderDetails.middleNames ?: listOf())
+        .withSurname(offenderDetails.surname)
+        .produce(),
+    )
+    withDateOfBirth(offenderDetails.dateOfBirth)
+    withGender(offenderDetails.gender)
+    withProfile(
+      ProfileFactory()
+        .withEthnicity(offenderDetails.offenderProfile.ethnicity)
+        .withGenderIdentity(offenderDetails.offenderProfile.genderIdentity)
+        .withNationality(offenderDetails.offenderProfile.nationality)
+        .withReligion(offenderDetails.offenderProfile.religion)
+        .produce(),
+    )
+    withCurrentExclusion(offenderDetails.currentExclusion)
+    withCurrentRestriction(offenderDetails.currentRestriction)
   }
 
   override fun produce(): CaseSummary = CaseSummary(

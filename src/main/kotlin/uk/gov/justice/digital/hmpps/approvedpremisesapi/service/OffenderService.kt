@@ -450,8 +450,8 @@ class OffenderService(
           ActiveOffence(
             deliusEventNumber = it.eventNumber,
             offenceDescription = it.description,
-            "",
-            0,
+            it.code,
+            it.eventNumber.toLong(),
             offenceDate = it.date,
           )
         },

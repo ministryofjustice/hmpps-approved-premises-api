@@ -2006,8 +2006,6 @@ components:
           type: boolean
         document:
           $ref: '#/components/schemas/AnyValue'
-        status:
-          $ref: '#/components/schemas/ApplicationStatus'
         submittedAt:
           type: string
           format: date-time
@@ -2185,8 +2183,6 @@ components:
         createdByUserId:
           type: string
           format: uuid
-        status:
-          $ref: '#/components/schemas/ApplicationStatus'
         person:
           $ref: '#/components/schemas/Person'
         createdAt:
@@ -2238,6 +2234,20 @@ components:
         - placed
         - inapplicable
         - withdrawn
+    ApprovedPremisesApplicationStatus:
+      type: string
+      enum:
+        - started
+        - submitted
+        - rejected
+        - awaitingAssesment
+        - unallocatedAssesment
+        - assesmentInProgress
+        - awaitingPlacement
+        - placementAllocated
+        - inapplicable
+        - withdrawn
+        - requestedFurtherInformation
     AnyValue:
       description: Any object that conforms to the current JSON schema for an application
     ApplicationTimelineNote:

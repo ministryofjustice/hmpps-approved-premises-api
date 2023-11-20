@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -20,7 +21,19 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
 
   fun findAllByAllocatedToUser_IdAndReallocatedAtNull(userId: UUID): List<PlacementApplicationEntity>
 
-  fun findAllByApplicationAndDecisionIsNullOrDecisionIsNot(application: ApprovedPremisesApplicationEntity, decision: PlacementApplicationDecision): List<PlacementApplicationEntity>
+  @Query(
+    """
+      SELECT a from PlacementApplicationEntity a where a.application.id = :applicationId
+      AND a.submittedAt is not null
+      AND 
+        (
+            a.decision != uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAWN_BY_PP
+            OR
+            a.decision is null
+        )
+    """,
+  )
+  fun findAllSubmittedAndNonWithdrawnApplicationsForApplicationId(applicationId: UUID): List<PlacementApplicationEntity>
 }
 
 @Entity

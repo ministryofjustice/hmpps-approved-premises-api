@@ -10,7 +10,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
@@ -86,7 +85,6 @@ class SubmittedApplicationTransformerTest {
         "outdatedSchema",
         "person",
         "schemaVersion",
-        "status",
         "statusUpdates",
         "submittedAt",
         "submittedBy",
@@ -109,7 +107,6 @@ class SubmittedApplicationTransformerTest {
       val transformation = applicationTransformer.transformJpaSummaryToApiRepresentation(applicationSummary, mockk())
 
       assertThat(transformation.id).isEqualTo(applicationSummary.getId())
-      assertThat(transformation.status).isEqualTo(ApplicationStatus.submitted)
     }
   }
 }

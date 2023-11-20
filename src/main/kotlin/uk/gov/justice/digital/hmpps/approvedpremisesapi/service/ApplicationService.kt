@@ -121,11 +121,12 @@ class ApplicationService(
 
   fun getAllApprovedPremisesApplications(
     page: Int?,
-    crn: String?,
+    crnOrName: String?,
     sortDirection: SortDirection?,
-    applicationSortField: ApplicationSortField?,
+    status: ApprovedPremisesApplicationStatus?,
+    sortBy: ApplicationSortField?,
   ): Pair<List<ApprovedPremisesApplicationSummary>, PaginationMetadata?> {
-    val sortField = when (applicationSortField) {
+    val sortField = when (sortBy) {
       ApplicationSortField.arrivalDate -> "arrivalDate"
       ApplicationSortField.createdAt -> "a.created_at"
       ApplicationSortField.tier -> "tier"
@@ -133,11 +134,11 @@ class ApplicationService(
     }
     val pageable = getPageable(sortField, sortDirection, page)
 
-    val response = if (crn == null) {
-      applicationRepository.findAllApprovedPremisesSummaries(pageable)
-    } else {
-      applicationRepository.findAllApprovedPremisesSummariesFilteredByCrn(pageable, crn)
-    }
+    val response = applicationRepository.findAllApprovedPremisesSummaries(
+      pageable,
+      crnOrName,
+      status,
+    )
 
     return Pair(response.content, getMetadata(response, page))
   }

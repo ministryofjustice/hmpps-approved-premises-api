@@ -26,15 +26,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.AP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 class BookingTest : IntegrationTestBase() {
@@ -3213,6 +3220,158 @@ class BookingTest : IntegrationTestBase() {
         .expectStatus()
         .isForbidden
     }
+  }
+
+  @Test
+  fun `Successfully send updated departure date events when create date-change is invoked for existing booking with departure detail`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val now = LocalDateTime.now()
+        val notes = "Some notes about the departure"
+        val premises = createTemporaryAccommodationPremises(userEntity)
+        val booking = createTemporaryAccommodationBooking(premises, offenderDetails.case.asOffenderDetail())
+        val reasonEntity = departureReasonEntityFactory.produceAndPersist {
+          withServiceScope("temporary-accommodation")
+        }
+        val moveOnCategoryEntity = moveOnCategoryEntityFactory.produceAndPersist {
+          withServiceScope("temporary-accommodation")
+        }
+        departureEntityFactory.produceAndPersist {
+          withBooking(booking)
+          withDateTime(now.atOffset(ZoneOffset.UTC))
+          withReason(reasonEntity)
+          withMoveOnCategory(moveOnCategoryEntity)
+          withNotes(notes)
+        }
+
+        callPersonDepartureDateAPIAndAssertDepartureDetail(
+          "/premises/${premises.id}/bookings/${booking.id}/departures",
+          buildNewDeparture(now, reasonEntity, moveOnCategoryEntity, notes),
+          booking,
+          now,
+          jwt,
+        )
+
+        assertPublishedSNSEvent(
+          booking,
+          "accommodation.cas3.person.departed.updated",
+          "Person has updated departure date of Transitional Accommodation premises",
+          "http://api/events/cas3/person-departure-updated",
+        )
+      }
+    }
+  }
+
+  @Test
+  fun `Successfully send departed events when create departure is invoked for existing booking without departure detail`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val now = LocalDateTime.now()
+        val notes = "Some notes about the departure"
+        val premises = createTemporaryAccommodationPremises(userEntity)
+        val booking = createTemporaryAccommodationBooking(premises, offenderDetails.case.asOffenderDetail())
+        val reasonEntity = departureReasonEntityFactory.produceAndPersist {
+          withServiceScope("temporary-accommodation")
+        }
+        val moveOnCategoryEntity = moveOnCategoryEntityFactory.produceAndPersist {
+          withServiceScope("temporary-accommodation")
+        }
+
+        callPersonDepartureDateAPIAndAssertDepartureDetail(
+          "/premises/${premises.id}/bookings/${booking.id}/departures",
+          buildNewDeparture(now, reasonEntity, moveOnCategoryEntity, notes),
+          booking,
+          now,
+          jwt,
+        )
+        assertPublishedSNSEvent(
+          booking,
+          "accommodation.cas3.person.departed",
+          "Someone has left a Transitional Accommodation premises",
+          "http://api/events/cas3/person-departed",
+        )
+      }
+    }
+  }
+
+  private fun assertPublishedSNSEvent(
+    booking: BookingEntity,
+    eventType: String,
+    eventDescription: String,
+    detailUrl: String,
+  ) {
+    val emittedMessage = inboundMessageListener.blockForMessage()
+
+    assertThat(emittedMessage.eventType).isEqualTo(eventType)
+    assertThat(emittedMessage.description).isEqualTo(eventDescription)
+    assertThat(emittedMessage.detailUrl).matches("$detailUrl/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+    assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+      SnsEventPersonReference("CRN", booking.crn),
+      SnsEventPersonReference("NOMS", booking.nomsNumber!!),
+    )
+  }
+
+  private fun callPersonDepartureDateAPIAndAssertDepartureDetail(
+    url: String,
+    requestBody: NewDeparture,
+    booking: BookingEntity,
+    now: LocalDateTime,
+    jwt: String,
+  ) {
+    webTestClient.post()
+      .uri(url)
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(requestBody)
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .jsonPath("$.id").isNotEmpty
+      .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
+      .jsonPath("$.notes").isEqualTo("Some notes about the departure")
+      .jsonPath("$.dateTime").isEqualTo(now.atOffset(ZoneOffset.UTC).toString())
+      .jsonPath("$.reason").isNotEmpty
+      .jsonPath("$.moveOnCategory").isNotEmpty
+  }
+
+  private fun buildNewDeparture(
+    now: LocalDateTime,
+    reasonEntity: DepartureReasonEntity,
+    moveOnCategoryEntity: MoveOnCategoryEntity,
+    notes: String,
+  ) = NewDeparture(
+    dateTime = now.toInstant(ZoneOffset.UTC),
+    reasonId = reasonEntity.id,
+    moveOnCategoryId = moveOnCategoryEntity.id,
+    notes = notes,
+    destinationProviderId = null,
+  )
+
+  private fun createTemporaryAccommodationPremises(userEntity: UserEntity) =
+    temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+      withProbationRegion(userEntity.probationRegion)
+      withYieldedLocalAuthorityArea {
+        localAuthorityEntityFactory.produceAndPersist()
+      }
+    }
+
+  private fun createTemporaryAccommodationBooking(
+    premises: TemporaryAccommodationPremisesEntity,
+    offenderDetails: OffenderDetailSummary,
+  ): BookingEntity {
+    val room = roomEntityFactory.produceAndPersist() {
+      withPremises(premises)
+    }
+    val bed = bedEntityFactory.produceAndPersist {
+      withRoom(room)
+    }
+    val booking = bookingEntityFactory.produceAndPersist {
+      withPremises(bed.room.premises)
+      withCrn(offenderDetails.otherIds.crn)
+      withBed(bed)
+      withServiceName(ServiceName.temporaryAccommodation)
+    }
+    return booking
   }
 
   private fun creatingNewExtensionReturnsCorrectly(booking: BookingEntity, jwt: String, newDate: String) {

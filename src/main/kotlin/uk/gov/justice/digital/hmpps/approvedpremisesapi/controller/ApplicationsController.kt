@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
@@ -82,16 +83,25 @@ class ApplicationsController(
   override fun applicationsAllGet(
     xServiceName: ServiceName,
     page: Int?,
-    crn: String?,
+    crnOrName: String?,
     sortDirection: SortDirection?,
-    applicationSortField: ApplicationSortField?,
+    status: ApprovedPremisesApplicationStatus?,
+    sortBy: ApplicationSortField?,
   ): ResponseEntity<List<ApplicationSummary>> {
     if (xServiceName != ServiceName.approvedPremises) {
       throw ForbiddenProblem()
     }
     val user = userService.getUserForRequest()
+    val statusTransformed = applicationsTransformer.transformApiApprovedPremisesApplicationStatusToJpa(status)
+
     val (applications, metadata) =
-      applicationService.getAllApprovedPremisesApplications(page, crn, sortDirection, applicationSortField)
+      applicationService.getAllApprovedPremisesApplications(
+        page,
+        crnOrName,
+        sortDirection,
+        statusTransformed,
+        sortBy,
+      )
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
