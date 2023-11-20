@@ -23,6 +23,7 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
       cas3_app.is_eligible AS isReferralEligibleForCas3,
       cas3_app.eligibility_reason AS referralEligibilityReason,
       probation_region.name AS probationRegion,
+      local_authority_area.name AS localAuthorityAreaName,
       booking.crn AS crn,
       CAST(confirmation.id AS VARCHAR) AS confirmationId,
       CAST(cancellation.id AS VARCHAR) AS cancellationId,
@@ -37,6 +38,8 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
       premises premises ON premises.id = booking.premises_id
     LEFT JOIN
       probation_regions probation_region ON probation_region.id = premises.probation_region_id
+    LEFT JOIN
+      local_authority_areas local_authority_area ON local_authority_area.id = premises.local_authority_area_id  
     LEFT JOIN
       applications app ON booking.application_id = app.id
     LEFT JOIN
@@ -83,6 +86,7 @@ interface BookingsReportData {
   val referralEligibleForCas3: Boolean?
   val referralEligibilityReason: String?
   val probationRegion: String
+  val localAuthorityAreaName: String?
   val crn: String
   val confirmationId: String?
   val cancellationId: String?
