@@ -2477,12 +2477,20 @@ components:
         username:
           type: string
           example: 'CAS2_ASSESSOR_USER'
+        name:
+          type: string
+          example: 'Roger Smith'
+        email:
+          type: string
+          example: 'roger@external.example.com'
         origin:
           type: string
           example: 'NACRO'
       required:
         - id
         - username
+        - name
+        - email
     NomisUser:
       type: object
       properties:

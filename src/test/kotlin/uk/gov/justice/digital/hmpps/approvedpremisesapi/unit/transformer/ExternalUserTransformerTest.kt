@@ -17,6 +17,8 @@ class ExternalUserTransformerTest {
       id = jpaEntity.id,
       username = jpaEntity.username,
       origin = jpaEntity.origin,
+      name = jpaEntity.name,
+      email = jpaEntity.email,
     )
 
     val transformation = externalUserTransformer.transformJpaToApi(jpaEntity)
