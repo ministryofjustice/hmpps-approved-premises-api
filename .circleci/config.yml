@@ -320,6 +320,7 @@ workflows:
             branches:
               only:
                 - main
+                - test-out-new-api-changes
       - hmpps/deploy_env:
           name: deploy_dev
           env: "dev"
@@ -342,7 +343,8 @@ workflows:
             - hmpps-common-vars
             - hmpps-approved-premises-api-stage
           requires:
-            - request-test-approval
+            - build_docker
+            - helm_lint
       - request-preprod-approval:
           type: approval
           requires:
