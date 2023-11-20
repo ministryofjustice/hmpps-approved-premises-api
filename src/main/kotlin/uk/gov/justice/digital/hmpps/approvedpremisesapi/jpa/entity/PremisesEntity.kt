@@ -31,16 +31,17 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   @Query(
     """
         SELECT
-          new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary(p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, pdu.name, p.status, CAST(COUNT(b) as int))
+          new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesSummary(p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, pdu.name, p.status, CAST(COUNT(b) as int), la.name)
         FROM
           TemporaryAccommodationPremisesEntity p
           LEFT JOIN p.rooms r 
           LEFT JOIN r.beds b
           LEFT JOIN p.probationRegion pr
           LEFT JOIN p.probationDeliveryUnit pdu
+          LEFT JOIN p.localAuthorityArea la
         WHERE 
           pr.id = :regionId
-        GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, pdu.name, p.status
+        GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, pdu.name, p.status, la.name
       """,
   )
   fun findAllTemporaryAccommodationSummary(regionId: UUID): List<TemporaryAccommodationPremisesSummary>
@@ -258,6 +259,7 @@ data class TemporaryAccommodationPremisesSummary(
   val pdu: String,
   val status: PropertyStatus,
   val bedCount: Int,
+  val localAuthorityAreaName: String?,
 )
 
 interface BookingSummary {
