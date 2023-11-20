@@ -263,4 +263,21 @@ class WebClientConfiguration(
       .filter(oauth2Client)
       .build()
   }
+
+  @Bean(name = ["manageUsersApiWebClient"])
+  fun manageUsersApiClient(
+    @Value("\${services.manage-users-api.base-url}") manageUsersBaseUrl: String,
+  ): WebClient {
+    return WebClient.builder()
+      .baseUrl(manageUsersBaseUrl)
+      .clientConnector(
+        ReactorClientHttpConnector(
+          HttpClient
+            .create()
+            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+        ),
+      )
+      .build()
+  }
 }
