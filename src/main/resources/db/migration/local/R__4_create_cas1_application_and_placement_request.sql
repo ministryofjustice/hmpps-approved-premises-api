@@ -45,7 +45,8 @@ insert into
     "withdrawal_reason",
     "other_withdrawal_reason",
     "name",
-    "target_location"
+    "target_location",
+    "status"
   )
 values (
   '51c50b75-e142-4fdf-a02e-57957541770a',
@@ -64,7 +65,8 @@ values (
   NULL,
   NULL,
   'BEN DAVIES',
-  NULL
+  NULL,
+  'AWAITING_PLACEMENT'
 )
 on conflict(id) do nothing;
 
@@ -149,7 +151,8 @@ insert into
     "withdrawal_reason",
     "other_withdrawal_reason",
     "name",
-    "target_location"
+    "target_location",
+    "status"
   )
 values (
   'f2e0de20-cb6b-43d3-82f1-defe5190ba51',
@@ -168,7 +171,8 @@ values (
   NULL,
   NULL,
   'BEN DAVIES',
-  NULL
+  NULL,
+  'STARTED'
 )
 on conflict(id) do nothing;
 
@@ -205,3 +209,7 @@ values
     '2023-11-09 12:36:16.618508'
   )
 on conflict(id) do nothing;
+
+update "approved_premises_applications" set "status" = 'AWAITING_PLACEMENT' where "id" = 'f2e0de20-cb6b-43d3-82f1-defe5190ba51';
+
+update "approved_premises_applications" set "status" = 'AWAITING_PLACEMENT' where "id" = '51c50b75-e142-4fdf-a02e-57957541770a';

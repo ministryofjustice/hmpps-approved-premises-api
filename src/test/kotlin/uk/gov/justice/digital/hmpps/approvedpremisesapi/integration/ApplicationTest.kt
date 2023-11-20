@@ -23,7 +23,6 @@ import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
@@ -105,6 +104,7 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 
 class ApplicationTest : IntegrationTestBase() {
   @Autowired
@@ -462,7 +462,7 @@ class ApplicationTest : IntegrationTestBase() {
             listOf(
               ApprovedPremisesApplicationSummary(
                 createdByUserId = userEntity.id,
-                status = ApplicationStatus.inProgress,
+                status = ApiApprovedPremisesApplicationStatus.started,
                 type = "CAS1",
                 id = application.id,
                 person = UnknownPerson(
@@ -3354,7 +3354,7 @@ class ApplicationTest : IntegrationTestBase() {
             )
 
           assertThat(responseBody.count()).isEqualTo(2)
-          assertThat(responseBody[0].status).isEqualTo(ApplicationStatus.inProgress)
+          assertThat(responseBody[0].status).isEqualTo(ApiApprovedPremisesApplicationStatus.assesmentInProgress)
         }
       }
     }

@@ -48,11 +48,6 @@ SELECT
     CAST(a.created_by_user_id AS TEXT) as createdByUserId,
     a.created_at as createdAt,
     a.submitted_at as submittedAt,
-    ass.submitted_at as latestAssessmentSubmittedAt,
-    ass.decision as latestAssessmentDecision,
-    (SELECT COUNT(1) FROM assessment_clarification_notes acn WHERE acn.assessment_id = ass.id AND acn.response IS NULL) > 0 as latestAssessmentHasClarificationNotesWithoutResponse,
-    (SELECT COUNT(1) FROM placement_requests pr WHERE pr.application_id = apa.id) > 0 as hasPlacementRequest,
-    (SELECT COUNT(1) FROM bookings b WHERE b.application_id = apa.id) > 0 as hasBooking,
     apa.is_womens_application as isWomensApplication,
     apa.is_pipe_application as isPipeApplication,
     apa.arrival_date as arrivalDate,
@@ -61,7 +56,6 @@ SELECT
     apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier
 FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
-LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
 WHERE apa.is_inapplicable IS NOT TRUE 
 AND (
       :crnOrName IS NULL OR 
@@ -151,18 +145,13 @@ SELECT
     CAST(a.created_by_user_id AS TEXT) as createdByUserId,
     a.created_at as createdAt,
     a.submitted_at as submittedAt,
-    ass.submitted_at as latestAssessmentSubmittedAt,
-    ass.decision as latestAssessmentDecision,
-    (SELECT COUNT(1) FROM assessment_clarification_notes acn WHERE acn.assessment_id = ass.id AND acn.response IS NULL) > 0 as latestAssessmentHasClarificationNotesWithoutResponse,
-    (SELECT COUNT(1) FROM placement_requests pr WHERE pr.application_id = apa.id) > 0 as hasPlacementRequest,
-    (SELECT COUNT(1) FROM bookings b WHERE b.application_id = apa.id) > 0 as hasBooking,
     apa.is_womens_application as isWomensApplication,
     apa.is_pipe_application as isPipeApplication,
     apa.arrival_date as arrivalDate,
+    apa.status as status,
     CAST(apa.risk_ratings AS TEXT) as riskRatings
 FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
-LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
 WHERE a.created_by_user_id = :userId 
 AND apa.is_inapplicable IS NOT TRUE 
 AND apa.is_withdrawn = FALSE;
@@ -300,7 +289,7 @@ class ApprovedPremisesApplicationEntity(
   var name: String,
   var targetLocation: String?,
   @Enumerated(value = EnumType.STRING)
-  var status: ApprovedPremisesApplicationStatus?,
+  var status: ApprovedPremisesApplicationStatus,
 ) : ApplicationEntity(
   id,
   crn,
@@ -411,25 +400,24 @@ interface ApplicationSummary {
   fun getCreatedByUserId(): UUID
   fun getCreatedAt(): Timestamp
   fun getSubmittedAt(): Timestamp?
-  fun getLatestAssessmentSubmittedAt(): Timestamp?
-  fun getLatestAssessmentDecision(): AssessmentDecision?
-  fun getLatestAssessmentHasClarificationNotesWithoutResponse(): Boolean
-  fun getHasBooking(): Boolean
+  fun getRiskRatings(): String?
 }
 
 interface ApprovedPremisesApplicationSummary : ApplicationSummary {
-  fun getHasPlacementRequest(): Boolean
   fun getIsWomensApplication(): Boolean?
   fun getIsPipeApplication(): Boolean?
   fun getIsEmergencyApplication(): Boolean?
   fun getIsEsapApplication(): Boolean?
   fun getArrivalDate(): Timestamp?
-  fun getRiskRatings(): String?
   fun getTier(): String?
+  fun getStatus(): String
 }
 
 interface TemporaryAccommodationApplicationSummary : ApplicationSummary {
-  fun getRiskRatings(): String?
+  fun getLatestAssessmentSubmittedAt(): Timestamp?
+  fun getLatestAssessmentDecision(): AssessmentDecision?
+  fun getLatestAssessmentHasClarificationNotesWithoutResponse(): Boolean
+  fun getHasBooking(): Boolean
 }
 
 interface ApprovedPremisesApplicationMetricsSummary {
