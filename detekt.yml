@@ -18,6 +18,8 @@ style:
     maxLineLength: 200
   ReturnCount:
     max: 4
+  WildcardImport:
+    excludeImports: [] # We remove the default exception of ['java.util.*'] inline with our existing style guide
 
 complexity:
   LongMethod:
