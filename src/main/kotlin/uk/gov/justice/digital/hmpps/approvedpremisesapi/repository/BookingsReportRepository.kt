@@ -22,7 +22,7 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
       cas3_app.duty_to_refer_submission_date AS dateDutyToReferMade,
       cas3_app.is_eligible AS isReferralEligibleForCas3,
       cas3_app.eligibility_reason AS referralEligibilityReason,
-      probation_region.name AS probationRegion,
+      probation_region.name AS probationRegionName,
       local_authority_area.name AS localAuthorityAreaName,
       booking.crn AS crn,
       CAST(confirmation.id AS VARCHAR) AS confirmationId,
@@ -85,7 +85,7 @@ interface BookingsReportData {
   val dateDutyToReferMade: LocalDate?
   val referralEligibleForCas3: Boolean?
   val referralEligibilityReason: String?
-  val probationRegion: String
+  val probationRegionName: String
   val localAuthorityAreaName: String?
   val crn: String
   val confirmationId: String?
