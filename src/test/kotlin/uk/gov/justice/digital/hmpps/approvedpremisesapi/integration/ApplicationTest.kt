@@ -3289,7 +3289,7 @@ class ApplicationTest : IntegrationTestBase() {
     fun `Get applications all returns 200 correct body and page two and query by status`() {
       `Given a User` { userEntity, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          val crn = offenderDetails.otherIds.crn
+          val crn = offenderDetails.case.crn
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
@@ -3341,9 +3341,9 @@ class ApplicationTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, _ ->
           `Given an Offender` { offenderDetails2, _ ->
 
-            val crn1 = offenderDetails.otherIds.crn
+            val crn1 = offenderDetails.case.crn
 
-            val crn2 = offenderDetails2.otherIds.crn
+            val crn2 = offenderDetails2.case.crn
 
             val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()

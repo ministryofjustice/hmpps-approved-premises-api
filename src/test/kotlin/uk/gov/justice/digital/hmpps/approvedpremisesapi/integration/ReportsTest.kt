@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.asOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
@@ -144,13 +145,13 @@ class ReportsTest : IntegrationTestBase() {
         }
 
         val caseSummary = CaseSummaryFactory()
-          .fromOffenderDetails(offenderDetails)
-          .withPnc(offenderDetails.otherIds.pncNumber)
+          .fromOffenderDetails(offenderDetails.case.asOffenderDetail())
+          .withPnc(offenderDetails.case.pnc)
           .produce()
 
         ApDeliusContext_addResponseToUserAccessCall(
           CaseAccessFactory()
-            .withCrn(offenderDetails.otherIds.crn)
+            .withCrn(offenderDetails.case.crn)
             .produce(),
           userEntity.deliusUsername,
         )
@@ -224,13 +225,13 @@ class ReportsTest : IntegrationTestBase() {
         }
 
         val caseSummary = CaseSummaryFactory()
-          .fromOffenderDetails(offenderDetails)
-          .withPnc(offenderDetails.otherIds.pncNumber)
+          .fromOffenderDetails(offenderDetails.case.asOffenderDetail())
+          .withPnc(offenderDetails.case.pnc)
           .produce()
 
         ApDeliusContext_addResponseToUserAccessCall(
           CaseAccessFactory()
-            .withCrn(offenderDetails.otherIds.crn)
+            .withCrn(offenderDetails.case.crn)
             .produce(),
           userEntity.deliusUsername,
         )
@@ -304,13 +305,13 @@ class ReportsTest : IntegrationTestBase() {
         }
 
         val caseSummary = CaseSummaryFactory()
-          .fromOffenderDetails(offenderDetails)
-          .withPnc(offenderDetails.otherIds.pncNumber)
+          .fromOffenderDetails(offenderDetails.case.asOffenderDetail())
+          .withPnc(offenderDetails.case.pnc)
           .produce()
 
         ApDeliusContext_addResponseToUserAccessCall(
           CaseAccessFactory()
-            .withCrn(offenderDetails.otherIds.crn)
+            .withCrn(offenderDetails.case.crn)
             .produce(),
           userEntity.deliusUsername,
         )
@@ -423,13 +424,13 @@ class ReportsTest : IntegrationTestBase() {
         }
 
         val caseSummary = CaseSummaryFactory()
-          .fromOffenderDetails(offenderDetails)
-          .withPnc(offenderDetails.otherIds.pncNumber)
+          .fromOffenderDetails(offenderDetails.case.asOffenderDetail())
+          .withPnc(offenderDetails.case.pnc)
           .produce()
 
         ApDeliusContext_addResponseToUserAccessCall(
           CaseAccessFactory()
-            .withCrn(offenderDetails.otherIds.crn)
+            .withCrn(offenderDetails.case.crn)
             .produce(),
           userEntity.deliusUsername,
         )
@@ -517,13 +518,13 @@ class ReportsTest : IntegrationTestBase() {
         }
 
         val caseSummary = CaseSummaryFactory()
-          .fromOffenderDetails(offenderDetails)
-          .withPnc(offenderDetails.otherIds.pncNumber)
+          .fromOffenderDetails(offenderDetails.case.asOffenderDetail())
+          .withPnc(offenderDetails.case.pnc)
           .produce()
 
         ApDeliusContext_addResponseToUserAccessCall(
           CaseAccessFactory()
-            .withCrn(offenderDetails.otherIds.crn)
+            .withCrn(offenderDetails.case.crn)
             .produce(),
           userEntity.deliusUsername,
         )
@@ -617,13 +618,13 @@ class ReportsTest : IntegrationTestBase() {
         }
 
         val caseSummary = CaseSummaryFactory()
-          .fromOffenderDetails(offenderDetails)
-          .withPnc(offenderDetails.otherIds.pncNumber)
+          .fromOffenderDetails(offenderDetails.case.asOffenderDetail())
+          .withPnc(offenderDetails.case.pnc)
           .produce()
 
         ApDeliusContext_addResponseToUserAccessCall(
           CaseAccessFactory()
-            .withCrn(offenderDetails.otherIds.crn)
+            .withCrn(offenderDetails.case.crn)
             .produce(),
           userEntity.deliusUsername,
         )
