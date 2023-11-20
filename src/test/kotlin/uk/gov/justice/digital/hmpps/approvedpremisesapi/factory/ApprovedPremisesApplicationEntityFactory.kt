@@ -165,7 +165,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.targetLocation = { targetLocation }
   }
 
-  fun withStatus(status: ApprovedPremisesApplicationStatus) {
+  fun withStatus(status: ApprovedPremisesApplicationStatus) = apply {
     this.status = { status }
   }
 

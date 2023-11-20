@@ -865,7 +865,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 .json(
                   objectMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToApi(
-                      placementRequest,
+                      placementRequestRepository.findByIdOrNull(placementRequest.id)!!,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
                       cancellations,
                     ),

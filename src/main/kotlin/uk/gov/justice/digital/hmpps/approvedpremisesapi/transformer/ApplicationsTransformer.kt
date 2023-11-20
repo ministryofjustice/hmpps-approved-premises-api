@@ -36,7 +36,7 @@ class ApplicationsTransformer(
   private val risksTransformer: RisksTransformer,
 ) {
 
-  val applicationStatuses = mapOf(
+  final val applicationStatuses = mapOf(
     ApiApprovedPremisesApplicationStatus.assesmentInProgress to ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS,
     ApiApprovedPremisesApplicationStatus.started to ApprovedPremisesApplicationStatus.STARTED,
     ApiApprovedPremisesApplicationStatus.submitted to ApprovedPremisesApplicationStatus.SUBMITTED,
@@ -49,6 +49,9 @@ class ApplicationsTransformer(
     ApiApprovedPremisesApplicationStatus.withdrawn to ApprovedPremisesApplicationStatus.WITHDRAWN,
     ApiApprovedPremisesApplicationStatus.requestedFurtherInformation to ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION,
   )
+
+  val reversedStatusMap: Map<ApprovedPremisesApplicationStatus, ApiApprovedPremisesApplicationStatus> =
+    this.applicationStatuses.entries.associateBy({ it.value }) { it.key }
 
   fun transformApiApprovedPremisesApplicationStatusToJpa(
     apiStatus: ApiApprovedPremisesApplicationStatus?,
@@ -79,7 +82,7 @@ class ApplicationsTransformer(
         } else {
           null
         },
-        status = getStatus(jpa, latestAssessment),
+        status = this.reversedStatusMap[jpa.status] ?: ApiApprovedPremisesApplicationStatus.started,
         assessmentDecision = transformJpaDecisionToApi(latestAssessment?.decision),
         assessmentId = latestAssessment?.id,
         assessmentDecisionDate = latestAssessment?.submittedAt?.toLocalDate(),
@@ -162,20 +165,6 @@ class ApplicationsTransformer(
   )
 
   private fun getStatus(entity: ApplicationEntity, latestAssessment: AssessmentEntity?): ApplicationStatus {
-    if (entity is ApprovedPremisesApplicationEntity) {
-      return when {
-        entity.isInapplicable == true -> ApplicationStatus.inapplicable
-        entity.isWithdrawn == true -> ApplicationStatus.withdrawn
-        latestAssessment?.submittedAt != null && latestAssessment.decision == AssessmentDecision.REJECTED -> ApplicationStatus.rejected
-        latestAssessment?.submittedAt != null && latestAssessment.decision == AssessmentDecision.ACCEPTED && entity.getLatestPlacementRequest() == null -> ApplicationStatus.pending
-        latestAssessment?.submittedAt != null && latestAssessment.decision == AssessmentDecision.ACCEPTED && entity.getLatestBooking() == null -> ApplicationStatus.awaitingPlacement
-        latestAssessment?.submittedAt != null && latestAssessment.decision == AssessmentDecision.ACCEPTED && entity.getLatestBooking() != null -> ApplicationStatus.placed
-        latestAssessment?.clarificationNotes?.any { it.response == null } == true -> ApplicationStatus.requestedFurtherInformation
-        entity.submittedAt !== null -> ApplicationStatus.submitted
-        else -> ApplicationStatus.inProgress
-      }
-    }
-
     return when {
       latestAssessment?.clarificationNotes?.any { it.response == null } == true -> ApplicationStatus.requestedFurtherInformation
       entity.submittedAt !== null -> ApplicationStatus.submitted
@@ -198,12 +187,9 @@ class ApplicationsTransformer(
     }
   }
 
-  private fun getStatusFromSummary(entity: DomainApprovedPremisesApplicationSummary): ApiApprovedPremisesApplicationStatus {
-    val reversedStatusMap: Map<ApprovedPremisesApplicationStatus, ApiApprovedPremisesApplicationStatus> =
-      this.applicationStatuses.entries.associateBy({ it.value }) { it.key }
-    return reversedStatusMap[ApprovedPremisesApplicationStatus.valueOf(entity.getStatus())]
+  private fun getStatusFromSummary(entity: DomainApprovedPremisesApplicationSummary): ApiApprovedPremisesApplicationStatus =
+    this.reversedStatusMap[ApprovedPremisesApplicationStatus.valueOf(entity.getStatus())]
       ?: throw RuntimeException("Application ${entity.getId()} has no status")
-  }
 
   fun transformJpaDecisionToApi(decision: AssessmentDecision?) = when (decision) {
     AssessmentDecision.ACCEPTED -> uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.accepted
