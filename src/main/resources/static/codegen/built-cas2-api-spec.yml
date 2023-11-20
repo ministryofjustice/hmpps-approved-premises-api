@@ -571,6 +571,8 @@ components:
           properties:
             pdu:
               type: string
+            localAuthorityAreaName:
+              type: string
       required:
         - pdu
     NewPremises:
