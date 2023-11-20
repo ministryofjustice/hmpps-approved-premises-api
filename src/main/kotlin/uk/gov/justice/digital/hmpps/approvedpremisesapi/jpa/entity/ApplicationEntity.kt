@@ -71,7 +71,6 @@ AND (
     SELECT COUNT(*)
       FROM approved_premises_applications apa
       LEFT JOIN applications a ON a.id = apa.id
-      LEFT JOIN assessments ass ON ass.application_id = apa.id AND ass.reallocated_at IS NULL 
       WHERE apa.is_inapplicable IS NOT TRUE
       AND (
         :crnOrName IS NULL OR 
