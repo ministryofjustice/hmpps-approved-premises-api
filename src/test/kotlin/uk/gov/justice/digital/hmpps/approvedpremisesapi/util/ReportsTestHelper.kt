@@ -34,8 +34,10 @@ fun List<BookingEntity>.toBookingsReportData(): List<BookingsReportData> = this
         get() = application?.isEligible
       override val referralEligibilityReason: String?
         get() = application?.eligibilityReason
-      override val probationRegion: String
+      override val probationRegionName: String
         get() = it.premises.probationRegion.name
+      override val localAuthorityAreaName: String?
+        get() = it.premises.localAuthorityArea?.name
       override val crn: String
         get() = it.crn
       override val confirmationId: String?
