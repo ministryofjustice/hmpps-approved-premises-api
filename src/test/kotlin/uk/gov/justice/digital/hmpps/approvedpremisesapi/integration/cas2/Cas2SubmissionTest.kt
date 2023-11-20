@@ -121,6 +121,23 @@ class Cas2SubmissionTest : IntegrationTestBase() {
 
   @Nested
   inner class GetToIndex {
+    @Test
+    fun `Previously unknown Assessor has an ExternalUser record created from their JWT`() {
+      val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt("PREVIOUSLY_UNKNOWN_ASSESSOR")
+
+      externalUserRepository.deleteAll()
+
+      webTestClient.get()
+        .uri("/cas2/submissions")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      Assertions.assertThat(
+        externalUserRepository.findByUsername("PREVIOUSLY_UNKNOWN_ASSESSOR"),
+      ).isNotNull
+    }
 
     @Test
     fun `Assessor can view ALL submitted applications`() {
@@ -189,6 +206,24 @@ class Cas2SubmissionTest : IntegrationTestBase() {
 
   @Nested
   inner class GetToShow {
+
+    @Test
+    fun `Previously unknown Assessor has an ExternalUser record created from their JWT`() {
+      externalUserRepository.deleteAll()
+      val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt("PREVIOUSLY_UNKNOWN_ASSESSOR")
+
+      webTestClient.get()
+        .uri("/cas2/submissions/fea7986d-cae6-4a7a-8420-5b31376ce787")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isNotFound
+
+      Assertions.assertThat(
+        externalUserRepository.findByUsername("PREVIOUSLY_UNKNOWN_ASSESSOR"),
+      ).isNotNull
+    }
+
     @Test
     fun `Assessor can view single submitted application`() {
       `Given a CAS2 Assessor` { assessor, jwt ->

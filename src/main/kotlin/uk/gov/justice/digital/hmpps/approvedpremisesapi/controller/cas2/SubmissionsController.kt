@@ -47,6 +47,7 @@ class SubmissionsController(
 
   override fun submissionsApplicationIdGet(applicationId: UUID): ResponseEntity<Cas2SubmittedApplication> {
     httpAuthService.getCas2AuthenticatedPrincipalOrThrow()
+    ensureExternalUserPersisted()
 
     val application = when (
       val applicationResult = applicationService.getSubmittedApplicationForAssessor(applicationId)
