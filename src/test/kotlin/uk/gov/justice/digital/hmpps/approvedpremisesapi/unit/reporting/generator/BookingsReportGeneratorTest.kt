@@ -48,7 +48,11 @@ class BookingsReportGeneratorTest {
               .withYieldedApArea { ApAreaEntityFactory().produce() }
               .produce()
           }
-          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
+          .withYieldedLocalAuthorityArea {
+            LocalAuthorityEntityFactory()
+              .withName("St Albans")
+              .produce()
+          }
           .produce()
       }
       .produce()
@@ -59,6 +63,7 @@ class BookingsReportGeneratorTest {
     )
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::probationRegion]).isEqualTo("East of England")
+    assertThat(actual[0][BookingsReportRow::localAuthority]).isEqualTo("St Albans")
   }
 
   @Test
