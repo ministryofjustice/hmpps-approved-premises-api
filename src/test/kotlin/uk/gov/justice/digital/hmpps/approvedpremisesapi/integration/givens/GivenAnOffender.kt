@@ -75,7 +75,7 @@ fun OffenderDetailSummary.asCaseSummary() = CaseSummaryFactory()
   .withNomsId(otherIds.nomsNumber)
   .withGender(gender)
   .withPnc(otherIds.pncNumber)
-      .withName(
+  .withName(
     NameFactory()
       .withForename(firstName)
       .withSurname(surname)
