@@ -21,16 +21,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -41,11 +36,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.sql.Timestamp
 import java.time.Instant
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary as DomainApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary as DomainTemporaryAccommodationApplicationSummary
 
@@ -97,9 +90,6 @@ class ApplicationsTransformerTest {
   private val awaitingClarificationNoteFactory = AssessmentClarificationNoteEntityFactory()
     .withCreatedBy(allocatedToUser)
 
-  private val submittedApprovedPremisesApplicationFactory = approvedPremisesApplicationFactory
-    .withSubmittedAt(OffsetDateTime.now())
-
   private val submittedTemporaryAccommodationApplicationFactory = temporaryAccommodationApplicationEntityFactory
     .withArrivalDate(OffsetDateTime.now().toLocalDate().plusDays(7))
     .withSubmittedAt(OffsetDateTime.now())
@@ -110,40 +100,18 @@ class ApplicationsTransformerTest {
     every { mockRisksTransformer.transformDomainToApi(any<PersonRisks>(), any<String>()) } returns mockk()
   }
 
-  @Test
-  fun `transformJpaToApi transforms an in progress Approved Premises application correctly`() {
-    val application = approvedPremisesApplicationFactory.withSubmittedAt(null).produce()
+  @ParameterizedTest
+  @MethodSource("applicationStatusArgs")
+  fun `transformJpaToApi transforms an Approved Premises application correctly`(args: Pair<ApiApprovedPremisesApplicationStatus, ApprovedPremisesApplicationStatus>) {
+    val (apiStatus, jpaStatus) = args
+
+    val application = approvedPremisesApplicationFactory.withStatus(jpaStatus).produce()
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
 
     assertThat(result.id).isEqualTo(application.id)
     assertThat(result.createdByUserId).isEqualTo(user.id)
-    assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
-    assertThat(result.assessmentDecision).isNull()
-  }
-
-  @Test
-  fun `transformJpaToApi transforms an inapplicable Approved Premises application correctly`() {
-    val application = approvedPremisesApplicationFactory.withIsInapplicable(true).produce()
-
-    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
-
-    assertThat(result.id).isEqualTo(application.id)
-    assertThat(result.createdByUserId).isEqualTo(user.id)
-    assertThat(result.status).isEqualTo(ApplicationStatus.inapplicable)
-    assertThat(result.assessmentDecision).isNull()
-  }
-
-  @Test
-  fun `transformJpaToApi transforms a withdrawn Approved Premises application correctly`() {
-    val application = approvedPremisesApplicationFactory.withIsWithdrawn(true).produce()
-
-    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
-
-    assertThat(result.id).isEqualTo(application.id)
-    assertThat(result.createdByUserId).isEqualTo(user.id)
-    assertThat(result.status).isEqualTo(ApplicationStatus.withdrawn)
-    assertThat(result.assessmentDecision).isNull()
+    assertThat(result.status).isEqualTo(apiStatus)
   }
 
   @Test
@@ -172,16 +140,6 @@ class ApplicationsTransformerTest {
   }
 
   @Test
-  fun `transformJpaToApi transforms a submitted Approved Premises application correctly`() {
-    val application = submittedApprovedPremisesApplicationFactory.produce()
-
-    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
-
-    assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
-    assertThat(result.assessmentDecision).isNull()
-  }
-
-  @Test
   fun `transformJpaToApi transforms a submitted Temporary Accommodation application correctly`() {
     val application = submittedTemporaryAccommodationApplicationFactory
       .withYieldedProbationRegion {
@@ -199,30 +157,6 @@ class ApplicationsTransformerTest {
     assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
     assertThat(result.arrivalDate).isEqualTo(application.arrivalDate!!.toInstant())
     assertThat(result.offenceId).isEqualTo(application.offenceId)
-  }
-
-  @Test
-  fun `transformJpaToApi sets status as 'requested further information' when transforming an Approved Premises application with requested clarification notes`() {
-    val application = submittedApprovedPremisesApplicationFactory.produce()
-    val assessment = assessmentFactory
-      .withDecision(null)
-      .withApplication(application)
-      .produce()
-
-    application.assessments = mutableListOf(assessment)
-    assessment.clarificationNotes = mutableListOf(
-      completedClarificationNoteFactory
-        .withAssessment(assessment)
-        .produce(),
-      awaitingClarificationNoteFactory
-        .withAssessment(assessment)
-        .produce(),
-    )
-
-    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
-
-    assertThat(result.status).isEqualTo(ApplicationStatus.requestedFurtherInformation)
-    assertThat(result.assessmentDecision).isNull()
   }
 
   @Test
@@ -252,154 +186,6 @@ class ApplicationsTransformerTest {
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as TemporaryAccommodationApplication
 
     assertThat(result.status).isEqualTo(ApplicationStatus.requestedFurtherInformation)
-  }
-
-  @Test
-  fun `transformJpaToApi sets status as 'submitted' when transforming an Approved Premises application with a completed clarification note`() {
-    val application = submittedApprovedPremisesApplicationFactory.produce()
-    val assessment = assessmentFactory
-      .withDecision(null)
-      .withApplication(application).produce()
-
-    assessment.clarificationNotes = mutableListOf(
-      completedClarificationNoteFactory
-        .withAssessment(assessment)
-        .produce(),
-    )
-
-    application.assessments = mutableListOf(assessment)
-
-    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
-
-    assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
-    assertThat(result.assessmentDecision).isNull()
-    assertThat(result.assessmentId).isEqualTo(assessment.id)
-    assertThat(result.assessmentDecisionDate).isNull()
-  }
-
-  @Test
-  fun `transformJpaToApi sets status as 'rejected' when transforming an Approved Premises application with a rejected Assessment`() {
-    val application = submittedApprovedPremisesApplicationFactory.produce()
-    val assessment = assessmentFactory
-      .withSubmittedAt(OffsetDateTime.now())
-      .withDecision(AssessmentDecision.REJECTED)
-      .withApplication(application)
-      .withSubmittedAt(OffsetDateTime.now())
-      .produce()
-
-    application.assessments = mutableListOf(assessment)
-
-    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
-
-    assertThat(result.status).isEqualTo(ApplicationStatus.rejected)
-    assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.rejected)
-    assertThat(result.assessmentId).isEqualTo(assessment.id)
-    assertThat(result.assessmentDecisionDate).isEqualTo(LocalDate.now())
-  }
-
-  @Test
-  fun `transformJpaToApi sets status as 'pending' when transforming an Approved Premises application with an approved Assessment but no Placement Request`() {
-    val application = submittedApprovedPremisesApplicationFactory.produce()
-    val assessment = assessmentFactory
-      .withSubmittedAt(OffsetDateTime.now())
-      .withDecision(AssessmentDecision.ACCEPTED)
-      .withApplication(application)
-      .withSubmittedAt(OffsetDateTime.now())
-      .produce()
-
-    application.assessments = mutableListOf(assessment)
-
-    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
-
-    assertThat(result.status).isEqualTo(ApplicationStatus.pending)
-    assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.accepted)
-    assertThat(result.assessmentId).isEqualTo(assessment.id)
-    assertThat(result.assessmentDecisionDate).isEqualTo(LocalDate.now())
-  }
-
-  @Test
-  fun `transformJpaToApi sets status as 'awaiting placement' when transforming an Approved Premises application with an approved Assessment with a Placement Request that has no Booking`() {
-    val application = submittedApprovedPremisesApplicationFactory.produce()
-    val assessment = assessmentFactory
-      .withSubmittedAt(OffsetDateTime.now())
-      .withDecision(AssessmentDecision.ACCEPTED)
-      .withApplication(application)
-      .withSubmittedAt(OffsetDateTime.now())
-      .produce()
-
-    application.assessments = mutableListOf(assessment)
-
-    val placementRequest = PlacementRequestEntityFactory()
-      .withPlacementRequirements(
-        PlacementRequirementsEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .produce(),
-      )
-      .withApplication(application)
-      .withAssessment(assessment)
-      .withAllocatedToUser(
-        UserEntityFactory()
-          .withUnitTestControlProbationRegion()
-          .produce(),
-      )
-      .produce()
-
-    application.placementRequests += placementRequest
-
-    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
-
-    assertThat(result.status).isEqualTo(ApplicationStatus.awaitingPlacement)
-    assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.accepted)
-    assertThat(result.assessmentId).isEqualTo(assessment.id)
-    assertThat(result.assessmentDecisionDate).isEqualTo(LocalDate.now())
-  }
-
-  @Test
-  fun `transformJpaToApi sets status as 'accepted' when transforming an Approved Premises application with an approved Assessment with a Placement Request that has a Booking`() {
-    val application = submittedApprovedPremisesApplicationFactory.produce()
-    val assessment = assessmentFactory
-      .withSubmittedAt(OffsetDateTime.now())
-      .withDecision(AssessmentDecision.ACCEPTED)
-      .withApplication(application)
-      .withSubmittedAt(OffsetDateTime.now())
-      .produce()
-
-    application.assessments = mutableListOf(assessment)
-
-    val booking = BookingEntityFactory()
-      .withPremises(
-        ApprovedPremisesEntityFactory()
-          .withUnitTestControlTestProbationAreaAndLocalAuthority()
-          .produce(),
-      )
-      .produce()
-
-    val placementRequest = PlacementRequestEntityFactory()
-      .withPlacementRequirements(
-        PlacementRequirementsEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .produce(),
-      )
-      .withApplication(application)
-      .withAssessment(assessment)
-      .withBooking(booking)
-      .withAllocatedToUser(
-        UserEntityFactory()
-          .withUnitTestControlProbationRegion()
-          .produce(),
-      )
-      .produce()
-
-    application.placementRequests += placementRequest
-
-    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
-
-    assertThat(result.status).isEqualTo(ApplicationStatus.placed)
-    assertThat(result.assessmentDecision).isEqualTo(ApiAssessmentDecision.accepted)
-    assertThat(result.assessmentId).isEqualTo(assessment.id)
-    assertThat(result.assessmentDecisionDate).isEqualTo(LocalDate.now())
   }
 
   @Test

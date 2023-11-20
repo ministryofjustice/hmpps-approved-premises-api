@@ -1942,7 +1942,7 @@ components:
             document:
               $ref: '#/components/schemas/AnyValue'
             status:
-              $ref: '#/components/schemas/ApplicationStatus'
+              $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
             assessmentId:
               type: string
               format: uuid
