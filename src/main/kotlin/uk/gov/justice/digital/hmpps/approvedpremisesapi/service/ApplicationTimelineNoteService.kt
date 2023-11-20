@@ -22,7 +22,7 @@ class ApplicationTimelineNoteService(
         id = UUID.randomUUID(),
         applicationId = applicationId,
         createdBy = applicationTimelineNote.createdByUserId,
-        createdAtDate = OffsetDateTime.now(),
+        createdAt = OffsetDateTime.now(),
         body = applicationTimelineNote.note,
       ),
     )

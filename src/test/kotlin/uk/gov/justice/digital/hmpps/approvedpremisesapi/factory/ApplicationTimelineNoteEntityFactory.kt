@@ -13,7 +13,7 @@ class ApplicationTimelineNoteEntityFactory : Factory<ApplicationTimelineNoteEnti
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var applicationId: Yielded<UUID> = { UUID.randomUUID() }
   private var createdBy: Yielded<UUID> = { UUID.randomUUID() }
-  private var createdAtDate: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
+  private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var body: Yielded<String> = { randomStringUpperCase(12) }
 
   fun withId(id: UUID) = apply {
@@ -28,8 +28,8 @@ class ApplicationTimelineNoteEntityFactory : Factory<ApplicationTimelineNoteEnti
     this.createdBy = { createdBy.id }
   }
 
-  fun withCreatedAtDate(createdAtDate: OffsetDateTime) = apply {
-    this.createdAtDate = { createdAtDate }
+  fun withCreatedAt(createdAt: OffsetDateTime) = apply {
+    this.createdAt = { createdAt }
   }
 
   fun withBody(body: String) = apply {
@@ -40,7 +40,7 @@ class ApplicationTimelineNoteEntityFactory : Factory<ApplicationTimelineNoteEnti
     id = this.id(),
     applicationId = this.applicationId(),
     createdBy = this.createdBy(),
-    createdAtDate = this.createdAtDate(),
+    createdAt = this.createdAt(),
     body = this.body(),
   )
 }

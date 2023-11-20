@@ -11,7 +11,7 @@ class ApplicationTimelineNoteTransformer {
 
   fun transformJpaToApi(jpa: ApplicationTimelineNoteEntity) = ApplicationTimelineNote(
     id = jpa.id,
-    createdAt = jpa.createdAtDate.toInstant(),
+    createdAt = jpa.createdAt.toInstant(),
     createdByUserId = jpa.createdBy,
     note = jpa.body,
   )
@@ -19,7 +19,7 @@ class ApplicationTimelineNoteTransformer {
   fun transformToTimelineEvents(jpa: ApplicationTimelineNoteEntity) = TimelineEvent(
     type = TimelineEventType.applicationTimelineNote,
     id = jpa.id.toString(),
-    occurredAt = jpa.createdAtDate.toInstant(),
+    occurredAt = jpa.createdAt.toInstant(),
     content = jpa.body,
     createdBy = jpa.createdBy.toString(),
   )

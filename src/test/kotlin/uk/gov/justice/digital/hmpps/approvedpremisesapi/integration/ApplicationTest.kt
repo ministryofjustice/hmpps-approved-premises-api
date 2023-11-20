@@ -2326,7 +2326,7 @@ class ApplicationTest : IntegrationTestBase() {
           withApplicationId(applicationId)
           withBody("note1")
           withId(note1Id)
-          withCreatedAtDate(note1CreatedAt)
+          withCreatedAt(note1CreatedAt)
           withCreatedBy(user)
         }
 
@@ -2334,7 +2334,7 @@ class ApplicationTest : IntegrationTestBase() {
           withApplicationId(applicationId)
           withBody("note2")
           withId(note2Id)
-          withCreatedAtDate(note2CreatedAt)
+          withCreatedAt(note2CreatedAt)
           withCreatedBy(user)
         }
 
@@ -2342,7 +2342,7 @@ class ApplicationTest : IntegrationTestBase() {
           withApplicationId(applicationId)
           withBody("note3")
           withId(note3Id)
-          withCreatedAtDate(note3CreatedAt)
+          withCreatedAt(note3CreatedAt)
           withCreatedBy(user)
         }
 
