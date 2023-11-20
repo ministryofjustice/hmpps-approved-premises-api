@@ -11,6 +11,8 @@ class ExternalUserEntityFactory : Factory<ExternalUserEntity> {
   private var username: Yielded<String> = { randomStringUpperCase(12) }
   private var isEnabled: Yielded<Boolean> = { true }
   private var origin: Yielded<String> = { "NACRO" }
+  private var name: Yielded<String> = { "John Smith" }
+  private var email: Yielded<String> = { "john@external.example.com" }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -25,5 +27,7 @@ class ExternalUserEntityFactory : Factory<ExternalUserEntity> {
     username = this.username(),
     isEnabled = this.isEnabled(),
     origin = this.origin(),
+    name = this.name(),
+    email = this.email(),
   )
 }
