@@ -593,7 +593,7 @@ class TasksTest : IntegrationTestBase() {
     @Test
     fun `Get placement application tasks without JWT returns 401`() {
       webTestClient.get()
-        .uri("/tasks/PlacementApplication")
+        .uri("/tasks/placement-application")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -773,6 +773,254 @@ class TasksTest : IntegrationTestBase() {
               .exchange()
               .expectStatus()
               .isEqualTo(HttpStatus.BAD_REQUEST)
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get tasks by taskType for a user returns the relevant placement requests tasks for a user page 2`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = otherUser,
+              allocatedToUser = otherUser,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              reallocated = true,
+            )
+
+            webTestClient.get()
+              .uri("/tasks/placement-request?page=2")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .expectBody()
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get tasks by taskType for a user returns the relevant placement application tasks for a user page 2`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val approvedPremisesPlacementApplicationJsonSchema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            }
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchema,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchema,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchema,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchema,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchema,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchema,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchema,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchema,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchema,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchema,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchema,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchema,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            webTestClient.get()
+              .uri("/tasks/placement-application?page=2")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .expectBody()
           }
         }
       }

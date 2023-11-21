@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -90,15 +92,17 @@ class TasksController(
 
     if (user.hasRole(UserRole.CAS1_MATCHER)) {
       async {
+        val placementRequests = placementRequestService.getVisiblePlacementRequestsForUser(user, null, null)
         tasks += getPlacementRequestTasks(
-          placementRequestService.getVisiblePlacementRequestsForUser(user),
+          placementRequests.first,
           user,
         )
       }
 
       async {
+        val placementApplications = placementApplicationService.getVisiblePlacementApplicationsForUser(user, null, null)
         tasks += getPlacementApplicationTasks(
-          placementApplicationService.getVisiblePlacementApplicationsForUser(user),
+          placementApplications.first,
           user,
         )
       }
@@ -107,27 +111,42 @@ class TasksController(
     return@runBlocking ResponseEntity.ok(tasks)
   }
 
-  override fun tasksTaskTypeGet(taskType: String): ResponseEntity<List<Task>> = runBlocking {
+  override fun tasksTaskTypeGet(
+    taskType: String,
+    page: Int?,
+    sortDirection: SortDirection?,
+  ): ResponseEntity<List<Task>> = runBlocking {
     val user = userService.getUserForRequest()
     val tasks = mutableListOf<Task>()
     val type = enumConverterFactory.getConverter(TaskType::class.java).convert(
       taskType.kebabCaseToPascalCase(),
     ) ?: throw NotFoundProblem(taskType, "TaskType")
 
+    var metaData: PaginationMetadata? = null
+
     if (user.hasRole(UserRole.CAS1_MATCHER)) {
       when (type) {
         TaskType.placementApplication -> {
+          val placementApplications =
+            placementApplicationService.getVisiblePlacementApplicationsForUser(
+              user,
+              page,
+              sortDirection,
+            )
+          metaData = placementApplications.second
           async {
             tasks += getPlacementApplicationTasks(
-              placementApplicationService.getVisiblePlacementApplicationsForUser(user),
+              placementApplications.first,
               user,
             )
           }
         }
         TaskType.placementRequest -> {
+          val placementRequests = placementRequestService.getVisiblePlacementRequestsForUser(user, page, sortDirection)
+          metaData = placementRequests.second
           async {
             tasks += getPlacementRequestTasks(
-              placementRequestService.getVisiblePlacementRequestsForUser(user),
+              placementRequests.first,
               user,
             )
           }
@@ -138,7 +157,11 @@ class TasksController(
       }
     }
 
-    return@runBlocking ResponseEntity.ok(tasks)
+    return@runBlocking ResponseEntity.ok().headers(
+      metaData?.toHeaders(),
+    ).body(
+      tasks,
+    )
   }
 
   override fun tasksTaskTypeIdGet(id: UUID, taskType: String): ResponseEntity<TaskWrapper> {

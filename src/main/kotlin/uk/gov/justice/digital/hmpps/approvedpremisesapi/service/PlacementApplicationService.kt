@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
@@ -16,10 +17,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
@@ -42,8 +46,15 @@ class PlacementApplicationService(
   private val notifyConfig: NotifyConfig,
 ) {
 
-  fun getVisiblePlacementApplicationsForUser(user: UserEntity): List<PlacementApplicationEntity> {
-    return placementApplicationRepository.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id)
+  fun getVisiblePlacementApplicationsForUser(
+    user: UserEntity,
+    page: Int?,
+    sortDirection: SortDirection?,
+  ): Pair<List<PlacementApplicationEntity>, PaginationMetadata?> {
+    val sortField = "createdAt"
+    val pageable = getPageable(sortField, sortDirection, page)
+    val response = placementApplicationRepository.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id, pageable)
+    return Pair(response.content, getMetadata(response, page))
   }
 
   fun getAllPlacementApplicationEntitiesForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {

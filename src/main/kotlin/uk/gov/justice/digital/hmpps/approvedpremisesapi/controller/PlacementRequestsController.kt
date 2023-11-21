@@ -55,10 +55,10 @@ class PlacementRequestsController(
   override fun placementRequestsGet(): ResponseEntity<List<PlacementRequest>> {
     val user = userService.getUserForRequest()
 
-    val requests = placementRequestService.getVisiblePlacementRequestsForUser(user)
+    val requests = placementRequestService.getVisiblePlacementRequestsForUser(user, null, null)
 
     return ResponseEntity.ok(
-      requests.map {
+      requests.first.map {
         val personInfo = offenderService.getInfoForPerson(it.application.crn, user.deliusUsername, false)
 
         placementRequestTransformer.transformJpaToApi(it, personInfo)

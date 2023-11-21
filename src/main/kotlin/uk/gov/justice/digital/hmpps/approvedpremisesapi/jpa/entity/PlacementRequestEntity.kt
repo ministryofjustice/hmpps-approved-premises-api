@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -16,7 +17,8 @@ import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
-
+@Service
+@Suppress("FunctionNaming")
 @Repository
 interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUID> {
   fun findByApplication(application: ApplicationEntity): PlacementRequestEntity?
@@ -25,7 +27,10 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
 
   fun findAllByPlacementApplication(placementApplication: PlacementApplicationEntity): List<PlacementRequestEntity>
 
-  fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(userId: UUID): List<PlacementRequestEntity>
+  fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(
+    userId: UUID,
+    pageable: Pageable?,
+  ): Page<PlacementRequestEntity>
 
   @Query(
     """
