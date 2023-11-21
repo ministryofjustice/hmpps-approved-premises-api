@@ -17,10 +17,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ManageUsers_mockSuccessfulExternalUsersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
@@ -122,10 +124,20 @@ class Cas2SubmissionTest : IntegrationTestBase() {
   @Nested
   inner class GetToIndex {
     @Test
-    fun `Previously unknown Assessor has an ExternalUser record created from their JWT`() {
-      val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt("PREVIOUSLY_UNKNOWN_ASSESSOR")
-
+    fun `Previously unknown Assessor has an ExternalUser record created from details retrieved from Manage-Users API `() {
       externalUserRepository.deleteAll()
+
+      val username = "PREVIOUSLY_UNKNOWN_ASSESSOR"
+      val externalUserDetails = ExternalUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+
+      ManageUsers_mockSuccessfulExternalUsersCall(
+        username = username,
+        externalUserDetails = externalUserDetails,
+      )
+
+      val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt(username)
 
       webTestClient.get()
         .uri("/cas2/submissions")
@@ -135,7 +147,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
         .isOk
 
       Assertions.assertThat(
-        externalUserRepository.findByUsername("PREVIOUSLY_UNKNOWN_ASSESSOR"),
+        externalUserRepository.findByUsername(username),
       ).isNotNull
     }
 
@@ -208,9 +220,20 @@ class Cas2SubmissionTest : IntegrationTestBase() {
   inner class GetToShow {
 
     @Test
-    fun `Previously unknown Assessor has an ExternalUser record created from their JWT`() {
+    fun `Previously unknown Assessor has an ExternalUser record created from details retrieved from Manage-Users API`() {
       externalUserRepository.deleteAll()
-      val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt("PREVIOUSLY_UNKNOWN_ASSESSOR")
+
+      val username = "PREVIOUSLY_UNKNOWN_ASSESSOR"
+      val externalUserDetails = ExternalUserDetailsFactory()
+        .withUsername(username)
+        .produce()
+
+      ManageUsers_mockSuccessfulExternalUsersCall(
+        username = username,
+        externalUserDetails = externalUserDetails,
+      )
+
+      val jwt = jwtAuthHelper.createValidExternalAuthorisationCodeJwt(username)
 
       webTestClient.get()
         .uri("/cas2/submissions/fea7986d-cae6-4a7a-8420-5b31376ce787")
