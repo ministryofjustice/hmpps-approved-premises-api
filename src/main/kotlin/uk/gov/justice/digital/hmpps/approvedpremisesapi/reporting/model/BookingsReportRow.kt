@@ -20,6 +20,7 @@ data class BookingsReportRow(
   val isReferralEligibleForCas3: Boolean?,
   val referralEligibilityReason: String?,
   val probationRegion: String,
+  val localAuthority: String?,
   val crn: String,
   val offerAccepted: Boolean,
   val isCancelled: Boolean,

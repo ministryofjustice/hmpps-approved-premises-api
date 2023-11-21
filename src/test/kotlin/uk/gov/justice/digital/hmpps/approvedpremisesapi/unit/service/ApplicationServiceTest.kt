@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Probati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
@@ -57,7 +58,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
@@ -162,7 +162,6 @@ class ApplicationServiceTest {
       .produce()
     val applicationSummaries = listOf(
       object : ApprovedPremisesApplicationSummary {
-        override fun getHasPlacementRequest(): Boolean = false
         override fun getIsWomensApplication(): Boolean? = true
         override fun getIsPipeApplication(): Boolean? = true
         override fun getIsEsapApplication() = true
@@ -174,11 +173,8 @@ class ApplicationServiceTest {
         override fun getCreatedByUserId(): UUID = UUID.fromString("60d0a768-1d05-4538-a6fd-78eb723dd310")
         override fun getCreatedAt(): Timestamp = Timestamp.from(Instant.parse("2023-04-20T10:11:00+01:00"))
         override fun getSubmittedAt(): Timestamp? = null
-        override fun getLatestAssessmentSubmittedAt(): Timestamp? = null
-        override fun getLatestAssessmentDecision(): AssessmentDecision? = null
-        override fun getLatestAssessmentHasClarificationNotesWithoutResponse(): Boolean = false
-        override fun getHasBooking(): Boolean = false
         override fun getTier(): String? = null
+        override fun getStatus(): String = ApprovedPremisesApplicationStatus.started.toString()
       },
     )
 

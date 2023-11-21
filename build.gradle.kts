@@ -22,7 +22,7 @@ configurations.matching { it.name == "detekt" }.all {
 }
 
 val springDocVersion = "1.7.0"
-val sentryVersion = "6.33.1"
+val sentryVersion = "6.34.0"
 
 dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
@@ -37,7 +37,7 @@ dependencies {
   implementation("com.github.ben-manes.caffeine:caffeine")
   implementation("com.google.guava:guava:32.1.3-jre")
 
-  runtimeOnly("org.postgresql:postgresql:42.6.0")
+  runtimeOnly("org.postgresql:postgresql:42.7.0")
 
   implementation("org.springdoc:springdoc-openapi-webmvc-core:$springDocVersion")
   implementation("org.springdoc:springdoc-openapi-ui:$springDocVersion")
