@@ -76,7 +76,7 @@ class PersonOffencesTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .json("[{\"deliusEventNumber\":\"${offence.eventNumber}\",\"offenceDescription\":\"${offence.description}\",\"offenceId\":\"\",\"convictionId\":0,\"offenceDate\":\"${offence.date}\"}]")
+          .json("[{\"deliusEventNumber\":\"${offence.eventNumber}\",\"offenceDescription\":\"${offence.description}\",\"offenceId\":\"${offence.code}\",\"convictionId\":${offence.eventNumber.toLong()},\"offenceDate\":\"${offence.date}\"}]")
       }
     }
   }
