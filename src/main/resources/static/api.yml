@@ -2611,6 +2611,33 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /tasks/{taskType}:
+    get:
+      tags:
+        - Task data
+      summary: List all tasks
+      parameters:
+        - in: path
+          name: taskType
+          required: true
+          description: Task type
+          schema:
+            type: string
+      responses:
+        200:
+          description: successfully retrieved tasks
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/Task'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
   /tasks/reallocatable:
     get:
       tags:
