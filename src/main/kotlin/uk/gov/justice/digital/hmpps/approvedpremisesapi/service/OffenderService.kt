@@ -453,7 +453,11 @@ class OffenderService(
     return AuthorisableActionResult.Success(documents)
   }
 
-  fun getDocument(crn: String, documentId: String, outputStream: OutputStream) = communityApiClient.getDocument(crn, documentId, outputStream)
+  fun getDocument(
+    crn: String,
+    documentId: String,
+    outputStream: OutputStream,
+  ) = communityApiClient.getDocument(crn, documentId, outputStream)
 
   fun getInfoForPerson(crn: String, deliusUsername: String, ignoreLao: Boolean): PersonInfoResult {
     var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)

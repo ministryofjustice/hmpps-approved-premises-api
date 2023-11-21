@@ -89,9 +89,53 @@ class TasksController(
     val tasks = mutableListOf<Task>()
 
     if (user.hasRole(UserRole.CAS1_MATCHER)) {
-      async { tasks += getPlacementRequestTasks(placementRequestService.getVisiblePlacementRequestsForUser(user), user) }
+      async {
+        tasks += getPlacementRequestTasks(
+          placementRequestService.getVisiblePlacementRequestsForUser(user),
+          user,
+        )
+      }
 
-      async { tasks += getPlacementApplicationTasks(placementApplicationService.getVisiblePlacementApplicationsForUser(user), user) }
+      async {
+        tasks += getPlacementApplicationTasks(
+          placementApplicationService.getVisiblePlacementApplicationsForUser(user),
+          user,
+        )
+      }
+    }
+
+    return@runBlocking ResponseEntity.ok(tasks)
+  }
+
+  override fun tasksTaskTypeGet(taskType: String): ResponseEntity<List<Task>> = runBlocking {
+    val user = userService.getUserForRequest()
+    val tasks = mutableListOf<Task>()
+    val type = enumConverterFactory.getConverter(TaskType::class.java).convert(
+      taskType.kebabCaseToPascalCase(),
+    ) ?: throw NotFoundProblem(taskType, "TaskType")
+
+    if (user.hasRole(UserRole.CAS1_MATCHER)) {
+      when (type) {
+        TaskType.placementApplication -> {
+          async {
+            tasks += getPlacementApplicationTasks(
+              placementApplicationService.getVisiblePlacementApplicationsForUser(user),
+              user,
+            )
+          }
+        }
+        TaskType.placementRequest -> {
+          async {
+            tasks += getPlacementRequestTasks(
+              placementRequestService.getVisiblePlacementRequestsForUser(user),
+              user,
+            )
+          }
+        }
+        else -> {
+          throw BadRequestProblem()
+        }
+      }
     }
 
     return@runBlocking ResponseEntity.ok(tasks)
@@ -114,7 +158,11 @@ class TasksController(
 
         transformedTask = getAssessmentTask(assessment, user)
 
-        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRolesPassingLAO(assessment.application.crn, assessment.application.getRequiredQualifications(), listOf(UserRole.CAS1_ASSESSOR))
+        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRolesPassingLAO(
+          assessment.application.crn,
+          assessment.application.getRequiredQualifications(),
+          listOf(UserRole.CAS1_ASSESSOR),
+        )
           .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
       }
       TaskType.placementRequest -> {
@@ -125,7 +173,11 @@ class TasksController(
         transformedTask = getPlacementRequestTask(placementRequest, user)
 
         transformedAllocatableUsers =
-          userService.getUsersWithQualificationsAndRolesPassingLAO(placementRequest.application.crn, emptyList(), listOf(UserRole.CAS1_MATCHER))
+          userService.getUsersWithQualificationsAndRolesPassingLAO(
+            placementRequest.application.crn,
+            emptyList(),
+            listOf(UserRole.CAS1_MATCHER),
+          )
             .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
       }
       TaskType.placementApplication -> {
@@ -135,7 +187,11 @@ class TasksController(
 
         transformedTask = getPlacementApplicationTask(placementApplication, user)
 
-        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRolesPassingLAO(placementApplication.application.crn, placementApplication.application.getRequiredQualifications(), listOf(UserRole.CAS1_ASSESSOR))
+        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRolesPassingLAO(
+          placementApplication.application.crn,
+          placementApplication.application.getRequiredQualifications(),
+          listOf(UserRole.CAS1_ASSESSOR),
+        )
           .map { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
       } else -> {
         throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
@@ -165,7 +221,9 @@ class TasksController(
 
     val userId = when {
       xServiceName == ServiceName.temporaryAccommodation -> user.id
-      body?.userId == null -> throw BadRequestProblem(invalidParams = ValidationErrors(mutableMapOf("$.userId" to "empty")))
+      body?.userId == null -> throw BadRequestProblem(
+        invalidParams = ValidationErrors(mutableMapOf("$.userId" to "empty")),
+      )
       else -> body.userId
     }
 
@@ -176,9 +234,16 @@ class TasksController(
     }
 
     val reallocatedTask = when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(
+        errorDetail = validationResult.message,
+      )
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(
+        invalidParams = validationResult.validationMessages,
+      )
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
+        id = validationResult.conflictingEntityId,
+        conflictReason = validationResult.message,
+      )
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
@@ -200,9 +265,16 @@ class TasksController(
     }
 
     when (validationResult) {
-      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validationResult.message)
-      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validationResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
+      is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(
+        errorDetail = validationResult.message,
+      )
+      is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(
+        invalidParams = validationResult.validationMessages,
+      )
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
+        id = validationResult.conflictingEntityId,
+        conflictReason = validationResult.message,
+      )
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
@@ -210,7 +282,12 @@ class TasksController(
   }
 
   private fun getAssessmentTask(assessment: AssessmentEntity, user: UserEntity): AssessmentTask {
-    val offenderDetailsResult = offenderService.getOffenderByCrn(assessment.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+    val offenderDetailsResult =
+      offenderService.getOffenderByCrn(
+        assessment.application.crn,
+        user.deliusUsername,
+        user.hasQualification(UserQualification.LAO),
+      )
 
     return taskTransformer.transformAssessmentToTask(
       assessment = assessment,
@@ -218,8 +295,16 @@ class TasksController(
     )
   }
 
-  private fun getPlacementRequestTask(placementRequest: PlacementRequestEntity, user: UserEntity): PlacementRequestTask {
-    val offenderDetailsResult = offenderService.getOffenderByCrn(placementRequest.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+  private fun getPlacementRequestTask(
+    placementRequest: PlacementRequestEntity,
+    user: UserEntity,
+  ): PlacementRequestTask {
+    val offenderDetailsResult =
+      offenderService.getOffenderByCrn(
+        placementRequest.application.crn,
+        user.deliusUsername,
+        user.hasQualification(UserQualification.LAO),
+      )
 
     return taskTransformer.transformPlacementRequestToTask(
       placementRequest = placementRequest,
@@ -227,8 +312,16 @@ class TasksController(
     )
   }
 
-  private fun getPlacementApplicationTask(placementApplication: PlacementApplicationEntity, user: UserEntity): PlacementApplicationTask {
-    val offenderDetailsResult = offenderService.getOffenderByCrn(placementApplication.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+  private fun getPlacementApplicationTask(
+    placementApplication: PlacementApplicationEntity,
+    user: UserEntity,
+  ): PlacementApplicationTask {
+    val offenderDetailsResult =
+      offenderService.getOffenderByCrn(
+        placementApplication.application.crn,
+        user.deliusUsername,
+        user.hasQualification(UserQualification.LAO),
+      )
 
     return taskTransformer.transformPlacementApplicationToTask(
       placementApplication = placementApplication,
@@ -240,16 +333,37 @@ class TasksController(
     getAssessmentTask(it, user)
   }
 
-  private suspend fun getPlacementRequestTasks(placementRequests: List<PlacementRequestEntity>, user: UserEntity) = placementRequests.map { getPlacementRequestTask(it, user) }
-
-  private suspend fun getPlacementApplicationTasks(placementApplications: List<PlacementApplicationEntity>, user: UserEntity) = placementApplications.map {
-    getPlacementApplicationTask(it, user)
+  private suspend fun getPlacementRequestTasks(
+    placementRequests: List<PlacementRequestEntity>,
+    user: UserEntity,
+  ) = placementRequests.map {
+    getPlacementRequestTask(it, user)
   }
 
+  private suspend fun getPlacementApplicationTasks(
+    placementApplications: List<PlacementApplicationEntity>,
+    user: UserEntity,
+  ) =
+    placementApplications.map {
+      getPlacementApplicationTask(it, user)
+    }
+
   private fun responseForAllTypes(user: UserEntity): ResponseEntity<List<Task>> = runBlocking {
-    val assessmentTasks = getAssessmentTasks(assessmentService.getAllReallocatable(), user)
-    val placementRequestTasks = getPlacementRequestTasks(placementRequestService.getAllReallocatable(), user)
-    val placementApplicationTasks = getPlacementApplicationTasks(placementApplicationService.getAllReallocatable(), user)
+    val assessmentTasks =
+      getAssessmentTasks(
+        assessmentService.getAllReallocatable(),
+        user,
+      )
+    val placementRequestTasks =
+      getPlacementRequestTasks(
+        placementRequestService.getAllReallocatable(),
+        user,
+      )
+    val placementApplicationTasks =
+      getPlacementApplicationTasks(
+        placementApplicationService.getAllReallocatable(),
+        user,
+      )
     val tasks: MutableList<Task> = ArrayList()
     async { tasks.addAll(assessmentTasks) }
     async { tasks.addAll(placementRequestTasks) }
@@ -268,7 +382,11 @@ class TasksController(
   }
 
   private fun placementApplicationTasks(user: UserEntity): ResponseEntity<List<Task>> = runBlocking {
-    val placementApplicationTasks = getPlacementApplicationTasks(placementApplicationService.getAllReallocatable(), user)
+    val placementApplicationTasks =
+      getPlacementApplicationTasks(
+        placementApplicationService.getAllReallocatable(),
+        user,
+      )
     return@runBlocking ResponseEntity.ok(placementApplicationTasks)
   }
 }
