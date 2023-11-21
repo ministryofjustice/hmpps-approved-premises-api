@@ -442,6 +442,68 @@ class DomainEventBuilderTest {
     }
   }
 
+  @Test
+  fun `getBookingCancelledUpdatedsDomainEvent transforms the booking information correctly`() {
+    val cancellationReasonName = "Some cancellation reason"
+    val cancellationNotes = "Some notes about the cancellation"
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withApArea(
+        ApAreaEntityFactory().produce(),
+      )
+      .produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withProbationRegion(probationRegion)
+      .withLocalAuthorityArea(
+        LocalAuthorityEntityFactory().produce(),
+      )
+      .produce()
+
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val booking = BookingEntityFactory()
+      .withPremises(premises)
+      .withApplication(application)
+      .produce()
+
+    val cancellationReason = CancellationReasonEntityFactory()
+      .withName(cancellationReasonName)
+      .produce()
+
+    booking.cancellations += CancellationEntityFactory()
+      .withBooking(booking)
+      .withReason(cancellationReason)
+      .withNotes(cancellationNotes)
+      .produce()
+
+    val event = domainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking)
+
+    assertThat(event).matches {
+      val data = it.data.eventDetails
+
+      it.applicationId == application.id &&
+        it.bookingId == booking.id &&
+        it.crn == booking.crn &&
+        data.personReference.crn == booking.crn &&
+        data.personReference.noms == booking.nomsNumber &&
+        data.bookingId == booking.id &&
+        data.bookingUrl.toString() == "http://api/premises/${premises.id}/bookings/${booking.id}" &&
+        data.cancellationReason == cancellationReasonName &&
+        data.notes == cancellationNotes &&
+        data.applicationId == application.id &&
+        data.applicationUrl.toString() == "http://api/applications/${application.id}"
+      data.cancelledAt == booking.cancellation?.date
+    }
+  }
+
   private fun assertBookingEventData(
     eventData: DomainEvent<CAS3PersonDepartureUpdatedEvent>,
     booking: BookingEntity,

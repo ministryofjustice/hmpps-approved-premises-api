@@ -55,7 +55,7 @@ domain-events:
   cas2:
     emit-enabled: true
   cas3:
-    emit-enabled: bookingCancelled,bookingConfirmed,bookingProvisionallyMade,personArrived,personDeparted,referralSubmitted,personDepartureUpdated
+    emit-enabled: bookingCancelled,bookingConfirmed,bookingProvisionallyMade,personArrived,personDeparted,referralSubmitted,personDepartureUpdated,bookingCancelledUpdated
 
 hmpps:
   auth:
@@ -133,6 +133,7 @@ url-templates:
       application: http://api/applications/#applicationId
       booking: http://api/premises/#premisesId/bookings/#bookingId
       booking-cancelled-event-detail: http://api/events/cas3/booking-cancelled/#eventId
+      booking-cancelled-updated-event-detail: http://api/events/cas3/booking-cancelled-updated/#eventId
       booking-confirmed-event-detail: http://api/events/cas3/booking-confirmed/#eventId
       booking-provisionally-made-event-detail: http://api/events/cas3/booking-provisionally-made/#eventId
       person-arrived-event-detail: http://api/events/cas3/person-arrived/#eventId

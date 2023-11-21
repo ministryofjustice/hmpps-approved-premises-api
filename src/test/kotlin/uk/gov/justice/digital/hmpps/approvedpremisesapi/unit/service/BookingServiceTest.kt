@@ -2235,25 +2235,12 @@ class BookingServiceTest {
     fun `createCancellation returns Success with correct result and emits a domain event for CAS3`() {
       val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
 
-      val bookingEntity = BookingEntityFactory()
-        .withYieldedPremises {
-          TemporaryAccommodationPremisesEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-            .produce()
-        }
-        .withServiceName(ServiceName.temporaryAccommodation)
-        .produce()
+      val bookingEntity = createTemporaryAccommodationBookingEntity()
 
       val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
 
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-
       every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
 
       val result = bookingService.createCancellation(
@@ -2274,6 +2261,60 @@ class BookingServiceTest {
       verify(exactly = 1) {
         mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
       }
+      verify(exactly = 0) {
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+      }
+    }
+
+    @Test
+    fun `createCancellation returns Success with correct result and emits cancelled-updated domain event for CAS3`() {
+      val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+      val bookingEntity = createTemporaryAccommodationBookingEntity()
+      val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
+      val cancellationEntity = CancellationEntityFactory().withBooking(bookingEntity).withReason(reasonEntity).produce()
+      bookingEntity.cancellations += cancellationEntity
+      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+      every { mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any()) } just Runs
+
+      val result = bookingService.createCancellation(
+        booking = bookingEntity,
+        cancelledAt = LocalDate.parse("2022-08-25"),
+        reasonId = reasonId,
+        notes = "notes",
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(bookingEntity.cancellations).contains(result.entity)
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(bookingEntity)
+      }
+      verify(exactly = 0) {
+        mockCas3DomainEventService.saveBookingCancelledEvent(any())
+      }
+    }
+
+    private fun createTemporaryAccommodationBookingEntity(): BookingEntity {
+      val bookingEntity = BookingEntityFactory()
+        .withYieldedPremises {
+          TemporaryAccommodationPremisesEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+            .produce()
+        }
+        .withServiceName(ServiceName.temporaryAccommodation)
+        .produce()
+      return bookingEntity
     }
   }
 

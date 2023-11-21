@@ -25,7 +25,7 @@ domain-events:
   cas2:
     emit-enabled: true
   cas3:
-    emit-enabled: bookingCancelled,bookingConfirmed,bookingProvisionallyMade,personArrived,personDeparted,referralSubmitted,personDepartureUpdated
+    emit-enabled: bookingCancelled,bookingConfirmed,bookingProvisionallyMade,personArrived,personDeparted,referralSubmitted,personDepartureUpdated,bookingCancelledUpdated
 
 log-client-credentials-jwt-info: true
 
