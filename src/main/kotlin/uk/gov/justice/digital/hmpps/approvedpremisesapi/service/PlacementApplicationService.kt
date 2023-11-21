@@ -43,7 +43,7 @@ class PlacementApplicationService(
 ) {
 
   fun getVisiblePlacementApplicationsForUser(user: UserEntity): List<PlacementApplicationEntity> {
-    return placementApplicationRepository.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id)
+    return placementApplicationRepository.findAllByAllocatedToUser_IdAndReallocatedAtNullAndDecisionNull(user.id)
   }
 
   fun getAllPlacementApplicationEntitiesForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
