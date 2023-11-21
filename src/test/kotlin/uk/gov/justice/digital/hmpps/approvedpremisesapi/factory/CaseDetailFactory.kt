@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Offe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Profile
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Registration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Team
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.LocalDate
@@ -56,7 +57,7 @@ class CaseDetailOffenceFactory : Factory<Offence> {
   var description: Yielded<String> = { randomStringLowerCase(10) }
   var date: Yielded<LocalDate> = { LocalDate.now() }
   var main: Yielded<Boolean> = { false }
-  var eventNumber: Yielded<String> = { randomStringLowerCase(10) }
+  var eventNumber: Yielded<String> = { randomNumberChars(2) }
 
   override fun produce(): Offence = Offence(
     code = this.code(),
