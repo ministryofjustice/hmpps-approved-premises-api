@@ -53,7 +53,7 @@ class PlacementApplicationService(
   ): Pair<List<PlacementApplicationEntity>, PaginationMetadata?> {
     val sortField = "createdAt"
     val pageable = getPageable(sortField, sortDirection, page)
-    val response = placementApplicationRepository.findAllByAllocatedToUser_IdAndReallocatedAtNull(user.id, pageable)
+    val response = placementApplicationRepository.findAllByAllocatedToUser_IdAndReallocatedAtNullAndDecisionNull(user.id, pageable)
     return Pair(response.content, getMetadata(response, page))
   }
 

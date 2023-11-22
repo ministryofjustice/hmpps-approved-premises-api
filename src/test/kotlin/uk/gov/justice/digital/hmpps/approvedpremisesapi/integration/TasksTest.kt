@@ -700,6 +700,17 @@ class TasksTest : IntegrationTestBase() {
                 withPermissiveSchema()
               },
               crn = offenderDetails.otherIds.crn,
+              decision = null,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              decision = PlacementApplicationDecision.ACCEPTED,
             )
 
             `Given a Placement Request`(
@@ -783,89 +794,15 @@ class TasksTest : IntegrationTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
+            val numberOfPlacementRequests = 12
+            repeat(numberOfPlacementRequests) {
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = user,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
 
             `Given a Placement Application`(
               createdByUser = otherUser,
@@ -922,93 +859,19 @@ class TasksTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
             )
 
-            val approvedPremisesPlacementApplicationJsonSchema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+            val approvedPremisesPlacementApplicationJsonSchema =
+              approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
               withPermissiveSchema()
             }
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchema,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchema,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchema,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchema,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchema,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchema,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchema,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchema,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchema,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchema,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchema,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchema,
-              crn = offenderDetails.otherIds.crn,
-            )
+            val numberOfPlacementApplications = 12
+            repeat(numberOfPlacementApplications) {
+              `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchema,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
 
             webTestClient.get()
               .uri("/tasks/placement-application?page=2")

@@ -122,31 +122,36 @@ class TasksController(
       taskType.kebabCaseToPascalCase(),
     ) ?: throw NotFoundProblem(taskType, "TaskType")
 
-    var metaData: PaginationMetadata? = null
+    var paginationMetaData: PaginationMetadata? = null
 
     if (user.hasRole(UserRole.CAS1_MATCHER)) {
       when (type) {
         TaskType.placementApplication -> {
-          val placementApplications =
+          val (placementApplications, metaData) =
             placementApplicationService.getVisiblePlacementApplicationsForUser(
               user,
               page,
               sortDirection,
             )
-          metaData = placementApplications.second
+          paginationMetaData = metaData
           async {
             tasks += getPlacementApplicationTasks(
-              placementApplications.first,
+              placementApplications,
               user,
             )
           }
         }
         TaskType.placementRequest -> {
-          val placementRequests = placementRequestService.getVisiblePlacementRequestsForUser(user, page, sortDirection)
-          metaData = placementRequests.second
+          val (placementRequests, metaData) =
+            placementRequestService.getVisiblePlacementRequestsForUser(
+              user,
+              page,
+              sortDirection,
+            )
+          paginationMetaData = metaData
           async {
             tasks += getPlacementRequestTasks(
-              placementRequests.first,
+              placementRequests,
               user,
             )
           }
@@ -158,7 +163,7 @@ class TasksController(
     }
 
     return@runBlocking ResponseEntity.ok().headers(
-      metaData?.toHeaders(),
+      paginationMetaData?.toHeaders(),
     ).body(
       tasks,
     )
