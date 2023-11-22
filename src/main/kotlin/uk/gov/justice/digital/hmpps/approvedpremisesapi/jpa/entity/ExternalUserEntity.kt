@@ -22,6 +22,8 @@ data class ExternalUserEntity(
   val username: String,
   var isEnabled: Boolean,
   var origin: String,
+  var name: String,
+  var email: String,
 
   @CreationTimestamp
   private val createdAt: OffsetDateTime? = null,

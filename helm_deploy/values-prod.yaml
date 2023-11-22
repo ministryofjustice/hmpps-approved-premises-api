@@ -26,6 +26,7 @@ generic-service:
     SERVICES_HMPPS-TIER_BASE-URL: https://hmpps-tier.hmpps.service.justice.gov.uk
     SERVICES_PRISONS-API_BASE-URL: https://api.prison.service.justice.gov.uk
     SERVICES_NOMIS-USER-ROLES-API_BASE-URL: https://nomis-user.aks-live-1.studio-hosting.service.justice.gov.uk
+    SERVICES_MANAGE-USERS-API_BASE-URL: https://manage-users-api.hmpps.service.justice.gov.uk
     SERVICES_CASE-NOTES_BASE-URL: https://offender-case-notes.service.justice.gov.uk
     SERVICES_AP-OASYS-CONTEXT-API_BASE-URL: https://approved-premises-and-oasys.hmpps.service.justice.gov.uk
     SERVICES_MANAGE-ADJUDICATIONS-API_BASE-URL: https://manage-adjudications-api.hmpps.service.justice.gov.uk

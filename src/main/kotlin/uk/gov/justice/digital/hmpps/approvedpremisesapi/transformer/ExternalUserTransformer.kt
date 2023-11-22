@@ -12,6 +12,8 @@ class ExternalUserTransformer {
       id = externalUserEntity.id,
       username = externalUserEntity.username,
       origin = externalUserEntity.origin,
+      name = externalUserEntity.name,
+      email = externalUserEntity.email,
     )
   }
 }
