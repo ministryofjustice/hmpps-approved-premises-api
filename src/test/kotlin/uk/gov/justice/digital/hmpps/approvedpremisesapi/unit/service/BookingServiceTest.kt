@@ -100,7 +100,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
@@ -4256,69 +4258,9 @@ class BookingServiceTest {
         departureDate = departureDate,
       )
 
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.Success).isTrue
-
-      val createdBooking = (validatableResult as ValidatableActionResult.Success).entity
-
-      verify(exactly = 1) {
-        mockBookingRepository.save(
-          match {
-            it.crn == application.crn &&
-              it.premises == premises &&
-              it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
-          },
-        )
-      }
-
-      verify(exactly = 1) {
-        mockDomainEventService.saveBookingMadeDomainEvent(
-          match {
-            val data = (it.data as BookingMadeEnvelope).eventDetails
-
-            it.applicationId == placementRequest.application.id &&
-              it.crn == application.crn &&
-              data.applicationId == placementRequest.application.id &&
-              data.applicationUrl == "http://frontend/applications/${placementRequest.application.id}" &&
-              data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
-              data.deliusEventNumber == placementRequest.application.eventNumber &&
-              data.premises == Premises(
-              id = premises.id,
-              name = premises.name,
-              apCode = premises.apCode,
-              legacyApCode = premises.qCode,
-              localAuthorityAreaName = premises.localAuthorityArea!!.name,
-            ) &&
-              data.arrivalOn == arrivalDate
-          },
-        )
-      }
-
-      verify(exactly = 1) {
-        mockPlacementRequestRepository.save(
-          match {
-            it.booking == createdBooking
-          },
-        )
-      }
-
-      verify(exactly = 2) {
-        mockEmailNotificationService.sendEmail(
-          any(),
-          any(),
-          match {
-            it["name"] == otherUser.name &&
-              (it["apName"] as String) == premises.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
-              (it["bookingUrl"] as String).matches(Regex("http://frontend/premises/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}/bookings/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-          },
-        )
-      }
+      assertBookingCreated(authorisableResult, application, premises, arrivalDate, departureDate)
+      assertDomainEventSent(placementRequest, offenderDetails, premises, arrivalDate)
+      assertEmailsSent(otherUser, premises)
     }
 
     @Test
@@ -4372,69 +4314,90 @@ class BookingServiceTest {
         departureDate = departureDate,
       )
 
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.Success).isTrue
+      assertBookingCreated(authorisableResult, application, premises, arrivalDate, departureDate)
+      assertDomainEventSent(placementRequest, offenderDetails, premises, arrivalDate)
+      assertEmailsSent(otherUser, premises)
+    }
 
-      val createdBooking = (validatableResult as ValidatableActionResult.Success).entity
+    @Test
+    fun `createApprovedPremisesBookingFromPlacementRequest saves Booking, creates Domain Event and sends email when a cancelled booking exists`() {
+      val arrivalDate = LocalDate.parse("2023-02-22")
+      val departureDate = LocalDate.parse("2023-02-23")
 
-      verify(exactly = 1) {
-        mockBookingRepository.save(
-          match {
-            it.crn == application.crn &&
-              it.premises == premises &&
-              it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
-          },
+      val existingPremises = TemporaryAccommodationPremisesEntityFactory()
+        .withUnitTestControlTestProbationAreaAndLocalAuthority()
+        .produce()
+
+      val existingRoom = RoomEntityFactory()
+        .withPremises(existingPremises)
+        .produce()
+
+      val existingBed = BedEntityFactory()
+        .withRoom(existingRoom)
+        .produce()
+
+      val existingBooking = BookingEntityFactory()
+        .withPremises(existingPremises)
+        .withBed(existingBed)
+        .produce()
+
+      val cancellation = CancellationEntityFactory()
+        .withYieldedReason { CancellationReasonEntityFactory().produce() }
+        .withBooking(existingBooking)
+        .produce()
+
+      existingBooking.cancellations = mutableListOf(cancellation)
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
         )
-      }
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withAllocatedToUser(user)
+        .withBooking(existingBooking)
+        .produce()
 
-      verify(exactly = 1) {
-        mockDomainEventService.saveBookingMadeDomainEvent(
-          match {
-            val data = (it.data as BookingMadeEnvelope).eventDetails
+      every { mockPlacementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
 
-            it.applicationId == placementRequest.application.id &&
-              it.crn == application.crn &&
-              data.applicationId == placementRequest.application.id &&
-              data.applicationUrl == "http://frontend/applications/${placementRequest.application.id}" &&
-              data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
-              data.deliusEventNumber == placementRequest.application.eventNumber &&
-              data.premises == Premises(
-              id = premises.id,
-              name = premises.name,
-              apCode = premises.apCode,
-              legacyApCode = premises.qCode,
-              localAuthorityAreaName = premises.localAuthorityArea!!.name,
-            ) &&
-              data.arrivalOn == arrivalDate
-          },
-        )
-      }
+      val premises = ApprovedPremisesEntityFactory()
+        .withUnitTestControlTestProbationAreaAndLocalAuthority()
+        .produce()
 
-      verify(exactly = 1) {
-        mockPlacementRequestRepository.save(
-          match {
-            it.booking == createdBooking
-          },
-        )
-      }
+      every { mockPremisesRepository.findByIdOrNull(premises.id) } returns premises
 
-      verify(exactly = 2) {
-        mockEmailNotificationService.sendEmail(
-          any(),
-          any(),
-          match {
-            it["name"] == otherUser.name &&
-              (it["apName"] as String) == premises.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
-              (it["bookingUrl"] as String).matches(Regex("http://frontend/premises/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}/bookings/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-          },
-        )
-      }
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(application.crn)
+        .produce()
+
+      val staffUserDetails = StaffUserDetailsFactory()
+        .withUsername(user.deliusUsername)
+        .produce()
+
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+      every { mockPlacementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+      every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
+      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+      every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
+      every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
+
+      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+
+      val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
+        user = user,
+        placementRequestId = placementRequest.id,
+        bedId = null,
+        premisesId = premises.id,
+        arrivalDate = arrivalDate,
+        departureDate = departureDate,
+      )
+
+      assertBookingCreated(authorisableResult, application, premises, arrivalDate, departureDate)
+      assertDomainEventSent(placementRequest, offenderDetails, premises, arrivalDate)
+      assertEmailsSent(otherUser, premises)
     }
 
     @Test
@@ -4499,6 +4462,18 @@ class BookingServiceTest {
         departureDate = departureDate,
       )
 
+      assertBookingCreated(authorisableResult, application, premises, arrivalDate, departureDate)
+      assertDomainEventSent(placementRequest, offenderDetails, premises, arrivalDate)
+      assertEmailsSent(otherUser, premises)
+    }
+
+    private fun assertBookingCreated(
+      authorisableResult: AuthorisableActionResult<ValidatableActionResult<BookingEntity>>,
+      application: ApprovedPremisesApplicationEntity,
+      premises: ApprovedPremisesEntity,
+      arrivalDate: LocalDate,
+      departureDate: LocalDate,
+    ) {
       assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
       val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
       assertThat(validatableResult is ValidatableActionResult.Success).isTrue
@@ -4516,6 +4491,21 @@ class BookingServiceTest {
         )
       }
 
+      verify(exactly = 1) {
+        mockPlacementRequestRepository.save(
+          match {
+            it.booking == createdBooking
+          },
+        )
+      }
+    }
+
+    private fun assertDomainEventSent(
+      placementRequest: PlacementRequestEntity,
+      offenderDetails: OffenderDetailSummary,
+      premises: ApprovedPremisesEntity,
+      arrivalDate: LocalDate,
+    ) {
       verify(exactly = 1) {
         mockDomainEventService.saveBookingMadeDomainEvent(
           match {
@@ -4541,21 +4531,15 @@ class BookingServiceTest {
           },
         )
       }
+    }
 
-      verify(exactly = 1) {
-        mockPlacementRequestRepository.save(
-          match {
-            it.booking == createdBooking
-          },
-        )
-      }
-
+    private fun assertEmailsSent(user: UserEntity, premises: ApprovedPremisesEntity) {
       verify(exactly = 2) {
         mockEmailNotificationService.sendEmail(
           any(),
           any(),
           match {
-            it["name"] == otherUser.name &&
+            it["name"] == user.name &&
               (it["apName"] as String) == premises.name &&
               (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
               (it["bookingUrl"] as String).matches(Regex("http://frontend/premises/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}/bookings/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
