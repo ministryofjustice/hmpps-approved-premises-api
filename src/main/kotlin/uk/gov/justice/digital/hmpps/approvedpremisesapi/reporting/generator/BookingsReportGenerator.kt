@@ -6,6 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Bookings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 
 class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo, BookingsReportRow, BookingsReportProperties>(BookingsReportRow::class) {
@@ -52,7 +54,7 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
         actualNightsStayed = if (booking.startDate == null) {
           null
         } else {
-          booking.actualEndDate?.let { ChronoUnit.DAYS.between(booking.startDate, it.toLocalDateTime()?.toLocalDate()).toInt() }
+          booking.actualEndDate?.let { ChronoUnit.DAYS.between(LocalDateTime.of(booking.startDate, LocalTime.MAX), it.toLocalDateTime()).toInt() }
         },
         accommodationOutcome = booking.accommodationOutcome,
       ),
