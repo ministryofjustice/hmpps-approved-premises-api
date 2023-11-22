@@ -2547,6 +2547,25 @@ components:
         - name
         - deliusUsername
         - region
+    UserWithWorkload:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            numAssessmentsPending:
+              type: integer
+            numAssessmentsCompleted7Days:
+              type: integer
+            numAssessmentsCompleted30Days:
+              type: integer
+            qualifications:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserQualification'
+            roles:
+              type: array
+              items:
+                $ref: '#/components/schemas/ApprovedPremisesUserRole'
     ApprovedPremisesUser:
       allOf:
         - $ref: '#/components/schemas/User'

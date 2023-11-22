@@ -117,6 +117,47 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
     nativeQuery = true,
   )
   fun findUserWithLeastPendingOrCompletedInLastWeekPlacementRequests(userIds: List<UUID>): UserEntity?
+
+  @Query(
+    """
+      SELECT
+      (
+        SELECT
+          count(*)
+        from
+          assessments a
+        where
+          a.allocated_to_user_id = u.id
+          and a.reallocated_at is null
+          and a.submitted_at is null
+      ) as pendingAssessments,
+      (
+        SELECT
+          count(*)
+        from
+          assessments a
+        where
+          a.allocated_to_user_id = u.id
+          and a.reallocated_at is null
+          and a.submitted_at > current_date - interval '7' day
+      ) as completedAssessmentsInTheLastSevenDays,
+      (
+        SELECT
+          count(*)
+        from
+          assessments a
+        where
+          a.allocated_to_user_id = u.id
+          and a.reallocated_at is null
+          and a.submitted_at > current_date - interval '30' day
+      ) as completedAssessmentsInTheLastThirtyDays
+    FROM
+      users u
+      WHERE u.id = :userId
+    """,
+    nativeQuery = true,
+  )
+  fun findWorkloadForUserId(userId: UUID): UserWorkload
 }
 
 @Entity
@@ -207,4 +248,12 @@ enum class UserQualification {
   LAO,
   ESAP,
   EMERGENCY,
+}
+
+interface UserWorkload {
+  fun getPendingAssessments(): Int
+
+  fun getCompletedAssessmentsInTheLastSevenDays(): Int
+
+  fun getCompletedAssessmentsInTheLastThirtyDays(): Int
 }

@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification.hasQualificationsAndRoles
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -204,6 +205,16 @@ class UserService(
     }
 
     return AuthorisableActionResult.Success(user)
+  }
+
+  fun getUserWorkload(userId: UUID): UserWorkload {
+    val jpa = userRepository.findWorkloadForUserId(userId)
+    val apiWorkload = UserWorkload(
+      jpa.getPendingAssessments(),
+      jpa.getCompletedAssessmentsInTheLastSevenDays(),
+      jpa.getCompletedAssessmentsInTheLastThirtyDays(),
+    )
+    return apiWorkload
   }
 
   fun getUserForUsername(username: String, throwProblemOn404: Boolean = false): UserEntity {
