@@ -154,7 +154,9 @@ class BookingService(
         return@validated generalError("placementRequestIsWithdrawn")
       }
 
-      if (placementRequest.booking != null) {
+      val existingBooking = placementRequest.booking
+
+      if (existingBooking != null && !existingBooking.isCancelled) {
         return@validated placementRequest.booking!!.id hasConflictError "A Booking has already been made for this Placement Request"
       }
 

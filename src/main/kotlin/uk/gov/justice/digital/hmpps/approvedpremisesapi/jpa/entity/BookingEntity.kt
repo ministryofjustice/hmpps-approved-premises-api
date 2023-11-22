@@ -175,6 +175,9 @@ data class BookingEntity(
   val turnaround: TurnaroundEntity?
     get() = turnarounds.maxByOrNull { it.createdAt }
 
+  val isCancelled: Boolean
+    get() = cancellation != null
+
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other !is BookingEntity) return false
