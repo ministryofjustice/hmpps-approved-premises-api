@@ -2625,6 +2625,16 @@ paths:
           description: Task type
           schema:
             type: string
+        - name: page
+          in: query
+          description: Page number of results to return.
+          schema:
+            type: integer
+        - name: sortDirection
+          in: query
+          description: The direction to sort the results by. If blank eill sort by descending order
+          schema:
+            $ref: '#/components/schemas/SortDirection'
       responses:
         200:
           description: successfully retrieved tasks
@@ -2634,6 +2644,15 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Task'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
         401:
           $ref: '#/components/responses/401Response'
         403:

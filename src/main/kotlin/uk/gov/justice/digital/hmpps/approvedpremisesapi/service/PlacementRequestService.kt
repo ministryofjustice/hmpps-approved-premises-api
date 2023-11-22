@@ -56,22 +56,50 @@ class PlacementRequestService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
 
-  fun getVisiblePlacementRequestsForUser(user: UserEntity): List<PlacementRequestEntity> {
-    return placementRequestRepository.findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(user.id)
+  fun getVisiblePlacementRequestsForUser(
+    user: UserEntity,
+    page: Int?,
+    sortDirection: SortDirection?,
+  ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
+    val sortField = "createdAt"
+    val pageable = getPageable(sortField, sortDirection, page)
+    val response = placementRequestRepository.findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(
+      user.id,
+      pageable,
+    )
+    return Pair(response.content, getMetadata(response, page))
   }
 
   fun getAllReallocatable(): List<PlacementRequestEntity> {
     return placementRequestRepository.findAllReallocatable()
   }
 
-  fun getAllActive(status: PlacementRequestStatus?, crn: String?, crnOrName: String?, tier: String?, arrivalDateStart: LocalDate?, arrivalDateEnd: LocalDate?, page: Int?, sortBy: PlacementRequestSortField, sortDirection: SortDirection?): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
+  fun getAllActive(
+    status: PlacementRequestStatus?,
+    crn: String?,
+    crnOrName: String?,
+    tier: String?,
+    arrivalDateStart: LocalDate?,
+    arrivalDateEnd: LocalDate?,
+    page: Int?,
+    sortBy: PlacementRequestSortField,
+    sortDirection: SortDirection?,
+  ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
     val sortField = when (sortBy) {
       PlacementRequestSortField.applicationSubmittedAt -> "application.submitted_at"
       else -> sortBy.value
     }
 
     val pageable = getPageable(sortField, sortDirection, page)
-    val response = placementRequestRepository.allForDashboard(status, crn, crnOrName, tier, arrivalDateStart, arrivalDateEnd, pageable)
+    val response = placementRequestRepository.allForDashboard(
+      status,
+      crn,
+      crnOrName,
+      tier,
+      arrivalDateStart,
+      arrivalDateEnd,
+      pageable,
+    )
 
     return Pair(response.content, getMetadata(response, page))
   }
