@@ -22,9 +22,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.time.OffsetDateTime
+import java.util.Random
 import java.util.UUID
 
 class TasksTest : IntegrationTestBase() {
@@ -462,6 +464,7 @@ class TasksTest : IntegrationTestBase() {
                   createdByUser = user,
                   crn = offenderDetails.otherIds.crn,
                 ) { assessment, _ ->
+
                   webTestClient.get()
                     .uri("/tasks/assessment/${assessment.id}")
                     .header("Authorization", "Bearer $jwt")
@@ -472,8 +475,16 @@ class TasksTest : IntegrationTestBase() {
                     .json(
                       objectMapper.writeValueAsString(
                         TaskWrapper(
-                          task = taskTransformer.transformAssessmentToTask(assessment, "${offenderDetails.firstName} ${offenderDetails.surname}"),
-                          users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises)),
+                          task = taskTransformer.transformAssessmentToTask(
+                            assessment,
+                            "${offenderDetails.firstName} ${offenderDetails.surname}",
+                          ),
+                          users = listOf(
+                            userTransformer.transformJpaToApi(
+                              allocatableUser,
+                              ServiceName.approvedPremises,
+                            ),
+                          ),
                         ),
                       ),
                     )
@@ -499,6 +510,7 @@ class TasksTest : IntegrationTestBase() {
                 createdByUser = user,
                 crn = offenderDetails.otherIds.crn,
               ) { placementRequest, _ ->
+
                 webTestClient.get()
                   .uri("/tasks/placement-request/${placementRequest.id}")
                   .header("Authorization", "Bearer $jwt")
@@ -509,8 +521,16 @@ class TasksTest : IntegrationTestBase() {
                   .json(
                     objectMapper.writeValueAsString(
                       TaskWrapper(
-                        task = taskTransformer.transformPlacementRequestToTask(placementRequest, "${offenderDetails.firstName} ${offenderDetails.surname}"),
-                        users = listOf(userTransformer.transformJpaToApi(allocatableUser, ServiceName.approvedPremises)),
+                        task = taskTransformer.transformPlacementRequestToTask(
+                          placementRequest,
+                          "${offenderDetails.firstName} ${offenderDetails.surname}",
+                        ),
+                        users = listOf(
+                          userTransformer.transformJpaToApi(
+                            allocatableUser,
+                            ServiceName.approvedPremises,
+                          ),
+                        ),
                       ),
                     ),
                   )
@@ -537,6 +557,7 @@ class TasksTest : IntegrationTestBase() {
                 },
                 crn = offenderDetails.otherIds.crn,
               ) { placementApplication ->
+
                 webTestClient.get()
                   .uri("/tasks/placement-application/${placementApplication.id}")
                   .header("Authorization", "Bearer $jwt")
@@ -555,6 +576,95 @@ class TasksTest : IntegrationTestBase() {
                           userTransformer.transformJpaToApi(
                             allocatableUser,
                             ServiceName.approvedPremises,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+              }
+            }
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get a PlacementApplication Task for an application gets UserWithWorkload and returns 200`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        `Given a User` { user, _ ->
+          `Given a User`(
+            roles = listOf(UserRole.CAS1_ASSESSOR),
+          ) { allocatableUser, _ ->
+            `Given an Offender` { offenderDetails, inmateDetails ->
+              `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+
+              ) { placementApplication ->
+
+                val numAssesmentsPending = 12
+                repeat(numAssesmentsPending) {
+                  `Given an Assessment for Approved Premises`(
+                    allocatedToUser = allocatableUser,
+                    createdByUser = user,
+                    crn = offenderDetails.otherIds.crn,
+                    decision = null,
+                    reallocated = false,
+                  )
+                }
+
+                val numAssesmentsCompleted7Days = 8
+                repeat(numAssesmentsCompleted7Days) {
+                  val days = kotlin.random.Random.nextInt(1, 7).toLong()
+                  `Given an Assessment for Approved Premises`(
+                    allocatedToUser = allocatableUser,
+                    createdByUser = user,
+                    crn = offenderDetails.otherIds.crn,
+                    decision = null,
+                    reallocated = false,
+                    submittedAt = OffsetDateTime.now().minusDays(days),
+                  )
+                }
+
+                val numAssesmentsCompleted30Days = 9
+                repeat(numAssesmentsCompleted30Days) {
+                  val days = kotlin.random.Random.nextInt(8, 30).toLong()
+                  `Given an Assessment for Approved Premises`(
+                    allocatedToUser = allocatableUser,
+                    createdByUser = user,
+                    crn = offenderDetails.otherIds.crn,
+                    decision = null,
+                    reallocated = false,
+                    submittedAt = OffsetDateTime.now().minusDays(days),
+                  )
+                }
+
+                webTestClient.get()
+                  .uri("/tasks/placement-application/${placementApplication.id}")
+                  .header("Authorization", "Bearer $jwt")
+                  .exchange()
+                  .expectStatus()
+                  .isOk
+                  .expectBody()
+                  .json(
+                    objectMapper.writeValueAsString(
+                      TaskWrapper(
+                        task = taskTransformer.transformPlacementApplicationToTask(
+                          placementApplication,
+                          "${offenderDetails.firstName} ${offenderDetails.surname}",
+                        ),
+                        users = listOf(
+                          userTransformer.transformJpaToAPIUserWithWorkload(
+                            allocatableUser,
+                            UserWorkload(
+                              12,
+                              8,
+                              17,
+                            ),
                           ),
                         ),
                       ),
@@ -589,7 +699,7 @@ class TasksTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetTaskTaskIdTest {
+  inner class GetTaskTaskTypeTest {
     @Test
     fun `Get placement application tasks without JWT returns 401`() {
       webTestClient.get()
@@ -861,8 +971,8 @@ class TasksTest : IntegrationTestBase() {
 
             val approvedPremisesPlacementApplicationJsonSchema =
               approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withPermissiveSchema()
-            }
+                withPermissiveSchema()
+              }
             val numberOfPlacementApplications = 12
             repeat(numberOfPlacementApplications) {
               `Given a Placement Application`(

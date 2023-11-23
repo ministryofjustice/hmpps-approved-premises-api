@@ -6,11 +6,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as ApiUserQualification
 
 @Component
@@ -18,6 +20,23 @@ class UserTransformer(
   private val probationRegionTransformer: ProbationRegionTransformer,
 ) {
 
+  fun transformJpaToAPIUserWithWorkload(jpa: UserEntity, userWorkload: UserWorkload): UserWithWorkload {
+    return UserWithWorkload(
+      id = jpa.id,
+      deliusUsername = jpa.deliusUsername,
+      email = jpa.email,
+      name = jpa.name,
+      telephoneNumber = jpa.telephoneNumber,
+      isActive = jpa.isActive,
+      region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
+      service = ServiceName.approvedPremises.value,
+      numAssessmentsPending = userWorkload.numAssessmentsPending,
+      numAssessmentsCompleted30Days = userWorkload.numAssessmentsCompleted30Days,
+      numAssessmentsCompleted7Days = userWorkload.numAssessmentsCompleted7Days,
+      qualifications = jpa.qualifications.map(::transformQualificationToApi),
+      roles = jpa.roles.mapNotNull(::transformApprovedPremisesRoleToApi),
+    )
+  }
   fun transformJpaToApi(jpa: UserEntity, serviceName: ServiceName) = when (serviceName) {
     ServiceName.approvedPremises, ServiceName.cas2 -> ApprovedPremisesUser(
       id = jpa.id,
