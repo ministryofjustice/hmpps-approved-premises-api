@@ -25,6 +25,7 @@ class PremisesSummaryTransformerTest {
       pdu = "North east",
       status = PropertyStatus.active,
       bedCount = 1,
+      localAuthorityAreaName = "Rochford",
     )
 
     val result = premisesSummaryTransformer.transformDomainToApi(domainPremisesSummary)
@@ -40,6 +41,7 @@ class PremisesSummaryTransformerTest {
         status = PropertyStatus.active,
         bedCount = 1,
         service = "CAS3",
+        localAuthorityAreaName = "Rochford",
       ),
     )
   }
@@ -71,6 +73,39 @@ class PremisesSummaryTransformerTest {
         bedCount = 1,
         apCode = "APCODE",
         service = "CAS1",
+      ),
+    )
+  }
+
+  @Test
+  fun `transformDomainToApi transforms the DomainTemporaryAccommodationPremisesSummary into a TemporaryAccommodationPremisesSummary without optional elements`() {
+    val uuid = UUID.randomUUID()
+    val domainPremisesSummary = DomainTemporaryAccommodationPremisesSummary(
+      id = uuid,
+      name = "bob",
+      addressLine1 = "address",
+      addressLine2 = null,
+      postcode = "123ABC",
+      pdu = "North east",
+      status = PropertyStatus.active,
+      bedCount = 1,
+      localAuthorityAreaName = null,
+    )
+
+    val result = premisesSummaryTransformer.transformDomainToApi(domainPremisesSummary)
+
+    assertThat(result).isEqualTo(
+      TemporaryAccommodationPremisesSummary(
+        id = uuid,
+        name = "bob",
+        addressLine1 = "address",
+        addressLine2 = null,
+        postcode = "123ABC",
+        pdu = "North east",
+        status = PropertyStatus.active,
+        bedCount = 1,
+        service = "CAS3",
+        localAuthorityAreaName = null,
       ),
     )
   }

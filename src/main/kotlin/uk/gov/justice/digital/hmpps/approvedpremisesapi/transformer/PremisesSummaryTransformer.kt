@@ -19,6 +19,7 @@ class PremisesSummaryTransformer() {
     bedCount = domain.bedCount,
     pdu = domain.pdu,
     service = "CAS3",
+    localAuthorityAreaName = domain.localAuthorityAreaName,
   )
 
   fun transformDomainToApi(domain: DomainApprovedPremisesSummary): ApiPremisesSummary = ApprovedPremisesSummary(

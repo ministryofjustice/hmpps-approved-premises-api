@@ -64,6 +64,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
         .jsonPath("$[0].status").isEqualTo("active")
         .jsonPath("$[0].pdu").isEqualTo(expectedCas3Premises.probationDeliveryUnit!!.name)
+        .jsonPath("$[0].localAuthorityAreaName").isEqualTo(expectedCas3Premises.localAuthorityArea!!.name)
         .jsonPath("$[0].bedCount").isEqualTo(5)
         .jsonPath("$.length()").isEqualTo(1)
     }
