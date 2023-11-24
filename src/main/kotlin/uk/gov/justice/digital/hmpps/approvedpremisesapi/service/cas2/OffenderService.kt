@@ -7,23 +7,77 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ProbationOffenderSearchApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.ProbationOffenderDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 
 @Service("CAS2OffenderService")
+@Suppress(
+  "ReturnCount",
+)
 class OffenderService(
   private val communityApiClient: CommunityApiClient,
   private val prisonsApiClient: PrisonsApiClient,
+  private val probationOffenderSearchApiClient: ProbationOffenderSearchApiClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
+
+  fun getPersonByNomsNumber(nomsNumber: String): ProbationOffenderSearchResult {
+    fun logFailedResponse(probationResponse: ClientResult.Failure<List<ProbationOffenderDetail>>) =
+      log.warn("Could not get inmate details for $nomsNumber", probationResponse.toException())
+
+    val probationResponse = probationOffenderSearchApiClient.searchOffenderByNomsNumber(nomsNumber)
+
+    val probationOffenderDetailList = when (probationResponse) {
+      is ClientResult.Success -> probationResponse.body
+      is ClientResult.Failure.StatusCode -> when (probationResponse.status) {
+        HttpStatus.NOT_FOUND -> return ProbationOffenderSearchResult.NotFound(nomsNumber)
+        HttpStatus.FORBIDDEN -> return ProbationOffenderSearchResult.Forbidden(nomsNumber, probationResponse.toException())
+        else -> {
+          logFailedResponse(probationResponse)
+          return ProbationOffenderSearchResult.Unknown(nomsNumber, probationResponse.toException())
+        }
+      }
+
+      is ClientResult.Failure -> {
+        logFailedResponse(probationResponse)
+        return ProbationOffenderSearchResult.Unknown(nomsNumber, probationResponse.toException())
+      }
+    }
+
+    if (probationOffenderDetailList.isEmpty()) {
+      return ProbationOffenderSearchResult.NotFound(nomsNumber)
+    } else {
+      val probationOffenderDetail = probationOffenderDetailList[0]
+      val isLao = probationOffenderDetail.currentExclusion == true || probationOffenderDetail.currentRestriction == true
+      if (isLao) {
+        return ProbationOffenderSearchResult.Forbidden(nomsNumber)
+      }
+
+      val inmateDetails = getInmateDetailsForProbationOffender(probationOffenderDetail)
+
+      return ProbationOffenderSearchResult.Success.Full(nomsNumber, probationOffenderDetail, inmateDetails)
+    }
+  }
+
+  private fun getInmateDetailsForProbationOffender(probationOffenderDetail: ProbationOffenderDetail): InmateDetail? {
+    return probationOffenderDetail.otherIds.nomsNumber?.let { nomsNumber ->
+      when (val inmateDetailsResult = getInmateDetailByNomsNumber(probationOffenderDetail.otherIds.crn, nomsNumber)) {
+        is AuthorisableActionResult.Success -> inmateDetailsResult.entity
+        else -> null
+      }
+    }
+  }
 
   fun getInfoForPerson(crn: String): PersonInfoResult {
     var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)

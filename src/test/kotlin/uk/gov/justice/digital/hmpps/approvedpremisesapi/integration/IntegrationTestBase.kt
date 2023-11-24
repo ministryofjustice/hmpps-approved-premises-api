@@ -769,6 +769,22 @@ abstract class IntegrationTestBase {
       )
     }
 
+  fun mockSuccessfulPostCallWithJsonResponse(url: String, requestBody: StringValuePattern, responseBody: Any, responseStatus: Int = 200) =
+    mockOAuth2ClientCredentialsCallIfRequired {
+      wiremockServer.stubFor(
+        post(urlEqualTo(url))
+          .withRequestBody(requestBody)
+          .willReturn(
+            aResponse()
+              .withHeader("Content-Type", "application/json")
+              .withStatus(responseStatus)
+              .withBody(
+                objectMapper.writeValueAsString(responseBody),
+              ),
+          ),
+      )
+    }
+
   fun mockSuccessfulGetCallWithBodyAndJsonResponse(url: String, requestBody: StringValuePattern, responseBody: Any, responseStatus: Int = 200) =
     mockOAuth2ClientCredentialsCallIfRequired {
       wiremockServer.stubFor(
@@ -802,6 +818,17 @@ abstract class IntegrationTestBase {
     mockOAuth2ClientCredentialsCallIfRequired {
       wiremockServer.stubFor(
         WireMock.get(urlEqualTo(url))
+          .willReturn(
+            aResponse()
+              .withStatus(responseStatus),
+          ),
+      )
+    }
+
+  fun mockUnsuccessfulPostCall(url: String, responseStatus: Int) =
+    mockOAuth2ClientCredentialsCallIfRequired {
+      wiremockServer.stubFor(
+        WireMock.post(urlEqualTo(url))
           .willReturn(
             aResponse()
               .withStatus(responseStatus),

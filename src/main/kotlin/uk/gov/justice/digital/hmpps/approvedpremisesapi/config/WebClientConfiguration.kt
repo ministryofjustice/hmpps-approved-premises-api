@@ -280,4 +280,28 @@ class WebClientConfiguration(
       )
       .build()
   }
+
+  @Bean(name = ["probationOffenderSearchApiWebClient"])
+  fun probationOffenderSearchApiClient(
+    clientRegistrations: ClientRegistrationRepository,
+    authorizedClients: OAuth2AuthorizedClientRepository,
+    @Value("\${services.probation-offender-search-api.base-url}") probationOffenderSearchBaseUrl: String,
+  ): WebClient {
+    val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(clientRegistrations, authorizedClients)
+
+    oauth2Client.setDefaultClientRegistrationId("delius-backed-apis")
+
+    return WebClient.builder()
+      .baseUrl(probationOffenderSearchBaseUrl)
+      .clientConnector(
+        ReactorClientHttpConnector(
+          HttpClient
+            .create()
+            .responseTimeout(Duration.ofMillis(upstreamTimeoutMs))
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Duration.ofMillis(upstreamTimeoutMs).toMillis().toInt()),
+        ),
+      )
+      .filter(oauth2Client)
+      .build()
+  }
 }
