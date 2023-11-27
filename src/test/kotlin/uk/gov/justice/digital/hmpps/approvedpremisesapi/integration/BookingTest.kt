@@ -335,9 +335,9 @@ class BookingTest : IntegrationTestBase() {
           withCrn(offenderDetails.otherIds.crn)
         }
 
-        bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
+        bookings[1].let { it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList() }
         bookings[2].let {
-          it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
+          it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
             withBooking(it)
@@ -489,9 +489,9 @@ class BookingTest : IntegrationTestBase() {
           withCrn(offenderDetails.otherIds.crn)
         }
 
-        bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
+        bookings[1].let { it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList() }
         bookings[2].let {
-          it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
+          it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
             withBooking(it)

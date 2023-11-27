@@ -34,7 +34,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var originalArrivalDate: Yielded<LocalDate>? = null
   private var originalDepartureDate: Yielded<LocalDate>? = null
   private var keyWorkerStaffCode: Yielded<String?> = { null }
-  private var arrival: Yielded<ArrivalEntity>? = null
+  private var arrivals: Yielded<MutableList<ArrivalEntity>>? = null
   private var departures: Yielded<MutableList<DepartureEntity>>? = null
   private var nonArrival: Yielded<NonArrivalEntity>? = null
   private var cancellations: Yielded<MutableList<CancellationEntity>>? = null
@@ -79,12 +79,12 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.keyWorkerStaffCode = { staffKeyWorkerCode }
   }
 
-  fun withYieldedArrival(arrival: Yielded<ArrivalEntity>) = apply {
-    this.arrival = arrival
+  fun withYieldedArrivals(arrivals: Yielded<MutableList<ArrivalEntity>>) = apply {
+    this.arrivals = arrivals
   }
 
-  fun withArrival(arrival: ArrivalEntity) = apply {
-    this.arrival = { arrival }
+  fun withArrivals(arrivals: MutableList<ArrivalEntity>) = apply {
+    this.arrivals = { arrivals }
   }
 
   fun withYieldedDepartures(departures: Yielded<MutableList<DepartureEntity>>) = apply {
@@ -185,7 +185,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
     arrivalDate = this.arrivalDate(),
     departureDate = this.departureDate(),
     keyWorkerStaffCode = this.keyWorkerStaffCode(),
-    arrival = this.arrival?.invoke(),
+    arrivals = this.arrivals?.invoke() ?: mutableListOf(),
     departures = this.departures?.invoke() ?: mutableListOf(),
     nonArrival = this.nonArrival?.invoke(),
     cancellations = this.cancellations?.invoke() ?: mutableListOf(),

@@ -164,7 +164,7 @@ class BookingSearchTest : IntegrationTestBase() {
                 withBooking(booking)
               }
 
-              booking.arrival = arrival
+              booking.arrivals.add(arrival)
             }
             // Closed
             3 -> {

@@ -289,7 +289,7 @@ class BedUtilisationReportGeneratorTest {
       .withDepartureDate(LocalDate.parse("2023-04-04"))
       .produce()
       .apply {
-        arrival = ArrivalEntityFactory()
+        arrivals += ArrivalEntityFactory()
           .withBooking(this)
           .produce()
       }
@@ -301,7 +301,7 @@ class BedUtilisationReportGeneratorTest {
       .withDepartureDate(LocalDate.parse("2023-05-04"))
       .produce()
       .apply {
-        arrival = ArrivalEntityFactory()
+        arrivals += ArrivalEntityFactory()
           .withBooking(this)
           .produce()
       }
@@ -636,7 +636,7 @@ class BedUtilisationReportGeneratorTest {
           .withBooking(this)
           .withWorkingDayCount(5)
           .produce()
-        arrival = ArrivalEntityFactory()
+        arrivals += ArrivalEntityFactory()
           .withBooking(this)
           .withArrivalDate(LocalDate.parse("2023-03-28"))
           .produce()
@@ -668,7 +668,7 @@ class BedUtilisationReportGeneratorTest {
           .withBooking(this)
           .withWorkingDayCount(4)
           .produce()
-        arrival = ArrivalEntityFactory()
+        arrivals += ArrivalEntityFactory()
           .withBooking(this)
           .withArrivalDate(LocalDate.parse("2023-04-25"))
           .produce()

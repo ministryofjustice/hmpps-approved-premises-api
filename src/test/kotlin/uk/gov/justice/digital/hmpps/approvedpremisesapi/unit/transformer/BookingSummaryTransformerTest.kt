@@ -27,7 +27,7 @@ class BookingSummaryTransformerTest {
       departureDate = LocalDate.parse("2022-08-30"),
       keyWorkerStaffCode = "789",
       crn = "CRN123",
-      arrival = null,
+      arrivals = mutableListOf(),
       departures = mutableListOf(),
       nonArrival = null,
       cancellations = mutableListOf(),

@@ -208,7 +208,7 @@ class BookingService(
           arrivalDate = arrivalDate,
           departureDate = departureDate,
           keyWorkerStaffCode = null,
-          arrival = null,
+          arrivals = mutableListOf(),
           departures = mutableListOf(),
           nonArrival = null,
           cancellations = mutableListOf(),
@@ -361,7 +361,7 @@ class BookingService(
           arrivalDate = arrivalDate,
           departureDate = departureDate,
           keyWorkerStaffCode = null,
-          arrival = null,
+          arrivals = mutableListOf(),
           departures = mutableListOf(),
           nonArrival = null,
           cancellations = mutableListOf(),
@@ -694,7 +694,7 @@ class BookingService(
           arrivalDate = arrivalDate,
           departureDate = departureDate,
           keyWorkerStaffCode = null,
-          arrival = null,
+          arrivals = mutableListOf(),
           departures = mutableListOf(),
           nonArrival = null,
           cancellations = mutableListOf(),
@@ -920,7 +920,7 @@ class BookingService(
     booking.departureDate = expectedDepartureDate
     updateBooking(booking)
 
-    booking.arrival = arrivalEntity
+    booking.arrivals += arrivalEntity
 
     if (booking.premises is TemporaryAccommodationPremisesEntity) {
       cas3DomainEventService.savePersonArrivedEvent(booking)

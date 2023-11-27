@@ -230,7 +230,7 @@ class DomainEventBuilderTest {
       .withApplication(application)
       .produce()
 
-    booking.arrival = ArrivalEntityFactory()
+    booking.arrivals += ArrivalEntityFactory()
       .withBooking(booking)
       .withArrivalDateTime(arrivalDateTime)
       .withExpectedDepartureDate(expectedDepartureDate)

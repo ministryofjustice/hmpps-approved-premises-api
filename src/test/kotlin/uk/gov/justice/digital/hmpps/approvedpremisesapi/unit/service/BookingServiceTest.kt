@@ -1013,7 +1013,7 @@ class BookingServiceTest {
         .withBooking(bookingEntity)
         .produce()
 
-      bookingEntity.arrival = arrivalEntity
+      bookingEntity.arrivals += arrivalEntity
 
       val result = bookingService.createArrival(
         booking = bookingEntity,
@@ -1171,7 +1171,7 @@ class BookingServiceTest {
         .withBooking(bookingEntity)
         .produce()
 
-      bookingEntity.arrival = arrivalEntity
+      bookingEntity.arrivals += arrivalEntity
 
       val result = bookingService.createCas1Arrival(
         booking = bookingEntity,
@@ -4980,7 +4980,7 @@ class BookingServiceTest {
         .withDepartureDate(LocalDate.parse("2023-07-16"))
         .produce()
         .apply {
-          arrival = ArrivalEntityFactory()
+          arrivals += ArrivalEntityFactory()
             .withBooking(this)
             .produce()
         }
@@ -5009,7 +5009,7 @@ class BookingServiceTest {
         .withDepartureDate(LocalDate.parse("2023-07-16"))
         .produce()
         .apply {
-          arrival = ArrivalEntityFactory()
+          arrivals += ArrivalEntityFactory()
             .withBooking(this)
             .produce()
         }
