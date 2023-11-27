@@ -1749,9 +1749,9 @@ class BookingTest : IntegrationTestBase() {
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            NewCas3Arrival(
-              type = "CAS3",
-              arrivalDate = LocalDate.parse("2022-08-12"),
+            NewCas1Arrival(
+              type = "CAS1",
+              arrivalDateTime = Instant.parse("2022-08-12T15:00:00Z"),
               expectedDepartureDate = LocalDate.parse("2022-08-14"),
               notes = "Hello",
               keyWorkerStaffCode = keyWorker.code,
@@ -1836,6 +1836,141 @@ class BookingTest : IntegrationTestBase() {
           .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
           .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
           .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
+      }
+    }
+  }
+
+  @Test
+  fun `Create Arrival and departure date for a Temporary Accommodation booking and emit arrival domain event for new arrival`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+            }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withYieldedPremises { premises }
+          withYieldedBed { bed }
+          withServiceName(ServiceName.temporaryAccommodation)
+          withArrivalDate(LocalDate.parse("2022-08-10"))
+          withDepartureDate(LocalDate.parse("2022-08-30"))
+          withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
+        }
+
+        webTestClient.post()
+          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewCas3Arrival(
+              type = "CAS3",
+              arrivalDate = LocalDate.parse("2022-08-12"),
+              expectedDepartureDate = LocalDate.parse("2022-08-14"),
+              notes = "Hello",
+              keyWorkerStaffCode = null,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        webTestClient.get()
+          .uri("/premises/${booking.premises.id}/bookings/${booking.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
+          .jsonPath("$.departureDate").isEqualTo("2022-08-14")
+          .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
+          .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
+
+        assertPublishedSNSEvent(
+          booking,
+          "accommodation.cas3.person.arrived",
+          "Someone has arrived at a Transitional Accommodation premises for their booking",
+          "http://api/events/cas3/person-arrived",
+        )
+      }
+    }
+  }
+
+  @Test
+  fun `Create Arrival updates arrival and departure date for a Temporary Accommodation booking which has existing arrival and no domain event send`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist {
+              withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+            }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withYieldedPremises { premises }
+            }
+          }
+        }
+        val booking = bookingEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withYieldedPremises { premises }
+          withYieldedBed { bed }
+          withServiceName(ServiceName.temporaryAccommodation)
+          withArrivalDate(LocalDate.parse("2022-08-10"))
+          withDepartureDate(LocalDate.parse("2022-08-30"))
+          withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
+        }
+        booking.let { it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(2) { withBooking(it) }.toMutableList() }
+
+        webTestClient.post()
+          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewCas3Arrival(
+              type = "CAS3",
+              arrivalDate = LocalDate.parse("2022-08-12"),
+              expectedDepartureDate = LocalDate.parse("2022-08-14"),
+              notes = "Hello",
+              keyWorkerStaffCode = null,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        webTestClient.get()
+          .uri("/premises/${booking.premises.id}/bookings/${booking.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
+          .jsonPath("$.departureDate").isEqualTo("2022-08-14")
+          .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-10")
+          .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
+
+        assertSNSEventNotPublished()
       }
     }
   }
@@ -3444,5 +3579,9 @@ class BookingTest : IntegrationTestBase() {
       SnsEventPersonReference("CRN", booking.crn),
       SnsEventPersonReference("NOMS", booking.nomsNumber!!),
     )
+  }
+
+  private fun assertSNSEventNotPublished() {
+    assertThat(inboundMessageListener.isEmpty()).isTrue()
   }
 }

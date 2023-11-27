@@ -929,6 +929,48 @@ class BookingService(
     return success(arrivalEntity)
   }
 
+  @Transactional
+  fun createCas3Arrival(
+    user: UserEntity? = null,
+    booking: BookingEntity,
+    arrivalDate: LocalDate,
+    expectedDepartureDate: LocalDate,
+    notes: String?,
+    keyWorkerStaffCode: String?,
+  ) = validated<ArrivalEntity> {
+    if (booking.premises !is TemporaryAccommodationPremisesEntity) {
+      return generalError("CAS3 Arrivals cannot be set on non-temporary accommodation premises")
+    }
+
+    if (expectedDepartureDate.isBefore(arrivalDate)) {
+      return "$.expectedDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
+    }
+    val isFirstArrival = booking.arrivals.isNullOrEmpty()
+    val arrivalEntity = arrivalRepository.save(
+      ArrivalEntity(
+        id = UUID.randomUUID(),
+        arrivalDate = arrivalDate,
+        arrivalDateTime = arrivalDate.toLocalDateTime().toInstant(),
+        expectedDepartureDate = expectedDepartureDate,
+        notes = notes,
+        booking = booking,
+        createdAt = OffsetDateTime.now(),
+      ),
+    )
+
+    booking.arrivalDate = arrivalDate
+    booking.departureDate = expectedDepartureDate
+    updateBooking(booking)
+
+    booking.arrivals += arrivalEntity
+
+    if (isFirstArrival) {
+      cas3DomainEventService.savePersonArrivedEvent(booking)
+    }
+
+    return success(arrivalEntity)
+  }
+
   fun createNonArrival(
     user: UserEntity?,
     booking: BookingEntity,
