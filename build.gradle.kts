@@ -6,7 +6,7 @@ plugins {
   id("org.openapi.generator") version "5.4.0"
   id("org.jetbrains.kotlin.plugin.jpa") version "1.9.21"
   id("io.gatling.gradle") version "3.9.5.6"
-  id("io.gitlab.arturbosch.detekt") version "1.23.3"
+  id("io.gitlab.arturbosch.detekt") version "1.23.4"
 }
 
 configurations {
@@ -16,7 +16,7 @@ configurations {
 configurations.matching { it.name == "detekt" }.all {
   resolutionStrategy.eachDependency {
     if (requested.group == "org.jetbrains.kotlin") {
-      useVersion("1.9.10")
+      useVersion("1.9.21")
     }
   }
 }
