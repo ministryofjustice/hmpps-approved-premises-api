@@ -70,8 +70,14 @@ class PlacementRequestService(
     return Pair(response.content, getMetadata(response, page))
   }
 
-  fun getAllReallocatable(): List<PlacementRequestEntity> {
-    return placementRequestRepository.findAllReallocatable()
+  fun getAllReallocatable(
+    page: Int?,
+    sortDirection: SortDirection?,
+  ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
+    val sortField = "created_at"
+    val pageable = getPageable(sortField, sortDirection, page)
+    val allReallocatable = placementRequestRepository.findAllReallocatable(pageable)
+    return Pair(allReallocatable.content, getMetadata(allReallocatable, page))
   }
 
   fun getAllActive(

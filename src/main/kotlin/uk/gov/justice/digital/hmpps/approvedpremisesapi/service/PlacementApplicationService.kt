@@ -302,8 +302,18 @@ class PlacementApplicationService(
     }
   }
 
-  fun getAllReallocatable(): List<PlacementApplicationEntity> {
-    return placementApplicationRepository.findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNull()
+  fun getAllReallocatable(
+    page: Int?,
+    sortDirection: SortDirection?,
+  ): Pair<List<PlacementApplicationEntity>, PaginationMetadata?> {
+    val sortField = "createdAt"
+    val pageable = getPageable(sortField, sortDirection, page)
+    val allReallocatable =
+      placementApplicationRepository.findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNull(
+        pageable,
+      )
+    val metaData = getMetadata(allReallocatable, page)
+    return Pair(allReallocatable.content, metaData)
   }
 
   private fun setSchemaUpToDate(placementApplicationEntity: PlacementApplicationEntity): PlacementApplicationEntity {

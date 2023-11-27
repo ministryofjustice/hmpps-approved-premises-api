@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -37,9 +38,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -75,15 +79,23 @@ class AssessmentService(
     else -> throw RuntimeException("Only CAS3 assessments are currently supported")
   }
 
-  fun getAllReallocatable(): List<AssessmentEntity> {
+  fun getAllReallocatable(
+    page: Int?,
+    sortDirection: SortDirection?,
+  ): Pair<List<AssessmentEntity>, PaginationMetadata?> {
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
-    val assessments = assessmentRepository.findAllByReallocatedAtNullAndSubmittedAtNullAndType(ApprovedPremisesAssessmentEntity::class.java)
+    val sortField = "createdAt"
+    val pageable = getPageable(sortField, sortDirection, page)
+    val assessments =
+      assessmentRepository.findAllByReallocatedAtNullAndSubmittedAtNullAndType(
+        ApprovedPremisesAssessmentEntity::class.java,
+        pageable,
+      )
 
     assessments.forEach {
       it.schemaUpToDate = it.schemaVersion.id == latestSchema.id
     }
-
-    return assessments
+    return Pair(assessments.content, getMetadata(assessments, page))
   }
 
   fun getAssessmentForUser(user: UserEntity, assessmentId: UUID): AuthorisableActionResult<AssessmentEntity> {
