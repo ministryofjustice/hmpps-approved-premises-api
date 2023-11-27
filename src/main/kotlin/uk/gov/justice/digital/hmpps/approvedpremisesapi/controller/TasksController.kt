@@ -62,7 +62,11 @@ class TasksController(
 ) : TasksApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun tasksReallocatableGet(type: String?): ResponseEntity<List<Task>> {
+  override fun tasksReallocatableGet(
+    type: String?,
+    page: Int?,
+    sortDirection: SortDirection?,
+  ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
     if (user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       if (type != null) {
@@ -71,9 +75,9 @@ class TasksController(
         ) ?: throw NotFoundProblem(type, "TaskType")
 
         when (taskType) {
-          TaskType.assessment -> return assessmentTasksResponse(user)
-          TaskType.placementRequest -> return placementRequestTasks(user)
-          TaskType.placementApplication -> return placementApplicationTasks(user)
+          TaskType.assessment -> return assessmentTasksResponse(user, page, sortDirection)
+          TaskType.placementRequest -> return placementRequestTasks(user, page, sortDirection)
+          TaskType.placementApplication -> return placementApplicationTasks(user, page, sortDirection)
           else -> {
             throw BadRequestProblem()
           }
@@ -398,22 +402,37 @@ class TasksController(
       getPlacementApplicationTask(it, user)
     }
 
-  private fun responseForAllTypes(user: UserEntity): ResponseEntity<List<Task>> = runBlocking {
-    val assessmentTasks =
-      getAssessmentTasks(
-        assessmentService.getAllReallocatable(),
-        user,
+  private fun responseForAllTypes(
+    user: UserEntity,
+  ): ResponseEntity<List<Task>> = runBlocking {
+    val (allReallocatableAssessmentTasks, _) =
+      assessmentService.getAllReallocatable(
+        null,
+        null,
       )
-    val placementRequestTasks =
-      getPlacementRequestTasks(
-        placementRequestService.getAllReallocatable(),
-        user,
+    val assessmentTasks = getAssessmentTasks(allReallocatableAssessmentTasks, user)
+
+    val (allReallocatablePlacementRequestTasks, _) =
+      placementRequestService.getAllReallocatable(
+        null,
+        null,
+      )
+    val placementRequestTasks = getPlacementRequestTasks(
+      allReallocatablePlacementRequestTasks,
+      user,
+    )
+
+    val (allReallocatablePlacementApplicationTasks, _) =
+      placementApplicationService.getAllReallocatable(
+        null,
+        null,
       )
     val placementApplicationTasks =
       getPlacementApplicationTasks(
-        placementApplicationService.getAllReallocatable(),
+        allReallocatablePlacementApplicationTasks,
         user,
       )
+
     val tasks: MutableList<Task> = ArrayList()
     async { tasks.addAll(assessmentTasks) }
     async { tasks.addAll(placementRequestTasks) }
@@ -421,29 +440,65 @@ class TasksController(
     return@runBlocking ResponseEntity.ok(tasks)
   }
 
-  private fun assessmentTasksResponse(user: UserEntity): ResponseEntity<List<Task>> = runBlocking {
-    val assessmentTasks = getAssessmentTasks(assessmentService.getAllReallocatable(), user)
-    return@runBlocking ResponseEntity.ok(assessmentTasks)
+  private fun assessmentTasksResponse(
+    user: UserEntity,
+    page: Int?,
+    sortDirection: SortDirection?,
+  ): ResponseEntity<List<Task>> = runBlocking {
+    val (allReallocatable, metaData) =
+      assessmentService.getAllReallocatable(
+        page,
+        sortDirection,
+      )
+    val assessmentTasks = getAssessmentTasks(allReallocatable, user)
+    return@runBlocking ResponseEntity.ok().headers(
+      metaData?.toHeaders(),
+    ).body(
+      assessmentTasks,
+    )
   }
 
   private fun placementRequestTasks(
     user: UserEntity,
+    page: Int?,
+    sortDirection: SortDirection?,
   ): ResponseEntity<List<Task>> = runBlocking {
+    val (allReallocatable, metaData) =
+      placementRequestService.getAllReallocatable(
+        page,
+        sortDirection,
+      )
     val placementRequestTasks = getPlacementRequestTasks(
-      placementRequestService.getAllReallocatable(),
+      allReallocatable,
       user,
     )
-    return@runBlocking ResponseEntity.ok(placementRequestTasks)
+    return@runBlocking ResponseEntity.ok().headers(
+      metaData?.toHeaders(),
+    ).body(
+      placementRequestTasks,
+    )
   }
 
   private fun placementApplicationTasks(
     user: UserEntity,
+    page: Int?,
+    sortDirection: SortDirection?,
   ): ResponseEntity<List<Task>> = runBlocking {
+    val (allReallocatable, metaData) =
+      placementApplicationService.getAllReallocatable(
+        page,
+        sortDirection,
+      )
     val placementApplicationTasks =
       getPlacementApplicationTasks(
-        placementApplicationService.getAllReallocatable(),
+        allReallocatable,
         user,
       )
-    return@runBlocking ResponseEntity.ok(placementApplicationTasks)
+
+    return@runBlocking ResponseEntity.ok().headers(
+      metaData?.toHeaders(),
+    ).body(
+      placementApplicationTasks,
+    )
   }
 }

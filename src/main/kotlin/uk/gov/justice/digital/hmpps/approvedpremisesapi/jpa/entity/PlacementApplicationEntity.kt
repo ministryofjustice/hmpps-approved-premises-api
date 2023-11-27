@@ -21,7 +21,7 @@ import javax.persistence.Table
 @Suppress("FunctionNaming")
 @Repository
 interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEntity, UUID> {
-  fun findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNull(): List<PlacementApplicationEntity>
+  fun findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNull(pageable: Pageable?): Page<PlacementApplicationEntity>
 
   fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndDecisionNull(
     userId: UUID,

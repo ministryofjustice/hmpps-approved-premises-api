@@ -45,11 +45,10 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       AND placement_request.reallocated_at IS NULL
       AND placement_request.is_withdrawn is false
       AND booking_not_made.id IS NULL
-      AND placement_request.reallocated_at IS NULL
     """,
     nativeQuery = true,
   )
-  fun findAllReallocatable(): List<PlacementRequestEntity>
+  fun findAllReallocatable(pageable: Pageable?): Page<PlacementRequestEntity>
 
   fun findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole: Boolean, pageable: Pageable?): Page<PlacementRequestEntity>
 

@@ -2669,6 +2669,16 @@ paths:
           description: Returns tasks that match the given type. If no type given return all.
           schema:
             type: string
+        - name: page
+          in: query
+          description: Page number of results to return.
+          schema:
+            type: integer
+        - name: sortDirection
+          in: query
+          description: The direction to sort the results by. If blank eill sort by descending order
+          schema:
+            $ref: '_shared.yml#/components/schemas/SortDirection'
       responses:
         200:
           description: successfully retrieved tasks
@@ -2678,6 +2688,15 @@ paths:
                 type: array
                 items:
                   $ref: '_shared.yml#/components/schemas/Task'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:

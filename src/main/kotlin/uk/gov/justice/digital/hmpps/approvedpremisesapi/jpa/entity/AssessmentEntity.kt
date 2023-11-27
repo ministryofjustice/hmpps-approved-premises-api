@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.hibernate.annotations.Type
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
@@ -41,7 +43,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   fun findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(probationRegionId: UUID, crn: String): List<DomainAssessmentSummary>
 
   @Query("SELECT a FROM AssessmentEntity a WHERE a.reallocatedAt IS NULL AND a.isWithdrawn != true AND a.submittedAt IS NULL AND TYPE(a) = :type")
-  fun <T : AssessmentEntity> findAllByReallocatedAtNullAndSubmittedAtNullAndType(type: Class<T>): List<AssessmentEntity>
+  fun <T : AssessmentEntity> findAllByReallocatedAtNullAndSubmittedAtNullAndType(type: Class<T>, pageable: Pageable?): Page<AssessmentEntity>
 
   fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
 

@@ -321,6 +321,104 @@ class TasksTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body when type assessment and page is two`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val numAllocatableAssessment = 12
+            repeat(numAllocatableAssessment) {
+              `Given an Assessment for Approved Premises`(
+                allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=assessment&page=2")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .expectBody()
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body with type placement requests and page two`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val numPlacementRequests = 12
+            repeat(numPlacementRequests) {
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=PlacementRequest&page=2")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .expectBody()
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body with type placement application and page two`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val numAllocatablePlacementApplications = 12
+
+            repeat(numAllocatablePlacementApplications) {
+              `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+              )
+            }
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=PlacementApplication&page=2")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .expectBody()
+          }
+        }
+      }
+    }
   }
 
   @Nested
