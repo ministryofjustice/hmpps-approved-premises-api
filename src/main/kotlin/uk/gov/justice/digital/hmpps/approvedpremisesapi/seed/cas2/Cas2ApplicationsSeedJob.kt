@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2
 
+import com.microsoft.applicationinsights.boot.dependencies.apachecommons.io.FileUtils
 import org.slf4j.LoggerFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
@@ -8,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+import java.io.File
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -59,7 +61,7 @@ class Cas2ApplicationsSeedJob(
         nomsNumber = row.nomsNumber,
         createdAt = row.createdAt,
         createdByUser = applicant,
-        data = "{}",
+        data = dataFor(row.state),
         document = "{}",
         submittedAt = row.submittedAt,
         schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
@@ -67,6 +69,23 @@ class Cas2ApplicationsSeedJob(
       ),
     )
   }
+
+  private fun dataFor(state: String): String {
+    if (state != "NOT_STARTED") {
+      return randomDataFixture()
+    }
+    return "{}"
+  }
+
+  private fun randomDataFixture(): String {
+    val path = "src/main/resources/db/seed/local+dev+test/cas2_application_data"
+    val randomNumber = 1
+    return FileUtils.readFileToString(
+      File("$path/data_$randomNumber.json"),
+      "UTF-8",
+    )
+  }
+
   private fun emptyToNull(value: String?) = value?.ifBlank { null }
   private fun parseDateIfNotNull(date: String?) = date?.let { OffsetDateTime.parse(it) }
 }
