@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
@@ -38,7 +39,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationBedspaceSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2ApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsersSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
 import java.io.File
 import java.io.IOException
@@ -127,6 +130,12 @@ class SeedService(
         SeedFileType.nomisUsers -> NomisUsersSeedJob(
           filename,
           applicationContext.getBean(NomisUserRepository::class.java),
+        )
+        SeedFileType.cas2Applications -> Cas2ApplicationsSeedJob(
+          filename,
+          applicationContext.getBean(Cas2ApplicationRepository::class.java),
+          applicationContext.getBean(NomisUserRepository::class.java),
+          applicationContext.getBean(JsonSchemaService::class.java),
         )
         SeedFileType.approvedPremisesUsers -> UsersSeedJob(
           filename,
