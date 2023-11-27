@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas2
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.NullNode
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import org.assertj.core.api.Assertions.assertThat
@@ -58,6 +60,45 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     assertThat(persistedApplication.statusUpdates).isEmpty()
   }
 
+  @Test
+  fun `An IN_PROGRESS application has _data_ but no _document_`() {
+    cas2ApplicationRepository.deleteAll()
+
+    nomisUserEntityFactory.produceAndPersist {
+      withNomisUsername("ROGER_SMITH_FAKE")
+    }
+
+    val applicationId = "6a1551ea-cdb7-4f5e-beac-aee9ad73339c"
+    val creationTimestamp = OffsetDateTime.parse("2022-12-13T15:00:00+01:00")
+
+    withCsv(
+      "in-progress-cas2-application",
+      cas2ApplicationSeedCsvRowsToCsv(
+        listOf(
+          Cas2ApplicationSeedCsvRowFactory()
+            .withId(applicationId)
+            .withNomsNumber("A1234AI")
+            .withCrn("CRN-ABC")
+            .withCreatedBy("ROGER_SMITH_FAKE")
+            .withCreatedAt(creationTimestamp)
+            .withSubmittedAt(null)
+            .withState("IN_PROGRESS")
+            .withStatusUpdates("0")
+            .withLocation(null)
+            .produce(),
+        ),
+      ),
+    )
+
+    seedService.seedData(SeedFileType.cas2Applications, "in-progress-cas2-application")
+
+    val persistedApplication = cas2ApplicationRepository.getReferenceById(UUID.fromString(applicationId))
+
+    assertThat(persistedApplication).isNotNull
+
+    assertThat(serializableToJsonNode(persistedApplication.data)).isNotEmpty()
+    assertThat(serializableToJsonNode(persistedApplication.document)).isEmpty()
+  }
   private fun cas2ApplicationSeedCsvRowsToCsv(rows: List<Cas2ApplicationSeedUntypedEnumsCsvRow>):
     String {
     val builder = CsvBuilder()
@@ -89,6 +130,13 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     }
 
     return builder.build()
+  }
+
+  private fun serializableToJsonNode(serializable: Any?): JsonNode {
+    if (serializable == null) return NullNode.instance
+    if (serializable is String) return objectMapper.readTree(serializable)
+
+    return objectMapper.readTree(objectMapper.writeValueAsString(serializable))
   }
 }
 
