@@ -26,6 +26,10 @@ class NomisUsersSeedJob(
   override fun processRow(row: NomisUserSeedCsvRow) {
     log.info("Setting up ${row.nomisUsername}")
 
+    if (repository.findByNomisUsername(row.nomisUsername) !== null) {
+      return log.info("Skipping ${row.nomisUsername}: already seeded")
+    }
+
     try {
       createNomisUser(row)
     } catch (exception: Exception) {

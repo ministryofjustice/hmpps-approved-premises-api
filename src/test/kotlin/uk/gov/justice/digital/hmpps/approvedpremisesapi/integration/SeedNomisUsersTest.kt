@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 class SeedNomisUsersTest : SeedTestBase() {
   @Test
   fun `Attempting to seed a fake currently unknown user succeeds`() {
+    nomisUserRepository.deleteAll()
+
     withCsv(
       "unknown-nomis-user",
       nomisUserSeedCsvRowsToCsv(
@@ -33,6 +35,38 @@ class SeedNomisUsersTest : SeedTestBase() {
     assertThat(persistedUser).isNotNull
     assertThat(persistedUser!!.name).isEqualTo("Roger Smith")
     assertThat(persistedUser!!.email).isEqualTo("roger.smith@example.com")
+  }
+
+  @Test
+  fun `Attempting to seed a fake user whose username exists does nothing`() {
+    nomisUserRepository.deleteAll()
+
+    nomisUserEntityFactory.produceAndPersist {
+      withNomisUsername("ROGER_SMITH_FAKE")
+      withName("Roger Smith")
+      withEmail("roger.smith@example.com")
+    }
+
+    withCsv(
+      "existing-nomis-user",
+      nomisUserSeedCsvRowsToCsv(
+        listOf(
+          NomisUsersSeedCsvRowFactory()
+            .withNomisUsername("ROGER_SMITH_FAKE")
+            .withName("Roger New Smith")
+            .withEmail("roger.new.smith@example.com")
+            .produce(),
+        ),
+      ),
+    )
+
+    seedService.seedData(SeedFileType.nomisUsers, "existing-nomis-user")
+
+    val persistedUser = nomisUserRepository.findByNomisUsername("ROGER_SMITH_FAKE")
+
+    assertThat(persistedUser).isNotNull
+    assertThat(persistedUser!!.name).isNotEqualTo("Roger New Smith")
+    assertThat(persistedUser!!.email).isNotEqualTo("roger.new.smith@example.com")
   }
 
   private fun nomisUserSeedCsvRowsToCsv(rows: List<NomisUsersSeedUntypedEnumsCsvRow>):
