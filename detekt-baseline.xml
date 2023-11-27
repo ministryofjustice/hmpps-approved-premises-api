@@ -50,6 +50,7 @@
     <ID>CyclomaticComplexMethod:PremisesService.kt$PremisesService$fun updatePremises( premisesId: UUID, addressLine1: String, addressLine2: String?, town: String?, postcode: String, localAuthorityAreaId: UUID?, probationRegionId: UUID, characteristicIds: List&lt;UUID>, notes: String?, status: PropertyStatus, probationDeliveryUnitIdentifier: Either&lt;String, UUID>?, turnaroundWorkingDayCount: Int?, ): AuthorisableActionResult&lt;ValidatableActionResult&lt;PremisesEntity>></ID>
     <ID>CyclomaticComplexMethod:SeedBookingsTest.kt$SeedBookingsTest$private fun approvedPremisesBookingSeedCsvRowsToCsv(rows: List&lt;ApprovedPremisesBookingSeedCsvRow>): String</ID>
     <ID>CyclomaticComplexMethod:SeedUtils.kt$fun getCanonicalRegionName(regionName: String): String</ID>
+    <ID>CyclomaticComplexMethod:SeedService.kt$SeedService$private fun seedData(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob&lt;*&gt;.() -&gt; String)</ID>
     <ID>CyclomaticComplexMethod:TaskService.kt$TaskService$fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, id: UUID): AuthorisableActionResult&lt;ValidatableActionResult&lt;Reallocation>></ID>
     <ID>EmptyDefaultConstructor:ArrivalTransformer.kt$ArrivalTransformer$()</ID>
     <ID>EmptyDefaultConstructor:CancellationReasonTransformer.kt$CancellationReasonTransformer$()</ID>
@@ -483,6 +484,9 @@
     <ID>TooGenericExceptionThrown:CancellationEntityFactory.kt$CancellationEntityFactory$throw RuntimeException("Booking must be provided")</ID>
     <ID>TooGenericExceptionThrown:CancellationEntityFactory.kt$CancellationEntityFactory$throw RuntimeException("Reason must be provided")</ID>
     <ID>TooGenericExceptionThrown:Cas2ApplicationEntityFactory.kt$Cas2ApplicationEntityFactory$throw RuntimeException("Must provide a createdByUser")</ID>
+    <ID>TooGenericExceptionCaught:Cas2ApplicationsSeedJob.kt$Cas2ApplicationsSeedJob$exception: Exception</ID>
+    <ID>TooGenericExceptionThrown:Cas2ApplicationsSeedJob.kt$Cas2ApplicationsSeedJob$throw RuntimeException("Could not create application ${row.id}", exception)</ID>
+    <ID>TooGenericExceptionThrown:Cas2ApplicationsSeedJob.kt$Cas2ApplicationsSeedJob$throw RuntimeException("Could not find applicant with nomisUsername ${row.createdBy}")</ID>
     <ID>TooGenericExceptionThrown:Cas2DomainEventFactory.kt$Cas2DomainEventFactory$throw RuntimeException("Must provide event data")</ID>
     <ID>TooGenericExceptionThrown:Cas2DomainEventFactory.kt$Cas2DomainEventFactory$throw RuntimeException("Unknown event details type ${dataClass.qualifiedName}")</ID>
     <ID>TooGenericExceptionThrown:CharacteristicTransformer.kt$CharacteristicTransformer$throw RuntimeException("Unsupported service scope: ${jpa.modelScope}")</ID>
