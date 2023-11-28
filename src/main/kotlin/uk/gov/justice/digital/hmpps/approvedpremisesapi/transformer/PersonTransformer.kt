@@ -75,12 +75,11 @@ class PersonTransformer {
       crn = probationOffenderResult.probationOffenderDetail.otherIds.crn,
       name = "${probationOffenderResult.probationOffenderDetail.firstName} ${probationOffenderResult.probationOffenderDetail.surname}",
       dateOfBirth = probationOffenderResult.probationOffenderDetail.dateOfBirth!!,
-      sex = probationOffenderResult.probationOffenderDetail.gender ?: "Not Found",
+      sex = probationOffenderResult.probationOffenderDetail.gender ?: "Not found",
       status = inOutStatusToPersonInfoApiStatus(probationOffenderResult.inmateDetail?.inOutStatus),
       nomsNumber = probationOffenderResult.probationOffenderDetail.otherIds.nomsNumber,
-      nationality = probationOffenderResult.probationOffenderDetail.offenderProfile?.nationality
-        ?: "Not Found",
       pncNumber = probationOffenderResult.probationOffenderDetail.otherIds.pncNumber ?: "Not found",
+      nationality = probationOffenderResult.probationOffenderDetail.offenderProfile?.nationality ?: "Not found",
       prisonName = inOutStatusToPersonInfoApiStatus(probationOffenderResult.inmateDetail?.inOutStatus).takeIf { it == FullPerson.Status.inCustody }?.let {
         probationOffenderResult.inmateDetail?.assignedLivingUnit?.agencyName
           ?: probationOffenderResult.inmateDetail?.assignedLivingUnit?.agencyId
