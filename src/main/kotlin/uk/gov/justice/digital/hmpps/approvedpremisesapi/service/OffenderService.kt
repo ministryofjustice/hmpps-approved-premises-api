@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import io.sentry.Sentry
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -493,7 +494,8 @@ class OffenderService(
                   accessResponse.deserializeTo<UserOffenderAccess>()
                   return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)
                 } catch (exception: Exception) {
-                  accessResponse.throwException()
+                  Sentry.captureException(RuntimeException("LAO calls returns but failed to marshal the response", exception))
+                  return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)
                 }
               }
 

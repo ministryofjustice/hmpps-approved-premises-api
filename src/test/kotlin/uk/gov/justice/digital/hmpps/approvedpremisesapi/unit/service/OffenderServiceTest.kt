@@ -746,6 +746,62 @@ class OffenderServiceTest {
     }
 
     @Test
+    fun `getInfoForPerson returns restricted result when LAO calls fail with Forbidden error and without body response`() {
+      val crn = "ABC123"
+      val deliusUsername = "USER"
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(crn)
+        .withCurrentRestriction(true)
+        .withoutNomsNumber()
+        .produce()
+
+      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = offenderDetails,
+      )
+
+      every { mockCommunityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn) } returns StatusCode(
+        HttpMethod.GET,
+        "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
+        HttpStatus.FORBIDDEN,
+        null,
+      )
+
+      val result = offenderService.getInfoForPerson(crn, deliusUsername, false)
+
+      assertThat(result is PersonInfoResult.Success.Restricted).isTrue
+      result as PersonInfoResult.Success.Restricted
+      assertThat(result.crn).isEqualTo(crn)
+    }
+
+    @Test
+    fun `throws runtime exception when LAO calls fail with BadRequest exception`() {
+      val crn = "ABC123"
+      val deliusUsername = "USER"
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(crn)
+        .withCurrentRestriction(true)
+        .withoutNomsNumber()
+        .produce()
+
+      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = offenderDetails,
+      )
+
+      every { mockCommunityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn) } returns StatusCode(
+        HttpMethod.GET,
+        "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
+        HttpStatus.BAD_REQUEST,
+        null,
+      )
+
+      assertThrows<RuntimeException> { offenderService.getInfoForPerson(crn, deliusUsername, false) }
+    }
+
+    @Test
     fun `returns Restricted for LAO Offender where user does not pass check and ignoreLao is false`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
