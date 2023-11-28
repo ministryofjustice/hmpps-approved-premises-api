@@ -40,6 +40,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var teamCodes: Yielded<MutableList<ApplicationTeamCodeEntity>> = { mutableListOf() }
   private var placementRequests: Yielded<MutableList<PlacementRequestEntity>> = { mutableListOf() }
   private var releaseType: Yielded<String?> = { null }
+  private var sentenceType: Yielded<String?> = { null }
   private var arrivalDate: Yielded<OffsetDateTime?> = { null }
   private var isInapplicable: Yielded<Boolean?> = { null }
   private var isWithdrawn: Yielded<Boolean> = { false }
@@ -129,6 +130,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.releaseType = { releaseType }
   }
 
+  fun withSentenceType(sentenceType: String) = apply {
+    this.sentenceType = { sentenceType }
+  }
+
   fun withArrivalDate(arrivalDate: OffsetDateTime?) = apply {
     this.arrivalDate = { arrivalDate }
   }
@@ -191,6 +196,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     teamCodes = this.teamCodes(),
     placementRequests = this.placementRequests(),
     releaseType = this.releaseType(),
+    sentenceType = this.sentenceType(),
     arrivalDate = this.arrivalDate(),
     isInapplicable = this.isInapplicable(),
     isWithdrawn = this.isWithdrawn(),

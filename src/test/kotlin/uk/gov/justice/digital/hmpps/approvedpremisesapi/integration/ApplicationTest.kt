@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOpt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskEnvelopeStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
@@ -1841,6 +1842,7 @@ class ApplicationTest : IntegrationTestBase() {
                 isEsapApplication = true,
                 targetLocation = "SW1A 1AA",
                 releaseType = ReleaseTypeOption.licence,
+                sentenceType = SentenceTypeOption.nonStatutory,
                 type = "CAS1",
               ),
             )
@@ -1854,6 +1856,7 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(persistedApplication?.isWomensApplication).isTrue
           assertThat(persistedApplication?.isPipeApplication).isTrue
           assertThat(persistedApplication?.targetLocation).isEqualTo("SW1A 1AA")
+          assertThat(persistedApplication?.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
 
           val createdAssessment =
             approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
@@ -1995,6 +1998,7 @@ class ApplicationTest : IntegrationTestBase() {
                     isEsapApplication = true,
                     targetLocation = "SW1A 1AA",
                     releaseType = ReleaseTypeOption.licence,
+                    sentenceType = SentenceTypeOption.nonStatutory,
                     type = "CAS1",
                   ),
                 )

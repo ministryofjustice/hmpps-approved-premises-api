@@ -284,6 +284,7 @@ class ApprovedPremisesApplicationEntity(
   @OneToMany(mappedBy = "application")
   var placementRequests: MutableList<PlacementRequestEntity>,
   var releaseType: String?,
+  var sentenceType: String?,
   var arrivalDate: OffsetDateTime?,
   var name: String,
   var targetLocation: String?,

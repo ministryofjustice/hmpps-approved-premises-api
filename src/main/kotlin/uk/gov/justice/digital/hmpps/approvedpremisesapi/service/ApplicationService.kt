@@ -335,6 +335,7 @@ class ApplicationService(
       name = "${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}",
       targetLocation = null,
       status = ApprovedPremisesApplicationStatus.STARTED,
+      sentenceType = null,
     )
   }
 
@@ -750,6 +751,7 @@ class ApplicationService(
       releaseType = submitApplication.releaseType.toString()
       targetLocation = submitApplication.targetLocation
       arrivalDate = getArrivalDate(submitApplication.arrivalDate)
+      sentenceType = submitApplication.sentenceType.toString()
     }
 
     assessmentService.createApprovedPremisesAssessment(application)

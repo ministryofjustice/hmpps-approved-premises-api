@@ -6148,6 +6148,8 @@ components:
               type: string
             releaseType:
               $ref: '#/components/schemas/ReleaseTypeOption'
+            sentenceType:
+              $ref: '#/components/schemas/SentenceTypeOption'
             arrivalDate:
               type: string
               format: date
@@ -6158,6 +6160,7 @@ components:
             - isEsapApplication
             - targetLocation
             - releaseType
+            - sentenceType
     SubmitCas2Application:
       type: object
       properties:
@@ -6207,6 +6210,16 @@ components:
         - pss
         - in_community
         - not_applicable
+    SentenceTypeOption:
+      type: string
+      enum:
+        - standardDeterminate
+        - life
+        - ipp
+        - extendedDeterminate
+        - communityOrder
+        - bailPlacement
+        - nonStatutory
     PrisonCaseNote:
       type: object
       properties:
