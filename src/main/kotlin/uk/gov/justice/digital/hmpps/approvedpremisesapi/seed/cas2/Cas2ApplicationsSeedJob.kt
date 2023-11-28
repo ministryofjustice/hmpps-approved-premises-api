@@ -61,7 +61,7 @@ class Cas2ApplicationsSeedJob(
         nomsNumber = row.nomsNumber,
         createdAt = row.createdAt,
         createdByUser = applicant,
-        data = dataFor(row.state),
+        data = dataFor(state = row.state, nomsNumber = row.nomsNumber),
         document = "{}",
         submittedAt = row.submittedAt,
         schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
@@ -70,18 +70,17 @@ class Cas2ApplicationsSeedJob(
     )
   }
 
-  private fun dataFor(state: String): String {
+  private fun dataFor(state: String, nomsNumber: String): String {
     if (state != "NOT_STARTED") {
-      return randomDataFixture()
+      return dataFixtureFor(nomsNumber)
     }
     return "{}"
   }
 
-  private fun randomDataFixture(): String {
+  private fun dataFixtureFor(nomsNumber: String): String {
     val path = "src/main/resources/db/seed/local+dev+test/cas2_application_data"
-    val randomNumber = 1
     return FileUtils.readFileToString(
-      File("$path/data_$randomNumber.json"),
+      File("$path/data_$nomsNumber.json"),
       "UTF-8",
     )
   }
