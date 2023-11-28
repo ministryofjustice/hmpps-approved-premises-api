@@ -1,0 +1,4 @@
+id,nomsNumber,crn,createdBy,createdAt,submittedAt,state,statusUpdates,location
+"6a1551ea-cdb7-4f5e-beac-aee9ad73339c","A1234AI","X320741","SARAH_JONES_FAKE","2022-12-13T15:00+01:00","","NOT_STARTED","0",""
+"e958d2d4-1f1b-4dfd-8e78-982689ffcbdd","A1234AI","X320741","ROGER_SMITH_FAKE","2023-01-10T10:00+01:00","","IN_PROGRESS","0",""
+"aa77a9ae-2a7c-40ca-a43a-a2052991fc54","A1234AI","X320741","HILARY_HUGHES_FAKE","2023-02-20T17:00+01:00","","IN_PROGRESS","0",""
