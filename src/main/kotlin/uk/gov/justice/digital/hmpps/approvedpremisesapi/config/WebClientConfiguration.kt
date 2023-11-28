@@ -242,8 +242,6 @@ class WebClientConfiguration(
 
   @Bean(name = ["nomisUserRolesApiWebClient"])
   fun nomisUserRolesApiClient(
-    clientRegistrations: ClientRegistrationRepository,
-    authorizedClients: OAuth2AuthorizedClientRepository,
     @Value("\${services.nomis-user-roles-api.base-url}") nomisUserRolesBaseUrl: String,
   ): WebClient {
     return WebClient.builder()
