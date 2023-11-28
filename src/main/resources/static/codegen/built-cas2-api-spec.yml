@@ -1064,6 +1064,8 @@ components:
               format: date
             nomsNumber:
               type: string
+            pncNumber:
+              type: string
             ethnicity:
               type: string
             nationality:
