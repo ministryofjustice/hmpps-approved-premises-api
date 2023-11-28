@@ -950,6 +950,7 @@ class ApplicationService(
       mappa = mappaLevel,
       offenceId = application.offenceId,
       releaseType = submitApplication.releaseType.toString(),
+      sentenceType = submitApplication.sentenceType.toString(),
       age = Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years,
       gender = when (offenderDetails.gender.lowercase()) {
         "male" -> ApplicationSubmitted.Gender.male

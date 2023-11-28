@@ -1237,6 +1237,7 @@ class ApplicationServiceTest {
             ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.releaseType == submitApprovedPremisesApplication.releaseType.toString() &&
+              data.sentenceType == submitApprovedPremisesApplication.sentenceType.toString() &&
               data.age == Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years &&
               data.gender == ApplicationSubmitted.Gender.male &&
               data.submittedBy == ApplicationSubmittedSubmittedBy(

@@ -472,6 +472,9 @@ components:
         releaseType:
           type: string
           example: 'rotl'
+        sentenceType:
+          type: string
+          example: 'standardDeterminate'
         age:
           type: integer
           example: 43
