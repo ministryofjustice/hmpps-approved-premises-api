@@ -896,6 +896,10 @@ class BookingService(
     notes: String?,
     keyWorkerStaffCode: String?,
   ) = validated<ArrivalEntity> {
+    if (booking.premises is TemporaryAccommodationPremisesEntity) {
+      return generalError("CAS3 booking arrival not supported here, preferred method is createCas3Arrival")
+    }
+
     if (booking.arrival != null) {
       return generalError("This Booking already has an Arrival set")
     }
@@ -939,7 +943,7 @@ class BookingService(
     keyWorkerStaffCode: String?,
   ) = validated<ArrivalEntity> {
     if (booking.premises !is TemporaryAccommodationPremisesEntity) {
-      return generalError("CAS3 Arrivals cannot be set on non-temporary accommodation premises")
+      return generalError("CAS3 Arrivals cannot be set on non-CAS3 premise")
     }
 
     if (expectedDepartureDate.isBefore(arrivalDate)) {
