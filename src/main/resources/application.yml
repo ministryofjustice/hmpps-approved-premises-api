@@ -63,11 +63,6 @@ spring:
             client-id: approved-premises-api
             client-secret: clientsecret
             authorization-grant-type: client_credentials
-          nomis-user-roles-api:
-            provider: hmpps-auth
-            client-id: approved-premises-api
-            client-secret: clientsecret
-            authorization-grant-type: client_credentials
           probation-offender-search-api:
             provider: hmpps-auth
             client-id: approved-premises-api
