@@ -497,7 +497,7 @@ class BookingsReportGeneratorTest {
       BookingsReportProperties(ServiceName.approvedPremises, null, 2023, 4),
     )
     assertThat(actual.count()).isEqualTo(1)
-    assertThat(actual[0][BookingsReportRow::actualNightsStayed]).isEqualTo(87L)
+    assertThat(actual[0][BookingsReportRow::actualNightsStayed]).isEqualTo(86L)
   }
 
   @Test

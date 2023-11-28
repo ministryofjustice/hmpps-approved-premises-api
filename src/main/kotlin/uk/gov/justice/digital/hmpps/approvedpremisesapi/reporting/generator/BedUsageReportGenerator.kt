@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
 
 class BedUsageReportGenerator(
@@ -45,7 +45,7 @@ class BedUsageReportGenerator(
         type = BedUsageType.Booking,
         startDate = booking.arrivalDate,
         endDate = booking.departureDate,
-        durationOfBookingDays = booking.arrivalDate.getDaysUntilInclusive(booking.departureDate).size,
+        durationOfBookingDays = booking.arrivalDate.getDaysUntilExclusiveEnd(booking.departureDate).size,
         bookingStatus = bookingTransformer.determineStatus(booking),
         voidCategory = null,
         voidNotes = null,
@@ -67,7 +67,7 @@ class BedUsageReportGenerator(
           type = BedUsageType.Turnaround,
           startDate = turnaroundStartDate,
           endDate = endDate,
-          durationOfBookingDays = turnaroundStartDate.getDaysUntilInclusive(endDate).size,
+          durationOfBookingDays = turnaroundStartDate.getDaysUntilExclusiveEnd(endDate).size,
           bookingStatus = null,
           voidCategory = null,
           voidNotes = null,
@@ -87,7 +87,7 @@ class BedUsageReportGenerator(
         type = BedUsageType.Void,
         startDate = lostBed.startDate,
         endDate = lostBed.endDate,
-        durationOfBookingDays = lostBed.startDate.getDaysUntilInclusive(lostBed.endDate).size,
+        durationOfBookingDays = lostBed.startDate.getDaysUntilExclusiveEnd(lostBed.endDate).size,
         bookingStatus = null,
         voidCategory = lostBed.reason.name,
         voidNotes = lostBed.notes,
