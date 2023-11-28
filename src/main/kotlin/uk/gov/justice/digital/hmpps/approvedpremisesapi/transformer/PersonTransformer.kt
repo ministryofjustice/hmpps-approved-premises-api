@@ -80,6 +80,7 @@ class PersonTransformer {
       nomsNumber = probationOffenderResult.probationOffenderDetail.otherIds.nomsNumber,
       nationality = probationOffenderResult.probationOffenderDetail.offenderProfile?.nationality
         ?: "Not Found",
+      pncNumber = probationOffenderResult.probationOffenderDetail.otherIds.pncNumber ?: "Not found",
       prisonName = inOutStatusToPersonInfoApiStatus(probationOffenderResult.inmateDetail?.inOutStatus).takeIf { it == FullPerson.Status.inCustody }?.let {
         probationOffenderResult.inmateDetail?.assignedLivingUnit?.agencyName
           ?: probationOffenderResult.inmateDetail?.assignedLivingUnit?.agencyId
