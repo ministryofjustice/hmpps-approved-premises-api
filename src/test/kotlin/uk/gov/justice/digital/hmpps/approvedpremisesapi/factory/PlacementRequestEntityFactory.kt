@@ -22,7 +22,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var application: Yielded<ApprovedPremisesApplicationEntity>? = null
   private var assessment: Yielded<AssessmentEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
-  private var allocatedToUser: Yielded<UserEntity> = { UserEntityFactory().produce() }
+  private var allocatedToUser: Yielded<UserEntity?> = { null }
   private var booking: Yielded<BookingEntity?> = { null }
   private var bookingNotMades: Yielded<MutableList<BookingNotMadeEntity>> = { mutableListOf() }
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }

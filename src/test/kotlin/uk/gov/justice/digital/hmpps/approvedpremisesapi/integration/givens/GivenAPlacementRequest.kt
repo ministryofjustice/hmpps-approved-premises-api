@@ -14,8 +14,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
+@Suppress(
+  "LongParameterList",
+)
 fun IntegrationTestBase.`Given a Placement Request`(
-  placementRequestAllocatedTo: UserEntity,
+  placementRequestAllocatedTo: UserEntity?,
   assessmentAllocatedTo: UserEntity,
   createdByUser: UserEntity,
   crn: String? = null,
@@ -74,7 +77,9 @@ fun IntegrationTestBase.`Given a Placement Request`(
     withAssessmentSchema(assessmentSchema)
     withApplication(application)
     withSubmittedAt(OffsetDateTime.now())
-    withAllocatedToUser(placementRequestAllocatedTo)
+    if (placementRequestAllocatedTo != null) {
+      withAllocatedToUser(placementRequestAllocatedTo)
+    }
     withDecision(AssessmentDecision.ACCEPTED)
   }
 
@@ -93,7 +98,9 @@ fun IntegrationTestBase.`Given a Placement Request`(
   }
 
   val placementRequest = placementRequestFactory.produceAndPersist {
-    withAllocatedToUser(placementRequestAllocatedTo)
+    if (placementRequestAllocatedTo != null) {
+      withAllocatedToUser(placementRequestAllocatedTo)
+    }
     withApplication(application)
     withAssessment(assessment)
     if (reallocated) {
@@ -111,8 +118,11 @@ fun IntegrationTestBase.`Given a Placement Request`(
   return Pair(placementRequest, application)
 }
 
+@Suppress(
+  "LongParameterList",
+)
 fun IntegrationTestBase.`Given a Placement Request`(
-  placementRequestAllocatedTo: UserEntity,
+  placementRequestAllocatedTo: UserEntity?,
   assessmentAllocatedTo: UserEntity,
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),

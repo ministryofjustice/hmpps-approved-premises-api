@@ -23,6 +23,10 @@ import javax.persistence.Table
 interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEntity, UUID> {
   fun findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNull(pageable: Pageable?): Page<PlacementApplicationEntity>
 
+  fun findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNullAndAllocatedToUserIsNotNull(pageable: Pageable?): Page<PlacementApplicationEntity>
+
+  fun findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNullAndAllocatedToUserNull(pageable: Pageable?): Page<PlacementApplicationEntity>
+
   fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndDecisionNull(
     userId: UUID,
     pageable: Pageable?,

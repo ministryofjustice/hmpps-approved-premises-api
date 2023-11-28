@@ -4316,6 +4316,11 @@ components:
       enum:
         - asc
         - desc
+    AllocatedFilter:
+      type: string
+      enum:
+        - allocated
+        - unallocated
     ApplicationSortField:
       type: string
       enum:

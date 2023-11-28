@@ -40,10 +40,37 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   fun findAllTemporaryAccommodationAssessmentSummariesForRegion(probationRegionId: UUID): List<DomainAssessmentSummary>
 
   @Query(nativeQuery = true)
-  fun findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(probationRegionId: UUID, crn: String): List<DomainAssessmentSummary>
+  fun findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(
+    probationRegionId: UUID,
+    crn: String,
+  ): List<DomainAssessmentSummary>
 
-  @Query("SELECT a FROM AssessmentEntity a WHERE a.reallocatedAt IS NULL AND a.isWithdrawn != true AND a.submittedAt IS NULL AND TYPE(a) = :type")
-  fun <T : AssessmentEntity> findAllByReallocatedAtNullAndSubmittedAtNullAndType(type: Class<T>, pageable: Pageable?): Page<AssessmentEntity>
+  @Query(
+    "SELECT a FROM AssessmentEntity a WHERE a.reallocatedAt IS NULL " +
+      "AND a.isWithdrawn != true AND a.submittedAt IS NULL AND TYPE(a) = :type AND a.allocatedToUser IS NULL",
+  )
+  fun <T : AssessmentEntity> findAllByReallocatedAtNullAndSubmittedAtNullAndTypeAndAllocatedToUserNull(
+    type: Class<T>,
+    pageable: Pageable?,
+  ): Page<AssessmentEntity>
+
+  @Query(
+    "SELECT a FROM AssessmentEntity a WHERE a.reallocatedAt IS NULL " +
+      "AND a.isWithdrawn != true AND a.submittedAt IS NULL AND TYPE(a) = :type AND a.allocatedToUser IS NOT NULL",
+  )
+  fun <T : AssessmentEntity> findAllByReallocatedAtNullAndSubmittedAtNullAndTypeAndAllocatedToUser(
+    type: Class<T>,
+    pageable: Pageable?,
+  ): Page<AssessmentEntity>
+
+  @Query(
+    "SELECT a FROM AssessmentEntity a WHERE a.reallocatedAt IS NULL " +
+      "AND a.isWithdrawn != true AND a.submittedAt IS NULL AND TYPE(a) = :type",
+  )
+  fun <T : AssessmentEntity> findAllByReallocatedAtNullAndSubmittedAtNullAndType(
+    type: Class<T>,
+    pageable: Pageable?,
+  ): Page<AssessmentEntity>
 
   fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
 

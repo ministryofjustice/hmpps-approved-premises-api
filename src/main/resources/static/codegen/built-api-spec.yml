@@ -2681,6 +2681,11 @@ paths:
           description: The direction to sort the results by. If blank eill sort by descending order
           schema:
             $ref: '#/components/schemas/SortDirection'
+        - name: allocatedFilter
+          in: query
+          description: Filter by allocated or not
+          schema:
+            $ref: '#/components/schemas/AllocatedFilter'
       responses:
         200:
           description: successfully retrieved tasks
@@ -8088,6 +8093,11 @@ components:
       enum:
         - asc
         - desc
+    AllocatedFilter:
+      type: string
+      enum:
+        - allocated
+        - unallocated
     ApplicationSortField:
       type: string
       enum:

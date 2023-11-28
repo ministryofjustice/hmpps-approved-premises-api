@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.TasksApiDelegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
@@ -66,6 +67,7 @@ class TasksController(
     type: String?,
     page: Int?,
     sortDirection: SortDirection?,
+    allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
     if (user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
@@ -75,16 +77,16 @@ class TasksController(
         ) ?: throw NotFoundProblem(type, "TaskType")
 
         when (taskType) {
-          TaskType.assessment -> return assessmentTasksResponse(user, page, sortDirection)
-          TaskType.placementRequest -> return placementRequestTasks(user, page, sortDirection)
-          TaskType.placementApplication -> return placementApplicationTasks(user, page, sortDirection)
+          TaskType.assessment -> return assessmentTasksResponse(user, page, sortDirection, allocatedFilter)
+          TaskType.placementRequest -> return placementRequestTasks(user, page, sortDirection, allocatedFilter)
+          TaskType.placementApplication -> return placementApplicationTasks(user, page, sortDirection, allocatedFilter)
           else -> {
             throw BadRequestProblem()
           }
         }
       }
 
-      return responseForAllTypes(user)
+      return responseForAllTypes(user, allocatedFilter)
     } else {
       throw ForbiddenProblem()
     }
@@ -404,11 +406,13 @@ class TasksController(
 
   private fun responseForAllTypes(
     user: UserEntity,
+    allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatableAssessmentTasks, _) =
       assessmentService.getAllReallocatable(
         null,
         null,
+        allocatedFilter,
       )
     val assessmentTasks = getAssessmentTasks(allReallocatableAssessmentTasks, user)
 
@@ -416,6 +420,7 @@ class TasksController(
       placementRequestService.getAllReallocatable(
         null,
         null,
+        allocatedFilter,
       )
     val placementRequestTasks = getPlacementRequestTasks(
       allReallocatablePlacementRequestTasks,
@@ -426,6 +431,7 @@ class TasksController(
       placementApplicationService.getAllReallocatable(
         null,
         null,
+        allocatedFilter,
       )
     val placementApplicationTasks =
       getPlacementApplicationTasks(
@@ -444,11 +450,13 @@ class TasksController(
     user: UserEntity,
     page: Int?,
     sortDirection: SortDirection?,
+    allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatable, metaData) =
       assessmentService.getAllReallocatable(
         page,
         sortDirection,
+        allocatedFilter,
       )
     val assessmentTasks = getAssessmentTasks(allReallocatable, user)
     return@runBlocking ResponseEntity.ok().headers(
@@ -462,11 +470,13 @@ class TasksController(
     user: UserEntity,
     page: Int?,
     sortDirection: SortDirection?,
+    allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatable, metaData) =
       placementRequestService.getAllReallocatable(
         page,
         sortDirection,
+        allocatedFilter,
       )
     val placementRequestTasks = getPlacementRequestTasks(
       allReallocatable,
@@ -483,11 +493,13 @@ class TasksController(
     user: UserEntity,
     page: Int?,
     sortDirection: SortDirection?,
+    allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatable, metaData) =
       placementApplicationService.getAllReallocatable(
         page,
         sortDirection,
+        allocatedFilter,
       )
     val placementApplicationTasks =
       getPlacementApplicationTasks(

@@ -323,14 +323,23 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body when type assessment and page is two`() {
+    fun `Get all reallocatable tasks returns 200 with correct body when type assessment and page is two and no allocated filter`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
-            val numAllocatableAssessment = 12
+            val numAllocatableAssessment = 7
             repeat(numAllocatableAssessment) {
               `Given an Assessment for Approved Premises`(
                 allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            val numUnallocatableAssessment = 5
+            repeat(numUnallocatableAssessment) {
+              `Given an Assessment for Approved Premises`(
+                null,
                 createdByUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
               )
@@ -353,15 +362,103 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body with type placement requests and page two`() {
+    fun `Get all reallocatable tasks returns 200 with correct body when type assessment and page is two and allocated filter allocated`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val numAllocatableAssessment = 12
+            repeat(numAllocatableAssessment) {
+              `Given an Assessment for Approved Premises`(
+                allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            val numUnallocatableAssessment = 5
+            repeat(numUnallocatableAssessment) {
+              `Given an Assessment for Approved Premises`(
+                null,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=assessment&page=2&allocatedFilter=allocated")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .expectBody()
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body when type assessment and page is two and allocated filter unallocated`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val numAllocatableAssessment = 2
+            repeat(numAllocatableAssessment) {
+              `Given an Assessment for Approved Premises`(
+                allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            val numUnallocatableAssessment = 15
+            repeat(numUnallocatableAssessment) {
+              `Given an Assessment for Approved Premises`(
+                null,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=assessment&page=2&allocatedFilter=unallocated")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .expectBody()
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body with type placement requests and page two no allocated filter`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
 
-            val numPlacementRequests = 12
-            repeat(numPlacementRequests) {
+            val numAllocatedRequests = 8
+            repeat(numAllocatedRequests) {
               `Given a Placement Request`(
                 placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            val numUnallocatedPlacementRequests = 6
+            repeat(numUnallocatedPlacementRequests) {
+              `Given a Placement Request`(
+                null,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = user,
                 crn = offenderDetails.otherIds.crn,
@@ -376,7 +473,91 @@ class TasksTest : IntegrationTestBase() {
               .isOk
               .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
               .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 14)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .expectBody()
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body with type placement requests and page two and allocated filter allocated`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val numAllocatedRequests = 12
+            repeat(numAllocatedRequests) {
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            val numUnallocatedPlacementRequests = 5
+            repeat(numUnallocatedPlacementRequests) {
+              `Given a Placement Request`(
+                null,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=PlacementRequest&page=2&allocatedFilter=allocated")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
               .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .expectBody()
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body with type placement requests and page two and allocated filter unallocated`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val numAllocatedRequests = 2
+            repeat(numAllocatedRequests) {
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            val numUnallocatedPlacementRequests = 15
+            repeat(numUnallocatedPlacementRequests) {
+              `Given a Placement Request`(
+                null,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=PlacementRequest&page=2&allocatedFilter=unallocated")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
               .expectHeader().valueEquals("X-Pagination-PageSize", 10)
               .expectBody()
           }
@@ -406,6 +587,150 @@ class TasksTest : IntegrationTestBase() {
 
             webTestClient.get()
               .uri("/tasks/reallocatable?type=PlacementApplication&page=2")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .expectBody()
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body with type placement application and page two and no allocated filter`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val numAllocatedPlacementApplications = 6
+            val numUnallocatedPlacementApplications = 5
+
+            repeat(numAllocatedPlacementApplications) {
+              `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+              )
+            }
+
+            repeat(numUnallocatedPlacementApplications) {
+              `Given a Placement Application`(
+                createdByUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+              )
+            }
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=PlacementApplication&page=2")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 11)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .expectBody()
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body with type placement application and page two and unallocated filter`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val numAllocatedPlacementApplications = 12
+            val numUnallocatedPlacementApplications = 15
+
+            repeat(numAllocatedPlacementApplications) {
+              `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+              )
+            }
+
+            repeat(numUnallocatedPlacementApplications) {
+              `Given a Placement Application`(
+                createdByUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+              )
+            }
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=PlacementApplication&page=2&allocatedFilter=unallocated")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 15)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .expectBody()
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body with type placement application and page two and allocated filter`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val numAllocatedPlacementApplications = 12
+            val numUnallocatedPlacementApplications = 15
+
+            repeat(numAllocatedPlacementApplications) {
+              `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+              )
+            }
+
+            repeat(numUnallocatedPlacementApplications) {
+              `Given a Placement Application`(
+                createdByUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+              )
+            }
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=PlacementApplication&page=2&allocatedFilter=allocated")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
