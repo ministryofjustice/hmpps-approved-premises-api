@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import io.sentry.Sentry
+import org.springframework.beans.factory.getBean
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
@@ -10,6 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationRepository
 
 @Service
 class MigrationJobService(
@@ -25,9 +28,12 @@ class MigrationJobService(
 
     try {
       val job: MigrationJob = when (migrationJobType) {
-        MigrationJobType.updateAllUsersFromCommunityApi -> UpdateAllUsersFromCommunityApiJob(
+        MigrationJobType.allUsersFromCommunityApi -> UpdateAllUsersFromCommunityApiJob(
           applicationContext.getBean(UserRepository::class.java),
           applicationContext.getBean(UserService::class.java),
+        )
+        MigrationJobType.sentenceTypeAndSituation -> UpdateSentenceTypeAndSituationJob(
+          applicationContext.getBean(UpdateSentenceTypeAndSituationRepository::class.java),
         )
       }
 

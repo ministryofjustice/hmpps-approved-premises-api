@@ -3559,6 +3559,7 @@ components:
       type: string
       enum:
         - update_all_users_from_community_api
+        - update_sentence_type_and_situation
     PlacementDates:
       type: object
       properties:
