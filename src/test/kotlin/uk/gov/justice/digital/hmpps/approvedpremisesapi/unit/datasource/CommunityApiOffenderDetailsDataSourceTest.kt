@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.CommunityApiOffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import java.util.stream.Stream
 
 class CommunityApiOffenderDetailsDataSourceTest {
@@ -46,6 +47,18 @@ class CommunityApiOffenderDetailsDataSourceTest {
     assertThat(result).isEqualTo(expectedResult)
   }
 
+  @ParameterizedTest
+  @MethodSource("userOffenderAccessClientResults")
+  fun `getUserAccessForOffenderCrn returns response from Community API call`(
+    expectedResult: ClientResult<UserOffenderAccess>,
+  ) {
+    every { mockCommunityApiClient.getUserAccessForOffenderCrn("DELIUS-USER", "SOME-CRN") } returns expectedResult
+
+    val result = communityApiOffenderDetailsDataSource.getUserAccessForOffenderCrn("DELIUS-USER", "SOME-CRN")
+
+    assertThat(result).isEqualTo(expectedResult)
+  }
+
   private companion object {
     @JvmStatic
     fun cacheableOffenderDetailSummaryClientResults(): Stream<Arguments> {
@@ -53,34 +66,44 @@ class CommunityApiOffenderDetailsDataSourceTest {
         .withCrn("SOME-CRN")
         .produce()
 
-      return Stream.of(
-        Arguments.of(
-          ClientResult.Failure.CachedValueUnavailable<OffenderDetailSummary>("some-cache-key"),
-        ),
-        Arguments.of(
-          ClientResult.Failure.StatusCode<OffenderDetailSummary>(
-            HttpMethod.GET,
-            "/",
-            HttpStatus.NOT_FOUND,
-            null,
-            false,
-          ),
-        ),
-        Arguments.of(
-          ClientResult.Failure.Other<OffenderDetailSummary>(
-            HttpMethod.POST,
-            "/",
-            RuntimeException("Some error"),
-          ),
-        ),
-        Arguments.of(
-          ClientResult.Success(HttpStatus.OK, successBody, true),
-        ),
-      )
+      return allClientResults(successBody)
+        .filter { it !is ClientResult.Failure.PreemptiveCacheTimeout }
+        .intoArgumentStream()
     }
 
     @JvmStatic
     fun <T> cacheTimeoutClientResult() =
       ClientResult.Failure.PreemptiveCacheTimeout<T>("some-cache", "some-cache-key", 1000)
+
+    @JvmStatic
+    fun userOffenderAccessClientResults(): Stream<Arguments> {
+      val successBody = UserOffenderAccess(
+        userRestricted = false,
+        userExcluded = false,
+        restrictionMessage = null,
+      )
+
+      return allClientResults(successBody).intoArgumentStream()
+    }
+
+    private fun <T> allClientResults(successBody: T): List<ClientResult<T>> = listOf(
+      ClientResult.Failure.CachedValueUnavailable("some-cache-key"),
+      ClientResult.Failure.StatusCode(
+        HttpMethod.GET,
+        "/",
+        HttpStatus.NOT_FOUND,
+        null,
+        false,
+      ),
+      ClientResult.Failure.Other(
+        HttpMethod.POST,
+        "/",
+        RuntimeException("Some error"),
+      ),
+      cacheTimeoutClientResult(),
+      ClientResult.Success(HttpStatus.OK, successBody, true),
+    )
+
+    private fun <T> List<ClientResult<T>>.intoArgumentStream(): Stream<Arguments> = this.stream().map { Arguments.of(it) }
   }
 }

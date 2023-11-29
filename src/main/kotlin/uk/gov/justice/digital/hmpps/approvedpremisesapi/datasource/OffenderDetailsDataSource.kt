@@ -7,11 +7,13 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 
 interface OffenderDetailsDataSource {
   val name: OffenderDetailsDataSourceName
 
   fun getOffenderDetailSummary(crn: String): ClientResult<OffenderDetailSummary>
+  fun getUserAccessForOffenderCrn(deliusUsername: String, crn: String): ClientResult<UserOffenderAccess>
 }
 
 enum class OffenderDetailsDataSourceName {
@@ -40,6 +42,7 @@ class ConfiguredOffenderDetailsDataSource(
     get() = dataSource.name
 
   override fun getOffenderDetailSummary(crn: String) = dataSource.getOffenderDetailSummary(crn)
+  override fun getUserAccessForOffenderCrn(deliusUsername: String, crn: String) = dataSource.getUserAccessForOffenderCrn(deliusUsername, crn)
 }
 
 @Component
@@ -58,6 +61,8 @@ class CommunityApiOffenderDetailsDataSource(
 
     return offenderResponse
   }
+
+  override fun getUserAccessForOffenderCrn(deliusUsername: String, crn: String): ClientResult<UserOffenderAccess> = communityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn)
 }
 
 @Component
@@ -67,5 +72,12 @@ class ApDeliusContextApiOffenderDetailsDataSource : OffenderDetailsDataSource {
 
   override fun getOffenderDetailSummary(crn: String): ClientResult<OffenderDetailSummary> {
     throw NotImplementedError("Getting details for individual offenders from the AP Delius Context API is not currently supported")
+  }
+
+  override fun getUserAccessForOffenderCrn(
+    deliusUsername: String,
+    crn: String,
+  ): ClientResult<UserOffenderAccess> {
+    throw NotImplementedError("Getting user access for individual offenders from the AP Delius Context API is not currently supported")
   }
 }
