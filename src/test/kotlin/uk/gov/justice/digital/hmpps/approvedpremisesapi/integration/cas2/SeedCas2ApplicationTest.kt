@@ -141,6 +141,58 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     assertThat(serializableToJsonNode(persistedApplication.document)).isNotEmpty()
   }
 
+  @Test
+  fun `An IN_REVIEW application has _data_, _document_ AND status updates`() {
+    cas2ApplicationRepository.deleteAll()
+
+    nomisUserEntityFactory.produceAndPersist {
+      withNomisUsername("ROGER_SMITH_FAKE")
+    }
+
+    externalUserEntityFactory.produceAndPersist {
+      withUsername("CAS2_ASSESSOR")
+    }
+
+    val applicationId = "6a1551ea-cdb7-4f5e-beac-aee9ad73339c"
+    val creationTimestamp = OffsetDateTime.parse("2022-12-13T15:00:00+01:00")
+    val submissionTimestamp = OffsetDateTime.parse("2022-12-15T12:00:00+01:00")
+
+    withCsv(
+      "in-review-cas2-application",
+      cas2ApplicationSeedCsvRowsToCsv(
+        listOf(
+          Cas2ApplicationSeedCsvRowFactory()
+            .withId(applicationId)
+            .withNomsNumber("A1234AI")
+            .withCrn("CRN-ABC")
+            .withCreatedBy("ROGER_SMITH_FAKE")
+            .withCreatedAt(creationTimestamp)
+            .withSubmittedAt(submissionTimestamp)
+            .withState("IN_REVIEW")
+            .withStatusUpdates("2")
+            .withLocation(null)
+            .produce(),
+        ),
+      ),
+    )
+
+    seedService.seedData(SeedFileType.cas2Applications, "in-review-cas2-application")
+
+    val persistedApplication = cas2ApplicationRepository.getReferenceById(UUID.fromString(applicationId))
+
+    assertThat(persistedApplication).isNotNull
+    assertThat(persistedApplication.submittedAt).isNotNull
+
+    assertThat(serializableToJsonNode(persistedApplication.data)).isNotEmpty()
+    assertThat(serializableToJsonNode(persistedApplication.document)).isNotEmpty()
+
+    assertThat(persistedApplication.statusUpdates).isNotEmpty()
+    assertThat(persistedApplication.statusUpdates!!.size).isEqualTo(2)
+    persistedApplication.statusUpdates!!.forEach { statusUpdate ->
+      assertThat(statusUpdate.assessor.username).isEqualTo("CAS2_ASSESSOR")
+    }
+  }
+
   private fun cas2ApplicationSeedCsvRowsToCsv(rows: List<Cas2ApplicationSeedUntypedEnumsCsvRow>):
     String {
     val builder = CsvBuilder()
