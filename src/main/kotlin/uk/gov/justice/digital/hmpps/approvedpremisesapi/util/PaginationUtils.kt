@@ -40,3 +40,45 @@ fun <T>getMetadata(response: Page<T>, page: Int?): PaginationMetadata? {
     null
   }
 }
+
+fun getIndices(page: Int, taskCount: Int): Pair<Int, Int> {
+  val pageSize = 10
+  val endMarker = pageSize - 1
+  var start = 0
+  if (page > 0) {
+    start = (page - 1) * pageSize
+  }
+
+  if (start > taskCount) {
+    val lastPage = (taskCount / pageSize)
+    start = lastPage * pageSize
+  }
+
+  var end = start + endMarker
+
+  while (end > taskCount - 1) {
+    end -= 1
+  }
+  return Pair(start, end)
+}
+
+fun getMetadata(
+  page: Int,
+  totalCount: Int,
+): PaginationMetadata {
+  val pageSize = 10
+  val totalPages = (totalCount / pageSize) + 1
+  var currentPage = page
+
+  when {
+    currentPage > totalPages -> currentPage = totalPages
+    currentPage < 1 -> currentPage = 1
+  }
+
+  return PaginationMetadata(
+    currentPage,
+    totalPages,
+    totalCount.toLong(),
+    pageSize,
+  )
+}
