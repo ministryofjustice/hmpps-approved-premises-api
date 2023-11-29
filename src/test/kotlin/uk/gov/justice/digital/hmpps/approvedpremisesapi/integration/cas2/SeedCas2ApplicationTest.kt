@@ -99,6 +99,48 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     assertThat(serializableToJsonNode(persistedApplication.data)).isNotEmpty()
     assertThat(serializableToJsonNode(persistedApplication.document)).isEmpty()
   }
+
+  @Test
+  fun `A SUBMITTED application has _data_ AND _document_`() {
+    cas2ApplicationRepository.deleteAll()
+
+    nomisUserEntityFactory.produceAndPersist {
+      withNomisUsername("ROGER_SMITH_FAKE")
+    }
+
+    val applicationId = "6a1551ea-cdb7-4f5e-beac-aee9ad73339c"
+    val creationTimestamp = OffsetDateTime.parse("2022-12-13T15:00:00+01:00")
+    val submissionTimestamp = OffsetDateTime.parse("2022-12-15T12:00:00+01:00")
+
+    withCsv(
+      "submitted-cas2-application",
+      cas2ApplicationSeedCsvRowsToCsv(
+        listOf(
+          Cas2ApplicationSeedCsvRowFactory()
+            .withId(applicationId)
+            .withNomsNumber("A1234AI")
+            .withCrn("CRN-ABC")
+            .withCreatedBy("ROGER_SMITH_FAKE")
+            .withCreatedAt(creationTimestamp)
+            .withSubmittedAt(submissionTimestamp)
+            .withState("SUBMITTED")
+            .withStatusUpdates("0")
+            .withLocation(null)
+            .produce(),
+        ),
+      ),
+    )
+
+    seedService.seedData(SeedFileType.cas2Applications, "submitted-cas2-application")
+
+    val persistedApplication = cas2ApplicationRepository.getReferenceById(UUID.fromString(applicationId))
+
+    assertThat(persistedApplication).isNotNull
+
+    assertThat(serializableToJsonNode(persistedApplication.data)).isNotEmpty()
+    assertThat(serializableToJsonNode(persistedApplication.document)).isNotEmpty()
+  }
+
   private fun cas2ApplicationSeedCsvRowsToCsv(rows: List<Cas2ApplicationSeedUntypedEnumsCsvRow>):
     String {
     val builder = CsvBuilder()
