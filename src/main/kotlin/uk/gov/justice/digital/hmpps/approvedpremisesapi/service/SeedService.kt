@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2ApplicationsSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.ExternalUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
@@ -132,6 +133,10 @@ class SeedService(
         SeedFileType.nomisUsers -> NomisUsersSeedJob(
           filename,
           applicationContext.getBean(NomisUserRepository::class.java),
+        )
+        SeedFileType.externalUsers -> ExternalUsersSeedJob(
+          filename,
+          applicationContext.getBean(ExternalUserRepository::class.java),
         )
         SeedFileType.cas2Applications -> Cas2ApplicationsSeedJob(
           filename,
