@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.springframework.data.domain.Page
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -35,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 class AssociatedPlacementRequestsHaveAtLeastOneBookingError(message: String) : Exception(message)
 
 @Service
+@Suppress("ReturnCount")
 class PlacementApplicationService(
   private val placementApplicationRepository: PlacementApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
@@ -53,7 +56,11 @@ class PlacementApplicationService(
   ): Pair<List<PlacementApplicationEntity>, PaginationMetadata?> {
     val sortField = "createdAt"
     val pageable = getPageable(sortField, sortDirection, page)
-    val response = placementApplicationRepository.findAllByAllocatedToUser_IdAndReallocatedAtNullAndDecisionNull(user.id, pageable)
+    val response =
+      placementApplicationRepository.findAllByAllocatedToUser_IdAndReallocatedAtNullAndDecisionNull(
+        user.id,
+        pageable,
+      )
     return Pair(response.content, getMetadata(response, page))
   }
 
@@ -96,12 +103,16 @@ class PlacementApplicationService(
   }
 
   fun getApplication(id: UUID): AuthorisableActionResult<PlacementApplicationEntity> {
-    val placementApplication = placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+    val placementApplication =
+      placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
 
     return AuthorisableActionResult.Success(setSchemaUpToDate(placementApplication))
   }
 
-  fun reallocateApplication(assigneeUser: UserEntity, id: UUID): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+  fun reallocateApplication(
+    assigneeUser: UserEntity,
+    id: UUID,
+  ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val currentPlacementApplication = placementApplicationRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -113,7 +124,11 @@ class PlacementApplicationService(
 
     if (!assigneeUser.hasRole(UserRole.CAS1_MATCHER)) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingMatcherRole" }),
+        ValidatableActionResult.FieldValidationError(
+          ValidationErrors().apply {
+            this["$.userId"] = "lackingMatcherRole"
+          },
+        ),
       )
     }
 
@@ -154,7 +169,9 @@ class PlacementApplicationService(
   }
 
   @Transactional
-  fun withdrawPlacementApplication(id: UUID): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+  fun withdrawPlacementApplication(
+    id: UUID,
+  ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
 
     when (placementApplicationAuthorisationResult) {
@@ -181,7 +198,10 @@ class PlacementApplicationService(
     )
   }
 
-  fun updateApplication(id: UUID, data: String): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+  fun updateApplication(
+    id: UUID,
+    data: String,
+  ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
 
     when (placementApplicationAuthorisationResult) {
@@ -190,7 +210,10 @@ class PlacementApplicationService(
       is AuthorisableActionResult.Success -> Unit
     }
 
-    val placementApplicationValidationResult = confirmApplicationCanBeUpdatedOrSubmitted(placementApplicationAuthorisationResult.entity)
+    val placementApplicationValidationResult =
+      confirmApplicationCanBeUpdatedOrSubmitted(
+        placementApplicationAuthorisationResult.entity,
+      )
 
     if (placementApplicationValidationResult !is ValidatableActionResult.Success) {
       return AuthorisableActionResult.Success(placementApplicationValidationResult)
@@ -207,7 +230,12 @@ class PlacementApplicationService(
     )
   }
 
-  fun submitApplication(id: UUID, translatedDocument: String, apiPlacementType: ApiPlacementType, apiPlacementDates: List<ApiPlacementDates>): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+  fun submitApplication(
+    id: UUID,
+    translatedDocument: String,
+    apiPlacementType: ApiPlacementType,
+    apiPlacementDates: List<ApiPlacementDates>,
+  ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
 
     when (placementApplicationAuthorisationResult) {
@@ -216,7 +244,10 @@ class PlacementApplicationService(
       is AuthorisableActionResult.Success -> Unit
     }
 
-    val placementApplicationValidationResult = confirmApplicationCanBeUpdatedOrSubmitted(placementApplicationAuthorisationResult.entity)
+    val placementApplicationValidationResult =
+      confirmApplicationCanBeUpdatedOrSubmitted(
+        placementApplicationAuthorisationResult.entity,
+      )
 
     if (placementApplicationValidationResult !is ValidatableActionResult.Success) {
       return AuthorisableActionResult.Success(placementApplicationValidationResult)
@@ -256,9 +287,13 @@ class PlacementApplicationService(
   }
 
   @Transactional
-  fun recordDecision(id: UUID, placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+  fun recordDecision(
+    id: UUID,
+    placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope,
+  ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val user = userService.getUserForRequest()
-    val placementApplicationEntity = placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+    val placementApplicationEntity =
+      placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
 
     if (placementApplicationEntity.allocatedToUser != user) {
       return AuthorisableActionResult.Unauthorised()
@@ -271,7 +306,11 @@ class PlacementApplicationService(
     }
 
     if (placementApplicationDecisionEnvelope.decision == ApiPlacementApplicationDecision.accepted) {
-      val placementRequestResult = placementRequestService.createPlacementRequestsFromPlacementApplication(placementApplicationEntity, placementApplicationDecisionEnvelope.decisionSummary)
+      val placementRequestResult =
+        placementRequestService.createPlacementRequestsFromPlacementApplication(
+          placementApplicationEntity,
+          placementApplicationDecisionEnvelope.decisionSummary,
+        )
 
       if (placementRequestResult is AuthorisableActionResult.NotFound) {
         return AuthorisableActionResult.NotFound(placementRequestResult.entityType, placementRequestResult.id)
@@ -305,19 +344,41 @@ class PlacementApplicationService(
   fun getAllReallocatable(
     page: Int?,
     sortDirection: SortDirection?,
+    allocatedFilter: AllocatedFilter?,
   ): Pair<List<PlacementApplicationEntity>, PaginationMetadata?> {
     val sortField = "createdAt"
     val pageable = getPageable(sortField, sortDirection, page)
-    val allReallocatable =
-      placementApplicationRepository.findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNull(
-        pageable,
-      )
+    var allReallocatable: Page<PlacementApplicationEntity>?
+
+    when {
+      allocatedFilter == AllocatedFilter.unallocated ->
+        allReallocatable =
+          placementApplicationRepository
+            .findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNullAndAllocatedToUserNull(
+              pageable,
+            )
+      allocatedFilter == AllocatedFilter.allocated ->
+        allReallocatable =
+          placementApplicationRepository
+            .findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNullAndAllocatedToUserIsNotNull(
+              pageable,
+            )
+      else ->
+        allReallocatable =
+          placementApplicationRepository
+            .findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNull(
+              pageable,
+            )
+    }
+
     val metaData = getMetadata(allReallocatable, page)
     return Pair(allReallocatable.content, metaData)
   }
 
   private fun setSchemaUpToDate(placementApplicationEntity: PlacementApplicationEntity): PlacementApplicationEntity {
-    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java)
+    val latestSchema = jsonSchemaService.getNewestSchema(
+      ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java,
+    )
 
     placementApplicationEntity.schemaUpToDate = placementApplicationEntity.schemaVersion.id == latestSchema.id
 
@@ -325,7 +386,8 @@ class PlacementApplicationService(
   }
 
   private fun getApplicationForUpdateOrSubmit(id: UUID): AuthorisableActionResult<PlacementApplicationEntity> {
-    val placementApplication = placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+    val placementApplication =
+      placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
     val user = userService.getUserForRequest()
 
     if (placementApplication.createdByUser != user) {
@@ -335,8 +397,12 @@ class PlacementApplicationService(
     return AuthorisableActionResult.Success(placementApplication)
   }
 
-  private fun confirmApplicationCanBeUpdatedOrSubmitted(placementApplicationEntity: PlacementApplicationEntity): ValidatableActionResult<PlacementApplicationEntity> {
-    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java)
+  private fun confirmApplicationCanBeUpdatedOrSubmitted(
+    placementApplicationEntity: PlacementApplicationEntity,
+  ): ValidatableActionResult<PlacementApplicationEntity> {
+    val latestSchema = jsonSchemaService.getNewestSchema(
+      ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java,
+    )
     placementApplicationEntity.schemaUpToDate = placementApplicationEntity.schemaVersion.id == latestSchema.id
 
     if (!placementApplicationEntity.schemaUpToDate) {
@@ -352,7 +418,10 @@ class PlacementApplicationService(
 
   private fun withdrawAssociatedPlacementRequests(placementApplicationEntity: PlacementApplicationEntity) {
     if (!placementApplicationEntity.canBeWithdrawn()) {
-      throw AssociatedPlacementRequestsHaveAtLeastOneBookingError("The Placement Application already has at least one associated booking")
+      throw AssociatedPlacementRequestsHaveAtLeastOneBookingError(
+        "The Placement Application " +
+          "already has at least one associated booking",
+      )
     }
 
     placementApplicationEntity.placementRequests.forEach {

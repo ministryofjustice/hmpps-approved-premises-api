@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.domain.Page
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessed
@@ -11,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -82,15 +84,33 @@ class AssessmentService(
   fun getAllReallocatable(
     page: Int?,
     sortDirection: SortDirection?,
+    allocatedFilter: AllocatedFilter?,
   ): Pair<List<AssessmentEntity>, PaginationMetadata?> {
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
     val sortField = "createdAt"
     val pageable = getPageable(sortField, sortDirection, page)
-    val assessments =
-      assessmentRepository.findAllByReallocatedAtNullAndSubmittedAtNullAndType(
-        ApprovedPremisesAssessmentEntity::class.java,
-        pageable,
-      )
+    var assessments: Page<AssessmentEntity>?
+
+    when {
+      allocatedFilter == AllocatedFilter.unallocated ->
+        assessments =
+          assessmentRepository.findAllByReallocatedAtNullAndSubmittedAtNullAndTypeAndAllocatedToUserNull(
+            ApprovedPremisesAssessmentEntity::class.java,
+            pageable,
+          )
+      allocatedFilter == AllocatedFilter.allocated ->
+        assessments =
+          assessmentRepository.findAllByReallocatedAtNullAndSubmittedAtNullAndTypeAndAllocatedToUser(
+            ApprovedPremisesAssessmentEntity::class.java,
+            pageable,
+          )
+      else ->
+        assessments =
+          assessmentRepository.findAllByReallocatedAtNullAndSubmittedAtNullAndType(
+            ApprovedPremisesAssessmentEntity::class.java,
+            pageable,
+          )
+    }
 
     assessments.forEach {
       it.schemaUpToDate = it.schemaVersion.id == latestSchema.id
@@ -372,7 +392,7 @@ class AssessmentService(
                 crn = offenderDetails.otherIds.crn,
                 noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
               ),
-              deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
+              deliusEventNumber = application.eventNumber,
               assessedAt = acceptedAt.toInstant(),
               assessedBy = ApplicationAssessedAssessedBy(
                 staffMember = StaffMember(
@@ -507,7 +527,7 @@ class AssessmentService(
                 crn = assessment.application.crn,
                 noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
               ),
-              deliusEventNumber = (application as ApprovedPremisesApplicationEntity).eventNumber,
+              deliusEventNumber = application.eventNumber,
               assessedAt = rejectedAt.toInstant(),
               assessedBy = ApplicationAssessedAssessedBy(
                 staffMember = StaffMember(
@@ -810,8 +830,10 @@ class AssessmentService(
 
   fun updateAssessmentWithdrawn(assessmentId: UUID) {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
-    assessment?.isWithdrawn = true
-    assessmentRepository.save(assessment)
+    if (assessment != null) {
+      assessment.isWithdrawn = true
+      assessmentRepository.save(assessment)
+    }
   }
 
   private fun AssessmentEntity.addSystemNote(user: UserEntity, type: ReferralHistorySystemNoteType) {

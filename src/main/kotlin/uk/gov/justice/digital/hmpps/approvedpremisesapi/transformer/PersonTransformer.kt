@@ -84,7 +84,7 @@ class PersonTransformer {
         probationOffenderResult.inmateDetail?.assignedLivingUnit?.agencyName
           ?: probationOffenderResult.inmateDetail?.assignedLivingUnit?.agencyId
       },
-      isRestricted = (probationOffenderResult.probationOffenderDetail.currentExclusion ?: false || probationOffenderResult.probationOffenderDetail.currentRestriction ?: false)
+      isRestricted = (probationOffenderResult.probationOffenderDetail.currentExclusion ?: false || probationOffenderResult.probationOffenderDetail.currentRestriction ?: false),
     )
   private fun inOutStatusToPersonInfoApiStatus(inOutStatus: InOutStatus?) = when (inOutStatus) {
     InOutStatus.IN -> FullPerson.Status.inCustody

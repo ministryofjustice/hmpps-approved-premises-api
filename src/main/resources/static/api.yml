@@ -2679,6 +2679,11 @@ paths:
           description: The direction to sort the results by. If blank eill sort by descending order
           schema:
             $ref: '_shared.yml#/components/schemas/SortDirection'
+        - name: allocatedFilter
+          in: query
+          description: Filter by allocated or not
+          schema:
+            $ref: '_shared.yml#/components/schemas/AllocatedFilter'
       responses:
         200:
           description: successfully retrieved tasks

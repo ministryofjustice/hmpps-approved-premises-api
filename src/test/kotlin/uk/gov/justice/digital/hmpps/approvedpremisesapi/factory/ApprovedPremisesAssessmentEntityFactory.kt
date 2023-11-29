@@ -31,7 +31,7 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var decision: Yielded<AssessmentDecision?> = { AssessmentDecision.ACCEPTED }
-  private var allocatedToUser: Yielded<UserEntity>? = null
+  private var allocatedToUser: UserEntity? = null
   private var rejectionRationale: Yielded<String?> = { null }
   private var clarificationNotes: Yielded<MutableList<AssessmentClarificationNoteEntity>> = { mutableListOf() }
   private var referralHistoryNotes: Yielded<MutableList<AssessmentReferralHistoryNoteEntity>> = { mutableListOf() }
@@ -78,7 +78,7 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
   }
 
   fun withAllocatedToUser(allocatedToUser: UserEntity) = apply {
-    this.allocatedToUser = { allocatedToUser }
+    this.allocatedToUser = allocatedToUser
   }
 
   fun withClarificationNotes(clarificationNotes: MutableList<AssessmentClarificationNoteEntity>) = apply {
@@ -107,7 +107,7 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     decision = this.decision(),
     schemaUpToDate = false,
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
-    allocatedToUser = this.allocatedToUser?.invoke() ?: throw RuntimeException("Must provide an allocatedToUser"),
+    allocatedToUser = this.allocatedToUser,
     allocatedAt = this.allocatedAt(),
     reallocatedAt = this.reallocatedAt(),
     rejectionRationale = this.rejectionRationale(),

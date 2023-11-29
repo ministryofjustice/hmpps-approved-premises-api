@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.domain.Page
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
@@ -9,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
@@ -42,6 +44,7 @@ import java.util.UUID
 import javax.transaction.Transactional
 
 @Service
+@Suppress("TooGenericExceptionThrown")
 class PlacementRequestService(
   private val placementRequestRepository: PlacementRequestRepository,
   private val userService: UserService,
@@ -73,10 +76,24 @@ class PlacementRequestService(
   fun getAllReallocatable(
     page: Int?,
     sortDirection: SortDirection?,
+    allocatedFilter: AllocatedFilter?,
   ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
     val sortField = "created_at"
     val pageable = getPageable(sortField, sortDirection, page)
-    val allReallocatable = placementRequestRepository.findAllReallocatable(pageable)
+    val allReallocatable: Page<PlacementRequestEntity>?
+
+    when {
+      allocatedFilter == AllocatedFilter.unallocated ->
+        allReallocatable =
+          placementRequestRepository.findAllReallocatableUnallocated(pageable)
+      allocatedFilter == AllocatedFilter.allocated ->
+        allReallocatable =
+          placementRequestRepository.findAllReallocatableAllocated(pageable)
+      else ->
+        allReallocatable =
+          placementRequestRepository.findAllReallocatable(pageable)
+    }
+
     return Pair(allReallocatable.content, getMetadata(allReallocatable, page))
   }
 
@@ -110,7 +127,10 @@ class PlacementRequestService(
     return Pair(response.content, getMetadata(response, page))
   }
 
-  fun getPlacementRequestForUser(user: UserEntity, id: UUID): AuthorisableActionResult<Pair<PlacementRequestEntity, List<CancellationEntity>>> {
+  fun getPlacementRequestForUser(
+    user: UserEntity,
+    id: UUID,
+  ): AuthorisableActionResult<Pair<PlacementRequestEntity, List<CancellationEntity>>> {
     val placementRequest = placementRequestRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -123,7 +143,10 @@ class PlacementRequestService(
     return AuthorisableActionResult.Success(Pair(placementRequest, cancellations))
   }
 
-  fun reallocatePlacementRequest(assigneeUser: UserEntity, id: UUID): AuthorisableActionResult<ValidatableActionResult<PlacementRequestEntity>> {
+  fun reallocatePlacementRequest(
+    assigneeUser: UserEntity,
+    id: UUID,
+  ): AuthorisableActionResult<ValidatableActionResult<PlacementRequestEntity>> {
     val currentPlacementRequest = placementRequestRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -135,7 +158,11 @@ class PlacementRequestService(
 
     if (!assigneeUser.hasRole(UserRole.CAS1_MATCHER)) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingMatcherRole" }),
+        ValidatableActionResult.FieldValidationError(
+          ValidationErrors().apply {
+            this["$.userId"] = "lackingMatcherRole"
+          },
+        ),
       )
     }
 
@@ -162,15 +189,24 @@ class PlacementRequestService(
     )
   }
 
-  fun createPlacementRequestsFromPlacementApplication(placementApplicationEntity: PlacementApplicationEntity, notes: String?): AuthorisableActionResult<List<PlacementRequestEntity>> {
+  fun createPlacementRequestsFromPlacementApplication(
+    placementApplicationEntity: PlacementApplicationEntity,
+    notes: String?,
+  ): AuthorisableActionResult<List<PlacementRequestEntity>> {
     val placementRequirements = placementRequirementsRepository.findTopByApplicationOrderByCreatedAtDesc(
       placementApplicationEntity.application,
-    ) ?: return AuthorisableActionResult.NotFound("Placement Requirements", placementApplicationEntity.application.id.toString())
+    ) ?: return AuthorisableActionResult.NotFound(
+      "Placement Requirements",
+      placementApplicationEntity.application.id.toString(),
+    )
 
     val placementDateEntities = placementDateRepository.findAllByPlacementApplication(placementApplicationEntity)
 
     if (placementDateEntities.isEmpty()) {
-      return AuthorisableActionResult.NotFound("Placement Dates for Placement Application", placementApplicationEntity.id.toString())
+      return AuthorisableActionResult.NotFound(
+        "Placement Dates for Placement Application",
+        placementApplicationEntity.id.toString(),
+      )
     }
 
     val placementRequests = placementDateEntities.map {
@@ -185,7 +221,13 @@ class PlacementRequestService(
     return AuthorisableActionResult.Success(placementRequests)
   }
 
-  fun createPlacementRequest(placementRequirements: PlacementRequirementsEntity, placementDates: PlacementDates, notes: String?, isParole: Boolean, placementApplicationEntity: PlacementApplicationEntity?): PlacementRequestEntity {
+  fun createPlacementRequest(
+    placementRequirements: PlacementRequirementsEntity,
+    placementDates: PlacementDates,
+    notes: String?,
+    isParole: Boolean,
+    placementApplicationEntity: PlacementApplicationEntity?,
+  ): PlacementRequestEntity {
     val user = userService
 
     return placementRequestRepository.save(
@@ -259,10 +301,22 @@ class PlacementRequestService(
 
     val application = placementRequest.application
 
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
+    val offenderDetails = when (
+      val offenderDetailsResult = offenderService.getOffenderByCrn(
+        application.crn,
+        user.deliusUsername,
+        user.hasQualification(UserQualification.LAO),
+      )
+    ) {
       is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Not Made Domain Event: Unauthorised")
-      is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Not Made Domain Event: Not Found")
+      is AuthorisableActionResult.Unauthorised -> throw RuntimeException(
+        "Unable to get Offender Details when " +
+          "creating Booking Not Made Domain Event: Unauthorised",
+      )
+      is AuthorisableActionResult.NotFound -> throw RuntimeException(
+        "Unable to get Offender Details when " +
+          "creating Booking Not Made Domain Event: Not Found",
+      )
     }
 
     val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)

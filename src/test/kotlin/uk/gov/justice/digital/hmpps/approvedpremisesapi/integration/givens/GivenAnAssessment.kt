@@ -9,8 +9,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.OffsetDateTime
 
+@Suppress(
+  "LongParameterList",
+)
 fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
-  allocatedToUser: UserEntity,
+  allocatedToUser: UserEntity?,
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   reallocated: Boolean = false,
@@ -39,7 +42,9 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   }
 
   val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-    withAllocatedToUser(allocatedToUser)
+    if (allocatedToUser != null) {
+      withAllocatedToUser(allocatedToUser)
+    }
     withApplication(application)
     withAssessmentSchema(assessmentSchema)
     withData(data)
@@ -59,8 +64,11 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   return Pair(assessment, application)
 }
 
+@Suppress(
+  "LongParameterList",
+)
 fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
-  allocatedToUser: UserEntity,
+  allocatedToUser: UserEntity?,
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   reallocated: Boolean = false,
