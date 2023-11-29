@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 
 interface OffenderDetailsDataSource {
@@ -42,12 +43,20 @@ class ConfiguredOffenderDetailsDataSource(
 }
 
 @Component
-class CommunityApiOffenderDetailsDataSource : OffenderDetailsDataSource {
+class CommunityApiOffenderDetailsDataSource(
+  private val communityApiClient: CommunityApiClient,
+) : OffenderDetailsDataSource {
   override val name: OffenderDetailsDataSourceName
     get() = OffenderDetailsDataSourceName.COMMUNITY_API
 
   override fun getOffenderDetailSummary(crn: String): ClientResult<OffenderDetailSummary> {
-    throw NotImplementedError("Getting details for individual offenders from the Community API is not currently supported")
+    var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
+
+    if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
+      offenderResponse = communityApiClient.getOffenderDetailSummaryWithCall(crn)
+    }
+
+    return offenderResponse
   }
 }
 
