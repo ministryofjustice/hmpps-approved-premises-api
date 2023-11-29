@@ -39,7 +39,6 @@ class Cas2ApplicationsSeedJob(
 
   override fun processRow(row: Cas2ApplicationSeedCsvRow) {
     log.info("Setting up Application id ${row.id}")
-
     if (repository.findById(row.id).isPresent()) {
       return log.info("Skipping ${row.id}: already seeded")
     }
@@ -62,7 +61,7 @@ class Cas2ApplicationsSeedJob(
         createdAt = row.createdAt,
         createdByUser = applicant,
         data = dataFor(state = row.state, nomsNumber = row.nomsNumber),
-        document = "{}",
+        document = documentFor(state = row.state, nomsNumber = row.nomsNumber),
         submittedAt = row.submittedAt,
         schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
         schemaUpToDate = true,
@@ -77,10 +76,25 @@ class Cas2ApplicationsSeedJob(
     return "{}"
   }
 
+  private fun documentFor(state: String, nomsNumber: String): String {
+    if (state == "SUBMITTED") {
+      return documentFixtureFor(nomsNumber)
+    }
+    return "{}"
+  }
+
   private fun dataFixtureFor(nomsNumber: String): String {
     val path = "src/main/resources/db/seed/local+dev+test/cas2_application_data"
     return FileUtils.readFileToString(
       File("$path/data_$nomsNumber.json"),
+      "UTF-8",
+    )
+  }
+
+  private fun documentFixtureFor(nomsNumber: String): String {
+    val path = "src/main/resources/db/seed/local+dev+test/cas2_application_data"
+    return FileUtils.readFileToString(
+      File("$path/document_$nomsNumber.json"),
       "UTF-8",
     )
   }
