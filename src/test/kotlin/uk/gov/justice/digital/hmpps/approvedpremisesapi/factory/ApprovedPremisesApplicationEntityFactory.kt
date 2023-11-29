@@ -41,6 +41,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var placementRequests: Yielded<MutableList<PlacementRequestEntity>> = { mutableListOf() }
   private var releaseType: Yielded<String?> = { null }
   private var sentenceType: Yielded<String?> = { null }
+  private var situation: Yielded<String?> = { null }
   private var arrivalDate: Yielded<OffsetDateTime?> = { null }
   private var isInapplicable: Yielded<Boolean?> = { null }
   private var isWithdrawn: Yielded<Boolean> = { false }
@@ -134,6 +135,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.sentenceType = { sentenceType }
   }
 
+  fun withSituation(situation: String) = apply {
+    this.situation = { situation }
+  }
+
   fun withArrivalDate(arrivalDate: OffsetDateTime?) = apply {
     this.arrivalDate = { arrivalDate }
   }
@@ -206,5 +211,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     name = this.name(),
     targetLocation = this.targetLocation(),
     status = this.status(),
+    situation = this.situation(),
   )
 }

@@ -285,6 +285,7 @@ class ApprovedPremisesApplicationEntity(
   var placementRequests: MutableList<PlacementRequestEntity>,
   var releaseType: String?,
   var sentenceType: String?,
+  var situation: String?,
   var arrivalDate: OffsetDateTime?,
   var name: String,
   var targetLocation: String?,

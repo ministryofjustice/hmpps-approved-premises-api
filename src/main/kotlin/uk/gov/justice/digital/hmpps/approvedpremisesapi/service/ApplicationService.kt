@@ -336,6 +336,7 @@ class ApplicationService(
       targetLocation = null,
       status = ApprovedPremisesApplicationStatus.STARTED,
       sentenceType = null,
+      situation = null,
     )
   }
 
