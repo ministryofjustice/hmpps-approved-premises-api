@@ -1,15 +1,19 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderIds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
@@ -17,8 +21,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.time.LocalDate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.OffenderProfile as ProbationOffenderProfile
 
 class PersonTransformerTest {
   private val personTransformer = PersonTransformer()
@@ -398,5 +404,81 @@ class PersonTransformerTest {
 
     assertThat(result.crn).isEqualTo(crn)
     assertThat(result is UnknownPerson).isTrue
+  }
+
+  @Nested
+  inner class transformProbationOffenderToPersonApi {
+    @Test
+    fun `transformProbationOffenderToPersonApi returns the correct response when all data is present`() {
+      val nomsNumber = "NOMS"
+      val crn = "CRN"
+      val pncNumber = "PNC"
+      val inmateDetail = InmateDetailFactory()
+        .withInOutStatus(inOutStatus = InOutStatus.IN)
+        .withAssignedLivingUnit(assignedLivingUnit = AssignedLivingUnit(agencyId = "1", locationId = 1, description = "description", agencyName = "HMPS Sheffield"))
+        .produce()
+      val probationOffenderDetail = ProbationOffenderDetailFactory()
+        .withOtherIds(otherIds = IDs(nomsNumber = nomsNumber, crn = crn, pncNumber = pncNumber))
+        .withOffenderProfile(offenderProfile = ProbationOffenderProfile(nationality = "British", religion = "Atheist"))
+        .produce()
+
+      val probationOffenderSearchResult = ProbationOffenderSearchResult.Success.Full(nomsNumber, probationOffenderDetail, inmateDetail)
+
+      val result = personTransformer.transformProbationOffenderToPersonApi(probationOffenderSearchResult, nomsNumber)
+
+      assertThat(result.crn).isEqualTo(crn)
+
+      assertThat(result).isEqualTo(
+        FullPerson(
+          type = PersonType.fullPerson,
+          crn = crn,
+          name = "${probationOffenderDetail.firstName} ${probationOffenderDetail.surname}",
+          dateOfBirth = probationOffenderDetail.dateOfBirth!!,
+          sex = probationOffenderDetail.gender!!,
+          status = FullPerson.Status.inCustody,
+          nomsNumber = nomsNumber,
+          pncNumber = pncNumber,
+          nationality = probationOffenderDetail.offenderProfile?.nationality!!,
+          prisonName = inmateDetail.assignedLivingUnit?.agencyName,
+          isRestricted = false,
+        ),
+      )
+    }
+
+    @Test
+    fun `transformProbationOffenderToPersonApi returns the correct response when missing sex, pncNumber, nationality and prison name`() {
+      val nomsNumber = "NOMS"
+      val crn = "CRN"
+      val inmateDetail = InmateDetailFactory()
+        .withInOutStatus(inOutStatus = InOutStatus.IN)
+        .produce()
+      val probationOffenderDetail = ProbationOffenderDetailFactory()
+        .withGender(null)
+        .withOtherIds(otherIds = IDs(nomsNumber = nomsNumber, crn = crn))
+        .withOffenderProfile(offenderProfile = ProbationOffenderProfile(religion = "Atheist"))
+        .produce()
+
+      val probationOffenderSearchResult = ProbationOffenderSearchResult.Success.Full(nomsNumber, probationOffenderDetail, inmateDetail)
+
+      val result = personTransformer.transformProbationOffenderToPersonApi(probationOffenderSearchResult, nomsNumber)
+
+      assertThat(result.crn).isEqualTo(crn)
+
+      assertThat(result).isEqualTo(
+        FullPerson(
+          type = PersonType.fullPerson,
+          crn = crn,
+          name = "${probationOffenderDetail.firstName} ${probationOffenderDetail.surname}",
+          dateOfBirth = probationOffenderDetail.dateOfBirth!!,
+          sex = "Not found",
+          status = FullPerson.Status.inCustody,
+          nomsNumber = nomsNumber,
+          pncNumber = "Not found",
+          nationality = "Not found",
+          prisonName = inmateDetail.assignedLivingUnit?.agencyName,
+          isRestricted = false,
+        ),
+      )
+    }
   }
 }

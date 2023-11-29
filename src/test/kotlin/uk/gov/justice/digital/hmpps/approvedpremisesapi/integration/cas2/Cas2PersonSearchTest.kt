@@ -89,7 +89,8 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
     @Test
     fun `Searching for a NOMIS ID returns OK with correct body`() {
       `Given a CAS2 User` { userEntity, jwt ->
-        val offender = ProbationOffenderDetailFactory().withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS321"))
+        val offender = ProbationOffenderDetailFactory()
+          .withOtherIds(IDs(crn = "CRN", nomsNumber = "NOMS321", pncNumber = "PNC123"))
           .withFirstName("James")
           .withSurname("Someone")
           .withDateOfBirth(
@@ -132,6 +133,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
                 sex = "Male",
                 status = FullPerson.Status.inCustody,
                 nomsNumber = "NOMS321",
+                pncNumber = "PNC123",
                 nationality = "English",
                 isRestricted = false,
                 prisonName = "HMP Bristol",

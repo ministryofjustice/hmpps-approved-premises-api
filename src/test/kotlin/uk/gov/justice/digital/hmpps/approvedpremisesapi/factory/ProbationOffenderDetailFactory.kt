@@ -16,7 +16,7 @@ class ProbationOffenderDetailFactory : Factory<ProbationOffenderDetail> {
   private var firstName: Yielded<String> = { randomStringUpperCase(8) }
   private var surname: Yielded<String> = { randomStringUpperCase(8) }
   private var dateOfBirth: Yielded<LocalDate> = { LocalDate.now().minusYears(20).randomDateBefore() }
-  private var gender: Yielded<String> = { randomOf(listOf("Male", "Female", "Other")) }
+  private var gender: Yielded<String?> = { randomOf(listOf("Male", "Female", "Other")) }
   private var otherIds: Yielded<IDs> = { IDs(crn = "CRN") }
   private var offenderProfile: Yielded<OffenderProfile> = { OffenderProfile() }
   private var softDeleted: Yielded<Boolean?> = { false }
@@ -39,7 +39,7 @@ class ProbationOffenderDetailFactory : Factory<ProbationOffenderDetail> {
     this.dateOfBirth = { dateOfBirth }
   }
 
-  fun withGender(gender: String) = apply {
+  fun withGender(gender: String?) = apply {
     this.gender = { gender }
   }
 
