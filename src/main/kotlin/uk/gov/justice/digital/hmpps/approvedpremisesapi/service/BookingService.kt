@@ -232,12 +232,18 @@ class BookingService(
       placementRequest.booking = booking
       placementRequestRepository.save(placementRequest)
 
+      val application = placementRequest.application
+
       saveBookingMadeDomainEvent(
-        applicationId = placementRequest.application.id,
-        eventNumber = placementRequest.application.eventNumber,
+        applicationId = application.id,
+        eventNumber = application.eventNumber,
         booking = booking,
         user = user,
         bookingCreatedAt = bookingCreatedAt,
+        applicationSubmittedOn = application.submittedAt,
+        releaseType = application.releaseType,
+        sentenceType = application.sentenceType,
+        situation = application.situation,
       )
 
       sendEmailNotifications(placementRequest.application, booking)
@@ -391,6 +397,10 @@ class BookingService(
           booking = booking,
           user = user!!,
           bookingCreatedAt = bookingCreatedAt,
+          applicationSubmittedOn = onlineApplication?.submittedAt,
+          releaseType = onlineApplication?.releaseType,
+          sentenceType = onlineApplication?.sentenceType,
+          situation = onlineApplication?.situation,
         )
 
         if (onlineApplication != null) {
@@ -491,6 +501,10 @@ class BookingService(
     booking: BookingEntity,
     user: UserEntity,
     bookingCreatedAt: OffsetDateTime,
+    applicationSubmittedOn: OffsetDateTime?,
+    sentenceType: String?,
+    releaseType: String?,
+    situation: String?,
   ) {
     val domainEventId = UUID.randomUUID()
 
@@ -548,6 +562,10 @@ class BookingService(
             ),
             arrivalOn = booking.arrivalDate,
             departureOn = booking.departureDate,
+            applicationSubmittedOn = applicationSubmittedOn?.toInstant(),
+            releaseType = releaseType,
+            sentenceType = sentenceType,
+            situation = situation,
           ),
         ),
       ),

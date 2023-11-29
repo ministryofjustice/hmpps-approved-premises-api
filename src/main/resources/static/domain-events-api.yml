@@ -685,6 +685,16 @@ components:
           type: string
           example: '2023-04-30'
           format: date
+        applicationSubmittedOn:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+        releaseType:
+          type: string
+        sentenceType:
+          type: string
+        situation:
+          type: string
       required:
         - applicationId
         - applicationUrl
