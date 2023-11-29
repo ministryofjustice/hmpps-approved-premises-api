@@ -58,6 +58,8 @@ generic-service:
     URL-TEMPLATES_API_CAS3_PERSON-DEPARTURE-UPDATED-EVENT-DETAIL: https://approved-premises-api-test.hmpps.service.justice.gov.uk/events/cas3/person-departure-updated/#eventId
     URL-TEMPLATES_API_CAS3_BOOKING-CANCELLED-UPDATED-EVENT-DETAIL: https://approved-premises-api-test.hmpps.service.justice.gov.uk/events/cas3/booking-cancelled-updated/#eventId
 
+    DATA-SOURCES_OFFENDER-DETAILS: community_api
+
   allowlist:
     unilink-aovpn1: "194.75.210.216/29"
     unilink-aovpn2: "83.98.63.176/29"

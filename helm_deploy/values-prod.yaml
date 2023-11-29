@@ -69,6 +69,8 @@ generic-service:
     ARRIVED-DEPARTED-DOMAIN-EVENTS-DISABLED: true
     URL-TEMPLATES_API_CAS3_BOOKING-CANCELLED-UPDATED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/cas3/booking-cancelled-updated/#eventId
 
+    DATA-SOURCES_OFFENDER-DETAILS: community_api
+
   namespace_secrets:
     hmpps-domain-events-topic:
       HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
