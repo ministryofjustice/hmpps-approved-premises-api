@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.NullSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted
@@ -29,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
@@ -982,7 +984,7 @@ class ApplicationServiceTest {
       }
       .produce()
 
-    private val submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+    private var submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
       translatedDocument = {},
       isPipeApplication = true,
       isWomensApplication = false,
@@ -1122,9 +1124,26 @@ class ApplicationServiceTest {
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
     }
 
-    @Test
-    fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event, sends confirmation email`() {
+    @ParameterizedTest
+    @EnumSource(value = SituationOption::class)
+    @NullSource
+    fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event, sends confirmation email`(situation: SituationOption?) {
       val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        isPipeApplication = true,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        situation = situation,
+      )
+
+      every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
 
       val application = ApprovedPremisesApplicationEntityFactory()
         .withApplicationSchema(newestSchema)
@@ -1217,6 +1236,11 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.isPipeApplication).isTrue
       assertThat(persistedApplication.isWomensApplication).isFalse
       assertThat(persistedApplication.releaseType).isEqualTo(submitApprovedPremisesApplication.releaseType.toString())
+      if (situation == null) {
+        assertThat(persistedApplication.situation).isNull()
+      } else {
+        assertThat(persistedApplication.situation).isEqualTo(situation.toString())
+      }
       assertThat(persistedApplication.targetLocation).isEqualTo(submitApprovedPremisesApplication.targetLocation)
 
       verify { mockApplicationRepository.save(any()) }

@@ -27,7 +27,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -3730,6 +3733,10 @@ class BookingServiceTest {
 
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(otherUser)
+      .withSubmittedAt(OffsetDateTime.now())
+      .withReleaseType(ReleaseTypeOption.licence.toString())
+      .withSentenceType(SentenceTypeOption.nonStatutory.toString())
+      .withSituation(SituationOption.bailSentence.toString())
       .produce()
 
     val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -4527,7 +4534,11 @@ class BookingServiceTest {
               legacyApCode = premises.qCode,
               localAuthorityAreaName = premises.localAuthorityArea!!.name,
             ) &&
-              data.arrivalOn == arrivalDate
+              data.arrivalOn == arrivalDate &&
+              data.applicationSubmittedOn == application.submittedAt!!.toInstant() &&
+              data.releaseType == application.releaseType &&
+              data.sentenceType == application.sentenceType &&
+              data.situation == application.situation
           },
         )
       }

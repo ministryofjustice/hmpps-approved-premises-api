@@ -336,6 +336,7 @@ class ApplicationService(
       targetLocation = null,
       status = ApprovedPremisesApplicationStatus.STARTED,
       sentenceType = null,
+      situation = null,
     )
   }
 
@@ -752,6 +753,7 @@ class ApplicationService(
       targetLocation = submitApplication.targetLocation
       arrivalDate = getArrivalDate(submitApplication.arrivalDate)
       sentenceType = submitApplication.sentenceType.toString()
+      situation = submitApplication.situation?.toString()
     }
 
     assessmentService.createApprovedPremisesAssessment(application)
