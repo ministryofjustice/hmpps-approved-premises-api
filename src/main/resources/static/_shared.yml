@@ -1983,6 +1983,8 @@ components:
               $ref: '#/components/schemas/ReleaseTypeOption'
             sentenceType:
               $ref: '#/components/schemas/SentenceTypeOption'
+            situation:
+              $ref: '#/components/schemas/SituationOption'
             arrivalDate:
               type: string
               format: date
@@ -2053,6 +2055,13 @@ components:
         - communityOrder
         - bailPlacement
         - nonStatutory
+    SituationOption:
+      type: string
+      enum:
+        - riskManagement
+        - residencyManagement
+        - bailAssessment
+        - bailSentence
     PrisonCaseNote:
       type: object
       properties:
