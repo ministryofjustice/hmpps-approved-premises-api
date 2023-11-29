@@ -2,11 +2,16 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2
 
 import com.microsoft.applicationinsights.boot.dependencies.apachecommons.io.FileUtils
 import org.slf4j.LoggerFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import java.io.File
@@ -17,6 +22,8 @@ class Cas2ApplicationsSeedJob(
   fileName: String,
   private val repository: Cas2ApplicationRepository,
   private val userRepository: NomisUserRepository,
+  private val externalUserRepository: ExternalUserRepository,
+  private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val jsonSchemaService: JsonSchemaService,
 ) : SeedJob<Cas2ApplicationSeedCsvRow>(
   id = UUID.randomUUID(),
@@ -53,7 +60,7 @@ class Cas2ApplicationsSeedJob(
   }
 
   private fun createApplication(row: Cas2ApplicationSeedCsvRow, applicant: NomisUserEntity) {
-    repository.save(
+    val application = repository.save(
       Cas2ApplicationEntity(
         id = row.id,
         crn = row.crn,
@@ -67,6 +74,29 @@ class Cas2ApplicationsSeedJob(
         schemaUpToDate = true,
       ),
     )
+    if (row.statusUpdates != "0") {
+      repeat(row.statusUpdates.toInt()) { idx -> createStatusUpdate(idx, application) }
+    }
+  }
+
+  private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
+    log.info("Seeding status update $idx for application ${application.id}")
+    val assessor = externalUserRepository.findAll().random()
+    val status = findStatusAtPosition(idx)
+    statusUpdateRepository.save(
+      Cas2StatusUpdateEntity(
+        id = UUID.randomUUID(),
+        application = application,
+        assessor = assessor,
+        description = status.description,
+        label = status.label,
+        statusId = status.id,
+      ),
+    )
+  }
+
+  private fun findStatusAtPosition(idx: Int): Cas2ApplicationStatus {
+    return Cas2ApplicationStatusSeeding.statusList()[idx]
   }
 
   private fun dataFor(state: String, nomsNumber: String): String {
@@ -77,7 +107,7 @@ class Cas2ApplicationsSeedJob(
   }
 
   private fun documentFor(state: String, nomsNumber: String): String {
-    if (state == "SUBMITTED") {
+    if (listOf("SUBMITTED", "IN_REVIEW").contains(state)) {
       return documentFixtureFor(nomsNumber)
     }
     return "{}"
