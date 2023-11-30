@@ -44,11 +44,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getIndices
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromOffenderDetailSummaryResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
 import java.util.UUID
 import javax.transaction.Transactional
-
 @Service
 class TasksController(
   private val userService: UserService,
@@ -86,7 +87,7 @@ class TasksController(
         }
       }
 
-      return responseForAllTypes(user, allocatedFilter)
+      return responseForAllTypes(user, page, allocatedFilter)
     } else {
       throw ForbiddenProblem()
     }
@@ -406,6 +407,7 @@ class TasksController(
 
   private fun responseForAllTypes(
     user: UserEntity,
+    page: Int?,
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatableAssessmentTasks, _) =
@@ -440,9 +442,26 @@ class TasksController(
       )
 
     val tasks: MutableList<Task> = ArrayList()
-    async { tasks.addAll(assessmentTasks) }
-    async { tasks.addAll(placementRequestTasks) }
-    async { tasks.addAll(placementApplicationTasks) }
+    tasks.addAll(assessmentTasks)
+    tasks.addAll(placementRequestTasks)
+    tasks.addAll(placementApplicationTasks)
+
+    if (page != null) {
+      var pageNormalised = page!!
+      if (pageNormalised > 0) {
+        pageNormalised -= 1
+      }
+      val (start, end) = getIndices(pageNormalised, tasks.count())
+      val tasksSlice = tasks.slice(start..end)
+      val metaData = getMetadata(page, tasks.count())
+
+      return@runBlocking ResponseEntity.ok().headers(
+        metaData.toHeaders(),
+      ).body(
+        tasksSlice,
+      )
+    }
+
     return@runBlocking ResponseEntity.ok(tasks)
   }
 
