@@ -15,9 +15,9 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ProbationOffenderSearchApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
@@ -37,10 +37,10 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 
 class OffenderServiceTest {
-  private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockProbationOffenderSearchClient = mockk<ProbationOffenderSearchApiClient>()
+  private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -49,10 +49,10 @@ class OffenderServiceTest {
   }
 
   private val offenderService = OffenderService(
-    mockCommunityApiClient,
     mockPrisonsApiClient,
     mockProbationOffenderSearchClient,
     mockApOASysContextApiClient,
+    mockOffenderDetailsDataSource,
   )
 
   @Nested
@@ -62,14 +62,14 @@ class OffenderServiceTest {
 
     @Test
     fun `returns NotFound result when Community API Client returns 404`() {
-      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
 
       assertThat(offenderService.getRiskByCrn("a-crn") is AuthorisableActionResult.NotFound).isTrue
     }
 
     @Test
     fun `throws when Community API Client returns other non-2xx status code`() {
-      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
 
       val exception = assertThrows<RuntimeException> { offenderService.getRiskByCrn("a-crn") }
       assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/a-crn: 400 BAD_REQUEST")
@@ -156,14 +156,14 @@ class OffenderServiceTest {
   inner class GetOffenderByCrn {
     @Test
     fun `returns NotFound result when Client returns 404`() {
-      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
 
       assertThat(offenderService.getOffenderByCrn("a-crn") is AuthorisableActionResult.NotFound).isTrue
     }
 
     @Test
     fun `throws when Client returns other non-2xx status code except 403`() {
-      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
 
       val exception = assertThrows<RuntimeException> { offenderService.getOffenderByCrn("a-crn") }
       assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/a-crn: 400 BAD_REQUEST")
@@ -365,7 +365,7 @@ class OffenderServiceTest {
     fun `returns NotFound if Community API responds with a 404`() {
       val crn = "ABC123"
 
-      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/ABC123", HttpStatus.NOT_FOUND, null, true)
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/ABC123", HttpStatus.NOT_FOUND, null, true)
 
       val result = offenderService.getInfoForPerson(crn)
 
@@ -376,7 +376,7 @@ class OffenderServiceTest {
     fun `returns Unknown if Community API responds with a 500`() {
       val crn = "ABC123"
 
-      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/ABC123", HttpStatus.INTERNAL_SERVER_ERROR, null, true)
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/ABC123", HttpStatus.INTERNAL_SERVER_ERROR, null, true)
 
       val result = offenderService.getInfoForPerson(crn)
 
@@ -395,7 +395,7 @@ class OffenderServiceTest {
         .withNomsNumber(nomsNumber)
         .produce()
 
-      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns ClientResult.Success(
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult.Success(
         status = HttpStatus.OK,
         body = offenderDetails,
       )
@@ -428,7 +428,7 @@ class OffenderServiceTest {
       .withCurrentExclusion(false)
       .produce()
 
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
   }
 
   private fun mock404RoSH(crn: String) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns StatusCode(HttpMethod.GET, "/rosh/a-crn", HttpStatus.NOT_FOUND, body = null)
