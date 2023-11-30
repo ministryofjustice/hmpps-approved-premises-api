@@ -21,27 +21,6 @@ data class ProbationOffenderDetail(
   val restrictionMessage: String? = null,
   val currentExclusion: Boolean? = null,
   val exclusionMessage: String? = null,
-  val highlight: Map<String, List<String>>? = null,
-  val accessDenied: Boolean? = null,
-  val currentTier: String? = null,
-  val activeProbationManagedSentence: Boolean? = null,
-)
-
-data class IDs(
-  val crn: String,
-  val pncNumber: String? = null,
-  val croNumber: String? = null,
-  val niNumber: String? = null,
-  val nomsNumber: String? = null,
-  val immigrationNumber: String? = null,
-  val mostRecentPrisonerNumber: String? = null,
-  val previousCrn: String? = null,
-)
-
-data class ContactDetails(
-  val phoneNumbers: List<String>? = null,
-  val emailAddresses: List<String>? = null,
-  val allowSMS: Boolean? = null,
 )
 
 data class OffenderProfile(
