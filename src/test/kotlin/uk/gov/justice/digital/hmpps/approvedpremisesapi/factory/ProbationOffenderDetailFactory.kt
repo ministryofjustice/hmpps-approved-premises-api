@@ -78,9 +78,5 @@ class ProbationOffenderDetailFactory : Factory<ProbationOffenderDetail> {
     restrictionMessage = null,
     currentExclusion = this.currentExclusion(),
     exclusionMessage = null,
-    highlight = null,
-    accessDenied = null,
-    currentTier = null,
-    activeProbationManagedSentence = null,
   )
 }
