@@ -18,8 +18,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Go
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
@@ -867,6 +870,151 @@ class ReportsTest : IntegrationTestBase() {
             Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
           }
       }
+    }
+  }
+
+  @Test
+  fun `Get bookings report returns OK with correct body and correct duty to refer local authority area name`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val accommodationApplication =
+          createTemporaryAccommodationApplication(offenderDetails, userEntity)
+
+        val bookings = bookingEntityFactory.produceAndPersistMultiple(1) {
+          withPremises(premises)
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn(offenderDetails.otherIds.crn)
+          withArrivalDate(LocalDate.of(2023, 4, 5))
+          withDepartureDate(LocalDate.of(2023, 4, 7))
+          withApplication(accommodationApplication)
+        }
+        bookings[0].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
+
+        val caseSummary = CaseSummaryFactory()
+          .fromOffenderDetails(offenderDetails)
+          .withPnc(offenderDetails.otherIds.pncNumber)
+          .produce()
+
+        ApDeliusContext_addResponseToUserAccessCall(
+          CaseAccessFactory()
+            .withCrn(offenderDetails.otherIds.crn)
+            .produce(),
+          userEntity.deliusUsername,
+        )
+
+        val expectedDataFrame = BookingsReportGenerator()
+          .createReport(
+            bookings.toBookingsReportDataAndPersonInfo { crn ->
+              PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+            },
+            BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+          )
+
+        webTestClient.get()
+          .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .consumeWith {
+            val actual = DataFrame
+              .readExcel(it.responseBody!!.inputStream())
+              .convertTo<BookingsReportRow>(ExcessiveColumns.Remove)
+              .sortBy(BookingsReportRow::bookingId)
+            Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
+          }
+      }
+    }
+  }
+
+  private fun createTemporaryAccommodationApplication(
+    offenderDetails: OffenderDetailSummary,
+    userEntity: UserEntity,
+  ): TemporaryAccommodationApplicationEntity {
+    val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withPermissiveSchema()
+    }
+    return temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+      withCrn(offenderDetails.otherIds.crn)
+      withCreatedByUser(userEntity)
+      withProbationRegion(userEntity.probationRegion)
+      withApplicationSchema(applicationSchema)
+      withData(
+        """
+               {
+                  "sentence-information": {
+                    "offending-summary": {
+                      "summary": "s"
+                    },
+                    "sentence-type": {
+                      "sentenceType": "standardDeterminate"
+                    },
+                    "sentence-length": {
+                      "years": "",
+                      "months": "1",
+                      "weeks": "",
+                      "days": ""
+                    },
+                    "sentence-expiry": {
+                      "sentenceExpiryDate": "2024-01-01",
+                      "sentenceExpiryDate-year": "2024",
+                      "sentenceExpiryDate-month": "1",
+                      "sentenceExpiryDate-day": "1"
+                    }
+                  },
+                  "contact-details": {
+                    "probation-practitioner": {
+                      "name": "ss",
+                      "phone": "000",
+                      "email": "a@b.com"
+                    },
+                    "backup-contact": {
+                      "name": "ss",
+                      "phone": "000",
+                      "email": "a@b.com"
+                    },
+                    "practitioner-pdu": {
+                      "pdu": "london"
+                    },
+                    "pop-phone-number": {
+                      "phone": "000"
+                    }
+                  },
+                  "move-on-plan": {
+                    "move-on-plan": {
+                      "plan": "s"
+                    }
+                  },
+                  "accommodation-referral-details": {
+                    "dtr-submitted": {
+                      "dtrSubmitted": "yes"
+                    },
+                    "dtr-details": {
+                      "reference": "1",
+                      "localAuthorityAreaName": "Aberdeen City",
+                      "date-year": "2023",
+                      "date-month": "2",
+                      "date-day": "1",
+                      "date": "2023-02-01"
+                    },
+                    "crs-submitted": {
+                      "crsSubmitted": "yes"
+                    },
+                    "other-accommodation-options": {
+                      "otherOptions": "no",
+                      "otherOptionsDetail": ""
+                    }
+                  }
+               }
+           """,
+      )
     }
   }
 }

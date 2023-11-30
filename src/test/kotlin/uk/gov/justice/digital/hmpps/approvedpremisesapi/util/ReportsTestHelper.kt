@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
+import com.jayway.jsonpath.Configuration
+import com.jayway.jsonpath.JsonPath
+import com.jayway.jsonpath.Option
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
@@ -54,6 +57,8 @@ fun List<BookingEntity>.toBookingsReportData(): List<BookingsReportData> = this
         get() = it.departure?.dateTime?.let { time -> Timestamp.from(time.toInstant()) }
       override val accommodationOutcome: String?
         get() = it.departure?.moveOnCategory?.name
+      override val dutyToReferLocalAuthorityAreaName: String?
+        get() = parseAndGetDutyToReferLocalAuthorityAreaName(application)
     }
   }
   .sortedBy { it.bookingId }
@@ -63,3 +68,13 @@ fun List<BookingEntity>.toBookingsReportDataAndPersonInfo(): List<BookingsReport
 
 fun List<BookingEntity>.toBookingsReportDataAndPersonInfo(configuration: (crn: String) -> PersonSummaryInfoResult): List<BookingsReportDataAndPersonInfo> =
   this.toBookingsReportData().map { BookingsReportDataAndPersonInfo(it, configuration(it.crn)) }
+
+private fun parseAndGetDutyToReferLocalAuthorityAreaName(application: TemporaryAccommodationApplicationEntity?): String? =
+  if (!application?.data.isNullOrEmpty()) {
+    val config = Configuration.defaultConfiguration().addOptions(Option.SUPPRESS_EXCEPTIONS)
+    JsonPath.using(config).parse(application?.data).read<String>(buildString { append(ACCOMMODATION_REFERRAL_DETAILS_DTR_DETAILS_LOCAL_AUTHORITY_AREA_NAME_PATH) })
+  } else {
+    null
+  }
+
+private const val ACCOMMODATION_REFERRAL_DETAILS_DTR_DETAILS_LOCAL_AUTHORITY_AREA_NAME_PATH = "$['accommodation-referral-details']['dtr-details']['localAuthorityAreaName']"

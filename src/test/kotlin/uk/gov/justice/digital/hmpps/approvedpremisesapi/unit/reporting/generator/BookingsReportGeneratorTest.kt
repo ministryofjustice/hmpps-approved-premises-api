@@ -659,6 +659,32 @@ class BookingsReportGeneratorTest {
       .withDutyToReferSubmissionDate(LocalDate.now())
       .withIsEligible(true)
       .withEligiblilityReason("Some reason")
+      .withData(
+        """
+               {
+                "accommodation-referral-details": {
+                    "dtr-submitted": {
+                      "dtrSubmitted": "yes"
+                    },
+                    "dtr-details": {
+                      "reference": "1",
+                      "localAuthorityAreaName": "Aberdeen City",
+                      "date-year": "2023",
+                      "date-month": "2",
+                      "date-day": "1",
+                      "date": "2023-02-01"
+                    },
+                    "crs-submitted": {
+                      "crsSubmitted": "yes"
+                    },
+                    "other-accommodation-options": {
+                      "otherOptions": "no",
+                      "otherOptionsDetail": ""
+                  }
+                }
+              }
+            """,
+      )
       .produce()
 
     val booking = BookingEntityFactory()
@@ -687,6 +713,118 @@ class BookingsReportGeneratorTest {
     assertThat(actual[0][BookingsReportRow::dateDutyToReferMade]).isEqualTo(LocalDate.now())
     assertThat(actual[0][BookingsReportRow::isReferralEligibleForCas3]).isTrue
     assertThat(actual[0][BookingsReportRow::referralEligibilityReason]).isEqualTo("Some reason")
+    assertThat(actual[0][BookingsReportRow::dutyToReferLocalAuthorityAreaName]).isEqualTo("Aberdeen City")
+  }
+
+  @Test
+  fun `The referral columns are returned in the report when the application don't have dtr details`() {
+    val probationRegion = ProbationRegionEntityFactory()
+      .withYieldedApArea { ApAreaEntityFactory().produce() }
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withYieldedCreatedByUser {
+        UserEntityFactory()
+          .withProbationRegion(probationRegion)
+          .produce()
+      }
+      .withProbationRegion(probationRegion)
+      .withSubmittedAt(OffsetDateTime.now())
+      .withRiskRatings {
+        withRoshRisks(
+          RiskWithStatus(
+            value = RoshRisks(
+              overallRisk = "High",
+              riskToChildren = "Medium",
+              riskToPublic = "Low",
+              riskToKnownAdult = "High",
+              riskToStaff = "High",
+              lastUpdated = null,
+            ),
+          ),
+        )
+      }
+      .withIsRegisteredSexOffender(true)
+      .withNeedsAccessibleProperty(true)
+      .withHasHistoryOfArson(false)
+      .withIsDutyToReferSubmitted(true)
+      .withDutyToReferSubmissionDate(LocalDate.now())
+      .withIsEligible(true)
+      .withEligiblilityReason("Some reason")
+      .withData(
+        """
+             {
+              "sentence-information": {
+                    "offending-summary": {
+                      "summary": "s"
+                    },
+                    "sentence-type": {
+                      "sentenceType": "standardDeterminate"
+                    },
+                    "sentence-length": {
+                      "years": "",
+                      "months": "1",
+                      "weeks": "",
+                      "days": ""
+                    },
+                    "sentence-expiry": {
+                      "sentenceExpiryDate": "2024-01-01",
+                      "sentenceExpiryDate-year": "2024",
+                      "sentenceExpiryDate-month": "1",
+                      "sentenceExpiryDate-day": "1"
+                    },
+                    "release-type": {
+                      "releaseTypes": [
+                        "licence"
+                      ],
+                      "licenceStartDate": "2024-01-01",
+                      "licenceStartDate-year": "2024",
+                      "licenceStartDate-month": "1",
+                      "licenceStartDate-day": "1",
+                      "licenceEndDate": "2024-01-10",
+                      "licenceEndDate-year": "2024",
+                      "licenceEndDate-month": "1",
+                      "licenceEndDate-day": "10",
+                      "pssStartDate-year": "",
+                      "pssStartDate-month": "",
+                      "pssStartDate-day": "",
+                      "pssEndDate-year": "",
+                      "pssEndDate-month": "",
+                      "pssEndDate-day": ""
+                    }
+              }
+             }
+          """,
+      )
+      .produce()
+
+    val booking = BookingEntityFactory()
+      .withServiceName(ServiceName.temporaryAccommodation)
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withProbationRegion(probationRegion)
+          .withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
+          .produce()
+      }
+      .withApplication(application)
+      .produce()
+
+    val actual = reportGenerator.createReport(
+      listOf(booking).toBookingsReportDataAndPersonInfo(),
+      BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+    )
+    assertThat(actual.count()).isEqualTo(1)
+    assertThat(actual[0][BookingsReportRow::referralId]).isEqualTo(application.id.toString())
+    assertThat(actual[0][BookingsReportRow::referralDate]).isEqualTo(application.submittedAt!!.toLocalDate())
+    assertThat(actual[0][BookingsReportRow::riskOfSeriousHarm]).isEqualTo("High")
+    assertThat(actual[0][BookingsReportRow::sexOffender]).isTrue
+    assertThat(actual[0][BookingsReportRow::needForAccessibleProperty]).isTrue
+    assertThat(actual[0][BookingsReportRow::historyOfArsonOffence]).isFalse
+    assertThat(actual[0][BookingsReportRow::dutyToReferMade]).isTrue
+    assertThat(actual[0][BookingsReportRow::dateDutyToReferMade]).isEqualTo(LocalDate.now())
+    assertThat(actual[0][BookingsReportRow::isReferralEligibleForCas3]).isTrue
+    assertThat(actual[0][BookingsReportRow::referralEligibilityReason]).isEqualTo("Some reason")
+    assertThat(actual[0][BookingsReportRow::dutyToReferLocalAuthorityAreaName]).isNull()
   }
 
   @Test
