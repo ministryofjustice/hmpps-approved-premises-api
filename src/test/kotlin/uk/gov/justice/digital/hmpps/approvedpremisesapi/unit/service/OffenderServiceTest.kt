@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategoryBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPageFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
@@ -66,6 +67,7 @@ class OffenderServiceTest {
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockAdjudicationsApiClient = mockk<AdjudicationsApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
+  private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
 
   private val prisonCaseNotesConfigBindingModel = PrisonCaseNotesConfigBindingModel().apply {
     lookbackDays = 30
@@ -99,20 +101,21 @@ class OffenderServiceTest {
     mockApOASysContextApiClient,
     mockAdjudicationsApiClient,
     mockApDeliusContextApiClient,
+    mockOffenderDetailsDataSource,
     prisonCaseNotesConfigBindingModel,
     adjudicationsConfigBindingModel,
   )
 
   @Test
   fun `getOffenderByCrn returns NotFound result when Client returns 404`() {
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
 
     assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.NotFound).isTrue
   }
 
   @Test
   fun `getOffenderByCrn throws when Client returns other non-2xx status code except 403`() {
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
 
     val exception = assertThrows<RuntimeException> { offenderService.getOffenderByCrn("a-crn", "distinguished.name") }
     assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/a-crn: 400 BAD_REQUEST")
@@ -126,7 +129,7 @@ class OffenderServiceTest {
       .withLastName("Doe")
       .produce()
 
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
 
     val result = offenderService.getOffenderByCrn("a-crn", "distinguished.name")
 
@@ -148,8 +151,8 @@ class OffenderServiceTest {
 
     val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true, restrictionMessage = null)
 
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
 
     assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name", true) is AuthorisableActionResult.Success).isTrue
   }
@@ -165,8 +168,8 @@ class OffenderServiceTest {
 
     val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true, restrictionMessage = null)
 
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
 
     assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -182,8 +185,8 @@ class OffenderServiceTest {
 
     val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true, restrictionMessage = null)
 
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns StatusCode(
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns StatusCode(
       HttpMethod.GET,
       "/secure/crn/a-crn/user/distinguished.name/userAccess",
       HttpStatus.FORBIDDEN,
@@ -202,8 +205,8 @@ class OffenderServiceTest {
       .withCurrentExclusion(true)
       .produce()
 
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns StatusCode(
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns StatusCode(
       HttpMethod.GET,
       "/secure/crn/a-crn/user/distinguished.name/userAccess",
       HttpStatus.FORBIDDEN,
@@ -225,8 +228,8 @@ class OffenderServiceTest {
 
     val accessBody = UserOffenderAccess(userRestricted = true, userExcluded = false, restrictionMessage = null)
 
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
 
     assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -242,10 +245,10 @@ class OffenderServiceTest {
 
     val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = false, restrictionMessage = null)
 
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
 
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
 
     val result = offenderService.getOffenderByCrn("a-crn", "distinguished.name")
 
@@ -258,14 +261,14 @@ class OffenderServiceTest {
 
   @Test
   fun `getRisksByCrn returns NotFound result when Community API Client returns 404`() {
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.NOT_FOUND, null)
 
     assertThat(offenderService.getRiskByCrn("a-crn", "jwt", "distinguished.name") is AuthorisableActionResult.NotFound).isTrue
   }
 
   @Test
   fun `getRisksByCrn throws when Community API Client returns other non-2xx status code`() {
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn", HttpStatus.BAD_REQUEST, null)
 
     val exception = assertThrows<RuntimeException> { offenderService.getRiskByCrn("a-crn", "jwt", "distinguished.name") }
     assertThat(exception.message).isEqualTo("Unable to complete GET request to /secure/offenders/crn/a-crn: 400 BAD_REQUEST")
@@ -282,8 +285,8 @@ class OffenderServiceTest {
 
     val accessBody = UserOffenderAccess(userRestricted = false, userExcluded = true, restrictionMessage = null)
 
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-    every { mockCommunityApiClient.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
 
     assertThat(offenderService.getRiskByCrn("a-crn", "jwt", "distinguished.name") is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -679,7 +682,7 @@ class OffenderServiceTest {
       .withCurrentExclusion(false)
       .produce()
 
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(offenderDetails.otherIds.crn) } returns ClientResult.Success(
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary(offenderDetails.otherIds.crn) } returns ClientResult.Success(
       HttpStatus.OK,
       offenderDetails,
     )
@@ -694,7 +697,7 @@ class OffenderServiceTest {
       .withCurrentExclusion(true)
       .produce()
 
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(offenderDetails.otherIds.crn) } returns ClientResult.Success(
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary(offenderDetails.otherIds.crn) } returns ClientResult.Success(
       HttpStatus.OK,
       offenderDetails,
     )
@@ -709,7 +712,7 @@ class OffenderServiceTest {
       .withCurrentExclusion(false)
       .produce()
 
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(offenderDetails.otherIds.crn) } returns ClientResult.Success(
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary(offenderDetails.otherIds.crn) } returns ClientResult.Success(
       HttpStatus.OK,
       offenderDetails,
     )
@@ -724,7 +727,7 @@ class OffenderServiceTest {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
-      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/ABC123", HttpStatus.NOT_FOUND, null, true)
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/ABC123", HttpStatus.NOT_FOUND, null, true)
 
       val result = offenderService.getInfoForPerson(crn, deliusUsername, false)
 
@@ -736,7 +739,7 @@ class OffenderServiceTest {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
-      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/ABC123", HttpStatus.INTERNAL_SERVER_ERROR, null, true)
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/ABC123", HttpStatus.INTERNAL_SERVER_ERROR, null, true)
 
       val result = offenderService.getInfoForPerson(crn, deliusUsername, false)
 
@@ -756,12 +759,12 @@ class OffenderServiceTest {
         .withoutNomsNumber()
         .produce()
 
-      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns ClientResult.Success(
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult.Success(
         status = HttpStatus.OK,
         body = offenderDetails,
       )
 
-      every { mockCommunityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn) } returns StatusCode(
+      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername, crn) } returns StatusCode(
         HttpMethod.GET,
         "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
         HttpStatus.FORBIDDEN,
@@ -786,12 +789,12 @@ class OffenderServiceTest {
         .withoutNomsNumber()
         .produce()
 
-      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns ClientResult.Success(
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult.Success(
         status = HttpStatus.OK,
         body = offenderDetails,
       )
 
-      every { mockCommunityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn) } returns StatusCode(
+      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername, crn) } returns StatusCode(
         HttpMethod.GET,
         "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
         HttpStatus.BAD_REQUEST,
@@ -806,7 +809,7 @@ class OffenderServiceTest {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
-      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns ClientResult.Success(
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult.Success(
         status = HttpStatus.OK,
         body = OffenderDetailsSummaryFactory()
           .withCrn(crn)
@@ -814,7 +817,7 @@ class OffenderServiceTest {
           .produce(),
       )
 
-      every { mockCommunityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn) } returns StatusCode(
+      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername, crn) } returns StatusCode(
         status = HttpStatus.FORBIDDEN,
         method = HttpMethod.GET,
         path = "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
@@ -845,12 +848,12 @@ class OffenderServiceTest {
         .withoutNomsNumber()
         .produce()
 
-      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns ClientResult.Success(
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult.Success(
         status = HttpStatus.OK,
         body = offenderDetails,
       )
 
-      every { mockCommunityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn) } returns ClientResult.Success(
+      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername, crn) } returns ClientResult.Success(
         status = HttpStatus.OK,
         body = UserOffenderAccess(
           userRestricted = false,
@@ -879,12 +882,12 @@ class OffenderServiceTest {
         .withoutNomsNumber()
         .produce()
 
-      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns ClientResult.Success(
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult.Success(
         status = HttpStatus.OK,
         body = offenderDetails,
       )
 
-      every { mockCommunityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn) } returns StatusCode(
+      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername, crn) } returns StatusCode(
         status = HttpStatus.FORBIDDEN,
         method = HttpMethod.GET,
         path = "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
@@ -917,7 +920,7 @@ class OffenderServiceTest {
         .withNomsNumber(nomsNumber)
         .produce()
 
-      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns ClientResult.Success(
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult.Success(
         status = HttpStatus.OK,
         body = offenderDetails,
       )
@@ -1093,7 +1096,7 @@ class OffenderServiceTest {
       .withCurrentExclusion(false)
       .produce()
 
-    every { mockCommunityApiClient.getOffenderDetailSummaryWithWait("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
   }
 
   private fun mock404RoSH(crn: String, jwt: String) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns StatusCode(HttpMethod.GET, "/rosh/a-crn", HttpStatus.NOT_FOUND, body = null)

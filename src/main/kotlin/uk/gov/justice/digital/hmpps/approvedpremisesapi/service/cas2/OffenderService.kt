@@ -5,9 +5,9 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ProbationOffenderSearchApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
@@ -24,10 +24,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
   "ReturnCount",
 )
 class OffenderService(
-  private val communityApiClient: CommunityApiClient,
   private val prisonsApiClient: PrisonsApiClient,
   private val probationOffenderSearchApiClient: ProbationOffenderSearchApiClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
+  private val offenderDetailsDataSource: OffenderDetailsDataSource,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -80,11 +80,7 @@ class OffenderService(
   }
 
   fun getInfoForPerson(crn: String): PersonInfoResult {
-    var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
-
-    if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
-      offenderResponse = communityApiClient.getOffenderDetailSummaryWithCall(crn)
-    }
+    var offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
 
     val offender = when (offenderResponse) {
       is ClientResult.Success -> offenderResponse.body
@@ -145,11 +141,7 @@ class OffenderService(
   }
 
   fun getOffenderByCrn(crn: String): AuthorisableActionResult<OffenderDetailSummary> {
-    var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
-
-    if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
-      offenderResponse = communityApiClient.getOffenderDetailSummaryWithCall(crn)
-    }
+    var offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
 
     val offender = when (offenderResponse) {
       is ClientResult.Success -> offenderResponse.body
