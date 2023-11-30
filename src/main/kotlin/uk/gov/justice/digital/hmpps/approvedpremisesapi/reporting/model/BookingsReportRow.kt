@@ -17,6 +17,7 @@ data class BookingsReportRow(
   val historyOfArsonOffence: Boolean?,
   val dutyToReferMade: Boolean?,
   val dateDutyToReferMade: LocalDate?,
+  val dutyToReferLocalAuthorityAreaName: String?,
   val isReferralEligibleForCas3: Boolean?,
   val referralEligibilityReason: String?,
   val probationRegion: String,
