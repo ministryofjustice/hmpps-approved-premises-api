@@ -135,7 +135,6 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
                 nomsNumber = "NOMS321",
                 pncNumber = "PNC123",
                 nationality = "English",
-                isRestricted = false,
                 prisonName = "HMP Bristol",
               ),
             ),
