@@ -905,6 +905,13 @@ class OffenderServiceTest {
     )
 
     @Test
+    fun `it returns an empty list when no CRNs are provided`() {
+      val result = offenderService.getOffenderSummariesByCrns(emptyList(), user.deliusUsername, false)
+
+      assertThat(result).isEmpty()
+    }
+
+    @Test
     fun `it returns full summaries when the user has the correct access`() {
       val caseAccess = crns.map {
         CaseAccessFactory()

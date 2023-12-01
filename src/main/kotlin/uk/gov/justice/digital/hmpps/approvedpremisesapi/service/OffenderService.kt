@@ -86,6 +86,10 @@ class OffenderService(
   }
 
   fun getOffenderSummariesByCrns(crns: List<String>, userDistinguishedName: String, ignoreLao: Boolean = false): List<PersonSummaryInfoResult> {
+    if (crns.isEmpty()) {
+      return emptyList()
+    }
+
     val offenders = when (val response = apDeliusContextApiClient.getSummariesForCrns(crns)) {
       is ClientResult.Success -> response.body
       is ClientResult.Failure.StatusCode -> response.throwException()
