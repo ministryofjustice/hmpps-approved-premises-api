@@ -1894,6 +1894,38 @@ components:
           example: "M1502750438"
       required:
         - crn
+    Cas2NewApplication:
+      type: object
+      properties:
+        crn:
+          type: string
+        nomsNumber:
+          type: string
+        name:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        nationality:
+          type: string
+        sex:
+          type: string
+        personStatus:
+          type: string
+          enum:
+            - InCustody
+            - InCommunity
+            - Unknown
+        prisonName:
+          type: string
+        pncNumber:
+          type: string
+      required:
+        - crn
+        - nomsNumber
+        - name
+        - dateOfBirth
+        - personStatus
     UpdateApplicationType:
       type: string
       enum:
