@@ -7,8 +7,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -440,7 +442,6 @@ class PersonTransformerTest {
           pncNumber = pncNumber,
           nationality = probationOffenderDetail.offenderProfile?.nationality!!,
           prisonName = inmateDetail.assignedLivingUnit?.agencyName,
-          isRestricted = false,
         ),
       )
     }
@@ -454,8 +455,8 @@ class PersonTransformerTest {
         .produce()
       val probationOffenderDetail = ProbationOffenderDetailFactory()
         .withGender(null)
-        .withOtherIds(otherIds = IDs(nomsNumber = nomsNumber, crn = crn))
-        .withOffenderProfile(offenderProfile = ProbationOffenderProfile(religion = "Atheist"))
+        .withOtherIds(otherIds = IDs(nomsNumber = nomsNumber, crn = crn, pncNumber = null))
+        .withOffenderProfile(offenderProfile = ProbationOffenderProfile(religion = "Atheist", nationality = null))
         .produce()
 
       val probationOffenderSearchResult = ProbationOffenderSearchResult.Success.Full(nomsNumber, probationOffenderDetail, inmateDetail)
@@ -476,9 +477,55 @@ class PersonTransformerTest {
           pncNumber = "Not found",
           nationality = "Not found",
           prisonName = inmateDetail.assignedLivingUnit?.agencyName,
-          isRestricted = false,
         ),
       )
+    }
+  }
+
+  @Nested
+  inner class transformCas2ApplicationEntityToPersonApi {
+    @Test
+    fun `returns the correct response when optional data nationality, sex, prison name, pnc number are missing`() {
+      val crn = "CRN123"
+      val nomsNumber = "NOMS456"
+      val createdByUser = NomisUserEntityFactory().produce()
+      val applicationEntity = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(createdByUser)
+        .withCrn(crn)
+        .withNomsNumber(nomsNumber)
+        .produce()
+      val result = personTransformer.transformCas2ApplicationEntityToPersonApi(applicationEntity)
+
+      assertThat(result.crn).isEqualTo(crn)
+      assertThat(result.nomsNumber).isEqualTo(nomsNumber)
+    }
+
+    @Test
+    fun `returns the correct response when optional data nationality, sex, prison name, pnc number exist`() {
+      val crn = "CRN123"
+      val nomsNumber = "NOMS456"
+      val createdByUser = NomisUserEntityFactory().produce()
+      val nationality = "British"
+      val sex = "Male"
+      val prisonName = "HMP Bristol"
+      val pncNumber = "PNC123"
+      val applicationEntity = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(createdByUser)
+        .withCrn(crn)
+        .withNomsNumber(nomsNumber)
+        .withNationality(nationality)
+        .withSex(sex)
+        .withPrisonName(prisonName)
+        .withPncNumber(pncNumber)
+        .produce()
+      val result = personTransformer.transformCas2ApplicationEntityToPersonApi(applicationEntity)
+
+      assertThat(result.crn).isEqualTo(crn)
+      assertThat(result.nomsNumber).isEqualTo(nomsNumber)
+      assertThat(result.nationality).isEqualTo(nationality)
+      assertThat(result.sex).isEqualTo(sex)
+      assertThat(result.prisonName).isEqualTo(prisonName)
+      assertThat(result.pncNumber).isEqualTo(pncNumber)
     }
   }
 }
