@@ -10,9 +10,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.Submitt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.sql.Timestamp
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -59,7 +61,8 @@ class SubmittedApplicationTransformerTest {
 
   @BeforeEach
   fun setup() {
-    every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
+    every { mockPersonTransformer.transformCas2ApplicationEntityToPersonApi(any()) } returns mockk<FullPerson>()
+    every { mockPersonTransformer.transformCas2ApplicationSummaryToPersonApi(any()) } returns mockk<FullPerson>()
     every { mockNomisUserTransformer.transformJpaToApi(any()) } returns mockNomisUser
     every { mockStatusUpdateTransformer.transformJpaToApi(any()) } returns mockStatusUpdateApi
   }
@@ -70,7 +73,7 @@ class SubmittedApplicationTransformerTest {
     fun `transforms to API representation with NomisUser, no data and status updates`() {
       val jpaEntity = submittedCas2ApplicationFactory.produce()
 
-      val transformation = applicationTransformer.transformJpaToApiRepresentation(jpaEntity, mockk())
+      val transformation = applicationTransformer.transformJpaToApiRepresentation(jpaEntity)
 
       assertThat(transformation.submittedBy).isEqualTo(mockNomisUser)
 
@@ -102,9 +105,17 @@ class SubmittedApplicationTransformerTest {
         override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
         override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
         override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
+        override fun getNomsNumber() = randomStringMultiCaseWithNumbers(6)
+        override fun getPncNumber() = randomStringMultiCaseWithNumbers(6)
+        override fun getName() = "Robert Smith"
+        override fun getDateOfBirth() = LocalDate.now().minusYears(60)
+        override fun getNationality() = "British"
+        override fun getSex() = "Male"
+        override fun getPrisonName() = "HMP Bristol"
+        override fun getPersonStatus() = Cas2NewApplication.PersonStatus.inCustody.name
       }
 
-      val transformation = applicationTransformer.transformJpaSummaryToApiRepresentation(applicationSummary, mockk())
+      val transformation = applicationTransformer.transformJpaSummaryToApiRepresentation(applicationSummary)
 
       assertThat(transformation.id).isEqualTo(applicationSummary.getId())
     }
