@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSta
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 
 @Component("Cas2ApplicationsTransformer")
@@ -15,11 +14,11 @@ class ApplicationsTransformer(
   private val personTransformer: PersonTransformer,
 ) {
 
-  fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult):
+  fun transformJpaToApi(jpa: Cas2ApplicationEntity):
     Cas2Application {
     return Cas2Application(
       id = jpa.id,
-      person = personTransformer.transformModelToPersonApi(personInfo),
+      person = personTransformer.transformCas2ApplicationEntityToPersonApi(jpa),
       createdByUserId = jpa.createdByUser.id,
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = !jpa.schemaUpToDate,
@@ -34,13 +33,11 @@ class ApplicationsTransformer(
 
   fun transformJpaSummaryToSummary(
     jpaSummary: Cas2ApplicationSummary,
-    personInfo:
-      PersonInfoResult.Success,
   ): uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary {
     return uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
       .Cas2ApplicationSummary(
         id = jpaSummary.getId(),
-        person = personTransformer.transformModelToPersonApi(personInfo),
+        person = personTransformer.transformCas2ApplicationSummaryToPersonApi(jpaSummary),
         createdByUserId = jpaSummary.getCreatedByUserId(),
         createdAt = jpaSummary.getCreatedAt().toInstant(),
         submittedAt = jpaSummary.getSubmittedAt()?.toInstant(),
