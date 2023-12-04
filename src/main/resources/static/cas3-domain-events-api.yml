@@ -139,6 +139,33 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /events/cas3/person-arrived-updated/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "CAS3 events"
+      summary: A 'person-arrived-updated' event
+      responses:
+        200:
+          description: The 'person-arrived-updated' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CAS3PersonArrivedUpdatedEvent'
+        404:
+          description: No 'person-arrived-updated' event found for the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /events/cas3/person-departed/{eventId}:
     parameters:
       - name: eventId
@@ -252,6 +279,7 @@ components:
           accommodation.cas3.booking.confirmed: '#/components/schemas/CAS3BookingConfirmedEvent'
           accommodation.cas3.booking.provisionally-made: '#/components/schemas/CAS3BookingProvisionallyMadeEvent'
           accommodation.cas3.person.arrived: '#/components/schemas/CAS3PersonArrivedEvent'
+          accommodation.cas3.person.arrived.updated: '#/components/schemas/CAS3PersonArrivedUpdatedEvent'
           accommodation.cas3.person.departed: '#/components/schemas/CAS3PersonDepartedEvent'
           accommodation.cas3.referral.submitted: '#/components/schemas/CAS3ReferralSubmittedEvent'
           accommodation.cas3.person.departed.updated: '#/components/schemas/CAS3PersonDepartureUpdatedEvent'
@@ -377,6 +405,15 @@ components:
         - expectedArrivedAt
         - notes
     CAS3PersonArrivedEvent:
+      allOf:
+        - $ref: '#/components/schemas/CAS3Event'
+        - type: object
+          properties:
+            eventDetails:
+              $ref: '#/components/schemas/CAS3PersonArrivedEventDetails'
+          required:
+            - eventDetails
+    CAS3PersonArrivedUpdatedEvent:
       allOf:
         - $ref: '#/components/schemas/CAS3Event'
         - type: object
@@ -563,6 +600,7 @@ components:
         - accommodation.cas3.booking.confirmed
         - accommodation.cas3.booking.provisionally-made
         - accommodation.cas3.person.arrived
+        - accommodation.cas3.person.arrived.updated
         - accommodation.cas3.person.departed
         - accommodation.cas3.referral.submitted
         - accommodation.cas3.person.departed.updated
@@ -572,6 +610,7 @@ components:
         - bookingConfirmed
         - bookingProvisionallyMade
         - personArrived
+        - personArrivedUpdated
         - personDeparted
         - referralSubmitted
         - personDepartureUpdated
