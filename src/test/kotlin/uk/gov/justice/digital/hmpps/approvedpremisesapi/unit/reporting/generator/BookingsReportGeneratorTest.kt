@@ -223,7 +223,7 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    booking.arrival = ArrivalEntityFactory()
+    booking.arrivals += ArrivalEntityFactory()
       .withArrivalDate(today)
       .withExpectedDepartureDate(today.plusDays(84L))
       .withBooking(booking)
@@ -354,7 +354,7 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    booking.arrival = ArrivalEntityFactory()
+    booking.arrivals += ArrivalEntityFactory()
       .withArrivalDate(arrivalDate)
       .withExpectedDepartureDate(arrivalDate.plusDays(84L))
       .withBooking(booking)
@@ -413,7 +413,7 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    booking.arrival = ArrivalEntityFactory()
+    booking.arrivals += ArrivalEntityFactory()
       .withArrivalDate(arrivalDate)
       .withExpectedDepartureDate(expectedDepartureDate)
       .withBooking(booking)
@@ -467,7 +467,7 @@ class BookingsReportGeneratorTest {
       }
       .produce()
 
-    booking.arrival = ArrivalEntityFactory()
+    booking.arrivals += ArrivalEntityFactory()
       .withArrivalDate(arrivalDate)
       .withExpectedDepartureDate(expectedDepartureDate)
       .withBooking(booking)

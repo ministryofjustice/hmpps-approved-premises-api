@@ -208,7 +208,7 @@ class BookingService(
           arrivalDate = arrivalDate,
           departureDate = departureDate,
           keyWorkerStaffCode = null,
-          arrival = null,
+          arrivals = mutableListOf(),
           departures = mutableListOf(),
           nonArrival = null,
           cancellations = mutableListOf(),
@@ -361,7 +361,7 @@ class BookingService(
           arrivalDate = arrivalDate,
           departureDate = departureDate,
           keyWorkerStaffCode = null,
-          arrival = null,
+          arrivals = mutableListOf(),
           departures = mutableListOf(),
           nonArrival = null,
           cancellations = mutableListOf(),
@@ -694,7 +694,7 @@ class BookingService(
           arrivalDate = arrivalDate,
           departureDate = departureDate,
           keyWorkerStaffCode = null,
-          arrival = null,
+          arrivals = mutableListOf(),
           departures = mutableListOf(),
           nonArrival = null,
           cancellations = mutableListOf(),
@@ -896,6 +896,10 @@ class BookingService(
     notes: String?,
     keyWorkerStaffCode: String?,
   ) = validated<ArrivalEntity> {
+    if (booking.premises is TemporaryAccommodationPremisesEntity) {
+      return generalError("CAS3 booking arrival not supported here, preferred method is createCas3Arrival")
+    }
+
     if (booking.arrival != null) {
       return generalError("This Booking already has an Arrival set")
     }
@@ -920,9 +924,51 @@ class BookingService(
     booking.departureDate = expectedDepartureDate
     updateBooking(booking)
 
-    booking.arrival = arrivalEntity
+    booking.arrivals += arrivalEntity
 
     if (booking.premises is TemporaryAccommodationPremisesEntity) {
+      cas3DomainEventService.savePersonArrivedEvent(booking)
+    }
+
+    return success(arrivalEntity)
+  }
+
+  @Transactional
+  fun createCas3Arrival(
+    user: UserEntity? = null,
+    booking: BookingEntity,
+    arrivalDate: LocalDate,
+    expectedDepartureDate: LocalDate,
+    notes: String?,
+    keyWorkerStaffCode: String?,
+  ) = validated<ArrivalEntity> {
+    if (booking.premises !is TemporaryAccommodationPremisesEntity) {
+      return generalError("CAS3 Arrivals cannot be set on non-CAS3 premise")
+    }
+
+    if (expectedDepartureDate.isBefore(arrivalDate)) {
+      return "$.expectedDepartureDate" hasSingleValidationError "beforeBookingArrivalDate"
+    }
+    val isFirstArrival = booking.arrivals.isNullOrEmpty()
+    val arrivalEntity = arrivalRepository.save(
+      ArrivalEntity(
+        id = UUID.randomUUID(),
+        arrivalDate = arrivalDate,
+        arrivalDateTime = arrivalDate.toLocalDateTime().toInstant(),
+        expectedDepartureDate = expectedDepartureDate,
+        notes = notes,
+        booking = booking,
+        createdAt = OffsetDateTime.now(),
+      ),
+    )
+
+    booking.arrivalDate = arrivalDate
+    booking.departureDate = expectedDepartureDate
+    updateBooking(booking)
+
+    booking.arrivals += arrivalEntity
+
+    if (isFirstArrival) {
       cas3DomainEventService.savePersonArrivedEvent(booking)
     }
 

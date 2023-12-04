@@ -130,8 +130,8 @@ data class BookingEntity(
   var arrivalDate: LocalDate,
   var departureDate: LocalDate,
   var keyWorkerStaffCode: String?,
-  @OneToOne(mappedBy = "booking")
-  var arrival: ArrivalEntity?,
+  @OneToMany(mappedBy = "booking")
+  var arrivals: MutableList<ArrivalEntity>,
   @OneToMany(mappedBy = "booking")
   var departures: MutableList<DepartureEntity>,
   @OneToOne(mappedBy = "booking")
@@ -178,6 +178,9 @@ data class BookingEntity(
   val isCancelled: Boolean
     get() = cancellation != null
 
+  val arrival: ArrivalEntity?
+    get() = arrivals.maxByOrNull { it.createdAt }
+
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other !is BookingEntity) return false
@@ -187,7 +190,6 @@ data class BookingEntity(
     if (arrivalDate != other.arrivalDate) return false
     if (departureDate != other.departureDate) return false
     if (keyWorkerStaffCode != other.keyWorkerStaffCode) return false
-    if (arrival != other.arrival) return false
     if (nonArrival != other.nonArrival) return false
     if (confirmation != other.confirmation) return false
     if (originalArrivalDate != other.originalArrivalDate) return false
@@ -197,7 +199,7 @@ data class BookingEntity(
     return true
   }
 
-  override fun hashCode() = Objects.hash(crn, arrivalDate, departureDate, keyWorkerStaffCode, arrival, nonArrival, confirmation, originalArrivalDate, originalDepartureDate, createdAt)
+  override fun hashCode() = Objects.hash(crn, arrivalDate, departureDate, keyWorkerStaffCode, nonArrival, confirmation, originalArrivalDate, originalDepartureDate, createdAt)
 
   override fun toString() = "BookingEntity:$id"
 }

@@ -119,9 +119,9 @@ class ReportsTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.of(2023, 4, 7))
         }
 
-        bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
+        bookings[1].let { it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList() }
         bookings[2].let {
-          it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
+          it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
             withBooking(it)
@@ -199,9 +199,9 @@ class ReportsTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.of(2023, 4, 7))
         }
 
-        bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
+        bookings[1].let { it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList() }
         bookings[2].let {
-          it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
+          it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
             withBooking(it)
@@ -279,9 +279,9 @@ class ReportsTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.of(2023, 4, 7))
         }
 
-        bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
+        bookings[1].let { it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList() }
         bookings[2].let {
-          it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
+          it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
             withBooking(it)
@@ -478,9 +478,9 @@ class ReportsTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.of(2023, 4, 7))
         }
 
-        bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
+        bookings[1].let { it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList() }
         bookings[2].let {
-          it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
+          it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
             withBooking(it)
@@ -572,9 +572,9 @@ class ReportsTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.of(2023, 4, 7))
         }
 
-        bookings[1].let { it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) } }
+        bookings[1].let { it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList() }
         bookings[2].let {
-          it.arrival = arrivalEntityFactory.produceAndPersist { withBooking(it) }
+          it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.departures = departureEntityFactory.produceAndPersistMultiple(1) {
             withBooking(it)

@@ -10,7 +10,7 @@ import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.Id
 import javax.persistence.JoinColumn
-import javax.persistence.OneToOne
+import javax.persistence.ManyToOne
 import javax.persistence.Table
 
 @Repository
@@ -26,7 +26,7 @@ data class ArrivalEntity(
   val expectedDepartureDate: LocalDate,
   val notes: String?,
   val createdAt: OffsetDateTime,
-  @OneToOne
+  @ManyToOne
   @JoinColumn(name = "booking_id")
   var booking: BookingEntity,
 ) {

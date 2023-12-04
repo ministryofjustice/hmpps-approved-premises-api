@@ -157,7 +157,7 @@ class PremisesServiceTest {
       .withBooking(arrivedBookingEntity)
       .produce()
 
-    arrivedBookingEntity.arrival = arrivalEntity
+    arrivedBookingEntity.arrivals += arrivalEntity
 
     val nonArrivedBookingEntity = BookingEntityFactory()
       .withPremises(premises)
@@ -306,7 +306,7 @@ class PremisesServiceTest {
       .withBooking(arrivedBookingEntity)
       .produce()
 
-    arrivedBookingEntity.arrival = arrivalEntity
+    arrivedBookingEntity.arrivals += arrivalEntity
 
     val nonArrivedBookingEntity = BookingEntityFactory()
       .withPremises(premises)

@@ -142,7 +142,7 @@ class BookingTransformerTest {
     departureDate = LocalDate.parse("2022-08-30"),
     keyWorkerStaffCode = "789",
     crn = "CRN123",
-    arrival = null,
+    arrivals = mutableListOf(),
     departures = mutableListOf(),
     nonArrival = null,
     cancellations = mutableListOf(),
@@ -455,7 +455,7 @@ class BookingTransformerTest {
   @Test
   fun `Approved Premises Arrived entity is correctly transformed`() {
     val arrivalBooking = baseBookingEntity.copy(id = UUID.fromString("443e79a9-b10a-4ad7-8be1-ffe301d2bbf3")).apply {
-      arrival = ArrivalEntity(
+      arrivals += ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         arrivalDate = LocalDate.parse("2022-08-10"),
         arrivalDateTime = Instant.parse("2022-08-10T00:00:00Z"),
@@ -722,7 +722,7 @@ class BookingTransformerTest {
   fun `Approved Premises Departed entity is correctly transformed`() {
     val bookingId = UUID.fromString("e0a3f9d7-0677-40bf-85a9-6673a7af33ee")
     val departedBooking = baseBookingEntity.copy(id = bookingId).apply {
-      arrival = ArrivalEntity(
+      arrivals += ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         arrivalDate = LocalDate.parse("2022-08-10"),
         arrivalDateTime = Instant.parse("2022-08-10T00:00:00Z"),
@@ -899,7 +899,7 @@ class BookingTransformerTest {
   fun `Temporary Accommodation entity with zero day turnaround period and departure is correctly transformed to closed status`() {
     val bookingId = UUID.fromString("e0a3f9d7-0677-40bf-85a9-6673a7af33ee")
     val departedBooking = baseBookingEntity.copy(id = bookingId, service = ServiceName.temporaryAccommodation.value).apply {
-      arrival = ArrivalEntity(
+      arrivals += ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         arrivalDate = LocalDate.parse("2022-08-10"),
         arrivalDateTime = Instant.parse("2022-08-10T00:00:00Z"),
@@ -1113,7 +1113,7 @@ class BookingTransformerTest {
     val departedBooking = baseBookingEntity.copy(id = bookingId, service = ServiceName.temporaryAccommodation.value).apply {
       departureDate = departedAt.toLocalDate()
 
-      arrival = ArrivalEntity(
+      arrivals += ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         arrivalDate = LocalDate.parse("2022-08-10"),
         arrivalDateTime = Instant.parse("2022-08-10T00:00:00Z"),
@@ -1331,7 +1331,7 @@ class BookingTransformerTest {
     val departedBooking = baseBookingEntity.copy(id = bookingId, service = ServiceName.temporaryAccommodation.value).apply {
       departureDate = departedAt.toLocalDate()
 
-      arrival = ArrivalEntity(
+      arrivals += ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         arrivalDate = LocalDate.parse("2022-08-10"),
         arrivalDateTime = Instant.parse("2022-08-10T00:00:00Z"),
@@ -1540,7 +1540,7 @@ class BookingTransformerTest {
     val bookingId = UUID.fromString("e0a3f9d7-0677-40bf-85a9-6673a7af33ee")
     val departedBooking = baseBookingEntity.copy(id = bookingId).apply {
       service = ServiceName.temporaryAccommodation.value
-      arrival = ArrivalEntity(
+      arrivals += ArrivalEntity(
         id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
         arrivalDate = LocalDate.parse("2022-08-10"),
         arrivalDateTime = Instant.parse("2022-08-10T00:00:00Z"),

@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
@@ -162,8 +163,8 @@ class ApprovedPremisesBookingSeedJob(
       if (keyWorker == null) throw RuntimeException("If arrivalDate is provided, keyWorkerDeliusUsername must also be provided.")
 
       val createdArrival = extractEntityFromValidatableActionResult(
-        if (createdBooking.premises is ApprovedPremisesEntity) {
-          bookingService.createCas1Arrival(
+        when (createdBooking.premises) {
+          is ApprovedPremisesEntity -> bookingService.createCas1Arrival(
             user = null,
             booking = createdBooking,
             arrivalDateTime = row.arrivalDate.toLocalDateTime().toInstant(),
@@ -171,8 +172,15 @@ class ApprovedPremisesBookingSeedJob(
             notes = row.arrivalNotes,
             keyWorkerStaffCode = keyWorker.staffCode,
           )
-        } else {
-          bookingService.createArrival(
+          is TemporaryAccommodationPremisesEntity -> bookingService.createCas3Arrival(
+            user = null,
+            booking = createdBooking,
+            arrivalDate = row.arrivalDate,
+            expectedDepartureDate = row.plannedDepartureDate,
+            notes = row.arrivalNotes,
+            keyWorkerStaffCode = keyWorker.staffCode,
+          )
+          else -> bookingService.createArrival(
             user = null,
             booking = createdBooking,
             arrivalDate = row.arrivalDate,
@@ -182,7 +190,6 @@ class ApprovedPremisesBookingSeedJob(
           )
         },
       )
-
       log.info("Created Arrival: ${createdArrival.id}")
     }
 

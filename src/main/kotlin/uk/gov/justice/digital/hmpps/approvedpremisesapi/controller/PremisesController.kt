@@ -455,7 +455,7 @@ class PremisesController(
         throwIfBookingDatesConflict(body.arrivalDate, body.expectedDepartureDate, bookingId, bedId)
         throwIfLostBedDatesConflict(body.arrivalDate, body.expectedDepartureDate, null, bedId)
 
-        bookingService.createArrival(
+        bookingService.createCas3Arrival(
           booking = booking,
           arrivalDate = body.arrivalDate,
           expectedDepartureDate = body.expectedDepartureDate,
