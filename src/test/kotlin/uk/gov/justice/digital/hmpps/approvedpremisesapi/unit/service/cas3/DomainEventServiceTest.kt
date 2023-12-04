@@ -1886,6 +1886,50 @@ class DomainEventServiceTest {
     verify(exactly = 0) { mockHmppsTopic.snsClient.publish(any()) }
   }
 
+  @Test
+  fun `getPersonArrivedUpdatedEvent returns null when event does not exist`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+
+    every { domainEventRepositoryMock.findByIdOrNull(id) } returns null
+
+    assertThat(domainEventService.getPersonArrivedUpdatedEvent(id)).isNull()
+  }
+
+  @Test
+  fun `getPersonArrivedUpdatedEvent returns event`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    val data = CAS3PersonArrivedUpdatedEvent(
+      id = id,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.personArrivedUpdated,
+      eventDetails = CAS3PersonArrivedEventDetailsFactory().produce(),
+    )
+
+    every { domainEventRepositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
+      .withId(id)
+      .withApplicationId(applicationId)
+      .withCrn(crn)
+      .withType(DomainEventType.CAS3_PERSON_ARRIVED_UPDATED)
+      .withData(objectMapper.writeValueAsString(data))
+      .withOccurredAt(occurredAt)
+      .produce()
+
+    val event = domainEventService.getPersonArrivedUpdatedEvent(id)
+    assertThat(event).isEqualTo(
+      DomainEvent(
+        id = id,
+        applicationId = applicationId,
+        crn = "CRN",
+        occurredAt = occurredAt.toInstant(),
+        data = data,
+      ),
+    )
+  }
+
   private fun createArrivedUpdatedDomainEvent(
     id: UUID,
     applicationId: UUID?,

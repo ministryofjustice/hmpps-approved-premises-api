@@ -70,6 +70,8 @@ class DomainEventService(
 
   fun getPersonArrivedEvent(id: UUID) = get<CAS3PersonArrivedEvent>(id)
 
+  fun getPersonArrivedUpdatedEvent(id: UUID) = get<CAS3PersonArrivedUpdatedEvent>(id)
+
   fun getPersonDepartedEvent(id: UUID) = get<CAS3PersonDepartedEvent>(id)
 
   fun getReferralSubmittedEvent(id: UUID) = get<CAS3ReferralSubmittedEvent>(id)

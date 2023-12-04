@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingConfirmedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingProvisionallyMadeEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartureUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEvent
@@ -474,6 +475,63 @@ class DomainEventTest : IntegrationTestBase() {
       .expectStatus()
       .isOk
       .expectBody(CAS3BookingCancelledUpdatedEvent::class.java)
+      .returnResult()
+
+    assertThat(response.responseBody).isEqualTo(envelopedData)
+  }
+
+  @Test
+  fun `Get 'person arrived updated' event without JWT returns 401`() {
+    webTestClient.get()
+      .uri("/events/cas3/person-arrived-updated/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Get 'person arrived updated' event without ROLE_APPROVED_PREMISES_EVENTS returns 403`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+    )
+
+    webTestClient.get()
+      .uri("/events/cas3/person-arrived-updated/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
+  fun `Get 'person arrived updated' event returns 200 with correct body`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
+    )
+
+    val eventId = UUID.randomUUID()
+
+    val envelopedData = CAS3PersonArrivedUpdatedEvent(
+      id = eventId,
+      timestamp = Instant.now(),
+      eventType = EventType.personArrivedUpdated,
+      eventDetails = CAS3PersonArrivedEventDetailsFactory().produce(),
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventId)
+      withType(DomainEventType.CAS3_PERSON_ARRIVED_UPDATED)
+      withData(objectMapper.writeValueAsString(envelopedData))
+    }
+
+    val response = webTestClient.get()
+      .uri("/events/cas3/person-arrived-updated/${event.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(CAS3PersonArrivedUpdatedEvent::class.java)
       .returnResult()
 
     assertThat(response.responseBody).isEqualTo(envelopedData)
