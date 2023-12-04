@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingProvisionallyMadeEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3Event
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartureUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEvent
@@ -52,6 +53,7 @@ class DomainEventService(
   @Value("\${url-templates.api.cas3.person-departed-event-detail}") private val personDepartedDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas3.referral-submitted-event-detail}") private val referralSubmittedDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas3.person-departure-updated-event-detail}") private val personDepartureUpdatedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas3.person-arrived-updated-event-detail}") private val personArrivedUpdatedDetailUrlTemplate: String,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -145,6 +147,20 @@ class DomainEventService(
       typeName = "accommodation.cas3.person.arrived",
       typeDescription = "Someone has arrived at a Transitional Accommodation premises for their booking",
       detailUrl = personArrivedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+    )
+  }
+
+  @Transactional
+  fun savePersonArrivedUpdatedEvent(booking: BookingEntity) {
+    val domainEvent = domainEventBuilder.buildPersonArrivedUpdatedDomainEvent(booking)
+
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "accommodation.cas3.person.arrived.updated",
+      typeDescription = "Someone has changed arrival date at a Transitional Accommodation premises for their booking",
+      detailUrl = personArrivedUpdatedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -257,6 +273,7 @@ class DomainEventService(
     CAS3BookingConfirmedEvent::class -> DomainEventType.CAS3_BOOKING_CONFIRMED
     CAS3BookingProvisionallyMadeEvent::class -> DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE
     CAS3PersonArrivedEvent::class -> DomainEventType.CAS3_PERSON_ARRIVED
+    CAS3PersonArrivedUpdatedEvent::class -> DomainEventType.CAS3_PERSON_ARRIVED_UPDATED
     CAS3PersonDepartedEvent::class -> DomainEventType.CAS3_PERSON_DEPARTED
     CAS3ReferralSubmittedEvent::class -> DomainEventType.CAS3_REFERRAL_SUBMITTED
     CAS3PersonDepartureUpdatedEvent::class -> DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED

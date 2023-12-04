@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingConfirmedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingProvisionallyMadeEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartureUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEvent
@@ -75,6 +76,7 @@ class DomainEventServiceTest {
     personDepartedDetailUrlTemplate = "http://api/events/cas3/person-departed/#eventId",
     referralSubmittedDetailUrlTemplate = "http://api/events/cas3/referral-submitted/#eventId",
     personDepartureUpdatedDetailUrlTemplate = "http://api/events/cas3/person-departure-updated/#eventId",
+    personArrivedUpdatedDetailUrlTemplate = "http://api/events/cas3/person-arrived-updated/#eventId",
   )
 
   private val domainEventServiceEmittingDisabled = DomainEventService(
@@ -91,6 +93,7 @@ class DomainEventServiceTest {
     personDepartedDetailUrlTemplate = "http://api/events/cas3/person-departed/#eventId",
     referralSubmittedDetailUrlTemplate = "http://api/events/cas3/referral-submitted/#eventId",
     personDepartureUpdatedDetailUrlTemplate = "http://api/events/cas3/person-departure-updated/#eventId",
+    personArrivedUpdatedDetailUrlTemplate = "http://api/events/cas3/person-arrived-updated/#eventId",
   )
 
   @Test
@@ -1771,6 +1774,135 @@ class DomainEventServiceTest {
       ),
     )
   }
+
+  @Test
+  fun `savePersonArrivedUpdatedEvent persists updated arrival event and emits event to SNS`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+    val mockHmppsTopic = mockk<HmppsTopic>()
+    val domainEventToSave = createArrivedUpdatedDomainEvent(id, applicationId, crn, occurredAt)
+    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
+
+    every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+    every { domainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any()) } returns domainEventToSave
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+
+    domainEventService.savePersonArrivedUpdatedEvent(bookingEntity)
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.CAS3_PERSON_ARRIVED_UPDATED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 1) {
+      mockHmppsTopic.snsClient.publish(
+        match {
+          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+
+          deserializedMessage.eventType == "accommodation.cas3.person.arrived.updated" &&
+            deserializedMessage.version == 1 &&
+            deserializedMessage.description == "Someone has changed arrival date at a Transitional Accommodation premises for their booking" &&
+            deserializedMessage.detailUrl == "http://api/events/cas3/person-arrived-updated/$id" &&
+            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            deserializedMessage.additionalInformation.applicationId == applicationId &&
+            deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+        },
+      )
+    }
+  }
+
+  @Test
+  fun `savePersonArrivedUpdatedEvent persists updated arrival event, but does not emit event to SNS when event is disabled`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+    val mockHmppsTopic = mockk<HmppsTopic>()
+    val domainEventToSave = createArrivedUpdatedDomainEvent(id, applicationId, crn, occurredAt)
+    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
+
+    every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+    every { domainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any()) } returns domainEventToSave
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+
+    domainEventServiceEmittingDisabled.savePersonArrivedUpdatedEvent(bookingEntity)
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.CAS3_PERSON_ARRIVED_UPDATED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+    verify(exactly = 0) { mockHmppsTopic.snsClient.publish(any()) }
+  }
+
+  @Test
+  fun `savePersonArrivedUpdatedEvent doesn't persist event when database exception occured and not emit SNS domain event`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+    val mockHmppsTopic = mockk<HmppsTopic>()
+    val domainEventToSave = createArrivedUpdatedDomainEvent(id, applicationId, crn, occurredAt)
+    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
+
+    every { domainEventRepositoryMock.save(any()) } throws RuntimeException("A database exception")
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+    every { domainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any()) } returns domainEventToSave
+
+    assertThatExceptionOfType(RuntimeException::class.java)
+      .isThrownBy { domainEventService.savePersonArrivedUpdatedEvent(bookingEntity) }
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.CAS3_PERSON_ARRIVED_UPDATED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+    verify(exactly = 0) { mockHmppsTopic.snsClient.publish(any()) }
+  }
+
+  private fun createArrivedUpdatedDomainEvent(
+    id: UUID,
+    applicationId: UUID?,
+    crn: String,
+    occurredAt: OffsetDateTime,
+  ) = DomainEvent(
+    id = id,
+    applicationId = applicationId,
+    crn = crn,
+    occurredAt = Instant.now(),
+    data = CAS3PersonArrivedUpdatedEvent(
+      id = id,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.personArrived,
+      eventDetails = CAS3PersonArrivedEventDetailsFactory().produce(),
+    ),
+  )
 
   private fun createTemporaryAccommodationPremisesBookingEntity(): BookingEntity {
     val probationRegion = ProbationRegionEntityFactory()
