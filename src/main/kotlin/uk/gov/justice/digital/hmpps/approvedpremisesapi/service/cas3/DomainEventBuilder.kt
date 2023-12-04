@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingProvisionallyMadeEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEventDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartureUpdatedEvent
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
@@ -142,27 +144,7 @@ class DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.personArrived,
-        eventDetails = CAS3PersonArrivedEventDetails(
-          applicationId = application?.id,
-          applicationUrl = application.toUrl(),
-          bookingId = booking.id,
-          bookingUrl = booking.toUrl(),
-          personReference = PersonReference(
-            crn = booking.crn,
-            noms = booking.nomsNumber,
-          ),
-          deliusEventNumber = application?.eventNumber ?: "",
-          premises = Premises(
-            addressLine1 = booking.premises.addressLine1,
-            addressLine2 = booking.premises.addressLine2,
-            postcode = booking.premises.postcode,
-            town = booking.premises.town,
-            region = booking.premises.probationRegion.name,
-          ),
-          arrivedAt = arrival.arrivalDateTime,
-          expectedDepartureOn = arrival.expectedDepartureDate,
-          notes = arrival.notes ?: "",
-        ),
+        eventDetails = createCas3PersonArrivedEventDetails(application, booking, arrival),
       ),
     )
   }
@@ -260,6 +242,28 @@ class DomainEventBuilder(
     )
   }
 
+  fun buildPersonArrivedUpdatedDomainEvent(
+    booking: BookingEntity,
+  ): DomainEvent<CAS3PersonArrivedUpdatedEvent> {
+    val domainEventId = UUID.randomUUID()
+    val arrival = booking.arrival!!
+    val application = booking.application as? TemporaryAccommodationApplicationEntity
+
+    return DomainEvent(
+      id = domainEventId,
+      applicationId = application?.id,
+      bookingId = booking.id,
+      crn = booking.crn,
+      occurredAt = arrival.arrivalDateTime,
+      data = CAS3PersonArrivedUpdatedEvent(
+        id = domainEventId,
+        timestamp = Instant.now(),
+        eventType = EventType.personArrivedUpdated,
+        eventDetails = createCas3PersonArrivedEventDetails(application, booking, arrival),
+      ),
+    )
+  }
+
   private fun buildCAS3PersonDepartedEventDetail(
     booking: BookingEntity,
     application: TemporaryAccommodationApplicationEntity?,
@@ -307,6 +311,32 @@ class DomainEventBuilder(
     cancellationReason = cancellation.reason.name,
     notes = cancellation.notes,
     cancelledAt = cancellation.date,
+  )
+
+  private fun createCas3PersonArrivedEventDetails(
+    application: TemporaryAccommodationApplicationEntity?,
+    booking: BookingEntity,
+    arrival: ArrivalEntity,
+  ) = CAS3PersonArrivedEventDetails(
+    applicationId = application?.id,
+    applicationUrl = application.toUrl(),
+    bookingId = booking.id,
+    bookingUrl = booking.toUrl(),
+    personReference = PersonReference(
+      crn = booking.crn,
+      noms = booking.nomsNumber,
+    ),
+    deliusEventNumber = application?.eventNumber ?: "",
+    premises = Premises(
+      addressLine1 = booking.premises.addressLine1,
+      addressLine2 = booking.premises.addressLine2,
+      postcode = booking.premises.postcode,
+      town = booking.premises.town,
+      region = booking.premises.probationRegion.name,
+    ),
+    arrivedAt = arrival.arrivalDateTime,
+    expectedDepartureOn = arrival.expectedDepartureDate,
+    notes = arrival.notes ?: "",
   )
 
   private fun TemporaryAccommodationApplicationEntity?.toUrl(): URI? =
