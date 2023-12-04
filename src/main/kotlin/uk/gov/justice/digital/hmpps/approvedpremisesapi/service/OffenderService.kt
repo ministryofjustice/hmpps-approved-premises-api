@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -57,6 +58,7 @@ class OffenderService(
   private val apOASysContextApiClient: ApOASysContextApiClient,
   private val adjudicationsApiClient: AdjudicationsApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
+  private val offenderDetailsDataSource: OffenderDetailsDataSource,
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
 ) {
@@ -126,11 +128,7 @@ class OffenderService(
   }
 
   fun getOffenderByCrn(crn: String, userDistinguishedName: String, ignoreLao: Boolean = false): AuthorisableActionResult<OffenderDetailSummary> {
-    var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
-
-    if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
-      offenderResponse = communityApiClient.getOffenderDetailSummaryWithCall(crn)
-    }
+    val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
 
     val offender = when (offenderResponse) {
       is ClientResult.Success -> offenderResponse.body
@@ -141,7 +139,7 @@ class OffenderService(
     if (!ignoreLao) {
       if (offender.currentExclusion || offender.currentRestriction) {
         val access =
-          when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(userDistinguishedName, crn)) {
+          when (val accessResponse = offenderDetailsDataSource.getUserAccessForOffenderCrn(userDistinguishedName, crn)) {
             is ClientResult.Success -> accessResponse.body
             is ClientResult.Failure.StatusCode -> {
               if (accessResponse.status == HttpStatus.FORBIDDEN) {
@@ -168,11 +166,7 @@ class OffenderService(
   }
 
   fun isLao(crn: String): Boolean {
-    var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
-
-    if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
-      offenderResponse = communityApiClient.getOffenderDetailSummaryWithCall(crn)
-    }
+    val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
 
     val offender = when (offenderResponse) {
       is ClientResult.Success -> offenderResponse.body
@@ -183,7 +177,7 @@ class OffenderService(
   }
 
   fun canAccessOffender(username: String, crn: String): Boolean {
-    return when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(username, crn)) {
+    return when (val accessResponse = offenderDetailsDataSource.getUserAccessForOffenderCrn(username, crn)) {
       is ClientResult.Success -> !accessResponse.body.userExcluded && !accessResponse.body.userRestricted
       is ClientResult.Failure.StatusCode -> {
         if (accessResponse.status == HttpStatus.FORBIDDEN) {
@@ -465,11 +459,7 @@ class OffenderService(
   ) = communityApiClient.getDocument(crn, documentId, outputStream)
 
   fun getInfoForPerson(crn: String, deliusUsername: String, ignoreLao: Boolean): PersonInfoResult {
-    var offenderResponse = communityApiClient.getOffenderDetailSummaryWithWait(crn)
-
-    if (offenderResponse is ClientResult.Failure.PreemptiveCacheTimeout) {
-      offenderResponse = communityApiClient.getOffenderDetailSummaryWithCall(crn)
-    }
+    val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
 
     val offender = when (offenderResponse) {
       is ClientResult.Success -> offenderResponse.body
@@ -486,7 +476,7 @@ class OffenderService(
     if (!ignoreLao) {
       if (offender.currentExclusion || offender.currentRestriction) {
         val access =
-          when (val accessResponse = communityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn)) {
+          when (val accessResponse = offenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername, crn)) {
             is ClientResult.Success -> accessResponse.body
             is ClientResult.Failure.StatusCode -> {
               if (accessResponse.status == HttpStatus.FORBIDDEN) {
