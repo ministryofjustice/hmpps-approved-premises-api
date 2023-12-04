@@ -160,3 +160,4 @@ upstream-timeout-ms: 2000
 
 data-sources:
   offender-details: community_api
+  offender-risks: community_api
