@@ -1911,7 +1911,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Arrival updates arrival and departure date for a Temporary Accommodation booking which has existing arrival and no domain event send`() {
+  fun `Create Arrival updates arrival for a Temporary Accommodation booking with existing arrival and updated domain event send`() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
@@ -1970,7 +1970,12 @@ class BookingTest : IntegrationTestBase() {
           .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
           .jsonPath("$.createdAt").isEqualTo("2022-07-01T12:34:56.789Z")
 
-        assertSNSEventNotPublished()
+        assertPublishedSNSEvent(
+          booking,
+          "accommodation.cas3.person.arrived.updated",
+          "Someone has changed arrival date at a Transitional Accommodation premises for their booking",
+          "http://api/events/cas3/person-arrived-updated",
+        )
       }
     }
   }
@@ -3579,9 +3584,5 @@ class BookingTest : IntegrationTestBase() {
       SnsEventPersonReference("CRN", booking.crn),
       SnsEventPersonReference("NOMS", booking.nomsNumber!!),
     )
-  }
-
-  private fun assertSNSEventNotPublished() {
-    assertThat(inboundMessageListener.isEmpty()).isTrue()
   }
 }

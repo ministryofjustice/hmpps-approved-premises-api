@@ -968,8 +968,9 @@ class BookingService(
 
     booking.arrivals += arrivalEntity
 
-    if (isFirstArrival) {
-      cas3DomainEventService.savePersonArrivedEvent(booking)
+    when (isFirstArrival) {
+      true -> cas3DomainEventService.savePersonArrivedEvent(booking)
+      else -> cas3DomainEventService.savePersonArrivedUpdatedEvent(booking)
     }
 
     return success(arrivalEntity)
