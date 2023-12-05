@@ -418,4 +418,796 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
+--- Add some departed Bookings for E2E---
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    'b8d2b571-b5ce-4df4-8e99-f65a86470ef0',
+    CURRENT_DATE - (5 * 2),
+    CURRENT_DATE - (5 * 2) - 2,
+    'X698334', -- Multiple offences
+    CURRENT_DATE - (5 * 2),
+    CURRENT_DATE - (5 * 2) - 2,
+    'e2543d2f-33a9-454b-ae15-03ca0475faa3',
+    '6d6d4c56-9989-4fb5-a486-d32f525748e6',
+    'temporary-accommodation',
+    CURRENT_DATE,
+    NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    'c78bb479-d2a8-4e2d-b800-58d9602bf6e5',
+    'b8d2b571-b5ce-4df4-8e99-f65a86470ef0',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  departures (
+    "id",
+    "date_time",
+    "departure_reason_id",
+    "move_on_category_id",
+    "destination_provider_id",
+    "notes",
+    "booking_id",
+    "created_at"
+  )
+VALUES
+  (
+    '12f1e431-649d-4789-a6ca-1b4e12bf6313',
+    CURRENT_DATE - 1,
+    'f4d00e1c-8bfd-40e9-8241-a7d0f744e737',
+    '587dc0dc-9073-4992-9d58-5576753050e9',
+    NULL,
+    NULL,
+    'b8d2b571-b5ce-4df4-8e99-f65a86470ef0',
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+--- Add some departed Bookings for E2E---
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    'dd833ba5-2924-4bda-8e5f-6036c2eef8c8',
+    CURRENT_DATE - (5 * 3),
+    CURRENT_DATE - (5 * 3) - 2,
+    'X698334', -- Multiple offences
+    CURRENT_DATE - (5 * 3),
+    CURRENT_DATE - (5 * 3) - 2,
+    'e2543d2f-33a9-454b-ae15-03ca0475faa3',
+    '6d6d4c56-9989-4fb5-a486-d32f525748e6',
+    'temporary-accommodation',
+    CURRENT_DATE,
+    NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    '91b1cc3b-0849-4c75-a7c4-03a344c4ec4e',
+    'dd833ba5-2924-4bda-8e5f-6036c2eef8c8',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  departures (
+    "id",
+    "date_time",
+    "departure_reason_id",
+    "move_on_category_id",
+    "destination_provider_id",
+    "notes",
+    "booking_id",
+    "created_at"
+  )
+VALUES
+  (
+    '0bdce140-af2d-4983-867f-658d0b3c3578',
+    CURRENT_DATE - 1,
+    'f4d00e1c-8bfd-40e9-8241-a7d0f744e737',
+    '587dc0dc-9073-4992-9d58-5576753050e9',
+    NULL,
+    NULL,
+    'dd833ba5-2924-4bda-8e5f-6036c2eef8c8',
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+--- Add some departed Bookings for E2E---
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    '10df1538-39d3-4f69-af32-53907f020f61',
+    CURRENT_DATE - (5 * 4),
+    CURRENT_DATE - (5 * 4) - 2,
+    'X698334', -- Multiple offences
+    CURRENT_DATE - (5 * 4),
+    CURRENT_DATE - (5 * 4) - 2,
+    'e2543d2f-33a9-454b-ae15-03ca0475faa3',
+    '6d6d4c56-9989-4fb5-a486-d32f525748e6',
+    'temporary-accommodation',
+    CURRENT_DATE,
+    NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    'ce634a9d-878d-4e2c-a57b-780361138550',
+    '10df1538-39d3-4f69-af32-53907f020f61',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  departures (
+    "id",
+    "date_time",
+    "departure_reason_id",
+    "move_on_category_id",
+    "destination_provider_id",
+    "notes",
+    "booking_id",
+    "created_at"
+  )
+VALUES
+  (
+    '9e4bf10c-7c92-4691-890c-31e50a26671c',
+    CURRENT_DATE - 1,
+    'f4d00e1c-8bfd-40e9-8241-a7d0f744e737',
+    '587dc0dc-9073-4992-9d58-5576753050e9',
+    NULL,
+    NULL,
+    '10df1538-39d3-4f69-af32-53907f020f61',
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+--- Add some departed Bookings for E2E---
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    '013d0da0-9dc9-4aa5-a95a-be23f67cb20c',
+    CURRENT_DATE - (5 * 5),
+    CURRENT_DATE - (5 * 5) - 2,
+    'X698334', -- Multiple offences
+    CURRENT_DATE - (5 * 5),
+    CURRENT_DATE - (5 * 5) - 2,
+    'e2543d2f-33a9-454b-ae15-03ca0475faa3',
+    '6d6d4c56-9989-4fb5-a486-d32f525748e6',
+    'temporary-accommodation',
+    CURRENT_DATE,
+    NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    '99f8f729-e358-4928-a7bf-a6129f63be99',
+    '013d0da0-9dc9-4aa5-a95a-be23f67cb20c',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  departures (
+    "id",
+    "date_time",
+    "departure_reason_id",
+    "move_on_category_id",
+    "destination_provider_id",
+    "notes",
+    "booking_id",
+    "created_at"
+  )
+VALUES
+  (
+    'e3dbb6b6-7b2e-4c97-a153-5d0357f48ae2',
+    CURRENT_DATE - 1,
+    'f4d00e1c-8bfd-40e9-8241-a7d0f744e737',
+    '587dc0dc-9073-4992-9d58-5576753050e9',
+    NULL,
+    NULL,
+    '013d0da0-9dc9-4aa5-a95a-be23f67cb20c',
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+--- Add some departed Bookings for E2E---
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    'f65006c9-2d6f-49f9-a800-3e3b71b9db72',
+    CURRENT_DATE - (5 * 6),
+    CURRENT_DATE - (5 * 6) - 2,
+    'X698334', -- Multiple offences
+    CURRENT_DATE - (5 * 6),
+    CURRENT_DATE - (5 * 6) - 2,
+    'e2543d2f-33a9-454b-ae15-03ca0475faa3',
+    '6d6d4c56-9989-4fb5-a486-d32f525748e6',
+    'temporary-accommodation',
+    CURRENT_DATE,
+    NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    '81c80f82-e3c7-469a-b3f0-8f03e7f8cb37',
+    'f65006c9-2d6f-49f9-a800-3e3b71b9db72',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  departures (
+    "id",
+    "date_time",
+    "departure_reason_id",
+    "move_on_category_id",
+    "destination_provider_id",
+    "notes",
+    "booking_id",
+    "created_at"
+  )
+VALUES
+  (
+    '6c7b29af-59e6-48d4-877d-e98a06345233',
+    CURRENT_DATE - 1,
+    'f4d00e1c-8bfd-40e9-8241-a7d0f744e737',
+    '587dc0dc-9073-4992-9d58-5576753050e9',
+    NULL,
+    NULL,
+    'f65006c9-2d6f-49f9-a800-3e3b71b9db72',
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+--- Add some departed Bookings for E2E---
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    '4096917e-42ff-4adb-b141-bbd39ac19ce7',
+    CURRENT_DATE - (5 * 7),
+    CURRENT_DATE - (5 * 7) - 2,
+    'X698334', -- Multiple offences
+    CURRENT_DATE - (5 * 7),
+    CURRENT_DATE - (5 * 7) - 2,
+    'e2543d2f-33a9-454b-ae15-03ca0475faa3',
+    '6d6d4c56-9989-4fb5-a486-d32f525748e6',
+    'temporary-accommodation',
+    CURRENT_DATE,
+    NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    '2fb9ceff-7135-47fe-ad58-14781b4ed0f4',
+    '4096917e-42ff-4adb-b141-bbd39ac19ce7',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  departures (
+    "id",
+    "date_time",
+    "departure_reason_id",
+    "move_on_category_id",
+    "destination_provider_id",
+    "notes",
+    "booking_id",
+    "created_at"
+  )
+VALUES
+  (
+    '415011bd-ae3b-4cda-bc43-bf74dbc880f4',
+    CURRENT_DATE - 1,
+    'f4d00e1c-8bfd-40e9-8241-a7d0f744e737',
+    '587dc0dc-9073-4992-9d58-5576753050e9',
+    NULL,
+    NULL,
+    '4096917e-42ff-4adb-b141-bbd39ac19ce7',
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+--- Add some departed Bookings for E2E---
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    'c97bb88b-da6a-4a96-8c98-664b0bebd9e1',
+    CURRENT_DATE - (5 * 8),
+    CURRENT_DATE - (5 * 8) - 2,
+    'X698334', -- Multiple offences
+    CURRENT_DATE - (5 * 8),
+    CURRENT_DATE - (5 * 8) - 2,
+    'e2543d2f-33a9-454b-ae15-03ca0475faa3',
+    '6d6d4c56-9989-4fb5-a486-d32f525748e6',
+    'temporary-accommodation',
+    CURRENT_DATE,
+    NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    '6c40948a-12b4-4353-a093-48df24d624df',
+    'c97bb88b-da6a-4a96-8c98-664b0bebd9e1',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  departures (
+    "id",
+    "date_time",
+    "departure_reason_id",
+    "move_on_category_id",
+    "destination_provider_id",
+    "notes",
+    "booking_id",
+    "created_at"
+  )
+VALUES
+  (
+    '80fc303c-23a9-4aa1-a04d-53463cbf0b2e',
+    CURRENT_DATE - 1,
+    'f4d00e1c-8bfd-40e9-8241-a7d0f744e737',
+    '587dc0dc-9073-4992-9d58-5576753050e9',
+    NULL,
+    NULL,
+    'c97bb88b-da6a-4a96-8c98-664b0bebd9e1',
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+--- Add some departed Bookings for E2E---
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    '70ba95d6-d3e1-4a1b-85bc-8f37fbf8618f',
+    CURRENT_DATE - (5 * 8),
+    CURRENT_DATE - (5 * 8) - 2,
+    'X698334', -- Multiple offences
+    CURRENT_DATE - (5 * 8),
+    CURRENT_DATE - (5 * 8) - 2,
+    'e2543d2f-33a9-454b-ae15-03ca0475faa3',
+    '6d6d4c56-9989-4fb5-a486-d32f525748e6',
+    'temporary-accommodation',
+    CURRENT_DATE,
+    NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    '5ce549ae-e079-4d0e-8476-521252a17361',
+    '70ba95d6-d3e1-4a1b-85bc-8f37fbf8618f',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  departures (
+    "id",
+    "date_time",
+    "departure_reason_id",
+    "move_on_category_id",
+    "destination_provider_id",
+    "notes",
+    "booking_id",
+    "created_at"
+  )
+VALUES
+  (
+    'cd51ea31-774b-478b-9b18-5addcdf2020e',
+    CURRENT_DATE - 1,
+    'f4d00e1c-8bfd-40e9-8241-a7d0f744e737',
+    '587dc0dc-9073-4992-9d58-5576753050e9',
+    NULL,
+    NULL,
+    '70ba95d6-d3e1-4a1b-85bc-8f37fbf8618f',
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+--- Add some departed Bookings for E2E---
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    '9eec3324-c5db-4983-9907-cdd12890dd39',
+    CURRENT_DATE - (5 * 9),
+    CURRENT_DATE - (5 * 9) - 2,
+    'X698334', -- Multiple offences
+    CURRENT_DATE - (5 * 9),
+    CURRENT_DATE - (5 * 9) - 2,
+    'e2543d2f-33a9-454b-ae15-03ca0475faa3',
+    '6d6d4c56-9989-4fb5-a486-d32f525748e6',
+    'temporary-accommodation',
+    CURRENT_DATE,
+    NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    'bb493404-4aa5-4272-86cf-03f385f65c33',
+    '9eec3324-c5db-4983-9907-cdd12890dd39',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  departures (
+    "id",
+    "date_time",
+    "departure_reason_id",
+    "move_on_category_id",
+    "destination_provider_id",
+    "notes",
+    "booking_id",
+    "created_at"
+  )
+VALUES
+  (
+    '90cd2885-a26e-40af-9dd8-d4cb1260b0bb',
+    CURRENT_DATE - 1,
+    'f4d00e1c-8bfd-40e9-8241-a7d0f744e737',
+    '587dc0dc-9073-4992-9d58-5576753050e9',
+    NULL,
+    NULL,
+    '9eec3324-c5db-4983-9907-cdd12890dd39',
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+--- Add some departed Bookings for E2E---
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    '99d8f177-ab9a-4afc-a5b9-360ccd40c5dc',
+    CURRENT_DATE - (5 * 10),
+    CURRENT_DATE - (5 * 10) - 2,
+    'X698334', -- Multiple offences
+    CURRENT_DATE - (5 * 10),
+    CURRENT_DATE - (5 * 10) - 2,
+    'e2543d2f-33a9-454b-ae15-03ca0475faa3',
+    '6d6d4c56-9989-4fb5-a486-d32f525748e6',
+    'temporary-accommodation',
+    CURRENT_DATE,
+    NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    '7e8e9978-47e5-4a78-8819-46f9af3723bb',
+    '99d8f177-ab9a-4afc-a5b9-360ccd40c5dc',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  departures (
+    "id",
+    "date_time",
+    "departure_reason_id",
+    "move_on_category_id",
+    "destination_provider_id",
+    "notes",
+    "booking_id",
+    "created_at"
+  )
+VALUES
+  (
+    '40d1a31d-61a7-46be-bbde-9c02463f4c0d',
+    CURRENT_DATE - 1,
+    'f4d00e1c-8bfd-40e9-8241-a7d0f744e737',
+    '587dc0dc-9073-4992-9d58-5576753050e9',
+    NULL,
+    NULL,
+    '99d8f177-ab9a-4afc-a5b9-360ccd40c5dc',
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+--- Add some departed Bookings for E2E---
+
+INSERT INTO
+  bookings (
+    "id",
+    "arrival_date",
+    "departure_date",
+    "crn",
+    "original_arrival_date",
+    "original_departure_date",
+    "premises_id",
+    "bed_id",
+    "service",
+    "created_at",
+    "noms_number"
+  )
+VALUES
+  (
+    '541ab042-3b7b-4fb2-b1be-a36b42581ec3',
+    CURRENT_DATE - (5 * 11),
+    CURRENT_DATE - (5 * 11) - 2,
+    'X698334', -- Multiple offences
+    CURRENT_DATE - (5 * 11),
+    CURRENT_DATE - (5 * 11) - 2,
+    'e2543d2f-33a9-454b-ae15-03ca0475faa3',
+    '6d6d4c56-9989-4fb5-a486-d32f525748e6',
+    'temporary-accommodation',
+    CURRENT_DATE,
+    NULL
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  turnarounds (
+    "id",
+    "booking_id",
+    "working_day_count",
+    "created_at"
+  )
+VALUES
+  (
+    'f088b879-d6a4-4d7f-853b-e339074593cb',
+    '541ab042-3b7b-4fb2-b1be-a36b42581ec3',
+    2,
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
+INSERT INTO
+  departures (
+    "id",
+    "date_time",
+    "departure_reason_id",
+    "move_on_category_id",
+    "destination_provider_id",
+    "notes",
+    "booking_id",
+    "created_at"
+  )
+VALUES
+  (
+    '877542c1-b6ea-4f26-9a8e-587f07fea6fe',
+    CURRENT_DATE - 1,
+    'f4d00e1c-8bfd-40e9-8241-a7d0f744e737',
+    '587dc0dc-9073-4992-9d58-5576753050e9',
+    NULL,
+    NULL,
+    '541ab042-3b7b-4fb2-b1be-a36b42581ec3',
+    CURRENT_DATE
+  )
+ON CONFLICT(id) DO NOTHING;
+
 UPDATE arrivals SET arrival_date_time = cast(arrival_date as timestamp) at time zone 'utc';
