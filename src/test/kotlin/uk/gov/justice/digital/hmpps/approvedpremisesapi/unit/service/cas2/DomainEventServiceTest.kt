@@ -44,6 +44,7 @@ class DomainEventServiceTest {
     hmppsQueueService = hmppsQueueServiceMock,
     emitDomainEventsEnabled = true,
     cas2ApplicationSubmittedDetailUrlTemplate = "http://api/events/cas2/application-submitted/#eventId",
+    cas2ApplicationStatusUpdatedDetailUrlTemplate = "http://api/events/cas2/application-status-updated/#eventId",
   )
 
   @Test
@@ -208,6 +209,7 @@ class DomainEventServiceTest {
       hmppsQueueService = hmppsQueueServiceMock,
       emitDomainEventsEnabled = false,
       cas2ApplicationSubmittedDetailUrlTemplate = "http://api/events/cas2/application-submitted/#eventId",
+      cas2ApplicationStatusUpdatedDetailUrlTemplate = "http://api/events/cas2/application-status-updated/#eventId",
     )
 
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")

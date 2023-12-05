@@ -36,6 +36,10 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.crn = { crn }
   }
 
+  fun withNomsNumber(nomsNumber: String) = apply {
+    this.nomsNumber = { nomsNumber }
+  }
+
   fun withCreatedByUser(createdByUser: NomisUserEntity) = apply {
     this.createdByUser = { createdByUser }
   }

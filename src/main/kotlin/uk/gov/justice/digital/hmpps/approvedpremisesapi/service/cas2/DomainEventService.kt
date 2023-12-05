@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Event
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
@@ -72,6 +73,17 @@ class DomainEventService(
       typeDescription = "An application has been submitted for a CAS2 placement",
       detailUrl = cas2ApplicationSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       personReference = domainEvent.data.eventDetails.personReference,
+    )
+
+  @Transactional
+  fun saveCas2ApplicationStatusUpdatedDomainEvent(domainEvent: DomainEvent<Cas2ApplicationStatusUpdatedEvent>) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "applications.cas2.application.status-updated",
+      typeDescription = "An assessor has updated the status of a CAS2 application",
+      detailUrl = cas2ApplicationStatusUpdatedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
+      personReference = domainEvent.data.eventDetails.personReference,
+
     )
 
   private fun <T : Cas2Event> saveAndEmit(
