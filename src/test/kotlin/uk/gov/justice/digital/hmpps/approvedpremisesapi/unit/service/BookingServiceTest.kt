@@ -1465,7 +1465,7 @@ class BookingServiceTest {
 
   @Nested
   inner class CreateCas3Arrival {
-    private val bookingEntity = createTemporaryAccommdationBooking()
+    private val bookingEntity = createTemporaryAccommodationBooking()
 
     @BeforeEach
     fun setup() {
@@ -1520,11 +1520,12 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createArrival should not returns GeneralValidationError when Booking already has an Arrival and doesnt save domain event`() {
+    fun `createArrival should return success response when arrival exists for a Booking and save and emit the event`() {
       val arrivalEntity = ArrivalEntityFactory()
         .withBooking(bookingEntity)
         .produce()
       bookingEntity.arrivals += arrivalEntity
+      every { mockCas3DomainEventService.savePersonArrivedUpdatedEvent(any()) } just Runs
 
       val result = bookingService.createCas3Arrival(
         booking = bookingEntity,
@@ -1546,6 +1547,9 @@ class BookingServiceTest {
 
       verify(exactly = 1) { mockArrivalRepository.save(any()) }
       verify(exactly = 1) { mockBookingRepository.save(any()) }
+      verify(exactly = 1) {
+        mockCas3DomainEventService.savePersonArrivedUpdatedEvent(bookingEntity)
+      }
       verify(exactly = 0) {
         mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity)
       }
@@ -1576,7 +1580,7 @@ class BookingServiceTest {
       verify(exactly = 1) { mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity) }
     }
 
-    private fun createTemporaryAccommdationBooking() = BookingEntityFactory()
+    private fun createTemporaryAccommodationBooking() = BookingEntityFactory()
       .withYieldedPremises {
         TemporaryAccommodationPremisesEntityFactory()
           .withYieldedProbationRegion {
