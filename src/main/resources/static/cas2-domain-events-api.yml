@@ -14,7 +14,7 @@ paths:
           $ref: '#/components/schemas/EventId'
     get:
       tags:
-        - "CAS2 'Apply' events"
+        - "CAS2 events"
       summary: An 'application-submitted' event
       responses:
         '200':
@@ -25,6 +25,33 @@ paths:
                 $ref: '#/components/schemas/Cas2ApplicationSubmittedEvent'
         404:
           description: No application-submitted event found for the provided `eventId`
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+  /events/cas2/application-status-updated/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "CAS2 events"
+      summary: An 'application-status-updated' event
+      responses:
+        '200':
+          description: The application-status-updated corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cas2ApplicationStatusUpdatedEvent'
+        404:
+          description: No application-status-updated event found for the provided `eventId`
           content:
             'application/json':
               schema:
@@ -59,6 +86,7 @@ components:
         propertyName: eventType
         mapping:
           applications.cas2.application.submitted: '#/components/schemas/Cas2ApplicationSubmittedEvent'
+          applications.cas2.application.status-updated: '#/components/schemas/Cas2ApplicationStatusUpdatedEvent'
     Cas2ApplicationSubmittedEvent:
       allOf:
         - $ref: '#/components/schemas/Cas2Event'
@@ -66,6 +94,15 @@ components:
           properties:
             eventDetails:
               $ref: '#/components/schemas/Cas2ApplicationSubmittedEventDetails'
+          required:
+            - eventDetails
+    Cas2ApplicationStatusUpdatedEvent:
+      allOf:
+        - $ref: '#/components/schemas/Cas2Event'
+        - type: object
+          properties:
+            eventDetails:
+              $ref: '#/components/schemas/Cas2ApplicationStatusUpdatedEventDetails'
           required:
             - eventDetails
     Cas2ApplicationSubmittedEventDetails:
@@ -96,6 +133,68 @@ components:
         - personReference
         - submittedAt
         - submittedBy
+    Cas2ApplicationStatusUpdatedEventDetails:
+      type: object
+      properties:
+        applicationId:
+          type: string
+          format: uuid
+        applicationUrl:
+          type: string
+          example: https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        newStatus:
+          $ref: '#/components/schemas/Cas2Status'
+        updatedBy:
+          $ref: '#/components/schemas/ExternalUser'
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - applicationId
+        - applicationUrl
+        - personReference
+        - newStatus
+        - updatedBy
+        - updatedAt
+    Cas2Status:
+      description: A status which can be applied to a submitted application by an assessor
+      type: object
+      properties:
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+        description:
+          type: string
+          example: 'More information about the application has been requested from the POM (Prison Offender Manager).'
+      required:
+        - name
+        - label
+        - description
+    ExternalUser:
+      type: object
+      properties:
+        username:
+          type: string
+          example: 'CAS2_ASSESSOR_USER'
+        name:
+          type: string
+          example: 'Roger Smith'
+        email:
+          type: string
+          example: 'roger@external.example.com'
+        origin:
+          type: string
+          example: 'NACRO'
+      required:
+        - id
+        - username
+        - name
+        - email
     Cas2StaffMember:
       description: A member of prison or CAS2 staff
       type: object
@@ -134,8 +233,10 @@ components:
       type: string
       enum:
         - applications.cas2.application.submitted
+        - applications.cas2.application.status-updated
       x-enum-varnames:
         - applicationSubmitted
+        - applicationStatusUpdated
     Problem:
       type: object
       properties:
