@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -12,7 +14,10 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DateCapacity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ExtendedPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewRoom
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
@@ -1689,6 +1694,186 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("$.bookings[5].status").isEqualTo(BookingStatus.cancelled.value)
         .jsonPath("$.dateCapacities").isArray
         .jsonPath("$.dateCapacities[0]").isNotEmpty
+    }
+  }
+
+  @Test
+  fun `Get Premises Summary by ID returns the correct capacity data`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      val premises = approvedPremisesEntityFactory.produceAndPersist() {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+        withTotalBeds(20)
+      }
+
+      val startDate = LocalDate.now()
+
+      val pendingBookingEntity = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(startDate.plusDays(1))
+        withDepartureDate(startDate.plusDays(3))
+        withStaffKeyWorkerCode(null)
+      }
+
+      val lostBeds = mutableListOf(
+        lostBedsEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withStartDate(startDate.plusDays(1))
+          withEndDate(startDate.plusDays(2))
+          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withBed(
+            bedEntityFactory.produceAndPersist {
+              withYieldedRoom {
+                roomEntityFactory.produceAndPersist {
+                  withYieldedPremises { premises }
+                }
+              }
+            },
+          )
+        },
+        lostBedsEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withStartDate(startDate.plusDays(1))
+          withEndDate(startDate.plusDays(2))
+          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withBed(
+            bedEntityFactory.produceAndPersist {
+              withYieldedRoom {
+                roomEntityFactory.produceAndPersist {
+                  withYieldedPremises { premises }
+                }
+              }
+            },
+          )
+        },
+      )
+
+      val cancelledLostBed = lostBedsEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withStartDate(startDate.plusDays(1))
+        withEndDate(startDate.plusDays(2))
+        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withBed(
+          bedEntityFactory.produceAndPersist {
+            withYieldedRoom {
+              roomEntityFactory.produceAndPersist {
+                withYieldedPremises { premises }
+              }
+            }
+          },
+        )
+      }
+
+      cancelledLostBed.cancellation = lostBedCancellationEntityFactory.produceAndPersist {
+        withLostBed(cancelledLostBed)
+      }
+
+      lostBeds += cancelledLostBed
+
+      val arrivedBookingEntity = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(startDate)
+        withDepartureDate(startDate.plusDays(2))
+        withStaffKeyWorkerCode(null)
+      }
+
+      arrivedBookingEntity.arrivals = mutableListOf(
+        arrivalEntityFactory.produceAndPersist {
+          withBooking(arrivedBookingEntity)
+        },
+      )
+
+      val nonArrivedBookingEntity = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(startDate.plusDays(3))
+        withDepartureDate(startDate.plusDays(5))
+        withStaffKeyWorkerCode(null)
+      }
+
+      nonArrivedBookingEntity.nonArrival = nonArrivalEntityFactory.produceAndPersist {
+        withBooking(nonArrivedBookingEntity)
+        withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
+      }
+
+      val cancelledBookingEntity = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(startDate.plusDays(4))
+        withDepartureDate(startDate.plusDays(6))
+        withStaffKeyWorkerCode(null)
+      }
+
+      cancelledBookingEntity.cancellations = mutableListOf(
+        cancellationEntityFactory.produceAndPersist {
+          withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+          withBooking(cancelledBookingEntity)
+        },
+      )
+
+      val bookings = listOf(
+        pendingBookingEntity,
+        arrivedBookingEntity,
+        nonArrivedBookingEntity,
+        cancelledBookingEntity,
+      )
+
+      bookings.forEach {
+        ApDeliusContext_addCaseSummaryToBulkResponse(
+          CaseSummaryFactory()
+            .withCrn(it.crn)
+            .produce(),
+        )
+        ApDeliusContext_addResponseToUserAccessCall(
+          CaseAccessFactory()
+            .withCrn(it.crn)
+            .produce(),
+          user.deliusUsername,
+        )
+      }
+
+      val rawResponseBody = webTestClient.get()
+        .uri("/premises/${premises.id}/summary")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk()
+        .returnResult<String>()
+        .responseBody
+        .blockFirst()
+
+      val responseBody =
+        objectMapper.readValue(
+          rawResponseBody,
+          object : TypeReference<ExtendedPremisesSummary>() {},
+        )
+
+      val getTotalBedsForDate = { date: LocalDate ->
+        val lostBedsForToday = lostBeds.filter { it.startDate <= date && it.endDate > date && it.cancellation == null }
+        val bookingsForToday = bookings
+          .filter { it.cancellation == null && it.nonArrival == null }
+          .filter { it.arrivalDate <= date && it.departureDate > date }
+        (premises.totalBeds - bookingsForToday.count()) - lostBedsForToday.count()
+      }
+
+      assertThat(responseBody.dateCapacities?.get(0)).isEqualTo(
+        DateCapacity(date = startDate, getTotalBedsForDate(startDate)),
+      )
+      assertThat(responseBody.dateCapacities?.get(1)).isEqualTo(
+        DateCapacity(date = startDate.plusDays(1), getTotalBedsForDate(startDate.plusDays(1))),
+      )
+      assertThat(responseBody.dateCapacities?.get(2)).isEqualTo(
+        DateCapacity(date = startDate.plusDays(2), getTotalBedsForDate(startDate.plusDays(2))),
+      )
+      assertThat(responseBody.dateCapacities?.get(3)).isEqualTo(
+        DateCapacity(date = startDate.plusDays(3), getTotalBedsForDate(startDate.plusDays(3))),
+      )
+      assertThat(responseBody.dateCapacities?.get(4)).isEqualTo(
+        DateCapacity(date = startDate.plusDays(4), getTotalBedsForDate(startDate.plusDays(4))),
+      )
+      assertThat(responseBody.dateCapacities?.get(5)).isEqualTo(
+        DateCapacity(date = startDate.plusDays(5), getTotalBedsForDate(startDate.plusDays(5))),
+      )
     }
   }
 

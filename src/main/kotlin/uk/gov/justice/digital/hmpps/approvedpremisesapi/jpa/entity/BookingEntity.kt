@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.BookingListener
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSummaryForAvailability
 import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -20,11 +21,44 @@ import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
-
 @Repository
 interface BookingRepository : JpaRepository<BookingEntity, UUID> {
-  @Query("SELECT b FROM BookingEntity b WHERE b.premises.id = :premisesId AND b.arrivalDate <= :endDate AND b.departureDate >= :startDate")
-  fun findAllByPremisesIdAndOverlappingDate(premisesId: UUID, startDate: LocalDate, endDate: LocalDate): List<BookingEntity>
+  @Query(
+    """
+    SELECT
+      b.arrival_date as arrivalDate,
+      b.departure_date as departureDate,
+      (
+        SELECT
+          count(1)
+        from
+          arrivals
+        where
+          booking_id = b.id
+      ) > 0 as arrived,
+      (
+        SELECT
+          count(1)
+        from
+          non_arrivals
+        where
+          booking_id = b.id
+      ) > 0 as isNotArrived,
+      (
+        SELECT
+          count(1)
+        from
+          cancellations
+        where
+          booking_id = b.id
+      ) > 0 as cancelled
+    from
+      bookings b
+    WHERE b.premises_id = :premisesId AND b.arrival_date <= :endDate AND b.departure_date >= :startDate
+  """,
+    nativeQuery = true,
+  )
+  fun findAllByPremisesIdAndOverlappingDate(premisesId: UUID, startDate: LocalDate, endDate: LocalDate): List<BookingSummaryForAvailability>
 
   @Query("SELECT b FROM BookingEntity b WHERE b.premises.id IN :premisesIds AND b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND SIZE(b.cancellations) = 0")
   fun findAllNotCancelledByPremisesIdsAndOverlappingDate(premisesIds: List<UUID>, startDate: LocalDate, endDate: LocalDate): List<BookingEntity>
