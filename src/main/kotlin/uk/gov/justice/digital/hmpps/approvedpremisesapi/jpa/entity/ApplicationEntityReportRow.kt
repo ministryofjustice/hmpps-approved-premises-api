@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.sql.Date
+import java.sql.Timestamp
 import java.util.UUID
 
 @Repository
@@ -13,6 +14,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
     SELECT DISTINCT
       cast(application.id as TEXT) as id,
       submission_event.data -> 'eventDetails' -> 'personReference' ->> 'crn' as crn,
+      assessments.allocated_at as lastAllocatedToAssessorDate,
       cast(assessment_event.data -> 'eventDetails' ->> 'assessedAt' as date) as applicationAssessedDate,
       assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'cru' ->> 'name' as assessorCru,
       assessment_event.data -> 'eventDetails' ->> 'decision' as assessmentDecision,
@@ -71,6 +73,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       and application.id = departure_event.application_id
       left join domain_events non_arrival_event on non_arrival_event.type = 'APPROVED_PREMISES_PERSON_NOT_ARRIVED'
       and application.id = non_arrival_event.application_id
+      left join assessments on application.id = assessments.application_id AND assessments.reallocated_at IS NULL
     where
       date_part('month', application.submitted_at) = :month
       AND date_part('year', application.submitted_at) = :year
@@ -84,6 +87,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
 interface ApplicationEntityReportRow {
   fun getId(): String
   fun getCrn(): String
+  fun getLastAllocatedToAssessorDate(): Timestamp?
   fun getApplicationAssessedDate(): Date?
   fun getAssessorCru(): String?
   fun getAssessmentDecision(): String?
@@ -94,9 +98,7 @@ interface ApplicationEntityReportRow {
   fun getOffenceId(): String
   fun getNoms(): String
   fun getPremisesType(): String?
-
   fun getSentenceType(): String?
-
   fun getReleaseType(): String?
   fun getApplicationSubmissionDate(): Date?
   fun getReferralRegion(): String?

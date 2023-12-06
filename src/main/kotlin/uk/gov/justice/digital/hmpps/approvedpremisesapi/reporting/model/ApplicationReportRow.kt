@@ -5,6 +5,7 @@ import java.time.LocalDate
 data class ApplicationReportRow(
   val id: String,
   val crn: String,
+  val lastAllocatedToAssessorDate: LocalDate?,
   val applicationAssessedDate: LocalDate?,
   val assessorCru: String?,
   val assessmentDecision: String?,
