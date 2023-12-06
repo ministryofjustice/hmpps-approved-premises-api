@@ -140,6 +140,7 @@ class DomainEventService(
 
   private fun <T : Cas2Event> enumTypeFromDataType(type: KClass<T>): DomainEventType = when (type) {
     Cas2ApplicationSubmittedEvent::class -> DomainEventType.CAS2_APPLICATION_SUBMITTED
+    Cas2ApplicationStatusUpdatedEvent::class -> DomainEventType.CAS2_APPLICATION_STATUS_UPDATED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
   }
 }
