@@ -50,7 +50,6 @@
     <ID>CyclomaticComplexMethod:PremisesService.kt$PremisesService$fun updatePremises( premisesId: UUID, addressLine1: String, addressLine2: String?, town: String?, postcode: String, localAuthorityAreaId: UUID?, probationRegionId: UUID, characteristicIds: List&lt;UUID>, notes: String?, status: PropertyStatus, probationDeliveryUnitIdentifier: Either&lt;String, UUID>?, turnaroundWorkingDayCount: Int?, ): AuthorisableActionResult&lt;ValidatableActionResult&lt;PremisesEntity>></ID>
     <ID>CyclomaticComplexMethod:SeedBookingsTest.kt$SeedBookingsTest$private fun approvedPremisesBookingSeedCsvRowsToCsv(rows: List&lt;ApprovedPremisesBookingSeedCsvRow>): String</ID>
     <ID>CyclomaticComplexMethod:SeedUtils.kt$fun getCanonicalRegionName(regionName: String): String</ID>
-    <ID>CyclomaticComplexMethod:SeedService.kt$SeedService$private fun seedData(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob&lt;*&gt;.() -&gt; String)</ID>
     <ID>CyclomaticComplexMethod:TaskService.kt$TaskService$fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, id: UUID): AuthorisableActionResult&lt;ValidatableActionResult&lt;Reallocation>></ID>
     <ID>EmptyDefaultConstructor:ArrivalTransformer.kt$ArrivalTransformer$()</ID>
     <ID>EmptyDefaultConstructor:CancellationReasonTransformer.kt$CancellationReasonTransformer$()</ID>
@@ -254,8 +253,6 @@
     <ID>MagicNumber:ReferralsMetricsReportGenerator.kt$ReferralsMetricsReportGenerator$100</ID>
     <ID>MagicNumber:ReportsController.kt$ReportsController$12</ID>
     <ID>MagicNumber:TaskTransformer.kt$TaskTransformer$10</ID>
-    <ID>MagicNumber:NomisUsersSeedJob.kt$NomisUsersSeedJob$100000</ID>
-    <ID>MagicNumber:NomisUsersSeedJob.kt$NomisUsersSeedJob$900000</ID>
     <ID>MagicNumber:UpdateAllUsersFromCommunityApiJob.kt$UpdateAllUsersFromCommunityApiJob$500</ID>
     <ID>MaxLineLength:AcceptAssessmentTest.kt$AcceptAssessmentTest$every { placementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns ValidatableActionResult.GeneralValidationError("Couldn't create Placement Requirements")</ID>
     <ID>MaxLineLength:ApplicationReportsTest.kt$ApplicationReportsTest$private</ID>
@@ -389,8 +386,6 @@
     <ID>TooGenericExceptionCaught:SeedService.kt$SeedService$exception: RuntimeException</ID>
     <ID>TooGenericExceptionCaught:UpdateAllUsersFromCommunityApiJob.kt$UpdateAllUsersFromCommunityApiJob$exception: Exception</ID>
     <ID>TooGenericExceptionCaught:UsersSeedJob.kt$UsersSeedJob$exception: Exception</ID>
-    <ID>TooGenericExceptionCaught:NomisUsersSeedJob.kt$NomisUsersSeedJob$exception: Exception</ID>
-    <ID>TooGenericExceptionCaught:ExternalUsersSeedJob.kt$ExternalUsersSeedJob$exception: Exception</ID>
     <ID>TooGenericExceptionThrown:AdjudicationTransformer.kt$AdjudicationTransformer$throw RuntimeException("Agency ${result.agencyId} not found")</ID>
     <ID>TooGenericExceptionThrown:ApplicationReportsTest.kt$ApplicationReportsTest$throw Exception("No offender found for CRN ${application.crn}")</ID>
     <ID>TooGenericExceptionThrown:ApplicationService.kt$ApplicationService$throw RuntimeException( "CAS2 applications now require " + "NomisUser", )</ID>
@@ -485,9 +480,6 @@
     <ID>TooGenericExceptionThrown:CancellationEntityFactory.kt$CancellationEntityFactory$throw RuntimeException("Booking must be provided")</ID>
     <ID>TooGenericExceptionThrown:CancellationEntityFactory.kt$CancellationEntityFactory$throw RuntimeException("Reason must be provided")</ID>
     <ID>TooGenericExceptionThrown:Cas2ApplicationEntityFactory.kt$Cas2ApplicationEntityFactory$throw RuntimeException("Must provide a createdByUser")</ID>
-    <ID>TooGenericExceptionCaught:Cas2ApplicationsSeedJob.kt$Cas2ApplicationsSeedJob$exception: Exception</ID>
-    <ID>TooGenericExceptionThrown:Cas2ApplicationsSeedJob.kt$Cas2ApplicationsSeedJob$throw RuntimeException("Could not create application ${row.id}", exception)</ID>
-    <ID>TooGenericExceptionThrown:Cas2ApplicationsSeedJob.kt$Cas2ApplicationsSeedJob$throw RuntimeException("Could not find applicant with nomisUsername ${row.createdBy}")</ID>
     <ID>TooGenericExceptionThrown:Cas2DomainEventFactory.kt$Cas2DomainEventFactory$throw RuntimeException("Must provide event data")</ID>
     <ID>TooGenericExceptionThrown:Cas2DomainEventFactory.kt$Cas2DomainEventFactory$throw RuntimeException("Unknown event details type ${dataClass.qualifiedName}")</ID>
     <ID>TooGenericExceptionThrown:CharacteristicTransformer.kt$CharacteristicTransformer$throw RuntimeException("Unsupported service scope: ${jpa.modelScope}")</ID>
@@ -578,8 +570,6 @@
     <ID>TooGenericExceptionThrown:UsersSeedJob.kt$UsersSeedJob$throw RuntimeException("Could not get user ${row.deliusUsername}", exception)</ID>
     <ID>TooGenericExceptionThrown:UsersSeedJob.kt$UsersSeedJob$throw RuntimeException("Unrecognised User Qualifications(s): $unknownQualifications")</ID>
     <ID>TooGenericExceptionThrown:UsersSeedJob.kt$UsersSeedJob$throw RuntimeException("Unrecognised User Role(s): $unknownRoles")</ID>
-    <ID>TooGenericExceptionThrown:NomisUsersSeedJob.kt$NomisUsersSeedJob$throw RuntimeException("Could not create user ${row.nomisUsername}", exception)</ID>
-    <ID>TooGenericExceptionThrown:ExternalUsersSeedJob.kt$ExternalUsersSeedJob$throw RuntimeException("Could not create external user ${row.username}", exception)</ID>
     <ID>TooGenericExceptionThrown:ValidatableActionResult.kt$ValidatableActionResult$throw RuntimeException("Cannot translate Success")</ID>
     <ID>TooGenericExceptionThrown:WebClientCache.kt$WebClientCache$throw RuntimeException("Must provide a preemptiveCacheKey")</ID>
     <ID>TooManyFunctions:ApplicationEntity.kt$ApplicationRepository : JpaRepository</ID>

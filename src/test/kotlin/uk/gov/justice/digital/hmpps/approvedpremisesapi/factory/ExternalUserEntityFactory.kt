@@ -22,14 +22,6 @@ class ExternalUserEntityFactory : Factory<ExternalUserEntity> {
     this.username = { username }
   }
 
-  fun withName(name: String) = apply {
-    this.name = { name }
-  }
-
-  fun withEmail(email: String) = apply {
-    this.email = { email }
-  }
-
   override fun produce(): ExternalUserEntity = ExternalUserEntity(
     id = this.id(),
     username = this.username(),

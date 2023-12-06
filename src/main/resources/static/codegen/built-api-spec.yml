@@ -7319,9 +7319,6 @@ components:
         - temporary_accommodation_premises
         - temporary_accommodation_bedspace
         - user
-        - nomis_users
-        - external_users
-        - cas2_applications
         - temporary_accommodation_users
         - approved_premises_users
         - characteristics
