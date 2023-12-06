@@ -96,15 +96,15 @@ class PremisesService(
     val lostBeds = lostBedsRepository.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate)
 
     return startDate.getDaysUntilExclusiveEnd(endDate).map { date ->
-      val bookingsOnDay = bookings.filter { booking -> booking.arrivalDate <= date && booking.departureDate > date }
+      val bookingsOnDay = bookings.filter { booking -> booking.getArrivalDate() <= date && booking.getDepartureDate() > date }
       val lostBedsOnDay = lostBeds.filter { lostBed -> lostBed.startDate <= date && lostBed.endDate > date && lostBed.cancellation == null }
 
       Availability(
         date = date,
-        pendingBookings = bookingsOnDay.count { it.arrival == null && it.nonArrival == null && it.cancellation == null },
-        arrivedBookings = bookingsOnDay.count { it.arrival != null },
-        nonArrivedBookings = bookingsOnDay.count { it.nonArrival != null },
-        cancelledBookings = bookingsOnDay.count { it.cancellation != null },
+        pendingBookings = bookingsOnDay.count { !it.getArrived() && !it.getIsNotArrived() && !it.getCancelled() },
+        arrivedBookings = bookingsOnDay.count { it.getArrived() },
+        nonArrivedBookings = bookingsOnDay.count { it.getIsNotArrived() },
+        cancelledBookings = bookingsOnDay.count { it.getCancelled() },
         lostBeds = lostBedsOnDay.size,
       )
     }.associateBy { it.date }

@@ -10,17 +10,12 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingSummaryForAvailabilityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedCancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NonArrivalReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
@@ -139,53 +134,37 @@ class PremisesServiceTest {
       )
       .produce()
 
-    val pendingBookingEntity = BookingEntityFactory()
-      .withPremises(premises)
+    val pendingBookingEntity = BookingSummaryForAvailabilityFactory()
       .withArrivalDate(startDate.plusDays(1))
       .withDepartureDate(startDate.plusDays(3))
-      .withStaffKeyWorkerCode(null)
+      .withArrived(false)
+      .withCancelled(false)
+      .withIsNotArrived(false)
       .produce()
 
-    val arrivedBookingEntity = BookingEntityFactory()
-      .withPremises(premises)
+    val arrivedBookingEntity = BookingSummaryForAvailabilityFactory()
       .withArrivalDate(startDate)
       .withDepartureDate(startDate.plusDays(2))
-      .withStaffKeyWorkerCode("123")
+      .withArrived(true)
+      .withCancelled(false)
+      .withIsNotArrived(false)
       .produce()
 
-    val arrivalEntity = ArrivalEntityFactory()
-      .withBooking(arrivedBookingEntity)
-      .produce()
-
-    arrivedBookingEntity.arrivals += arrivalEntity
-
-    val nonArrivedBookingEntity = BookingEntityFactory()
-      .withPremises(premises)
+    val nonArrivedBookingEntity = BookingSummaryForAvailabilityFactory()
       .withArrivalDate(startDate.plusDays(3))
       .withDepartureDate(startDate.plusDays(5))
-      .withStaffKeyWorkerCode(null)
+      .withArrived(false)
+      .withCancelled(false)
+      .withIsNotArrived(true)
       .produce()
 
-    val nonArrivalEntity = NonArrivalEntityFactory()
-      .withBooking(nonArrivedBookingEntity)
-      .withYieldedReason { NonArrivalReasonEntityFactory().produce() }
-      .produce()
-
-    nonArrivedBookingEntity.nonArrival = nonArrivalEntity
-
-    val cancelledBookingEntity = BookingEntityFactory()
-      .withPremises(premises)
+    val cancelledBookingEntity = BookingSummaryForAvailabilityFactory()
       .withArrivalDate(startDate.plusDays(4))
       .withDepartureDate(startDate.plusDays(6))
-      .withStaffKeyWorkerCode(null)
+      .withArrived(false)
+      .withCancelled(true)
+      .withIsNotArrived(false)
       .produce()
-
-    val cancelledArrivalEntity = CancellationEntityFactory()
-      .withYieldedReason { CancellationReasonEntityFactory().produce() }
-      .withBooking(cancelledBookingEntity)
-      .produce()
-
-    cancelledBookingEntity.cancellations = mutableListOf(cancelledArrivalEntity)
 
     every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
       pendingBookingEntity,
@@ -288,53 +267,37 @@ class PremisesServiceTest {
       .withYieldedBed { bed }
       .produce()
 
-    val pendingBookingEntity = BookingEntityFactory()
-      .withPremises(premises)
+    val pendingBookingEntity = BookingSummaryForAvailabilityFactory()
       .withArrivalDate(startDate.plusDays(1))
       .withDepartureDate(startDate.plusDays(3))
-      .withStaffKeyWorkerCode(null)
+      .withCancelled(false)
+      .withArrived(false)
+      .withIsNotArrived(false)
       .produce()
 
-    val arrivedBookingEntity = BookingEntityFactory()
-      .withPremises(premises)
+    val arrivedBookingEntity = BookingSummaryForAvailabilityFactory()
       .withArrivalDate(startDate)
       .withDepartureDate(startDate.plusDays(2))
-      .withStaffKeyWorkerCode("123")
+      .withCancelled(false)
+      .withArrived(true)
+      .withIsNotArrived(false)
       .produce()
 
-    val arrivalEntity = ArrivalEntityFactory()
-      .withBooking(arrivedBookingEntity)
-      .produce()
-
-    arrivedBookingEntity.arrivals += arrivalEntity
-
-    val nonArrivedBookingEntity = BookingEntityFactory()
-      .withPremises(premises)
+    val nonArrivedBookingEntity = BookingSummaryForAvailabilityFactory()
       .withArrivalDate(startDate.plusDays(3))
       .withDepartureDate(startDate.plusDays(5))
-      .withStaffKeyWorkerCode(null)
+      .withCancelled(false)
+      .withArrived(false)
+      .withIsNotArrived(true)
       .produce()
 
-    val nonArrivalEntity = NonArrivalEntityFactory()
-      .withBooking(nonArrivedBookingEntity)
-      .withYieldedReason { NonArrivalReasonEntityFactory().produce() }
-      .produce()
-
-    nonArrivedBookingEntity.nonArrival = nonArrivalEntity
-
-    val cancelledBookingEntity = BookingEntityFactory()
-      .withPremises(premises)
+    val cancelledBookingEntity = BookingSummaryForAvailabilityFactory()
       .withArrivalDate(startDate.plusDays(4))
       .withDepartureDate(startDate.plusDays(6))
-      .withStaffKeyWorkerCode(null)
+      .withCancelled(true)
+      .withArrived(false)
+      .withIsNotArrived(false)
       .produce()
-
-    val cancelledArrivalEntity = CancellationEntityFactory()
-      .withYieldedReason { CancellationReasonEntityFactory().produce() }
-      .withBooking(cancelledBookingEntity)
-      .produce()
-
-    cancelledBookingEntity.cancellations = mutableListOf(cancelledArrivalEntity)
 
     every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf(
       pendingBookingEntity,
