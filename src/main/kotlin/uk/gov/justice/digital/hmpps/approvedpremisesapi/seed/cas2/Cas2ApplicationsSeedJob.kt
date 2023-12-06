@@ -116,7 +116,7 @@ class Cas2ApplicationsSeedJob(
   private fun dataFixtureFor(nomsNumber: String): String {
     val path = "src/main/resources/db/seed/local+dev+test/cas2_application_data"
     return FileUtils.readFileToString(
-      File("$path/data_$nomsNumber.json"),
+      File("$path/data_$nomsNumber.json").absoluteFile,
       "UTF-8",
     )
   }
@@ -124,7 +124,7 @@ class Cas2ApplicationsSeedJob(
   private fun documentFixtureFor(nomsNumber: String): String {
     val path = "src/main/resources/db/seed/local+dev+test/cas2_application_data"
     return FileUtils.readFileToString(
-      File("$path/document_$nomsNumber.json"),
+      File("$path/document_$nomsNumber.json").absoluteFile,
       "UTF-8",
     )
   }
