@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Resu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Conviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
@@ -48,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.io.OutputStream
 import java.time.LocalDate
+import java.util.Objects.isNull
 
 @Service
 class OffenderService(
@@ -560,14 +562,20 @@ class OffenderService(
   private fun getMappaEnvelope(registrationsResponse: ClientResult<Registrations>): RiskWithStatus<Mappa> {
     when (registrationsResponse) {
       is ClientResult.Success -> {
-        return RiskWithStatus(
-          value = registrationsResponse.body.registrations.firstOrNull { it.type.code == "MAPP" }?.let { registration ->
-            Mappa(
-              level = "CAT ${registration.registerCategory!!.code}/LEVEL ${registration.registerLevel!!.code}",
-              lastUpdated = registration.registrationReviews?.filter { it.completed }?.maxOfOrNull { it.reviewDate } ?: registration.startDate,
-            )
-          },
-        )
+        val firstMappaRegistration = registrationsResponse.body.registrations.firstOrNull { it.type.code == "MAPP" }
+
+        if (isMandatoryPropertyMissing(firstMappaRegistration)) {
+          return RiskWithStatus(status = RiskStatus.Error)
+        } else {
+          return RiskWithStatus(
+            value = firstMappaRegistration?.let { registration ->
+              Mappa(
+                level = "CAT ${registration.registerCategory!!.code}/LEVEL ${registration.registerLevel!!.code}",
+                lastUpdated = registration.registrationReviews?.filter { it.completed }?.maxOfOrNull { it.reviewDate } ?: registration.startDate,
+              )
+            },
+          )
+        }
       }
       is ClientResult.Failure.StatusCode -> return if (registrationsResponse.status == HttpStatus.NOT_FOUND) {
         RiskWithStatus(status = RiskStatus.NotFound)
@@ -619,4 +627,7 @@ class OffenderService(
       }
     }
   }
+
+  private fun isMandatoryPropertyMissing(firstMappaRegistration: Registration?) =
+    !isNull(firstMappaRegistration) && (isNull(firstMappaRegistration?.registerCategory) || isNull(firstMappaRegistration?.registerLevel))
 }

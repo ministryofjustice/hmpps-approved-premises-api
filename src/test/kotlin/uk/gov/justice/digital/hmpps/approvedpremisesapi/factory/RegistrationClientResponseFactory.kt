@@ -55,7 +55,7 @@ class RegistrationClientResponseFactory : Factory<Registration> {
       description = randomStringUpperCase(20),
     )
   }
-  private var registerCategory: Yielded<RegistrationKeyValue> = {
+  private var registerCategory: Yielded<RegistrationKeyValue?> = {
     RegistrationKeyValue(
       code = "M2",
       description = "MAPPA Cat 2",
@@ -129,7 +129,7 @@ class RegistrationClientResponseFactory : Factory<Registration> {
     this.registerLevel = { registerLevel }
   }
 
-  fun withRegisterCategory(registerCategory: RegistrationKeyValue) = apply {
+  fun withRegisterCategory(registerCategory: RegistrationKeyValue?) = apply {
     this.registerCategory = { registerCategory }
   }
 
