@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.repository.findByIdOrNull
@@ -70,6 +71,8 @@ class AssessmentService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: String,
 ) {
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   fun getVisibleAssessmentSummariesForUser(user: UserEntity, serviceName: ServiceName): List<DomainAssessmentSummary> = when (serviceName) {
     ServiceName.approvedPremises -> assessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(user.id.toString())
     ServiceName.temporaryAccommodation -> assessmentRepository.findAllTemporaryAccommodationAssessmentSummariesForRegion(user.probationRegion.id)
@@ -636,6 +639,11 @@ class AssessmentService(
     }
 
     if (!assigneeUser.hasAllQualifications(requiredQualifications)) {
+      log.error(
+        "User ${assigneeUser.deliusUsername} has qualifications " +
+          "`${assigneeUser.qualifications.map { it.qualification.name }.joinToString(", ")}`, " +
+          "but Assessment requires `${requiredQualifications.map { it.name }.joinToString(", ")}`",
+      )
       return AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingQualifications" }),
       )
