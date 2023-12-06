@@ -8,14 +8,9 @@ import org.springframework.context.annotation.Configuration
 class SeedConfig {
   lateinit var filePrefix: String
   var auto: AutoSeedConfig = AutoSeedConfig()
-  var autoScript: AutoScriptConfig = AutoScriptConfig()
 }
 
 class AutoSeedConfig {
   var enabled: Boolean = false
   var filePrefixes: List<String> = listOf()
-}
-
-class AutoScriptConfig {
-  var enabled: Boolean = false
 }
