@@ -1252,7 +1252,7 @@ class TasksTest : IntegrationTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         `Given a User` { user, _ ->
           `Given a User`(
-            roles = listOf(UserRole.CAS1_ASSESSOR),
+            roles = listOf(UserRole.CAS1_MATCHER),
           ) { allocatableUser, _ ->
             `Given an Offender` { offenderDetails, inmateDetails ->
               `Given a Placement Application`(
@@ -1299,7 +1299,7 @@ class TasksTest : IntegrationTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         `Given a User` { user, _ ->
           `Given a User`(
-            roles = listOf(UserRole.CAS1_ASSESSOR),
+            roles = listOf(UserRole.CAS1_MATCHER),
           ) { allocatableUser, _ ->
             `Given an Offender` { offenderDetails, inmateDetails ->
               `Given a Placement Application`(

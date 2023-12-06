@@ -18,7 +18,13 @@ enum class AllocationType {
   Assessment, PlacementRequest, PlacementApplication
 }
 
-class UserAllocationsEngine(private val userRepository: UserRepository, private val allocationType: AllocationType, private val requiredQualifications: List<UserQualification>, private val isLao: Boolean) {
+class UserAllocationsEngine(
+  private val userRepository: UserRepository,
+  private val allocationType: AllocationType,
+  private val requiredQualifications: List<UserQualification>,
+  private val isLao: Boolean,
+  private val excludeAutoAllocations: Boolean = true,
+) {
   fun getAllocatedUser(): UserEntity? {
     val userIds = this.getUserPool().map { it.id }
 
@@ -73,9 +79,11 @@ class UserAllocationsEngine(private val userRepository: UserRepository, private 
       }
 
       // Finally, we want to make sure the user does not have the exclusion role for our allocation type
-      predicates.add(
-        allUsersWithoutExclusionRole(root, criteriaBuilder),
-      )
+      if (excludeAutoAllocations) {
+        predicates.add(
+          allUsersWithoutExclusionRole(root, criteriaBuilder),
+        )
+      }
 
       query.groupBy(root.get<UUID>("id"))
       criteriaBuilder.and(*predicates.toTypedArray())

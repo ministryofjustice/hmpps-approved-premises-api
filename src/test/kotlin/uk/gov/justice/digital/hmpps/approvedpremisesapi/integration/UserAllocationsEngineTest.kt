@@ -35,6 +35,10 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
   lateinit var expectedPlacementApplicationMatcher: UserEntity
   lateinit var expectedPlacementRequestMatcher: UserEntity
 
+  lateinit var excludedMatcher: UserEntity
+  lateinit var excludedAssessor: UserEntity
+  lateinit var excludedPlacementApplicationMatcher: UserEntity
+
   @BeforeEach
   fun setup() {
     applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
@@ -103,7 +107,7 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
       numberOfRecentCompletedAssessments = 0,
       numberOfLessRecentCompletedAssessments = 2,
     )
-    createUserForAssessmentQuery(
+    excludedAssessor = createUserForAssessmentQuery(
       "Excluded User",
       isAssessor = true,
       qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
@@ -170,7 +174,7 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
       numberOfRecentCompletedPlacementApplications = 0,
       numberOfLessRecentCompletedPlacementApplications = 2,
     )
-    createUserForPlacementApplicationsQuery(
+    excludedPlacementApplicationMatcher = createUserForPlacementApplicationsQuery(
       "Excluded Matcher with both Qualifications and zero pending allocated Placement Applications",
       isMatcher = true,
       isExcluded = true,
@@ -236,7 +240,7 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
       numberOfLessRecentCompletedPlacementRequests = 2,
       isActive = false,
     )
-    createUserForPlacementRequestsQuery(
+    excludedMatcher = createUserForPlacementRequestsQuery(
       "Excluded Matcher with both Qualifications and zero pending allocated Placement Requests",
       isMatcher = true,
       qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
@@ -350,6 +354,35 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
     }
     assertThat(actualAllocatedUser).isNotNull()
     assertThat(actualAllocatedUser!!.deliusUsername).isEqualTo(expectedPlacementRequestMatcher.deliusUsername)
+  }
+
+  @Test
+  fun `setting excludeAutoAllocations ensures users with the auto allocation roles remain in the pool`() {
+    val assessmentAllocationEngine = UserAllocationsEngine(
+      realUserRepository,
+      AllocationType.Assessment,
+      listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      isLao = false,
+      excludeAutoAllocations = false,
+    )
+    val placementApplicationAllocationEngine = UserAllocationsEngine(
+      realUserRepository,
+      AllocationType.PlacementApplication,
+      listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      isLao = false,
+      excludeAutoAllocations = false,
+    )
+    val placementRequestAllocationsEngine = UserAllocationsEngine(
+      realUserRepository,
+      AllocationType.PlacementRequest,
+      listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      isLao = false,
+      excludeAutoAllocations = false,
+    )
+
+    assertThat(assessmentAllocationEngine.getUserPool().map { it.id }).contains(excludedAssessor.id)
+    assertThat(placementApplicationAllocationEngine.getUserPool().map { it.id }).contains(excludedPlacementApplicationMatcher.id)
+    assertThat(placementRequestAllocationsEngine.getUserPool().map { it.id }).contains(excludedMatcher.id)
   }
 
   private fun createUserForPlacementRequestsQuery(deliusUsername: String, isMatcher: Boolean, qualifications: List<UserQualification>, numberOfPlacementRequests: Int, numberOfRecentCompletedPlacementRequests: Int, numberOfLessRecentCompletedPlacementRequests: Int, isActive: Boolean = true, isExcluded: Boolean = false): UserEntity {
