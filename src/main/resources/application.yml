@@ -216,6 +216,7 @@ url-templates:
       application-withdrawn-event-detail: http://localhost:3000/events/application-withdrawn/#eventId
     cas2:
       application-submitted-event-detail: http://localhost:3000/events/cas2/application-submitted/#eventId
+      application-status-updated-event-detail: http://localhost:3000/events/cas2/application-status-updated/#eventId
     cas3:
       application: http://localhost:3000/applications/#applicationId
       booking: http://localhost:3000/premises/#premisesId/bookings/#bookingId

@@ -35,6 +35,7 @@ class DomainEventService(
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.cas2.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
   @Value("\${url-templates.api.cas2.application-submitted-event-detail}") private val cas2ApplicationSubmittedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas2.application-status-updated-event-detail}") private val cas2ApplicationStatusUpdatedDetailUrlTemplate: String,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
