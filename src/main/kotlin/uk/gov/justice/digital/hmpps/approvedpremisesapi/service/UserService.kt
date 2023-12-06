@@ -116,12 +116,11 @@ class UserService(
     return Pair(users, metadata)
   }
 
-  fun getUsersWithQualificationsAndRolesPassingLAO(crn: String, qualifications: List<UserQualification>?, roles: List<UserRole>?): List<UserEntity> {
+  fun getAllocatableUsersForAllocationType(crn: String, qualifications: List<UserQualification>, allocationType: AllocationType): List<UserEntity> {
     val isLao = offenderService.isLao(crn)
+    val allocationsEngine = UserAllocationsEngine(userRepository, allocationType, qualifications, isLao, false)
 
-    return userRepository.findAll(hasQualificationsAndRoles(qualifications, roles, true), Sort.by(Sort.Direction.ASC, "name")).filter {
-      !isLao || it.hasQualification(UserQualification.LAO) || offenderService.getOffenderByCrn(crn, it.deliusUsername) is AuthorisableActionResult.Success
-    }
+    return allocationsEngine.getUserPool()
   }
 
   fun getUserForAssessmentAllocation(application: ApplicationEntity): UserEntity? {

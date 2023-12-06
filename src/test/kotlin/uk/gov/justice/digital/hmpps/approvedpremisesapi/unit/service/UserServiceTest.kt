@@ -275,6 +275,7 @@ class UserServiceTest {
         EqMatcher(AllocationType.Assessment),
         EqMatcher<List<UserQualification>>(emptyList()),
         EqMatcher(true),
+        EqMatcher(true),
       ).getAllocatedUser()
     } returns userForAllocation
 
@@ -307,6 +308,7 @@ class UserServiceTest {
         EqMatcher(AllocationType.Assessment),
         EqMatcher(listOf(UserQualification.PIPE, UserQualification.EMERGENCY)),
         EqMatcher(false),
+        EqMatcher(true),
       ).getAllocatedUser()
     } returns userForAllocation
 
@@ -330,6 +332,7 @@ class UserServiceTest {
         EqMatcher(mockUserRepository),
         EqMatcher(AllocationType.PlacementRequest),
         EqMatcher<List<UserQualification>>(emptyList()),
+        EqMatcher(true),
         EqMatcher(true),
       ).getAllocatedUser()
     } returns userForAllocation
@@ -355,6 +358,7 @@ class UserServiceTest {
         EqMatcher(AllocationType.PlacementRequest),
         EqMatcher<List<UserQualification>>(emptyList()),
         EqMatcher(false),
+        EqMatcher(true),
       ).getAllocatedUser()
     } returns userForAllocation
 
@@ -378,6 +382,7 @@ class UserServiceTest {
         EqMatcher(mockUserRepository),
         EqMatcher(AllocationType.PlacementApplication),
         EqMatcher<List<UserQualification>>(emptyList()),
+        EqMatcher(true),
         EqMatcher(true),
       ).getAllocatedUser()
     } returns userForAllocation
@@ -403,6 +408,7 @@ class UserServiceTest {
         EqMatcher(AllocationType.PlacementApplication),
         EqMatcher<List<UserQualification>>(emptyList()),
         EqMatcher(false),
+        EqMatcher(true),
       ).getAllocatedUser()
     } returns userForAllocation
 

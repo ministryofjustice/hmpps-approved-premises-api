@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getIndices
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -203,10 +204,10 @@ class TasksController(
 
         transformedTask = getAssessmentTask(assessment, user)
 
-        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRolesPassingLAO(
+        transformedAllocatableUsers = userService.getAllocatableUsersForAllocationType(
           assessment.application.crn,
           assessment.application.getRequiredQualifications(),
-          listOf(UserRole.CAS1_ASSESSOR),
+          AllocationType.Assessment,
         )
           .map {
             val workload = userService.getUserWorkload(it.id)
@@ -221,10 +222,10 @@ class TasksController(
         transformedTask = getPlacementRequestTask(placementRequest, user)
 
         transformedAllocatableUsers =
-          userService.getUsersWithQualificationsAndRolesPassingLAO(
+          userService.getAllocatableUsersForAllocationType(
             placementRequest.application.crn,
             emptyList(),
-            listOf(UserRole.CAS1_MATCHER),
+            AllocationType.PlacementRequest,
           )
             .map {
               val workload = userService.getUserWorkload(it.id)
@@ -238,10 +239,10 @@ class TasksController(
 
         transformedTask = getPlacementApplicationTask(placementApplication, user)
 
-        transformedAllocatableUsers = userService.getUsersWithQualificationsAndRolesPassingLAO(
+        transformedAllocatableUsers = userService.getAllocatableUsersForAllocationType(
           placementApplication.application.crn,
           placementApplication.application.getRequiredQualifications(),
-          listOf(UserRole.CAS1_ASSESSOR),
+          AllocationType.PlacementApplication,
         )
           .map {
             val workload = userService.getUserWorkload(it.id)
