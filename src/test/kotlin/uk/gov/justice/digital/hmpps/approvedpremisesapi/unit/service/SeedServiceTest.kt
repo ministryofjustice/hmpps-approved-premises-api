@@ -9,7 +9,6 @@ import io.mockk.verify
 import io.mockk.verifyOrder
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.context.ApplicationContext
 import org.springframework.transaction.support.TransactionTemplate
@@ -25,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesRoo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SeedService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
 
@@ -34,10 +32,9 @@ class SeedServiceTest {
   private val mockApplicationContext = mockk<ApplicationContext>()
   private val mockTransactionTemplate = mockk<TransactionTemplate>()
   private val mockSeedLogger = mockk<SeedLogger>()
-  private val mockCas2AutoScript = mockk<Cas2AutoScript>()
   private val logEntries = mutableListOf<LogEntry>()
 
-  private val seedService = SeedService(seedConfig, mockApplicationContext, mockTransactionTemplate, mockSeedLogger, mockCas2AutoScript)
+  private val seedService = SeedService(seedConfig, mockApplicationContext, mockTransactionTemplate, mockSeedLogger)
 
   @BeforeEach
   fun setUp() {
@@ -53,7 +50,6 @@ class SeedServiceTest {
     every { mockSeedLogger.error(any(), any()) } answers {
       logEntries += LogEntry(it.invocation.args[0] as String, "error", it.invocation.args[1] as Throwable)
     }
-    every { mockCas2AutoScript.script() } answers { }
   }
 
   @Test
@@ -148,28 +144,5 @@ class SeedServiceTest {
 
     assertThat(approvedPremisesFilename).isEqualTo("1__approved_premises.csv")
     assertThat(approvedPremisesRoomsFilename).isEqualTo("2__approved_premises_rooms.csv")
-  }
-
-  @Nested
-  inner class AutoScript {
-    @Test
-    fun `does nothing if autoScript is NOT enabled`() {
-      seedConfig.auto.enabled = true
-
-      seedConfig.autoScript.enabled = false
-      seedService.autoSeed()
-
-      verify(exactly = 0) { mockCas2AutoScript.script() }
-    }
-
-    @Test
-    fun `runs Cas2AutoScript when autoScript IS enabled (along with auto-seeding)`() {
-      seedConfig.auto.enabled = true
-
-      seedConfig.autoScript.enabled = true
-      seedService.autoSeed()
-
-      verify { mockCas2AutoScript.script() }
-    }
   }
 }

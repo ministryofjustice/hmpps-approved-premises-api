@@ -15,15 +15,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DestinationProviderRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorityAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -41,11 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationBedspaceSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2ApplicationsSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.ExternalUsersSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsersSeedJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
 import java.io.File
 import java.io.IOException
@@ -57,9 +48,7 @@ class SeedService(
   private val applicationContext: ApplicationContext,
   private val transactionTemplate: TransactionTemplate,
   private val seedLogger: SeedLogger,
-  private val cas2AutoScript: Cas2AutoScript,
 ) {
-
   @PostConstruct
   fun autoSeed() {
     if (!seedConfig.auto.enabled) {
@@ -102,15 +91,6 @@ class SeedService(
         }
       }
     }
-
-    if (seedConfig.autoScript.enabled) {
-      this.autoScript()
-    }
-  }
-
-  fun autoScript() {
-    seedLogger.info("**Auto-scripting**")
-    cas2AutoScript.script()
   }
 
   @Async
@@ -141,22 +121,6 @@ class SeedService(
           filename,
           ServiceName.values().toList(),
           applicationContext.getBean(UserService::class.java),
-        )
-        SeedFileType.nomisUsers -> NomisUsersSeedJob(
-          filename,
-          applicationContext.getBean(NomisUserRepository::class.java),
-        )
-        SeedFileType.externalUsers -> ExternalUsersSeedJob(
-          filename,
-          applicationContext.getBean(ExternalUserRepository::class.java),
-        )
-        SeedFileType.cas2Applications -> Cas2ApplicationsSeedJob(
-          filename,
-          applicationContext.getBean(Cas2ApplicationRepository::class.java),
-          applicationContext.getBean(NomisUserRepository::class.java),
-          applicationContext.getBean(ExternalUserRepository::class.java),
-          applicationContext.getBean(Cas2StatusUpdateRepository::class.java),
-          applicationContext.getBean(JsonSchemaService::class.java),
         )
         SeedFileType.approvedPremisesUsers -> UsersSeedJob(
           filename,
