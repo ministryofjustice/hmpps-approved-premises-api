@@ -9,6 +9,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Event
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -69,7 +70,7 @@ class DomainEventService(
       typeName = "applications.cas2.application.submitted",
       typeDescription = "An application has been submitted for a CAS2 placement",
       detailUrl = cas2ApplicationSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      personReference = domainEvent.data.eventDetails.personReference,
     )
 
   private fun <T : Cas2Event> saveAndEmit(
@@ -77,7 +78,7 @@ class DomainEventService(
     typeName: String,
     typeDescription: String,
     detailUrl: String,
-    nomsNumber: String,
+    personReference: PersonReference,
   ) {
     domainEventRepository.save(
       DomainEventEntity(
@@ -94,7 +95,10 @@ class DomainEventService(
     )
 
     if (emitDomainEventsEnabled) {
-      val personReferenceIdentifiers = listOf(SnsEventPersonReference("NOMS", nomsNumber))
+      val personReferenceIdentifiers = listOf(
+        SnsEventPersonReference("NOMS", personReference.noms),
+        SnsEventPersonReference("CRN", personReference.crn.toString()),
+      )
 
       val snsEvent = SnsEvent(
         eventType = typeName,

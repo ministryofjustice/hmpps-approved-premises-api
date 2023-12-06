@@ -144,7 +144,8 @@ class DomainEventServiceTest {
             deserializedMessage.detailUrl == "http://api/events/cas2/application-submitted/$id" &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
-            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms } &&
+            deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn }
         },
       )
     }
