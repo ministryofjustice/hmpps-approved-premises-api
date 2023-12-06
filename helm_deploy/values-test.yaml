@@ -32,6 +32,7 @@ generic-service:
     DOMAIN-EVENTS_CAS3_EMIT-ENABLED: bookingCancelled,bookingConfirmed,bookingProvisionallyMade,personArrived,personDeparted,referralSubmitted,bookingCancelledUpdated,personDepartureUpdated,personArrivedUpdated
     SEED_AUTO_ENABLED: true
     SEED_AUTO_FILE-PREFIXES: classpath:db/seed/local+dev+test,classpath:db/seed/dev+test
+    SEED_AUTO-SCRIPT_ENABLED: true
 
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises-test.hmpps.service.justice.gov.uk/applications/#id
     URL-TEMPLATES_FRONTEND_ASSESSMENT: https://approved-premises-test.hmpps.service.justice.gov.uk/assessments/#id
