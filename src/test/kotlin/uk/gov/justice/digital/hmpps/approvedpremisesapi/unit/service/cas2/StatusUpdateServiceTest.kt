@@ -4,11 +4,9 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.fail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Status
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
@@ -139,9 +137,26 @@ class StatusUpdateServiceTest {
 
     @Nested
     inner class WhenUnsuccessful {
+
+      @BeforeEach
+      fun setUp() {
+        every { mockApplicationRepository.findSubmittedApplicationById(applicationId) } answers
+          {
+            null
+          }
+      }
+
       @Test
       fun `does NOT ask the domain event service to create a status-updated event`() {
-        org.junit.jupiter.api.fail("not yet implemented")
+        statusUpdateService.create(
+          applicationId = applicationId,
+          statusUpdate = applicationStatusUpdate,
+          assessor = assessor,
+        )
+
+        verify(exactly = 0) {
+          mockDomainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(any())
+        }
       }
     }
   }
