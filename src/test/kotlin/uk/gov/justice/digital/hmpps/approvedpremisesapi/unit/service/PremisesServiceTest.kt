@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
 import java.util.UUID
 
@@ -615,18 +616,93 @@ class PremisesServiceTest {
   }
 
   @Test
-  fun `Get data capacities function returns list`() {
+  fun `getDateCapacities looks ahead a maximum of one year in the future`() {
     val premises = approvedPremisesFactory.produce()
 
-    every { premisesService.getDateCapacities(premises) } answers { callOriginal() }
-    every { premisesService.getLastBookingDate(premises) } answers { callOriginal() }
-    every { premisesService.getLastLostBedsDate(premises) } answers { callOriginal() }
-    every { bookingRepositoryMock.getHighestBookingDate(premises.id) } returns LocalDate.now()
+    val today = LocalDate.now()
+    val ninetyNineYearsFromNow = today.plusYears(99)
+    val oneYearFromNow = today.plusYears(1)
+
+    every { premisesService.getLastBookingDate(premises) } answers { ninetyNineYearsFromNow }
+    every { premisesService.getLastLostBedsDate(premises) } answers { ninetyNineYearsFromNow }
+
+    every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, oneYearFromNow) } answers { emptyList() }
+    every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, oneYearFromNow) } answers { emptyList() }
 
     val result = premisesService.getDateCapacities(premises)
-    assertThat(result).isInstanceOf(List::class.java)
 
-    verify(exactly = 1) { premisesService.getLastBookingDate(premises) }
-    verify(exactly = 1) { premisesService.getLastLostBedsDate(premises) }
+    assertThat(result.size).isEqualTo(366)
+
+    assertThat(
+      result.map { it.date },
+    ).isEqualTo(
+      today.getDaysUntilExclusiveEnd(oneYearFromNow),
+    )
+  }
+
+  @Test
+  fun `getDateCapacities uses the getLastLostBedsDate if it is the latest date and less than one year ago`() {
+    val premises = approvedPremisesFactory.produce()
+
+    val today = LocalDate.now()
+    val fourMonthsFromNow = today.plusMonths(4)
+
+    every { premisesService.getLastBookingDate(premises) } answers { today.plusWeeks(2) }
+    every { premisesService.getLastLostBedsDate(premises) } answers { fourMonthsFromNow }
+
+    every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
+    every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
+
+    val result = premisesService.getDateCapacities(premises)
+
+    assertThat(
+      result.map { it.date },
+    ).isEqualTo(
+      today.getDaysUntilExclusiveEnd(fourMonthsFromNow),
+    )
+  }
+
+  @Test
+  fun `getDateCapacities uses the getLastBookingDate if it is the latest date and less than one year ago`() {
+    val premises = approvedPremisesFactory.produce()
+
+    val today = LocalDate.now()
+    val fourMonthsFromNow = today.plusMonths(4)
+
+    every { premisesService.getLastBookingDate(premises) } answers { fourMonthsFromNow }
+    every { premisesService.getLastLostBedsDate(premises) } answers { today.plusWeeks(2) }
+
+    every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
+    every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
+
+    val result = premisesService.getDateCapacities(premises)
+
+    assertThat(
+      result.map { it.date },
+    ).isEqualTo(
+      today.getDaysUntilExclusiveEnd(fourMonthsFromNow),
+    )
+  }
+
+  @Test
+  fun `getDateCapacities prioritises the lastBookingDate if the lastLostBedsDate is null`() {
+    val premises = approvedPremisesFactory.produce()
+
+    val today = LocalDate.now()
+    val fourMonthsFromNow = today.plusMonths(4)
+
+    every { premisesService.getLastBookingDate(premises) } answers { fourMonthsFromNow }
+    every { premisesService.getLastLostBedsDate(premises) } answers { null }
+
+    every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
+    every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
+
+    val result = premisesService.getDateCapacities(premises)
+
+    assertThat(
+      result.map { it.date },
+    ).isEqualTo(
+      today.getDaysUntilExclusiveEnd(fourMonthsFromNow),
+    )
   }
 }
