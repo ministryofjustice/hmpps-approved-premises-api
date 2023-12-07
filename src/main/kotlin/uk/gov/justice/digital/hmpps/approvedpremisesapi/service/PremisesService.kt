@@ -529,8 +529,15 @@ class PremisesService(
   }
 
   fun getDateCapacities(premises: PremisesEntity): List<DateCapacity> {
-    val lastBookingDate = getLastBookingDate(premises)
-    val lastLostBedsDate = getLastLostBedsDate(premises)
+    val oneYearsTime = LocalDate.now().plusYears(1)
+    val lastBookingDate = minOf(
+      getLastBookingDate(premises) ?: LocalDate.now(),
+      oneYearsTime,
+    )
+    val lastLostBedsDate = minOf(
+      getLastLostBedsDate(premises) ?: LocalDate.now(),
+      oneYearsTime,
+    )
 
     val capacityForPeriod = getAvailabilityForRange(
       premises,

@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
 import java.util.UUID
 
@@ -51,6 +52,20 @@ class PremisesServiceTest {
   private val characteristicServiceMock = mockk<CharacteristicService>()
   private val roomRepositoryMock = mockk<RoomRepository>()
   private val bedRepositoryMock = mockk<BedRepository>()
+
+  private val approvedPremisesFactory = ApprovedPremisesEntityFactory()
+    .withYieldedProbationRegion {
+      ProbationRegionEntityFactory()
+        .withYieldedApArea { ApAreaEntityFactory().produce() }
+        .produce()
+    }
+    .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+
+  private val temporaryAccommodationPremisesFactory = TemporaryAccommodationPremisesEntityFactory()
+    .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+    .withYieldedProbationRegion {
+      ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
+    }
 
   private val premisesService = PremisesService(
     premisesRepositoryMock,
@@ -71,12 +86,9 @@ class PremisesServiceTest {
     val startDate = LocalDate.now()
     val endDate = LocalDate.now().plusDays(3)
 
-    val premises = ApprovedPremisesEntityFactory()
+    val premises = approvedPremisesFactory
       .withTotalBeds(30)
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
-      }.produce()
+      .produce()
 
     every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf()
     every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf()
@@ -95,12 +107,9 @@ class PremisesServiceTest {
     val startDate = LocalDate.now()
     val endDate = LocalDate.now().plusDays(6)
 
-    val premises = ApprovedPremisesEntityFactory()
+    val premises = approvedPremisesFactory
       .withTotalBeds(30)
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
-      }.produce()
+      .produce()
 
     val lostBedEntityOne = LostBedsEntityFactory()
       .withPremises(premises)
@@ -194,12 +203,9 @@ class PremisesServiceTest {
     val startDate = LocalDate.now()
     val endDate = LocalDate.now().plusDays(6)
 
-    val premises = ApprovedPremisesEntityFactory()
+    val premises = approvedPremisesFactory
       .withTotalBeds(30)
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
-      }.produce()
+      .produce()
 
     val lostBedEntity = LostBedsEntityFactory()
       .withPremises(premises)
@@ -245,11 +251,7 @@ class PremisesServiceTest {
     val startDate = LocalDate.now()
     val endDate = LocalDate.now().plusDays(6)
 
-    val premises = TemporaryAccommodationPremisesEntityFactory()
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
-      }.produce()
+    val premises = temporaryAccommodationPremisesFactory.produce()
 
     val room = RoomEntityFactory()
       .withYieldedPremises { premises }
@@ -323,14 +325,7 @@ class PremisesServiceTest {
 
   @Test
   fun `createLostBeds returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
-    val premisesEntity = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
+    val premisesEntity = approvedPremisesFactory.produce()
 
     val reasonId = UUID.randomUUID()
 
@@ -355,14 +350,7 @@ class PremisesServiceTest {
 
   @Test
   fun `createLostBeds returns FieldValidationError with correct param to message map when a lost bed reason with the incorrect service scope is supplied`() {
-    val premisesEntity = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
+    val premisesEntity = approvedPremisesFactory.produce()
 
     val reasonId = UUID.randomUUID()
 
@@ -388,14 +376,7 @@ class PremisesServiceTest {
 
   @Test
   fun `createLostBeds returns Success with correct result when validation passed`() {
-    val premisesEntity = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
+    val premisesEntity = approvedPremisesFactory.produce()
 
     val room = RoomEntityFactory()
       .withPremises(premisesEntity)
@@ -438,14 +419,7 @@ class PremisesServiceTest {
 
   @Test
   fun `updateLostBeds returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
-    val premisesEntity = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
+    val premisesEntity = approvedPremisesFactory.produce()
 
     val reasonId = UUID.randomUUID()
 
@@ -490,14 +464,7 @@ class PremisesServiceTest {
 
   @Test
   fun `updateLostBeds returns FieldValidationError with correct param to message map when a lost bed reason with the incorrect service scope is supplied`() {
-    val premisesEntity = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
+    val premisesEntity = approvedPremisesFactory.produce()
 
     val reasonId = UUID.randomUUID()
 
@@ -543,14 +510,7 @@ class PremisesServiceTest {
 
   @Test
   fun `updateLostBeds returns Success with correct result when validation passed`() {
-    val premisesEntity = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
+    val premisesEntity = approvedPremisesFactory.produce()
 
     val lostBedReason = LostBedReasonEntityFactory()
       .withServiceScope(ServiceName.approvedPremises.value)
@@ -610,14 +570,7 @@ class PremisesServiceTest {
 
   @Test
   fun `renamePremises returns FieldValidationError if the new name is not unique for the service`() {
-    val premises = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
+    val premises = approvedPremisesFactory.produce()
 
     every { premisesRepositoryMock.findByIdOrNull(any()) } returns premises
     every { premisesRepositoryMock.nameIsUniqueForType<TemporaryAccommodationPremisesEntity>(any(), any()) } returns false
@@ -635,14 +588,7 @@ class PremisesServiceTest {
 
   @Test
   fun `renamePremises returns Success containing updated premises otherwise`() {
-    val premises = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
+    val premises = approvedPremisesFactory.produce()
 
     every { premisesRepositoryMock.findByIdOrNull(any()) } returns premises
     every { premisesRepositoryMock.nameIsUniqueForType<TemporaryAccommodationPremisesEntity>(any(), any()) } returns true
@@ -670,25 +616,93 @@ class PremisesServiceTest {
   }
 
   @Test
-  fun `Get data capacities function returns list`() {
-    val premises = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
+  fun `getDateCapacities looks ahead a maximum of one year in the future`() {
+    val premises = approvedPremisesFactory.produce()
 
-    every { premisesService.getDateCapacities(premises) } answers { callOriginal() }
-    every { premisesService.getLastBookingDate(premises) } answers { callOriginal() }
-    every { premisesService.getLastLostBedsDate(premises) } answers { callOriginal() }
-    every { bookingRepositoryMock.getHighestBookingDate(premises.id) } returns LocalDate.now()
+    val today = LocalDate.now()
+    val ninetyNineYearsFromNow = today.plusYears(99)
+    val oneYearFromNow = today.plusYears(1)
+
+    every { premisesService.getLastBookingDate(premises) } answers { ninetyNineYearsFromNow }
+    every { premisesService.getLastLostBedsDate(premises) } answers { ninetyNineYearsFromNow }
+
+    every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, oneYearFromNow) } answers { emptyList() }
+    every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, oneYearFromNow) } answers { emptyList() }
 
     val result = premisesService.getDateCapacities(premises)
-    assertThat(result).isInstanceOf(List::class.java)
 
-    verify(exactly = 1) { premisesService.getLastBookingDate(premises) }
-    verify(exactly = 1) { premisesService.getLastLostBedsDate(premises) }
+    assertThat(result.size).isEqualTo(366)
+
+    assertThat(
+      result.map { it.date },
+    ).isEqualTo(
+      today.getDaysUntilExclusiveEnd(oneYearFromNow),
+    )
+  }
+
+  @Test
+  fun `getDateCapacities uses the getLastLostBedsDate if it is the latest date and less than one year ago`() {
+    val premises = approvedPremisesFactory.produce()
+
+    val today = LocalDate.now()
+    val fourMonthsFromNow = today.plusMonths(4)
+
+    every { premisesService.getLastBookingDate(premises) } answers { today.plusWeeks(2) }
+    every { premisesService.getLastLostBedsDate(premises) } answers { fourMonthsFromNow }
+
+    every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
+    every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
+
+    val result = premisesService.getDateCapacities(premises)
+
+    assertThat(
+      result.map { it.date },
+    ).isEqualTo(
+      today.getDaysUntilExclusiveEnd(fourMonthsFromNow),
+    )
+  }
+
+  @Test
+  fun `getDateCapacities uses the getLastBookingDate if it is the latest date and less than one year ago`() {
+    val premises = approvedPremisesFactory.produce()
+
+    val today = LocalDate.now()
+    val fourMonthsFromNow = today.plusMonths(4)
+
+    every { premisesService.getLastBookingDate(premises) } answers { fourMonthsFromNow }
+    every { premisesService.getLastLostBedsDate(premises) } answers { today.plusWeeks(2) }
+
+    every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
+    every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
+
+    val result = premisesService.getDateCapacities(premises)
+
+    assertThat(
+      result.map { it.date },
+    ).isEqualTo(
+      today.getDaysUntilExclusiveEnd(fourMonthsFromNow),
+    )
+  }
+
+  @Test
+  fun `getDateCapacities prioritises the lastBookingDate if the lastLostBedsDate is null`() {
+    val premises = approvedPremisesFactory.produce()
+
+    val today = LocalDate.now()
+    val fourMonthsFromNow = today.plusMonths(4)
+
+    every { premisesService.getLastBookingDate(premises) } answers { fourMonthsFromNow }
+    every { premisesService.getLastLostBedsDate(premises) } answers { null }
+
+    every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
+    every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
+
+    val result = premisesService.getDateCapacities(premises)
+
+    assertThat(
+      result.map { it.date },
+    ).isEqualTo(
+      today.getDaysUntilExclusiveEnd(fourMonthsFromNow),
+    )
   }
 }
