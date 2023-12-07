@@ -195,10 +195,15 @@ class ApplicationReportsTest : IntegrationTestBase() {
       val applicationWithPlacementApplication = createApplication()
       acceptAssessmentForApplication(applicationWithPlacementApplication)
       createAndAcceptPlacementApplication(applicationWithPlacementApplication)
-      createBookingForApplication(applicationWithPlacementApplication)
+      val placementBooking = createBookingForApplication(applicationWithPlacementApplication)
 
       val applicationWithMultipleAssessments = createApplication()
       reallocateAssessment(applicationWithMultipleAssessments)
+
+      val applicationWithMultipleBookings = createApplication()
+      acceptAssessmentForApplication(applicationWithMultipleBookings)
+      val multipleBookings1 = createBookingForApplication(applicationWithMultipleBookings)
+      val multipleBookings2 = createBookingForApplication(applicationWithMultipleBookings)
 
       webTestClient.get()
         .uri("/reports/applications?year=${LocalDate.now().year}&month=${LocalDate.now().monthValue}")
@@ -214,20 +219,21 @@ class ApplicationReportsTest : IntegrationTestBase() {
             .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(6)
+          assertThat(actual.size).isEqualTo(8)
 
-          assertApplicationRowHasCorrectData(actual, applicationWithBooking.id, userEntity, ApplicationFacets())
-          assertApplicationRowHasCorrectData(actual, applicationWithDepartedBooking.id, userEntity, ApplicationFacets(hasDeparture = true))
-          assertApplicationRowHasCorrectData(actual, applicationWithCancelledBooking.id, userEntity, ApplicationFacets(hasCancellation = true))
-          assertApplicationRowHasCorrectData(actual, applicationWithNonArrivedBooking.id, userEntity, ApplicationFacets(hasNonArrival = true))
-          assertApplicationRowHasCorrectData(actual, applicationWithPlacementApplication.id, userEntity, ApplicationFacets(hasBooking = true, hasPlacementApplication = true))
-          assertApplicationRowHasCorrectData(actual, applicationWithMultipleAssessments.id, userEntity, ApplicationFacets(hasBooking = false, isAssessed = false))
+          assertApplicationRowHasCorrectData(actual, applicationWithBooking.id, arrivedBooking, userEntity)
+          assertApplicationRowHasCorrectData(actual, applicationWithDepartedBooking.id, departedBooking, userEntity, ApplicationFacets(hasDeparture = true))
+          assertApplicationRowHasCorrectData(actual, applicationWithCancelledBooking.id, cancelledBooking, userEntity, ApplicationFacets(hasCancellation = true))
+          assertApplicationRowHasCorrectData(actual, applicationWithNonArrivedBooking.id, nonArrivedBooking, userEntity, ApplicationFacets(hasNonArrival = true))
+          assertApplicationRowHasCorrectData(actual, applicationWithPlacementApplication.id, placementBooking, userEntity, ApplicationFacets(hasPlacementApplication = true))
+          assertApplicationRowHasCorrectData(actual, applicationWithMultipleAssessments.id, null, userEntity, ApplicationFacets(isAssessed = false))
+          assertApplicationRowHasCorrectData(actual, applicationWithMultipleBookings.id, multipleBookings1, userEntity)
+          assertApplicationRowHasCorrectData(actual, applicationWithMultipleBookings.id, multipleBookings2, userEntity)
         }
     }
   }
 
   data class ApplicationFacets(
-    val hasBooking: Boolean = true,
     val hasCancellation: Boolean = false,
     val hasDeparture: Boolean = false,
     val hasNonArrival: Boolean = false,
@@ -238,10 +244,11 @@ class ApplicationReportsTest : IntegrationTestBase() {
   private fun assertApplicationRowHasCorrectData(
     report: List<ApplicationReportRow>,
     applicationId: UUID,
+    booking: BookingEntity?,
     userEntity: UserEntity,
-    applicationFacets: ApplicationFacets,
+    applicationFacets: ApplicationFacets = ApplicationFacets(),
   ) {
-    val reportRow = report.find { it.id == applicationId.toString() }!!
+    val reportRow = report.find { it.id == applicationId.toString() && (booking == null || it.bookingID == booking.id.toString()) }!!
 
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
     val assessment = application.getLatestAssessment()!!
@@ -267,7 +274,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
     assertThat(reportRow.offenceId).isEqualTo(application.offenceId)
     assertThat(reportRow.noms).isEqualTo(application.nomsNumber)
 
-    if (applicationFacets.hasBooking) {
+    if (booking != null) {
       assertThat(reportRow.premisesType).isEqualTo(placementRequest!!.placementRequirements.apType.name)
     }
 
@@ -281,8 +288,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
     assertThat(reportRow.referralRegion).isEqualTo(referrerProbationArea)
     assertThat(reportRow.referralTeam).isEqualTo(caseDetail.case.manager.team.name)
 
-    if (applicationFacets.hasBooking) {
-      val booking = placementRequest!!.booking!!
+    if (booking != null) {
       assertThat(reportRow.bookingID).isEqualTo(booking.id.toString())
       assertThat(reportRow.expectedArrivalDate).isEqualTo(booking.arrivalDate)
       assertThat(reportRow.expectedDepartureDate).isEqualTo("2022-08-30")
@@ -489,7 +495,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
       .expectStatus()
       .isOk
 
-    return realBookingRepository.findByApplication(application)
+    return realBookingRepository.findAllByCrn(application.crn).maxByOrNull { it.createdAt }!!
   }
 
   private fun markBookingAsArrived(booking: BookingEntity): ArrivalEntity {
