@@ -48,6 +48,8 @@ class ApplicationReportGenerator : ReportGenerator<ApplicationEntityReportRow, A
         departureReason = this.getDepartureReason(),
         hasNotArrived = this.getHasNotArrived(),
         notArrivedReason = this.getNotArrivedReason(),
+        paroleDecisionDate = this.getParoleDecisionDate()?.toLocalDate(),
+        type = this.getType(),
       ),
     )
   }

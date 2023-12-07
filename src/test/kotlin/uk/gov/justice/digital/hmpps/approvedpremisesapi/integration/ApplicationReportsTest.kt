@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
@@ -18,14 +19,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
@@ -45,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -98,6 +107,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
 
   lateinit var applicationSchema: ApprovedPremisesApplicationJsonSchemaEntity
   lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
+  lateinit var placementApplicationSchema: ApprovedPremisesPlacementApplicationJsonSchemaEntity
 
   @BeforeEach
   fun setup() {
@@ -130,6 +140,10 @@ class ApplicationReportsTest : IntegrationTestBase() {
     assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
+      withPermissiveSchema()
+    }
+
+    placementApplicationSchema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
     }
   }
@@ -166,20 +180,24 @@ class ApplicationReportsTest : IntegrationTestBase() {
   fun `Get application report returns OK with correct applications`() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
       val (applicationWithBooking, arrivedBooking) = createApplicationWithBooking()
-      val (applicationWithDepartedBooking, departedBooking) = createApplicationWithBooking()
-      val (applicationWithCancelledBooking, cancelledBooking) = createApplicationWithBooking()
-      val (applicationWithNonArrivedBooking, nonArrivedBooking) = createApplicationWithBooking()
-      val applicationWithMultipleAssessments = createApplication()
-
       markBookingAsArrived(arrivedBooking)
-      markBookingAsArrived(departedBooking)
 
+      val (applicationWithDepartedBooking, departedBooking) = createApplicationWithBooking()
+      markBookingAsArrived(departedBooking)
       markBookingAsDeparted(departedBooking)
 
+      val (applicationWithCancelledBooking, cancelledBooking) = createApplicationWithBooking()
       cancelBooking(cancelledBooking)
 
+      val (applicationWithNonArrivedBooking, nonArrivedBooking) = createApplicationWithBooking()
       markBookingAsNonArrived(nonArrivedBooking)
 
+      val applicationWithPlacementApplication = createApplication()
+      acceptAssessmentForApplication(applicationWithPlacementApplication)
+      createAndAcceptPlacementApplication(applicationWithPlacementApplication)
+      createBookingForApplication(applicationWithPlacementApplication)
+
+      val applicationWithMultipleAssessments = createApplication()
       reallocateAssessment(applicationWithMultipleAssessments)
 
       webTestClient.get()
@@ -196,12 +214,13 @@ class ApplicationReportsTest : IntegrationTestBase() {
             .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(5)
+          assertThat(actual.size).isEqualTo(6)
 
           assertApplicationRowHasCorrectData(actual, applicationWithBooking.id, userEntity, ApplicationFacets())
           assertApplicationRowHasCorrectData(actual, applicationWithDepartedBooking.id, userEntity, ApplicationFacets(hasDeparture = true))
           assertApplicationRowHasCorrectData(actual, applicationWithCancelledBooking.id, userEntity, ApplicationFacets(hasCancellation = true))
           assertApplicationRowHasCorrectData(actual, applicationWithNonArrivedBooking.id, userEntity, ApplicationFacets(hasNonArrival = true))
+          assertApplicationRowHasCorrectData(actual, applicationWithPlacementApplication.id, userEntity, ApplicationFacets(hasBooking = true, hasPlacementApplication = true))
           assertApplicationRowHasCorrectData(actual, applicationWithMultipleAssessments.id, userEntity, ApplicationFacets(hasBooking = false, isAssessed = false))
         }
     }
@@ -213,6 +232,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
     val hasDeparture: Boolean = false,
     val hasNonArrival: Boolean = false,
     val isAssessed: Boolean = false,
+    val hasPlacementApplication: Boolean = false,
   )
 
   private fun assertApplicationRowHasCorrectData(
@@ -287,6 +307,14 @@ class ApplicationReportsTest : IntegrationTestBase() {
       val nonArrival = placementRequest!!.booking!!.nonArrival!!
       assertThat(reportRow.hasNotArrived).isEqualTo(true)
       assertThat(reportRow.notArrivedReason).isEqualTo(nonArrival.reason.name)
+    }
+
+    if (applicationFacets.hasPlacementApplication) {
+      assertThat(reportRow.paroleDecisionDate).isEqualTo("2023-11-11")
+      assertThat(reportRow.type).isEqualTo("placement request")
+    } else {
+      assertThat(reportRow.paroleDecisionDate).isNull()
+      assertThat(reportRow.type).isEqualTo("referral")
     }
   }
 
@@ -593,5 +621,74 @@ class ApplicationReportsTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isCreated
+  }
+
+  private fun createAndAcceptPlacementApplication(application: ApprovedPremisesApplicationEntity) {
+    val (_, jwt) = assessorDetails
+
+    val rawResult = webTestClient.post()
+      .uri("/placement-applications")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewPlacementApplication(
+          applicationId = application.id,
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+      .returnResult<String>()
+      .responseBody
+      .blockFirst()
+
+    val placementApplication = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+
+    webTestClient.put()
+      .uri("/placement-applications/${placementApplication.id}")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        UpdatePlacementApplication(
+          data = mapOf("request-a-placement" to mapOf("decision-to-release" to mapOf("decisionToReleaseDate" to "2023-11-11"))),
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+
+    val placementDates = listOf(
+      PlacementDates(
+        expectedArrival = LocalDate.now(),
+        duration = 12,
+      ),
+    )
+    webTestClient.post()
+      .uri("/placement-applications/${placementApplication.id}/submission")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        SubmitPlacementApplication(
+          translatedDocument = mapOf("thingId" to 123),
+          placementType = PlacementType.additionalPlacement,
+          placementDates = placementDates,
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
+
+    val (_, matcherJwt) = matcherDetails
+
+    webTestClient.post()
+      .uri("/placement-applications/${placementApplication.id}/decision")
+      .header("Authorization", "Bearer $matcherJwt")
+      .bodyValue(
+        PlacementApplicationDecisionEnvelope(
+          decision = PlacementApplicationDecision.accepted,
+          summaryOfChanges = "ChangeSummary",
+          decisionSummary = "DecisionSummary",
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isOk
   }
 }

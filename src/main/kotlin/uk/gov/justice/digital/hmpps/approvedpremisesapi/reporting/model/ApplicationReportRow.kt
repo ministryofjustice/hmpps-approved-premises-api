@@ -39,4 +39,6 @@ data class ApplicationReportRow(
   val departureMoveOnCategory: String?,
   val hasNotArrived: Boolean?,
   val notArrivedReason: String?,
+  val paroleDecisionDate: LocalDate?,
+  val type: String,
 )
