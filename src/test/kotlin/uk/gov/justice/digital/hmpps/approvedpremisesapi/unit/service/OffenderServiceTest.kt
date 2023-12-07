@@ -20,12 +20,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure.StatusCode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategoryBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderRisksDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPageFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AgencyFactory
@@ -34,20 +34,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseNoteFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummaries
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserAccess
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppstier.Tier
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshRatings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
@@ -55,19 +48,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.OffsetDateTime
-import java.util.UUID
 
 class OffenderServiceTest {
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
-  private val mockHMPPSTierApiClient = mockk<HMPPSTierApiClient>()
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockCaseNotesClient = mockk<CaseNotesClient>()
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockAdjudicationsApiClient = mockk<AdjudicationsApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
+  private val mockOffenderRisksDataSource = mockk<OffenderRisksDataSource>()
 
   private val prisonCaseNotesConfigBindingModel = PrisonCaseNotesConfigBindingModel().apply {
     lookbackDays = 30
@@ -95,13 +85,13 @@ class OffenderServiceTest {
 
   private val offenderService = OffenderService(
     mockCommunityApiClient,
-    mockHMPPSTierApiClient,
     mockPrisonsApiClient,
     mockCaseNotesClient,
     mockApOASysContextApiClient,
     mockAdjudicationsApiClient,
     mockApDeliusContextApiClient,
     mockOffenderDetailsDataSource,
+    mockOffenderRisksDataSource,
     prisonCaseNotesConfigBindingModel,
     adjudicationsConfigBindingModel,
   )
@@ -292,342 +282,29 @@ class OffenderServiceTest {
   }
 
   @Test
-  fun `getRisksByCrn returns NotFound envelopes for RoSH, Tier, Mappa & flags when respective Clients return 404`() {
+  fun `getRisksByCrn returns Success result with information from offender risks data source`() {
     val crn = "a-crn"
-    val jwt = "jwt"
-    val distinguishedName = "distinguished.name"
+    val deliusUsername = "SOME-USER"
 
-    mockExistingNonLaoOffender()
-    mock404RoSH(crn, jwt)
-    mock404Tier(crn)
-    mock404Registrations(crn)
+    val expectedRisks = PersonRisksFactory().produce()
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns
+      ClientResult.Success(
+        HttpStatus.OK,
+        OffenderDetailsSummaryFactory().produce(),
+      )
 
-    val result = offenderService.getRiskByCrn(crn, jwt, distinguishedName)
+    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(crn, deliusUsername) } returns
+      ClientResult.Success(
+        HttpStatus.OK,
+        UserOffenderAccess(userRestricted = false, userExcluded = false, restrictionMessage = null),
+      )
+
+    every { mockOffenderRisksDataSource.getPersonRisks(crn) } returns expectedRisks
+
+    val result = offenderService.getRiskByCrn(crn, deliusUsername)
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
-    assertThat(result.entity.roshRisks.status).isEqualTo(RiskStatus.NotFound)
-    assertThat(result.entity.tier.status).isEqualTo(RiskStatus.NotFound)
-    assertThat(result.entity.mappa.status).isEqualTo(RiskStatus.NotFound)
-    assertThat(result.entity.flags.status).isEqualTo(RiskStatus.NotFound)
-  }
-
-  @Test
-  fun `getRisksByCrn returns Error envelopes for RoSH, Tier, Mappa & flags when respective Clients return 500`() {
-    val crn = "a-crn"
-    val jwt = "jwt"
-    val distinguishedName = "distinguished.name"
-
-    mockExistingNonLaoOffender()
-    mock500RoSH(crn, jwt)
-    mock500Tier(crn)
-    mock500Registrations(crn)
-
-    val result = offenderService.getRiskByCrn(crn, jwt, distinguishedName)
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-    assertThat(result.entity.roshRisks.status).isEqualTo(RiskStatus.Error)
-    assertThat(result.entity.tier.status).isEqualTo(RiskStatus.Error)
-    assertThat(result.entity.mappa.status).isEqualTo(RiskStatus.Error)
-    assertThat(result.entity.flags.status).isEqualTo(RiskStatus.Error)
-  }
-
-  @Test
-  fun `getRisksByCrn returns Retrieved envelopes with expected contents for RoSH, Tier, Mappa & flags when respective Clients return 200`() {
-    val crn = "a-crn"
-    val jwt = "jwt"
-    val distinguishedName = "distinguished.name"
-
-    mockExistingNonLaoOffender()
-
-    mock200RoSH(
-      crn,
-      jwt,
-      RoshRatingsFactory().apply {
-        withDateCompleted(OffsetDateTime.parse("2022-09-06T13:45:00Z"))
-        withAssessmentId(34853487)
-        withRiskChildrenCommunity(RiskLevel.LOW)
-        withRiskPublicCommunity(RiskLevel.MEDIUM)
-        withRiskKnownAdultCommunity(RiskLevel.HIGH)
-        withRiskStaffCommunity(RiskLevel.VERY_HIGH)
-      }.produce(),
-    )
-
-    mock200Tier(
-      crn,
-      Tier(
-        tierScore = "M2",
-        calculationId = UUID.randomUUID(),
-        calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
-      ),
-    )
-
-    mock200Registrations(
-      crn,
-      Registrations(
-        registrations = listOf(
-          RegistrationClientResponseFactory()
-            .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
-            .withRegisterCategory(RegistrationKeyValue(code = "C1", description = "C1"))
-            .withRegisterLevel(RegistrationKeyValue(code = "L1", description = "L1"))
-            .withStartDate(LocalDate.parse("2022-09-06"))
-            .produce(),
-          RegistrationClientResponseFactory()
-            .withType(RegistrationKeyValue(code = "FLAG", description = "RISK FLAG"))
-            .produce(),
-        ),
-      ),
-    )
-
-    val result = offenderService.getRiskByCrn(crn, jwt, distinguishedName)
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-
-    assertThat(result.entity.roshRisks.status).isEqualTo(RiskStatus.Retrieved)
-    result.entity.roshRisks.value!!.let {
-      assertThat(it.lastUpdated).isEqualTo(LocalDate.parse("2022-09-06"))
-      assertThat(it.overallRisk).isEqualTo("Very High")
-      assertThat(it.riskToChildren).isEqualTo("Low")
-      assertThat(it.riskToPublic).isEqualTo("Medium")
-      assertThat(it.riskToKnownAdult).isEqualTo("High")
-      assertThat(it.riskToStaff).isEqualTo("Very High")
-    }
-
-    assertThat(result.entity.tier.status).isEqualTo(RiskStatus.Retrieved)
-    result.entity.tier.value!!.let {
-      assertThat(it.lastUpdated).isEqualTo(LocalDate.parse("2022-09-06"))
-      assertThat(it.level).isEqualTo("M2")
-    }
-
-    assertThat(result.entity.mappa.status).isEqualTo(RiskStatus.Retrieved)
-    result.entity.mappa.value!!.let {
-      assertThat(it.lastUpdated).isEqualTo(LocalDate.parse("2022-09-06"))
-      assertThat(it.level).isEqualTo("CAT C1/LEVEL L1")
-    }
-
-    assertThat(result.entity.flags.status).isEqualTo(RiskStatus.Retrieved)
-    assertThat(result.entity.flags.value).contains("RISK FLAG")
-  }
-
-  @Test
-  fun `getRisksByCrn returns Retrieved envelopes with expected contents for RoSH, Tier,flags and Mappa with Error status when missing 'registration-registerCategory' element`() {
-    val crn = "a-crn"
-    val jwt = "jwt"
-    val distinguishedName = "distinguished.name"
-
-    mockExistingNonLaoOffender()
-
-    mock200RoSH(
-      crn,
-      jwt,
-      RoshRatingsFactory().apply {
-        withDateCompleted(OffsetDateTime.parse("2022-09-06T13:45:00Z"))
-        withAssessmentId(34853487)
-        withRiskChildrenCommunity(RiskLevel.LOW)
-        withRiskPublicCommunity(RiskLevel.MEDIUM)
-        withRiskKnownAdultCommunity(RiskLevel.HIGH)
-        withRiskStaffCommunity(RiskLevel.VERY_HIGH)
-      }.produce(),
-    )
-
-    mock200Tier(
-      crn,
-      Tier(
-        tierScore = "M2",
-        calculationId = UUID.randomUUID(),
-        calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
-      ),
-    )
-
-    mock200Registrations(
-      crn,
-      Registrations(
-        registrations = listOf(
-          RegistrationClientResponseFactory()
-            .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
-            .withRegisterCategory(null)
-            .withRegisterLevel(RegistrationKeyValue(code = "L1", description = "L1"))
-            .withStartDate(LocalDate.parse("2022-09-06"))
-            .produce(),
-          RegistrationClientResponseFactory()
-            .withType(RegistrationKeyValue(code = "FLAG", description = "RISK FLAG"))
-            .produce(),
-        ),
-      ),
-    )
-
-    val result = offenderService.getRiskByCrn(crn, jwt, distinguishedName)
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-
-    assertThat(result.entity.roshRisks.status).isEqualTo(RiskStatus.Retrieved)
-    result.entity.roshRisks.value!!.let {
-      assertThat(it.lastUpdated).isEqualTo(LocalDate.parse("2022-09-06"))
-      assertThat(it.overallRisk).isEqualTo("Very High")
-      assertThat(it.riskToChildren).isEqualTo("Low")
-      assertThat(it.riskToPublic).isEqualTo("Medium")
-      assertThat(it.riskToKnownAdult).isEqualTo("High")
-      assertThat(it.riskToStaff).isEqualTo("Very High")
-    }
-
-    assertThat(result.entity.tier.status).isEqualTo(RiskStatus.Retrieved)
-    result.entity.tier.value!!.let {
-      assertThat(it.lastUpdated).isEqualTo(LocalDate.parse("2022-09-06"))
-      assertThat(it.level).isEqualTo("M2")
-    }
-
-    assertThat(result.entity.mappa.status).isEqualTo(RiskStatus.Error)
-    assertThat(result.entity.mappa.value).isNull()
-
-    assertThat(result.entity.flags.status).isEqualTo(RiskStatus.Retrieved)
-    assertThat(result.entity.flags.value).contains("RISK FLAG")
-  }
-
-  @Test
-  fun `getRisksByCrn returns Retrieved envelopes with expected contents for RoSH, Tier,flags and Mappa with Rrror status when missing 'registration-registerLevel' element`() {
-    val crn = "a-crn"
-    val jwt = "jwt"
-    val distinguishedName = "distinguished.name"
-
-    mockExistingNonLaoOffender()
-
-    mock200RoSH(
-      crn,
-      jwt,
-      RoshRatingsFactory().apply {
-        withDateCompleted(OffsetDateTime.parse("2022-09-06T13:45:00Z"))
-        withAssessmentId(34853487)
-        withRiskChildrenCommunity(RiskLevel.LOW)
-        withRiskPublicCommunity(RiskLevel.MEDIUM)
-        withRiskKnownAdultCommunity(RiskLevel.HIGH)
-        withRiskStaffCommunity(RiskLevel.VERY_HIGH)
-      }.produce(),
-    )
-
-    mock200Tier(
-      crn,
-      Tier(
-        tierScore = "M2",
-        calculationId = UUID.randomUUID(),
-        calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
-      ),
-    )
-
-    mock200Registrations(
-      crn,
-      Registrations(
-        registrations = listOf(
-          RegistrationClientResponseFactory()
-            .withType(RegistrationKeyValue(code = "MAPP", description = "MAPPA"))
-            .withRegisterCategory(RegistrationKeyValue(code = "C1", description = "C1"))
-            .withRegisterLevel(null)
-            .withStartDate(LocalDate.parse("2022-09-06"))
-            .produce(),
-          RegistrationClientResponseFactory()
-            .withType(RegistrationKeyValue(code = "FLAG", description = "RISK FLAG"))
-            .produce(),
-        ),
-      ),
-    )
-
-    val result = offenderService.getRiskByCrn(crn, jwt, distinguishedName)
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-
-    assertThat(result.entity.roshRisks.status).isEqualTo(RiskStatus.Retrieved)
-    result.entity.roshRisks.value!!.let {
-      assertThat(it.lastUpdated).isEqualTo(LocalDate.parse("2022-09-06"))
-      assertThat(it.overallRisk).isEqualTo("Very High")
-      assertThat(it.riskToChildren).isEqualTo("Low")
-      assertThat(it.riskToPublic).isEqualTo("Medium")
-      assertThat(it.riskToKnownAdult).isEqualTo("High")
-      assertThat(it.riskToStaff).isEqualTo("Very High")
-    }
-
-    assertThat(result.entity.tier.status).isEqualTo(RiskStatus.Retrieved)
-    result.entity.tier.value!!.let {
-      assertThat(it.lastUpdated).isEqualTo(LocalDate.parse("2022-09-06"))
-      assertThat(it.level).isEqualTo("M2")
-    }
-
-    assertThat(result.entity.mappa.status).isEqualTo(RiskStatus.Error)
-    assertThat(result.entity.mappa.value).isNull()
-
-    assertThat(result.entity.flags.status).isEqualTo(RiskStatus.Retrieved)
-    assertThat(result.entity.flags.value).contains("RISK FLAG")
-  }
-
-  @Test
-  fun `getRisksByCrn returns Retrieved envelopes with expected contents for RoSH, Tier,flags and Mappa with Retrieved status when missing 'registration' element`() {
-    val crn = "a-crn"
-    val jwt = "jwt"
-    val distinguishedName = "distinguished.name"
-
-    mockExistingNonLaoOffender()
-
-    mock200RoSH(
-      crn,
-      jwt,
-      RoshRatingsFactory().apply {
-        withDateCompleted(OffsetDateTime.parse("2022-09-06T13:45:00Z"))
-        withAssessmentId(34853487)
-        withRiskChildrenCommunity(RiskLevel.LOW)
-        withRiskPublicCommunity(RiskLevel.MEDIUM)
-        withRiskKnownAdultCommunity(RiskLevel.HIGH)
-        withRiskStaffCommunity(RiskLevel.VERY_HIGH)
-      }.produce(),
-    )
-
-    mock200Tier(
-      crn,
-      Tier(
-        tierScore = "M2",
-        calculationId = UUID.randomUUID(),
-        calculationDate = LocalDateTime.parse("2022-09-06T14:59:00"),
-      ),
-    )
-
-    mock200Registrations(
-      crn,
-      Registrations(
-        registrations = listOf(
-          RegistrationClientResponseFactory()
-            .withType(RegistrationKeyValue(code = "TEST", description = "TEST"))
-            .withRegisterCategory(RegistrationKeyValue(code = "C1", description = "C1"))
-            .withRegisterLevel(RegistrationKeyValue(code = "L1", description = "L1"))
-            .withStartDate(LocalDate.parse("2022-09-06"))
-            .produce(),
-          RegistrationClientResponseFactory()
-            .withType(RegistrationKeyValue(code = "FLAG", description = "RISK FLAG"))
-            .produce(),
-        ),
-      ),
-    )
-
-    val result = offenderService.getRiskByCrn(crn, jwt, distinguishedName)
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-
-    assertThat(result.entity.roshRisks.status).isEqualTo(RiskStatus.Retrieved)
-    result.entity.roshRisks.value!!.let {
-      assertThat(it.lastUpdated).isEqualTo(LocalDate.parse("2022-09-06"))
-      assertThat(it.overallRisk).isEqualTo("Very High")
-      assertThat(it.riskToChildren).isEqualTo("Low")
-      assertThat(it.riskToPublic).isEqualTo("Medium")
-      assertThat(it.riskToKnownAdult).isEqualTo("High")
-      assertThat(it.riskToStaff).isEqualTo("Very High")
-    }
-
-    assertThat(result.entity.tier.status).isEqualTo(RiskStatus.Retrieved)
-    result.entity.tier.value!!.let {
-      assertThat(it.lastUpdated).isEqualTo(LocalDate.parse("2022-09-06"))
-      assertThat(it.level).isEqualTo("M2")
-    }
-
-    assertThat(result.entity.mappa.status).isEqualTo(RiskStatus.Retrieved)
-    assertThat(result.entity.mappa.value).isNull()
-
-    assertThat(result.entity.flags.status).isEqualTo(RiskStatus.Retrieved)
-    assertThat(result.entity.flags.value).contains("RISK FLAG")
+    assertThat(result.entity).isEqualTo(expectedRisks)
   }
 
   @Test
@@ -1308,28 +985,4 @@ class OffenderServiceTest {
       assertThat(result[3]).isEqualTo(PersonSummaryInfoResult.NotFound(crns[3]))
     }
   }
-
-  private fun mockExistingNonLaoOffender() {
-    val resultBody = OffenderDetailsSummaryFactory()
-      .withCrn("a-crn")
-      .withFirstName("Bob")
-      .withLastName("Doe")
-      .withCurrentRestriction(false)
-      .withCurrentExclusion(false)
-      .produce()
-
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
-  }
-
-  private fun mock404RoSH(crn: String, jwt: String) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns StatusCode(HttpMethod.GET, "/rosh/a-crn", HttpStatus.NOT_FOUND, body = null)
-  private fun mock404Tier(crn: String) = every { mockHMPPSTierApiClient.getTier(crn) } returns StatusCode(HttpMethod.GET, "/crn/a-crn/tier", HttpStatus.NOT_FOUND, body = null)
-  private fun mock404Registrations(crn: String) = every { mockCommunityApiClient.getRegistrationsForOffenderCrn(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn/registrations?activeOnly=true", HttpStatus.NOT_FOUND, body = null)
-
-  private fun mock500RoSH(crn: String, jwt: String) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns StatusCode(HttpMethod.GET, "/rosh/a-crn", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
-  private fun mock500Tier(crn: String) = every { mockHMPPSTierApiClient.getTier(crn) } returns StatusCode(HttpMethod.GET, "/crn/a-crn/tier", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
-  private fun mock500Registrations(crn: String) = every { mockCommunityApiClient.getRegistrationsForOffenderCrn(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/a-crn/registrations?activeOnly=true", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
-
-  private fun mock200RoSH(crn: String, jwt: String, body: RoshRatings) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns ClientResult.Success(HttpStatus.OK, body = body)
-  private fun mock200Tier(crn: String, body: Tier) = every { mockHMPPSTierApiClient.getTier(crn) } returns ClientResult.Success(HttpStatus.OK, body = body)
-  private fun mock200Registrations(crn: String, body: Registrations) = every { mockCommunityApiClient.getRegistrationsForOffenderCrn(crn) } returns ClientResult.Success(HttpStatus.OK, body = body)
 }
