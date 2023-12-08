@@ -325,6 +325,55 @@ class DomainEventServiceTest {
           mockHmppsTopic.snsClient.publish(any())
         }
       }
+
+      @Test
+      fun `does not emit event to SNS if event fails to persist to database`() {
+        val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+        val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+        val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+        val crn = "CRN"
+
+        every { domainEventRepositoryMock.save(any()) } throws RuntimeException("A database exception")
+
+        val mockHmppsTopic = mockk<HmppsTopic>()
+
+        every { hmppsQueueServiceMock.findByTopicId("domain-events") } returns mockHmppsTopic
+
+        val domainEventToSave = DomainEvent(
+          id = id,
+          applicationId = applicationId,
+          crn = crn,
+          occurredAt = Instant.now(),
+          data = Cas2ApplicationStatusUpdatedEvent(
+            id = id,
+            timestamp = occurredAt.toInstant(),
+            eventType = EventType.applicationSubmitted,
+            eventDetails = Cas2ApplicationStatusUpdatedEventDetailsFactory().produce(),
+          ),
+        )
+
+        every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+        every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+
+        assertThatExceptionOfType(RuntimeException::class.java)
+          .isThrownBy { domainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(domainEventToSave) }
+
+        verify(exactly = 1) {
+          domainEventRepositoryMock.save(
+            match {
+              it.id == domainEventToSave.id &&
+                it.type == DomainEventType.CAS2_APPLICATION_STATUS_UPDATED &&
+                it.crn == domainEventToSave.crn &&
+                it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+                it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            },
+          )
+        }
+
+        verify(exactly = 0) {
+          mockHmppsTopic.snsClient.publish(any())
+        }
+      }
     }
   }
 }
