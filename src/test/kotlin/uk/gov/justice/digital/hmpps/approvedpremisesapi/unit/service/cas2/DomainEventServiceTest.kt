@@ -447,6 +447,41 @@ class DomainEventServiceTest {
 
         assertThat(domainEventService.getCas2ApplicationStatusUpdatedDomainEvent(id)).isNull()
       }
+
+      @Test
+      fun `returns event when found`() {
+        val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+        val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+        val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+        val crn = "CRN"
+
+        val data = Cas2ApplicationStatusUpdatedEvent(
+          id = id,
+          timestamp = occurredAt.toInstant(),
+          eventType = EventType.applicationStatusUpdated,
+          eventDetails = Cas2ApplicationStatusUpdatedEventDetailsFactory().produce(),
+        )
+
+        every { domainEventRepositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
+          .withId(id)
+          .withApplicationId(applicationId)
+          .withCrn(crn)
+          .withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
+          .withData(objectMapper.writeValueAsString(data))
+          .withOccurredAt(occurredAt)
+          .produce()
+
+        val event = domainEventService.getCas2ApplicationStatusUpdatedDomainEvent(id)
+        assertThat(event).isEqualTo(
+          DomainEvent(
+            id = id,
+            applicationId = applicationId,
+            crn = "CRN",
+            occurredAt = occurredAt.toInstant(),
+            data = data,
+          ),
+        )
+      }
     }
   }
 }
