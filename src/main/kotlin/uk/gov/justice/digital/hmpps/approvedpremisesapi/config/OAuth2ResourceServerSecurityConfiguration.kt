@@ -57,7 +57,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.DELETE, "/internal/booking/*", permitAll)
         authorize(HttpMethod.DELETE, "/internal/premises/*", permitAll)
         authorize(HttpMethod.DELETE, "/internal/room/*", permitAll)
-        authorize(HttpMethod.GET, "/events/cas2/application-submitted/*", hasAuthority("ROLE_CAS2_EVENTS"))
+        authorize(HttpMethod.GET, "/events/cas2/**", hasAuthority("ROLE_CAS2_EVENTS"))
         authorize(HttpMethod.GET, "/events/**", hasAuthority("ROLE_APPROVED_PREMISES_EVENTS"))
         authorize(HttpMethod.GET, "/cas2/submissions/**", hasRole("CAS2_ASSESSOR"))
         authorize(HttpMethod.POST, "/cas2/submissions/*/status-updates", hasRole("CAS2_ASSESSOR"))
