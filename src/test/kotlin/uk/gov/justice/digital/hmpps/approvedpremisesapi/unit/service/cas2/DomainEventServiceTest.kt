@@ -273,6 +273,67 @@ class DomainEventServiceTest {
     inner class SaveCas2ApplicationStatusUpdatedDomainEvent {
 
       @Test
+      fun `persists event, emits event to SNS`() {
+        val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+        val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+        val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+        val crn = "CRN"
+
+        every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+        val mockHmppsTopic = mockk<HmppsTopic>()
+
+        every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+
+        val domainEventToSave = DomainEvent(
+          id = id,
+          applicationId = applicationId,
+          crn = crn,
+          occurredAt = Instant.now(),
+          data = Cas2ApplicationStatusUpdatedEvent(
+            id = id,
+            timestamp = occurredAt.toInstant(),
+            eventType = EventType.applicationStatusUpdated,
+            eventDetails = Cas2ApplicationStatusUpdatedEventDetailsFactory().produce(),
+          ),
+        )
+
+        every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+        every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+
+        domainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(domainEventToSave)
+
+        verify(exactly = 1) {
+          domainEventRepositoryMock.save(
+            match {
+              it.id == domainEventToSave.id &&
+                it.type == DomainEventType.CAS2_APPLICATION_STATUS_UPDATED &&
+                it.crn == domainEventToSave.crn &&
+                it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+                it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            },
+          )
+        }
+
+        verify(exactly = 1) {
+          mockHmppsTopic.snsClient.publish(
+            match {
+              val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+
+              deserializedMessage.eventType == "applications.cas2.application.status-updated" &&
+                deserializedMessage.version == 1 &&
+                deserializedMessage.description == "An assessor has updated the status of a CAS2 application" &&
+                deserializedMessage.detailUrl == "http://api/events/cas2/application-status-updated/$id" &&
+                deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+                deserializedMessage.additionalInformation.applicationId == applicationId &&
+                deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms } &&
+                deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn }
+            },
+          )
+        }
+      }
+
+      @Test
       fun `does not emit if emitDomainEventsEnabled is false`() {
         val domainEventServiceDisabled = DomainEventService(
           objectMapper = objectMapper,
