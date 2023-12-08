@@ -47,6 +47,8 @@ class DomainEventService(
 
   fun getCas2ApplicationSubmittedDomainEvent(id: UUID) = get<Cas2ApplicationSubmittedEvent>(id)
 
+  fun getCas2ApplicationStatusUpdatedDomainEvent(id: UUID) = get<Cas2ApplicationStatusUpdatedEvent>(id)
+
   private inline fun <reified T : Cas2Event> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
 

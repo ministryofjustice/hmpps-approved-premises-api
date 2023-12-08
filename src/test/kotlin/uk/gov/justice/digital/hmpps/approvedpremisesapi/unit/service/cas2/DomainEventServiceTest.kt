@@ -436,5 +436,17 @@ class DomainEventServiceTest {
         }
       }
     }
+
+    @Nested
+    inner class GetCas2ApplicationStatusUpdatedDomainEvent {
+      @Test
+      fun `returns null when event does not exist`() {
+        val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+
+        every { domainEventRepositoryMock.findByIdOrNull(id) } returns null
+
+        assertThat(domainEventService.getCas2ApplicationStatusUpdatedDomainEvent(id)).isNull()
+      }
+    }
   }
 }
