@@ -6205,6 +6205,8 @@ components:
               type: boolean
             eligibilityReason:
               type: string
+            dutyToReferLocalAuthorityAreaName:
+              type: string
             summaryData:
               $ref: '#/components/schemas/AnyValue'
           required:
