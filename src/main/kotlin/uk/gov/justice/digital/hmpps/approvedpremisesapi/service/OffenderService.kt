@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.ExcludedCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicationsConfig
@@ -18,14 +17,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonAdjudicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.PrisonCaseNotesConfigBindingModel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderRisksDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Adjudication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.AdjudicationsPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Agency
@@ -33,8 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Resu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Conviction
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registration
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
@@ -49,24 +42,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.io.OutputStream
 import java.time.LocalDate
-import java.util.Objects.isNull
 
 @Service
 class OffenderService(
   private val communityApiClient: CommunityApiClient,
-  private val hmppsTierApiClient: HMPPSTierApiClient,
   private val prisonsApiClient: PrisonsApiClient,
   private val caseNotesClient: CaseNotesClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
   private val adjudicationsApiClient: AdjudicationsApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
+  private val offenderRisksDataSource: OffenderRisksDataSource,
   prisonCaseNotesConfigBindingModel: PrisonCaseNotesConfigBindingModel,
   adjudicationsConfigBindingModel: PrisonAdjudicationsConfigBindingModel,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  private val ignoredRegisterTypesForFlags = listOf("RVHR", "RHRH", "RMRH", "RLRH", "MAPP")
   private val prisonCaseNotesConfig: PrisonCaseNotesConfig
   private val adjudicationsConfig: PrisonAdjudicationsConfig
 
@@ -229,24 +220,17 @@ class OffenderService(
     return AuthorisableActionResult.Success(inmateDetail)
   }
 
-  fun getRiskByCrn(crn: String, jwt: String, userDistinguishedName: String): AuthorisableActionResult<PersonRisks> {
-    return when (getOffenderByCrn(crn, userDistinguishedName)) {
+  @Deprecated(message = "The 'jwt' parameter is no longer needed.", replaceWith = ReplaceWith(expression = "getRiskByCrn(crn, userDistinguishedName)"))
+  fun getRiskByCrn(crn: String, jwt: String, userDistinguishedName: String): AuthorisableActionResult<PersonRisks> =
+    getRiskByCrn(crn, userDistinguishedName)
+
+  fun getRiskByCrn(crn: String, deliusUsername: String): AuthorisableActionResult<PersonRisks> {
+    return when (getOffenderByCrn(crn, deliusUsername)) {
       is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()
       is AuthorisableActionResult.Unauthorised -> AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.Success -> {
-        val registrationsResponse = communityApiClient.getRegistrationsForOffenderCrn(crn)
-
-        val risks = PersonRisks(
-          roshRisks = getRoshRisksEnvelope(crn, jwt),
-          mappa = getMappaEnvelope(registrationsResponse),
-          tier = getRiskTierEnvelope(crn),
-          flags = getFlagsEnvelope(registrationsResponse),
-        )
-
-        AuthorisableActionResult.Success(
-          risks,
-        )
-      }
+      is AuthorisableActionResult.Success -> AuthorisableActionResult.Success(
+        offenderRisksDataSource.getPersonRisks(crn),
+      )
     }
   }
 
@@ -515,119 +499,4 @@ class OffenderService(
       inmateDetail = inmateDetails,
     )
   }
-
-  private fun getRoshRisksEnvelope(crn: String, jwt: String): RiskWithStatus<RoshRisks> {
-    when (val roshRisksResponse = apOASysContextApiClient.getRoshRatings(crn)) {
-      is ClientResult.Success -> {
-        val summary = roshRisksResponse.body.rosh
-
-        if (summary.anyRisksAreNull()) {
-          return RiskWithStatus(
-            status = RiskStatus.NotFound,
-            value = null,
-          )
-        }
-
-        return RiskWithStatus(
-          status = RiskStatus.Retrieved,
-          value = RoshRisks(
-            overallRisk = summary.determineOverallRiskLevel().text,
-            riskToChildren = summary.riskChildrenCommunity!!.text,
-            riskToPublic = summary.riskPublicCommunity!!.text,
-            riskToKnownAdult = summary.riskKnownAdultCommunity!!.text,
-            riskToStaff = summary.riskStaffCommunity!!.text,
-            lastUpdated = roshRisksResponse.body.dateCompleted?.toLocalDate()
-              ?: roshRisksResponse.body.initiationDate.toLocalDate(),
-          ),
-        )
-      }
-      is ClientResult.Failure.StatusCode -> return if (roshRisksResponse.status == HttpStatus.NOT_FOUND) {
-        RiskWithStatus(
-          status = RiskStatus.NotFound,
-          value = null,
-        )
-      } else {
-        RiskWithStatus(
-          status = RiskStatus.Error,
-          value = null,
-        )
-      }
-      is ClientResult.Failure -> return RiskWithStatus(
-        status = RiskStatus.Error,
-        value = null,
-      )
-    }
-  }
-
-  private fun getMappaEnvelope(registrationsResponse: ClientResult<Registrations>): RiskWithStatus<Mappa> {
-    when (registrationsResponse) {
-      is ClientResult.Success -> {
-        val firstMappaRegistration = registrationsResponse.body.registrations.firstOrNull { it.type.code == "MAPP" }
-
-        if (isMandatoryPropertyMissing(firstMappaRegistration)) {
-          return RiskWithStatus(status = RiskStatus.Error)
-        } else {
-          return RiskWithStatus(
-            value = firstMappaRegistration?.let { registration ->
-              Mappa(
-                level = "CAT ${registration.registerCategory!!.code}/LEVEL ${registration.registerLevel!!.code}",
-                lastUpdated = registration.registrationReviews?.filter { it.completed }?.maxOfOrNull { it.reviewDate } ?: registration.startDate,
-              )
-            },
-          )
-        }
-      }
-      is ClientResult.Failure.StatusCode -> return if (registrationsResponse.status == HttpStatus.NOT_FOUND) {
-        RiskWithStatus(status = RiskStatus.NotFound)
-      } else {
-        RiskWithStatus(status = RiskStatus.Error)
-      }
-      is ClientResult.Failure -> {
-        return RiskWithStatus(status = RiskStatus.Error)
-      }
-    }
-  }
-
-  private fun getFlagsEnvelope(registrationsResponse: ClientResult<Registrations>): RiskWithStatus<List<String>> {
-    when (registrationsResponse) {
-      is ClientResult.Success -> {
-        return RiskWithStatus(
-          value = registrationsResponse.body.registrations.filter { !ignoredRegisterTypesForFlags.contains(it.type.code) }.map { it.type.description },
-        )
-      }
-      is ClientResult.Failure.StatusCode -> return if (registrationsResponse.status == HttpStatus.NOT_FOUND) {
-        RiskWithStatus(status = RiskStatus.NotFound)
-      } else {
-        RiskWithStatus(status = RiskStatus.Error)
-      }
-      is ClientResult.Failure -> {
-        return RiskWithStatus(status = RiskStatus.Error)
-      }
-    }
-  }
-
-  private fun getRiskTierEnvelope(crn: String): RiskWithStatus<RiskTier> {
-    when (val tierResponse = hmppsTierApiClient.getTier(crn)) {
-      is ClientResult.Success -> {
-        return RiskWithStatus(
-          status = RiskStatus.Retrieved,
-          value = RiskTier(
-            level = tierResponse.body.tierScore,
-            lastUpdated = tierResponse.body.calculationDate.toLocalDate(),
-          ),
-        )
-      }
-      is ClientResult.Failure.StatusCode -> return if (tierResponse.status == HttpStatus.NOT_FOUND) {
-        RiskWithStatus(status = RiskStatus.NotFound)
-      } else {
-        RiskWithStatus(status = RiskStatus.Error)
-      }
-      is ClientResult.Failure -> {
-        return RiskWithStatus(status = RiskStatus.Error)
-      }
-    }
-  }
-
-  private fun isMandatoryPropertyMissing(firstMappaRegistration: Registration?) =
-    !isNull(firstMappaRegistration) && (isNull(firstMappaRegistration?.registerCategory) || isNull(firstMappaRegistration?.registerLevel))
 }

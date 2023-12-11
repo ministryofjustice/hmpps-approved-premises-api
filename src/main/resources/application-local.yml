@@ -40,3 +40,4 @@ preemptive-cache-logging-enabled: true
 
 data-sources:
   offender-details: community_api
+  offender-risks: community_api
