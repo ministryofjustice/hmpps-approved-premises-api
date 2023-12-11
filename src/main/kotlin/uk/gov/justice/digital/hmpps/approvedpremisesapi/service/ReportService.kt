@@ -108,7 +108,7 @@ class ReportService(
   }
 
   fun createCas1ApplicationPerformanceReport(properties: ApplicationReportProperties, outputStream: OutputStream) {
-    ApplicationReportGenerator(offenderService)
+    ApplicationReportGenerator()
       .createReport(applicationEntityReportRowRepository.generateApprovedPremisesReportRowsForCalendarMonth(properties.month, properties.year), properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)

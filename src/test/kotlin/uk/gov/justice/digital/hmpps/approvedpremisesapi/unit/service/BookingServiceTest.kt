@@ -123,7 +123,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnit
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.OffsetTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService as Cas3DomainEventService
 
@@ -2159,7 +2158,7 @@ class BookingServiceTest {
               legacyApCode = premises.qCode,
               localAuthorityAreaName = premises.localAuthorityArea!!.name,
             ) &&
-              data.cancelledAt == cancelledAt.atTime(OffsetTime.MIN).toInstant() &&
+              data.cancelledAt == Instant.parse("2022-08-25T00:00:00.00Z") &&
               data.cancellationReason == reasonEntity.name
           },
         )
@@ -2237,7 +2236,7 @@ class BookingServiceTest {
               legacyApCode = premises.qCode,
               localAuthorityAreaName = premises.localAuthorityArea!!.name,
             ) &&
-              data.cancelledAt == cancelledAt.atTime(OffsetTime.MIN).toInstant() &&
+              data.cancelledAt == Instant.parse("2022-08-25T00:00:00.00Z") &&
               data.cancellationReason == reasonEntity.name
           },
         )

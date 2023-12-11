@@ -79,7 +79,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.OffsetTime
 import java.time.ZoneOffset
 import java.util.UUID
 import javax.transaction.Transactional
@@ -527,6 +526,7 @@ class BookingService(
         applicationId = applicationId,
         crn = booking.crn,
         occurredAt = bookingCreatedAt.toInstant(),
+        bookingId = booking.id,
         data = BookingMadeEnvelope(
           id = domainEventId,
           timestamp = bookingCreatedAt.toInstant(),
@@ -1192,7 +1192,7 @@ class BookingService(
                 surname = staffDetails.staff.surname,
                 username = staffDetails.username,
               ),
-              cancelledAt = cancelledAt.atTime(OffsetTime.MIN).toInstant(),
+              cancelledAt = cancelledAt.atTime(0, 0).toInstant(ZoneOffset.UTC),
               cancellationReason = reason.name,
             ),
           ),

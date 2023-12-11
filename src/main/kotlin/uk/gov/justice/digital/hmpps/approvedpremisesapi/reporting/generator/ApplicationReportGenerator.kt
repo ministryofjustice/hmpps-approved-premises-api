@@ -3,11 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ApplicationReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 
-class ApplicationReportGenerator(
-  private val offenderService: OffenderService,
-) : ReportGenerator<ApplicationEntityReportRow, ApplicationReportRow, ApplicationReportProperties>(ApplicationReportRow::class) {
+class ApplicationReportGenerator : ReportGenerator<ApplicationEntityReportRow, ApplicationReportRow, ApplicationReportProperties>(ApplicationReportRow::class) {
   override fun filter(properties: ApplicationReportProperties): (ApplicationEntityReportRow) -> Boolean = {
     true
   }
@@ -17,6 +14,7 @@ class ApplicationReportGenerator(
       ApplicationReportRow(
         id = this.getId(),
         crn = this.getCrn(),
+        lastAllocatedToAssessorDate = this.getLastAllocatedToAssessorDate()?.toLocalDateTime()?.toLocalDate(),
         applicationAssessedDate = this.getApplicationAssessedDate()?.toLocalDate(),
         assessorCru = this.getAssessorCru(),
         assessmentDecision = this.getAssessmentDecision(),
@@ -50,6 +48,8 @@ class ApplicationReportGenerator(
         departureReason = this.getDepartureReason(),
         hasNotArrived = this.getHasNotArrived(),
         notArrivedReason = this.getNotArrivedReason(),
+        paroleDecisionDate = this.getParoleDecisionDate()?.toLocalDate(),
+        type = this.getType(),
       ),
     )
   }

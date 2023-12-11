@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.sql.Date
+import java.sql.Timestamp
 import java.util.UUID
 
 @Repository
@@ -13,6 +14,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
     SELECT DISTINCT
       cast(application.id as TEXT) as id,
       submission_event.data -> 'eventDetails' -> 'personReference' ->> 'crn' as crn,
+      assessments.allocated_at as lastAllocatedToAssessorDate,
       cast(assessment_event.data -> 'eventDetails' ->> 'assessedAt' as date) as applicationAssessedDate,
       assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'cru' ->> 'name' as assessorCru,
       assessment_event.data -> 'eventDetails' ->> 'decision' as assessmentDecision,
@@ -39,7 +41,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       submission_event.data -> 'eventDetails' ->> 'targetLocation' as targetLocation,
       cast(withdrawl_event.data -> 'eventDetails' ->> 'withdrawnAt' as date) as applicationWithdrawalDate,
       withdrawl_event.data -> 'eventDetails' ->> 'withdrawalReason' as applicationWithdrawalReason,
-      booking_made_event.data -> 'eventDetails' ->> 'bookingId' as bookingID,
+      cast(booking_made_event.booking_id as text) as bookingID,
       booking_cancelled_event.data -> 'eventDetails' ->> 'cancellationReason' as bookingCancellationReason,
       cast(booking_cancelled_event.data -> 'eventDetails' ->> 'cancelledAt' as date) as bookingCancellationDate,
       cast(booking_made_event.data -> 'eventDetails' ->> 'arrivalOn' as date) as expectedArrivalDate,
@@ -51,7 +53,14 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       departure_event.data -> 'eventDetails' ->> 'reason' as departureReason,
       departure_event.data -> 'eventDetails' -> 'destination' -> 'moveOnCategory' ->> 'description' as departureMoveOnCategory,
       non_arrival_event.data IS NOT NULL as hasNotArrived,
-      non_arrival_event.data -> 'eventDetails' ->> 'reason' as notArrivedReason
+      non_arrival_event.data -> 'eventDetails' ->> 'reason' as notArrivedReason,
+      cast(placement_applications.data -> 'request-a-placement' -> 'decision-to-release' ->> 'decisionToReleaseDate' as date) as paroleDecisionDate,
+      (
+        CASE
+          WHEN placement_applications.id IS NULL THEN 'referral'
+          ELSE 'placement request'
+        END
+      ) as type
     from
       applications application
       left join approved_premises_applications apa on application.id = apa.id
@@ -71,6 +80,9 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       and application.id = departure_event.application_id
       left join domain_events non_arrival_event on non_arrival_event.type = 'APPROVED_PREMISES_PERSON_NOT_ARRIVED'
       and application.id = non_arrival_event.application_id
+      left join assessments on application.id = assessments.application_id AND assessments.reallocated_at IS NULL
+      left join placement_requests on placement_requests.booking_id = booking_made_event.booking_id
+      left join placement_applications on placement_applications.id = placement_requests.placement_application_id
     where
       date_part('month', application.submitted_at) = :month
       AND date_part('year', application.submitted_at) = :year
@@ -84,6 +96,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
 interface ApplicationEntityReportRow {
   fun getId(): String
   fun getCrn(): String
+  fun getLastAllocatedToAssessorDate(): Timestamp?
   fun getApplicationAssessedDate(): Date?
   fun getAssessorCru(): String?
   fun getAssessmentDecision(): String?
@@ -94,9 +107,7 @@ interface ApplicationEntityReportRow {
   fun getOffenceId(): String
   fun getNoms(): String
   fun getPremisesType(): String?
-
   fun getSentenceType(): String?
-
   fun getReleaseType(): String?
   fun getApplicationSubmissionDate(): Date?
   fun getReferralRegion(): String?
@@ -119,4 +130,6 @@ interface ApplicationEntityReportRow {
   fun getDepartureReason(): String?
   fun getHasNotArrived(): Boolean?
   fun getNotArrivedReason(): String?
+  fun getParoleDecisionDate(): Date?
+  fun getType(): String
 }
