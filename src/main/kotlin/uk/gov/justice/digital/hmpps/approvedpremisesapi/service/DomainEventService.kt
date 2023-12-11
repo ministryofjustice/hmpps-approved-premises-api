@@ -104,6 +104,7 @@ class DomainEventService(
       detailUrl = bookingMadeDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      bookingId = domainEvent.bookingId,
     )
 
   @Transactional
@@ -192,12 +193,13 @@ class DomainEventService(
     detailUrl: String,
     crn: String,
     nomsNumber: String,
+    bookingId: UUID? = null,
   ) {
     domainEventRepository.save(
       DomainEventEntity(
         id = domainEvent.id,
         applicationId = domainEvent.applicationId,
-        bookingId = null,
+        bookingId = bookingId,
         crn = domainEvent.crn,
         type = enumTypeFromDataType(domainEvent.data!!::class.java),
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),

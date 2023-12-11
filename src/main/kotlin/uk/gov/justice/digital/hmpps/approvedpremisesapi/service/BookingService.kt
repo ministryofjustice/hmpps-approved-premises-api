@@ -526,6 +526,7 @@ class BookingService(
         applicationId = applicationId,
         crn = booking.crn,
         occurredAt = bookingCreatedAt.toInstant(),
+        bookingId = booking.id,
         data = BookingMadeEnvelope(
           id = domainEventId,
           timestamp = bookingCreatedAt.toInstant(),
