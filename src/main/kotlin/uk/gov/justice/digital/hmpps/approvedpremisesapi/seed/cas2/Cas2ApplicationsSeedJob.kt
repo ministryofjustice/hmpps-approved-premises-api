@@ -1,7 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2
 
-import com.microsoft.applicationinsights.boot.dependencies.apachecommons.io.FileUtils
 import org.slf4j.LoggerFactory
+import org.springframework.core.io.DefaultResourceLoader
+import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
@@ -14,7 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
-import java.io.File
+import java.io.IOException
+import java.io.InputStreamReader
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -114,19 +116,24 @@ class Cas2ApplicationsSeedJob(
   }
 
   private fun dataFixtureFor(nomsNumber: String): String {
-    val path = "src/main/resources/db/seed/local+dev+test/cas2_application_data"
-    return FileUtils.readFileToString(
-      File("$path/data_$nomsNumber.json"),
-      "UTF-8",
-    )
+    return loadFixtureAsResource("data_$nomsNumber.json")
   }
 
   private fun documentFixtureFor(nomsNumber: String): String {
-    val path = "src/main/resources/db/seed/local+dev+test/cas2_application_data"
-    return FileUtils.readFileToString(
-      File("$path/document_$nomsNumber.json"),
-      "UTF-8",
-    )
+    return loadFixtureAsResource("document_$nomsNumber.json")
+  }
+
+  private fun loadFixtureAsResource(filename: String): String {
+    val path = "db/seed/local+dev+test/cas2_application_data/$filename"
+    val loader = DefaultResourceLoader()
+    return try {
+      val resource = loader.getResource(path)
+      val reader = InputStreamReader(resource.inputStream, "UTF-8")
+      FileCopyUtils.copyToString(reader)
+    } catch (e: IOException) {
+      log.warn("FAILED to load seed fixture: " + e.message!!)
+      "{}"
+    }
   }
 
   private fun emptyToNull(value: String?) = value?.ifBlank { null }
