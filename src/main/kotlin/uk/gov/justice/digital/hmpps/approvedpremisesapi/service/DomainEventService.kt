@@ -37,6 +37,7 @@ class DomainEventService(
   private val objectMapper: ObjectMapper,
   private val domainEventRepository: DomainEventRepository,
   private val hmppsQueueService: HmppsQueueService,
+  val domainEventWorker: ConfiguredDomainEventWorker,
   @Value("\${domain-events.cas1.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
   @Value("\${url-templates.api.cas1.application-submitted-event-detail}") private val applicationSubmittedDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas1.application-assessed-event-detail}") private val applicationAssessedDetailUrlTemplate: String,
@@ -51,7 +52,7 @@ class DomainEventService(
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  private val domainTopic by lazy {
+  val domainTopic by lazy {
     hmppsQueueService.findByTopicId("domainevents")
       ?: throw MissingTopicException("domainevents not found")
   }
@@ -184,7 +185,8 @@ class DomainEventService(
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
-  fun getAllDomainEventsForApplication(applicationId: UUID) = domainEventRepository.findAllTimelineEventsByApplicationId(applicationId)
+  fun getAllDomainEventsForApplication(applicationId: UUID) =
+    domainEventRepository.findAllTimelineEventsByApplicationId(applicationId)
 
   private fun saveAndEmit(
     domainEvent: DomainEvent<*>,
@@ -209,33 +211,36 @@ class DomainEventService(
       ),
     )
 
-    if (emitDomainEventsEnabled) {
-      val snsEvent = SnsEvent(
-        eventType = typeName,
-        version = 1,
-        description = typeDescription,
-        detailUrl = detailUrl,
-        occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
-        additionalInformation = SnsEventAdditionalInformation(
-          applicationId = domainEvent.applicationId,
-        ),
-        personReference = SnsEventPersonReferenceCollection(
-          identifiers = listOf(
-            SnsEventPersonReference("CRN", crn),
-            SnsEventPersonReference("NOMS", nomsNumber),
-          ),
-        ),
-      )
-
-      val publishResult = domainTopic.snsClient.publish(
-        PublishRequest(domainTopic.arn, objectMapper.writeValueAsString(snsEvent))
-          .withMessageAttributes(mapOf("eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType))),
-      )
-
-      log.info("Emitted SNS event (Message Id: ${publishResult.messageId}, Sequence Id: ${publishResult.sequenceNumber}) for Domain Event: ${domainEvent.id} of type: ${snsEvent.eventType}")
-    } else {
+    if (!emitDomainEventsEnabled) {
       log.info("Not emitting SNS event for domain event because domain-events.cas1.emit-enabled is not enabled")
+      return
     }
+
+    val snsEvent = SnsEvent(
+      eventType = typeName,
+      version = 1,
+      description = typeDescription,
+      detailUrl = detailUrl,
+      occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
+      additionalInformation = SnsEventAdditionalInformation(
+        applicationId = domainEvent.applicationId,
+      ),
+      personReference = SnsEventPersonReferenceCollection(
+        identifiers = listOf(
+          SnsEventPersonReference("CRN", crn),
+          SnsEventPersonReference("NOMS", nomsNumber),
+        ),
+      ),
+    )
+
+    val publishRequest = PublishRequest(domainTopic.arn, objectMapper.writeValueAsString(snsEvent))
+      .withMessageAttributes(
+        mapOf(
+          "eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType),
+        ),
+      )
+
+    domainEventWorker.emitEvent(snsEvent, publishRequest, domainEvent.id)
   }
 
   private fun <T> enumTypeFromDataType(type: Class<T>) = when (type) {
