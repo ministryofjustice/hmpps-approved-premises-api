@@ -295,6 +295,11 @@ class WebClientConfiguration(
         ),
       )
       .filter(oauth2Client)
+      .exchangeStrategies(
+        ExchangeStrategies.builder().codecs {
+          it.defaultCodecs().maxInMemorySize(maxResponseInMemorySizeBytes)
+        }.build(),
+      )
       .build()
   }
 }
