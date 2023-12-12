@@ -149,32 +149,6 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       AND (:status is null or s.booking_status = :#{#status?.toString()})
       AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
     """,
-    countQuery = """
-      SELECT COUNT(1)
-       FROM bookings b 
-       LEFT JOIN (
-        SELECT
-          b.id,
-          (
-            CASE
-              WHEN (SELECT COUNT(1) FROM cancellations c WHERE c.booking_id = b.id) > 0 THEN 'cancelled'
-              WHEN (SELECT COUNT(1) FROM departures d WHERE d.booking_id = b.id) > 0 THEN 'departed'
-              WHEN (SELECT COUNT(1) FROM arrivals a WHERE a.booking_id = b.id) > 0 THEN 'arrived'
-              WHEN (SELECT COUNT(1) FROM confirmations c2 WHERE c2.booking_id = b.id) > 0 THEN 'confirmed'
-              WHEN (SELECT COUNT(1) FROM non_arrivals n WHERE n.booking_id = n.id) > 0 THEN 'not-arrived'
-              WHEN :serviceName = 'approved-premises' THEN 'awaiting-arrival'
-              ELSE 'provisional'
-            END
-          ) AS booking_status
-        FROM bookings b
-      ) as s ON b.id = s.id
-      LEFT JOIN beds b2 ON b.bed_id = b2.id
-      LEFT JOIN rooms r ON b2.room_id = r.id
-      LEFT JOIN premises p ON r.premises_id = p.id
-      WHERE b.service = :serviceName
-      AND (:status is null or s.booking_status = :#{#status?.toString()})
-      AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
-    """,
     nativeQuery = true,
   )
   fun findBookings(serviceName: String, status: BookingStatus?, probationRegionId: UUID?, pageable: Pageable?): Page<BookingSearchResult>
