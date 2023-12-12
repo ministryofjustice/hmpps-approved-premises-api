@@ -1805,6 +1805,15 @@ components:
         - id
         - person
         - createdAt
+    Cas2Report:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: '<application.submitted> domain events'
     Cas2StatusUpdate:
       type: object
       properties:

@@ -391,3 +391,43 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /reports:
+    get:
+      tags:
+        - Reports
+      summary: Lists reports available to download in spreadsheet form
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/Cas2Report'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+  /reports/{reportId}:
+    get:
+      tags:
+        - Reports
+      summary: Returns a spreadsheet of metrics
+      parameters:
+        - name: reportId
+          in: path
+          description: Id of the CAS2 Report to be downloaded
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+              schema:
+                type: string
+                format: binary
