@@ -391,3 +391,16 @@ paths:
           $ref: '_shared.yml#/components/responses/403Response'
         500:
           $ref: '_shared.yml#/components/responses/500Response'
+  /reports/example-report:
+    get:
+      tags:
+        - Reports
+      summary: Returns an example spreadsheet of metrics
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+              schema:
+                type: string
+                format: binary
