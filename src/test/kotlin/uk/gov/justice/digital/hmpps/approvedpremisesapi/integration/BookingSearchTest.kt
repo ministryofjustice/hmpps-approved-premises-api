@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import java.time.LocalDate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 
 class BookingSearchTest : IntegrationTestBase() {
   @Test
@@ -614,6 +615,7 @@ class BookingSearchTest : IntegrationTestBase() {
         withServiceName(ServiceName.temporaryAccommodation)
         withArrivalDate(LocalDate.now().minusDays((60 - index).toLong()))
         withDepartureDate(LocalDate.now().minusDays((30 - index).toLong()))
+        withCreatedAt(LocalDate.now().minusDays((30 - index).toLong()).toLocalDateTime())
       }
 
       allBookings += booking
