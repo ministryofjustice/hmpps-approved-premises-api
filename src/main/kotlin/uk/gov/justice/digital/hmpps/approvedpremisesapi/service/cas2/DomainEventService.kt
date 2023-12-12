@@ -7,8 +7,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Event
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -34,6 +36,7 @@ class DomainEventService(
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.cas2.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
   @Value("\${url-templates.api.cas2.application-submitted-event-detail}") private val cas2ApplicationSubmittedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas2.application-status-updated-event-detail}") private val cas2ApplicationStatusUpdatedDetailUrlTemplate: String,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -43,6 +46,8 @@ class DomainEventService(
   }
 
   fun getCas2ApplicationSubmittedDomainEvent(id: UUID) = get<Cas2ApplicationSubmittedEvent>(id)
+
+  fun getCas2ApplicationStatusUpdatedDomainEvent(id: UUID) = get<Cas2ApplicationStatusUpdatedEvent>(id)
 
   private inline fun <reified T : Cas2Event> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
@@ -69,7 +74,18 @@ class DomainEventService(
       typeName = "applications.cas2.application.submitted",
       typeDescription = "An application has been submitted for a CAS2 placement",
       detailUrl = cas2ApplicationSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      personReference = domainEvent.data.eventDetails.personReference,
+    )
+
+  @Transactional
+  fun saveCas2ApplicationStatusUpdatedDomainEvent(domainEvent: DomainEvent<Cas2ApplicationStatusUpdatedEvent>) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "applications.cas2.application.status-updated",
+      typeDescription = "An assessor has updated the status of a CAS2 application",
+      detailUrl = cas2ApplicationStatusUpdatedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
+      personReference = domainEvent.data.eventDetails.personReference,
+
     )
 
   private fun <T : Cas2Event> saveAndEmit(
@@ -77,7 +93,7 @@ class DomainEventService(
     typeName: String,
     typeDescription: String,
     detailUrl: String,
-    nomsNumber: String,
+    personReference: PersonReference,
   ) {
     domainEventRepository.save(
       DomainEventEntity(
@@ -94,7 +110,10 @@ class DomainEventService(
     )
 
     if (emitDomainEventsEnabled) {
-      val personReferenceIdentifiers = listOf(SnsEventPersonReference("NOMS", nomsNumber))
+      val personReferenceIdentifiers = listOf(
+        SnsEventPersonReference("NOMS", personReference.noms),
+        SnsEventPersonReference("CRN", personReference.crn.toString()),
+      )
 
       val snsEvent = SnsEvent(
         eventType = typeName,
@@ -123,6 +142,7 @@ class DomainEventService(
 
   private fun <T : Cas2Event> enumTypeFromDataType(type: KClass<T>): DomainEventType = when (type) {
     Cas2ApplicationSubmittedEvent::class -> DomainEventType.CAS2_APPLICATION_SUBMITTED
+    Cas2ApplicationStatusUpdatedEvent::class -> DomainEventType.CAS2_APPLICATION_STATUS_UPDATED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
   }
 }

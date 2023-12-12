@@ -30,6 +30,10 @@ class ExternalUserEntityFactory : Factory<ExternalUserEntity> {
     this.email = { email }
   }
 
+  fun withOrigin(origin: String) = apply {
+    this.origin = { origin }
+  }
+  
   override fun produce(): ExternalUserEntity = ExternalUserEntity(
     id = this.id(),
     username = this.username(),
