@@ -1,0 +1,91 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
+
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
+import java.time.OffsetDateTime
+import java.util.UUID
+
+class Cas2AutoScriptTest {
+  private val mockSeedLogger = mockk<SeedLogger>()
+  private val logEntries = mutableListOf<LogEntry>()
+
+  private val mockNomisUserRepository = mockk<NomisUserRepository>()
+  private val mockNomisUserEntity = mockk<NomisUserEntity>()
+
+  private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
+  private val mockApplicationEntity = mockk<Cas2ApplicationEntity>()
+
+  private val mockExternalUserRepository = mockk<ExternalUserRepository>()
+  private val mockExternalUserEntity = mockk<ExternalUserEntity>()
+
+  private val mockStatusUpdateRepository = mockk<Cas2StatusUpdateRepository>()
+  private val mockStatusUpdateEntity = mockk<Cas2StatusUpdateEntity>()
+
+  private val mockJsonSchemaService = mockk<JsonSchemaService>()
+  private val mockJsonSchemaEntity = mockk<JsonSchemaEntity>()
+
+  private val autoScript = Cas2AutoScript(
+    mockSeedLogger,
+    mockNomisUserRepository,
+    mockApplicationRepository,
+    mockExternalUserRepository,
+    mockStatusUpdateRepository,
+    mockJsonSchemaService,
+  )
+
+  @BeforeEach
+  fun setUp() {
+    every { mockSeedLogger.info(any()) } answers {
+      logEntries += LogEntry(it.invocation.args[0] as String, "info", null)
+    }
+    every { mockNomisUserRepository.findAll() } answers { listOf(mockNomisUserEntity) }
+    every { mockNomisUserEntity.nomisUsername } answers { "SMITHJ_GEN" }
+
+    every { mockExternalUserRepository.findAll() } answers { listOf(mockExternalUserEntity) }
+    every {
+      mockJsonSchemaService.getNewestSchema(
+        Cas2ApplicationJsonSchemaEntity::class.java,
+      )
+    } answers { mockJsonSchemaEntity }
+
+    every { mockApplicationRepository.save(any()) } answers { mockApplicationEntity }
+    every { mockApplicationEntity.id } answers {
+      UUID.fromString("6c8d4bbb-72e6-47fe-9cde-ca2eefc5274b")
+    }
+    every { mockApplicationEntity.submittedAt } answers { OffsetDateTime.parse("2022-09-21T12:45:00+01:00") }
+
+    every { mockStatusUpdateRepository.save(any()) } answers { mockStatusUpdateEntity }
+    every { mockStatusUpdateEntity.createdAt = (any()) } answers { mockStatusUpdateEntity }
+  }
+
+  @Test
+  fun `creates 3 applications for each Nomis User`() {
+    autoScript.script()
+
+    verify(exactly = 3) { mockApplicationRepository.save(any()) }
+  }
+
+  @Test
+  fun `creates at least 1 status update`() {
+    autoScript.script()
+
+    verify(atLeast = 1) { mockStatusUpdateRepository.save(any()) }
+  }
+}

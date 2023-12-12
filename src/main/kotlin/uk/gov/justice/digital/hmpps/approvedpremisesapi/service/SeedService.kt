@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodationPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2ApplicationsSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.ExternalUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.NomisUsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
@@ -56,7 +57,9 @@ class SeedService(
   private val applicationContext: ApplicationContext,
   private val transactionTemplate: TransactionTemplate,
   private val seedLogger: SeedLogger,
+  private val cas2AutoScript: Cas2AutoScript,
 ) {
+
   @PostConstruct
   fun autoSeed() {
     if (!seedConfig.auto.enabled) {
@@ -99,6 +102,15 @@ class SeedService(
         }
       }
     }
+
+    if (seedConfig.autoScript.enabled) {
+      this.autoScript()
+    }
+  }
+
+  fun autoScript() {
+    seedLogger.info("**Auto-scripting**")
+    cas2AutoScript.script()
   }
 
   @Async
