@@ -379,6 +379,7 @@ class TemporaryAccommodationApplicationEntity(
   var dutyToReferSubmissionDate: LocalDate?,
   var isEligible: Boolean?,
   var eligibilityReason: String?,
+  var dutyToReferLocalAuthorityAreaName: String?,
 ) : ApplicationEntity(
   id,
   crn,

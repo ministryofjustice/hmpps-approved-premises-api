@@ -1021,6 +1021,7 @@ class ApplicationServiceTest {
       dutyToReferSubmissionDate = LocalDate.now().minusDays(7),
       isApplicationEligible = true,
       eligibilityReason = "homelessFromApprovedPremises",
+      dutyToReferLocalAuthorityAreaName = "Aberdeen City",
     )
 
     @BeforeEach
@@ -1497,6 +1498,7 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.dutyToReferSubmissionDate).isEqualTo(LocalDate.now().minusDays(7))
       assertThat(persistedApplication.isEligible).isEqualTo(true)
       assertThat(persistedApplication.eligibilityReason).isEqualTo("homelessFromApprovedPremises")
+      assertThat(persistedApplication.dutyToReferLocalAuthorityAreaName).isEqualTo("Aberdeen City")
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) { mockAssessmentService.createTemporaryAccommodationAssessment(application, submitTemporaryAccommodationApplicationWithMiReportingData.summaryData!!) }
