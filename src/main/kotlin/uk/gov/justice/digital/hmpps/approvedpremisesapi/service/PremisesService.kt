@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesWithRoomCount
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
@@ -55,7 +56,7 @@ class PremisesService(
     ServiceName.temporaryAccommodation to TemporaryAccommodationPremisesEntity::class.java,
   )
 
-  fun getAllPremises(): List<PremisesEntity> = premisesRepository.findAll()
+  fun getAllPremises(): List<PremisesWithRoomCount> = premisesRepository.findAllWithRoomCount()
 
   fun getAllTemporaryAccommodationPremisesSummaries(regionId: UUID): List<TemporaryAccommodationPremisesSummary> {
     return premisesRepository.findAllTemporaryAccommodationSummary(regionId)
@@ -65,17 +66,17 @@ class PremisesService(
     return premisesRepository.findAllApprovedPremisesSummary()
   }
 
-  fun getAllPremisesInRegion(probationRegionId: UUID): List<PremisesEntity> = premisesRepository.findAllByProbationRegion_Id(probationRegionId)
+  fun getAllPremisesInRegion(probationRegionId: UUID): List<PremisesWithRoomCount> = premisesRepository.findAllByProbationRegion(probationRegionId)
 
-  fun getAllPremisesForService(service: ServiceName) = serviceNameToEntityType[service]?.let {
+  fun getAllPremisesForService(service: ServiceName): List<PremisesWithRoomCount> = serviceNameToEntityType[service]?.let {
     premisesRepository.findAllByType(it)
   } ?: listOf()
 
   fun getAllPremisesInRegionForService(
     probationRegionId: UUID,
     service: ServiceName,
-  ): List<PremisesEntity> = serviceNameToEntityType[service]?.let {
-    premisesRepository.findAllByProbationRegion_IdAndType(probationRegionId, it)
+  ): List<PremisesWithRoomCount> = serviceNameToEntityType[service]?.let {
+    premisesRepository.findAllByProbationRegionAndType(probationRegionId, it)
   } ?: listOf()
 
   fun getPremises(premisesId: UUID): PremisesEntity? = premisesRepository.findByIdOrNull(premisesId)
@@ -549,11 +550,17 @@ class PremisesService(
       ),
     )
 
+    val totalBeds = getBedCount(premises)
+
     return capacityForPeriod.map {
       DateCapacity(
         date = it.key,
-        availableBeds = it.value.getFreeCapacity(premises.totalBeds),
+        availableBeds = it.value.getFreeCapacity(totalBeds),
       )
     }
+  }
+
+  fun getBedCount(premises: PremisesEntity): Int {
+    return premisesRepository.getBedCount(premises)
   }
 }

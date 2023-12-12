@@ -64,10 +64,6 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     this.postcode = { postcode }
   }
 
-  fun withTotalBeds(totalBeds: Int) = apply {
-    this.totalBeds = { totalBeds }
-  }
-
   fun withProbationRegion(probationRegion: ProbationRegionEntity) = apply {
     this.probationRegion = { probationRegion }
   }
@@ -98,6 +94,10 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
 
   fun withTurnaroundWorkingDayCount(turnaroundWorkingDayCount: Int) = apply {
     this.turnaroundWorkingDayCount = { turnaroundWorkingDayCount }
+  }
+
+  fun withYieldedRooms(probationRegion: Yielded<ProbationRegionEntity>) = apply {
+    this.probationRegion = probationRegion
   }
 
   fun withUnitTestControlTestProbationAreaAndLocalAuthority() = apply {

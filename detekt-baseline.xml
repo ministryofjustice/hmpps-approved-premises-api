@@ -7,7 +7,8 @@
     <ID>FunctionNaming:PlacementApplicationEntity.kt$PlacementApplicationRepository$fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndDecisionNull(userId: UUID): List&lt;PlacementApplicationEntity></ID>
     <ID>CyclomaticComplexMethod:ApplicationServiceTest.kt$ApplicationServiceTest.SubmitApplication$@ParameterizedTest @EnumSource(value = SituationOption::class) @NullSource fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event, sends confirmation email`(situation: SituationOption?)</ID>
     <ID>CyclomaticComplexMethod:OffenderService.kt$OffenderService$fun getOffenderSummariesByCrns(crns: List&lt;String>, userDistinguishedName: String, ignoreLao: Boolean = false): List&lt;PersonSummaryInfoResult></ID>
-   </ManuallySuppressedIssues>
+    <ID>TooManyFunctions:PremisesEntity.kt$PremisesRepository : JpaRepository</ID>
+  </ManuallySuppressedIssues>
   <CurrentIssues>
     <ID>ComplexCondition:BookingService.kt$BookingService$booking.service == ServiceName.approvedPremises.value &amp;&amp; booking.application != null &amp;&amp; user != null &amp;&amp; !arrivedAndDepartedDomainEventsDisabled</ID>
     <ID>ConstructorParameterNaming:ApplicationTest.kt$EventType$val Type: String</ID>

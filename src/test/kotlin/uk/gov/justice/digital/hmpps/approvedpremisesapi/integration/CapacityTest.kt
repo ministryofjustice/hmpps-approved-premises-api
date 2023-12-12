@@ -47,13 +47,16 @@ class CapacityTest : IntegrationTestBase() {
   fun `Get Capacity with no bookings or lost beds on Approved Premises returns OK with empty list body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withTotalBeds(30)
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist {
             withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
           }
         }
+      }
+
+      bedEntityFactory.produceAndPersistMultiple(30) {
+        withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
       }
 
       webTestClient.get()
@@ -72,11 +75,14 @@ class CapacityTest : IntegrationTestBase() {
   fun `Get Capacity for Approved Premises with booking in past returns OK with empty list body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withTotalBeds(30)
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
+      }
+
+      bedEntityFactory.produceAndPersistMultiple(30) {
+        withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
       }
 
       val keyWorker = ContextStaffMemberFactory().produce()
@@ -104,11 +110,14 @@ class CapacityTest : IntegrationTestBase() {
   fun `Get Capacity for Approved Premises with booking in future returns OK with list entry for each day until the booking ends when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withTotalBeds(30)
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
+      }
+
+      bedEntityFactory.produceAndPersistMultiple(30) {
+        withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
       }
 
       val keyWorker = ContextStaffMemberFactory().produce()

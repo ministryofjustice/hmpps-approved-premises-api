@@ -83,10 +83,6 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.longitude = { longitude }
   }
 
-  fun withTotalBeds(totalBeds: Int) = apply {
-    this.totalBeds = { totalBeds }
-  }
-
   fun withProbationRegion(probationRegion: ProbationRegionEntity) = apply {
     this.probationRegion = { probationRegion }
   }
