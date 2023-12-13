@@ -97,6 +97,7 @@ FROM
   "user_role_assignments"
 WHERE
   "user_id" = (SELECT id FROM users where delius_username='JIMSNOWLDAP')
+  AND ("role" = 'CAS3_ASSESSOR' OR "role" = 'CAS3_REPORTER')
 ON CONFLICT (id)
 DO
   NOTHING;
