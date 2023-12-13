@@ -66,18 +66,17 @@ class CommunityApiOffenderDetailsDataSource(
     return offenderResponse
   }
 
-  override fun getOffenderDetailSummaries(crns: List<String>): List<ClientResult<OffenderDetailSummary>> {
-    throw NotImplementedError("Getting details for multiple offenders from the Community API is not currently supported")
-  }
+  override fun getOffenderDetailSummaries(crns: List<String>): List<ClientResult<OffenderDetailSummary>> =
+    crns.map(this::getOffenderDetailSummary)
 
-  override fun getUserAccessForOffenderCrn(deliusUsername: String, crn: String): ClientResult<UserOffenderAccess> = communityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn)
+  override fun getUserAccessForOffenderCrn(deliusUsername: String, crn: String): ClientResult<UserOffenderAccess> =
+    communityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn)
 
   override fun getUserAccessForOffenderCrns(
     deliusUsername: String,
     crns: List<String>,
-  ): List<ClientResult<UserOffenderAccess>> {
-    throw NotImplementedError("Getting user access for multiple offenders from the Community API is not currently supported")
-  }
+  ): List<ClientResult<UserOffenderAccess>> =
+    crns.map { getUserAccessForOffenderCrn(deliusUsername, it) }
 }
 
 @Component
