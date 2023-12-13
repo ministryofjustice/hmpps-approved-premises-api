@@ -51,36 +51,6 @@ VALUES
     '81e7c996-4e20-4c4f-94c4-1acd4e5bce33',
     'CAS1_ADMIN',
     'aa30f20a-84e3-4baa-bef0-3c9bd51879ad'
-  ),
-  (
-    '28f03d11-c430-4dea-e0e3-bec6ea67d2d9',
-    'CAS1_ASSESSOR',
-    '0621c5b0-0028-40b7-87fb-53ec65704314'
-  ),
-  (
-    '8adb9e9b-fd29-475d-e603-bf231500a3e7',
-    'CAS1_MATCHER',
-    '0621c5b0-0028-40b7-87fb-53ec65704314'
-  ),
-  (
-    '208f58d7-2979-4cea-acb9-1c54e9d66193',
-    'CAS1_MANAGER',
-    '0621c5b0-0028-40b7-87fb-53ec65704314'
-  ),
-  (
-    '492d40dc-5554-4476-e8ad-1ec0f309450a',
-    'CAS1_WORKFLOW_MANAGER',
-    '0621c5b0-0028-40b7-87fb-53ec65704314'
-  ),
-  (
-    '830d7aab-96e1-4056-be91-045e089378b8',
-    'CAS1_APPLICANT',
-    '0621c5b0-0028-40b7-87fb-53ec65704314'
-  ),
-  (
-    '29ffb4f6-d72a-47e0-9ece-0797c5ff2169',
-    'CAS1_ADMIN',
-    '0621c5b0-0028-40b7-87fb-53ec65704314'
   ) ON CONFLICT (id)
 DO
   NOTHING;
@@ -92,6 +62,21 @@ SELECT
   gen_random_uuid() AS id,
   role AS role,
   (SELECT id FROM users where delius_username='APPROVEDPREMISESTESTUSER') AS user_id
+FROM
+  "user_role_assignments"
+WHERE
+  "user_id" = (SELECT id FROM users where delius_username='JIMSNOWLDAP')
+ON CONFLICT (id)
+DO
+  NOTHING;
+
+-- Copy all roles from JIMSNOWLDAP to TEMPORARY-ACCOMMODATION-E2E-TESTER
+INSERT INTO
+  "user_role_assignments" ("id", "role", "user_id")
+SELECT
+  gen_random_uuid() AS id,
+  role AS role,
+  (SELECT id FROM users where delius_username='TEMPORARY-ACCOMMODATION-E2E-TESTER') AS user_id
 FROM
   "user_role_assignments"
 WHERE
