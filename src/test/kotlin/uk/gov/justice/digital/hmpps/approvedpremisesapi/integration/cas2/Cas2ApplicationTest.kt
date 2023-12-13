@@ -13,8 +13,8 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -158,7 +159,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(userEntity)
               withCrn(offenderDetails.otherIds.crn)
-              withNomsNumber("NOMS123")
               withData("{}")
             }
 
@@ -166,7 +166,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(otherUser)
               withCrn(offenderDetails.otherIds.crn)
-              withNomsNumber("NOMS456")
               withData("{}")
             }
 
@@ -201,13 +200,31 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Get list of applications returns 500 when a person cannot be found`() {
+      `Given a CAS2 User`() { userEntity, jwt ->
+        val crn = "X1234"
+
+        produceAndPersistBasicApplication(crn, userEntity)
+        CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+        loadPreemptiveCacheForOffenderDetails(crn)
+
+        webTestClient.get()
+          .uri("/cas2/applications")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .is5xxServerError
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
+      }
+    }
+
+    @Test
     fun `Get list of applications returns successfully when the person cannot be fetched from the prisons API`() {
       `Given a CAS2 User`() { userEntity, jwt ->
         val crn = "X1234"
 
-        val nomsNumber = "NOMS123"
-
-        val application = produceAndPersistBasicApplication(crn, nomsNumber, userEntity)
+        val application = produceAndPersistBasicApplication(crn, userEntity)
 
         val offenderDetails = OffenderDetailsSummaryFactory()
           .withCrn(crn)
@@ -241,8 +258,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
           application.id == it[0].id &&
             application.crn == person.crn &&
-            person.nomsNumber == application.nomsNumber &&
-            person.status == FullPerson.Status.inCustody &&
+            person.nomsNumber == null &&
+            person.status == FullPerson.Status.unknown &&
             person.prisonName == null
         }
       }
@@ -320,6 +337,52 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `Get single application returns successfully when the person cannot be fetched from the prisons API`() {
+      `Given a CAS2 User`() { userEntity, jwt ->
+        val crn = "X1234"
+
+        val application = produceAndPersistBasicApplication(crn, userEntity)
+
+        val offenderDetails = OffenderDetailsSummaryFactory()
+          .withCrn(crn)
+          .withNomsNumber("ABC123")
+          .produce()
+
+        CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
+        loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
+        PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
+        loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
+
+        val rawResponseBody = webTestClient.get()
+          .uri("/cas2/applications/${application.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val responseBody = objectMapper.readValue(
+          rawResponseBody,
+          Cas2Application::class.java,
+        )
+
+        Assertions.assertThat(responseBody.person is FullPerson).isTrue
+
+        Assertions.assertThat(responseBody).matches {
+          val person = it.person as FullPerson
+
+          application.id == it.id &&
+            application.crn == person.crn &&
+            person.nomsNumber == null &&
+            person.status == FullPerson.Status.unknown &&
+            person.prisonName == null
+        }
+      }
+    }
   }
 
   @Nested
@@ -339,12 +402,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.cas2.value)
             .bodyValue(
-              Cas2NewApplication(
+              NewApplication(
                 crn = offenderDetails.otherIds.crn,
-                nomsNumber = "NOMS456",
-                dateOfBirth = offenderDetails.dateOfBirth,
-                name = "${offenderDetails.firstName} ${offenderDetails.surname}",
-                personStatus = Cas2NewApplication.PersonStatus.inCustody,
               ),
             )
             .exchange()
@@ -361,6 +420,35 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               it.schemaVersion == applicationSchema.id
           }
         }
+      }
+    }
+
+    @Test
+    fun `Create new application returns 404 when a person cannot be found`() {
+      `Given a CAS2 User` { userEntity, jwt ->
+        val crn = "X1234"
+
+        CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+        loadPreemptiveCacheForOffenderDetails(crn)
+
+        cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.now())
+          withId(UUID.randomUUID())
+        }
+
+        webTestClient.post()
+          .uri("/cas2/applications")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewApplication(
+              crn = crn,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isNotFound
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("No Offender with an ID of $crn could be found")
       }
     }
   }
@@ -437,7 +525,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
   private fun produceAndPersistBasicApplication(
     crn: String,
-    nomsNumber: String,
     userEntity: NomisUserEntity,
   ): Cas2ApplicationEntity {
     val jsonSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -465,7 +552,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     val application = cas2ApplicationEntityFactory.produceAndPersist {
       withApplicationSchema(jsonSchema)
       withCrn(crn)
-      withNomsNumber(nomsNumber)
       withCreatedByUser(userEntity)
       withData(
         """

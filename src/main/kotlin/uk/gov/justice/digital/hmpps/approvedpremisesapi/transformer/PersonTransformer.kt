@@ -5,8 +5,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
@@ -86,36 +84,8 @@ class PersonTransformer {
         probationOffenderResult.inmateDetail?.assignedLivingUnit?.agencyName
           ?: probationOffenderResult.inmateDetail?.assignedLivingUnit?.agencyId
       },
+      isRestricted = (probationOffenderResult.probationOffenderDetail.currentExclusion ?: false || probationOffenderResult.probationOffenderDetail.currentRestriction ?: false),
     )
-
-  fun transformCas2ApplicationEntityToPersonApi(application: Cas2ApplicationEntity) =
-    FullPerson(
-      type = PersonType.fullPerson,
-      crn = application.crn,
-      name = application.name,
-      dateOfBirth = application.dateOfBirth,
-      sex = application.sex ?: "Not found",
-      status = FullPerson.Status.valueOf(application.personStatus),
-      nomsNumber = application.nomsNumber,
-      pncNumber = application.pncNumber ?: "Not found",
-      nationality = application.nationality ?: "Not found",
-      prisonName = application.prisonName,
-    )
-
-  fun transformCas2ApplicationSummaryToPersonApi(applicationSummary: Cas2ApplicationSummary) =
-    FullPerson(
-      type = PersonType.fullPerson,
-      crn = applicationSummary.getCrn(),
-      name = applicationSummary.getName(),
-      dateOfBirth = applicationSummary.getDateOfBirth(),
-      sex = applicationSummary.getSex() ?: "Not found",
-      status = FullPerson.Status.valueOf(applicationSummary.getPersonStatus()),
-      nomsNumber = applicationSummary.getNomsNumber(),
-      pncNumber = applicationSummary.getPncNumber() ?: "Not found",
-      nationality = applicationSummary.getNationality() ?: "Not found",
-      prisonName = applicationSummary.getPrisonName(),
-    )
-
   private fun inOutStatusToPersonInfoApiStatus(inOutStatus: InOutStatus?) = when (inOutStatus) {
     InOutStatus.IN -> FullPerson.Status.inCustody
     InOutStatus.OUT -> FullPerson.Status.inCommunity
