@@ -7,9 +7,9 @@ INSERT INTO "users" (id, name, delius_username, delius_staff_identifier, probati
     ('f29b6402-b5f0-4f39-a66f-a2bb13eb5d6d', 'A. E2etester', 'APPROVEDPREMISESTESTUSER', 2500041002, 'ca979718-b15d-4318-9944-69aaff281cad', 'STAFFCODE'), -- East of England
     ('0621c5b0-0028-40b7-87fb-53ec65704314', 'T. Assessor', 'TEMPORARY-ACCOMMODATION-E2E-TESTER', 2500041003, 'db82d408-d440-4eb5-960b-119cb33427cd', 'STAFFCODE'), -- Kent, Surrey & Sussex
     ('7e36a89e-c69e-48b1-a5cf-a7c8949f432a', 'T. Referrer', 'TEMPORARY-ACCOMMODATION-E2E-REFERRER', 2500510725, 'db82d408-d440-4eb5-960b-119cb33427cd', 'STAFFCODE'), -- Kent, Surrey & Sussex
-    ('b5825da0-1553-4398-90ac-6a8e0c8a4cae', 'Tester Testy', 'tester.testy', 2500043547, 'c5acff6c-d0d2-4b89-9f4d-89a15cfa3891', 'STAFFCODE'), -- North East
     ('695ba399-c407-4b66-aafc-e8835d72b8a7', 'Bernard Beaks', 'bernard.beaks', 2500057096, 'ca979718-b15d-4318-9944-69aaff281cad', 'STAFFCODE'), -- East of England
     ('045b71d3-9845-49b3-a79b-c7799a6bc7bc', 'Panesar Jaspal', 'panesar.jaspal', 2500054544, 'afee0696-8df3-4d9f-9d0c-268f17772e2c', 'STAFFCODE') -- Wales
+    ('b5825da0-1553-4398-90ac-6a8e0c8a4cae', 'Tester Testy', 'TESTER.TESTY', 2500043547, 'c5acff6c-d0d2-4b89-9f4d-89a15cfa3891', 'STAFFCODE'), -- North East
 ON CONFLICT (id) DO NOTHING;
 
 UPDATE
@@ -83,36 +83,6 @@ VALUES
     '0621c5b0-0028-40b7-87fb-53ec65704314'
   ),
   (
-    '14bcef1a-fc78-4c42-f8d4-e35da461b837',
-    'CAS1_ASSESSOR',
-    'b5825da0-1553-4398-90ac-6a8e0c8a4cae'
-  ),
-  (
-    'eec1afe7-4659-4ed5-d83f-a13ee89641b0',
-    'CAS1_MATCHER',
-    'b5825da0-1553-4398-90ac-6a8e0c8a4cae'
-  ),
-  (
-    'e2dc3c5c-c9b7-4754-941d-c6e6043a7b26',
-    'CAS1_MANAGER',
-    'b5825da0-1553-4398-90ac-6a8e0c8a4cae'
-  ),
-  (
-    '2d8000ed-67f9-4370-adac-234e1f4264a5',
-    'CAS1_WORKFLOW_MANAGER',
-    'b5825da0-1553-4398-90ac-6a8e0c8a4cae'
-  ),
-  (
-    '50b8779d-487e-494f-dff5-f9958b9d0eae',
-    'CAS1_APPLICANT',
-    'b5825da0-1553-4398-90ac-6a8e0c8a4cae'
-  ),
-  (
-    'afa2bec7-2820-4fd8-bd6d-fc1f610442f3',
-    'CAS1_ADMIN',
-    'b5825da0-1553-4398-90ac-6a8e0c8a4cae'
-  ),
-  (
     '739b27c5-d17b-4fe7-d0a4-162eb3268e1b',
     'CAS1_ASSESSOR',
     '695ba399-c407-4b66-aafc-e8835d72b8a7'
@@ -182,6 +152,21 @@ SELECT
   gen_random_uuid() AS id,
   role AS role,
   (SELECT id FROM users where delius_username='APPROVEDPREMISESTESTUSER') AS user_id
+FROM
+  "user_role_assignments"
+WHERE
+  "user_id" = (SELECT id FROM users where delius_username='JIMSNOWLDAP')
+ON CONFLICT (id)
+DO
+  NOTHING;
+
+-- Copy all roles from JIMSNOWLDAP to TESTER.TESTY
+INSERT INTO
+  "user_role_assignments" ("id", "role", "user_id")
+SELECT
+  gen_random_uuid() AS id,
+  role AS role,
+  (SELECT id FROM users where delius_username='TESTER.TESTY') AS user_id
 FROM
   "user_role_assignments"
 WHERE
