@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
@@ -34,6 +33,7 @@ class ApplicationService(
   private val userRepository: NomisUserRepository,
   private val applicationRepository: Cas2ApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
+  private val offenderService: OffenderService,
   private val userService: NomisUserService,
   private val userAccessService: UserAccessService,
   private val domainEventService: DomainEventService,
@@ -78,8 +78,20 @@ class ApplicationService(
     }
   }
 
-  fun createApplication(newApplication: Cas2NewApplication, user: NomisUserEntity, jwt: String) =
+  fun createApplication(crn: String, user: NomisUserEntity, jwt: String) =
     validated<Cas2ApplicationEntity> {
+      val offenderDetailsResult = offenderService.getOffenderByCrn(crn)
+
+      val offenderDetails = when (offenderDetailsResult) {
+        is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
+        is AuthorisableActionResult.Unauthorised -> return "$.crn" hasSingleValidationError "userPermission"
+        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+      }
+
+      if (offenderDetails.otherIds.nomsNumber == null) {
+        throw RuntimeException("Cannot create an Application for an Offender without a NOMS number")
+      }
+
       if (validationErrors.any()) {
         return fieldValidationError
       }
@@ -87,7 +99,7 @@ class ApplicationService(
       val createdApplication = applicationRepository.save(
         Cas2ApplicationEntity(
           id = UUID.randomUUID(),
-          crn = newApplication.crn,
+          crn = crn,
           createdByUser = user,
           data = null,
           document = null,
@@ -95,14 +107,7 @@ class ApplicationService(
           createdAt = OffsetDateTime.now(),
           submittedAt = null,
           schemaUpToDate = true,
-          nomsNumber = newApplication.nomsNumber,
-          pncNumber = newApplication.pncNumber,
-          name = newApplication.name,
-          dateOfBirth = newApplication.dateOfBirth,
-          nationality = newApplication.nationality,
-          sex = newApplication.sex,
-          prisonName = newApplication.prisonName,
-          personStatus = newApplication.personStatus.name,
+          nomsNumber = offenderDetails.otherIds.nomsNumber,
         ),
       )
 

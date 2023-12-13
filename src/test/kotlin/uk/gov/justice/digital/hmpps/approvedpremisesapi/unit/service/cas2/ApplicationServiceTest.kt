@@ -12,12 +12,12 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
@@ -28,8 +28,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.UserAccessService
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -37,6 +37,7 @@ class ApplicationServiceTest {
   private val mockUserRepository = mockk<NomisUserRepository>()
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
+  private val mockOffenderService = mockk<OffenderService>()
   private val mockUserService = mockk<NomisUserService>()
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockDomainEventService = mockk<DomainEventService>()
@@ -46,6 +47,7 @@ class ApplicationServiceTest {
     mockUserRepository,
     mockApplicationRepository,
     mockJsonSchemaService,
+    mockOffenderService,
     mockUserService,
     mockUserAccessService,
     mockDomainEventService,
@@ -126,22 +128,50 @@ class ApplicationServiceTest {
 
   @Nested
   inner class CreateApplication {
+    @Test
+    fun `returns FieldValidationError when Offender is not found`() {
+      val crn = "CRN345"
+      val username = "SOMEPERSON"
+
+      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.NotFound()
+
+      val user = userWithUsername(username)
+
+      val result = applicationService.createApplication(crn, user, "jwt")
+
+      assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+      result as ValidatableActionResult.FieldValidationError
+      assertThat(result.validationMessages).containsEntry("$.crn", "doesNotExist")
+    }
+
+    @Test
+    fun `returns FieldValidationError when user is not authorised to view CRN`() {
+      val crn = "CRN345"
+      val username = "SOMEPERSON"
+
+      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.Unauthorised()
+
+      val user = userWithUsername(username)
+
+      val result = applicationService.createApplication(crn, user, "jwt")
+
+      assertThat(result is ValidatableActionResult.FieldValidationError).isTrue
+      result as ValidatableActionResult.FieldValidationError
+      assertThat(result.validationMessages).containsEntry("$.crn", "userPermission")
+    }
 
     @Test
     fun `returns Success with created Application`() {
       val crn = "CRN345"
       val username = "SOMEPERSON"
-      val newApplication = Cas2NewApplication(
-        crn = crn,
-        nomsNumber = "NOMS123",
-        dateOfBirth = LocalDate.now().minusYears(40),
-        name = "Bob Smith",
-        personStatus = Cas2NewApplication.PersonStatus.inCustody,
-      )
 
       val schema = Cas2ApplicationJsonSchemaEntityFactory().produce()
 
       val user = userWithUsername(username)
+
+      every { mockOffenderService.getOffenderByCrn(crn) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
 
       every { mockJsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java) } returns schema
       every { mockApplicationRepository.save(any()) } answers {
@@ -149,7 +179,7 @@ class ApplicationServiceTest {
           Cas2ApplicationEntity
       }
 
-      val result = applicationService.createApplication(newApplication, user, "jwt")
+      val result = applicationService.createApplication(crn, user, "jwt")
 
       assertThat(result is ValidatableActionResult.Success).isTrue
       result as ValidatableActionResult.Success
@@ -482,6 +512,15 @@ class ApplicationServiceTest {
         it.invocation.args[0]
           as Cas2ApplicationEntity
       }
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withGender("male")
+        .withCrn(application.crn)
+        .produce()
+
+      every { mockOffenderService.getOffenderByCrn(application.crn) } returns AuthorisableActionResult.Success(
+        offenderDetails,
+      )
 
       val _schema = application.schemaVersion as Cas2ApplicationJsonSchemaEntity
 

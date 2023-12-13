@@ -6,10 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import java.sql.Timestamp
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Entity
@@ -28,14 +25,6 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
 SELECT
     CAST(a.id AS TEXT) as id,
     a.crn,
-    a.noms_number as nomsNumber,
-    a.pnc_number as pncNumber,
-    a.name,
-    a.date_of_birth as dateOfBirth,
-    a.nationality,
-    a.sex,
-    a.prison_name as prisonName,
-    a.person_status as personStatus,
     CAST(a.created_by_user_id AS TEXT) as createdByUserId,
     a.created_at as createdAt,
     a.submitted_at as submittedAt
@@ -52,14 +41,6 @@ WHERE a.created_by_user_id = :userId
 SELECT
     CAST(a.id AS TEXT) as id,
     a.crn,
-    a.noms_number as nomsNumber,
-    a.pnc_number as pncNumber,
-    a.name,
-    a.date_of_birth as dateOfBirth,
-    a.nationality,
-    a.sex,
-    a.prison_name as prisonName,
-    a.person_status as personStatus,
     CAST(a.created_by_user_id AS TEXT) as createdByUserId,
     a.created_at as createdAt,
     a.submitted_at as submittedAt
@@ -92,22 +73,6 @@ data class Cas2ApplicationEntity(
 
   val crn: String,
 
-  var nomsNumber: String,
-
-  var pncNumber: String?,
-
-  var name: String,
-
-  var dateOfBirth: LocalDate,
-
-  var nationality: String?,
-
-  var sex: String?,
-
-  var prisonName: String?,
-
-  var personStatus: String,
-
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")
   val createdByUser: NomisUserEntity,
@@ -131,41 +96,17 @@ data class Cas2ApplicationEntity(
   @Transient
   var schemaUpToDate: Boolean,
 
+  var nomsNumber: String?,
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
 }
 
-@Suppress("TooManyFunctions")
 interface AppSummary {
   fun getId(): UUID
   fun getCrn(): String
   fun getCreatedByUserId(): UUID
   fun getCreatedAt(): Timestamp
   fun getSubmittedAt(): Timestamp?
-  fun getNomsNumber(): String
-  fun getPncNumber(): String?
-  fun getName(): String
-  fun getDateOfBirth(): LocalDate
-  fun getNationality(): String?
-  fun getSex(): String
-  fun getPrisonName(): String?
-  fun getPersonStatus(): String
-  fun getPerson(): FullPerson
 }
 
-interface Cas2ApplicationSummary : AppSummary {
-  override fun getPerson(): FullPerson {
-    return FullPerson(
-      type = PersonType.fullPerson,
-      crn = this.getCrn(),
-      nomsNumber = this.getNomsNumber(),
-      pncNumber = this.getPncNumber(),
-      name = this.getName(),
-      dateOfBirth = this.getDateOfBirth(),
-      nationality = this.getNationality(),
-      sex = this.getSex(),
-      prisonName = this.getPrisonName(),
-      status = FullPerson.Status.valueOf(this.getPersonStatus()),
-    )
-  }
-}
+interface Cas2ApplicationSummary : AppSummary

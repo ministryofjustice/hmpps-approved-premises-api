@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 
@@ -21,11 +22,14 @@ class SubmittedApplicationTransformer(
 
   fun transformJpaToApiRepresentation(
     jpa: Cas2ApplicationEntity,
+    personInfo:
+      PersonInfoResult
+      .Success,
   ):
     Cas2SubmittedApplication {
     return Cas2SubmittedApplication(
       id = jpa.id,
-      person = personTransformer.transformCas2ApplicationEntityToPersonApi(jpa),
+      person = personTransformer.transformModelToPersonApi(personInfo),
       submittedBy = nomisUserTransformer.transformJpaToApi(jpa.createdByUser),
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = !jpa.schemaUpToDate,
@@ -38,10 +42,12 @@ class SubmittedApplicationTransformer(
 
   fun transformJpaSummaryToApiRepresentation(
     jpaSummary: Cas2ApplicationSummary,
+    personInfo:
+      PersonInfoResult.Success,
   ): Cas2SubmittedApplicationSummary {
     return Cas2SubmittedApplicationSummary(
       id = jpaSummary.getId(),
-      person = personTransformer.transformCas2ApplicationSummaryToPersonApi(jpaSummary),
+      person = personTransformer.transformModelToPersonApi(personInfo),
       createdByUserId = jpaSummary.getCreatedByUserId(),
       createdAt = jpaSummary.getCreatedAt().toInstant(),
       submittedAt = jpaSummary.getSubmittedAt()?.toInstant(),
