@@ -7,12 +7,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 
 @Component("Cas2ApplicationsTransformer")
 class ApplicationsTransformer(
   private val objectMapper: ObjectMapper,
   private val personTransformer: PersonTransformer,
+  private val nomisUserTransformer: NomisUserTransformer,
 ) {
 
   fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult):
@@ -20,7 +22,7 @@ class ApplicationsTransformer(
     return Cas2Application(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
-      createdByUserId = jpa.createdByUser.id,
+      createdBy = nomisUserTransformer.transformJpaToApi(jpa.createdByUser),
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = !jpa.schemaUpToDate,
       createdAt = jpa.createdAt.toInstant(),
