@@ -11,6 +11,8 @@ import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Mono
 import java.net.URLEncoder
 import java.nio.charset.Charset
+import java.util.*
+import org.springframework.http.HttpHeaders
 
 fun authorizeUser(): ChainBuilder {
   val jwt = getJwt()
@@ -35,9 +37,11 @@ private fun getJwt(): String {
   val webClient = WebClient.create()
 
   val savedRequestCookie = webClient.get()
-    .uri("$HMPPS_AUTH_BASE_URL/auth/oauth/authorize?response_type=code&state=gatling&client_id=gatling&redirect_uri=http://example.org")
+    .uri("$HMPPS_AUTH_BASE_URL/auth/oauth/authorize?response_type=code&state=gatling&client_id=$HMPPS_AUTH_CLIENT_ID&redirect_uri=http://example.org")
+    .header(HttpHeaders.AUTHORIZATION, "Basic ${Base64.getEncoder().encodeToString("$HMPPS_AUTH_CLIENT_ID:$HMPPS_AUTH_CLIENT_SECRET".toByteArray())}")
     .exchangeToMono {
       it.printIfError("authorize")
+      println(it.cookies()["savedrequest"]?.get(0))
       Mono.justOrEmpty(it.cookies()["savedrequest"]?.get(0))
     }
     .block()
