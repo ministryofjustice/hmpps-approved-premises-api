@@ -54,6 +54,8 @@ fun List<BookingEntity>.toBookingsReportData(): List<BookingsReportData> = this
         get() = it.departure?.dateTime?.let { time -> Timestamp.from(time.toInstant()) }
       override val accommodationOutcome: String?
         get() = it.departure?.moveOnCategory?.name
+      override val dutyToReferLocalAuthorityAreaName: String?
+        get() = application?.dutyToReferLocalAuthorityAreaName
     }
   }
   .sortedBy { it.bookingId }
