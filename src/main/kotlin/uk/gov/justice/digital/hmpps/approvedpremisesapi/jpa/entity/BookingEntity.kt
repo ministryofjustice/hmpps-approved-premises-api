@@ -129,17 +129,15 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       LEFT JOIN (
         SELECT
           b.id,
-          (
-            CASE
-              WHEN (SELECT COUNT(1) FROM cancellations c WHERE c.booking_id = b.id) > 0 THEN 'cancelled'
-              WHEN (SELECT COUNT(1) FROM departures d WHERE d.booking_id = b.id) > 0 THEN 'departed'
-              WHEN (SELECT COUNT(1) FROM arrivals a WHERE a.booking_id = b.id) > 0 THEN 'arrived'
-              WHEN (SELECT COUNT(1) FROM confirmations c2 WHERE c2.booking_id = b.id) > 0 THEN 'confirmed'
-              WHEN (SELECT COUNT(1) FROM non_arrivals n WHERE n.booking_id = n.id) > 0 THEN 'not-arrived'
+          CASE
+              WHEN EXISTS (SELECT 1 FROM cancellations c WHERE c.booking_id = b.id) THEN 'cancelled'
+              WHEN EXISTS (SELECT 1 FROM departures d WHERE d.booking_id = b.id) THEN 'departed'
+              WHEN EXISTS (SELECT 1 FROM arrivals a WHERE a.booking_id = b.id) THEN 'arrived'
+              WHEN EXISTS (SELECT 1 FROM confirmations c2 WHERE c2.booking_id = b.id) THEN 'confirmed'
+              WHEN EXISTS (SELECT 1 FROM non_arrivals n WHERE n.booking_id = n.id) THEN 'not-arrived'
               WHEN :serviceName = 'approved-premises' THEN 'awaiting-arrival'
               ELSE 'provisional'
-            END
-          ) AS booking_status
+          END AS booking_status
         FROM bookings b
       ) as s ON b.id = s.id
       LEFT JOIN beds b2 ON b.bed_id = b2.id
