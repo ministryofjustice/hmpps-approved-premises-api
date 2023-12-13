@@ -21,11 +21,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmittedApplicationTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getFullInfoForPersonOrThrow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getInfoForPersonOrThrowInternalServerError
 import java.util.UUID
 
 @Service("Cas2SubmissionsController")
@@ -33,7 +30,6 @@ class SubmissionsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
   private val applicationTransformer: SubmittedApplicationTransformer,
-  private val offenderService: OffenderService,
   private val externalUserService: ExternalUserService,
   private val statusUpdateService: StatusUpdateService,
 ) : SubmissionsCas2Delegate {
@@ -42,7 +38,7 @@ class SubmissionsController(
     httpAuthService.getCas2AuthenticatedPrincipalOrThrow()
     ensureExternalUserPersisted()
     val applications = applicationService.getAllSubmittedApplicationsForAssessor()
-    return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it) })
+    return ResponseEntity.ok(applications.map { transformToSummary(it) })
   }
 
   override fun submissionsApplicationIdGet(applicationId: UUID): ResponseEntity<Cas2SubmittedApplication> {
@@ -58,7 +54,7 @@ class SubmissionsController(
     }
 
     if (application != null) {
-      return ResponseEntity.ok(getPersonDetailAndTransform(application))
+      return ResponseEntity.ok(transformToApplication(application))
     }
     throw NotFoundProblem(applicationId, "Application")
   }
@@ -129,26 +125,18 @@ class SubmissionsController(
     externalUserService.getUserForRequest()
   }
 
-  private fun getPersonDetailAndTransformToSummary(
+  private fun transformToSummary(
     application: Cas2ApplicationSummary,
   ):
     Cas2SubmittedApplicationSummary {
-    val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn())
-
-    return applicationTransformer.transformJpaSummaryToApiRepresentation(
-      application,
-      personInfo,
-    )
+    return applicationTransformer.transformJpaSummaryToApiRepresentation(application)
   }
 
-  private fun getPersonDetailAndTransform(
+  private fun transformToApplication(
     application: Cas2ApplicationEntity,
   ): Cas2SubmittedApplication {
-    val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
-
     return applicationTransformer.transformJpaToApiRepresentation(
       application,
-      personInfo,
     )
   }
 }

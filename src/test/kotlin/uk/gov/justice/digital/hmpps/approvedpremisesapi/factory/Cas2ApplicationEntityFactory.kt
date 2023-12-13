@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
@@ -10,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -27,6 +29,14 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var statusUpdates: Yielded<MutableList<Cas2StatusUpdateEntity>> = { mutableListOf() }
   private var eventNumber: Yielded<String> = { randomInt(1, 9).toString() }
   private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
+
+  private var name: Yielded<String> = { "First Surname" }
+  private var dateOfBirth: Yielded<LocalDate> = { LocalDate.now().minusYears(60) }
+  private var nationality: Yielded<String?> = { null }
+  private var sex: Yielded<String?> = { null }
+  private var prisonName: Yielded<String?> = { null }
+  private var pncNumber: Yielded<String?> = { null }
+  private var personStatus: Yielded<String> = { Cas2NewApplication.PersonStatus.inCustody.name }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -80,6 +90,22 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.eventNumber = { eventNumber }
   }
 
+  fun withNationality(nationality: String) = apply {
+    this.nationality = { nationality }
+  }
+
+  fun withSex(sex: String) = apply {
+    this.sex = { sex }
+  }
+
+  fun withPrisonName(prisonName: String) = apply {
+    this.prisonName = { prisonName }
+  }
+
+  fun withPncNumber(pncNumber: String) = apply {
+    this.pncNumber = { pncNumber }
+  }
+
   override fun produce(): Cas2ApplicationEntity = Cas2ApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -92,5 +118,12 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     statusUpdates = this.statusUpdates(),
     schemaUpToDate = false,
     nomsNumber = this.nomsNumber(),
+    name = this.name(),
+    sex = this.sex(),
+    nationality = this.nationality(),
+    dateOfBirth = this.dateOfBirth(),
+    prisonName = this.prisonName(),
+    pncNumber = this.pncNumber(),
+    personStatus = this.personStatus(),
   )
 }

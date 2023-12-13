@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
@@ -17,9 +18,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import java.io.IOException
 import java.io.InputStreamReader
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@Suppress("MagicNumber")
 class Cas2ApplicationsSeedJob(
   fileName: String,
   private val repository: Cas2ApplicationRepository,
@@ -74,6 +77,13 @@ class Cas2ApplicationsSeedJob(
         submittedAt = row.submittedAt,
         schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
         schemaUpToDate = true,
+        name = "Aadland Bertrand",
+        dateOfBirth = LocalDate.of(1978, 1, 6),
+        sex = "Male",
+        personStatus = Cas2NewApplication.PersonStatus.inCustody.name,
+        nationality = null,
+        pncNumber = null,
+        prisonName = null,
       ),
     )
     if (row.statusUpdates != "0") {

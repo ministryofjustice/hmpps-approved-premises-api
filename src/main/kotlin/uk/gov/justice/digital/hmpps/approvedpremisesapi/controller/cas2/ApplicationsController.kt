@@ -6,10 +6,9 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.ApplicationsCas2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -19,10 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getFullInfoForPersonOrThrow
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getInfoForPersonOrThrowInternalServerError
 import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
@@ -36,7 +32,6 @@ class ApplicationsController(
   private val applicationService: ApplicationService,
   private val applicationsTransformer: ApplicationsTransformer,
   private val objectMapper: ObjectMapper,
-  private val offenderService: OffenderService,
   private val userService: NomisUserService,
 ) : ApplicationsCas2Delegate {
 
@@ -45,7 +40,7 @@ class ApplicationsController(
 
     val applications = applicationService.getAllApplicationsForUser(user)
 
-    return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it, user) })
+    return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it) })
   }
 
   override fun applicationsApplicationIdGet(applicationId: UUID):
@@ -62,21 +57,19 @@ class ApplicationsController(
     }
 
     if (application != null) {
-      return ResponseEntity.ok(getPersonDetailAndTransform(application, user))
+      return ResponseEntity.ok(getPersonDetailAndTransform(application))
     }
     throw NotFoundProblem(applicationId, "Application")
   }
 
   @Transactional
-  override fun applicationsPost(body: NewApplication):
+  override fun applicationsPost(body: Cas2NewApplication):
     ResponseEntity<Application> {
     val nomisPrincipal = httpAuthService.getNomisPrincipalOrThrow()
     val user = userService.getUserForRequest()
 
-    val personInfo = offenderService.getFullInfoForPersonOrThrow(body.crn)
-
     val applicationResult = applicationService.createApplication(
-      body.crn,
+      body,
       user,
       nomisPrincipal.token.tokenValue,
     )
@@ -90,7 +83,7 @@ class ApplicationsController(
 
     return ResponseEntity
       .created(URI.create("/cas2/applications/${application.id}"))
-      .body(applicationsTransformer.transformJpaToApi(application, personInfo))
+      .body(applicationsTransformer.transformJpaToApi(application))
   }
 
   @Transactional
@@ -123,26 +116,20 @@ class ApplicationsController(
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
-    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user))
+    return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication))
   }
 
   private fun getPersonDetailAndTransformToSummary(
     application: uk.gov.justice.digital
     .hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary,
-    user: NomisUserEntity,
   ):
     ApplicationSummary {
-    val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn())
-
-    return applicationsTransformer.transformJpaSummaryToSummary(application, personInfo)
+    return applicationsTransformer.transformJpaSummaryToSummary(application)
   }
 
   private fun getPersonDetailAndTransform(
     application: Cas2ApplicationEntity,
-    user: NomisUserEntity,
   ): Application {
-    val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
-
-    return applicationsTransformer.transformJpaToApi(application, personInfo)
+    return applicationsTransformer.transformJpaToApi(application)
   }
 }
