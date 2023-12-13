@@ -86,9 +86,7 @@ class PremisesServiceTest {
     val startDate = LocalDate.now()
     val endDate = LocalDate.now().plusDays(3)
 
-    val premises = approvedPremisesFactory
-      .withTotalBeds(30)
-      .produce()
+    val premises = approvedPremisesFactory.produce()
 
     every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf()
     every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, startDate, endDate) } returns mutableListOf()
@@ -107,9 +105,7 @@ class PremisesServiceTest {
     val startDate = LocalDate.now()
     val endDate = LocalDate.now().plusDays(6)
 
-    val premises = approvedPremisesFactory
-      .withTotalBeds(30)
-      .produce()
+    val premises = approvedPremisesFactory.produce()
 
     val lostBedEntityOne = LostBedsEntityFactory()
       .withPremises(premises)
@@ -203,9 +199,7 @@ class PremisesServiceTest {
     val startDate = LocalDate.now()
     val endDate = LocalDate.now().plusDays(6)
 
-    val premises = approvedPremisesFactory
-      .withTotalBeds(30)
-      .produce()
+    val premises = approvedPremisesFactory.produce()
 
     val lostBedEntity = LostBedsEntityFactory()
       .withPremises(premises)
@@ -625,6 +619,7 @@ class PremisesServiceTest {
 
     every { premisesService.getLastBookingDate(premises) } answers { ninetyNineYearsFromNow }
     every { premisesService.getLastLostBedsDate(premises) } answers { ninetyNineYearsFromNow }
+    every { premisesService.getBedCount(premises) } answers { 30 }
 
     every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, oneYearFromNow) } answers { emptyList() }
     every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, oneYearFromNow) } answers { emptyList() }
@@ -649,6 +644,7 @@ class PremisesServiceTest {
 
     every { premisesService.getLastBookingDate(premises) } answers { today.plusWeeks(2) }
     every { premisesService.getLastLostBedsDate(premises) } answers { fourMonthsFromNow }
+    every { premisesService.getBedCount(premises) } answers { 30 }
 
     every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
     every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
@@ -671,6 +667,7 @@ class PremisesServiceTest {
 
     every { premisesService.getLastBookingDate(premises) } answers { fourMonthsFromNow }
     every { premisesService.getLastLostBedsDate(premises) } answers { today.plusWeeks(2) }
+    every { premisesService.getBedCount(premises) } answers { 30 }
 
     every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
     every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
@@ -693,6 +690,7 @@ class PremisesServiceTest {
 
     every { premisesService.getLastBookingDate(premises) } answers { fourMonthsFromNow }
     every { premisesService.getLastLostBedsDate(premises) } answers { null }
+    every { premisesService.getBedCount(premises) } answers { 30 }
 
     every { bookingRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }
     every { lostBedsRepositoryMock.findAllByPremisesIdAndOverlappingDate(premises.id, today, fourMonthsFromNow) } answers { emptyList() }

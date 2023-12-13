@@ -26,7 +26,20 @@ import javax.persistence.Table
 
 @Repository
 interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
-  fun findAllByProbationRegion_Id(probationRegionId: UUID): List<PremisesEntity>
+
+  @Query("SELECT p as premises, (SELECT CAST(COUNT(b) as int) FROM p.rooms r JOIN r.beds b WHERE r.premises = p GROUP BY p) as roomCount FROM PremisesEntity p")
+  fun findAllWithRoomCount(): List<PremisesWithRoomCount>
+
+  @Query(
+    """
+        SELECT 
+          p as premises, 
+          (SELECT CAST(COUNT(b) as int) FROM p.rooms r JOIN r.beds b WHERE r.premises = p GROUP BY p) as roomCount 
+        FROM PremisesEntity p
+        WHERE p.probationRegion.id = :probationRegionId
+    """,
+  )
+  fun findAllByProbationRegion(probationRegionId: UUID): List<PremisesWithRoomCount>
 
   @Query(
     """
@@ -49,11 +62,19 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   @Query("SELECT new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesSummary(p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.status, CAST(COUNT(b) as int), p.apCode) FROM ApprovedPremisesEntity p LEFT JOIN p.rooms r LEFT JOIN r.beds b GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.apCode, p.status")
   fun findAllApprovedPremisesSummary(): List<ApprovedPremisesSummary>
 
-  @Query("SELECT p FROM PremisesEntity p WHERE TYPE(p) = :type")
-  fun <T : PremisesEntity> findAllByType(type: Class<T>): List<PremisesEntity>
+  @Query("SELECT p as premises, (SELECT CAST(COUNT(b) as int) FROM p.rooms r JOIN r.beds b WHERE r.premises = p GROUP BY p) as roomCount FROM PremisesEntity p WHERE TYPE(p) = :type")
+  fun <T : PremisesEntity> findAllByType(type: Class<T>): List<PremisesWithRoomCount>
 
-  @Query("SELECT p FROM PremisesEntity p WHERE p.probationRegion.id = :probationRegionId AND TYPE(p) = :type")
-  fun <T : PremisesEntity> findAllByProbationRegion_IdAndType(probationRegionId: UUID, type: Class<T>): List<PremisesEntity>
+  @Query(
+    """
+        SELECT 
+          p as premises, 
+          (SELECT CAST(COUNT(b) as int) FROM p.rooms r LEFT JOIN r.beds b WHERE r.premises = p GROUP BY p) as roomCount 
+        FROM PremisesEntity p 
+        WHERE p.probationRegion.id = :probationRegionId AND TYPE(p) = :type
+    """,
+  )
+  fun <T : PremisesEntity> findAllByProbationRegionAndType(probationRegionId: UUID, type: Class<T>): List<PremisesWithRoomCount>
 
   @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>): Boolean
@@ -63,6 +84,9 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
 
   @Query("SELECT p FROM PremisesEntity p WHERE ap_code = :apCode AND TYPE(p) = :type")
   fun <T : PremisesEntity> findByApCode(apCode: String, type: Class<T>): PremisesEntity?
+
+  @Query("SELECT CAST(COUNT(b) as int) FROM PremisesEntity p JOIN p.rooms r JOIN r.beds b WHERE r.premises = :premises")
+  fun getBedCount(premises: PremisesEntity): Int
 
   @Query(
     """
@@ -118,6 +142,7 @@ abstract class PremisesEntity(
   var postcode: String,
   var longitude: Double?,
   var latitude: Double?,
+  @Deprecated("Total Beds should no longer be used as it can provide an inaccurate count. Use PremisesService#getBedCount instead.")
   var totalBeds: Int,
   var notes: String,
   var emailAddress: String?,
@@ -271,4 +296,9 @@ interface BookingSummary {
   fun getBedName(): String?
   fun getBedCode(): String?
   fun getStatus(): BookingStatus
+}
+
+interface PremisesWithRoomCount {
+  fun getPremises(): PremisesEntity
+  fun getRoomCount(): Int
 }

@@ -198,7 +198,8 @@ class PremisesController(
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
-    return ResponseEntity.ok(premisesTransformer.transformJpaToApi(updatedPremises, updatedPremises.totalBeds))
+    val totalBeds = premisesService.getBedCount(premises)
+    return ResponseEntity.ok(premisesTransformer.transformJpaToApi(updatedPremises, totalBeds = totalBeds, availableBedsForToday = totalBeds))
   }
 
   override fun premisesGet(xServiceName: ServiceName?, xUserRegion: UUID?): ResponseEntity<List<Premises>> {
@@ -206,7 +207,7 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val premises = when {
+    val premisesWithRoomCounts = when {
       xServiceName == null && xUserRegion == null -> premisesService.getAllPremises()
       xServiceName != null && xUserRegion != null -> premisesService.getAllPremisesInRegionForService(xUserRegion, xServiceName)
       xServiceName != null -> premisesService.getAllPremisesForService(xServiceName)
@@ -214,11 +215,13 @@ class PremisesController(
     }
 
     return ResponseEntity.ok(
-      premises.map {
-        val availableBedsForToday = premisesService.getAvailabilityForRange(it, LocalDate.now(), LocalDate.now().plusDays(1))
-          .values.first().getFreeCapacity(it.totalBeds)
+      premisesWithRoomCounts.map {
+        val premises = it.getPremises()
+        val totalBeds = it.getRoomCount()
+        val availableBedsForToday = premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
+          .values.first().getFreeCapacity(totalBeds)
 
-        premisesTransformer.transformJpaToApi(it, availableBedsForToday)
+        premisesTransformer.transformJpaToApi(premises, totalBeds, availableBedsForToday)
       },
     )
   }
@@ -252,7 +255,9 @@ class PremisesController(
         turnaroundWorkingDayCount = body.turnaroundWorkingDayCount,
       ),
     )
-    return ResponseEntity(premisesTransformer.transformJpaToApi(premises, premises.totalBeds), HttpStatus.CREATED)
+
+    val totalBeds = premisesService.getBedCount(premises)
+    return ResponseEntity(premisesTransformer.transformJpaToApi(premises, totalBeds = totalBeds, availableBedsForToday = totalBeds), HttpStatus.CREATED)
   }
 
   override fun premisesPremisesIdGet(premisesId: UUID): ResponseEntity<Premises> {
@@ -263,10 +268,11 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
+    val totalBeds = premisesService.getBedCount(premises)
     val availableBedsForToday = premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
-      .values.first().getFreeCapacity(premises.totalBeds)
+      .values.first().getFreeCapacity(totalBeds)
 
-    return ResponseEntity.ok(premisesTransformer.transformJpaToApi(premises, availableBedsForToday))
+    return ResponseEntity.ok(premisesTransformer.transformJpaToApi(premises, totalBeds, availableBedsForToday))
   }
 
   override fun premisesPremisesIdBookingsGet(premisesId: UUID): ResponseEntity<List<Booking>> = runBlocking {
@@ -958,6 +964,7 @@ class PremisesController(
     val bookingsSummary = premisesService.getPremisesSummary(premisesId)
     val crns = bookingsSummary.map { it.getCrn() }
     val personSummary = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+    val totalBeds = premisesService.getBedCount(premises)
 
     val bookingsSummaryMapped = bookingsSummary.map {
       val personInfo = personSummary.find { personSummary -> personSummary.crn == it.getCrn() } ?: PersonSummaryInfoResult.NotFound(it.getCrn())
@@ -965,7 +972,7 @@ class PremisesController(
     }
 
     val availableBedsForToday = premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
-      .values.first().getFreeCapacity(premises.totalBeds)
+      .values.first().getFreeCapacity(totalBeds)
 
     val dateCapacities = premisesService.getDateCapacities(premises)
 
@@ -980,7 +987,7 @@ class PremisesController(
         name = premises.name,
         apCode = apCode,
         postcode = premises.postcode,
-        bedCount = premises.totalBeds,
+        bedCount = totalBeds,
         availableBedsForToday = availableBedsForToday,
         bookings = bookingsSummaryMapped,
         dateCapacities = dateCapacities,

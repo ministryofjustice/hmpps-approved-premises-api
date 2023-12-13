@@ -375,11 +375,7 @@ class LostBedsTest : IntegrationTestBase() {
     }
 
     val bed = bedEntityFactory.produceAndPersist {
-      withYieldedRoom {
-        roomEntityFactory.produceAndPersist {
-          withYieldedPremises { premises }
-        }
-      }
+      withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
     }
 
     webTestClient.post()
@@ -444,11 +440,14 @@ class LostBedsTest : IntegrationTestBase() {
   fun `Create Lost Beds on Approved Premises returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withTotalBeds(3)
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
+      }
+
+      bedEntityFactory.produceAndPersistMultiple(3) {
+        withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
       }
 
       val reason = lostBedReasonEntityFactory.produceAndPersist {
@@ -495,13 +494,16 @@ class LostBedsTest : IntegrationTestBase() {
 
   @Test
   fun `Create Lost Bed on Approved Premises succeeds even if overlapping with Booking`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
+    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withTotalBeds(3)
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
+      }
+
+      bedEntityFactory.produceAndPersistMultiple(2) {
+        withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
       }
 
       val reason = lostBedReasonEntityFactory.produceAndPersist {
@@ -664,11 +666,14 @@ class LostBedsTest : IntegrationTestBase() {
   fun `Create Lost Beds on Approved Premises for current day does not break GET all Premises endpoint`() {
     `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withTotalBeds(3)
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
+      }
+
+      bedEntityFactory.produceAndPersistMultiple(2) {
+        withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
       }
 
       val lostBed = lostBedsEntityFactory.produceAndPersist {
@@ -807,11 +812,14 @@ class LostBedsTest : IntegrationTestBase() {
   fun `Update Lost Beds on Approved Premises returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withTotalBeds(3)
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
+      }
+
+      bedEntityFactory.produceAndPersistMultiple(2) {
+        withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
       }
 
       val bed = bedEntityFactory.produceAndPersist {
@@ -1063,11 +1071,14 @@ class LostBedsTest : IntegrationTestBase() {
   fun `Cancel Lost Bed on Approved Premises returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withTotalBeds(3)
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
+      }
+
+      bedEntityFactory.produceAndPersistMultiple(2) {
+        withYieldedRoom { roomEntityFactory.produceAndPersist { withPremises(premises) } }
       }
 
       val lostBeds = lostBedsEntityFactory.produceAndPersist {

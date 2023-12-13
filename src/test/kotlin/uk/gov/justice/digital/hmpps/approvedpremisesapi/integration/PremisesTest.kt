@@ -31,6 +31,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
@@ -183,7 +185,6 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-        withTotalBeds(20)
       }
 
       val premisesToGet = premises[0]
@@ -232,7 +233,6 @@ class PremisesTest : IntegrationTestBase() {
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withProbationRegion(user.probationRegion)
-        withTotalBeds(20)
         withYieldedProbationDeliveryUnit {
           probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(user.probationRegion)
@@ -291,7 +291,6 @@ class PremisesTest : IntegrationTestBase() {
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withProbationRegion(user.probationRegion)
-        withTotalBeds(20)
         withYieldedProbationDeliveryUnit {
           probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(user.probationRegion)
@@ -355,7 +354,6 @@ class PremisesTest : IntegrationTestBase() {
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withProbationRegion(otherProbationRegion)
-        withTotalBeds(20)
         withYieldedProbationDeliveryUnit {
           probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(otherProbationRegion)
@@ -427,7 +425,6 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-        withTotalBeds(20)
       }
 
       val premisesToGet = premises[0]
@@ -465,7 +462,6 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-        withTotalBeds(20)
       }
 
       val premisesToGet = premises[0]
@@ -501,7 +497,6 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-        withTotalBeds(20)
       }
 
       val premisesToGet = premises[0]
@@ -539,7 +534,6 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-        withTotalBeds(20)
       }
 
       val premisesToGet = premises[0]
@@ -580,7 +574,6 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-        withTotalBeds(20)
       }
 
       val premisesToGet = premises[0]
@@ -621,7 +614,6 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-        withTotalBeds(20)
       }
 
       val premisesToGet = premises[0]
@@ -663,7 +655,6 @@ class PremisesTest : IntegrationTestBase() {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
         withName("old-premises-name")
-        withTotalBeds(20)
       }
 
       webTestClient.put()
@@ -712,7 +703,6 @@ class PremisesTest : IntegrationTestBase() {
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withProbationRegion(user.probationRegion)
-        withTotalBeds(20)
         withYieldedProbationDeliveryUnit {
           probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(user.probationRegion)
@@ -774,7 +764,6 @@ class PremisesTest : IntegrationTestBase() {
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withProbationRegion(user.probationRegion)
-        withTotalBeds(20)
         withYieldedProbationDeliveryUnit {
           probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(user.probationRegion)
@@ -1179,8 +1168,7 @@ class PremisesTest : IntegrationTestBase() {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
         withService("CAS1")
-        withTotalBeds(20)
-      }
+      }.onEach { addRoomsAndBeds(it, roomCount = 5, bedsPerRoom = 4) }
 
       val cas3Premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1188,14 +1176,13 @@ class PremisesTest : IntegrationTestBase() {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
         withService("CAS3")
-        withTotalBeds(20)
-      }
+      }.onEach { addRoomsAndBeds(it, roomCount = 4, bedsPerRoom = 5) }
 
       val premises = cas1Premises + cas3Premises
 
       val expectedJson = objectMapper.writeValueAsString(
         premises.map {
-          premisesTransformer.transformJpaToApi(it, 20)
+          premisesTransformer.transformJpaToApi(it, 20, 20)
         },
       )
 
@@ -1219,8 +1206,7 @@ class PremisesTest : IntegrationTestBase() {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
         withService("CAS1")
-        withTotalBeds(20)
-      }
+      }.onEach { addRoomsAndBeds(it, roomCount = 5, bedsPerRoom = 4) }
 
       // Add some extra premises for the other service that shouldn't be returned
       temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
@@ -1229,12 +1215,11 @@ class PremisesTest : IntegrationTestBase() {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
         withService("CAS3")
-        withTotalBeds(20)
-      }
+      }.onEach { addRoomsAndBeds(it, roomCount = 6, bedsPerRoom = 4) }
 
       val expectedJson = objectMapper.writeValueAsString(
         premises.map {
-          premisesTransformer.transformJpaToApi(it, 20)
+          premisesTransformer.transformJpaToApi(it, 20, 20)
         },
       )
 
@@ -1291,20 +1276,18 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion { region }
         withService("CAS3")
-        withTotalBeds(20)
         withYieldedProbationDeliveryUnit {
           probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(region)
           }
         }
-      }
+      }.onEach { addRoomsAndBeds(it, roomCount = 2, bedsPerRoom = 10) }
 
       val cas1Premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion { region }
         withService("CAS1")
-        withTotalBeds(20)
-      }
+      }.onEach { addRoomsAndBeds(it, roomCount = 2, 10) }
 
       // Add some extra premises in both services for other regions that shouldn't be returned
       val otherRegion = probationRegionEntityFactory.produceAndPersist {
@@ -1317,26 +1300,24 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion { otherRegion }
         withService("CAS3")
-        withTotalBeds(20)
         withYieldedProbationDeliveryUnit {
           probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(otherRegion)
           }
         }
-      }
+      }.onEach { addRoomsAndBeds(it, roomCount = 2, 10) }
 
       approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion { otherRegion }
         withService("CAS1")
-        withTotalBeds(20)
-      }
+      }.onEach { addRoomsAndBeds(it, roomCount = 1, 20) }
 
       val expectedPremises = cas1Premises + cas3Premises
 
       val expectedJson = objectMapper.writeValueAsString(
         expectedPremises.map {
-          premisesTransformer.transformJpaToApi(it, 20)
+          premisesTransformer.transformJpaToApi(it, 20, 20)
         },
       )
 
@@ -1359,21 +1340,19 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withProbationRegion(user.probationRegion)
         withService("CAS3")
-        withTotalBeds(20)
         withYieldedProbationDeliveryUnit {
           probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(user.probationRegion)
           }
         }
-      }
+      }.onEach { addRoomsAndBeds(it, roomCount = 20, 1) }
 
       // Add some extra premises in the same region but in Approved Premises that shouldn't be returned
       approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withProbationRegion(user.probationRegion)
         withService("CAS1")
-        withTotalBeds(20)
-      }
+      }.onEach { addRoomsAndBeds(it, roomCount = 5, 4) }
 
       // Add some extra premises in both services for other regions that shouldn't be returned
       val otherProbationRegion = probationRegionEntityFactory.produceAndPersist {
@@ -1386,24 +1365,22 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withProbationRegion(otherProbationRegion)
         withService("CAS3")
-        withTotalBeds(20)
         withYieldedProbationDeliveryUnit {
           probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(otherProbationRegion)
           }
         }
-      }
+      }.onEach { addRoomsAndBeds(it, roomCount = 4, 5) }
 
       approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withProbationRegion(otherProbationRegion)
         withService("CAS1")
-        withTotalBeds(20)
-      }
+      }.onEach { addRoomsAndBeds(it, roomCount = 4, 5) }
 
       val expectedJson = objectMapper.writeValueAsString(
         premises.map {
-          premisesTransformer.transformJpaToApi(it, 20)
+          premisesTransformer.transformJpaToApi(it, 20, 20)
         },
       )
 
@@ -1428,11 +1405,10 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-        withTotalBeds(20)
-      }
+      }.onEach { addRoomsAndBeds(it, roomCount = 4, 5) }
 
       val premisesToGet = premises[2]
-      val expectedJson = objectMapper.writeValueAsString(premisesTransformer.transformJpaToApi(premises[2], 20))
+      val expectedJson = objectMapper.writeValueAsString(premisesTransformer.transformJpaToApi(premises[2], 20, 20))
 
       webTestClient.get()
         .uri("/premises/${premisesToGet.id}")
@@ -1453,8 +1429,7 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-        withTotalBeds(20)
-      }
+      }.onEach { addRoomsAndBeds(it, roomCount = 4, 5) }
 
       val keyWorker = ContextStaffMemberFactory().produce()
       premises.forEach {
@@ -1469,7 +1444,7 @@ class PremisesTest : IntegrationTestBase() {
       }
 
       val premisesToGet = premises[2]
-      val expectedJson = objectMapper.writeValueAsString(premisesTransformer.transformJpaToApi(premises[2], 19))
+      val expectedJson = objectMapper.writeValueAsString(premisesTransformer.transformJpaToApi(premises[2], 20, 19))
 
       webTestClient.get()
         .uri("/premises/${premisesToGet.id}")
@@ -1509,7 +1484,6 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-        withTotalBeds(20)
       }
 
       val premisesToGet = premises[2]
@@ -1566,21 +1540,14 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-        withTotalBeds(20)
       }
+
+      val rooms = addRoomsAndBeds(premises, roomCount = 4, 5)
 
       val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
         withNomsNumber("26")
         withPremises(premises)
-        withBed(
-          bedEntityFactory.produceAndPersist() {
-            withRoom(
-              roomEntityFactory.produceAndPersist() {
-                withPremises(premises)
-              },
-            )
-          },
-        )
+        withBed(rooms.first().beds.first())
       }
 
       bookings.forEach {
@@ -1653,7 +1620,7 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("$.name").isEqualTo("${premises.name}")
         .jsonPath("$.apCode").isEqualTo("${premises.apCode}")
         .jsonPath("$.postcode").isEqualTo("${premises.postcode}")
-        .jsonPath("$.bedCount").isEqualTo("${premises.totalBeds}")
+        .jsonPath("$.bedCount").isEqualTo("20")
         .jsonPath("$.availableBedsForToday").isEqualTo("17")
         .jsonPath("$.bookings").isArray
         .jsonPath("$.bookings[0].id").isEqualTo(bookings[0].id.toString())
@@ -1705,8 +1672,10 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-        withTotalBeds(20)
       }
+
+      val totalBeds = 20
+      val rooms = addRoomsAndBeds(premises, roomCount = 4, 5)
 
       val startDate = LocalDate.now()
 
@@ -1723,30 +1692,14 @@ class PremisesTest : IntegrationTestBase() {
           withStartDate(startDate.plusDays(1))
           withEndDate(startDate.plusDays(2))
           withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
-          withBed(
-            bedEntityFactory.produceAndPersist {
-              withYieldedRoom {
-                roomEntityFactory.produceAndPersist {
-                  withYieldedPremises { premises }
-                }
-              }
-            },
-          )
+          withBed(rooms[0].beds[0])
         },
         lostBedsEntityFactory.produceAndPersist {
           withPremises(premises)
           withStartDate(startDate.plusDays(1))
           withEndDate(startDate.plusDays(2))
           withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
-          withBed(
-            bedEntityFactory.produceAndPersist {
-              withYieldedRoom {
-                roomEntityFactory.produceAndPersist {
-                  withYieldedPremises { premises }
-                }
-              }
-            },
-          )
+          withBed(rooms[1].beds[0])
         },
       )
 
@@ -1755,15 +1708,7 @@ class PremisesTest : IntegrationTestBase() {
         withStartDate(startDate.plusDays(1))
         withEndDate(startDate.plusDays(2))
         withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
-        withBed(
-          bedEntityFactory.produceAndPersist {
-            withYieldedRoom {
-              roomEntityFactory.produceAndPersist {
-                withYieldedPremises { premises }
-              }
-            }
-          },
-        )
+        withBed(rooms[2].beds[0])
       }
 
       cancelledLostBed.cancellation = lostBedCancellationEntityFactory.produceAndPersist {
@@ -1853,8 +1798,10 @@ class PremisesTest : IntegrationTestBase() {
         val bookingsForToday = bookings
           .filter { it.cancellation == null && it.nonArrival == null }
           .filter { it.arrivalDate <= date && it.departureDate > date }
-        (premises.totalBeds - bookingsForToday.count()) - lostBedsForToday.count()
+        (totalBeds - bookingsForToday.count()) - lostBedsForToday.count()
       }
+
+      println(responseBody.dateCapacities)
 
       assertThat(responseBody.dateCapacities?.get(0)).isEqualTo(
         DateCapacity(date = startDate, getTotalBedsForDate(startDate)),
@@ -2134,15 +2081,7 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-      }
-
-      val room = roomEntityFactory.produceAndPersist {
-        withYieldedPremises { premises }
-      }
-
-      bedEntityFactory.produceAndPersistMultiple(5) {
-        withYieldedRoom { room }
-      }
+      }.also { addRoomsAndBeds(it, roomCount = 2, bedsPerRoom = 5) }
 
       webTestClient.get()
         .uri("/premises/${premises.id}")
@@ -2151,7 +2090,7 @@ class PremisesTest : IntegrationTestBase() {
         .expectStatus()
         .isOk
         .expectBody()
-        .jsonPath("$.bedCount").isEqualTo(5)
+        .jsonPath("$.bedCount").isEqualTo(10)
     }
   }
 
@@ -2647,7 +2586,6 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-        withTotalBeds(20)
       }
 
       val room = roomEntityFactory.produceAndPersist {
@@ -2780,7 +2718,6 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-        withTotalBeds(20)
       }
 
       val room = roomEntityFactory.produceAndPersist {
@@ -2809,7 +2746,6 @@ class PremisesTest : IntegrationTestBase() {
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
       }
-      withTotalBeds(20)
     }
 
     val room = roomEntityFactory.produceAndPersist {
@@ -2843,7 +2779,6 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-        withTotalBeds(20)
       }
 
       val roomIdToRequest = UUID.randomUUID().toString()
@@ -2984,5 +2919,17 @@ class PremisesTest : IntegrationTestBase() {
       Arguments.of(0, "isNotAPositiveInteger"),
       Arguments.of(-4, "isNotAPositiveInteger"),
     )
+  }
+
+  fun addRoomsAndBeds(premises: PremisesEntity, roomCount: Int, bedsPerRoom: Int): List<RoomEntity> {
+    return roomEntityFactory.produceAndPersistMultiple(roomCount) {
+      withYieldedPremises { premises }
+    }.onEach {
+      bedEntityFactory.produceAndPersistMultiple(bedsPerRoom) {
+        withYieldedRoom { it }
+      }
+    }.map {
+      roomTestRepository.getReferenceById(it.id)
+    }
   }
 }

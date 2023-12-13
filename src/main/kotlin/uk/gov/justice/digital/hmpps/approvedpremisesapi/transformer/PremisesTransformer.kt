@@ -17,7 +17,7 @@ class PremisesTransformer(
   private val characteristicTransformer: CharacteristicTransformer,
   private val probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer,
 ) {
-  fun transformJpaToApi(jpa: PremisesEntity, availableBedsForToday: Int): Premises = when (jpa) {
+  fun transformJpaToApi(jpa: PremisesEntity, totalBeds: Int, availableBedsForToday: Int): Premises = when (jpa) {
     is ApprovedPremisesEntity -> ApprovedPremises(
       id = jpa.id,
       name = jpa.name,
@@ -26,7 +26,7 @@ class PremisesTransformer(
       addressLine2 = jpa.addressLine2,
       town = jpa.town,
       postcode = jpa.postcode,
-      bedCount = jpa.totalBeds,
+      bedCount = totalBeds,
       service = ServiceName.approvedPremises.value,
       notes = jpa.notes,
       availableBedsForToday = availableBedsForToday,
@@ -43,7 +43,7 @@ class PremisesTransformer(
       addressLine2 = jpa.addressLine2,
       town = jpa.town,
       postcode = jpa.postcode,
-      bedCount = jpa.rooms.flatMap { it.beds }.size,
+      bedCount = totalBeds,
       service = ServiceName.temporaryAccommodation.value,
       notes = jpa.notes,
       availableBedsForToday = availableBedsForToday,

@@ -28,7 +28,6 @@ class PremisesSummaryTest : IntegrationTestBase() {
           }
         }
         withService("CAS3")
-        withTotalBeds(0) // A static legacy column that we don't use
       }
 
       // unexpectedCas3Premises that's in a different region
@@ -100,7 +99,6 @@ class PremisesSummaryTest : IntegrationTestBase() {
         withStatus(PropertyStatus.active)
         withApCode("APCODE")
         withService("CAS3")
-        withTotalBeds(0) // A static legacy column that we don't use
       }
 
       val room = roomEntityFactory.produceAndPersist {
