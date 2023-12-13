@@ -51,7 +51,23 @@ VALUES
     '81e7c996-4e20-4c4f-94c4-1acd4e5bce33',
     'CAS1_ADMIN',
     'aa30f20a-84e3-4baa-bef0-3c9bd51879ad'
-  ) ON CONFLICT (id)
+  ),
+  (
+    'f1118a4e-bb6f-4b16-83ad-08ef92314610',
+    'CAS3_ASSESSOR',
+    'aa30f20a-84e3-4baa-bef0-3c9bd51879ad'
+  ),
+  (
+    '77c6cc54-5d01-41d2-9987-5b293d6d2e07',
+    'CAS3_REFERRER',
+    'aa30f20a-84e3-4baa-bef0-3c9bd51879ad'
+  ),
+  (
+    '482a4ab7-a6e4-4bf8-a0fc-8516eca9efa2',
+    'CAS3_REPORTER',
+    'aa30f20a-84e3-4baa-bef0-3c9bd51879ad'
+  )
+   ON CONFLICT (id)
 DO
   NOTHING;
 
