@@ -53,36 +53,6 @@ VALUES
     'aa30f20a-84e3-4baa-bef0-3c9bd51879ad'
   ),
   (
-    'c729526f-1135-4383-ee7b-4326e5517ba0',
-    'CAS1_ASSESSOR',
-    'f29b6402-b5f0-4f39-a66f-a2bb13eb5d6d'
-  ),
-  (
-    'ac554076-cb51-454d-ae1e-ba466971dfe2',
-    'CAS1_MATCHER',
-    'f29b6402-b5f0-4f39-a66f-a2bb13eb5d6d'
-  ),
-  (
-    '7a88a8db-4ced-49a0-e4a4-45fce098d7e4',
-    'CAS1_MANAGER',
-    'f29b6402-b5f0-4f39-a66f-a2bb13eb5d6d'
-  ),
-  (
-    '71290b6b-67e1-4747-f6db-e389a83433dc',
-    'CAS1_WORKFLOW_MANAGER',
-    'f29b6402-b5f0-4f39-a66f-a2bb13eb5d6d'
-  ),
-  (
-    'd7d7ffe2-e975-4655-fb8b-96f2f23be682',
-    'CAS1_APPLICANT',
-    'f29b6402-b5f0-4f39-a66f-a2bb13eb5d6d'
-  ),
-  (
-    '80c184f8-43f3-4ccb-e726-77d9b89a8b2a',
-    'CAS1_ADMIN',
-    'f29b6402-b5f0-4f39-a66f-a2bb13eb5d6d'
-  ),
-  (
     '28f03d11-c430-4dea-e0e3-bec6ea67d2d9',
     'CAS1_ASSESSOR',
     '0621c5b0-0028-40b7-87fb-53ec65704314'
@@ -202,5 +172,20 @@ VALUES
     'CAS1_ADMIN',
     '045b71d3-9845-49b3-a79b-c7799a6bc7bc'
   ) ON CONFLICT (id)
+DO
+  NOTHING;
+
+-- Copy all roles from JIMSNOWLDAP to APPROVEDPREMISESTESTUSER
+INSERT INTO
+  "user_role_assignments" ("id", "role", "user_id")
+SELECT
+  gen_random_uuid() AS id,
+  role AS role,
+  (SELECT id FROM users where delius_username='APPROVEDPREMISESTESTUSER') AS user_id
+FROM
+  "user_role_assignments"
+WHERE
+  "user_id" = (SELECT id FROM users where delius_username='JIMSNOWLDAP')
+ON CONFLICT (id)
 DO
   NOTHING;
