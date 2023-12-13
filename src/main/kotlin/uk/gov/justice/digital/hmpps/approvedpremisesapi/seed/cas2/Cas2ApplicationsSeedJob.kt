@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import java.io.IOException
 import java.io.InputStreamReader
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -44,6 +45,13 @@ class Cas2ApplicationsSeedJob(
     submittedAt = parseDateIfNotNull(emptyToNull(columns["submittedAt"])),
     statusUpdates = columns["statusUpdates"]!!.trim(),
     location = columns["location"]!!.trim(),
+    name = columns["name"]!!.trim(),
+    dateOfBirth = LocalDate.parse(columns["dateOfBirth"]!!.trim()),
+    sex = columns["sex"]!!.trim(),
+    personStatus = columns["personStatus"]!!.trim(),
+    nationality = columns["nationality"]!!.trim(),
+    pncNumber = columns["pncNumber"]!!.trim(),
+    prisonName = columns["prisonName"]!!.trim(),
   )
 
   override fun processRow(row: Cas2ApplicationSeedCsvRow) {
@@ -74,6 +82,13 @@ class Cas2ApplicationsSeedJob(
         submittedAt = row.submittedAt,
         schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
         schemaUpToDate = true,
+        name = row.name,
+        dateOfBirth = row.dateOfBirth,
+        sex = row.sex,
+        personStatus = row.personStatus,
+        nationality = row.nationality,
+        pncNumber = row.pncNumber,
+        prisonName = row.prisonName,
       ),
     )
     if (row.statusUpdates != "0") {
@@ -150,4 +165,11 @@ data class Cas2ApplicationSeedCsvRow(
   val submittedAt: OffsetDateTime?,
   val statusUpdates: String,
   val location: String,
+  val name: String,
+  val dateOfBirth: LocalDate,
+  val sex: String,
+  val personStatus: String,
+  val nationality: String?,
+  val pncNumber: String?,
+  val prisonName: String?,
 )

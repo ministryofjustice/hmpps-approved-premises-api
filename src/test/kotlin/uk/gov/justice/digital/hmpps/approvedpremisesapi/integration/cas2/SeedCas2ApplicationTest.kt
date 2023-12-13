@@ -7,12 +7,14 @@ import io.github.bluegroundltd.kfactory.Yielded
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SeedFileType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.SeedTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -206,6 +208,13 @@ class SeedCas2ApplicationTest : SeedTestBase() {
         "state",
         "statusUpdates",
         "location",
+        "name",
+        "dateOfBirth",
+        "sex",
+        "personStatus",
+        "nationality",
+        "pncNumber",
+        "prisonName",
       )
       .newRow()
 
@@ -220,6 +229,13 @@ class SeedCas2ApplicationTest : SeedTestBase() {
         .withQuotedField(it.state)
         .withQuotedField(it.statusUpdates)
         .withQuotedField(it.location ?: "")
+        .withQuotedField(it.name)
+        .withQuotedField(it.dateOfBirth)
+        .withQuotedField(it.sex)
+        .withQuotedField(it.personStatus)
+        .withQuotedField(it.nationality ?: "")
+        .withQuotedField(it.pncNumber ?: "")
+        .withQuotedField(it.prisonName ?: "")
         .newRow()
     }
 
@@ -244,6 +260,13 @@ data class Cas2ApplicationSeedUntypedEnumsCsvRow(
   val state: String, // NOT_STARTED | IN-PROGRESS | SUBMITTED | IN_REVIEW
   val statusUpdates: String,
   val location: String?,
+  val name: String,
+  val dateOfBirth: LocalDate,
+  val sex: String,
+  val personStatus: String,
+  val nationality: String?,
+  val pncNumber: String?,
+  val prisonName: String?,
 )
 
 class Cas2ApplicationSeedCsvRowFactory : Factory<Cas2ApplicationSeedUntypedEnumsCsvRow> {
@@ -256,6 +279,13 @@ class Cas2ApplicationSeedCsvRowFactory : Factory<Cas2ApplicationSeedUntypedEnums
   private var statusUpdates: Yielded<String> = { "0" }
   private var location: Yielded<String?> = { "Leeds" }
   private var state: Yielded<String> = { listOf("NOT_STARTED", "IN_PROGRESS", "SUBMITTED", "IN_REVIEW").random() }
+  private var name: Yielded<String> = { "AADLAND BERTRAND FAKE" }
+  private var dateOfBirth: Yielded<LocalDate> = { LocalDate.of(1970, 2, 2) }
+  private var sex: Yielded<String> = { "Male" }
+  private var personStatus: Yielded<String> = { Cas2NewApplication.PersonStatus.inCustody.name }
+  private var nationality: Yielded<String> = { "British" }
+  private var pncNumber: Yielded<String> = { "123PNC" }
+  private var prisonName: Yielded<String> = { "HMP Leeds" }
 
   fun withId(id: String) = apply {
     this.id = { id }
@@ -303,5 +333,12 @@ class Cas2ApplicationSeedCsvRowFactory : Factory<Cas2ApplicationSeedUntypedEnums
     statusUpdates = this.statusUpdates(),
     location = this.location(),
     state = this.state(),
+    name = this.name(),
+    dateOfBirth = this.dateOfBirth(),
+    sex = this.sex(),
+    personStatus = this.personStatus(),
+    nationality = this.nationality(),
+    pncNumber = this.pncNumber(),
+    prisonName = this.prisonName(),
   )
 }
