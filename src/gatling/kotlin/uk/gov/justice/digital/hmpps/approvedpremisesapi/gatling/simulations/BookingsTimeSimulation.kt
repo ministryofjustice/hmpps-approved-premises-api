@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.simulations
 
 import io.gatling.javaapi.core.CoreDsl.constantUsersPerSec
 import io.gatling.javaapi.core.CoreDsl.exec
+import io.gatling.javaapi.core.CoreDsl.global
 import io.gatling.javaapi.core.CoreDsl.scenario
 import io.gatling.javaapi.core.Session
 import io.gatling.javaapi.core.Simulation
@@ -24,7 +25,8 @@ import java.time.LocalDate
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
-class BookingsReportGenerationTimeSimulation : Simulation() {
+@Suppress("MagicNumber")
+class BookingsTimeSimulation : Simulation() {
   private val arrivalDateKey = "arrival_date"
   private val getArrivalDate = { session: Session -> session.get<LocalDate>(arrivalDateKey)!! }
 
@@ -127,6 +129,20 @@ class BookingsReportGenerationTimeSimulation : Simulation() {
   )
     .pause(1.seconds.toJavaDuration())
 
+  private val bookingSearch = exec(
+    http("Bookings Search")
+      .get("/bookings/search")
+      .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+      .queryParam("page", 1)
+      .check(status().`is`(200)),
+  )
+
+  private val bookingsSearchJourney = scenario("Bookings search journey")
+    .exec(
+      authorizeUser(),
+      bookingSearch,
+    )
+
   private val bookingsReportDownloadJourney = scenario("Bookings report journey")
     .exec(
       authorizeUser(),
@@ -141,10 +157,20 @@ class BookingsReportGenerationTimeSimulation : Simulation() {
         constantUsersPerSec(20.0).during(60.seconds.toJavaDuration()),
       )
         .andThen(
+          bookingsSearchJourney.injectOpen(
+            constantUsersPerSec(2.0).during(10.seconds.toJavaDuration()),
+          ),
+        )
+        .andThen(
           bookingsReportDownloadJourney.injectOpen(
             constantUsersPerSec(0.25).during(400.seconds.toJavaDuration()),
           ),
         ),
-    ).withAuthorizedUserHttpProtocol()
+    )
+    .assertions(
+      global().responseTime().percentile(95.0).lt(20000),
+      global().successfulRequests().percent().gte(100.0)
+    )
+    .withAuthorizedUserHttpProtocol()
   }
 }
