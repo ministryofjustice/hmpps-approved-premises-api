@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
@@ -50,6 +51,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var turnarounds: Yielded<MutableList<TurnaroundEntity>>? = null
   private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
   private var placementRequest: Yielded<PlacementRequestEntity?> = { null }
+  private var status: Yielded<BookingStatus?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -179,6 +181,10 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.placementRequest = { placementRequest }
   }
 
+  fun withStatus(departed: BookingStatus) = apply {
+    this.status = { departed }
+  }
+
   override fun produce(): BookingEntity = BookingEntity(
     id = this.id(),
     crn = this.crn(),
@@ -203,5 +209,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     turnarounds = this.turnarounds?.invoke() ?: mutableListOf(),
     nomsNumber = this.nomsNumber(),
     placementRequest = this.placementRequest(),
+    status = this.status?.invoke(),
   )
 }

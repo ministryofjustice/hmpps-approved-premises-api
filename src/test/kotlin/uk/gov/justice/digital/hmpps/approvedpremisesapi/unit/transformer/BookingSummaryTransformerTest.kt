@@ -45,6 +45,7 @@ class BookingSummaryTransformerTest {
       turnarounds = mutableListOf(),
       nomsNumber = "NOMS123",
       placementRequest = null,
+      status = null,
     )
 
     assertThat(bookingSummaryTransformer.transformJpaToApi(booking)).isEqualTo(

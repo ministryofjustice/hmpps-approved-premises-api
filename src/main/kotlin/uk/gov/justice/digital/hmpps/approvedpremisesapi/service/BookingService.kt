@@ -225,6 +225,7 @@ class BookingService(
           turnarounds = mutableListOf(),
           nomsNumber = placementRequest.application.nomsNumber,
           placementRequest = null,
+          status = null,
         ),
       )
 
@@ -378,6 +379,7 @@ class BookingService(
           dateChanges = mutableListOf(),
           nomsNumber = nomsNumber,
           placementRequest = null,
+          status = null,
         ),
       )
 
@@ -711,6 +713,7 @@ class BookingService(
           offlineApplication = null,
           turnarounds = mutableListOf(),
           placementRequest = null,
+          status = null,
         ),
       )
 

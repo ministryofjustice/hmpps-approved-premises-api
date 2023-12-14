@@ -160,6 +160,7 @@ class BookingTransformerTest {
     turnarounds = mutableListOf(),
     nomsNumber = "NOMS123",
     placementRequest = null,
+    status = null,
   )
 
   private val staffMember = StaffMember(

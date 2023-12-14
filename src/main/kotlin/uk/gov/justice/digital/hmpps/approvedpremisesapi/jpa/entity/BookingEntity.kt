@@ -15,6 +15,8 @@ import java.util.Objects
 import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.EntityListeners
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
@@ -197,6 +199,8 @@ data class BookingEntity(
   var nomsNumber: String?,
   @OneToOne(mappedBy = "booking")
   var placementRequest: PlacementRequestEntity?,
+  @Enumerated(value = EnumType.STRING)
+  var status: BookingStatus?,
 ) {
   val departure: DepartureEntity?
     get() = departures.maxByOrNull { it.createdAt }
