@@ -6179,9 +6179,12 @@ components:
           type: string
           format: uuid
           description: Id of the application being submitted
+        telephoneNumber:
+          type: string
       required:
         - translatedDocument
         - applicationId
+        - telephoneNumber
     SubmitTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/SubmitApplication'
