@@ -202,7 +202,9 @@ class TasksController(
           assessmentService.getAssessmentForUser(user, id),
         )
 
-        transformedTask = getAssessmentTask(assessment, user)
+        transformedTask = getAssessmentTask(assessment) {
+          getPersonNameFromAssessment(it, user)
+        }
 
         transformedAllocatableUsers = userService.getAllocatableUsersForAllocationType(
           assessment.application.crn,
@@ -219,7 +221,9 @@ class TasksController(
           placementRequestService.getPlacementRequestForUser(user, id),
         )
 
-        transformedTask = getPlacementRequestTask(placementRequest, user)
+        transformedTask = getPlacementRequestTask(placementRequest) {
+          getPersonNameFromPlacementRequest(it, user)
+        }
 
         transformedAllocatableUsers =
           userService.getAllocatableUsersForAllocationType(
@@ -237,7 +241,9 @@ class TasksController(
           placementApplicationService.getApplication(id),
         )
 
-        transformedTask = getPlacementApplicationTask(placementApplication, user)
+        transformedTask = getPlacementApplicationTask(placementApplication) {
+          getPersonNameFromPlacementApplication(it, user)
+        }
 
         transformedAllocatableUsers = userService.getAllocatableUsersForAllocationType(
           placementApplication.application.crn,
@@ -336,51 +342,33 @@ class TasksController(
     return ResponseEntity(Unit, HttpStatus.NO_CONTENT)
   }
 
-  private fun getAssessmentTask(assessment: AssessmentEntity, user: UserEntity): AssessmentTask {
-    val offenderDetailsResult =
-      offenderService.getOffenderByCrn(
-        assessment.application.crn,
-        user.deliusUsername,
-        user.hasQualification(UserQualification.LAO),
-      )
-
+  private fun getAssessmentTask(
+    assessment: AssessmentEntity,
+    personNameFunc: (AssessmentEntity) -> String,
+  ): AssessmentTask {
     return taskTransformer.transformAssessmentToTask(
       assessment = assessment,
-      personName = getNameFromOffenderDetailSummaryResult(offenderDetailsResult),
+      personName = personNameFunc(assessment),
     )
   }
 
   private fun getPlacementRequestTask(
     placementRequest: PlacementRequestEntity,
-    user: UserEntity,
+    personNameFunc: (PlacementRequestEntity) -> String,
   ): PlacementRequestTask {
-    val offenderDetailsResult =
-      offenderService.getOffenderByCrn(
-        placementRequest.application.crn,
-        user.deliusUsername,
-        user.hasQualification(UserQualification.LAO),
-      )
-
     return taskTransformer.transformPlacementRequestToTask(
       placementRequest = placementRequest,
-      personName = getNameFromOffenderDetailSummaryResult(offenderDetailsResult),
+      personName = personNameFunc(placementRequest),
     )
   }
 
   private fun getPlacementApplicationTask(
     placementApplication: PlacementApplicationEntity,
-    user: UserEntity,
+    personNameFunc: (PlacementApplicationEntity) -> String,
   ): PlacementApplicationTask {
-    val offenderDetailsResult =
-      offenderService.getOffenderByCrn(
-        placementApplication.application.crn,
-        user.deliusUsername,
-        user.hasQualification(UserQualification.LAO),
-      )
-
     return taskTransformer.transformPlacementApplicationToTask(
       placementApplication = placementApplication,
-      personName = getNameFromOffenderDetailSummaryResult(offenderDetailsResult),
+      personName = personNameFunc(placementApplication),
     )
   }
 
@@ -388,14 +376,18 @@ class TasksController(
     assessments: List<AssessmentEntity>,
     user: UserEntity,
   ) = assessments.map {
-    getAssessmentTask(it, user)
+    getAssessmentTask(it) { assessment ->
+      getPersonNameFromAssessment(assessment, user)
+    }
   }
 
   private suspend fun getPlacementRequestTasks(
     placementRequests: List<PlacementRequestEntity>,
     user: UserEntity,
   ) = placementRequests.map {
-    getPlacementRequestTask(it, user)
+    getPlacementRequestTask(it) { placementRequest ->
+      getPersonNameFromPlacementRequest(placementRequest, user)
+    }
   }
 
   private suspend fun getPlacementApplicationTasks(
@@ -403,7 +395,9 @@ class TasksController(
     user: UserEntity,
   ) =
     placementApplications.map {
-      getPlacementApplicationTask(it, user)
+      getPlacementApplicationTask(it) { placementApplication ->
+        getPersonNameFromPlacementApplication(placementApplication, user)
+      }
     }
 
   private fun responseForAllTypes(
@@ -532,5 +526,38 @@ class TasksController(
     ).body(
       placementApplicationTasks,
     )
+  }
+
+  private fun getPersonNameFromAssessment(assessment: AssessmentEntity, user: UserEntity): String {
+    val offenderDetailsResult =
+      offenderService.getOffenderByCrn(
+        assessment.application.crn,
+        user.deliusUsername,
+        user.hasQualification(UserQualification.LAO),
+      )
+
+    return getNameFromOffenderDetailSummaryResult(offenderDetailsResult)
+  }
+
+  private fun getPersonNameFromPlacementRequest(placementRequest: PlacementRequestEntity, user: UserEntity): String {
+    val offenderDetailsResult =
+      offenderService.getOffenderByCrn(
+        placementRequest.application.crn,
+        user.deliusUsername,
+        user.hasQualification(UserQualification.LAO),
+      )
+
+    return getNameFromOffenderDetailSummaryResult(offenderDetailsResult)
+  }
+
+  private fun getPersonNameFromPlacementApplication(placementApplication: PlacementApplicationEntity, user: UserEntity): String {
+    val offenderDetailsResult =
+      offenderService.getOffenderByCrn(
+        placementApplication.application.crn,
+        user.deliusUsername,
+        user.hasQualification(UserQualification.LAO),
+      )
+
+    return getNameFromOffenderDetailSummaryResult(offenderDetailsResult)
   }
 }
