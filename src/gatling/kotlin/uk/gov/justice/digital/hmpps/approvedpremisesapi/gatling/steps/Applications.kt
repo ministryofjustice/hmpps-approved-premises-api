@@ -9,11 +9,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporar
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.toJson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.CRN
 import java.time.LocalDate
 import java.util.UUID
 
 fun createTemporaryAccommodationApplication(
-  crn: (Session) -> String = { _ -> "X320741" },
+  crn: (Session) -> String = { _ -> CRN },
   saveApplicationIdAs: String? = null,
 ) = CoreDsl.exec(
   HttpDsl.http("Create Application")
