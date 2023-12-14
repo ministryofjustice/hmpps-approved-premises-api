@@ -33,7 +33,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var name: Yielded<String> = { "First Surname" }
   private var dateOfBirth: Yielded<LocalDate> = { LocalDate.now().minusYears(60) }
   private var nationality: Yielded<String?> = { null }
-  private var sex: Yielded<String?> = { null }
+  private var sex: Yielded<String?> = { "Male" }
   private var prisonName: Yielded<String?> = { null }
   private var pncNumber: Yielded<String?> = { null }
   private var personStatus: Yielded<String> = { Cas2NewApplication.PersonStatus.inCustody.name }
