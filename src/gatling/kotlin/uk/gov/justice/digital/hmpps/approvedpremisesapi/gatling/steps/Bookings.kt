@@ -6,12 +6,13 @@ import io.gatling.javaapi.http.HttpDsl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.toJson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.CRN
 import java.time.LocalDate
 import java.util.UUID
 
 fun createTemporaryAccommodationBooking(
   bedId: (Session) -> UUID,
-  crn: (Session) -> String = { _ -> "X320741" },
+  crn: (Session) -> String = { _ -> CRN },
   arrivalDate: (Session) -> LocalDate = { _ -> LocalDate.now() },
   departureDate: (Session) -> LocalDate = { session -> arrivalDate(session).plusDays(84) },
   saveBookingIdAs: String? = null,
