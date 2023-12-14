@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -225,7 +226,7 @@ class BookingService(
           turnarounds = mutableListOf(),
           nomsNumber = placementRequest.application.nomsNumber,
           placementRequest = null,
-          status = null,
+          status = BookingStatus.confirmed,
         ),
       )
 
@@ -379,7 +380,7 @@ class BookingService(
           dateChanges = mutableListOf(),
           nomsNumber = nomsNumber,
           placementRequest = null,
-          status = null,
+          status = BookingStatus.confirmed,
         ),
       )
 
@@ -713,7 +714,7 @@ class BookingService(
           offlineApplication = null,
           turnarounds = mutableListOf(),
           placementRequest = null,
-          status = null,
+          status = BookingStatus.provisional,
         ),
       )
 
@@ -825,6 +826,7 @@ class BookingService(
 
     booking.arrivalDate = arrivalDate
     booking.departureDate = expectedDepartureDate
+    booking.status = BookingStatus.arrived
     updateBooking(booking)
 
     if (!arrivedAndDepartedDomainEventsDisabled && shouldCreateDomainEventForBooking(booking, user)) {
@@ -926,6 +928,7 @@ class BookingService(
 
     booking.arrivalDate = arrivalDate
     booking.departureDate = expectedDepartureDate
+    booking.status = BookingStatus.arrived
     updateBooking(booking)
 
     booking.arrivals += arrivalEntity
@@ -968,6 +971,7 @@ class BookingService(
 
     booking.arrivalDate = arrivalDate
     booking.departureDate = expectedDepartureDate
+    booking.status = BookingStatus.arrived
     updateBooking(booking)
 
     booking.arrivals += arrivalEntity
@@ -1128,6 +1132,9 @@ class BookingService(
         createdAt = OffsetDateTime.now(),
       ),
     )
+    booking.status = BookingStatus.cancelled
+    updateBooking(booking)
+    booking.cancellations += cancellationEntity
 
     if (reason.id == approvedPremisesBookingAppealedCancellationReasonId && booking.placementRequest != null) {
       val placementRequest = booking.placementRequest!!
@@ -1236,7 +1243,8 @@ class BookingService(
         createdAt = OffsetDateTime.now(),
       ),
     )
-
+    booking.status = BookingStatus.cancelled
+    updateBooking(booking)
     booking.cancellations += cancellationEntity
 
     when (isFirstCancellations) {
@@ -1265,7 +1273,8 @@ class BookingService(
         createdAt = OffsetDateTime.now(),
       ),
     )
-
+    booking.status = BookingStatus.confirmed
+    updateBooking(booking)
     booking.confirmation = confirmationEntity
 
     if (booking.premises is TemporaryAccommodationPremisesEntity) {
@@ -1362,7 +1371,9 @@ class BookingService(
     )
 
     booking.departureDate = dateTime.toLocalDate()
+    booking.status = BookingStatus.departed
     updateBooking(booking)
+    booking.departures += departureEntity
 
     if (!arrivedAndDepartedDomainEventsDisabled && shouldCreateDomainEventForBooking(booking, user)) {
       val domainEventId = UUID.randomUUID()
@@ -1488,9 +1499,10 @@ class BookingService(
         createdAt = OffsetDateTime.now(),
       ),
     )
-    booking.departures += departureEntity
+    booking.status = BookingStatus.departed
     booking.departureDate = dateTime.toLocalDate()
     updateBooking(booking)
+    booking.departures += departureEntity
 
     when (isFirstDeparture) {
       true -> cas3DomainEventService.savePersonDepartedEvent(booking)
