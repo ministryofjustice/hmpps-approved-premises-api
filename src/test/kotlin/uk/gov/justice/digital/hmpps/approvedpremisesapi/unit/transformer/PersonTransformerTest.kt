@@ -136,6 +136,7 @@ class PersonTransformerTest {
         sex = "Male",
         status = FullPerson.Status.unknown,
         nomsNumber = null,
+        pncNumber = null,
         ethnicity = "White and Asian",
         nationality = "Spanish",
         religionOrBelief = "Sikh",
@@ -148,6 +149,99 @@ class PersonTransformerTest {
 
   @Test
   fun `transformModelToPersonInfoApi transforms correctly for a full person info with prison info`() {
+    val crn = "CRN123"
+
+    val offenderDetailSummary = OffenderDetailSummary(
+      offenderId = 547839,
+      title = "Mr",
+      firstName = "Greggory",
+      middleNames = listOf(),
+      surname = "Someone",
+      previousSurname = null,
+      preferredName = null,
+      dateOfBirth = LocalDate.parse("1980-09-12"),
+      gender = "Male",
+      otherIds = OffenderIds(
+        crn = crn,
+        croNumber = null,
+        immigrationNumber = null,
+        mostRecentPrisonNumber = null,
+        niNumber = null,
+        nomsNumber = "NOMS321",
+        pncNumber = "PNC456",
+      ),
+      offenderProfile = OffenderProfile(
+        ethnicity = "White and Asian",
+        nationality = "Spanish",
+        secondaryNationality = null,
+        notes = null,
+        immigrationStatus = null,
+        offenderLanguages = OffenderLanguages(
+          primaryLanguage = null,
+          otherLanguages = listOf(),
+          languageConcerns = null,
+          requiresInterpreter = null,
+        ),
+        religion = "Sikh",
+        sexualOrientation = null,
+        offenderDetails = null,
+        remandStatus = null,
+        riskColour = null,
+        disabilities = listOf(),
+        genderIdentity = null,
+        selfDescribedGender = null,
+      ),
+      softDeleted = null,
+      currentDisposal = "",
+      partitionArea = null,
+      currentRestriction = false,
+      currentExclusion = false,
+      isActiveProbationManagedSentence = false,
+    )
+
+    val inmateDetail = InmateDetail(
+      offenderNo = "NOMS321",
+      inOutStatus = InOutStatus.IN,
+      assignedLivingUnit = AssignedLivingUnit(
+        agencyId = "BRI",
+        locationId = 5,
+        description = "B-2F-004",
+        agencyName = "HMP Bristol",
+      ),
+    )
+
+    val personInfoResult = PersonInfoResult.Success.Full(
+      crn = crn,
+      offenderDetailSummary = offenderDetailSummary,
+      inmateDetail = inmateDetail,
+    )
+
+    val result = personTransformer.transformModelToPersonApi(personInfoResult)
+
+    assertThat(result.crn).isEqualTo(crn)
+    assertThat(result is FullPerson).isTrue
+    assertThat(result).isEqualTo(
+      FullPerson(
+        type = PersonType.fullPerson,
+        crn = "CRN123",
+        name = "Greggory Someone",
+        dateOfBirth = LocalDate.parse("1980-09-12"),
+        sex = "Male",
+        status = FullPerson.Status.inCustody,
+        nomsNumber = "NOMS321",
+        pncNumber = "PNC456",
+        ethnicity = "White and Asian",
+        nationality = "Spanish",
+        religionOrBelief = "Sikh",
+        genderIdentity = null,
+        prisonName = "HMP Bristol",
+        isRestricted = false,
+      ),
+    )
+  }
+
+  @Test
+  fun `transformModelToPersonInfoApi transforms correctly without pnc number`() {
     val crn = "CRN123"
 
     val offenderDetailSummary = OffenderDetailSummary(
@@ -228,6 +322,7 @@ class PersonTransformerTest {
         sex = "Male",
         status = FullPerson.Status.inCustody,
         nomsNumber = "NOMS321",
+        pncNumber = null,
         ethnicity = "White and Asian",
         nationality = "Spanish",
         religionOrBelief = "Sikh",

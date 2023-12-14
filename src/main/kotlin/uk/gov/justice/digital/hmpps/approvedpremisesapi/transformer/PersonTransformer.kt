@@ -16,6 +16,7 @@ class PersonTransformer {
     is PersonInfoResult.Success.Full -> FullPerson(
       type = PersonType.fullPerson,
       crn = personInfoResult.offenderDetailSummary.otherIds.crn,
+      pncNumber = personInfoResult.offenderDetailSummary.otherIds.pncNumber,
       name = "${personInfoResult.offenderDetailSummary.firstName} ${personInfoResult.offenderDetailSummary.surname}",
       dateOfBirth = personInfoResult.offenderDetailSummary.dateOfBirth,
       sex = personInfoResult.offenderDetailSummary.gender,
