@@ -233,12 +233,78 @@ class ApplicationReportsTest : IntegrationTestBase() {
     }
   }
 
+  @Test
+  fun `Get referrals report returns OK with correct applications`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
+      val (applicationWithBooking, arrivedBooking) = createApplicationWithBooking()
+      markBookingAsArrived(arrivedBooking)
+
+      val (applicationWithDepartedBooking, departedBooking) = createApplicationWithBooking()
+      markBookingAsArrived(departedBooking)
+      markBookingAsDeparted(departedBooking)
+
+      val (applicationWithCancelledBooking, cancelledBooking) = createApplicationWithBooking()
+      cancelBooking(cancelledBooking)
+
+      val (applicationWithNonArrivedBooking, nonArrivedBooking) = createApplicationWithBooking()
+      markBookingAsNonArrived(nonArrivedBooking)
+
+      val applicationWithPlacementApplication = createApplication(withArrivalDate = false)
+      acceptAssessmentForApplication(applicationWithPlacementApplication)
+      createAndAcceptPlacementApplication(applicationWithPlacementApplication)
+      createBookingForApplication(applicationWithPlacementApplication)
+      createBookingForApplication(applicationWithPlacementApplication)
+
+      val applicationWithMultipleAssessments = createApplication()
+      reallocateAssessment(applicationWithMultipleAssessments)
+
+      // In very rare scenarios, an application will have multiple bookings associated
+      // without having associated Placement Application(s). In this scenario, we just
+      // return the latest booking that has been made
+      val applicationWithMultipleBookings = createApplication()
+      acceptAssessmentForApplication(applicationWithMultipleBookings)
+      val multipleBookings1 = createBookingForApplication(applicationWithMultipleBookings)
+      val multipleBookings2 = createBookingForApplication(applicationWithMultipleBookings)
+
+      webTestClient.get()
+        .uri("/reports/referrals?year=${LocalDate.now().year}&month=${LocalDate.now().monthValue}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .consumeWith {
+          val actual = DataFrame
+            .readExcel(it.responseBody!!.inputStream())
+            .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
+            .toList()
+
+          assertThat(actual.size).isEqualTo(7)
+
+          assertApplicationRowHasCorrectData(actual, applicationWithBooking.id, arrivedBooking, userEntity, ApplicationFacets(reportType = ReportType.Referrals))
+          assertApplicationRowHasCorrectData(actual, applicationWithDepartedBooking.id, departedBooking, userEntity, ApplicationFacets(hasDeparture = true, reportType = ReportType.Referrals))
+          assertApplicationRowHasCorrectData(actual, applicationWithCancelledBooking.id, cancelledBooking, userEntity, ApplicationFacets(hasCancellation = true, reportType = ReportType.Referrals))
+          assertApplicationRowHasCorrectData(actual, applicationWithNonArrivedBooking.id, nonArrivedBooking, userEntity, ApplicationFacets(hasNonArrival = true, reportType = ReportType.Referrals))
+          assertApplicationRowHasCorrectData(actual, applicationWithPlacementApplication.id, null, userEntity, ApplicationFacets(hasPlacementApplication = true, reportType = ReportType.Referrals))
+          assertApplicationRowHasCorrectData(actual, applicationWithMultipleAssessments.id, null, userEntity, ApplicationFacets(isAssessed = false, reportType = ReportType.Referrals))
+          assertApplicationRowHasCorrectData(actual, applicationWithMultipleBookings.id, multipleBookings2, userEntity, ApplicationFacets(reportType = ReportType.Referrals))
+        }
+    }
+  }
+
+  enum class ReportType {
+    Applications,
+    Referrals,
+  }
+
   data class ApplicationFacets(
     val hasCancellation: Boolean = false,
     val hasDeparture: Boolean = false,
     val hasNonArrival: Boolean = false,
     val isAssessed: Boolean = false,
     val hasPlacementApplication: Boolean = false,
+    val reportType: ReportType = ReportType.Applications,
   )
 
   private fun assertApplicationRowHasCorrectData(
@@ -315,12 +381,14 @@ class ApplicationReportsTest : IntegrationTestBase() {
       assertThat(reportRow.notArrivedReason).isEqualTo(nonArrival.reason.name)
     }
 
-    if (applicationFacets.hasPlacementApplication) {
-      assertThat(reportRow.paroleDecisionDate).isEqualTo("2023-11-11")
-      assertThat(reportRow.type).isEqualTo("placement request")
-    } else {
-      assertThat(reportRow.paroleDecisionDate).isNull()
-      assertThat(reportRow.type).isEqualTo("referral")
+    if (applicationFacets.reportType == ReportType.Applications) {
+      if (applicationFacets.hasPlacementApplication) {
+        assertThat(reportRow.paroleDecisionDate).isEqualTo("2023-11-11")
+        assertThat(reportRow.type).isEqualTo("placement request")
+      } else {
+        assertThat(reportRow.paroleDecisionDate).isNull()
+        assertThat(reportRow.type).isEqualTo("referral")
+      }
     }
   }
 
@@ -338,8 +406,8 @@ class ApplicationReportsTest : IntegrationTestBase() {
     }
   }
 
-  private fun createApplication(): ApprovedPremisesApplicationEntity {
-    return createAndSubmitApplication(ApType.normal)
+  private fun createApplication(withArrivalDate: Boolean = true): ApprovedPremisesApplicationEntity {
+    return createAndSubmitApplication(ApType.normal, withArrivalDate)
   }
 
   private fun createApplicationWithBooking(): Pair<ApprovedPremisesApplicationEntity, BookingEntity> {
@@ -350,7 +418,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
     return Pair(application, booking)
   }
 
-  private fun createAndSubmitApplication(apType: ApType): ApprovedPremisesApplicationEntity {
+  private fun createAndSubmitApplication(apType: ApType, withArrivalDate: Boolean = true): ApprovedPremisesApplicationEntity {
     val (referrer, jwt) = referrerDetails
     val (offenderDetails, _) = `Given an Offender`()
 
@@ -400,6 +468,12 @@ class ApplicationReportsTest : IntegrationTestBase() {
       )
     }
 
+    val arrivalDate = if (withArrivalDate) {
+      LocalDate.now().plusMonths(8)
+    } else {
+      null
+    }
+
     webTestClient.post()
       .uri("/applications/${application.id}/submission")
       .header("Authorization", "Bearer $jwt")
@@ -414,6 +488,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
           releaseType = ReleaseTypeOption.licence,
           type = "CAS1",
           sentenceType = SentenceTypeOption.nonStatutory,
+          arrivalDate = arrivalDate,
         ),
       )
       .exchange()
