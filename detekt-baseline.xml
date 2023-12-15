@@ -1,13 +1,17 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <SmellBaseline>
   <ManuallySuppressedIssues>
-   <ID>TooGenericExceptionCaught:ApplicationStatusMigrationJob.kt$ApplicationStatusMigrationJob$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ApplicationStatusMigrationJob.kt$ApplicationStatusMigrationJob$e: Exception</ID>
     <ID>TooGenericExceptionThrown:ApplicationsTransformer.kt$ApplicationsTransformer$throw RuntimeException("Application ${entity.getId()} has no status")</ID>
     <ID>UnusedParameter:MigrationJobService.kt$MigrationJobService$pageSize: Int = 10</ID>
     <ID>FunctionNaming:PlacementApplicationEntity.kt$PlacementApplicationRepository$fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndDecisionNull(userId: UUID): List&lt;PlacementApplicationEntity></ID>
     <ID>CyclomaticComplexMethod:ApplicationServiceTest.kt$ApplicationServiceTest.SubmitApplication$@ParameterizedTest @EnumSource(value = SituationOption::class) @NullSource fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event, sends confirmation email`(situation: SituationOption?)</ID>
     <ID>CyclomaticComplexMethod:OffenderService.kt$OffenderService$fun getOffenderSummariesByCrns(crns: List&lt;String>, userDistinguishedName: String, ignoreLao: Boolean = false): List&lt;PersonSummaryInfoResult></ID>
     <ID>TooManyFunctions:PremisesEntity.kt$PremisesRepository : JpaRepository</ID>
+    <ID>CyclomaticComplexMethod:DomainEventServiceTest.kt$DomainEventServiceTest$@Test fun `saveBookingCancelledDomainEvent persists event, emits event to SNS`()</ID>
+    <ID>CyclomaticComplexMethod:DomainEventServiceTest.kt$DomainEventServiceTest$@Test fun `savePersonArrivedEvent persists event, emits event to SNS`()</ID>
+    <ID>CyclomaticComplexMethod:DomainEventServiceTest.kt$DomainEventServiceTest$@Test fun `savePersonNotArrivedEvent persists event, emits event to SNS`()</ID>
+    <ID>CyclomaticComplexMethod:DomainEventServiceTest.kt$DomainEventServiceTest$@Test fun `savePersonDepartedEvent persists event, emits event to SNS`()</ID>
   </ManuallySuppressedIssues>
   <CurrentIssues>
     <ID>ComplexCondition:BookingService.kt$BookingService$booking.service == ServiceName.approvedPremises.value &amp;&amp; booking.application != null &amp;&amp; user != null &amp;&amp; !arrivedAndDepartedDomainEventsDisabled</ID>

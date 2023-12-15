@@ -785,7 +785,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.bookingId == domainEventToSave.bookingId
         },
       )
     }
@@ -942,7 +943,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.bookingId == domainEventToSave.bookingId
         },
       )
     }
@@ -1099,7 +1101,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.bookingId == domainEventToSave.bookingId
         },
       )
     }
@@ -1256,7 +1259,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.bookingId == domainEventToSave.bookingId
         },
       )
     }

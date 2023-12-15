@@ -847,6 +847,7 @@ class BookingService(
           applicationId = applicationId,
           crn = booking.crn,
           occurredAt = arrivalDateTime,
+          bookingId = booking.id,
           data = PersonArrivedEnvelope(
             id = domainEventId,
             timestamp = occurredAt.toInstant(),
@@ -1038,6 +1039,7 @@ class BookingService(
           applicationId = applicationId,
           crn = booking.crn,
           occurredAt = date.toLocalDateTime().toInstant(),
+          bookingId = booking.id,
           data = PersonNotArrivedEnvelope(
             id = domainEventId,
             timestamp = occurredAt.toInstant(),
@@ -1165,6 +1167,7 @@ class BookingService(
           applicationId = applicationId,
           crn = booking.crn,
           occurredAt = dateTime.toInstant(),
+          bookingId = booking.id,
           data = BookingCancelledEnvelope(
             id = domainEventId,
             timestamp = dateTime.toInstant(),
@@ -1383,6 +1386,7 @@ class BookingService(
           applicationId = applicationId,
           crn = booking.crn,
           occurredAt = dateTime.toInstant(),
+          bookingId = booking.id,
           data = PersonDepartedEnvelope(
             id = domainEventId,
             timestamp = occurredAt.toInstant(),
