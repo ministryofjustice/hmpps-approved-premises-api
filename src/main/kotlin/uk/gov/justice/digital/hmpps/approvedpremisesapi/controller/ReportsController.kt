@@ -109,6 +109,23 @@ class ReportsController(
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }
 
+  override fun reportsReferralsGet(xServiceName: ServiceName, year: Int, month: Int): ResponseEntity<Resource> {
+    if (!userAccessService.currentUserCanViewReport()) {
+      throw ForbiddenProblem()
+    }
+
+    val user = userService.getUserForRequest()
+
+    validateParameters(null, month)
+
+    val properties = ApplicationReportProperties(xServiceName, year, month, user.deliusUsername)
+    val outputStream = ByteArrayOutputStream()
+
+    reportService.createCas1ApplicationReferralsReport(properties, outputStream)
+
+    return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
+  }
+
   override fun reportsDailyMetricsGet(xServiceName: ServiceName, year: Int, month: Int): ResponseEntity<Resource> {
     if (!userAccessService.currentUserCanViewReport()) {
       throw ForbiddenProblem()

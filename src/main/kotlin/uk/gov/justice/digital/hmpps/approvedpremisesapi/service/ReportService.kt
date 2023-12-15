@@ -115,6 +115,14 @@ class ReportService(
       }
   }
 
+  fun createCas1ApplicationReferralsReport(properties: ApplicationReportProperties, outputStream: OutputStream) {
+    ApplicationReportGenerator()
+      .createReport(applicationEntityReportRowRepository.generateApprovedPremisesReferralReportRowsForCalendarMonth(properties.month, properties.year), properties)
+      .writeExcel(outputStream) {
+        WorkbookFactory.create(true)
+      }
+  }
+
   fun createDailyMetricsReport(properties: DailyMetricReportProperties, outputStream: OutputStream) {
     val applications = applicationRepository.findAllApprovedPremisesApplicationsCreatedInMonth(properties.month, properties.year).map {
       ApprovedPremisesApplicationMetricsSummaryDto(
