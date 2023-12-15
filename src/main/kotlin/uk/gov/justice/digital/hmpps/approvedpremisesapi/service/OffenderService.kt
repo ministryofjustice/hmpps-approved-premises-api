@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import arrow.core.zip
 import io.sentry.Sentry
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -40,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNot
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import java.io.OutputStream
 import java.time.LocalDate
 
@@ -81,6 +83,41 @@ class OffenderService(
     )
   }
 
+  fun getOffenderSummariesByCrns(
+    crns: List<String>,
+    deliusUsername: String,
+    ignoreLao: Boolean = false,
+    forceApDeliusContextApi: Boolean = false,
+  ): List<PersonSummaryInfoResult> {
+    if (forceApDeliusContextApi) return getOffenderSummariesByCrns(crns, deliusUsername, ignoreLao)
+
+    if (crns.isEmpty()) return emptyList()
+
+    val offenderDetailsList = offenderDetailsDataSource.getOffenderDetailSummaries(crns)
+    val userAccessList = offenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, crns)
+
+    return crns
+      .zip(offenderDetailsList, userAccessList) { crn, offenderResponse, accessResponse ->
+        val offender = getOffender(
+          ignoreLao,
+          { offenderResponse },
+          { accessResponse },
+        )
+
+        when (offender) {
+          is AuthorisableActionResult.Success -> {
+            PersonSummaryInfoResult.Success.Full(crn, offender.entity.asCaseSummary())
+          }
+          is AuthorisableActionResult.NotFound -> PersonSummaryInfoResult.NotFound(crn)
+          is AuthorisableActionResult.Unauthorised -> {
+            val nomsNumber = (offenderResponse as ClientResult.Success).body.otherIds.nomsNumber
+            PersonSummaryInfoResult.Success.Restricted(crn, nomsNumber)
+          }
+        }
+      }
+  }
+
+  @Deprecated("This method directly couples to the AP Delius Context API.", replaceWith = ReplaceWith("getOffenderSummariesByCrns(crns, userDistinguishedName, ignoreLao, true)"))
   fun getOffenderSummariesByCrns(crns: List<String>, userDistinguishedName: String, ignoreLao: Boolean = false): List<PersonSummaryInfoResult> {
     if (crns.isEmpty()) {
       return emptyList()
@@ -121,33 +158,46 @@ class OffenderService(
   }
 
   fun getOffenderByCrn(crn: String, userDistinguishedName: String, ignoreLao: Boolean = false): AuthorisableActionResult<OffenderDetailSummary> {
-    val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
+    return getOffender(
+      ignoreLao,
+      { offenderDetailsDataSource.getOffenderDetailSummary(crn) },
+      { offenderDetailsDataSource.getUserAccessForOffenderCrn(userDistinguishedName, crn) },
+    )
+  }
 
-    val offender = when (offenderResponse) {
+  @Suppress("detekt:CyclomaticComplexMethod", "detekt:NestedBlockDepth") // Extracted logic from `getOffenderByCrn` to be reusable without significant refactoring
+  private fun getOffender(
+    ignoreLao: Boolean,
+    offenderProducer: () -> ClientResult<OffenderDetailSummary>,
+    userAccessProducer: () -> ClientResult<UserOffenderAccess>,
+  ): AuthorisableActionResult<OffenderDetailSummary> {
+    val offender = when (val offenderResponse = offenderProducer()) {
       is ClientResult.Success -> offenderResponse.body
-      is ClientResult.Failure.StatusCode -> if (offenderResponse.status == HttpStatus.NOT_FOUND) return AuthorisableActionResult.NotFound() else offenderResponse.throwException()
+      is ClientResult.Failure.StatusCode -> when (offenderResponse.status) {
+        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
+        else -> offenderResponse.throwException()
+      }
       is ClientResult.Failure -> offenderResponse.throwException()
     }
 
     if (!ignoreLao) {
       if (offender.currentExclusion || offender.currentRestriction) {
-        val access =
-          when (val accessResponse = offenderDetailsDataSource.getUserAccessForOffenderCrn(userDistinguishedName, crn)) {
-            is ClientResult.Success -> accessResponse.body
-            is ClientResult.Failure.StatusCode -> {
-              if (accessResponse.status == HttpStatus.FORBIDDEN) {
-                try {
-                  accessResponse.deserializeTo<UserOffenderAccess>()
-                  return AuthorisableActionResult.Unauthorised()
-                } catch (exception: Exception) {
-                  accessResponse.throwException()
-                }
+        val access = when (val accessResponse = userAccessProducer()) {
+          is ClientResult.Success -> accessResponse.body
+          is ClientResult.Failure.StatusCode -> {
+            if (accessResponse.status == HttpStatus.FORBIDDEN) {
+              try {
+                accessResponse.deserializeTo<UserOffenderAccess>()
+                return AuthorisableActionResult.Unauthorised()
+              } catch (exception: Exception) {
+                accessResponse.throwException()
               }
-
-              accessResponse.throwException()
             }
-            is ClientResult.Failure -> accessResponse.throwException()
+
+            accessResponse.throwException()
           }
+          is ClientResult.Failure -> accessResponse.throwException()
+        }
 
         if (access.userExcluded || access.userRestricted) {
           return AuthorisableActionResult.Unauthorised()
