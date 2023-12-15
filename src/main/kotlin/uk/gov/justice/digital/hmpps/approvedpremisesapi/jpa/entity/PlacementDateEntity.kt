@@ -38,4 +38,6 @@ data class PlacementDateEntity(
   val expectedArrival: LocalDate,
 
   val duration: Int,
-)
+) {
+  override fun toString() = "PlacementDateEntity: $id"
+}

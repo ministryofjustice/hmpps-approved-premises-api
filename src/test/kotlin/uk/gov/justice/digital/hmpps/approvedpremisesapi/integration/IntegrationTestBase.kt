@@ -168,6 +168,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ArrivalTestRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.AssessmentClarificationNoteTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.AssessmentReferralHistorySystemNoteTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.AssessmentReferralHistoryUserNoteTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.AssessmentTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingNotMadeTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CancellationReasonTestRepository
@@ -191,6 +192,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NomisUserTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalReasonTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.OfflineApplicationTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PlacementApplicationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PostCodeDistrictTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationAreaProbationRegionMappingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationDeliveryUnitTestRepository
@@ -469,6 +471,12 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var roomTestRepository: RoomTestRepository
+
+  @Autowired
+  lateinit var placementApplicationTestRepository: PlacementApplicationTestRepository
+
+  @Autowired
+  lateinit var assessmentTestRepository: AssessmentTestRepository
 
   lateinit var probationRegionEntityFactory: PersistedFactory<ProbationRegionEntity, UUID, ProbationRegionEntityFactory>
   lateinit var apAreaEntityFactory: PersistedFactory<ApAreaEntity, UUID, ApAreaEntityFactory>

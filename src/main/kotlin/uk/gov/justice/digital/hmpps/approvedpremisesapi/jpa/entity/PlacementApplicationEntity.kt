@@ -97,6 +97,8 @@ data class PlacementApplicationEntity(
   var placementRequests: MutableList<PlacementRequestEntity>,
 ) {
   fun canBeWithdrawn() = placementRequests.all { it.booking == null }
+
+  override fun toString() = "PlacementApplicationEntity: $id"
 }
 
 enum class PlacementType {
