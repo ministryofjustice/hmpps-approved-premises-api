@@ -5745,9 +5745,8 @@ components:
         - $ref: '#/components/schemas/Application'
         - type: object
           properties:
-            createdByUserId:
-              type: string
-              format: uuid
+            createdBy:
+              $ref: '#/components/schemas/NomisUser'
             schemaVersion:
               type: string
               format: uuid
@@ -5763,7 +5762,7 @@ components:
               type: string
               format: date-time
           required:
-            - createdByUserId
+            - createdBy
             - schemaVersion
             - outdatedSchema
             - status

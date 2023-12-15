@@ -11,10 +11,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.sql.Timestamp
@@ -24,6 +26,7 @@ import java.util.UUID
 
 class ApplicationsTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
+  private val mockNomisTransformer = mockk<NomisUserTransformer>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -35,6 +38,7 @@ class ApplicationsTransformerTest {
     .approvedpremisesapi.transformer.cas2.ApplicationsTransformer(
       objectMapper,
       mockPersonTransformer,
+      mockNomisTransformer,
     )
 
   private val user = NomisUserEntityFactory().produce()
@@ -47,6 +51,12 @@ class ApplicationsTransformerTest {
   @BeforeEach
   fun setup() {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
+    every { mockNomisTransformer.transformJpaToApi(any()) } returns NomisUser(
+      id = user.id,
+      name = user.name,
+      nomisUsername = user.nomisUsername,
+      isActive = user.isActive,
+    )
   }
 
   @Nested
@@ -61,8 +71,7 @@ class ApplicationsTransformerTest {
       val result = applicationsTransformer.transformJpaToApi(application, mockk())
 
       assertThat(result.id).isEqualTo(application.id)
-      assertThat(result.createdByUserId).isEqualTo(user.id)
-      assertThat(result.createdByUserId).isEqualTo(user.id)
+      assertThat(result.createdBy.id).isEqualTo(user.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
     }
 
