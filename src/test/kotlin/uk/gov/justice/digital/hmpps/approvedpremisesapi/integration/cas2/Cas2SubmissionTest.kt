@@ -460,6 +460,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
                 SubmitCas2Application(
                   applicationId = applicationId,
                   translatedDocument = {},
+                  telephoneNumber = "123 456 7891",
                 ),
               )
               .exchange()
@@ -524,6 +525,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
                   SubmitCas2Application(
                     applicationId = applicationId,
                     translatedDocument = {},
+                    telephoneNumber = "123 456 7891",
                   ),
                 )
                 .exchange()

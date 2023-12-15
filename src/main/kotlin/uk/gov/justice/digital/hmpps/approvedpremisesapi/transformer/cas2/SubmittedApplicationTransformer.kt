@@ -30,7 +30,7 @@ class SubmittedApplicationTransformer(
     return Cas2SubmittedApplication(
       id = jpa.id,
       person = personTransformer.transformModelToPersonApi(personInfo),
-      submittedBy = nomisUserTransformer.transformJpaToApi(jpa.createdByUser),
+      submittedBy = nomisUserTransformer.transformJpaToApi(jpa.createdByUser, jpa.telephoneNumber),
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = !jpa.schemaUpToDate,
       statusUpdates = jpa.statusUpdates?.map { update -> transformUpdate(update) },

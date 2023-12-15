@@ -74,6 +74,7 @@ class Cas2ApplicationsSeedJob(
         submittedAt = row.submittedAt,
         schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
         schemaUpToDate = true,
+        telephoneNumber = "123 456 789",
       ),
     )
     if (row.statusUpdates != "0") {

@@ -69,6 +69,7 @@ class Cas2AutoScript(
         submittedAt = submittedAt,
         schemaVersion = jsonSchemaService.getNewestSchema(Cas2ApplicationJsonSchemaEntity::class.java),
         schemaUpToDate = true,
+        telephoneNumber = "123 456 789",
       ),
     )
     if (state == "IN_REVIEW") {

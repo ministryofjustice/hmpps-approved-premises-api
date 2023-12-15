@@ -2540,6 +2540,8 @@ components:
         isActive:
           type: boolean
           example: true
+        telephoneNumber:
+          type: string
       required:
         - id
         - name
