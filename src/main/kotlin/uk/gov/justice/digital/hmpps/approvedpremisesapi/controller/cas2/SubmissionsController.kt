@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
@@ -35,19 +36,28 @@ class SubmissionsController(
   private val applicationTransformer: SubmittedApplicationTransformer,
   private val offenderService: OffenderService,
   private val externalUserService: ExternalUserService,
+  private val nomisUserService: NomisUserService,
   private val statusUpdateService: StatusUpdateService,
 ) : SubmissionsCas2Delegate {
 
   override fun submissionsGet(): ResponseEntity<List<Cas2SubmittedApplicationSummary>> {
-    httpAuthService.getCas2AuthenticatedPrincipalOrThrow()
-    ensureExternalUserPersisted()
+    val principal = httpAuthService.getCas2AuthenticatedPrincipalOrThrow()
+    if (principal.isExternalUser()) {
+      ensureExternalUserPersisted()
+    } else {
+      ensureNomisUserPersisted()
+    }
     val applications = applicationService.getAllSubmittedApplicationsForAssessor()
     return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it) })
   }
 
   override fun submissionsApplicationIdGet(applicationId: UUID): ResponseEntity<Cas2SubmittedApplication> {
-    httpAuthService.getCas2AuthenticatedPrincipalOrThrow()
-    ensureExternalUserPersisted()
+    val principal = httpAuthService.getCas2AuthenticatedPrincipalOrThrow()
+    if (principal.isExternalUser()) {
+      ensureExternalUserPersisted()
+    } else {
+      ensureNomisUserPersisted()
+    }
 
     val application = when (
       val applicationResult = applicationService.getSubmittedApplicationForAssessor(applicationId)
@@ -127,6 +137,10 @@ class SubmissionsController(
 
   private fun ensureExternalUserPersisted() {
     externalUserService.getUserForRequest()
+  }
+
+  private fun ensureNomisUserPersisted() {
+    nomisUserService.getUserForRequest()
   }
 
   private fun getPersonDetailAndTransformToSummary(

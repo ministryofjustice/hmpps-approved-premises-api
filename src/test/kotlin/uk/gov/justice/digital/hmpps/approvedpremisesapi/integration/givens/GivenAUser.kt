@@ -128,3 +128,28 @@ fun IntegrationTestBase.`Given a CAS2 Assessor`(
 
   block(user, jwt)
 }
+
+fun IntegrationTestBase.`Given a CAS2 Admin`(
+  id: UUID = UUID.randomUUID(),
+  nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
+  block: (nomisUserEntity: NomisUserEntity, jwt: String) -> Unit,
+) {
+  val nomisUserDetailsFactory = NomisUserDetailFactory()
+
+  if (nomisUserDetailsConfigBlock != null) {
+    nomisUserDetailsConfigBlock(nomisUserDetailsFactory)
+  }
+
+  val nomisUserDetails = nomisUserDetailsFactory.produce()
+
+  val user = nomisUserEntityFactory.produceAndPersist {
+    withId(id)
+    withNomisUsername(nomisUserDetails.username)
+    withEmail(nomisUserDetails.primaryEmail)
+    withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
+  }
+
+  val jwt = jwtAuthHelper.createValidAdminAuthorisationCodeJwt(nomisUserDetails.username)
+
+  block(user, jwt)
+}

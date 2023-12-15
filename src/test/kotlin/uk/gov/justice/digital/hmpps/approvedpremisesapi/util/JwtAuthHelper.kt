@@ -77,6 +77,13 @@ class JwtAuthHelper {
       roles = listOf("ROLE_CAS2_ASSESSOR"),
     )
 
+  internal fun createValidAdminAuthorisationCodeJwt(username: String = "username") =
+    createAuthorizationCodeJwt(
+      subject = username,
+      authSource = "nomis",
+      roles = listOf("ROLE_PRISON", "ROLE_CAS2_ADMIN"),
+    )
+
   internal fun createValidAuthorizationCodeJwt(username: String = "username") = createAuthorizationCodeJwt(
     subject = username,
     authSource = "delius",
