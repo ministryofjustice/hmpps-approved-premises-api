@@ -118,6 +118,7 @@ class OffenderService(
   }
 
   @Deprecated("This method directly couples to the AP Delius Context API.", replaceWith = ReplaceWith("getOffenderSummariesByCrns(crns, userDistinguishedName, ignoreLao, true)"))
+  @SuppressWarnings("CyclomaticComplexMethod")
   fun getOffenderSummariesByCrns(crns: List<String>, userDistinguishedName: String, ignoreLao: Boolean = false): List<PersonSummaryInfoResult> {
     if (crns.isEmpty()) {
       return emptyList()
