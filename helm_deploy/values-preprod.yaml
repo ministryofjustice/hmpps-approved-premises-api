@@ -31,9 +31,9 @@ generic-service:
     DOMAIN-EVENTS_CAS1_EMIT-ENABLED: true
     DOMAIN-EVENTS_CAS2_EMIT-ENABLED: false
     DOMAIN-EVENTS_CAS3_EMIT-ENABLED: bookingCancelled,bookingConfirmed,bookingProvisionallyMade,personArrived,personDeparted,referralSubmitted,bookingCancelledUpdated,personDepartureUpdated,personArrivedUpdated
-    DOMAIN-EVENTS_CAS1_ASYNC-ENABLED: false
-    DOMAIN-EVENTS_CAS2_ASYNC-ENABLED: false
-    DOMAIN-EVENTS_CAS3_ASYNC-ENABLED: false
+    DOMAIN-EVENTS_CAS1_ASYNC-SAVE-ENABLED: false
+    DOMAIN-EVENTS_CAS2_ASYNC-SAVE-ENABLED: false
+    DOMAIN-EVENTS_CAS3_ASYNC-SAVE-ENABLED: false
     HMPPS_SQS_USE_WEB_TOKEN: true
 
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises-preprod.hmpps.service.justice.gov.uk/applications/#id
