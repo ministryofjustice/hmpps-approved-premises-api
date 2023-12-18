@@ -10,6 +10,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
@@ -36,7 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomainEventWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
@@ -47,7 +48,7 @@ import java.util.UUID
 class DomainEventServiceTest {
   private val domainEventRespositoryMock = mockk<DomainEventRepository>()
   private val hmppsQueueServieMock = mockk<HmppsQueueService>()
-
+  private val domainEventWorkerMock = mockk<ConfiguredDomainEventWorker>()
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
     registerModule(JavaTimeModule())
@@ -58,6 +59,7 @@ class DomainEventServiceTest {
     objectMapper = objectMapper,
     domainEventRepository = domainEventRespositoryMock,
     hmppsQueueService = hmppsQueueServieMock,
+    domainEventWorker = domainEventWorkerMock,
     emitDomainEventsEnabled = true,
     applicationSubmittedDetailUrlTemplate = "http://api/events/application-submitted/#eventId",
     applicationAssessedDetailUrlTemplate = "http://api/events/application-assessed/#eventId",
@@ -141,6 +143,8 @@ class DomainEventServiceTest {
       ),
     )
 
+    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
+
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
@@ -159,19 +163,19 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 1) {
-      mockHmppsTopic.snsClient.publish(
+      domainEventWorkerMock.emitEvent(
         match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
-
-          deserializedMessage.eventType == "approved-premises.application.submitted" &&
-            deserializedMessage.version == 1 &&
-            deserializedMessage.description == "An application has been submitted for an Approved Premises placement" &&
-            deserializedMessage.detailUrl == "http://api/events/application-submitted/$id" &&
-            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            deserializedMessage.additionalInformation.applicationId == applicationId &&
-            deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+          it.eventType == "approved-premises.application.submitted" &&
+            it.version == 1 &&
+            it.description == "An application has been submitted for an Approved Premises placement" &&
+            it.detailUrl == "http://api/events/application-submitted/$id" &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.additionalInformation.applicationId == applicationId &&
+            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
+        any(),
+        domainEventToSave.id,
       )
     }
   }
@@ -207,7 +211,8 @@ class DomainEventServiceTest {
 
     try {
       domainEventService.saveApplicationSubmittedDomainEvent(domainEventToSave)
-    } catch (_: Exception) { }
+    } catch (_: Exception) {
+    }
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(
@@ -298,6 +303,7 @@ class DomainEventServiceTest {
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
 
     domainEventService.saveApplicationAssessedDomainEvent(domainEventToSave)
 
@@ -314,19 +320,19 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 1) {
-      mockHmppsTopic.snsClient.publish(
+      domainEventWorkerMock.emitEvent(
         match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
-
-          deserializedMessage.eventType == "approved-premises.application.assessed" &&
-            deserializedMessage.version == 1 &&
-            deserializedMessage.description == "An application has been assessed for an Approved Premises placement" &&
-            deserializedMessage.detailUrl == "http://api/events/application-assessed/$id" &&
-            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            deserializedMessage.additionalInformation.applicationId == applicationId &&
-            deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+          it.eventType == "approved-premises.application.assessed" &&
+            it.version == 1 &&
+            it.description == "An application has been assessed for an Approved Premises placement" &&
+            it.detailUrl == "http://api/events/application-assessed/$id" &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.additionalInformation.applicationId == applicationId &&
+            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
+        any(),
+        domainEventToSave.id,
       )
     }
   }
@@ -362,7 +368,8 @@ class DomainEventServiceTest {
 
     try {
       domainEventService.saveApplicationAssessedDomainEvent(domainEventToSave)
-    } catch (_: Exception) { }
+    } catch (_: Exception) {
+    }
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(
@@ -453,6 +460,7 @@ class DomainEventServiceTest {
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
 
     domainEventService.saveBookingMadeDomainEvent(domainEventToSave)
 
@@ -469,19 +477,19 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 1) {
-      mockHmppsTopic.snsClient.publish(
+      domainEventWorkerMock.emitEvent(
         match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
-
-          deserializedMessage.eventType == "approved-premises.booking.made" &&
-            deserializedMessage.version == 1 &&
-            deserializedMessage.description == "An Approved Premises booking has been made" &&
-            deserializedMessage.detailUrl == "http://api/events/booking-made/$id" &&
-            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            deserializedMessage.additionalInformation.applicationId == applicationId &&
-            deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+          it.eventType == "approved-premises.booking.made" &&
+            it.version == 1 &&
+            it.description == "An Approved Premises booking has been made" &&
+            it.detailUrl == "http://api/events/booking-made/$id" &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.additionalInformation.applicationId == applicationId &&
+            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
+        any(),
+        domainEventToSave.id,
       )
     }
   }
@@ -517,7 +525,8 @@ class DomainEventServiceTest {
 
     try {
       domainEventService.saveBookingMadeDomainEvent(domainEventToSave)
-    } catch (_: Exception) { }
+    } catch (_: Exception) {
+    }
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(
@@ -608,6 +617,7 @@ class DomainEventServiceTest {
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
 
     domainEventService.saveBookingChangedEvent(domainEventToSave)
 
@@ -624,19 +634,19 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 1) {
-      mockHmppsTopic.snsClient.publish(
+      domainEventWorkerMock.emitEvent(
         match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
-
-          deserializedMessage.eventType == "approved-premises.booking.changed" &&
-            deserializedMessage.version == 1 &&
-            deserializedMessage.description == "An Approved Premises Booking has been changed" &&
-            deserializedMessage.detailUrl == "http://api/events/booking-changed/$id" &&
-            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            deserializedMessage.additionalInformation.applicationId == applicationId &&
-            deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+          it.eventType == "approved-premises.booking.changed" &&
+            it.version == 1 &&
+            it.description == "An Approved Premises Booking has been changed" &&
+            it.detailUrl == "http://api/events/booking-changed/$id" &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.additionalInformation.applicationId == applicationId &&
+            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
+        any(),
+        domainEventToSave.id,
       )
     }
   }
@@ -672,7 +682,8 @@ class DomainEventServiceTest {
 
     try {
       domainEventService.saveBookingChangedEvent(domainEventToSave)
-    } catch (_: Exception) { }
+    } catch (_: Exception) {
+    }
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(
@@ -763,6 +774,7 @@ class DomainEventServiceTest {
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
 
     domainEventService.saveBookingCancelledEvent(domainEventToSave)
 
@@ -779,19 +791,19 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 1) {
-      mockHmppsTopic.snsClient.publish(
+      domainEventWorkerMock.emitEvent(
         match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
-
-          deserializedMessage.eventType == "approved-premises.booking.cancelled" &&
-            deserializedMessage.version == 1 &&
-            deserializedMessage.description == "An Approved Premises Booking has been cancelled" &&
-            deserializedMessage.detailUrl == "http://api/events/booking-cancelled/$id" &&
-            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            deserializedMessage.additionalInformation.applicationId == applicationId &&
-            deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+          it.eventType == "approved-premises.booking.cancelled" &&
+            it.version == 1 &&
+            it.description == "An Approved Premises Booking has been cancelled" &&
+            it.detailUrl == "http://api/events/booking-cancelled/$id" &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.additionalInformation.applicationId == applicationId &&
+            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
+        any(),
+        domainEventToSave.id,
       )
     }
   }
@@ -827,7 +839,8 @@ class DomainEventServiceTest {
 
     try {
       domainEventService.saveBookingCancelledEvent(domainEventToSave)
-    } catch (_: Exception) { }
+    } catch (_: Exception) {
+    }
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(
@@ -918,6 +931,7 @@ class DomainEventServiceTest {
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
 
     domainEventService.savePersonArrivedEvent(domainEventToSave)
 
@@ -934,19 +948,19 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 1) {
-      mockHmppsTopic.snsClient.publish(
+      domainEventWorkerMock.emitEvent(
         match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
-
-          deserializedMessage.eventType == "approved-premises.person.arrived" &&
-            deserializedMessage.version == 1 &&
-            deserializedMessage.description == "Someone has arrived at an Approved Premises for their Booking" &&
-            deserializedMessage.detailUrl == "http://api/events/person-arrived/$id" &&
-            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            deserializedMessage.additionalInformation.applicationId == applicationId &&
-            deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+          it.eventType == "approved-premises.person.arrived" &&
+            it.version == 1 &&
+            it.description == "Someone has arrived at an Approved Premises for their Booking" &&
+            it.detailUrl == "http://api/events/person-arrived/$id" &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.additionalInformation.applicationId == applicationId &&
+            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
+        any(),
+        domainEventToSave.id,
       )
     }
   }
@@ -982,7 +996,8 @@ class DomainEventServiceTest {
 
     try {
       domainEventService.savePersonArrivedEvent(domainEventToSave)
-    } catch (_: Exception) { }
+    } catch (_: Exception) {
+    }
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(
@@ -1073,6 +1088,7 @@ class DomainEventServiceTest {
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
 
     domainEventService.savePersonNotArrivedEvent(domainEventToSave)
 
@@ -1089,19 +1105,19 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 1) {
-      mockHmppsTopic.snsClient.publish(
+      domainEventWorkerMock.emitEvent(
         match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
-
-          deserializedMessage.eventType == "approved-premises.person.not-arrived" &&
-            deserializedMessage.version == 1 &&
-            deserializedMessage.description == "Someone has failed to arrive at an Approved Premises for their Booking" &&
-            deserializedMessage.detailUrl == "http://api/events/person-not-arrived/$id" &&
-            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            deserializedMessage.additionalInformation.applicationId == applicationId &&
-            deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+          it.eventType == "approved-premises.person.not-arrived" &&
+            it.version == 1 &&
+            it.description == "Someone has failed to arrive at an Approved Premises for their Booking" &&
+            it.detailUrl == "http://api/events/person-not-arrived/$id" &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.additionalInformation.applicationId == applicationId &&
+            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
+        any(),
+        domainEventToSave.id,
       )
     }
   }
@@ -1137,7 +1153,8 @@ class DomainEventServiceTest {
 
     try {
       domainEventService.savePersonNotArrivedEvent(domainEventToSave)
-    } catch (_: Exception) { }
+    } catch (_: Exception) {
+    }
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(
@@ -1228,6 +1245,7 @@ class DomainEventServiceTest {
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
 
     domainEventService.savePersonDepartedEvent(domainEventToSave)
 
@@ -1244,19 +1262,19 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 1) {
-      mockHmppsTopic.snsClient.publish(
+      domainEventWorkerMock.emitEvent(
         match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
-
-          deserializedMessage.eventType == "approved-premises.person.departed" &&
-            deserializedMessage.version == 1 &&
-            deserializedMessage.description == "Someone has left an Approved Premises" &&
-            deserializedMessage.detailUrl == "http://api/events/person-departed/$id" &&
-            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            deserializedMessage.additionalInformation.applicationId == applicationId &&
-            deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+          it.eventType == "approved-premises.person.departed" &&
+            it.version == 1 &&
+            it.description == "Someone has left an Approved Premises" &&
+            it.detailUrl == "http://api/events/person-departed/$id" &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.additionalInformation.applicationId == applicationId &&
+            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
+        any(),
+        domainEventToSave.id,
       )
     }
   }
@@ -1292,7 +1310,8 @@ class DomainEventServiceTest {
 
     try {
       domainEventService.savePersonDepartedEvent(domainEventToSave)
-    } catch (_: Exception) { }
+    } catch (_: Exception) {
+    }
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(
@@ -1383,6 +1402,7 @@ class DomainEventServiceTest {
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
 
     domainEventService.saveBookingNotMadeEvent(domainEventToSave)
 
@@ -1399,19 +1419,19 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 1) {
-      mockHmppsTopic.snsClient.publish(
+      domainEventWorkerMock.emitEvent(
         match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
-
-          deserializedMessage.eventType == "approved-premises.booking.not-made" &&
-            deserializedMessage.version == 1 &&
-            deserializedMessage.description == "It was not possible to create a Booking on this attempt" &&
-            deserializedMessage.detailUrl == "http://api/events/booking-not-made/$id" &&
-            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            deserializedMessage.additionalInformation.applicationId == applicationId &&
-            deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+          it.eventType == "approved-premises.booking.not-made" &&
+            it.version == 1 &&
+            it.description == "It was not possible to create a Booking on this attempt" &&
+            it.detailUrl == "http://api/events/booking-not-made/$id" &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.additionalInformation.applicationId == applicationId &&
+            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
+        any(),
+        domainEventToSave.id,
       )
     }
   }
@@ -1447,7 +1467,8 @@ class DomainEventServiceTest {
 
     try {
       domainEventService.saveBookingNotMadeEvent(domainEventToSave)
-    } catch (_: Exception) { }
+    } catch (_: Exception) {
+    }
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(
@@ -1538,6 +1559,7 @@ class DomainEventServiceTest {
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
 
     domainEventService.saveApplicationWithdrawnEvent(domainEventToSave)
 
@@ -1554,19 +1576,19 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 1) {
-      mockHmppsTopic.snsClient.publish(
+      domainEventWorkerMock.emitEvent(
         match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
-
-          deserializedMessage.eventType == "approved-premises.application.withdrawn" &&
-            deserializedMessage.version == 1 &&
-            deserializedMessage.description == "An Approved Premises Application has been withdrawn" &&
-            deserializedMessage.detailUrl == "http://api/events/application-withdrawn/$id" &&
-            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            deserializedMessage.additionalInformation.applicationId == applicationId &&
-            deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+          it.eventType == "approved-premises.application.withdrawn" &&
+            it.version == 1 &&
+            it.description == "An Approved Premises Application has been withdrawn" &&
+            it.detailUrl == "http://api/events/application-withdrawn/$id" &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.additionalInformation.applicationId == applicationId &&
+            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
+        any(),
+        domainEventToSave.id,
       )
     }
   }
@@ -1602,7 +1624,8 @@ class DomainEventServiceTest {
 
     try {
       domainEventService.saveApplicationWithdrawnEvent(domainEventToSave)
-    } catch (_: Exception) { }
+    } catch (_: Exception) {
+    }
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(

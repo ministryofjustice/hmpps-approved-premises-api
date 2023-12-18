@@ -28,6 +28,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+  implementation("org.springframework.retry:spring-retry")
   implementation("com.vladmihalcea:hibernate-types-55:2.21.1")
   implementation("org.locationtech.jts:jts-core:1.19.0")
   implementation("org.hibernate:hibernate-spatial")
@@ -308,13 +309,14 @@ tasks.get("openApiGenerate").doLast {
 
   // This is a workaround for an issue where we end up with duplicate keys in output JSON because we declare properties both in the discriminator
   // and as a regular property in the OpenAPI spec.  The Typescript generator does not support just the discriminator so there is no alternative.
-  File("$rootDir/build/generated/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/model").walk().forEach {
-    if (it.isFile && it.extension == "kt") {
-      val replacedFileContents = FileUtils.readFileToString(it, "UTF-8")
-        .replace("include = JsonTypeInfo.As.PROPERTY", "include = JsonTypeInfo.As.EXISTING_PROPERTY")
-      FileUtils.writeStringToFile(it, replacedFileContents, "UTF-8")
+  File("$rootDir/build/generated/src/main/kotlin/uk/gov/justice/digital/hmpps/approvedpremisesapi/api/model").walk()
+    .forEach {
+      if (it.isFile && it.extension == "kt") {
+        val replacedFileContents = FileUtils.readFileToString(it, "UTF-8")
+          .replace("include = JsonTypeInfo.As.PROPERTY", "include = JsonTypeInfo.As.EXISTING_PROPERTY")
+        FileUtils.writeStringToFile(it, replacedFileContents, "UTF-8")
+      }
     }
-  }
 }
 
 ktlint {
@@ -339,7 +341,8 @@ tasks.getByName("runKtlintCheckOverMainSourceSet").dependsOn("openApiGenerate", 
 gatling {
   // WARNING: options below only work when logback config file isn't provided
   logLevel = "WARN" // logback root level
-  logHttp = io.gatling.gradle.LogHttp.NONE // set to 'ALL' for all HTTP traffic in TRACE, 'FAILURES' for failed HTTP traffic in DEBUG
+  logHttp =
+    io.gatling.gradle.LogHttp.NONE // set to 'ALL' for all HTTP traffic in TRACE, 'FAILURES' for failed HTTP traffic in DEBUG
 }
 
 detekt {
