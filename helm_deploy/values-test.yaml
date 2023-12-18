@@ -31,6 +31,9 @@ generic-service:
     DOMAIN-EVENTS_CAS1_EMIT-ENABLED: false
     DOMAIN-EVENTS_CAS2_EMIT-ENABLED: false
     DOMAIN-EVENTS_CAS3_EMIT-ENABLED: bookingCancelled,bookingConfirmed,bookingProvisionallyMade,personArrived,personDeparted,referralSubmitted,bookingCancelledUpdated,personDepartureUpdated,personArrivedUpdated
+    DOMAIN-EVENTS_CAS1_ASYNC-ENABLED: false
+    DOMAIN-EVENTS_CAS2_ASYNC-ENABLED: false
+    DOMAIN-EVENTS_CAS3_ASYNC-ENABLED: false
     SEED_AUTO_ENABLED: true
     SEED_AUTO_FILE-PREFIXES: classpath:db/seed/local+dev+test,classpath:db/seed/dev+test
     SEED_AUTO-SCRIPT_ENABLED: true
