@@ -1,0 +1,3 @@
+ALTER TABLE placement_application_dates ADD COLUMN placement_request_id uuid NULL;
+
+ALTER TABLE placement_application_dates ADD CONSTRAINT placement_application_dates_placement_request_id_fkey FOREIGN KEY (placement_request_id) REFERENCES placement_requests(id) DEFERRABLE;

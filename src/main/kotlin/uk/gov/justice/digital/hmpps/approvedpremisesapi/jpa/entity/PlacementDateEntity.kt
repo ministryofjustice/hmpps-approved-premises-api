@@ -31,6 +31,10 @@ data class PlacementDateEntity(
   @JoinColumn(name = "placement_application_id")
   val placementApplication: PlacementApplicationEntity,
 
+  @OneToOne
+  @JoinColumn(name = "placement_request_id")
+  var placementRequest: PlacementRequestEntity? = null,
+
   val expectedArrival: LocalDate,
 
   val duration: Int,

@@ -209,13 +209,21 @@ class PlacementRequestService(
       )
     }
 
-    val placementRequests = placementDateEntities.map {
+    val placementRequests = placementDateEntities.map { placementDateEntity ->
       val placementDates = PlacementDates(
-        expectedArrival = it.expectedArrival,
-        duration = it.duration,
+        expectedArrival = placementDateEntity.expectedArrival,
+        duration = placementDateEntity.duration,
       )
       val isParole = placementApplicationEntity.placementType == PlacementType.RELEASE_FOLLOWING_DECISION
-      this.createPlacementRequest(placementRequirements, placementDates, notes, isParole, placementApplicationEntity)
+      val placementRequest = this.createPlacementRequest(placementRequirements, placementDates, notes, isParole, placementApplicationEntity)
+
+      placementDateRepository.save(
+        placementDateEntity.apply {
+          placementDateEntity.placementRequest = placementRequest
+        }
+      )
+
+      placementRequest
     }
 
     return AuthorisableActionResult.Success(placementRequests)
