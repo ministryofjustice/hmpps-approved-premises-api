@@ -65,7 +65,7 @@ class PlacementApplicationService(
   }
 
   fun getAllPlacementApplicationEntitiesForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
-    return placementApplicationRepository.findAllSubmittedAndNonWithdrawnApplicationsForApplicationId(applicationId)
+    return placementApplicationRepository.findAllSubmittedNonReallocatedAndNonWithdrawnApplicationsForApplicationId(applicationId)
   }
 
   fun createApplication(

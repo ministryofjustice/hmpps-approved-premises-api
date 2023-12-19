@@ -36,6 +36,7 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
     """
       SELECT a from PlacementApplicationEntity a where a.application.id = :applicationId
       AND a.submittedAt is not null
+      AND a.reallocatedAt is null
       AND 
         (
             a.decision != uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAWN_BY_PP
@@ -44,7 +45,7 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
         )
     """,
   )
-  fun findAllSubmittedAndNonWithdrawnApplicationsForApplicationId(applicationId: UUID): List<PlacementApplicationEntity>
+  fun findAllSubmittedNonReallocatedAndNonWithdrawnApplicationsForApplicationId(applicationId: UUID): List<PlacementApplicationEntity>
 }
 
 @Entity
