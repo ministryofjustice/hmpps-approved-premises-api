@@ -1158,31 +1158,41 @@ class ApplicationTest : IntegrationTestBase() {
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           },
+          reallocated = true,
           decision = decision,
           submittedAt = OffsetDateTime.now(),
-        ) { placementApplicationEntity ->
+        ) { _ ->
+          `Given a Placement Application`(
+            createdByUser = user,
+            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+            decision = decision,
+            submittedAt = OffsetDateTime.now(),
+          ) { placementApplicationEntity ->
 
-          val applicationId = placementApplicationEntity.application.id
-          val rawResult = webTestClient.get()
-            .uri("/applications/$applicationId/placement-applications")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.approvedPremises.value)
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
+            val applicationId = placementApplicationEntity.application.id
+            val rawResult = webTestClient.get()
+              .uri("/applications/$applicationId/placement-applications")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
 
-          val body = objectMapper.readValue(rawResult, object : TypeReference<List<PlacementApplication>>() {})
+            val body = objectMapper.readValue(rawResult, object : TypeReference<List<PlacementApplication>>() {})
 
-          assertThat(body.size).isEqualTo(1)
-          assertThat(body[0].id).isEqualTo(placementApplicationEntity.id)
-          assertThat(body[0].applicationId).isEqualTo(placementApplicationEntity.application.id)
-          assertThat(body[0].createdByUserId).isEqualTo(placementApplicationEntity.createdByUser.id)
-          assertThat(body[0].schemaVersion).isEqualTo(placementApplicationEntity.schemaVersion.id)
-          assertThat(body[0].createdAt).isEqualTo(placementApplicationEntity.createdAt.toInstant())
-          assertThat(body[0].submittedAt).isCloseTo(placementApplicationEntity.submittedAt!!.toInstant(), within(1, ChronoUnit.SECONDS))
+            assertThat(body.size).isEqualTo(1)
+            assertThat(body[0].id).isEqualTo(placementApplicationEntity.id)
+            assertThat(body[0].applicationId).isEqualTo(placementApplicationEntity.application.id)
+            assertThat(body[0].createdByUserId).isEqualTo(placementApplicationEntity.createdByUser.id)
+            assertThat(body[0].schemaVersion).isEqualTo(placementApplicationEntity.schemaVersion.id)
+            assertThat(body[0].createdAt).isEqualTo(placementApplicationEntity.createdAt.toInstant())
+            assertThat(body[0].submittedAt).isCloseTo(placementApplicationEntity.submittedAt!!.toInstant(), within(1, ChronoUnit.SECONDS))
+          }
         }
       }
     }
