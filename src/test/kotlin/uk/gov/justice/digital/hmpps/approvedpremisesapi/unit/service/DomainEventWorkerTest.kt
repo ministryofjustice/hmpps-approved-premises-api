@@ -9,8 +9,11 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
+import io.mockk.unmockkConstructor
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.retry.backoff.FixedBackOffPolicy
 import org.springframework.retry.policy.SimpleRetryPolicy
@@ -19,8 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationSubmittedFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
@@ -38,7 +39,6 @@ import java.util.UUID
 
 @Suppress("SwallowedException")
 class DomainEventWorkerTest {
-  private val domainEventRespositoryMock = mockk<DomainEventRepository>()
   private val hmppsQueueServiceMock = mockk<HmppsQueueService>()
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -49,21 +49,66 @@ class DomainEventWorkerTest {
 
   private val asyncDomainEventWorker = AsyncDomainEventWorker(
     domainTopic = hmppsTopicMock,
+    objectMapper = objectMapper,
   )
 
   private val syncDomainEventWorker = SyncDomainEventWorker(
     domainTopic = hmppsTopicMock,
+    objectMapper = objectMapper,
   )
 
+  @BeforeEach
+  fun clearConstructorMocks() {
+    unmockkConstructor(AsyncDomainEventWorker::class)
+    unmockkConstructor(SyncDomainEventWorker::class)
+  }
+
   @Test
-  fun `If we create a ConfiguredDomainEventWorker with asyncSaveEnabled set to true we get back a AsyncDomainEventWorker`() {
+  fun `Creating a ConfiguredDomainEventWorker with asyncSaveEnabled set to true gives an AsyncDomainEventWorker`() {
+    mockkConstructor(AsyncDomainEventWorker::class)
+
+    val snsEvent = mockk<SnsEvent>()
+    val domainEventId = UUID.randomUUID()
+
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns hmppsTopicMock
+    every { anyConstructed<AsyncDomainEventWorker>().emitEvent(snsEvent, domainEventId) } returns Unit
 
     val configuredWorker = ConfiguredDomainEventWorker(
       hmppsQueueServiceMock,
+      objectMapper,
       true,
     )
+    configuredWorker.emitEvent(snsEvent, domainEventId)
+
     assertTrue(configuredWorker.worker is AsyncDomainEventWorker)
+
+    verify {
+      anyConstructed<AsyncDomainEventWorker>().emitEvent(snsEvent, domainEventId)
+    }
+  }
+
+  @Test
+  fun `Creating a ConfiguredDomainEventWorker with asyncSaveEnabled set to false gives a SyncDomainEventWorker`() {
+    mockkConstructor(SyncDomainEventWorker::class)
+
+    val snsEvent = mockk<SnsEvent>()
+    val domainEventId = UUID.randomUUID()
+
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns hmppsTopicMock
+    every { anyConstructed<SyncDomainEventWorker>().emitEvent(snsEvent, domainEventId) } returns Unit
+
+    val configuredWorker = ConfiguredDomainEventWorker(
+      hmppsQueueServiceMock,
+      objectMapper,
+      false,
+    )
+    configuredWorker.emitEvent(snsEvent, domainEventId)
+
+    assertTrue(configuredWorker.worker is SyncDomainEventWorker)
+
+    verify {
+      anyConstructed<SyncDomainEventWorker>().emitEvent(snsEvent, domainEventId)
+    }
   }
 
   @Test
@@ -105,14 +150,6 @@ class DomainEventWorkerTest {
       ),
     )
 
-    val publishRequest = PublishRequest("", objectMapper.writeValueAsString(snsEvent))
-      .withMessageAttributes(
-        mapOf(
-          "eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType),
-        ),
-
-      )
-
     every { asyncDomainEventWorker.domainTopic.snsClient.publish(any()) } throws RuntimeException()
 
     try {
@@ -124,10 +161,12 @@ class DomainEventWorkerTest {
       retryTemplate.setBackOffPolicy(backOffPolicy)
       retryTemplate.setRetryPolicy(retryPolicy)
       asyncDomainEventWorker.retryTemplate = retryTemplate
-      asyncDomainEventWorker.emitEvent(snsEvent, publishRequest, domainEventToSave.id)
+      asyncDomainEventWorker.emitEvent(snsEvent, domainEventToSave.id)
     } catch (error: RuntimeException) {
       verify(exactly = AsyncDomainEventWorker.MAX_ATTEMPTS_RETRY) {
-        asyncDomainEventWorker.domainTopic.snsClient.publish(any())
+        asyncDomainEventWorker.domainTopic.snsClient.publish(
+          match { matchingPublishRequest(it, snsEvent) },
+        )
       }
     }
   }
@@ -181,10 +220,12 @@ class DomainEventWorkerTest {
 
     every { asyncDomainEventWorker.domainTopic.snsClient.publish(any()) } returns PublishResult()
 
-    asyncDomainEventWorker.emitEvent(snsEvent, publishRequest, id)
+    asyncDomainEventWorker.emitEvent(snsEvent, id)
 
     verify(exactly = 1) {
-      asyncDomainEventWorker.domainTopic.snsClient.publish(any())
+      asyncDomainEventWorker.domainTopic.snsClient.publish(
+        match { matchingPublishRequest(it, snsEvent) },
+      )
     }
   }
 
@@ -227,20 +268,14 @@ class DomainEventWorkerTest {
       ),
     )
 
-    val publishRequest = PublishRequest("", objectMapper.writeValueAsString(snsEvent))
-      .withMessageAttributes(
-        mapOf(
-          "eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType),
-        ),
-
-      )
-
     every { syncDomainEventWorker.domainTopic.snsClient.publish(any()) } returns PublishResult()
 
-    syncDomainEventWorker.emitEvent(snsEvent, publishRequest, id)
+    syncDomainEventWorker.emitEvent(snsEvent, id)
 
     verify(exactly = 1) {
-      syncDomainEventWorker.domainTopic.snsClient.publish(any())
+      syncDomainEventWorker.domainTopic.snsClient.publish(
+        match { matchingPublishRequest(it, snsEvent) },
+      )
     }
   }
 
@@ -250,8 +285,6 @@ class DomainEventWorkerTest {
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
     val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
     val domainEventToSave = DomainEvent(
       id = id,
@@ -286,28 +319,22 @@ class DomainEventWorkerTest {
     every { syncDomainEventWorker.domainTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { syncDomainEventWorker.domainTopic.snsClient.publish(any()) } returns PublishResult()
 
-    val publishRequest =
-      PublishRequest("arn:aws:sns:eu-west-2:000000000000:domain-events", objectMapper.writeValueAsString(snsEvent))
-        .withMessageAttributes(
-          mapOf(
-            "eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType),
-          ),
-
-        )
-    syncDomainEventWorker.emitEvent(snsEvent, publishRequest, id)
+    syncDomainEventWorker.emitEvent(snsEvent, id)
 
     verify(exactly = 1) {
       syncDomainEventWorker.domainTopic.snsClient.publish(
-        match {
-          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
-
-          deserializedMessage.eventType == "approved-premises.application.submitted" &&
-            deserializedMessage.version == 1 &&
-            deserializedMessage.description == "An application has been submitted for an Approved Premises placement" &&
-            deserializedMessage.detailUrl == "http://api/events/application-submitted/$id" &&
-            deserializedMessage.additionalInformation.applicationId == applicationId
-        },
+        match { matchingPublishRequest(it, snsEvent) },
       )
     }
+  }
+
+  private fun matchingPublishRequest(publishRequest: PublishRequest, snsEvent: SnsEvent): Boolean {
+    val deserializedMessage = objectMapper.readValue(publishRequest.message, SnsEvent::class.java)
+
+    return deserializedMessage.eventType == snsEvent.eventType &&
+      deserializedMessage.version == snsEvent.version &&
+      deserializedMessage.description == snsEvent.description &&
+      deserializedMessage.detailUrl == snsEvent.detailUrl &&
+      deserializedMessage.additionalInformation.applicationId == snsEvent.additionalInformation.applicationId
   }
 }

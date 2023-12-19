@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import com.amazonaws.services.sns.model.MessageAttributeValue
 import com.amazonaws.services.sns.model.PublishRequest
+import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -14,36 +16,44 @@ import uk.gov.justice.hmpps.sqs.MissingTopicException
 import java.util.UUID
 
 interface DomainEventWorkerInterface {
-  fun emitEvent(snsEvent: SnsEvent, publishRequest: PublishRequest, domainEventId: UUID): Unit
+  fun emitEvent(snsEvent: SnsEvent, domainEventId: UUID): Unit
 }
 
 @Component
 @Primary
 class ConfiguredDomainEventWorker(
   private val hmppsQueueService: HmppsQueueService,
+  private val objectMapper: ObjectMapper,
   @Value("\${domain-events.cas1.async-save-enabled}") private val asyncSaveEnabled: Boolean,
 ) : DomainEventWorkerInterface {
-  val domainTopic by lazy {
+  final val domainTopic by lazy {
     hmppsQueueService.findByTopicId("domainevents")
       ?: throw MissingTopicException("domainevents not found")
   }
 
   var worker: DomainEventWorkerInterface = if (asyncSaveEnabled) {
-    AsyncDomainEventWorker(domainTopic)
+    AsyncDomainEventWorker(domainTopic, objectMapper)
   } else {
-    SyncDomainEventWorker(domainTopic)
+    SyncDomainEventWorker(domainTopic, objectMapper)
   }
 
-  override fun emitEvent(snsEvent: SnsEvent, publishRequest: PublishRequest, domainEventId: UUID) =
-    this.worker.emitEvent(snsEvent, publishRequest, domainEventId)
+  override fun emitEvent(snsEvent: SnsEvent, domainEventId: UUID) =
+    this.worker.emitEvent(snsEvent, domainEventId)
 }
 
 class SyncDomainEventWorker(
   val domainTopic: HmppsTopic,
+  val objectMapper: ObjectMapper,
 ) : DomainEventWorkerInterface {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun emitEvent(snsEvent: SnsEvent, publishRequest: PublishRequest, domainEventId: UUID) {
+  override fun emitEvent(snsEvent: SnsEvent, domainEventId: UUID) {
+    val publishRequest = PublishRequest(domainTopic.arn, objectMapper.writeValueAsString(snsEvent))
+      .withMessageAttributes(
+        mapOf(
+          "eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType),
+        ),
+      )
     val publishResult = domainTopic.snsClient.publish(publishRequest)
 
     log.info(
@@ -56,6 +66,7 @@ class SyncDomainEventWorker(
 
 class AsyncDomainEventWorker(
   val domainTopic: HmppsTopic,
+  val objectMapper: ObjectMapper,
 ) : DomainEventWorkerInterface {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -64,10 +75,17 @@ class AsyncDomainEventWorker(
     .maxAttempts(MAX_ATTEMPTS_RETRY_EXPONENTIAL)
     .build()
 
-  override fun emitEvent(snsEvent: SnsEvent, publishRequest: PublishRequest, domainEventId: UUID) =
+  override fun emitEvent(snsEvent: SnsEvent, domainEventId: UUID) {
+    val publishRequest = PublishRequest(domainTopic.arn, objectMapper.writeValueAsString(snsEvent))
+      .withMessageAttributes(
+        mapOf(
+          "eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType),
+        ),
+      )
     runBlocking {
       publishSnsEventWithRetry(publishRequest, snsEvent, retryTemplate, domainEventId)
     }
+  }
 
   fun publishSnsEventWithRetry(
     publishRequest: PublishRequest,
