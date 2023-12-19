@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Admin`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
@@ -344,8 +345,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
                 applicationEntity.createdAt.toInstant() == it.createdAt &&
                 applicant == it.submittedBy &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-                serializableToJsonNode(applicationEntity.document) ==
-                  serializableToJsonNode(it.document) &&
+                serializableToJsonNode(applicationEntity.document) == serializableToJsonNode(it.document) &&
                 newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
             }
 
@@ -406,6 +406,174 @@ class Cas2SubmissionTest : IntegrationTestBase() {
               .exchange()
               .expectStatus()
               .isNotFound
+          }
+        }
+      }
+    }
+
+    @Nested
+    inner class ControlsOnCas2Admin {
+      @Test
+      fun `Admin can view single submitted application`() {
+        `Given a CAS2 Assessor` { assessor, _ ->
+          `Given a CAS2 Admin` { admin, jwt ->
+            `Given a CAS2 User` { user, _ ->
+              `Given an Offender` { offenderDetails, _ ->
+                cas2ApplicationJsonSchemaRepository.deleteAll()
+
+                val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
+                  .produceAndPersist {
+                    withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+                    withSchema(
+                      """
+                        {
+                          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                          "${"\$id"}": "https://example.com/product.schema.json",
+                          "title": "Thing",
+                          "description": "A thing",
+                          "type": "object",
+                          "properties": {
+                            "thingId": {
+                              "description": "The unique identifier for a thing",
+                              "type": "integer"
+                            }
+                          },
+                          "required": [ "thingId" ]
+                        }
+                        """,
+                    )
+                  }
+
+                val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(newestJsonSchema)
+                  withCrn(offenderDetails.otherIds.crn)
+                  withCreatedByUser(user)
+                  withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+                  withData(
+                    """
+                        {
+                           "thingId": 123
+                        }
+                        """,
+                  )
+                }
+
+                val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
+                  withApplication(applicationEntity)
+                  withAssessor(assessor)
+                  withLabel("1st update")
+                }
+
+                val update2 = cas2StatusUpdateEntityFactory.produceAndPersist {
+                  withApplication(applicationEntity)
+                  withAssessor(assessor)
+                  withLabel("2nd update")
+                }
+
+                val update3 = cas2StatusUpdateEntityFactory.produceAndPersist {
+                  withApplication(applicationEntity)
+                  withAssessor(assessor)
+                  withLabel("3rd update")
+                }
+
+                update1.apply { this.createdAt = OffsetDateTime.now().minusDays(20) }
+                realStatusUpdateRepository.save(update1)
+
+                update2.apply { this.createdAt = OffsetDateTime.now().minusDays(15) }
+                realStatusUpdateRepository.save(update2)
+
+                update3.apply { this.createdAt = OffsetDateTime.now().minusDays(1) }
+                realStatusUpdateRepository.save(update3)
+
+                val rawResponseBody = webTestClient.get()
+                  .uri("/cas2/submissions/${applicationEntity.id}")
+                  .header("Authorization", "Bearer $jwt")
+                  .exchange()
+                  .expectStatus()
+                  .isOk
+                  .returnResult<String>()
+                  .responseBody
+                  .blockFirst()
+
+                val responseBody = objectMapper.readValue(
+                  rawResponseBody,
+                  Cas2SubmittedApplication::class.java,
+                )
+
+                val applicant = nomisUserTransformer.transformJpaToApi(
+                  applicationEntity
+                    .createdByUser,
+                )
+
+                Assertions.assertThat(responseBody).matches {
+                  applicationEntity.id == it.id &&
+                    applicationEntity.crn == it.person.crn &&
+                    applicationEntity.createdAt.toInstant() == it.createdAt &&
+                    applicant == it.submittedBy &&
+                    applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
+                    serializableToJsonNode(applicationEntity.document) == serializableToJsonNode(it.document) &&
+                    newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+                }
+
+                Assertions.assertThat(responseBody.statusUpdates!!.map { update -> update.label })
+                  .isEqualTo(listOf("3rd update", "2nd update", "1st update"))
+              }
+            }
+          }
+        }
+      }
+
+      @Test
+      fun `Admin can NOT view single in-progress application`() {
+        `Given a CAS2 Admin` { _, jwt ->
+          `Given a CAS2 User` { user, _ ->
+            `Given an Offender` { offenderDetails, _ ->
+              cas2ApplicationJsonSchemaRepository.deleteAll()
+
+              val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
+                .produceAndPersist {
+                  withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+                  withSchema(
+                    """
+          {
+            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+            "${"\$id"}": "https://example.com/product.schema.json",
+            "title": "Thing",
+            "description": "A thing",
+            "type": "object",
+            "properties": {
+              "thingId": {
+                "description": "The unique identifier for a thing",
+                "type": "integer"
+              }
+            },
+            "required": [ "thingId" ]
+          }
+          """,
+                  )
+                }
+
+              val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(newestJsonSchema)
+                withCrn(offenderDetails.otherIds.crn)
+                withCreatedByUser(user)
+                withSubmittedAt(null)
+                withData(
+                  """
+            {
+               "thingId": 123
+            }
+            """,
+                )
+              }
+
+              val rawResponseBody = webTestClient.get()
+                .uri("/cas2/submissions/${applicationEntity.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isNotFound
+            }
           }
         }
       }
