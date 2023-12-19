@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementApplicationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementMetricsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ReferralsMetricsProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ReportService
@@ -168,6 +169,27 @@ class ReportsController(
     val outputStream = ByteArrayOutputStream()
 
     reportService.createPlacementMetricsReport(properties, outputStream)
+
+    return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
+  }
+
+  override fun reportsPlacementApplicationsGet(
+    xServiceName: ServiceName,
+    year: Int,
+    month: Int,
+  ): ResponseEntity<Resource> {
+    if (!userAccessService.currentUserCanViewReport()) {
+      throw ForbiddenProblem()
+    }
+
+    val user = userService.getUserForRequest()
+
+    validateParameters(null, month)
+
+    val properties = PlacementApplicationReportProperties(year, month)
+    val outputStream = ByteArrayOutputStream()
+
+    reportService.createCas1PlacementApplicationReport(properties, outputStream)
 
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }

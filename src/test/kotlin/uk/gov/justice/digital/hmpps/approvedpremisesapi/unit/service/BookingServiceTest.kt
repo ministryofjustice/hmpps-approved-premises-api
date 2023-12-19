@@ -653,7 +653,8 @@ class BookingServiceTest {
 
             it.applicationId == application.id &&
               it.crn == bookingEntity.crn &&
-              data.applicationId == application.id &&
+              it.bookingId == bookingEntity.id
+            data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
               crn = offenderDetails.otherIds.crn,
@@ -1301,6 +1302,7 @@ class BookingServiceTest {
             it.applicationId == application.id &&
               it.crn == bookingEntity.crn &&
               it.occurredAt == arrivalDateTime &&
+              it.bookingId == bookingEntity.id &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
@@ -1789,6 +1791,7 @@ class BookingServiceTest {
 
             it.applicationId == application.id &&
               it.crn == bookingEntity.crn &&
+              it.bookingId == bookingEntity.id &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
@@ -2159,7 +2162,8 @@ class BookingServiceTest {
               localAuthorityAreaName = premises.localAuthorityArea!!.name,
             ) &&
               data.cancelledAt == Instant.parse("2022-08-25T00:00:00.00Z") &&
-              data.cancellationReason == reasonEntity.name
+              data.cancellationReason == reasonEntity.name &&
+              data.bookingId == bookingEntity.id
           },
         )
       }

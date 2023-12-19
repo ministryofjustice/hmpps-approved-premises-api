@@ -117,6 +117,7 @@ class DomainEventService(
       detailUrl = personArrivedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      bookingId = domainEvent.bookingId,
     )
 
   @Transactional
@@ -128,6 +129,7 @@ class DomainEventService(
       detailUrl = personNotArrivedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      bookingId = domainEvent.bookingId,
     )
 
   @Transactional
@@ -139,6 +141,7 @@ class DomainEventService(
       detailUrl = personDepartedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      bookingId = domainEvent.bookingId,
     )
 
   @Transactional
@@ -161,6 +164,7 @@ class DomainEventService(
       detailUrl = bookingCancelledDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      bookingId = domainEvent.bookingId,
     )
 
   @Transactional
