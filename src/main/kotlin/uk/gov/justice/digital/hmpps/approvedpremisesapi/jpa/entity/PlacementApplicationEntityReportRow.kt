@@ -109,8 +109,8 @@ interface PlacementApplicationEntityReportRowRepository : JpaRepository<Placemen
 interface PlacementApplicationEntityReportRow {
   fun getId(): String
   fun getCrn(): String
-  fun getRequestedArrivalDate(): Date
-  fun getRequestedDurationDays(): Int
+  fun getRequestedArrivalDate(): Date?
+  fun getRequestedDurationDays(): Int?
   fun getDecision(): String?
   fun getSubmittedAt(): Timestamp?
   fun getApplicationAssessedDate(): Date?

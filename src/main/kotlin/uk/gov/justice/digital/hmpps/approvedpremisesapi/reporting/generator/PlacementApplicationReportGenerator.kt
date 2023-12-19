@@ -17,7 +17,7 @@ class PlacementApplicationReportGenerator :
         id = this.getId(),
         crn = this.getCrn(),
         submittedAt = this.getSubmittedAt()?.toLocalDateTime()?.toLocalDate(),
-        requestedArrivalDate = this.getRequestedArrivalDate().toLocalDate(),
+        requestedArrivalDate = this.getRequestedArrivalDate()?.toLocalDate(),
         requestedDurationDays = this.getRequestedDurationDays(),
         decision = this.getDecision(),
         applicationAssessedDate = this.getApplicationAssessedDate()?.toLocalDate(),
