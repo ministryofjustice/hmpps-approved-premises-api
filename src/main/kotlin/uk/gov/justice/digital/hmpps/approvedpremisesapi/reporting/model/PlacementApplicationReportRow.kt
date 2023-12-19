@@ -5,8 +5,8 @@ import java.time.LocalDate
 data class PlacementApplicationReportRow(
   val id: String,
   val crn: String,
-  val requestedArrivalDate: LocalDate,
-  val requestedDurationDays: Int,
+  val requestedArrivalDate: LocalDate?,
+  val requestedDurationDays: Int?,
   val decision: String?,
   val submittedAt: LocalDate?,
   val applicationAssessedDate: LocalDate?,
