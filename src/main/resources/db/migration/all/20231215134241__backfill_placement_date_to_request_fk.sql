@@ -1,1 +1,1 @@
-UPDATE placement_application_dates pa_dates SET placement_request_id = (SELECT pr.id FROM placement_requests pr WHERE pr.placement_application_id = pa_dates.placement_application_id AND pr.expected_arrival = pa_dates.expected_arrival);
+UPDATE placement_application_dates pa_dates SET placement_request_id = (SELECT pr.id FROM placement_requests pr WHERE pr.placement_application_id = pa_dates.placement_application_id AND pr.expected_arrival = pa_dates.expected_arrival AND pr.reallocated_at IS NULL);
