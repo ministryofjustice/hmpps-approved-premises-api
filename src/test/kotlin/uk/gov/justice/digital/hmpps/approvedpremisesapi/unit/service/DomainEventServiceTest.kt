@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
-import com.amazonaws.services.sns.model.PublishResult
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -10,7 +9,6 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.any
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
@@ -39,7 +37,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomainEventWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
-import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -47,7 +44,6 @@ import java.util.UUID
 
 class DomainEventServiceTest {
   private val domainEventRespositoryMock = mockk<DomainEventRepository>()
-  private val hmppsQueueServieMock = mockk<HmppsQueueService>()
   private val domainEventWorkerMock = mockk<ConfiguredDomainEventWorker>()
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -58,7 +54,6 @@ class DomainEventServiceTest {
   private val domainEventService = DomainEventService(
     objectMapper = objectMapper,
     domainEventRepository = domainEventRespositoryMock,
-    hmppsQueueService = hmppsQueueServieMock,
     domainEventWorker = domainEventWorkerMock,
     emitDomainEventsEnabled = true,
     applicationSubmittedDetailUrlTemplate = "http://api/events/application-submitted/#eventId",
@@ -126,10 +121,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domainevents") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -143,10 +134,7 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
-
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
     domainEventService.saveApplicationSubmittedDomainEvent(domainEventToSave)
 
@@ -174,7 +162,6 @@ class DomainEventServiceTest {
             it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
-        any(),
         domainEventToSave.id,
       )
     }
@@ -189,10 +176,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domain-events") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -205,9 +188,6 @@ class DomainEventServiceTest {
         eventDetails = ApplicationSubmittedFactory().produce(),
       ),
     )
-
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     try {
       domainEventService.saveApplicationSubmittedDomainEvent(domainEventToSave)
@@ -227,7 +207,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      domainEventWorkerMock.emitEvent(any(), any())
     }
   }
 
@@ -284,10 +264,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domainevents") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -301,9 +277,7 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
-    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
     domainEventService.saveApplicationAssessedDomainEvent(domainEventToSave)
 
@@ -331,7 +305,6 @@ class DomainEventServiceTest {
             it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
-        any(),
         domainEventToSave.id,
       )
     }
@@ -346,10 +319,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domain-events") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -362,9 +331,6 @@ class DomainEventServiceTest {
         eventDetails = ApplicationAssessedFactory().produce(),
       ),
     )
-
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     try {
       domainEventService.saveApplicationAssessedDomainEvent(domainEventToSave)
@@ -384,7 +350,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      domainEventWorkerMock.emitEvent(any(), any())
     }
   }
 
@@ -441,10 +407,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domainevents") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -458,9 +420,7 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
-    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
     domainEventService.saveBookingMadeDomainEvent(domainEventToSave)
 
@@ -488,7 +448,6 @@ class DomainEventServiceTest {
             it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
-        any(),
         domainEventToSave.id,
       )
     }
@@ -503,10 +462,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domain-events") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -519,9 +474,6 @@ class DomainEventServiceTest {
         eventDetails = BookingMadeFactory().produce(),
       ),
     )
-
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     try {
       domainEventService.saveBookingMadeDomainEvent(domainEventToSave)
@@ -541,7 +493,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      domainEventWorkerMock.emitEvent(any(), any())
     }
   }
 
@@ -598,10 +550,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domainevents") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -615,9 +563,7 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
-    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
     domainEventService.saveBookingChangedEvent(domainEventToSave)
 
@@ -645,7 +591,6 @@ class DomainEventServiceTest {
             it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
-        any(),
         domainEventToSave.id,
       )
     }
@@ -660,10 +605,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domain-events") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -676,9 +617,6 @@ class DomainEventServiceTest {
         eventDetails = BookingChangedFactory().produce(),
       ),
     )
-
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     try {
       domainEventService.saveBookingChangedEvent(domainEventToSave)
@@ -698,7 +636,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      domainEventWorkerMock.emitEvent(any(), any())
     }
   }
 
@@ -755,10 +693,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domainevents") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -772,9 +706,7 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
-    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
     domainEventService.saveBookingCancelledEvent(domainEventToSave)
 
@@ -803,7 +735,6 @@ class DomainEventServiceTest {
             it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
-        any(),
         domainEventToSave.id,
       )
     }
@@ -818,10 +749,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domain-events") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -834,9 +761,6 @@ class DomainEventServiceTest {
         eventDetails = BookingCancelledFactory().produce(),
       ),
     )
-
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     try {
       domainEventService.saveBookingCancelledEvent(domainEventToSave)
@@ -856,7 +780,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      domainEventWorkerMock.emitEvent(any(), any())
     }
   }
 
@@ -913,10 +837,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domainevents") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -930,9 +850,7 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
-    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
     domainEventService.savePersonArrivedEvent(domainEventToSave)
 
@@ -961,7 +879,6 @@ class DomainEventServiceTest {
             it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
-        any(),
         domainEventToSave.id,
       )
     }
@@ -976,10 +893,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domain-events") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -992,9 +905,6 @@ class DomainEventServiceTest {
         eventDetails = PersonArrivedFactory().produce(),
       ),
     )
-
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     try {
       domainEventService.savePersonArrivedEvent(domainEventToSave)
@@ -1014,7 +924,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      domainEventWorkerMock.emitEvent(any(), any())
     }
   }
 
@@ -1071,10 +981,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domainevents") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -1088,9 +994,7 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
-    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
     domainEventService.savePersonNotArrivedEvent(domainEventToSave)
 
@@ -1119,7 +1023,6 @@ class DomainEventServiceTest {
             it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
-        any(),
         domainEventToSave.id,
       )
     }
@@ -1134,10 +1037,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domain-events") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -1150,9 +1049,6 @@ class DomainEventServiceTest {
         eventDetails = PersonNotArrivedFactory().produce(),
       ),
     )
-
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     try {
       domainEventService.savePersonNotArrivedEvent(domainEventToSave)
@@ -1172,7 +1068,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      domainEventWorkerMock.emitEvent(any(), any())
     }
   }
 
@@ -1229,10 +1125,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domainevents") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -1246,9 +1138,7 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
-    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
     domainEventService.savePersonDepartedEvent(domainEventToSave)
 
@@ -1277,7 +1167,6 @@ class DomainEventServiceTest {
             it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
-        any(),
         domainEventToSave.id,
       )
     }
@@ -1294,8 +1183,6 @@ class DomainEventServiceTest {
 
     val mockHmppsTopic = mockk<HmppsTopic>()
 
-    every { hmppsQueueServieMock.findByTopicId("domain-events") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -1308,9 +1195,6 @@ class DomainEventServiceTest {
         eventDetails = PersonDepartedFactory().produce(),
       ),
     )
-
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     try {
       domainEventService.savePersonDepartedEvent(domainEventToSave)
@@ -1387,10 +1271,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domainevents") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -1404,9 +1284,7 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
-    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
     domainEventService.saveBookingNotMadeEvent(domainEventToSave)
 
@@ -1434,7 +1312,6 @@ class DomainEventServiceTest {
             it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
-        any(),
         domainEventToSave.id,
       )
     }
@@ -1449,10 +1326,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domain-events") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -1465,9 +1338,6 @@ class DomainEventServiceTest {
         eventDetails = BookingNotMadeFactory().produce(),
       ),
     )
-
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     try {
       domainEventService.saveBookingNotMadeEvent(domainEventToSave)
@@ -1487,7 +1357,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      domainEventWorkerMock.emitEvent(any(), any())
     }
   }
 
@@ -1544,10 +1414,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domainevents") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -1561,9 +1427,7 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
-    every { domainEventWorkerMock.emitEvent(any(), any(), any()) } returns Unit
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
     domainEventService.saveApplicationWithdrawnEvent(domainEventToSave)
 
@@ -1591,7 +1455,6 @@ class DomainEventServiceTest {
             it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
-        any(),
         domainEventToSave.id,
       )
     }
@@ -1606,10 +1469,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
-    every { hmppsQueueServieMock.findByTopicId("domain-events") } returns mockHmppsTopic
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -1622,9 +1481,6 @@ class DomainEventServiceTest {
         eventDetails = ApplicationWithdrawnFactory().produce(),
       ),
     )
-
-    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
-    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     try {
       domainEventService.saveApplicationWithdrawnEvent(domainEventToSave)
@@ -1644,7 +1500,7 @@ class DomainEventServiceTest {
     }
 
     verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+      domainEventWorkerMock.emitEvent(any(), any())
     }
   }
 }

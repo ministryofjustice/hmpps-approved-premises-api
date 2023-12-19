@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import com.amazonaws.services.sns.model.MessageAttributeValue
-import com.amazonaws.services.sns.model.PublishRequest
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -25,8 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReferenceCollection
-import uk.gov.justice.hmpps.sqs.HmppsQueueService
-import uk.gov.justice.hmpps.sqs.MissingTopicException
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -36,7 +32,6 @@ import javax.transaction.Transactional
 class DomainEventService(
   private val objectMapper: ObjectMapper,
   private val domainEventRepository: DomainEventRepository,
-  private val hmppsQueueService: HmppsQueueService,
   val domainEventWorker: ConfiguredDomainEventWorker,
   @Value("\${domain-events.cas1.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
   @Value("\${url-templates.api.cas1.application-submitted-event-detail}") private val applicationSubmittedDetailUrlTemplate: String,
@@ -51,11 +46,6 @@ class DomainEventService(
   @Value("\${url-templates.api.cas1.application-withdrawn-event-detail}") private val applicationWithdrawnDetailUrlTemplate: String,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
-
-  val domainTopic by lazy {
-    hmppsQueueService.findByTopicId("domainevents")
-      ?: throw MissingTopicException("domainevents not found")
-  }
 
   fun getApplicationSubmittedDomainEvent(id: UUID) = get<ApplicationSubmittedEnvelope>(id)
   fun getApplicationAssessedDomainEvent(id: UUID) = get<ApplicationAssessedEnvelope>(id)
@@ -220,31 +210,25 @@ class DomainEventService(
       return
     }
 
-    val snsEvent = SnsEvent(
-      eventType = typeName,
-      version = 1,
-      description = typeDescription,
-      detailUrl = detailUrl,
-      occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
-      additionalInformation = SnsEventAdditionalInformation(
-        applicationId = domainEvent.applicationId,
-      ),
-      personReference = SnsEventPersonReferenceCollection(
-        identifiers = listOf(
-          SnsEventPersonReference("CRN", crn),
-          SnsEventPersonReference("NOMS", nomsNumber),
+    domainEventWorker.emitEvent(
+      SnsEvent(
+        eventType = typeName,
+        version = 1,
+        description = typeDescription,
+        detailUrl = detailUrl,
+        occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
+        additionalInformation = SnsEventAdditionalInformation(
+          applicationId = domainEvent.applicationId,
+        ),
+        personReference = SnsEventPersonReferenceCollection(
+          identifiers = listOf(
+            SnsEventPersonReference("CRN", crn),
+            SnsEventPersonReference("NOMS", nomsNumber),
+          ),
         ),
       ),
+      domainEvent.id,
     )
-
-    val publishRequest = PublishRequest(domainTopic.arn, objectMapper.writeValueAsString(snsEvent))
-      .withMessageAttributes(
-        mapOf(
-          "eventType" to MessageAttributeValue().withDataType("String").withStringValue(snsEvent.eventType),
-        ),
-      )
-
-    domainEventWorker.emitEvent(snsEvent, publishRequest, domainEvent.id)
   }
 
   private fun <T> enumTypeFromDataType(type: Class<T>) = when (type) {
