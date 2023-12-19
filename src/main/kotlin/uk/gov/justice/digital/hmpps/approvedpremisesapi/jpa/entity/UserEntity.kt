@@ -28,6 +28,9 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
 
   fun findByDeliusUsername(deliusUsername: String): UserEntity?
 
+  @Query("SELECT DISTINCT u FROM UserEntity u join u.roles r where r.role = :role")
+  fun findUsersWithRole(role: UserRole): List<UserEntity>
+
   @Query(
     """
     SELECT u.*,
@@ -183,8 +186,11 @@ data class UserEntity(
 ) {
   fun hasRole(userRole: UserRole) = roles.any { it.role == userRole }
   fun hasAnyRole(vararg userRoles: UserRole) = userRoles.any(::hasRole)
-  fun hasQualification(userQualification: UserQualification) = qualifications.any { it.qualification === userQualification }
-  fun hasAllQualifications(requiredQualifications: List<UserQualification>) = requiredQualifications.all(::hasQualification)
+  fun hasQualification(userQualification: UserQualification) =
+    qualifications.any { it.qualification === userQualification }
+
+  fun hasAllQualifications(requiredQualifications: List<UserQualification>) =
+    requiredQualifications.all(::hasQualification)
 
   override fun toString() = "User $id"
 }

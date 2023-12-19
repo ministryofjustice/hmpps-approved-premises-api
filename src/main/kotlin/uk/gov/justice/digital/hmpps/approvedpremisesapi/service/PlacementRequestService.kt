@@ -220,7 +220,7 @@ class PlacementRequestService(
       placementDateRepository.save(
         placementDateEntity.apply {
           placementDateEntity.placementRequest = placementRequest
-        }
+        },
       )
 
       placementRequest
