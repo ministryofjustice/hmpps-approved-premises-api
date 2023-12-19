@@ -266,6 +266,11 @@ class ApplicationReportsTest : IntegrationTestBase() {
       val multipleBookings1 = createBookingForApplication(applicationWithMultipleBookings)
       val multipleBookings2 = createBookingForApplication(applicationWithMultipleBookings)
 
+      val applicationWithSubsequentPlacementApplications = createApplication()
+      acceptAssessmentForApplication(applicationWithSubsequentPlacementApplications)
+      createAndAcceptPlacementApplication(applicationWithSubsequentPlacementApplications)
+      createAndAcceptPlacementApplication(applicationWithSubsequentPlacementApplications)
+
       webTestClient.get()
         .uri("/reports/referrals?year=${LocalDate.now().year}&month=${LocalDate.now().monthValue}")
         .header("Authorization", "Bearer $jwt")
@@ -280,7 +285,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
             .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(7)
+          assertThat(actual.size).isEqualTo(8)
 
           assertApplicationRowHasCorrectData(actual, applicationWithBooking.id, arrivedBooking, userEntity, ApplicationFacets(reportType = ReportType.Referrals))
           assertApplicationRowHasCorrectData(actual, applicationWithDepartedBooking.id, departedBooking, userEntity, ApplicationFacets(hasDeparture = true, reportType = ReportType.Referrals))
@@ -289,6 +294,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
           assertApplicationRowHasCorrectData(actual, applicationWithPlacementApplication.id, null, userEntity, ApplicationFacets(hasPlacementApplication = true, reportType = ReportType.Referrals))
           assertApplicationRowHasCorrectData(actual, applicationWithMultipleAssessments.id, null, userEntity, ApplicationFacets(isAssessed = false, reportType = ReportType.Referrals))
           assertApplicationRowHasCorrectData(actual, applicationWithMultipleBookings.id, multipleBookings2, userEntity, ApplicationFacets(reportType = ReportType.Referrals))
+          assertApplicationRowHasCorrectData(actual, applicationWithSubsequentPlacementApplications.id, null, userEntity, ApplicationFacets(reportType = ReportType.Referrals))
         }
     }
   }

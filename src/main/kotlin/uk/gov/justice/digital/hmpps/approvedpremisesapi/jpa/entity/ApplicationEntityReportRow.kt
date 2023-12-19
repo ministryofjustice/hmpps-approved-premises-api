@@ -57,8 +57,8 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       cast(placement_applications.data -> 'request-a-placement' -> 'decision-to-release' ->> 'decisionToReleaseDate' as date) as paroleDecisionDate,
       (
         CASE
-          WHEN placement_applications.id IS NULL THEN 'referral'
-          ELSE 'placement request'
+          WHEN apa.arrival_date IS NULL THEN 'placement request'
+          ELSE 'referral'
         END
       ) as type
     from
