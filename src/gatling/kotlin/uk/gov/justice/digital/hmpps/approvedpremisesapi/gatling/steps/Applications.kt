@@ -8,8 +8,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.toJson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.CRN
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.toJson
 import java.time.LocalDate
 import java.util.UUID
 

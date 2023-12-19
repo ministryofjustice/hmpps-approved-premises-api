@@ -1161,7 +1161,7 @@ class TasksTest : IntegrationTestBase() {
             roles = listOf(UserRole.CAS1_ASSESSOR),
           ) { allocatableUser, _ ->
             `Given a User`(
-              roles = listOf(UserRole.CAS1_ASSESSOR),
+              roles = listOf(UserRole.CAS1_MATCHER),
               isActive = false,
             ) { _, _ ->
               `Given an Offender` { offenderDetails, inmateDetails ->
@@ -1205,7 +1205,9 @@ class TasksTest : IntegrationTestBase() {
     @Test
     fun `Get a Placement Request Task for an application returns 200`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        `Given a User` { user, _ ->
+        `Given a User`(
+          roles = listOf(UserRole.CAS1_ASSESSOR),
+        ) { user, _ ->
           `Given a User`(
             roles = listOf(UserRole.CAS1_MATCHER),
           ) { allocatableUser, _ ->
@@ -1250,7 +1252,9 @@ class TasksTest : IntegrationTestBase() {
     @Test
     fun `Get a Placement Application Task for an application returns 200`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
-        `Given a User` { user, _ ->
+        `Given a User`(
+          roles = listOf(UserRole.CAS1_ADMIN),
+        ) { user, _ ->
           `Given a User`(
             roles = listOf(UserRole.CAS1_MATCHER),
           ) { allocatableUser, _ ->
@@ -1281,6 +1285,59 @@ class TasksTest : IntegrationTestBase() {
                         users = listOf(
                           userTransformer.transformJpaToApi(
                             allocatableUser,
+                            ServiceName.approvedPremises,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+              }
+            }
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get a Placement Application Task for an application returns 2 users with correct roles`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        `Given a User`(
+          roles = listOf(UserRole.CAS1_MATCHER),
+        ) { user, _ ->
+          `Given a User`(
+            roles = listOf(UserRole.CAS1_MATCHER),
+          ) { allocatableUser, _ ->
+            `Given an Offender` { offenderDetails, inmateDetails ->
+              `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+              ) { placementApplication ->
+
+                webTestClient.get()
+                  .uri("/tasks/placement-application/${placementApplication.id}")
+                  .header("Authorization", "Bearer $jwt")
+                  .exchange()
+                  .expectStatus()
+                  .isOk
+                  .expectBody()
+                  .json(
+                    objectMapper.writeValueAsString(
+                      TaskWrapper(
+                        task = taskTransformer.transformPlacementApplicationToTask(
+                          placementApplication,
+                          "${offenderDetails.firstName} ${offenderDetails.surname}",
+                        ),
+                        users = listOf(
+                          userTransformer.transformJpaToApi(
+                            allocatableUser,
+                            ServiceName.approvedPremises,
+                          ),
+                          userTransformer.transformJpaToApi(
+                            user,
                             ServiceName.approvedPremises,
                           ),
                         ),
@@ -1770,7 +1827,10 @@ class TasksTest : IntegrationTestBase() {
                   .json(
                     objectMapper.writeValueAsString(
                       Reallocation(
-                        user = userTransformer.transformJpaToApi(assigneeUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
+                        user = userTransformer.transformJpaToApi(
+                          assigneeUser,
+                          ServiceName.approvedPremises,
+                        ) as ApprovedPremisesUser,
                         taskType = TaskType.assessment,
                       ),
                     ),
@@ -1817,7 +1877,10 @@ class TasksTest : IntegrationTestBase() {
                 .json(
                   objectMapper.writeValueAsString(
                     Reallocation(
-                      user = userTransformer.transformJpaToApi(assigneeUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
+                      user = userTransformer.transformJpaToApi(
+                        assigneeUser,
+                        ServiceName.approvedPremises,
+                      ) as ApprovedPremisesUser,
                       taskType = TaskType.placementRequest,
                     ),
                   ),
@@ -1829,11 +1892,15 @@ class TasksTest : IntegrationTestBase() {
               Assertions.assertThat(placementRequests.first { it.id == existingPlacementRequest.id }.reallocatedAt).isNotNull
               Assertions.assertThat(allocatedPlacementRequest).isNotNull
 
-              val desirableCriteria = allocatedPlacementRequest!!.placementRequirements.desirableCriteria.map { it.propertyName }
-              val essentialCriteria = allocatedPlacementRequest!!.placementRequirements.essentialCriteria.map { it.propertyName }
+              val desirableCriteria =
+                allocatedPlacementRequest!!.placementRequirements.desirableCriteria.map { it.propertyName }
+              val essentialCriteria =
+                allocatedPlacementRequest!!.placementRequirements.essentialCriteria.map { it.propertyName }
 
-              Assertions.assertThat(desirableCriteria).isEqualTo(existingPlacementRequest.placementRequirements.desirableCriteria.map { it.propertyName })
-              Assertions.assertThat(essentialCriteria).isEqualTo(existingPlacementRequest.placementRequirements.essentialCriteria.map { it.propertyName })
+              Assertions.assertThat(desirableCriteria)
+                .isEqualTo(existingPlacementRequest.placementRequirements.desirableCriteria.map { it.propertyName })
+              Assertions.assertThat(essentialCriteria)
+                .isEqualTo(existingPlacementRequest.placementRequirements.essentialCriteria.map { it.propertyName })
             }
           }
         }
@@ -1876,14 +1943,18 @@ class TasksTest : IntegrationTestBase() {
                   .json(
                     objectMapper.writeValueAsString(
                       Reallocation(
-                        user = userTransformer.transformJpaToApi(assigneeUser, ServiceName.approvedPremises) as ApprovedPremisesUser,
+                        user = userTransformer.transformJpaToApi(
+                          assigneeUser,
+                          ServiceName.approvedPremises,
+                        ) as ApprovedPremisesUser,
                         taskType = TaskType.placementApplication,
                       ),
                     ),
                   )
 
                 val placementApplications = placementApplicationRepository.findAll()
-                val allocatedPlacementApplication = placementApplications.find { it.allocatedToUser!!.id == assigneeUser.id }
+                val allocatedPlacementApplication =
+                  placementApplications.find { it.allocatedToUser!!.id == assigneeUser.id }
 
                 Assertions.assertThat(placementApplications.first { it.id == placementApplication.id }.reallocatedAt).isNotNull
                 Assertions.assertThat(allocatedPlacementApplication).isNotNull
@@ -2017,7 +2088,8 @@ class TasksTest : IntegrationTestBase() {
               .expectStatus()
               .isNoContent
 
-            val assessment = temporaryAccommodationAssessmentRepository.findAll().first { it.id == existingAssessment.id }
+            val assessment =
+              temporaryAccommodationAssessmentRepository.findAll().first { it.id == existingAssessment.id }
 
             Assertions.assertThat(assessment.allocatedToUser).isNull()
             Assertions.assertThat(assessment.allocatedAt).isNull()

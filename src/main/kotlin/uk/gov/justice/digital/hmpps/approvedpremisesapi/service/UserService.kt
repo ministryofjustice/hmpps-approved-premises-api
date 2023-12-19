@@ -92,7 +92,13 @@ class UserService(
     return userRepository.findByDeliusUsername(username.uppercase())
   }
 
-  fun getUsersWithQualificationsAndRoles(qualifications: List<UserQualification>?, roles: List<UserRole>?, sortBy: UserSortField?, sortDirection: SortDirection?, page: Int?): Pair<List<UserEntity>, PaginationMetadata?> {
+  fun getUsersWithQualificationsAndRoles(
+    qualifications: List<UserQualification>?,
+    roles: List<UserRole>?,
+    sortBy: UserSortField?,
+    sortDirection: SortDirection?,
+    page: Int?,
+  ): Pair<List<UserEntity>, PaginationMetadata?> {
     var metadata: PaginationMetadata? = null
     val users: List<UserEntity>
 
@@ -116,11 +122,32 @@ class UserService(
     return Pair(users, metadata)
   }
 
-  fun getAllocatableUsersForAllocationType(crn: String, qualifications: List<UserQualification>, allocationType: AllocationType): List<UserEntity> {
+  fun getAllocatableUsersForAllocationType(
+    crn: String,
+    qualifications: List<UserQualification>,
+    allocationType: AllocationType,
+  ): List<UserEntity> {
     val isLao = offenderService.isLao(crn)
-    val allocationsEngine = UserAllocationsEngine(userRepository, allocationType, qualifications, isLao, false)
+    val userQualifications = mutableListOf<UserQualification>()
+    userQualifications.addAll(qualifications)
 
-    return allocationsEngine.getUserPool()
+    if (isLao) {
+      userQualifications.add(UserQualification.LAO)
+    }
+
+    val requiredRole = when (allocationType) {
+      AllocationType.Assessment -> UserRole.CAS1_ASSESSOR
+      AllocationType.PlacementRequest -> UserRole.CAS1_MATCHER
+      AllocationType.PlacementApplication -> UserRole.CAS1_MATCHER
+    }
+
+    var users = userRepository.findUsersWithRole(requiredRole)
+
+    userQualifications.forEach { qualification ->
+      users = users.filter { it.hasQualification(qualification) }
+    }
+
+    return users
   }
 
   fun getUserForAssessmentAllocation(application: ApplicationEntity): UserEntity? {
@@ -135,7 +162,8 @@ class UserService(
   fun getUserForPlacementRequestAllocation(crn: String): UserEntity? {
     val isLao = offenderService.isLao(crn)
 
-    val allocationsEngine = UserAllocationsEngine(this.userRepository, AllocationType.PlacementRequest, emptyList(), isLao)
+    val allocationsEngine =
+      UserAllocationsEngine(this.userRepository, AllocationType.PlacementRequest, emptyList(), isLao)
 
     return allocationsEngine.getAllocatedUser()
   }
@@ -143,7 +171,8 @@ class UserService(
   fun getUserForPlacementApplicationAllocation(crn: String): UserEntity? {
     val isLao = offenderService.isLao(crn)
 
-    val allocationsEngine = UserAllocationsEngine(this.userRepository, AllocationType.PlacementApplication, emptyList(), isLao)
+    val allocationsEngine =
+      UserAllocationsEngine(this.userRepository, AllocationType.PlacementApplication, emptyList(), isLao)
 
     return allocationsEngine.getAllocatedUser()
   }
@@ -154,7 +183,10 @@ class UserService(
     userRepository.save(user)
   }
 
-  fun updateUser(id: UUID, userRolesAndQualifications: UserRolesAndQualifications): AuthorisableActionResult<UserEntity> {
+  fun updateUser(
+    id: UUID,
+    userRolesAndQualifications: UserRolesAndQualifications,
+  ): AuthorisableActionResult<UserEntity> {
     val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
     val roles = userRolesAndQualifications.roles
     val qualifications = userRolesAndQualifications.qualifications
@@ -164,7 +196,11 @@ class UserService(
     return updateUserRolesAndQualificationsForUser(user, roles, qualifications)
   }
 
-  fun updateUserRolesAndQualificationsForUser(user: UserEntity, roles: List<ApprovedPremisesUserRole>, qualifications: List<APIUserQualification>): AuthorisableActionResult<UserEntity> {
+  fun updateUserRolesAndQualificationsForUser(
+    user: UserEntity,
+    roles: List<ApprovedPremisesUserRole>,
+    qualifications: List<APIUserQualification>,
+  ): AuthorisableActionResult<UserEntity> {
     clearQualifications(user)
     clearRolesForService(user, ServiceName.approvedPremises)
 
@@ -233,6 +269,7 @@ class UserService(
           staffUserDetailsResponse.throwException()
         }
       }
+
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 

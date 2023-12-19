@@ -5,8 +5,8 @@ import io.gatling.javaapi.core.Session
 import io.gatling.javaapi.http.HttpDsl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.toJson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.CRN
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.toJson
 import java.time.LocalDate
 import java.util.UUID
 
