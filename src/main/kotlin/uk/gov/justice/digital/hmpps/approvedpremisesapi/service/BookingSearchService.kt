@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSearch
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSearchResultDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.OffsetDateTime
@@ -44,7 +44,10 @@ class BookingSearchService(
       probationRegionId,
       buildPage(sortOrder, sortField, page),
     )
-    var results = updatePersonNameFromOffenderDetail(findBookings, user)
+    var results = removeRestrictedAndUpdatePersonNameFromOffenderDetail(
+      mapToBookingSearchResults(findBookings),
+      user,
+    )
     if (sortField == BookingSearchSortField.personName) {
       results = sortBookingResultByPersonName(results, sortOrder)
     }
@@ -52,20 +55,29 @@ class BookingSearchService(
     return Pair(results, getMetadata(findBookings, page))
   }
 
-  private fun updatePersonNameFromOffenderDetail(
-    findBookings: Page<BookingSearchResult>,
+  private fun removeRestrictedAndUpdatePersonNameFromOffenderDetail(
+    bookingSearchResultDtos: List<BookingSearchResultDto>,
     user: UserEntity,
-  ) = mapToBookingSearchResults(findBookings)
-    .mapNotNull { result ->
-      val offenderDetails =
-        when (val offenderDetailsResult = offenderService.getOffenderByCrn(result.personCrn, user.deliusUsername)) {
-          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-          is AuthorisableActionResult.Unauthorised -> return@mapNotNull null
-          is AuthorisableActionResult.NotFound -> null
+  ): List<BookingSearchResultDto> {
+    val offenderSummaries = offenderService.getOffenderSummariesByCrns(
+      bookingSearchResultDtos.map { it.personCrn },
+      user.deliusUsername,
+      ignoreLao = false,
+      forceApDeliusContextApi = false,
+    )
+
+    return bookingSearchResultDtos
+      .map { result -> result to offenderSummaries.first { it.crn == result.personCrn } }
+      .filter { (_, offenderSummary) -> offenderSummary !is PersonSummaryInfoResult.Success.Restricted }
+      .map { (result, offenderSummary) ->
+        result
+        result.personName = when (offenderSummary) {
+          is PersonSummaryInfoResult.Success.Full -> "${offenderSummary.summary.name.forename} ${offenderSummary.summary.name.surname}"
+          else -> null
         }
-      result.personName = offenderDetails?.let { "${it.firstName} ${it.surname}" }
-      result
-    }
+        result
+      }
+  }
 
   private fun mapToBookingSearchResults(findBookings: Page<BookingSearchResult>) =
     findBookings.content
