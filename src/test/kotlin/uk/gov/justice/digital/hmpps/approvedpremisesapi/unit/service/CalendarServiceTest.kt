@@ -7,11 +7,13 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedReasonEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LostBedsEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarBedInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarBookingInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarLostBedInfo
@@ -69,6 +71,7 @@ class CalendarServiceTest {
     )
 
     every { calendarRepositoryMock.getCalendarInfo(premisesId, startDate, endDate) } returns repositoryResults
+    every { offenderServiceMock.getOffenderSummariesByCrns(emptyList(), user.deliusUsername, ignoreLao = false, forceApDeliusContextApi = false) } returns emptyList()
 
     val result = calendarService.getCalendarInfo(user, premisesId, startDate, endDate)
 
@@ -115,6 +118,9 @@ class CalendarServiceTest {
         ),
       )
     }
+
+    every { offenderServiceMock.getOffenderSummariesByCrns(listOf(crn), user.deliusUsername, ignoreLao = false, forceApDeliusContextApi = false) } returns
+      listOf(PersonSummaryInfoResult.NotFound(crn))
 
     every { offenderServiceMock.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.NotFound()
 
@@ -176,7 +182,8 @@ class CalendarServiceTest {
       )
     }
 
-    every { offenderServiceMock.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
+    every { offenderServiceMock.getOffenderSummariesByCrns(listOf(crn), user.deliusUsername, ignoreLao = false, forceApDeliusContextApi = false) } returns
+      listOf(PersonSummaryInfoResult.Success.Restricted(crn, "noms"))
 
     val result = calendarService.getCalendarInfo(user, premisesId, startDate, endDate)
 
@@ -188,7 +195,7 @@ class CalendarServiceTest {
             endDate = endDate,
             bookingId = booking.id,
             crn = crn,
-            personName = "LAO Offender",
+            personName = "Limited Access Offender",
           ),
         ),
       ),
@@ -236,12 +243,13 @@ class CalendarServiceTest {
       )
     }
 
-    every { offenderServiceMock.getOffenderByCrn(crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory()
-        .withFirstName("Firstname")
-        .withLastName("Lastname")
-        .produce(),
-    )
+    every { offenderServiceMock.getOffenderSummariesByCrns(listOf(crn), user.deliusUsername, ignoreLao = false, forceApDeliusContextApi = false) } returns
+      listOf(
+        PersonSummaryInfoResult.Success.Full(
+          crn,
+          CaseSummaryFactory().withName(NameFactory().withForename("Firstname").withMiddleNames(listOf("Middle")).withSurname("Lastname").produce()).produce(),
+        ),
+      )
 
     val result = calendarService.getCalendarInfo(user, premisesId, startDate, endDate)
 
@@ -253,7 +261,7 @@ class CalendarServiceTest {
             endDate = endDate,
             bookingId = booking.id,
             crn = crn,
-            personName = "Firstname Lastname",
+            personName = "Firstname Middle Lastname",
           ),
         ),
       ),
