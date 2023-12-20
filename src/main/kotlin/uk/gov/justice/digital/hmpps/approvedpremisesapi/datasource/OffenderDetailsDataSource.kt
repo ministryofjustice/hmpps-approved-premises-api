@@ -13,7 +13,9 @@ interface OffenderDetailsDataSource {
   val name: OffenderDetailsDataSourceName
 
   fun getOffenderDetailSummary(crn: String): ClientResult<OffenderDetailSummary>
+  fun getOffenderDetailSummaries(crns: List<String>): List<ClientResult<OffenderDetailSummary>>
   fun getUserAccessForOffenderCrn(deliusUsername: String, crn: String): ClientResult<UserOffenderAccess>
+  fun getUserAccessForOffenderCrns(deliusUsername: String, crns: List<String>): List<ClientResult<UserOffenderAccess>>
 }
 
 enum class OffenderDetailsDataSourceName {
@@ -42,7 +44,9 @@ class ConfiguredOffenderDetailsDataSource(
     get() = dataSource.name
 
   override fun getOffenderDetailSummary(crn: String) = dataSource.getOffenderDetailSummary(crn)
+  override fun getOffenderDetailSummaries(crns: List<String>) = dataSource.getOffenderDetailSummaries(crns)
   override fun getUserAccessForOffenderCrn(deliusUsername: String, crn: String) = dataSource.getUserAccessForOffenderCrn(deliusUsername, crn)
+  override fun getUserAccessForOffenderCrns(deliusUsername: String, crns: List<String>) = dataSource.getUserAccessForOffenderCrns(deliusUsername, crns)
 }
 
 @Component
@@ -62,7 +66,17 @@ class CommunityApiOffenderDetailsDataSource(
     return offenderResponse
   }
 
-  override fun getUserAccessForOffenderCrn(deliusUsername: String, crn: String): ClientResult<UserOffenderAccess> = communityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn)
+  override fun getOffenderDetailSummaries(crns: List<String>): List<ClientResult<OffenderDetailSummary>> =
+    crns.map(this::getOffenderDetailSummary)
+
+  override fun getUserAccessForOffenderCrn(deliusUsername: String, crn: String): ClientResult<UserOffenderAccess> =
+    communityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn)
+
+  override fun getUserAccessForOffenderCrns(
+    deliusUsername: String,
+    crns: List<String>,
+  ): List<ClientResult<UserOffenderAccess>> =
+    crns.map { getUserAccessForOffenderCrn(deliusUsername, it) }
 }
 
 @Component
@@ -74,10 +88,21 @@ class ApDeliusContextApiOffenderDetailsDataSource : OffenderDetailsDataSource {
     throw NotImplementedError("Getting details for individual offenders from the AP Delius Context API is not currently supported")
   }
 
+  override fun getOffenderDetailSummaries(crns: List<String>): List<ClientResult<OffenderDetailSummary>> {
+    throw NotImplementedError("Getting details for multiple offenders from the AP Delius Context API is not currently supported")
+  }
+
   override fun getUserAccessForOffenderCrn(
     deliusUsername: String,
     crn: String,
   ): ClientResult<UserOffenderAccess> {
     throw NotImplementedError("Getting user access for individual offenders from the AP Delius Context API is not currently supported")
+  }
+
+  override fun getUserAccessForOffenderCrns(
+    deliusUsername: String,
+    crns: List<String>,
+  ): List<ClientResult<UserOffenderAccess>> {
+    throw NotImplementedError("Getting user access for multiple offenders from the AP Delius Context API is not currently supported")
   }
 }

@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -20,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -47,7 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getIndices
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromOffenderDetailSummaryResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
 import java.util.UUID
 import javax.transaction.Transactional
@@ -63,8 +64,6 @@ class TasksController(
   private val userTransformer: UserTransformer,
   private val taskService: TaskService,
 ) : TasksApiDelegate {
-  private val log = LoggerFactory.getLogger(this::class.java)
-
   override fun tasksReallocatableGet(
     type: String?,
     page: Int?,
@@ -78,10 +77,10 @@ class TasksController(
           type.kebabCaseToPascalCase(),
         ) ?: throw NotFoundProblem(type, "TaskType")
 
-        when (taskType) {
-          TaskType.assessment -> return assessmentTasksResponse(user, page, sortDirection, allocatedFilter)
-          TaskType.placementRequest -> return placementRequestTasks(user, page, sortDirection, allocatedFilter)
-          TaskType.placementApplication -> return placementApplicationTasks(user, page, sortDirection, allocatedFilter)
+        return when (taskType) {
+          TaskType.assessment -> assessmentTasksResponse(user, page, sortDirection, allocatedFilter)
+          TaskType.placementRequest -> placementRequestTasks(user, page, sortDirection, allocatedFilter)
+          TaskType.placementApplication -> placementApplicationTasks(user, page, sortDirection, allocatedFilter)
           else -> {
             throw BadRequestProblem()
           }
@@ -96,34 +95,40 @@ class TasksController(
 
   override fun tasksGet(): ResponseEntity<List<Task>> = runBlocking {
     val user = userService.getUserForRequest()
-    val tasks = mutableListOf<Task>()
+    var tasks = listOf<Task>()
 
     if (user.hasRole(UserRole.CAS1_MATCHER)) {
-      async {
-        val placementRequests =
-          placementRequestService.getVisiblePlacementRequestsForUser(
-            user,
-            null,
-            null,
-          )
-        tasks += getPlacementRequestTasks(
-          placementRequests.first,
+      val placementRequests =
+        placementRequestService.getVisiblePlacementRequestsForUser(
           user,
+          null,
+          null,
         )
-      }
 
-      async {
-        val placementApplications =
-          placementApplicationService.getVisiblePlacementApplicationsForUser(
-            user,
-            null,
-            null,
-          )
-        tasks += getPlacementApplicationTasks(
-          placementApplications.first,
+      val placementApplications =
+        placementApplicationService.getVisiblePlacementApplicationsForUser(
           user,
+          null,
+          null,
         )
-      }
+
+      val crns = listOf(
+        placementRequests.first.map { it.application.crn },
+        placementApplications.first.map { it.application.crn },
+      ).flatten()
+
+      val offenderSummaries = getOffenderSummariesForCrns(crns, user)
+
+      tasks = listOf(
+        getPlacementRequestTasks(
+          placementRequests.first,
+          offenderSummaries,
+        ),
+        getPlacementApplicationTasks(
+          placementApplications.first,
+          offenderSummaries,
+        ),
+      ).flatten()
     }
 
     return@runBlocking ResponseEntity.ok(tasks)
@@ -151,11 +156,14 @@ class TasksController(
               page,
               sortDirection,
             )
+          val crns = placementApplications.map { it.application.crn }
+          val offenderSummaries = getOffenderSummariesForCrns(crns, user)
+
           paginationMetaData = metaData
           async {
             tasks += getPlacementApplicationTasks(
               placementApplications,
-              user,
+              offenderSummaries,
             )
           }
         }
@@ -166,11 +174,14 @@ class TasksController(
               page,
               sortDirection,
             )
+          val crns = placementRequests.map { it.application.crn }
+          val offenderSummaries = getOffenderSummariesForCrns(crns, user)
+
           paginationMetaData = metaData
           async {
             tasks += getPlacementRequestTasks(
               placementRequests,
-              user,
+              offenderSummaries,
             )
           }
         }
@@ -194,15 +205,18 @@ class TasksController(
     ) ?: throw NotFoundProblem(taskType, "TaskType")
 
     val transformedTask: Task
-    var transformedAllocatableUsers: List<UserWithWorkload>
+    val transformedAllocatableUsers: List<UserWithWorkload>
 
     when (type) {
       TaskType.assessment -> {
         val assessment = extractEntityFromAuthorisableActionResult(
           assessmentService.getAssessmentForUser(user, id),
         )
+        val offenderSummaries = getOffenderSummariesForCrns(listOf(assessment.application.crn), user)
 
-        transformedTask = getAssessmentTask(assessment, user)
+        transformedTask = getAssessmentTask(assessment) {
+          getPersonNameFromApplication(it.application, offenderSummaries)
+        }
 
         transformedAllocatableUsers = userService.getAllocatableUsersForAllocationType(
           assessment.application.crn,
@@ -218,8 +232,11 @@ class TasksController(
         val (placementRequest) = extractEntityFromAuthorisableActionResult(
           placementRequestService.getPlacementRequestForUser(user, id),
         )
+        val offenderSummaries = getOffenderSummariesForCrns(listOf(placementRequest.application.crn), user)
 
-        transformedTask = getPlacementRequestTask(placementRequest, user)
+        transformedTask = getPlacementRequestTask(placementRequest) {
+          getPersonNameFromApplication(it.application, offenderSummaries)
+        }
 
         transformedAllocatableUsers =
           userService.getAllocatableUsersForAllocationType(
@@ -236,8 +253,11 @@ class TasksController(
         val placementApplication = extractEntityFromAuthorisableActionResult(
           placementApplicationService.getApplication(id),
         )
+        val offenderSummaries = getOffenderSummariesForCrns(listOf(placementApplication.application.crn), user)
 
-        transformedTask = getPlacementApplicationTask(placementApplication, user)
+        transformedTask = getPlacementApplicationTask(placementApplication) {
+          getPersonNameFromApplication(it.application, offenderSummaries)
+        }
 
         transformedAllocatableUsers = userService.getAllocatableUsersForAllocationType(
           placementApplication.application.crn,
@@ -336,74 +356,62 @@ class TasksController(
     return ResponseEntity(Unit, HttpStatus.NO_CONTENT)
   }
 
-  private fun getAssessmentTask(assessment: AssessmentEntity, user: UserEntity): AssessmentTask {
-    val offenderDetailsResult =
-      offenderService.getOffenderByCrn(
-        assessment.application.crn,
-        user.deliusUsername,
-        user.hasQualification(UserQualification.LAO),
-      )
-
+  private fun getAssessmentTask(
+    assessment: AssessmentEntity,
+    personNameFunc: (AssessmentEntity) -> String,
+  ): AssessmentTask {
     return taskTransformer.transformAssessmentToTask(
       assessment = assessment,
-      personName = getNameFromOffenderDetailSummaryResult(offenderDetailsResult),
+      personName = personNameFunc(assessment),
     )
   }
 
   private fun getPlacementRequestTask(
     placementRequest: PlacementRequestEntity,
-    user: UserEntity,
+    personNameFunc: (PlacementRequestEntity) -> String,
   ): PlacementRequestTask {
-    val offenderDetailsResult =
-      offenderService.getOffenderByCrn(
-        placementRequest.application.crn,
-        user.deliusUsername,
-        user.hasQualification(UserQualification.LAO),
-      )
-
     return taskTransformer.transformPlacementRequestToTask(
       placementRequest = placementRequest,
-      personName = getNameFromOffenderDetailSummaryResult(offenderDetailsResult),
+      personName = personNameFunc(placementRequest),
     )
   }
 
   private fun getPlacementApplicationTask(
     placementApplication: PlacementApplicationEntity,
-    user: UserEntity,
+    personNameFunc: (PlacementApplicationEntity) -> String,
   ): PlacementApplicationTask {
-    val offenderDetailsResult =
-      offenderService.getOffenderByCrn(
-        placementApplication.application.crn,
-        user.deliusUsername,
-        user.hasQualification(UserQualification.LAO),
-      )
-
     return taskTransformer.transformPlacementApplicationToTask(
       placementApplication = placementApplication,
-      personName = getNameFromOffenderDetailSummaryResult(offenderDetailsResult),
+      personName = personNameFunc(placementApplication),
     )
   }
 
   private suspend fun getAssessmentTasks(
     assessments: List<AssessmentEntity>,
-    user: UserEntity,
+    offenderSummaries: List<PersonSummaryInfoResult>,
   ) = assessments.map {
-    getAssessmentTask(it, user)
+    getAssessmentTask(it) { assessment ->
+      getPersonNameFromApplication(assessment.application, offenderSummaries)
+    }
   }
 
   private suspend fun getPlacementRequestTasks(
     placementRequests: List<PlacementRequestEntity>,
-    user: UserEntity,
+    offenderSummaries: List<PersonSummaryInfoResult>,
   ) = placementRequests.map {
-    getPlacementRequestTask(it, user)
+    getPlacementRequestTask(it) { placementRequest ->
+      getPersonNameFromApplication(placementRequest.application, offenderSummaries)
+    }
   }
 
   private suspend fun getPlacementApplicationTasks(
     placementApplications: List<PlacementApplicationEntity>,
-    user: UserEntity,
+    offenderSummaries: List<PersonSummaryInfoResult>,
   ) =
     placementApplications.map {
-      getPlacementApplicationTask(it, user)
+      getPlacementApplicationTask(it) { placementApplication ->
+        getPersonNameFromApplication(placementApplication.application, offenderSummaries)
+      }
     }
 
   private fun responseForAllTypes(
@@ -417,7 +425,6 @@ class TasksController(
         null,
         allocatedFilter,
       )
-    val assessmentTasks = getAssessmentTasks(allReallocatableAssessmentTasks, user)
 
     val (allReallocatablePlacementRequestTasks, _) =
       placementRequestService.getAllReallocatable(
@@ -425,21 +432,30 @@ class TasksController(
         null,
         allocatedFilter,
       )
-    val placementRequestTasks = getPlacementRequestTasks(
-      allReallocatablePlacementRequestTasks,
-      user,
-    )
-
     val (allReallocatablePlacementApplicationTasks, _) =
       placementApplicationService.getAllReallocatable(
         null,
         null,
         allocatedFilter,
       )
+
+    val crns = listOf(
+      allReallocatableAssessmentTasks.map { it.application.crn },
+      allReallocatablePlacementRequestTasks.map { it.application.crn },
+      allReallocatablePlacementApplicationTasks.map { it.application.crn },
+    ).flatten()
+
+    val offenderSummaries = getOffenderSummariesForCrns(crns, user)
+
+    val assessmentTasks = getAssessmentTasks(allReallocatableAssessmentTasks, offenderSummaries)
+    val placementRequestTasks = getPlacementRequestTasks(
+      allReallocatablePlacementRequestTasks,
+      offenderSummaries,
+    )
     val placementApplicationTasks =
       getPlacementApplicationTasks(
         allReallocatablePlacementApplicationTasks,
-        user,
+        offenderSummaries,
       )
 
     val tasks: MutableList<Task> = ArrayList()
@@ -448,7 +464,7 @@ class TasksController(
     tasks.addAll(placementApplicationTasks)
 
     if (page != null) {
-      var pageNormalised = page!!
+      var pageNormalised = page
       if (pageNormalised > 0) {
         pageNormalised -= 1
       }
@@ -478,7 +494,8 @@ class TasksController(
         sortDirection,
         allocatedFilter,
       )
-    val assessmentTasks = getAssessmentTasks(allReallocatable, user)
+    val offenderSummaries = getOffenderSummariesForCrns(allReallocatable.map { it.application.crn }, user)
+    val assessmentTasks = getAssessmentTasks(allReallocatable, offenderSummaries)
     return@runBlocking ResponseEntity.ok().headers(
       metaData?.toHeaders(),
     ).body(
@@ -498,9 +515,10 @@ class TasksController(
         sortDirection,
         allocatedFilter,
       )
+    val offenderSummaries = getOffenderSummariesForCrns(allReallocatable.map { it.application.crn }, user)
     val placementRequestTasks = getPlacementRequestTasks(
       allReallocatable,
-      user,
+      offenderSummaries,
     )
     return@runBlocking ResponseEntity.ok().headers(
       metaData?.toHeaders(),
@@ -521,16 +539,33 @@ class TasksController(
         sortDirection,
         allocatedFilter,
       )
+    val offenderSummaries = getOffenderSummariesForCrns(allReallocatable.map { it.application.crn }, user)
+
     val placementApplicationTasks =
       getPlacementApplicationTasks(
         allReallocatable,
-        user,
+        offenderSummaries,
       )
 
     return@runBlocking ResponseEntity.ok().headers(
       metaData?.toHeaders(),
     ).body(
       placementApplicationTasks,
+    )
+  }
+
+  private fun getPersonNameFromApplication(application: ApplicationEntity, offenderSummaries: List<PersonSummaryInfoResult>): String {
+    val crn = application.crn
+    val offenderSummary = offenderSummaries.first { it.crn == crn }
+    return getNameFromPersonSummaryInfoResult(offenderSummary)
+  }
+
+  private fun getOffenderSummariesForCrns(crns: List<String>, user: UserEntity): List<PersonSummaryInfoResult> {
+    return offenderService.getOffenderSummariesByCrns(
+      crns.toSet(),
+      user.deliusUsername,
+      user.hasQualification(UserQualification.LAO),
+      false,
     )
   }
 }

@@ -47,6 +47,10 @@ class TestBookingSearchResult : BookingSearchResult {
     this.personName = personName
   }
 
+  fun withPersonCrn(personCrn: String) = apply {
+    this.personCrn = personCrn
+  }
+
   fun withBookingStatus(bookingStatus: BookingStatus) = apply {
     this.bookingStatus = bookingStatus.value
   }

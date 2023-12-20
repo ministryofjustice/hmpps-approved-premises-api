@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.datasource
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -47,6 +48,32 @@ class CommunityApiOffenderDetailsDataSourceTest {
     assertThat(result).isEqualTo(expectedResult)
   }
 
+  @Test
+  fun `getOffenderDetailSummaries returns cached response or calls Community API for each CRN`() {
+    val crns = listOf(
+      "CRN-CACHE-UNAVAILABLE",
+      "CRN-HTTP-404",
+      "CRN-MISC-ERROR",
+      "CRN-CACHE-TIMEOUT",
+      "CRN-SUCCESS",
+    )
+    val successBody = OffenderDetailsSummaryFactory()
+      .withCrn("CRN-SUCCESS")
+      .produce()
+    val expectedResults = allClientResults(successBody)
+
+    crns.zip(expectedResults).forEach { (crn, expected) ->
+      every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns expected
+    }
+
+    every { mockCommunityApiClient.getOffenderDetailSummaryWithCall("CRN-CACHE-TIMEOUT") } returns
+      expectedResults.first { it is ClientResult.Failure.PreemptiveCacheTimeout }
+
+    val results = communityApiOffenderDetailsDataSource.getOffenderDetailSummaries(crns)
+
+    assertThat(results).isEqualTo(expectedResults)
+  }
+
   @ParameterizedTest
   @MethodSource("userOffenderAccessClientResults")
   fun `getUserAccessForOffenderCrn returns response from Community API call`(
@@ -57,6 +84,31 @@ class CommunityApiOffenderDetailsDataSourceTest {
     val result = communityApiOffenderDetailsDataSource.getUserAccessForOffenderCrn("DELIUS-USER", "SOME-CRN")
 
     assertThat(result).isEqualTo(expectedResult)
+  }
+
+  @Test
+  fun `getUserAccessForOffenderCrns returns response from Community API call for each CRN`() {
+    val crns = listOf(
+      "CRN-CACHE-UNAVAILABLE",
+      "CRN-HTTP-404",
+      "CRN-MISC-ERROR",
+      "CRN-CACHE-TIMEOUT",
+      "CRN-SUCCESS",
+    )
+    val successBody = UserOffenderAccess(
+      userRestricted = false,
+      userExcluded = false,
+      restrictionMessage = null,
+    )
+    val expectedResults = allClientResults(successBody)
+
+    crns.zip(expectedResults).forEach { (crn, expected) ->
+      every { mockCommunityApiClient.getUserAccessForOffenderCrn("DELIUS-USER", crn) } returns expected
+    }
+
+    val results = communityApiOffenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", crns)
+
+    assertThat(results).isEqualTo(expectedResults)
   }
 
   private companion object {
