@@ -26,19 +26,20 @@ class ConfiguredDomainEventWorker(
   private val objectMapper: ObjectMapper,
   @Value("\${domain-events.cas1.async-save-enabled}") private val asyncSaveEnabled: Boolean,
 ) : DomainEventWorkerInterface {
-  final val domainTopic by lazy {
+  val domainTopic by lazy {
     hmppsQueueService.findByTopicId("domainevents")
       ?: throw MissingTopicException("domainevents not found")
   }
 
-  var worker: DomainEventWorkerInterface = if (asyncSaveEnabled) {
-    AsyncDomainEventWorker(domainTopic, objectMapper)
-  } else {
-    SyncDomainEventWorker(domainTopic, objectMapper)
-  }
+  override fun emitEvent(snsEvent: SnsEvent, domainEventId: UUID) {
+    val worker = if (this.asyncSaveEnabled) {
+      AsyncDomainEventWorker(this.domainTopic, this.objectMapper)
+    } else {
+      SyncDomainEventWorker(this.domainTopic, this.objectMapper)
+    }
 
-  override fun emitEvent(snsEvent: SnsEvent, domainEventId: UUID) =
-    this.worker.emitEvent(snsEvent, domainEventId)
+    worker.emitEvent(snsEvent, domainEventId)
+  }
 }
 
 class SyncDomainEventWorker(

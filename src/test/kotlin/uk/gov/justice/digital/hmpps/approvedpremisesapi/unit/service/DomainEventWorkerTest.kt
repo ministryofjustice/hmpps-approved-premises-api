@@ -12,7 +12,6 @@ import io.mockk.mockk
 import io.mockk.mockkConstructor
 import io.mockk.unmockkConstructor
 import io.mockk.verify
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.retry.backoff.FixedBackOffPolicy
@@ -80,8 +79,6 @@ class DomainEventWorkerTest {
     )
     configuredWorker.emitEvent(snsEvent, domainEventId)
 
-    assertTrue(configuredWorker.worker is AsyncDomainEventWorker)
-
     verify {
       anyConstructed<AsyncDomainEventWorker>().emitEvent(snsEvent, domainEventId)
     }
@@ -103,8 +100,6 @@ class DomainEventWorkerTest {
       false,
     )
     configuredWorker.emitEvent(snsEvent, domainEventId)
-
-    assertTrue(configuredWorker.worker is SyncDomainEventWorker)
 
     verify {
       anyConstructed<SyncDomainEventWorker>().emitEvent(snsEvent, domainEventId)
