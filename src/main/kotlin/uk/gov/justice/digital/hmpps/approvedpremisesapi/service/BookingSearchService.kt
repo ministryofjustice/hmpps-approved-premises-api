@@ -60,7 +60,7 @@ class BookingSearchService(
     user: UserEntity,
   ): List<BookingSearchResultDto> {
     val offenderSummaries = offenderService.getOffenderSummariesByCrns(
-      bookingSearchResultDtos.map { it.personCrn },
+      bookingSearchResultDtos.map { it.personCrn }.toSet(),
       user.deliusUsername,
       ignoreLao = false,
       forceApDeliusContextApi = false,

@@ -562,7 +562,7 @@ class TasksController(
 
   private fun getOffenderSummariesForCrns(crns: List<String>, user: UserEntity): List<PersonSummaryInfoResult> {
     return offenderService.getOffenderSummariesByCrns(
-      crns,
+      crns.toSet(),
       user.deliusUsername,
       user.hasQualification(UserQualification.LAO),
       false,

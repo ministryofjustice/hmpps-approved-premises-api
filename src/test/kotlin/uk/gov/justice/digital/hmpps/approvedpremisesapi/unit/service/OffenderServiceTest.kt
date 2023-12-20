@@ -902,7 +902,7 @@ class OffenderServiceTest {
 
     @Test
     fun `it returns an empty list when no CRNs are provided (forceApDeliusContextApi = true)`() {
-      val result = offenderService.getOffenderSummariesByCrns(emptyList(), user.deliusUsername, false, true)
+      val result = offenderService.getOffenderSummariesByCrns(emptySet(), user.deliusUsername, false, true)
 
       assertThat(result).isEmpty()
     }
@@ -931,7 +931,7 @@ class OffenderServiceTest {
         ),
       )
 
-      val result = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername, false, true)
+      val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, false, true)
 
       assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummaries[0]))
       assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummaries[1]))
@@ -973,7 +973,7 @@ class OffenderServiceTest {
         ),
       )
 
-      val result = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername, false, true)
+      val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, false, true)
 
       assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Restricted(crns[0], caseSummaries[0].nomsId))
       assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Restricted(crns[1], caseSummaries[1].nomsId))
@@ -1015,7 +1015,7 @@ class OffenderServiceTest {
         ),
       )
 
-      val result = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername, true, true)
+      val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, true, true)
 
       assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummaries[0]))
       assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummaries[1]))
@@ -1025,7 +1025,7 @@ class OffenderServiceTest {
 
     @Test
     fun `it returns an empty list when no CRNs are provided (forceApDeliusContextApi = false)`() {
-      val result = offenderService.getOffenderSummariesByCrns(emptyList(), user.deliusUsername, false, false)
+      val result = offenderService.getOffenderSummariesByCrns(emptySet(), user.deliusUsername, false, false)
 
       assertThat(result).isEmpty()
     }
@@ -1042,7 +1042,7 @@ class OffenderServiceTest {
         )
       }
 
-      val result = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername, false, false)
+      val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, false, false)
 
       assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummaries[0]))
       assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummaries[1]))
@@ -1079,7 +1079,7 @@ class OffenderServiceTest {
         ),
       )
 
-      val result = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername, false, false)
+      val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, false, false)
 
       assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Restricted(crns[0], caseSummaries[0].nomsId))
       assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Restricted(crns[1], caseSummaries[1].nomsId))
@@ -1116,7 +1116,7 @@ class OffenderServiceTest {
         ),
       )
 
-      val result = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername, true, false)
+      val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, true, false)
 
       assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummaries[0]))
       assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummaries[1]))

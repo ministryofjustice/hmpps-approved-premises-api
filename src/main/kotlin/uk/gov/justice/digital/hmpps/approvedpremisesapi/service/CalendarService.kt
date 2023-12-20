@@ -22,7 +22,7 @@ class CalendarService(
 
     val crns = calendarInfo.values.flatMap {
         it.filterIsInstance<CalendarBookingInfo>().map { it.crn }
-    }
+    }.toSet()
     val offenderSummaries = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername, user.hasQualification(UserQualification.LAO), forceApDeliusContextApi = false)
 
     calendarInfo.values.forEach { bedList ->
