@@ -17,6 +17,7 @@ import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
+
 @Service
 @Suppress("FunctionNaming")
 @Repository
@@ -88,7 +89,10 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   )
   fun findAllReallocatableUnallocated(pageable: Pageable?): Page<PlacementRequestEntity>
 
-  fun findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(isParole: Boolean, pageable: Pageable?): Page<PlacementRequestEntity>
+  fun findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(
+    isParole: Boolean,
+    pageable: Pageable?,
+  ): Page<PlacementRequestEntity>
 
   @Query(
     """
@@ -100,7 +104,6 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       left join applications application on application.id = pq.application_id
     where
       pq.reallocated_at IS NULL
-      AND pq.is_withdrawn IS FALSE
       AND (:status IS NULL OR (
         CASE
           WHEN (
@@ -139,7 +142,15 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   """,
     nativeQuery = true,
   )
-  fun allForDashboard(status: PlacementRequestStatus?, crn: String?, crnOrName: String?, tier: String?, arrivalDateFrom: LocalDate?, arrivalDateTo: LocalDate?, pageable: Pageable?): Page<PlacementRequestEntity>
+  fun allForDashboard(
+    status: PlacementRequestStatus?,
+    crn: String?,
+    crnOrName: String?,
+    tier: String?,
+    arrivalDateFrom: LocalDate?,
+    arrivalDateTo: LocalDate?,
+    pageable: Pageable?,
+  ): Page<PlacementRequestEntity>
 }
 
 @Entity

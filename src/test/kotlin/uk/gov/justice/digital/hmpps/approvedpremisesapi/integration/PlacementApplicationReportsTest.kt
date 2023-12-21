@@ -118,19 +118,24 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     referrerTeam = StaffUserTeamMembershipFactory().produce()
     referrerProbationArea = "Referrer probation area"
 
-    referrerDetails = `Given a User`(staffUserDetailsConfigBlock = {
-      withTeams(
-        listOf(
-          referrerTeam,
-        ),
-      )
-      withProbationAreaDescription(
-        referrerProbationArea,
-      )
-    },)
-    assessorDetails = `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), staffUserDetailsConfigBlock = {
-      withProbationAreaCode("N03")
-    },)
+    referrerDetails = `Given a User`(
+      staffUserDetailsConfigBlock = {
+        withTeams(
+          listOf(
+            referrerTeam,
+          ),
+        )
+        withProbationAreaDescription(
+          referrerProbationArea,
+        )
+      },
+    )
+    assessorDetails = `Given a User`(
+      roles = listOf(UserRole.CAS1_ASSESSOR),
+      staffUserDetailsConfigBlock = {
+        withProbationAreaCode("N03")
+      },
+    )
     managerDetails = `Given a User`(roles = listOf(UserRole.CAS1_MANAGER))
     workflowManagerDetails = `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
     matcherDetails = `Given a User`(roles = listOf(UserRole.CAS1_MATCHER))
@@ -310,13 +315,19 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
             hasBooking = true
             placementDate = placementDate1
             this.application = application
-            booking = createBookingForPlacementRequest(placementRequestRepository.findAllByApplication(application).first { it.expectedArrival == placementDate1.expectedArrival })
+            booking = createBookingForPlacementRequest(
+              placementRequestRepository.findAllByApplication(application)
+                .first { it.expectedArrival == placementDate1.expectedArrival },
+            )
           },
           expectedRow {
             hasBooking = true
             placementDate = placementDate2
             this.application = application
-            booking = createBookingForPlacementRequest(placementRequestRepository.findAllByApplication(application).first { it.expectedArrival == placementDate2.expectedArrival })
+            booking = createBookingForPlacementRequest(
+              placementRequestRepository.findAllByApplication(application)
+                .first { it.expectedArrival == placementDate2.expectedArrival },
+            )
           },
         )
       }
@@ -337,7 +348,10 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
             hasBooking = true
             placementDate = placementDate2
             this.application = application
-            booking = createBookingForPlacementRequest(placementRequestRepository.findAllByApplication(application).first { it.expectedArrival == placementDate2.expectedArrival })
+            booking = createBookingForPlacementRequest(
+              placementRequestRepository.findAllByApplication(application)
+                .first { it.expectedArrival == placementDate2.expectedArrival },
+            )
           },
         )
       }
@@ -419,7 +433,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
     assertThat(reportRow.crn).isEqualTo(application.crn)
 
-    if(expectedRow.isSubmitted) {
+    if (expectedRow.isSubmitted) {
       assertThat(reportRow.submittedAt).isEqualTo(placementApplication.submittedAt!!.toLocalDate())
       assertThat(reportRow.requestedArrivalDate).isEqualTo(expectedRow.placementDate!!.expectedArrival)
       assertThat(reportRow.requestedDurationDays).isEqualTo(expectedRow.placementDate!!.duration)
@@ -486,13 +500,16 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       assertThat(reportRow.notArrivedReason).isEqualTo(nonArrival.reason.name)
     }
 
-    if(expectedRow.isSubmitted) {
+    if (expectedRow.isSubmitted) {
       assertThat(reportRow.placementRequestType).isEqualTo("Some Test Reason")
       assertThat(reportRow.paroleDecisionDate).isEqualTo("2023-11-11")
     }
   }
 
-  private fun getOffenderDetailForApplication(application: ApplicationEntity, deliusUsername: String): OffenderDetailSummary {
+  private fun getOffenderDetailForApplication(
+    application: ApplicationEntity,
+    deliusUsername: String,
+  ): OffenderDetailSummary {
     return when (val personInfo = realOffenderService.getInfoForPerson(application.crn, deliusUsername, true)) {
       is PersonInfoResult.Success.Full -> personInfo.offenderDetailSummary
       else -> error("No offender found for CRN ${application.crn}")
@@ -768,7 +785,10 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       duration = 12,
     )
 
-  private fun createAndAcceptPlacementApplication(application: ApprovedPremisesApplicationEntity, placementDates: List<PlacementDates>): PlacementApplication {
+  private fun createAndAcceptPlacementApplication(
+    application: ApprovedPremisesApplicationEntity,
+    placementDates: List<PlacementDates>,
+  ): PlacementApplication {
     return acceptPlacementApplication(
       createAndSubmitPlacementApplication(application, placementDates),
     )
@@ -795,7 +815,10 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     return objectMapper.readValue(rawResult, PlacementApplication::class.java)
   }
 
-  private fun createAndSubmitPlacementApplication(application: ApprovedPremisesApplicationEntity, placementDates: List<PlacementDates>): PlacementApplication {
+  private fun createAndSubmitPlacementApplication(
+    application: ApprovedPremisesApplicationEntity,
+    placementDates: List<PlacementDates>,
+  ): PlacementApplication {
     val (_, jwt) = assessorDetails
 
     val placementApplication = createPlacementApplication(application)
