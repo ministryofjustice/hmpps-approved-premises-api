@@ -7,10 +7,13 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -314,20 +317,26 @@ class TaskServiceTest {
     val metadata = mockk<PaginationMetadata>()
 
     every { page.content } returns tasks
-    every { taskRepositoryMock.getAllReallocatable(true, PageRequest.of(0, 10)) } returns page
+    every { taskRepositoryMock.getAllReallocatable(true, PageRequest.of(0, 10, Sort.by("created_at").ascending())) } returns page
     every { assessmentRepositoryMock.findAllById(assessments.map { it.id }) } returns assessments
     every { placementApplicationRepositoryMock.findAllById(placementApplications.map { it.id }) } returns placementApplications
     every { placementRequestRepositoryMock.findAllById(placementRequests.map { it.id }) } returns placementRequests
 
     every { getMetadata(page, 1) } returns metadata
 
-    val result = taskService.getAllReallocatable(AllocatedFilter.allocated, 1)
+    val result = taskService.getAllReallocatable(AllocatedFilter.allocated, 1, TaskSortField.createdAt, SortDirection.asc)
 
     val expectedTasks = listOf(
       assessments.map { TypedTask.Assessment(it) },
       placementApplications.map { TypedTask.PlacementApplication(it) },
       placementRequests.map { TypedTask.PlacementRequest(it) },
-    ).flatten()
+    ).flatten().sortedBy {
+      when (it) {
+        is TypedTask.Assessment -> it.entity.createdAt
+        is TypedTask.PlacementApplication -> it.entity.createdAt
+        is TypedTask.PlacementRequest -> it.entity.createdAt
+      }
+    }
 
     Assertions.assertThat(result.first).isEqualTo(expectedTasks)
     Assertions.assertThat(result.second).isEqualTo(metadata)

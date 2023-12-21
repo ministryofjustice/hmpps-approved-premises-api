@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
@@ -75,11 +76,18 @@ class PlacementRequestService(
 
   fun getAllReallocatable(
     page: Int?,
+    sortField: TaskSortField,
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
   ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
-    val sortField = "created_at"
-    val pageable = getPageable(sortField, sortDirection, page)
+    val pageable = getPageable(
+      // Convert to snake_case, because the findAllReallocatable* methods are native SQL queries
+      when (sortField) {
+        TaskSortField.createdAt -> "created_at"
+      },
+      sortDirection,
+      page,
+    )
     val allReallocatable: Page<PlacementRequestEntity>?
 
     when {

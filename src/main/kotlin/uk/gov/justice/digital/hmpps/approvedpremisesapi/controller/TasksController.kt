@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorkload
@@ -66,10 +67,14 @@ class TasksController(
   override fun tasksReallocatableGet(
     type: String?,
     page: Int?,
+    sortBy: TaskSortField?,
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
+    val sortBy = sortBy ?: TaskSortField.createdAt
+    val sortDirection = sortDirection ?: SortDirection.asc
+
     if (user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       if (type != null) {
         val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
@@ -77,16 +82,16 @@ class TasksController(
         ) ?: throw NotFoundProblem(type, "TaskType")
 
         return when (taskType) {
-          TaskType.assessment -> assessmentTasksResponse(user, page, sortDirection, allocatedFilter)
-          TaskType.placementRequest -> placementRequestTasks(user, page, sortDirection, allocatedFilter)
-          TaskType.placementApplication -> placementApplicationTasks(user, page, sortDirection, allocatedFilter)
+          TaskType.assessment -> assessmentTasksResponse(user, page, sortBy, sortDirection, allocatedFilter)
+          TaskType.placementRequest -> placementRequestTasks(user, page, sortBy, sortDirection, allocatedFilter)
+          TaskType.placementApplication -> placementApplicationTasks(user, page, sortBy, sortDirection, allocatedFilter)
           else -> {
             throw BadRequestProblem()
           }
         }
       }
 
-      return responseForAllTypes(user, page, allocatedFilter)
+      return responseForAllTypes(user, page, sortBy, sortDirection, allocatedFilter)
     } else {
       throw ForbiddenProblem()
     }
@@ -416,11 +421,15 @@ class TasksController(
   private fun responseForAllTypes(
     user: UserEntity,
     page: Int?,
+    sortBy: TaskSortField,
+    sortDirection: SortDirection,
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allocatedTasks, metadata) = taskService.getAllReallocatable(
       allocatedFilter,
       page,
+      sortBy,
+      sortDirection,
     )
 
     val crns = allocatedTasks.map {
@@ -457,12 +466,14 @@ class TasksController(
   private fun assessmentTasksResponse(
     user: UserEntity,
     page: Int?,
+    sortField: TaskSortField,
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatable, metaData) =
       assessmentService.getAllReallocatable(
         page,
+        sortField,
         sortDirection,
         allocatedFilter,
       )
@@ -478,12 +489,14 @@ class TasksController(
   private fun placementRequestTasks(
     user: UserEntity,
     page: Int?,
+    sortField: TaskSortField,
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatable, metaData) =
       placementRequestService.getAllReallocatable(
         page,
+        sortField,
         sortDirection,
         allocatedFilter,
       )
@@ -502,12 +515,14 @@ class TasksController(
   private fun placementApplicationTasks(
     user: UserEntity,
     page: Int?,
+    sortField: TaskSortField,
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatable, metaData) =
       placementApplicationService.getAllReallocatable(
         page,
+        sortField,
         sortDirection,
         allocatedFilter,
       )

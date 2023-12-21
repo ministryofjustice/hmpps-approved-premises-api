@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -83,12 +84,12 @@ class AssessmentService(
 
   fun getAllReallocatable(
     page: Int?,
+    sortField: TaskSortField,
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
   ): Pair<List<AssessmentEntity>, PaginationMetadata?> {
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
-    val sortField = "createdAt"
-    val pageable = getPageable(sortField, sortDirection, page)
+    val pageable = getPageable(sortField.value, sortDirection, page)
     var assessments: Page<AssessmentEntity>?
 
     when {

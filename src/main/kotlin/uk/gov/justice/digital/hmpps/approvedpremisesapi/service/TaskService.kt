@@ -1,11 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.util.UUID
 
 @Service
@@ -41,9 +43,17 @@ class TaskService(
   fun getAllReallocatable(
     allocatedFilter: AllocatedFilter?,
     page: Int?,
+    sortField: TaskSortField,
+    sortDirection: SortDirection,
   ): Pair<List<TypedTask>, PaginationMetadata?> {
-    val pageSize = 10
-    val pageable = if (page != null) { PageRequest.of(page - 1, pageSize) } else { null }
+    val pageable = getPageable(
+      // Convert to snake_case, because getAllReallocatable is a native SQL query
+      when (sortField) {
+        TaskSortField.createdAt -> "created_at"
+      },
+      sortDirection,
+      page,
+    )
 
     val isAllocated = if (allocatedFilter == null) { null } else { allocatedFilter == AllocatedFilter.allocated }
     val reallocatableTaskResult = taskRespository.getAllReallocatable(isAllocated, pageable)
@@ -53,11 +63,25 @@ class TaskService(
     val placementApplicationIds = reallocatableTasks.filter { it.type == "placement_application" }.map { it.id }
     val placementRequestIds = reallocatableTasks.filter { it.type == "placement_request" }.map { it.id }
 
-    val tasks = listOf(
+    var tasks = listOf(
       assessmentRepository.findAllById(assessmentIds).map { TypedTask.Assessment(it as ApprovedPremisesAssessmentEntity) },
       placementApplicationRepository.findAllById(placementApplicationIds).map { TypedTask.PlacementApplication(it) },
       placementRequestRepository.findAllById(placementRequestIds).map { TypedTask.PlacementRequest(it) },
     ).flatten()
+
+    tasks = tasks.sortedBy {
+      when (sortField) {
+        TaskSortField.createdAt -> when (it) {
+          is TypedTask.Assessment -> it.entity.createdAt
+          is TypedTask.PlacementApplication -> it.entity.createdAt
+          is TypedTask.PlacementRequest -> it.entity.createdAt
+        }
+      }
+    }
+
+    if (sortDirection == SortDirection.desc) {
+      tasks = tasks.reversed()
+    }
 
     val metadata = getMetadata(reallocatableTaskResult, page)
 

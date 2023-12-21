@@ -280,6 +280,10 @@ components:
         - not_started
         - in_progress
         - complete
+    TaskSortField:
+      type: string
+      enum:
+        - createdAt
     AssessmentTask:
       allOf:
         - $ref: '#/components/schemas/Task'

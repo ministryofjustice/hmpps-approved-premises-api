@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
@@ -346,11 +347,11 @@ class PlacementApplicationService(
 
   fun getAllReallocatable(
     page: Int?,
+    sortField: TaskSortField,
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
   ): Pair<List<PlacementApplicationEntity>, PaginationMetadata?> {
-    val sortField = "createdAt"
-    val pageable = getPageable(sortField, sortDirection, page)
+    val pageable = getPageable(sortField.value, sortDirection, page)
     var allReallocatable: Page<PlacementApplicationEntity>?
 
     when {

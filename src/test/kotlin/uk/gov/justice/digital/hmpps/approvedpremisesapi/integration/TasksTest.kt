@@ -573,6 +573,100 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Get all reallocatable tasks returns retains original sort order`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val (task1) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val (task2) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val (task3) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val task4 = `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+            )
+
+            val (task5) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val expectedTasks = listOf(
+              taskTransformer.transformPlacementRequestToTask(
+                task1,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformAssessmentToTask(
+                task2,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformPlacementRequestToTask(
+                task3,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformPlacementApplicationToTask(
+                task4,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformAssessmentToTask(
+                task5,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+            )
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?page=1&sortBy=createdAt&sortDirection=asc")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  expectedTasks,
+                ),
+              )
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?page=1&sortBy=createdAt&sortDirection=desc")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  expectedTasks.reversed(),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
     fun `Get all reallocatable tasks returns 200 with correct body with type placement application and page two`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
