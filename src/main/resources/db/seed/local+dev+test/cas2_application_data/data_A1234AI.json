@@ -26,6 +26,11 @@
     "second-preferred-area": {
       "preferredArea": "Hertford",
       "preferenceReason": "Mr Bertrand has a sister in Hertford"
+    },
+    "exclusion-zones": {
+      "hasExclusionZones": "yes",
+      "exclusionZonesDetail": "Avoid Liverpool"
+    },
     }
   },
   "funding-information": {
