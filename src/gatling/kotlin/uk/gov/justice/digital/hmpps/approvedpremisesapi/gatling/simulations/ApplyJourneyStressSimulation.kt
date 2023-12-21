@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.simulations
 
+import io.gatling.javaapi.core.CoreDsl
 import io.gatling.javaapi.core.CoreDsl.constantUsersPerSec
 import io.gatling.javaapi.core.CoreDsl.repeat
 import io.gatling.javaapi.core.CoreDsl.scenario
@@ -13,10 +14,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.authorizeUs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.getUUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.withAuthorizedUserHttpProtocol
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
+@Suppress("MagicNumber")
 class ApplyJourneyStressSimulation : Simulation() {
   private val applicationIdKey = "application_id"
   private val getApplicationId = { session: Session -> session.getUUID(applicationIdKey) }
@@ -53,6 +56,11 @@ class ApplyJourneyStressSimulation : Simulation() {
         constantUsersPerSec(50.0).during(2.minutes.toJavaDuration()).randomized(),
         stressPeakUsers(5000).during(1.minutes.toJavaDuration()),
       ),
-    ).withAuthorizedUserHttpProtocol()
+    )
+    .assertions(
+      CoreDsl.global().responseTime().percentile(95.0).lt(40000),
+      CoreDsl.global().successfulRequests().percent().gte(100.0)
+    )
+    .withAuthorizedUserHttpProtocol()
   }
 }

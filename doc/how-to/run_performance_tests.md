@@ -11,6 +11,12 @@ Once the API has started locally, just run:
 ./gradlew gatlingRun
 ```
 
+To run a specific test define the FQN of the simulation:
+
+```shell
+./gradlew gatlingRun-uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.simulations.BookingsTimeSimulation```
+```
+
 ## Running against a remote environment
 This requires some configuration, which can be done through environment variables:
 ```shell
