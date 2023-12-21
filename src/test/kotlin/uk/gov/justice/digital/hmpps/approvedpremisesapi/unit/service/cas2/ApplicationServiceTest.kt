@@ -543,6 +543,7 @@ class ApplicationServiceTest {
 
             it.applicationId == application.id &&
               data.personReference.noms == application.nomsNumber &&
+              data.personReference.crn == application.crn &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.submittedBy.staffMember.username == username
           },

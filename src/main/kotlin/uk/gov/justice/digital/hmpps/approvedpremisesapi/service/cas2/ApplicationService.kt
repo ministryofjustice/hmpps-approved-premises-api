@@ -241,6 +241,7 @@ class ApplicationService(
             submittedAt = Instant.now(),
             personReference = PersonReference(
               noms = application.nomsNumber ?: "Unknown NOMS Number",
+              crn = application.crn,
             ),
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
