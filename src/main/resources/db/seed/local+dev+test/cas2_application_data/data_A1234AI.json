@@ -31,6 +31,12 @@
       "hasExclusionZones": "yes",
       "exclusionZonesDetail": "Avoid Liverpool"
     },
+    "gang-affiliations": {
+      "hasGangAffiliations": "yes",
+      "gangName": "Gang name",
+      "gangOperationArea": "Derby",
+      "rivalGangDetail": "Rival gang detail"
+    },
     }
   },
   "funding-information": {
