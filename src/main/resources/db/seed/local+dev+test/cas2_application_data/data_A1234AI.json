@@ -325,5 +325,9 @@
       "nonStandardLicenceConditionsDetail": "There are exclusion zones, please check"
     }
   },
+  "check-your-answers": {
+    "check-your-answers": {
+      "checkYourAnswers": "confirmed"
+    }
   }
 }
