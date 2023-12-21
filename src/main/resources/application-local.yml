@@ -37,6 +37,8 @@ seed:
   auto:
     enabled: true
     file-prefixes: classpath:db/seed/local+dev+test
+  auto-script:
+    enabled: true
 
 assign-default-region-to-users-with-unknown-region: true
 preemptive-cache-logging-enabled: true
