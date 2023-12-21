@@ -101,6 +101,8 @@ springdoc:
         url: "cas2-api.yml"
       - name: Domain events
         url: "domain-events-api.yml"
+      - name: CAS2 Domain events
+        url: "cas2-domain-events-api.yml"
 
 server:
   port: 8080
