@@ -17,6 +17,7 @@ interface PlacementApplicationEntityReportRowRepository : JpaRepository<Placemen
         pa_dates.expected_arrival as requestedArrivalDate,
         pa_dates.duration as requestedDurationDays,
         pa.decision as decision,
+        pa.decision_made_at as decisionMadeAt,
         pa.submitted_at as placementApplicationSubmittedAt,
         application.submitted_at as applicationSubmittedAt,
         cast(
@@ -114,6 +115,7 @@ interface PlacementApplicationEntityReportRow {
   fun getRequestedArrivalDate(): Date?
   fun getRequestedDurationDays(): Int?
   fun getDecision(): String?
+  fun getDecisionMadeAt(): Timestamp?
   fun getPlacementApplicationSubmittedAt(): Timestamp?
   fun getApplicationSubmittedAt(): Timestamp?
   fun getApplicationAssessedDate(): Date?
