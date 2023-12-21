@@ -1,61 +1,89 @@
 {
   "sections": [
     {
-      "title": "Before you start",
+      "title": "Before you apply",
       "tasks": [
         {
-          "title": "Check eligibility for CAS-2",
+          "title": "Confirm eligibility",
           "questionsAndAnswers": [
             {
               "question": "Is Aadland Bertrand eligible for Short-Term Accommodation (CAS-2)?",
               "answer": "Yes, I confirm Aadland Bertrand is eligible"
             }
           ]
-        }
-      ]
-    },
-    {
-      "title": "Area and funding",
-      "tasks": [
+        },
         {
-          "title": "Add exclusion zones and preferred areas",
+          "title": "Confirm consent to share information",
           "questionsAndAnswers": [
             {
-              "question": "First preferred area",
-              "answer": "Luton"
+              "question": "Has Aadland Bertrand given their consent to apply for CAS-2?",
+              "answer": "Yes, Aadland Bertrand has given their consent"
             },
             {
-              "question": "Reason for first preference",
-              "answer": "This is where Mr Bertrand has spent the majority of his life and where his family live"
-            },
-            {
-              "question": "Second preferred area",
-              "answer": "Hertford"
-            },
-            {
-              "question": "Reason for second preference",
-              "answer": "Mr Bertrand has a sister in Hertford"
+              "question": "When did they give consent?",
+              "answer": "1 January 2023"
             }
           ]
         },
         {
-          "title": "Add funding information",
+          "title": "Add your details",
           "questionsAndAnswers": [
             {
-              "question": "How will Aadland Bertrand pay for their accommodation and service charge?",
-              "answer": "Personal money or savings"
+              "question": "Name",
+              "answer": "Roger Smith"
             },
             {
-              "question": "What is Aadland Bertrand's National Insurance number? (Optional)",
-              "answer": "NS 123 288 12"
+              "question": "Email address",
+              "answer": "rsmith@justice.example.com"
+            },
+            {
+              "question": "What is your job title?",
+              "answer": "POM"
+            },
+            {
+              "question": "What is your contact telephone number?",
+              "answer": "07777 777 777"
             }
           ]
         }
       ]
     },
     {
-      "title": "About the person",
+      "title": "About the applicant",
       "tasks": [
+        {
+          "title": "Add personal information",
+          "questionsAndAnswers": [
+            {
+              "question": "Will Aadland Bertrand have a working mobile phone when they are released?",
+              "answer": "yes"
+            },
+            {
+              "question": "What is their mobile number? (Optional)",
+              "answer": "07777 777 777"
+            },
+            {
+              "question": "Is their mobile a smart phone?",
+              "answer": "yes"
+            },
+            {
+              "question": "Is Aadland Bertrand pregnant?",
+              "answer": "Yes"
+            },
+            {
+              "question": "When is their due date?",
+              "answer": "5 June 2024"
+            },
+            {
+              "question": "Does Aadland Bertrand have a gender preference for their support worker?",
+              "answer": "Yes"
+            },
+            {
+              "question": "What is their preference?",
+              "answer": "Female"
+            }
+          ]
+        },
         {
           "title": "Add address history",
           "questionsAndAnswers": [
@@ -70,7 +98,7 @@
           ]
         },
         {
-          "title": "Complete equality and diversity monitoring",
+          "title": "Add equality and diversity monitoring information",
           "questionsAndAnswers": [
             {
               "question": "Equality questions for Aadland Bertrand",
@@ -125,13 +153,84 @@
       ]
     },
     {
+      "title": "Area, funding and ID",
+      "tasks": [
+        {
+          "title": "Add exclusion zones and preferred areas",
+          "questionsAndAnswers": [
+            {
+              "question": "First preferred area",
+              "answer": "Luton"
+            },
+            {
+              "question": "Reason for first preference",
+              "answer": "This is where Mr Bertrand has spent the majority of his life and where his family live"
+            },
+            {
+              "question": "Second preferred area",
+              "answer": "Hertford"
+            },
+            {
+              "question": "Reason for second preference",
+              "answer": "Mr Bertrand has a sister in Hertford"
+            },
+            {
+              "question": "Does Aadland Bertrand have any exclusion zones?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Provide details about the exclusion zone",
+              "answer": "Avoid Liverpool"
+            },
+            {
+              "question": "Does Aadland Bertrand have any gang affiliations?",
+              "answer": "Yes"
+            },
+            {
+              "question": "What is the name of the gang?",
+              "answer": "Gang name"
+            },
+            {
+              "question": "Where do they operate?",
+              "answer": "Derby"
+            },
+            {
+              "question": "Name any known rival gangs and where they operate (optional)",
+              "answer": "Rival gang detail"
+            },
+            {
+              "question": "Do they want to apply to live with their children in a family property?",
+              "answer": "Yes"
+            }
+          ]
+        },
+        {
+          "title": "Confirm funding and ID",
+          "questionsAndAnswers": [
+            {
+              "question": "How will Aadland Bertrand pay for their accommodation and service charge?",
+              "answer": "Personal money or savings"
+            },
+            {
+              "question": "What identification documentation (ID) does Aadland Bertrand have?",
+              "answer": "Passport"
+            },
+            {
+              "question": "What is Aadland Bertrand's National Insurance number? (Optional)",
+              "answer": "NS 123 288 12"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "title": "Risks and needs",
       "tasks": [
         {
           "title": "Add health needs",
           "questionsAndAnswers": [
             {
-              "question": "Do they take any illegal substances?",
+              "question": "Do they take any illegal substances in custody?",
               "answer": "Yes"
             },
             {
@@ -143,7 +242,7 @@
               "answer": "Daily intravenous use"
             },
             {
-              "question": "Are they engaged with a drug and alcohol service?",
+              "question": "Are they engaged with a drug and alcohol service in custody?",
               "answer": "Yes"
             },
             {
@@ -289,7 +388,7 @@
           ]
         },
         {
-          "title": "Review risk to self information",
+          "title": "Add risk to self information",
           "questionsAndAnswers": [
             {
               "question": "Describe Aadland Bertrand's current issues and needs related to self harm and suicide",
@@ -322,7 +421,7 @@
           ]
         },
         {
-          "title": "Review risk of serious harm (RoSH) information",
+          "title": "Add risk of serious harm (RoSH) information",
           "questionsAndAnswers": [
             {
               "question": "Who is at risk?",
@@ -376,6 +475,19 @@
       "title": "Offence and licence information",
       "tasks": [
         {
+          "title": "Add current offences",
+          "questionsAndAnswers": [
+            {
+              "question": "Current offence 1",
+              "answer": "Arson (09000)\r\nundefined\r\n5 June 2020\r\n3 years\r\n\nSummary: summary detail\r\nOutstanding charges: Yes\r\nDetails of outstanding charges: The offence took place at the home of his ex-partner in Liverpool"
+            },
+            {
+              "question": "Current offence 2",
+              "answer": "Stalking (08000)\r\nundefined\r\n6 July 2023\r\n2 months\r\n\nSummary: This offence is against a victim living in Liverpool, see exclusion zones.\r\nOutstanding charges: No"
+            }
+          ]
+        },
+        {
           "title": "Add offending history",
           "questionsAndAnswers": [
             {
@@ -393,6 +505,31 @@
             {
               "question": "Historical offence 3",
               "answer": "Dangerous driving/Aid, abet cause or permit reckless driving - 80200\r\nOther\r\n15 June 2020\r\n3 months\r\n\nSummary: Mr Bertrand was stopped on the A41 near Berkhamsted after being observed mounting the kerb at speed. "
+            }
+          ]
+        },
+        {
+          "title": "Add HDC licence and CPP details",
+          "questionsAndAnswers": [
+            {
+              "question": "HDC eligibility date",
+              "answer": "28 February 2024"
+            },
+            {
+              "question": "Conditional release date",
+              "answer": "22 February 2024"
+            },
+            {
+              "question": "Who is Aadland Bertrand's Community Probation Practitioner (CPP)?",
+              "answer": "Roger Smith\r\nLeeds\r\ncpp@justice.example.com\r\n01234 777 099"
+            },
+            {
+              "question": "Does Aadland Bertrand have any non-standard licence conditions?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Describe the conditions",
+              "answer": "There are exclusion zones, please check"
             }
           ]
         }
