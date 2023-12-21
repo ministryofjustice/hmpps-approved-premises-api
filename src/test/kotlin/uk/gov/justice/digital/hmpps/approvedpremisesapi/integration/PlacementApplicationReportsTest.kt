@@ -190,7 +190,6 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
 
       val singleDateUnsubmittedPlacement = expectedRow {
-        isSubmitted = false
         application = createAssessedApplication("singleDateUnsubmittedPlacement")
         createPlacementApplication(application)
       }
@@ -365,28 +364,30 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         .isOk
         .expectBody()
         .consumeWith {
-          val actual = DataFrame
+          val actualRows = DataFrame
             .readExcel(it.responseBody!!.inputStream())
             .convertTo<PlacementApplicationReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(15)
+          assertThat(actualRows.size).isEqualTo(14)
 
-          assertApplicationRowHasCorrectData(actual, singleDateUnsubmittedPlacement, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateNoBookingReallocated, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateBooked, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateReallocatedAssessment, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateWithArrival, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateWithDeparture, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateWithCancellation, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateWithNonArrival, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateWithWithdrawal, userEntity)
-          assertApplicationRowHasCorrectData(actual, multiDateNoneBooked1, userEntity)
-          assertApplicationRowHasCorrectData(actual, multiDateNoneBooked2, userEntity)
-          assertApplicationRowHasCorrectData(actual, multiDateAllBooked1, userEntity)
-          assertApplicationRowHasCorrectData(actual, multiDateAllBooked2, userEntity)
-          assertApplicationRowHasCorrectData(actual, multiDateSomeBooked1, userEntity)
-          assertApplicationRowHasCorrectData(actual, multiDateSomeBooked2, userEntity)
+          val unsubmittedPlacementApplication = getPlacementApplication(singleDateUnsubmittedPlacement.application)
+          assertThat(actualRows).noneMatch { row -> row.id == unsubmittedPlacementApplication.id.toString() }
+
+          assertApplicationRowHasCorrectData(actualRows, singleDateNoBookingReallocated, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateBooked, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateReallocatedAssessment, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateWithArrival, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateWithDeparture, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateWithCancellation, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateWithNonArrival, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateWithWithdrawal, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multiDateNoneBooked1, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multiDateNoneBooked2, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multiDateAllBooked1, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multiDateAllBooked2, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multiDateSomeBooked1, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multiDateSomeBooked2, userEntity)
         }
     }
   }
@@ -402,7 +403,6 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     var placementDate: PlacementDates? = null
     var booking: BookingEntity? = null
 
-    var isSubmitted: Boolean = true
     var hasBooking: Boolean = false
     var hasArrival: Boolean = false
     var hasDeparture: Boolean = false
@@ -419,26 +419,24 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     val applicationId = expectedRow.application.id
     val booking = expectedRow.booking
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
-    val placementApplication = placementApplicationTestRepository.findByApplicationAndReallocatedAtNull(application)
+    val placementApplication = getPlacementApplication(application)
     val assessment = application.getLatestAssessment()!!
     val offenderDetailSummary = getOffenderDetailForApplication(application, userEntity.deliusUsername)
     val caseDetail = getCaseDetailForApplication(application)
 
     val reportRow = report.find {
       it.id == placementApplication.id.toString() &&
-        (!expectedRow.isSubmitted || it.requestedArrivalDate == expectedRow.placementDate!!.expectedArrival)
+        it.requestedArrivalDate == expectedRow.placementDate!!.expectedArrival
     }!!
 
     val (referrerEntity, _) = referrerDetails
 
     assertThat(reportRow.crn).isEqualTo(application.crn)
 
-    if (expectedRow.isSubmitted) {
-      assertThat(reportRow.submittedAt).isEqualTo(placementApplication.submittedAt!!.toLocalDate())
-      assertThat(reportRow.requestedArrivalDate).isEqualTo(expectedRow.placementDate!!.expectedArrival)
-      assertThat(reportRow.requestedDurationDays).isEqualTo(expectedRow.placementDate!!.duration)
-    }
-
+    assertThat(reportRow.placementRequestSubmittedAt).isEqualTo(placementApplication.submittedAt!!.toLocalDate())
+    assertThat(reportRow.requestedArrivalDate).isEqualTo(expectedRow.placementDate!!.expectedArrival)
+    assertThat(reportRow.requestedDurationDays).isEqualTo(expectedRow.placementDate!!.duration)
+    assertThat(reportRow.applicationSubmittedAt).isEqualTo(application.submittedAt!!.toLocalDate())
     assertThat(reportRow.applicationAssessedDate).isEqualTo(assessment.submittedAt!!.toLocalDate())
     assertThat(reportRow.assessorCru).isEqualTo("Wales")
     assertThat(reportRow.assessmentDecision).isEqualTo(assessment.decision.toString())
@@ -500,11 +498,11 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       assertThat(reportRow.notArrivedReason).isEqualTo(nonArrival.reason.name)
     }
 
-    if (expectedRow.isSubmitted) {
-      assertThat(reportRow.placementRequestType).isEqualTo("Some Test Reason")
-      assertThat(reportRow.paroleDecisionDate).isEqualTo("2023-11-11")
-    }
+    assertThat(reportRow.placementRequestType).isEqualTo("Some Test Reason")
+    assertThat(reportRow.paroleDecisionDate).isEqualTo("2023-11-11")
   }
+
+  fun getPlacementApplication(application: ApprovedPremisesApplicationEntity) = placementApplicationTestRepository.findByApplicationAndReallocatedAtNull(application)
 
   private fun getOffenderDetailForApplication(
     application: ApplicationEntity,
