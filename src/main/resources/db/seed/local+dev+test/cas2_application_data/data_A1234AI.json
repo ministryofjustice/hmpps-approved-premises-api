@@ -268,6 +268,32 @@
       "additionalInformationDetail": ""
     }
   },
+  "current-offences": {
+    "current-offence-data": [
+      {
+        "titleAndNumber": "Arson (09000)",
+        "offenceCategory": "Arson",
+        "offenceDate-day": "5",
+        "offenceDate-month": "6",
+        "offenceDate-year": "2020",
+        "sentenceLength": "3 years",
+        "summary": "summary detail",
+        "outstandingCharges": "yes",
+        "outstandingChargesDetail": "The offence took place at the home of his ex-partner in Liverpool"
+      },
+      {
+        "titleAndNumber": "Stalking (08000)",
+        "offenceCategory": "Stalking",
+        "offenceDate-day": "6",
+        "offenceDate-month": "7",
+        "offenceDate-year": "2023",
+        "sentenceLength": "2 months",
+        "summary": "This offence is against a victim living in Liverpool, see exclusion zones.",
+        "outstandingCharges": "no"
+      }
+    ],
+    "current-offences": {}
+  },
   "offending-history": {
     "any-previous-convictions": {
       "hasAnyPreviousConvictions": "yes"
