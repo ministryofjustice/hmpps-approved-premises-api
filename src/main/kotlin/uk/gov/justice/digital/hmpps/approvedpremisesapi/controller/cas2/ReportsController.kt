@@ -16,4 +16,10 @@ class ReportsController(private val reportService: ReportsService) : ReportsCas2
     reportService.createCas2ExampleReport(outputStream)
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }
+
+  override fun reportsReportNameGet(reportName: String): ResponseEntity<Resource> {
+    val outputStream = ByteArrayOutputStream()
+    reportService.createSubmittedApplicationsReport(outputStream)
+    return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
+  }
 }
