@@ -302,5 +302,28 @@
       }
     ],
     "offence-history": {}
+  },
+  "hdc-licence-and-cpp-details": {
+    "hdc-licence-dates": {
+      "hdcEligibilityDate": "2024-02-28",
+      "hdcEligibilityDate-year": "2024",
+      "hdcEligibilityDate-month": "2",
+      "hdcEligibilityDate-day": "28",
+      "conditionalReleaseDate": "2024-02-22",
+      "conditionalReleaseDate-year": "2024",
+      "conditionalReleaseDate-month": "2",
+      "conditionalReleaseDate-day": "22"
+    },
+    "cpp-details": {
+      "name": "Roger Smith",
+      "probationRegion": "Leeds",
+      "email": "cpp@justice.example.com",
+      "telephone": "01234 777 099"
+    },
+    "non-standard-licence-conditions": {
+      "nonStandardLicenceConditions": "yes",
+      "nonStandardLicenceConditionsDetail": "There are exclusion zones, please check"
+    }
+  },
   }
 }
