@@ -14,7 +14,7 @@ class PlacementApplicationReportGenerator :
   override val convert: PlacementApplicationEntityReportRow.(properties: PlacementApplicationReportProperties) -> List<PlacementApplicationReportRow> = { properties ->
     listOf(
       PlacementApplicationReportRow(
-        id = this.getId(),
+        placementRequestId = this.getId(),
         crn = this.getCrn(),
         placementRequestSubmittedAt = this.getPlacementApplicationSubmittedAt()?.toLocalDateTime()?.toLocalDate(),
         requestedArrivalDate = this.getRequestedArrivalDate()?.toLocalDate(),

@@ -366,6 +366,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         .isOk
         .expectBody()
         .consumeWith {
+
           val actualRows = DataFrame
             .readExcel(it.responseBody!!.inputStream())
             .convertTo<PlacementApplicationReportRow>(ExcessiveColumns.Remove)
@@ -374,7 +375,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
           assertThat(actualRows.size).isEqualTo(14)
 
           val unsubmittedPlacementApplication = getPlacementApplication(singleDateUnsubmittedPlacement.application)
-          assertThat(actualRows).noneMatch { row -> row.id == unsubmittedPlacementApplication.id.toString() }
+          assertThat(actualRows).noneMatch { row -> row.placementRequestId == unsubmittedPlacementApplication.id.toString() }
 
           assertApplicationRowHasCorrectData(actualRows, singleDateNoBookingReallocated, userEntity)
           assertApplicationRowHasCorrectData(actualRows, singleDateBooked, userEntity)
@@ -428,7 +429,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     val caseDetail = getCaseDetailForApplication(application)
 
     val reportRow = report.find {
-      it.id == placementApplication.id.toString() &&
+      it.placementRequestId == placementApplication.id.toString() &&
         it.requestedArrivalDate == expectedRow.placementDate!!.expectedArrival
     }!!
 
