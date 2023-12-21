@@ -13,6 +13,11 @@
       "consentDate-day": "1"
     }
   },
+  "referrer-details": {
+    "confirm-details": { "name": "Roger Smith", "email": "rsmith@justice.example.com" },
+    "job-title": { "jobTitle": "POM" },
+    "contact-number": { "telephone": "07777 777 777" }
+  },
   "area-information": {
     "first-preferred-area": {
       "preferredArea": "Luton",
