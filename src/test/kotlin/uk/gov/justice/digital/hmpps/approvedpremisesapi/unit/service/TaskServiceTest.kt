@@ -2,8 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -19,8 +23,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Task
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRespository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -30,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import java.util.UUID
 
 class TaskServiceTest {
@@ -39,6 +54,10 @@ class TaskServiceTest {
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
   private val userTransformerMock = mockk<UserTransformer>()
   private val placementApplicationServiceMock = mockk<PlacementApplicationService>()
+  private val taskRepositoryMock = mockk<TaskRespository>()
+  private val assessmentRepositoryMock = mockk<AssessmentRepository>()
+  private val placementApplicationRepositoryMock = mockk<PlacementApplicationRepository>()
+  private val placementRequestRepositoryMock = mockk<PlacementRequestRepository>()
 
   private val taskService = TaskService(
     assessmentServiceMock,
@@ -47,6 +66,10 @@ class TaskServiceTest {
     placementRequestServiceMock,
     userTransformerMock,
     placementApplicationServiceMock,
+    taskRepositoryMock,
+    assessmentRepositoryMock,
+    placementApplicationRepositoryMock,
+    placementRequestRepositoryMock,
   )
 
   private val requestUserWithPermission = UserEntityFactory()
@@ -269,6 +292,47 @@ class TaskServiceTest {
     Assertions.assertThat(validationResult is ValidatableActionResult.Success).isTrue
   }
 
+  @Test
+  fun `getAllReallocatable returns all tasks for a particular page`() {
+    mockkStatic("uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationUtilsKt")
+
+    val assessments = List(3) { generateAssessment() }
+    val placementApplications = List(4) { generatePlacementApplication() }
+    val placementRequests = List(4) { generatePlacementRequest() }
+
+    val assessmentTasks = assessments.map { Task(it.id, it.createdAt.toLocalDateTime(), "assessment") }
+    val placementApplicationTasks = placementApplications.map { Task(it.id, it.createdAt.toLocalDateTime(), "placement_application") }
+    val placementRequestTasks = placementRequests.map { Task(it.id, it.createdAt.toLocalDateTime(), "placement_request") }
+
+    val tasks = listOf(
+      assessmentTasks,
+      placementApplicationTasks,
+      placementRequestTasks,
+    ).flatten()
+
+    val page = mockk<Page<Task>>()
+    val metadata = mockk<PaginationMetadata>()
+
+    every { page.content } returns tasks
+    every { taskRepositoryMock.getAllReallocatable(true, PageRequest.of(0, 10)) } returns page
+    every { assessmentRepositoryMock.findAllById(assessments.map { it.id }) } returns assessments
+    every { placementApplicationRepositoryMock.findAllById(placementApplications.map { it.id }) } returns placementApplications
+    every { placementRequestRepositoryMock.findAllById(placementRequests.map { it.id }) } returns placementRequests
+
+    every { getMetadata(page, 1) } returns metadata
+
+    val result = taskService.getAllReallocatable(AllocatedFilter.allocated, 1)
+
+    val expectedTasks = listOf(
+      assessments.map { TypedTask.Assessment(it) },
+      placementApplications.map { TypedTask.PlacementApplication(it) },
+      placementRequests.map { TypedTask.PlacementRequest(it) },
+    ).flatten()
+
+    Assertions.assertThat(result.first).isEqualTo(expectedTasks)
+    Assertions.assertThat(result.second).isEqualTo(metadata)
+  }
+
   private fun generateAndStubAssigneeUser(): UserEntity {
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
@@ -297,5 +361,42 @@ class TaskServiceTest {
       .produce()
 
     return application
+  }
+
+  private fun generateAssessment(application: ApprovedPremisesApplicationEntity = generateApplication()): ApprovedPremisesAssessmentEntity {
+    return ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+  }
+
+  private fun generatePlacementApplication(): PlacementApplicationEntity {
+    val application = generateApplication()
+    return PlacementApplicationEntityFactory()
+      .withApplication(application)
+      .withCreatedByUser(
+        UserEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .produce(),
+      )
+      .produce()
+  }
+
+  private fun generatePlacementRequest(): PlacementRequestEntity {
+    val application = generateApplication()
+    val assessment = generateAssessment(application)
+    return PlacementRequestEntityFactory()
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
+          .withApplication(application as ApprovedPremisesApplicationEntity)
+          .withAssessment(assessment)
+          .produce(),
+      )
+      .withApplication(application)
+      .withAssessment(assessment)
+      .produce()
   }
 }
