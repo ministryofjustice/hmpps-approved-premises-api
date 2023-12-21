@@ -62,6 +62,26 @@
       "previousPostcode": "LU1 2BQ"
     }
   },
+  "personal-information": {
+    "working-mobile-phone": {
+      "hasWorkingMobilePhone": "yes",
+      "mobilePhoneNumber": "07777 777 777",
+      "isSmartPhone": "yes"
+    },
+    "immigration-status": {
+      "immigrationStatus": "UK citizen"
+    },
+    "pregnancy-information": {
+      "isPregnant": "yes",
+      "dueDate-day": "5",
+      "dueDate-month": "6",
+      "dueDate-year": "2024"
+    },
+    "support-worker-preference": {
+      "hasSupportWorkerPreference": "yes",
+      "supportWorkerPreference": "female"
+    }
+  },
   "equality-and-diversity-monitoring": {
     "will-answer-equality-questions": {
       "willAnswer": "yes"
