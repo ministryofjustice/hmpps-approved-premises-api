@@ -71,11 +71,7 @@ class TaskService(
 
     tasks = tasks.sortedBy {
       when (sortField) {
-        TaskSortField.createdAt -> when (it) {
-          is TypedTask.Assessment -> it.entity.createdAt
-          is TypedTask.PlacementApplication -> it.entity.createdAt
-          is TypedTask.PlacementRequest -> it.entity.createdAt
-        }
+        TaskSortField.createdAt -> it.createdAt
       }
     }
 

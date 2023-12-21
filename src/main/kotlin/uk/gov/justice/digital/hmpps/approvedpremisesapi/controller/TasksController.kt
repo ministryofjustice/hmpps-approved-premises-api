@@ -432,13 +432,7 @@ class TasksController(
       sortDirection,
     )
 
-    val crns = allocatedTasks.map {
-      when (it) {
-        is TypedTask.Assessment -> it.entity.application.crn
-        is TypedTask.PlacementRequest -> it.entity.application.crn
-        is TypedTask.PlacementApplication -> it.entity.application.crn
-      }
-    }
+    val crns = allocatedTasks.map { it.crn }
 
     val offenderSummaries = getOffenderSummariesForCrns(crns, user)
 

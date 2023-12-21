@@ -330,13 +330,7 @@ class TaskServiceTest {
       assessments.map { TypedTask.Assessment(it) },
       placementApplications.map { TypedTask.PlacementApplication(it) },
       placementRequests.map { TypedTask.PlacementRequest(it) },
-    ).flatten().sortedBy {
-      when (it) {
-        is TypedTask.Assessment -> it.entity.createdAt
-        is TypedTask.PlacementApplication -> it.entity.createdAt
-        is TypedTask.PlacementRequest -> it.entity.createdAt
-      }
-    }
+    ).flatten().sortedBy { it.createdAt }
 
     Assertions.assertThat(result.first).isEqualTo(expectedTasks)
     Assertions.assertThat(result.second).isEqualTo(metadata)
