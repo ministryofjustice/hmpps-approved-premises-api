@@ -37,6 +37,8 @@
       "gangOperationArea": "Derby",
       "rivalGangDetail": "Rival gang detail"
     },
+    "family-accommodation": {
+      "familyProperty": "yes"
     }
   },
   "funding-information": {
