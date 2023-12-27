@@ -202,6 +202,45 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `It returns the unmatched placement requests and withdrawn placement requests when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { unmatchedOffender, unmatchedInmate ->
+          `Given a Placement Request`(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unmatchedOffender.otherIds.crn,
+          ) { unmatchedPlacementRequest, _ ->
+
+            val withdrawnPlacementRequest = createPlacementRequest(unmatchedOffender, user, isWithdrawn = true)
+
+            webTestClient.get()
+              .uri("/placement-requests/dashboard")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    placementRequestTransformer.transformJpaToApi(
+                      unmatchedPlacementRequest,
+                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
+                    ),
+                    placementRequestTransformer.transformJpaToApi(
+                      withdrawnPlacementRequest,
+                      PersonInfoResult.Success.Full(unmatchedOffender.otherIds.crn, unmatchedOffender, unmatchedInmate),
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
     fun `It returns the unmatched placement requests when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { unmatchedOffender, unmatchedInmate ->
@@ -319,7 +358,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   listOf(
                     placementRequestTransformer.transformJpaToApi(
                       unableToMatchPlacementRequest,
-                      PersonInfoResult.Success.Full(unableToMatchOffender.otherIds.crn, unableToMatchOffender, unableToMatchInmate),
+                      PersonInfoResult.Success.Full(
+                        unableToMatchOffender.otherIds.crn,
+                        unableToMatchOffender,
+                        unableToMatchInmate,
+                      ),
                     ),
                   ),
                 ),
@@ -363,10 +406,12 @@ class PlacementRequestsTest : IntegrationTestBase() {
     @Test
     fun `It searches by name when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given an Offender`(offenderDetailsConfigBlock = {
-          withFirstName("JOHN")
-          withLastName("SMITH")
-        },) { offenderDetails, inmateDetails ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withFirstName("JOHN")
+            withLastName("SMITH")
+          },
+        ) { offenderDetails, inmateDetails ->
           `Given an Offender` { otherOffenderDetails, _ ->
             val placementRequest = createPlacementRequest(offenderDetails, user)
             createPlacementRequest(otherOffenderDetails, user)
@@ -461,8 +506,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           val placementRequestWithExpectedArrivalOfToday = createPlacementRequest(offenderDetails, user)
-          val placementRequestWithExpectedArrivalInTwelveDays = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.now().plusDays(12))
-          val placementRequestWithExpectedArrivalInThirtyDays = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.now().plusDays(30))
+          val placementRequestWithExpectedArrivalInTwelveDays =
+            createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.now().plusDays(12))
+          val placementRequestWithExpectedArrivalInThirtyDays =
+            createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.now().plusDays(30))
 
           webTestClient.get()
             .uri("/placement-requests/dashboard?page=1&sortBy=expected_arrival")
@@ -494,8 +541,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           val placementRequestCreatedToday = createPlacementRequest(offenderDetails, user)
-          val placementRequestCreatedFiveDaysAgo = createPlacementRequest(offenderDetails, user, createdAt = OffsetDateTime.now().minusDays(5))
-          val placementRequestCreatedThirtyDaysAgo = createPlacementRequest(offenderDetails, user, createdAt = OffsetDateTime.now().minusDays(30))
+          val placementRequestCreatedFiveDaysAgo =
+            createPlacementRequest(offenderDetails, user, createdAt = OffsetDateTime.now().minusDays(5))
+          val placementRequestCreatedThirtyDaysAgo =
+            createPlacementRequest(offenderDetails, user, createdAt = OffsetDateTime.now().minusDays(30))
 
           webTestClient.get()
             .uri("/placement-requests/dashboard?page=1&sortBy=created_at")
@@ -527,8 +576,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           val placementRequestWithApplicationCreatedToday = createPlacementRequest(offenderDetails, user)
-          val placementRequestWithApplicationCreatedTwelveDaysAgo = createPlacementRequest(offenderDetails, user, applicationDate = OffsetDateTime.now().minusDays(12))
-          val placementRequestWithApplicationCreatedThirtyDaysAgo = createPlacementRequest(offenderDetails, user, applicationDate = OffsetDateTime.now().minusDays(30))
+          val placementRequestWithApplicationCreatedTwelveDaysAgo =
+            createPlacementRequest(offenderDetails, user, applicationDate = OffsetDateTime.now().minusDays(12))
+          val placementRequestWithApplicationCreatedThirtyDaysAgo =
+            createPlacementRequest(offenderDetails, user, applicationDate = OffsetDateTime.now().minusDays(30))
 
           webTestClient.get()
             .uri("/placement-requests/dashboard?page=1&sortBy=application_date")
@@ -555,7 +606,16 @@ class PlacementRequestsTest : IntegrationTestBase() {
       }
     }
 
-    private fun createPlacementRequest(offenderDetails: OffenderDetailSummary, user: UserEntity, duration: Int = 12, expectedArrival: LocalDate = LocalDate.now(), createdAt: OffsetDateTime = OffsetDateTime.now(), applicationDate: OffsetDateTime = OffsetDateTime.now()): PlacementRequestEntity {
+    @Suppress("LongParameterList")
+    private fun createPlacementRequest(
+      offenderDetails: OffenderDetailSummary,
+      user: UserEntity,
+      duration: Int = 12,
+      expectedArrival: LocalDate = LocalDate.now(),
+      createdAt: OffsetDateTime = OffsetDateTime.now(),
+      applicationDate: OffsetDateTime = OffsetDateTime.now(),
+      isWithdrawn: Boolean = false,
+    ): PlacementRequestEntity {
       val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
         withPermissiveSchema()
       }
@@ -610,6 +670,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
         withDuration(duration)
         withExpectedArrival(expectedArrival)
         withCreatedAt(createdAt)
+        withIsWithdrawn(isWithdrawn)
       }
     }
   }
@@ -801,7 +862,10 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   objectMapper.writeValueAsString(
                     placementRequestDetailTransformer.transformJpaToApi(
                       placementRequest,
-                      PersonInfoResult.Success.Restricted(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber),
+                      PersonInfoResult.Success.Restricted(
+                        offenderDetails.otherIds.crn,
+                        offenderDetails.otherIds.nomsNumber,
+                      ),
                       listOf(),
                     ),
                   ),
