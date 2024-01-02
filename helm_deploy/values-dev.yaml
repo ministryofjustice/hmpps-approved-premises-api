@@ -41,6 +41,7 @@ generic-service:
     SEED_AUTO_ENABLED: true
     SEED_AUTO_FILE-PREFIXES: classpath:db/seed/local+dev+test,classpath:db/seed/dev+test
     SEED_AUTO-SCRIPT_ENABLED: true
+    SEED_AUTO-SCRIPT_NOMS: G9542VP
     NOTIFY_MODE: TEST_AND_GUEST_LIST
     HMPPS_SQS_USE_WEB_TOKEN: true
 

@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
@@ -26,6 +27,8 @@ class Cas2AutoScriptTest {
   private val mockSeedLogger = mockk<SeedLogger>()
   private val logEntries = mutableListOf<LogEntry>()
 
+  private val mockSeedConfig = mockk<SeedConfig>()
+
   private val mockNomisUserRepository = mockk<NomisUserRepository>()
   private val mockNomisUserEntity = mockk<NomisUserEntity>()
 
@@ -43,6 +46,7 @@ class Cas2AutoScriptTest {
 
   private val autoScript = Cas2AutoScript(
     mockSeedLogger,
+    mockSeedConfig,
     mockNomisUserRepository,
     mockApplicationRepository,
     mockExternalUserRepository,
@@ -55,6 +59,8 @@ class Cas2AutoScriptTest {
     every { mockSeedLogger.info(any()) } answers {
       logEntries += LogEntry(it.invocation.args[0] as String, "info", null)
     }
+
+    every { mockSeedConfig.autoScript.noms } answers { "NOMS123" }
     every { mockNomisUserRepository.findAll() } answers { listOf(mockNomisUserEntity) }
     every { mockNomisUserEntity.nomisUsername } answers { "SMITHJ_GEN" }
 
@@ -80,6 +86,13 @@ class Cas2AutoScriptTest {
     autoScript.script()
 
     verify(exactly = 3) { mockApplicationRepository.save(any()) }
+  }
+
+  @Test
+  fun `uses the NOMS number supplied in AutoScriptConfig`() {
+    autoScript.script()
+
+    verify(exactly = 3) { mockSeedConfig.autoScript.noms }
   }
 
   @Test
