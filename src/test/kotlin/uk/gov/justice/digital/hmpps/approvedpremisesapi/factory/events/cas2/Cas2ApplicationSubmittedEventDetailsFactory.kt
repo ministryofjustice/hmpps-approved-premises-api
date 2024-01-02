@@ -16,6 +16,7 @@ class Cas2ApplicationSubmittedEventDetailsFactory : Factory<Cas2ApplicationSubmi
   private var applicationId: Yielded<UUID> = { UUID.randomUUID() }
   private var applicationUrl: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var personReference: Yielded<PersonReference> = { PersonReferenceFactory().produce() }
+  private var referringPrisonCode: Yielded<String> = { "BRI" }
   private var submittedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(7) }
   private var submittedByStaffMember: Yielded<Cas2StaffMember> = { StaffMemberFactory().produce() }
 
@@ -31,6 +32,10 @@ class Cas2ApplicationSubmittedEventDetailsFactory : Factory<Cas2ApplicationSubmi
     this.personReference = { personReference }
   }
 
+  fun withReferringPrisonCode(referringPrisonCode: String) = apply {
+    this.referringPrisonCode = { referringPrisonCode }
+  }
+
   fun withSubmittedAt(submittedAt: Instant) = apply {
     this.submittedAt = { submittedAt }
   }
@@ -43,6 +48,7 @@ class Cas2ApplicationSubmittedEventDetailsFactory : Factory<Cas2ApplicationSubmi
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
     personReference = this.personReference(),
+    referringPrisonCode = this.referringPrisonCode(),
     submittedAt = this.submittedAt(),
     submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
       staffMember = this.submittedByStaffMember(),

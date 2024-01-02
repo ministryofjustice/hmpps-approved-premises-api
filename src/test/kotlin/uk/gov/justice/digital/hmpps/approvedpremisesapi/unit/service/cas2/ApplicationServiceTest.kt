@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -508,6 +509,15 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
         application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
+
+      val inmateDetail = InmateDetailFactory().produce()
+      every {
+        mockOffenderService.getInmateDetailByNomsNumber(
+          application.crn,
+          application.nomsNumber.toString(),
+        )
+      } returns AuthorisableActionResult.Success(inmateDetail)
+
       every { mockApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
           as Cas2ApplicationEntity
