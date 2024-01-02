@@ -15,6 +15,7 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
         events.data -> 'eventDetails' -> 'submittedBy' -> 'staffMember' ->> 'username' AS submittedBy,
         events.data -> 'eventDetails' -> 'personReference' ->> 'noms' AS personNoms,
         events.data -> 'eventDetails' -> 'personReference' ->> 'crn' AS personCrn,
+        events.data -> 'eventDetails' ->> 'referringPrisonCode' AS referringPrisonCode,
         CAST(
           CAST(events.data -> 'eventDetails' ->> 'submittedAt' as DATE) 
          as TEXT) as submittedAt
@@ -34,4 +35,5 @@ interface Cas2SubmittedApplicationReportRow {
   fun getSubmittedAt(): String
   fun getPersonNoms(): String
   fun getPersonCrn(): String
+  fun getReferringPrisonCode(): String
 }

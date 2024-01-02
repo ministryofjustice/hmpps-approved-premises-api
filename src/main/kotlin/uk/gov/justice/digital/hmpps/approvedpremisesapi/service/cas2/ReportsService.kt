@@ -30,6 +30,7 @@ class ReportsService(
         applicationId = row.getApplicationId(),
         personCrn = row.getPersonCrn(),
         personNoms = row.getPersonNoms(),
+        referringPrisonCode = row.getReferringPrisonCode(),
         submittedBy = row.getSubmittedBy(),
         submittedAt = row.getSubmittedAt(),
       )
