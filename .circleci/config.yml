@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  hmpps: ministryofjustice/hmpps@8.0.3
+  hmpps: ministryofjustice/hmpps@8.1.0
   mem: circleci/rememborb@0.0.2
   node: circleci/node@5.1.1
   slack: circleci/slack@4.12.5
