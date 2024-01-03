@@ -277,7 +277,10 @@ class ApplicationsTransformerTest {
     }
     every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockPersonInfoResult) as ApprovedPremisesApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(
+      application,
+      mockPersonInfoResult,
+    ) as ApprovedPremisesApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.person).isEqualTo(mockPerson)
@@ -307,7 +310,10 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as TemporaryAccommodationApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(
+      application,
+      mockk(),
+    ) as TemporaryAccommodationApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -330,7 +336,10 @@ class ApplicationsTransformerTest {
       override fun getHasBooking() = false
     }
 
-    val result = applicationsTransformer.transformDomainToApiSummary(application, mockk()) as TemporaryAccommodationApplicationSummary
+    val result = applicationsTransformer.transformDomainToApiSummary(
+      application,
+      mockk(),
+    ) as TemporaryAccommodationApplicationSummary
 
     assertThat(result.id).isEqualTo(application.getId())
     assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
@@ -342,7 +351,9 @@ class ApplicationsTransformerTest {
   fun `transformDomainEventTypeToTimelineEventType throws error if given CAS2 domain event type`() {
     val cas2DomainEventType = DomainEventType.CAS2_APPLICATION_SUBMITTED
 
-    val exception = assertThrows<RuntimeException> { applicationsTransformer.transformDomainEventTypeToTimelineEventType(cas2DomainEventType) }
+    val exception = assertThrows<RuntimeException> {
+      applicationsTransformer.transformDomainEventTypeToTimelineEventType(cas2DomainEventType)
+    }
     assertThat(exception.message).isEqualTo("Only CAS1 is currently supported")
   }
 
@@ -350,7 +361,9 @@ class ApplicationsTransformerTest {
   @MethodSource("applicationStatusArgs")
   fun `transformApiApprovedPremisesApplicationStatusToJpa transforms statuses correctly`(args: Pair<ApiApprovedPremisesApplicationStatus, ApprovedPremisesApplicationStatus>) {
     val (apiStatus, jpaStatus) = args
-    assertThat(applicationsTransformer.transformApiApprovedPremisesApplicationStatusToJpa(apiStatus)).isEqualTo(jpaStatus)
+    assertThat(applicationsTransformer.transformApiApprovedPremisesApplicationStatusToJpa(apiStatus)).isEqualTo(
+      jpaStatus,
+    )
   }
 
   private companion object {
@@ -367,6 +380,7 @@ class ApplicationsTransformerTest {
       ApiApprovedPremisesApplicationStatus.inapplicable to ApprovedPremisesApplicationStatus.INAPPLICABLE,
       ApiApprovedPremisesApplicationStatus.withdrawn to ApprovedPremisesApplicationStatus.WITHDRAWN,
       ApiApprovedPremisesApplicationStatus.requestedFurtherInformation to ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION,
+      ApiApprovedPremisesApplicationStatus.pendingPlacementRequest to ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST,
     )
   }
 }

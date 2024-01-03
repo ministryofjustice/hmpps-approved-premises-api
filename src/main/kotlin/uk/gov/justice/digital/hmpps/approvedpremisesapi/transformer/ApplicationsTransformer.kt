@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary as DomainCas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity as DomainTemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationSummary as DomainTemporaryAccommodationApplicationSummary
+
 @Component
 class ApplicationsTransformer(
   private val objectMapper: ObjectMapper,
@@ -48,6 +49,7 @@ class ApplicationsTransformer(
     ApiApprovedPremisesApplicationStatus.inapplicable to ApprovedPremisesApplicationStatus.INAPPLICABLE,
     ApiApprovedPremisesApplicationStatus.withdrawn to ApprovedPremisesApplicationStatus.WITHDRAWN,
     ApiApprovedPremisesApplicationStatus.requestedFurtherInformation to ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION,
+    ApiApprovedPremisesApplicationStatus.pendingPlacementRequest to ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST,
   )
 
   val reversedStatusMap: Map<ApprovedPremisesApplicationStatus, ApiApprovedPremisesApplicationStatus> =
@@ -117,7 +119,10 @@ class ApplicationsTransformer(
     }
   }
 
-  fun transformDomainToApiSummary(domain: DomainApplicationSummary, personInfo: PersonInfoResult): ApiApplicationSummary = when (domain) {
+  fun transformDomainToApiSummary(
+    domain: DomainApplicationSummary,
+    personInfo: PersonInfoResult,
+  ): ApiApplicationSummary = when (domain) {
     is DomainApprovedPremisesApplicationSummary -> {
       val riskRatings =
         if (domain.getRiskRatings() != null) objectMapper.readValue<PersonRisks>(domain.getRiskRatings()!!) else null

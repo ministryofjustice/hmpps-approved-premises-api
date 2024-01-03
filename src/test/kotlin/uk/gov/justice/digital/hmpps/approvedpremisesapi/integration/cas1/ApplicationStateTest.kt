@@ -58,7 +58,13 @@ class ApplicationStateTest : IntegrationTestBase() {
   @BeforeEach
   fun setup() {
     val (offenderDetails) = `Given an Offender`()
-    val (user, jwt) = `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR, UserRole.CAS1_MATCHER, UserRole.CAS1_WORKFLOW_MANAGER))
+    val (user, jwt) = `Given a User`(
+      roles = listOf(
+        UserRole.CAS1_ASSESSOR,
+        UserRole.CAS1_MATCHER,
+        UserRole.CAS1_WORKFLOW_MANAGER,
+      ),
+    )
     approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
       withId(UUID.randomUUID())
@@ -92,7 +98,7 @@ class ApplicationStateTest : IntegrationTestBase() {
   fun `a CAS1 application can transition between all states correctly`() {
     assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
 
-    submitApplication()
+    submitApplication(true)
     assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
 
     startAssessment()
@@ -100,6 +106,23 @@ class ApplicationStateTest : IntegrationTestBase() {
 
     approveAssessment()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+
+    createBooking()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
+  }
+
+  @Test
+  fun `a CAS1 application can transition between all states correctly with no arrival date`() {
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.STARTED)
+
+    submitApplication(false)
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT)
+
+    startAssessment()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS)
+
+    approveAssessment()
+    assertApplicationStatus(ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
 
     createBooking()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED)
@@ -340,9 +363,15 @@ class ApplicationStateTest : IntegrationTestBase() {
       .isOk
   }
 
-  private fun submitApplication() {
+  private fun submitApplication(hasArrival: Boolean = true) {
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
     application.data = "{\"data\": \"something\"}"
+    val arrivalDate = if (hasArrival) {
+      LocalDate.now()
+    } else {
+      null
+    }
+
     realApplicationRepository.save(application)
 
     webTestClient.post()
@@ -358,7 +387,7 @@ class ApplicationStateTest : IntegrationTestBase() {
           targetLocation = "SW1A 1AA",
           releaseType = ReleaseTypeOption.licence,
           type = "CAS1",
-          arrivalDate = LocalDate.now(),
+          arrivalDate = arrivalDate,
           sentenceType = SentenceTypeOption.nonStatutory,
         ),
       )

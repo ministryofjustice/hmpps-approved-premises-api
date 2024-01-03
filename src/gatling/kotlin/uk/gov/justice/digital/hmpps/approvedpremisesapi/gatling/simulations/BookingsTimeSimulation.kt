@@ -167,10 +167,10 @@ class BookingsTimeSimulation : Simulation() {
           ),
         ),
     )
-    .assertions(
-      global().responseTime().percentile(95.0).lt(20000),
-      global().successfulRequests().percent().gte(100.0)
-    )
-    .withAuthorizedUserHttpProtocol()
+      .assertions(
+        global().responseTime().percentile(95.0).lt(20000),
+        global().successfulRequests().percent().gte(100.0),
+      )
+      .withAuthorizedUserHttpProtocol()
   }
 }

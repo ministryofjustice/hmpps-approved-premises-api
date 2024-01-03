@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.authorizeUs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.getUUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.withAuthorizedUserHttpProtocol
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
@@ -57,10 +56,10 @@ class ApplyJourneyStressSimulation : Simulation() {
         stressPeakUsers(5000).during(1.minutes.toJavaDuration()),
       ),
     )
-    .assertions(
-      CoreDsl.global().responseTime().percentile(95.0).lt(40000),
-      CoreDsl.global().successfulRequests().percent().gte(100.0)
-    )
-    .withAuthorizedUserHttpProtocol()
+      .assertions(
+        CoreDsl.global().responseTime().percentile(95.0).lt(40000),
+        CoreDsl.global().successfulRequests().percent().gte(100.0),
+      )
+      .withAuthorizedUserHttpProtocol()
   }
 }
