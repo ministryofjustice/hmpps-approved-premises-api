@@ -10,6 +10,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
@@ -486,6 +488,56 @@ class ApplicationServiceTest {
       val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+    }
+
+    @Test
+    fun `throws an UpstreamApiException if InmateDetails (for prison code) are not available`() {
+      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockUserService.getUserForRequest() } returns user
+      every {
+        mockApplicationRepository.findByIdOrNullWithWriteLock(any())
+      } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(any()) } returns
+        application
+      every { mockJsonSchemaService.validate(any(), any()) } returns true
+
+      every { mockApplicationRepository.save(any()) } answers {
+        it.invocation.args[0]
+          as Cas2ApplicationEntity
+      }
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(application.crn)
+        .produce()
+
+      every { mockOffenderService.getOffenderByCrn(any()) } returns AuthorisableActionResult.Success(
+        offenderDetails,
+      )
+
+      // this call to the Prison API to find the referringPrisonCode when saving
+      // the application.submitted domain event *should* never 404 or otherwise fail,
+      // as when creating  the application initially a similar call was made.
+      // If there is a problem with accessing the Prison API, we fail hard and
+      // abort our attempt to submit the application.
+      every {
+        mockOffenderService.getInmateDetailByNomsNumber(any(), any())
+      } returns AuthorisableActionResult.NotFound()
+
+      val exception = assertThrows<UpstreamApiException> {
+        applicationService.submitApplication(submitCas2Application)
+      }
+      assertThat(exception.message).isEqualTo("Inmate Detail not found")
     }
 
     @Test
