@@ -190,17 +190,21 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
 
       val singleDateUnsubmittedPlacement = expectedRow {
-        isSubmitted = false
         application = createAssessedApplication("singleDateUnsubmittedPlacement")
         createPlacementApplication(application)
       }
 
       val singleDateNoBookingReallocated = expectedRow {
+        isAccepted = true
+
         placementDate = placementDateStarting(LocalDate.now())
         application = createAssessedApplication("singleDateNoBookingReallocated")
-        val placementApplication = createAndSubmitPlacementApplication(application, listOf(placementDate!!))
-        reallocatePlacementApplication(placementApplication)
-        acceptPlacementApplication(placementApplication)
+
+        val initialPlacementApplication = createAndSubmitPlacementApplication(application, listOf(placementDate!!))
+        reallocatePlacementApplication(initialPlacementApplication)
+
+        val reallocatedPlacementApplication = placementApplicationTestRepository.findByApplicationAndReallocatedAtNull(application)
+        acceptPlacementApplication(reallocatedPlacementApplication.id)
       }
 
       val singleDateBooked = expectedRow {
@@ -218,12 +222,6 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         placementDate = placementDateStarting(LocalDate.now())
         application = createAndSubmitApplication("singleDateReallocatedAssessment", ApType.normal)
         reallocateAssessment(application)
-
-        // When assessments are reallocated, the millisecond part of the new assessment's created_on date is set to 0
-        // This can lead to the wrong assessment being selected when creating a placement application
-        // The following call ensures the new assessment always has the latest created_on date
-        assessmentTestRepository.updateCreatedAtOnLatestAssessment(OffsetDateTime.now(), application.id)
-
         acceptAssessmentForApplication(application)
         createAndAcceptPlacementApplication(application, listOf(placementDate!!))
         booking = createBookingForPlacementRequest(application.getLatestPlacementRequest()!!)
@@ -276,6 +274,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       }
 
       val singleDateWithWithdrawal = expectedRow {
+        isAccepted = true
         isWithdrawn = true
 
         placementDate = placementDateStarting(LocalDate.now())
@@ -340,11 +339,13 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
         listOf(
           expectedRow {
+            isAccepted = true
             hasBooking = false
             placementDate = placementDate1
             this.application = application
           },
           expectedRow {
+            isAccepted = true
             hasBooking = true
             placementDate = placementDate2
             this.application = application
@@ -365,28 +366,31 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         .isOk
         .expectBody()
         .consumeWith {
-          val actual = DataFrame
+
+          val actualRows = DataFrame
             .readExcel(it.responseBody!!.inputStream())
             .convertTo<PlacementApplicationReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(15)
+          assertThat(actualRows.size).isEqualTo(14)
 
-          assertApplicationRowHasCorrectData(actual, singleDateUnsubmittedPlacement, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateNoBookingReallocated, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateBooked, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateReallocatedAssessment, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateWithArrival, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateWithDeparture, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateWithCancellation, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateWithNonArrival, userEntity)
-          assertApplicationRowHasCorrectData(actual, singleDateWithWithdrawal, userEntity)
-          assertApplicationRowHasCorrectData(actual, multiDateNoneBooked1, userEntity)
-          assertApplicationRowHasCorrectData(actual, multiDateNoneBooked2, userEntity)
-          assertApplicationRowHasCorrectData(actual, multiDateAllBooked1, userEntity)
-          assertApplicationRowHasCorrectData(actual, multiDateAllBooked2, userEntity)
-          assertApplicationRowHasCorrectData(actual, multiDateSomeBooked1, userEntity)
-          assertApplicationRowHasCorrectData(actual, multiDateSomeBooked2, userEntity)
+          val unsubmittedPlacementApplication = getPlacementApplication(singleDateUnsubmittedPlacement.application)
+          assertThat(actualRows).noneMatch { row -> row.placementRequestId == unsubmittedPlacementApplication.id.toString() }
+
+          assertApplicationRowHasCorrectData(actualRows, singleDateNoBookingReallocated, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateBooked, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateReallocatedAssessment, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateWithArrival, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateWithDeparture, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateWithCancellation, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateWithNonArrival, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, singleDateWithWithdrawal, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multiDateNoneBooked1, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multiDateNoneBooked2, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multiDateAllBooked1, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multiDateAllBooked2, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multiDateSomeBooked1, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multiDateSomeBooked2, userEntity)
         }
     }
   }
@@ -402,7 +406,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     var placementDate: PlacementDates? = null
     var booking: BookingEntity? = null
 
-    var isSubmitted: Boolean = true
+    var isAccepted: Boolean = false
     var hasBooking: Boolean = false
     var hasArrival: Boolean = false
     var hasDeparture: Boolean = false
@@ -419,26 +423,33 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     val applicationId = expectedRow.application.id
     val booking = expectedRow.booking
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
-    val placementApplication = placementApplicationTestRepository.findByApplicationAndReallocatedAtNull(application)
+    val placementApplication = getPlacementApplication(application)
     val assessment = application.getLatestAssessment()!!
     val offenderDetailSummary = getOffenderDetailForApplication(application, userEntity.deliusUsername)
     val caseDetail = getCaseDetailForApplication(application)
 
     val reportRow = report.find {
-      it.id == placementApplication.id.toString() &&
-        (!expectedRow.isSubmitted || it.requestedArrivalDate == expectedRow.placementDate!!.expectedArrival)
+      it.placementRequestId == placementApplication.id.toString() &&
+        it.requestedArrivalDate == expectedRow.placementDate!!.expectedArrival
     }!!
 
     val (referrerEntity, _) = referrerDetails
 
     assertThat(reportRow.crn).isEqualTo(application.crn)
 
-    if (expectedRow.isSubmitted) {
-      assertThat(reportRow.submittedAt).isEqualTo(placementApplication.submittedAt!!.toLocalDate())
-      assertThat(reportRow.requestedArrivalDate).isEqualTo(expectedRow.placementDate!!.expectedArrival)
-      assertThat(reportRow.requestedDurationDays).isEqualTo(expectedRow.placementDate!!.duration)
+    assertThat(reportRow.placementRequestSubmittedAt).isEqualTo(placementApplication.submittedAt!!.toLocalDate())
+    assertThat(reportRow.requestedArrivalDate).isEqualTo(expectedRow.placementDate!!.expectedArrival)
+    assertThat(reportRow.requestedDurationDays).isEqualTo(expectedRow.placementDate!!.duration)
+
+    if (expectedRow.isAccepted || expectedRow.hasBooking) {
+      assertThat(reportRow.decision).isEqualTo("ACCEPTED")
+      assertThat(reportRow.decisionMadeAt).isToday()
+    } else {
+      assertThat(reportRow.decision).isNull()
+      assertThat(reportRow.decisionMadeAt).isNull()
     }
 
+    assertThat(reportRow.applicationSubmittedAt).isEqualTo(application.submittedAt!!.toLocalDate())
     assertThat(reportRow.applicationAssessedDate).isEqualTo(assessment.submittedAt!!.toLocalDate())
     assertThat(reportRow.assessorCru).isEqualTo("Wales")
     assertThat(reportRow.assessmentDecision).isEqualTo(assessment.decision.toString())
@@ -466,7 +477,6 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     if (expectedRow.hasBooking) {
       checkNotNull(booking)
 
-      assertThat(reportRow.decision).isEqualTo("ACCEPTED")
       assertThat(reportRow.bookingID).isEqualTo(booking.id.toString())
 
       if (expectedRow.hasCancellation) {
@@ -500,11 +510,11 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       assertThat(reportRow.notArrivedReason).isEqualTo(nonArrival.reason.name)
     }
 
-    if (expectedRow.isSubmitted) {
-      assertThat(reportRow.placementRequestType).isEqualTo("Some Test Reason")
-      assertThat(reportRow.paroleDecisionDate).isEqualTo("2023-11-11")
-    }
+    assertThat(reportRow.placementRequestType).isEqualTo("Some Test Reason")
+    assertThat(reportRow.paroleDecisionDate).isEqualTo("2023-11-11")
   }
+
+  fun getPlacementApplication(application: ApprovedPremisesApplicationEntity) = placementApplicationTestRepository.findByApplicationAndReallocatedAtNull(application)
 
   private fun getOffenderDetailForApplication(
     application: ApplicationEntity,
@@ -785,13 +795,10 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       duration = 12,
     )
 
-  private fun createAndAcceptPlacementApplication(
-    application: ApprovedPremisesApplicationEntity,
-    placementDates: List<PlacementDates>,
-  ): PlacementApplication {
-    return acceptPlacementApplication(
-      createAndSubmitPlacementApplication(application, placementDates),
-    )
+  private fun createAndAcceptPlacementApplication(application: ApprovedPremisesApplicationEntity, placementDates: List<PlacementDates>): PlacementApplication {
+    val placementApplication = createAndSubmitPlacementApplication(application, placementDates)
+    acceptPlacementApplication(placementApplication.id)
+    return placementApplication
   }
 
   private fun createPlacementApplication(application: ApprovedPremisesApplicationEntity): PlacementApplication {
@@ -857,11 +864,11 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     return placementApplication
   }
 
-  private fun acceptPlacementApplication(placementApplication: PlacementApplication): PlacementApplication {
+  private fun acceptPlacementApplication(placementApplicationId: UUID) {
     val (_, matcherJwt) = matcherDetails
 
     webTestClient.post()
-      .uri("/placement-applications/${placementApplication.id}/decision")
+      .uri("/placement-applications/$placementApplicationId/decision")
       .header("Authorization", "Bearer $matcherJwt")
       .bodyValue(
         PlacementApplicationDecisionEnvelope(
@@ -873,8 +880,6 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
-
-    return placementApplication
   }
 
   private fun reallocateAssessment(application: ApprovedPremisesApplicationEntity) {
@@ -895,6 +900,11 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isCreated
+
+    // When assessments are reallocated, the millisecond part of the new assessment's created_on date is set to 0
+    // This can lead to the wrong assessment being selected when creating a placement application
+    // The following call ensures the new assessment always has the latest created_on date
+    assessmentTestRepository.updateCreatedAtOnLatestAssessment(OffsetDateTime.now(), application.id)
   }
 
   private fun reallocatePlacementApplication(placementApplication: PlacementApplication) {

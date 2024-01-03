@@ -89,6 +89,8 @@ data class PlacementApplicationEntity(
   @Enumerated(value = EnumType.STRING)
   var decision: PlacementApplicationDecision?,
 
+  var decisionMadeAt: OffsetDateTime?,
+
   var placementType: PlacementType?,
 
   @OneToMany(mappedBy = "placementApplication")

@@ -1,0 +1,1 @@
+UPDATE placement_applications pa SET decision_made_at = (SELECT min(pr.created_at) FROM placement_requests pr WHERE pr.placement_application_id = pa.id) WHERE decision IS NOT NULL

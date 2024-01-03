@@ -17,7 +17,9 @@ interface PlacementApplicationEntityReportRowRepository : JpaRepository<Placemen
         pa_dates.expected_arrival as requestedArrivalDate,
         pa_dates.duration as requestedDurationDays,
         pa.decision as decision,
-        pa.submitted_at as submittedAt,
+        pa.decision_made_at as decisionMadeAt,
+        pa.submitted_at as placementApplicationSubmittedAt,
+        application.submitted_at as applicationSubmittedAt,
         cast(
           assessment_event.data -> 'eventDetails' ->> 'assessedAt' as date
         ) as applicationAssessedDate,
@@ -96,9 +98,10 @@ interface PlacementApplicationEntityReportRowRepository : JpaRepository<Placemen
         and placement_request.booking_id = non_arrival_event.booking_id
       where
         pa.reallocated_at is null
-          AND date_part('month', application.submitted_at) = :month
-          AND date_part('year', application.submitted_at) = :year
-          AND application.service = 'approved-premises';
+        AND pa.submitted_at is not null
+        AND date_part('month', application.submitted_at) = :month
+        AND date_part('year', application.submitted_at) = :year
+        AND application.service = 'approved-premises';
     """,
     nativeQuery = true,
   )
@@ -112,7 +115,9 @@ interface PlacementApplicationEntityReportRow {
   fun getRequestedArrivalDate(): Date?
   fun getRequestedDurationDays(): Int?
   fun getDecision(): String?
-  fun getSubmittedAt(): Timestamp?
+  fun getDecisionMadeAt(): Timestamp?
+  fun getPlacementApplicationSubmittedAt(): Timestamp?
+  fun getApplicationSubmittedAt(): Timestamp?
   fun getApplicationAssessedDate(): Date?
   fun getAssessorCru(): String?
   fun getAssessmentDecision(): String?

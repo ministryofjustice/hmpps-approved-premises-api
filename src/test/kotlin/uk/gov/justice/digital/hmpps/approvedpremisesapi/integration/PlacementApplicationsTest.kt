@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -892,6 +893,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                         placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
 
                       assertThat(updatedPlacementApplication.decision).isEqualTo(JpaPlacementApplicationDecision.ACCEPTED)
+                      assertThat(updatedPlacementApplication.decisionMadeAt).isWithinTheLastMinute()
 
                       val createdPlacementRequests =
                         placementRequestRepository.findAllByApplication(placementApplicationEntity.application)
@@ -1071,6 +1073,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
 
             assertThat(updatedPlacementApplication.decision).isEqualTo(uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAWN_BY_PP)
+            assertThat(updatedPlacementApplication.decisionMadeAt).isWithinTheLastMinute()
           }
         }
       }

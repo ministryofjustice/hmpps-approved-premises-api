@@ -93,6 +93,7 @@ class PlacementApplicationService(
         allocatedAt = null,
         reallocatedAt = null,
         decision = null,
+        decisionMadeAt = null,
         placementType = null,
         placementDates = mutableListOf(),
         placementRequests = mutableListOf(),
@@ -191,6 +192,7 @@ class PlacementApplicationService(
     }
 
     placementApplicationEntity.decision = PlacementApplicationDecision.WITHDRAWN_BY_PP
+    placementApplicationEntity.decisionMadeAt = OffsetDateTime.now()
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
 
     return AuthorisableActionResult.Success(
@@ -324,6 +326,7 @@ class PlacementApplicationService(
         ApiPlacementApplicationDecision.withdraw -> JpaPlacementApplicationDecision.WITHDRAW
         ApiPlacementApplicationDecision.withdrawnByPp -> JpaPlacementApplicationDecision.WITHDRAWN_BY_PP
       }
+      decisionMadeAt = OffsetDateTime.now()
     }
 
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
