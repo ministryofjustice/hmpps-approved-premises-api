@@ -2,6 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderIds
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Manager
@@ -57,4 +60,52 @@ fun OffenderDetailSummary.asCaseSummary() = CaseSummary(
   ),
   currentExclusion = this.currentExclusion,
   currentRestriction = this.currentRestriction,
+)
+
+fun CaseSummary.asOffenderDetailSummary() = OffenderDetailSummary(
+  offenderId = null,
+  title = null,
+  firstName = this.name.forename,
+  middleNames = this.name.middleNames,
+  surname = this.name.surname,
+  previousSurname = null,
+  preferredName = null,
+  dateOfBirth = this.dateOfBirth,
+  gender = this.gender ?: "unknown",
+  otherIds = OffenderIds(
+    crn = this.crn,
+    croNumber = null,
+    immigrationNumber = null,
+    mostRecentPrisonNumber = null,
+    niNumber = null,
+    nomsNumber = this.nomsId,
+    pncNumber = this.pnc,
+  ),
+  offenderProfile = OffenderProfile(
+    ethnicity = this.profile?.ethnicity,
+    nationality = this.profile?.nationality,
+    secondaryNationality = null,
+    notes = null,
+    immigrationStatus = null,
+    offenderLanguages = OffenderLanguages(
+      primaryLanguage = null,
+      otherLanguages = null,
+      languageConcerns = null,
+      requiresInterpreter = null,
+    ),
+    religion = this.profile?.religion,
+    sexualOrientation = null,
+    offenderDetails = null,
+    remandStatus = null,
+    riskColour = null,
+    disabilities = null,
+    genderIdentity = this.profile?.genderIdentity,
+    selfDescribedGender = null,
+  ),
+  softDeleted = false,
+  currentDisposal = null,
+  partitionArea = null,
+  currentRestriction = this.currentRestriction ?: false,
+  currentExclusion = this.currentExclusion ?: false,
+  isActiveProbationManagedSentence = null,
 )
