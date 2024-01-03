@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorkload
@@ -28,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -46,8 +48,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getIndices
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
 import java.util.UUID
@@ -67,10 +67,14 @@ class TasksController(
   override fun tasksReallocatableGet(
     type: String?,
     page: Int?,
+    sortBy: TaskSortField?,
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
+    val sortBy = sortBy ?: TaskSortField.createdAt
+    val sortDirection = sortDirection ?: SortDirection.asc
+
     if (user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       if (type != null) {
         val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
@@ -78,16 +82,16 @@ class TasksController(
         ) ?: throw NotFoundProblem(type, "TaskType")
 
         return when (taskType) {
-          TaskType.assessment -> assessmentTasksResponse(user, page, sortDirection, allocatedFilter)
-          TaskType.placementRequest -> placementRequestTasks(user, page, sortDirection, allocatedFilter)
-          TaskType.placementApplication -> placementApplicationTasks(user, page, sortDirection, allocatedFilter)
+          TaskType.assessment -> assessmentTasksResponse(user, page, sortBy, sortDirection, allocatedFilter)
+          TaskType.placementRequest -> placementRequestTasks(user, page, sortBy, sortDirection, allocatedFilter)
+          TaskType.placementApplication -> placementApplicationTasks(user, page, sortBy, sortDirection, allocatedFilter)
           else -> {
             throw BadRequestProblem()
           }
         }
       }
 
-      return responseForAllTypes(user, page, allocatedFilter)
+      return responseForAllTypes(user, page, sortBy, sortDirection, allocatedFilter)
     } else {
       throw ForbiddenProblem()
     }
@@ -417,80 +421,53 @@ class TasksController(
   private fun responseForAllTypes(
     user: UserEntity,
     page: Int?,
+    sortBy: TaskSortField,
+    sortDirection: SortDirection,
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
-    val (allReallocatableAssessmentTasks, _) =
-      assessmentService.getAllReallocatable(
-        null,
-        null,
-        allocatedFilter,
-      )
+    val (allocatedTasks, metadata) = taskService.getAllReallocatable(
+      allocatedFilter,
+      page,
+      sortBy,
+      sortDirection,
+    )
 
-    val (allReallocatablePlacementRequestTasks, _) =
-      placementRequestService.getAllReallocatable(
-        null,
-        null,
-        allocatedFilter,
-      )
-    val (allReallocatablePlacementApplicationTasks, _) =
-      placementApplicationService.getAllReallocatable(
-        null,
-        null,
-        allocatedFilter,
-      )
-
-    val crns = listOf(
-      allReallocatableAssessmentTasks.map { it.application.crn },
-      allReallocatablePlacementRequestTasks.map { it.application.crn },
-      allReallocatablePlacementApplicationTasks.map { it.application.crn },
-    ).flatten()
+    val crns = allocatedTasks.map { it.crn }
 
     val offenderSummaries = getOffenderSummariesForCrns(crns, user)
 
-    val assessmentTasks = getAssessmentTasks(allReallocatableAssessmentTasks, offenderSummaries)
-    val placementRequestTasks = getPlacementRequestTasks(
-      allReallocatablePlacementRequestTasks,
-      offenderSummaries,
-    )
-    val placementApplicationTasks =
-      getPlacementApplicationTasks(
-        allReallocatablePlacementApplicationTasks,
-        offenderSummaries,
-      )
-
-    val tasks: MutableList<Task> = ArrayList()
-    tasks.addAll(assessmentTasks)
-    tasks.addAll(placementRequestTasks)
-    tasks.addAll(placementApplicationTasks)
-
-    if (page != null) {
-      var pageNormalised = page
-      if (pageNormalised > 0) {
-        pageNormalised -= 1
+    val tasks = allocatedTasks.map {
+      when (it) {
+        is TypedTask.Assessment -> getAssessmentTask(it.entity) { assessment ->
+          getPersonNameFromApplication(assessment.application, offenderSummaries)
+        }
+        is TypedTask.PlacementRequest -> getPlacementRequestTask(it.entity) { placementRequest ->
+          getPersonNameFromApplication(placementRequest.application, offenderSummaries)
+        }
+        is TypedTask.PlacementApplication -> getPlacementApplicationTask(it.entity) { placementApplication ->
+          getPersonNameFromApplication(placementApplication.application, offenderSummaries)
+        }
       }
-      val (start, end) = getIndices(pageNormalised, tasks.count())
-      val tasksSlice = tasks.slice(start..end)
-      val metaData = getMetadata(page, tasks.count())
-
-      return@runBlocking ResponseEntity.ok().headers(
-        metaData.toHeaders(),
-      ).body(
-        tasksSlice,
-      )
     }
 
-    return@runBlocking ResponseEntity.ok(tasks)
+    return@runBlocking ResponseEntity.ok().headers(
+      metadata?.toHeaders(),
+    ).body(
+      tasks,
+    )
   }
 
   private fun assessmentTasksResponse(
     user: UserEntity,
     page: Int?,
+    sortField: TaskSortField,
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatable, metaData) =
       assessmentService.getAllReallocatable(
         page,
+        sortField,
         sortDirection,
         allocatedFilter,
       )
@@ -506,12 +483,14 @@ class TasksController(
   private fun placementRequestTasks(
     user: UserEntity,
     page: Int?,
+    sortField: TaskSortField,
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatable, metaData) =
       placementRequestService.getAllReallocatable(
         page,
+        sortField,
         sortDirection,
         allocatedFilter,
       )
@@ -530,12 +509,14 @@ class TasksController(
   private fun placementApplicationTasks(
     user: UserEntity,
     page: Int?,
+    sortField: TaskSortField,
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatable, metaData) =
       placementApplicationService.getAllReallocatable(
         page,
+        sortField,
         sortDirection,
         allocatedFilter,
       )

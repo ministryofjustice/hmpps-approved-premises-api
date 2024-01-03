@@ -2676,9 +2676,14 @@ paths:
           description: Page number of results to return.
           schema:
             type: integer
+        - name: sortBy
+          in: query
+          description: Which field to sort the results by. If blank, will sort by createdAt
+          schema:
+            $ref: '#/components/schemas/TaskSortField'
         - name: sortDirection
           in: query
-          description: The direction to sort the results by. If blank eill sort by descending order
+          description: The direction to sort the results by. If blank will sort by descending order
           schema:
             $ref: '#/components/schemas/SortDirection'
         - name: allocatedFilter
@@ -4516,6 +4521,10 @@ components:
         - not_started
         - in_progress
         - complete
+    TaskSortField:
+      type: string
+      enum:
+        - createdAt
     AssessmentTask:
       allOf:
         - $ref: '#/components/schemas/Task'

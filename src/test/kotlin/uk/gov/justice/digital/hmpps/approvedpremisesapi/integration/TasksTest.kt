@@ -81,7 +81,6 @@ class TasksTest : IntegrationTestBase() {
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
-              reallocated = true,
               isWithdrawn = true,
             )
 
@@ -89,7 +88,6 @@ class TasksTest : IntegrationTestBase() {
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
-              reallocated = true,
             )
 
             `Given a Placement Application`(
@@ -575,6 +573,100 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Get all reallocatable tasks returns retains original sort order`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val (task1) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val (task2) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val (task3) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val task4 = `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+            )
+
+            val (task5) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val expectedTasks = listOf(
+              taskTransformer.transformPlacementRequestToTask(
+                task1,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformAssessmentToTask(
+                task2,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformPlacementRequestToTask(
+                task3,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformPlacementApplicationToTask(
+                task4,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformAssessmentToTask(
+                task5,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+            )
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?page=1&sortBy=createdAt&sortDirection=asc")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  expectedTasks,
+                ),
+              )
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?page=1&sortBy=createdAt&sortDirection=desc")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  expectedTasks.reversed(),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
     fun `Get all reallocatable tasks returns 200 with correct body with type placement application and page two`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
@@ -945,15 +1037,8 @@ class TasksTest : IntegrationTestBase() {
           `Given an Offender` { offenderDetails, _ ->
 
             val numAllocatedPlacementApplications = 1
-            val numUnallocatedPlacementApplications = 11
-            val numAllocatableAssessment = 1
-            val numUnallocatableAssessment = 5
+            val numAllocatedAssessments = 1
             val numAllocatedPlacementRequests = 1
-            val numUnallocatedPlacementRequests = 7
-
-            val totalTasks = numUnallocatedPlacementApplications +
-              numUnallocatableAssessment +
-              numUnallocatedPlacementRequests
 
             repeat(numAllocatedPlacementApplications) {
               `Given a Placement Application`(
@@ -967,28 +1052,9 @@ class TasksTest : IntegrationTestBase() {
               )
             }
 
-            repeat(numUnallocatedPlacementApplications) {
-              `Given a Placement Application`(
-                createdByUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-            }
-
-            repeat(numAllocatableAssessment) {
+            repeat(numAllocatedAssessments) {
               `Given an Assessment for Approved Premises`(
                 allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            repeat(numUnallocatableAssessment) {
-              `Given an Assessment for Approved Premises`(
-                null,
                 createdByUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
               )
@@ -1003,6 +1069,31 @@ class TasksTest : IntegrationTestBase() {
               )
             }
 
+            val numUnallocatedPlacementApplications = 11
+            val numUnallocatedAssessments = 5
+            val numUnallocatedPlacementRequests = 7
+
+            repeat(numUnallocatedPlacementApplications) {
+              `Given a Placement Application`(
+                createdByUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+                reallocated = false,
+                decision = null,
+              )
+            }
+
+            repeat(numUnallocatedAssessments) {
+              `Given an Assessment for Approved Premises`(
+                null,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
             repeat(numUnallocatedPlacementRequests) {
               `Given a Placement Request`(
                 null,
@@ -1012,6 +1103,10 @@ class TasksTest : IntegrationTestBase() {
               )
             }
 
+            val totalUnallocatedTasks = numUnallocatedPlacementApplications +
+              numUnallocatedAssessments +
+              numUnallocatedPlacementRequests
+
             webTestClient.get()
               .uri("/tasks/reallocatable?page=2&allocatedFilter=unallocated")
               .header("Authorization", "Bearer $jwt")
@@ -1020,7 +1115,7 @@ class TasksTest : IntegrationTestBase() {
               .isOk
               .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
               .expectHeader().valueEquals("X-Pagination-TotalPages", 3)
-              .expectHeader().valueEquals("X-Pagination-TotalResults", totalTasks.toLong())
+              .expectHeader().valueEquals("X-Pagination-TotalResults", totalUnallocatedTasks.toLong())
               .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
               .expectBody()
           }
