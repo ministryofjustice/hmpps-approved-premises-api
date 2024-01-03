@@ -1186,9 +1186,13 @@ class TasksTest : IntegrationTestBase() {
                             "${offenderDetails.firstName} ${offenderDetails.surname}",
                           ),
                           users = listOf(
-                            userTransformer.transformJpaToApi(
+                            userTransformer.transformJpaToAPIUserWithWorkload(
                               allocatableUser,
-                              ServiceName.approvedPremises,
+                              UserWorkload(
+                                0,
+                                0,
+                                0,
+                              ),
                             ),
                           ),
                         ),
@@ -1234,9 +1238,9 @@ class TasksTest : IntegrationTestBase() {
                           "${offenderDetails.firstName} ${offenderDetails.surname}",
                         ),
                         users = listOf(
-                          userTransformer.transformJpaToApi(
+                          userTransformer.transformJpaToAPIUserWithWorkload(
                             allocatableUser,
-                            ServiceName.approvedPremises,
+                            UserWorkload(0, 0, 0),
                           ),
                         ),
                       ),
@@ -1283,9 +1287,9 @@ class TasksTest : IntegrationTestBase() {
                           "${offenderDetails.firstName} ${offenderDetails.surname}",
                         ),
                         users = listOf(
-                          userTransformer.transformJpaToApi(
+                          userTransformer.transformJpaToAPIUserWithWorkload(
                             allocatableUser,
-                            ServiceName.approvedPremises,
+                            UserWorkload(0, 0, 0),
                           ),
                         ),
                       ),
@@ -1332,13 +1336,13 @@ class TasksTest : IntegrationTestBase() {
                           "${offenderDetails.firstName} ${offenderDetails.surname}",
                         ),
                         users = listOf(
-                          userTransformer.transformJpaToApi(
-                            allocatableUser,
-                            ServiceName.approvedPremises,
-                          ),
-                          userTransformer.transformJpaToApi(
+                          userTransformer.transformJpaToAPIUserWithWorkload(
                             user,
-                            ServiceName.approvedPremises,
+                            UserWorkload(0, 0, 0),
+                          ),
+                          userTransformer.transformJpaToAPIUserWithWorkload(
+                            allocatableUser,
+                            UserWorkload(0, 0, 0),
                           ),
                         ),
                       ),

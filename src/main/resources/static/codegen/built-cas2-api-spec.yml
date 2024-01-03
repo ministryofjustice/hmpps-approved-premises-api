@@ -639,7 +639,7 @@ components:
         users:
           type: array
           items:
-            $ref: '#/components/schemas/User'
+            $ref: '#/components/schemas/UserWithWorkload'
       required:
         - task
         - users
