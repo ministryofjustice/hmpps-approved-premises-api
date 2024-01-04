@@ -291,6 +291,7 @@ class ApprovedPremisesApplicationEntity(
   var targetLocation: String?,
   @Enumerated(value = EnumType.STRING)
   var status: ApprovedPremisesApplicationStatus,
+  var inmateInOutStatusOnSubmission: String?,
 ) : ApplicationEntity(
   id,
   crn,

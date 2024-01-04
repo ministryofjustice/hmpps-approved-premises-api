@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary as ApiApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary as ApiApprovedPremisesApplicationSummary
@@ -88,6 +89,9 @@ class ApplicationsTransformer(
         assessmentDecision = transformJpaDecisionToApi(latestAssessment?.decision),
         assessmentId = latestAssessment?.id,
         assessmentDecisionDate = latestAssessment?.submittedAt?.toLocalDate(),
+        personStatusOnSubmission = personTransformer.inOutStatusToPersonInfoApiStatus(
+          InOutStatus.entries.firstOrNull { it.name == jpa.inmateInOutStatusOnSubmission },
+        ),
         type = "CAS1",
       )
 
