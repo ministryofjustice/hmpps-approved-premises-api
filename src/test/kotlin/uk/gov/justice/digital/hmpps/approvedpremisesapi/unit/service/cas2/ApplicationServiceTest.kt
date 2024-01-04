@@ -629,7 +629,10 @@ class ApplicationServiceTest {
               data.personReference.crn == application.crn &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.submittedBy.staffMember.username == username &&
-              data.referringPrisonCode == "BRI"
+              data.referringPrisonCode == "BRI" &&
+              data.preferredAreas == "Leeds | Bradford" &&
+              data.hdcEligibilityDate == hdcEligibilityDate &&
+              data.conditionalReleaseDate == conditionalReleaseDate
           },
         )
       }

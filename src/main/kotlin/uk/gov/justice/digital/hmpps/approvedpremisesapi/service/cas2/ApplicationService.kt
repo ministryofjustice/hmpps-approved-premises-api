@@ -249,6 +249,9 @@ class ApplicationService(
               crn = application.crn,
             ),
             referringPrisonCode = application.referringPrisonCode,
+            preferredAreas = application.preferredAreas,
+            hdcEligibilityDate = application.hdcEligibilityDate,
+            conditionalReleaseDate = application.conditionalReleaseDate,
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
                 staffIdentifier = application.createdByUser.nomisStaffId,
