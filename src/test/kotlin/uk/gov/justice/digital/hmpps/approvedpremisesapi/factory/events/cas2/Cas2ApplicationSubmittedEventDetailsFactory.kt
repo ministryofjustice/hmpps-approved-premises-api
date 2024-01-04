@@ -40,6 +40,18 @@ class Cas2ApplicationSubmittedEventDetailsFactory : Factory<Cas2ApplicationSubmi
     this.referringPrisonCode = { referringPrisonCode }
   }
 
+  fun withPreferredAreas(preferredAreas: String) = apply {
+    this.preferredAreas = { preferredAreas }
+  }
+
+  fun withHdcEligibilityDate(hdcEligibilityDate: LocalDate) = apply {
+    this.hdcEligibilityDate = { hdcEligibilityDate }
+  }
+
+  fun withConditionalReleaseDate(conditionalReleaseDate: LocalDate) = apply {
+    this.conditionalReleaseDate = { conditionalReleaseDate }
+  }
+
   fun withSubmittedAt(submittedAt: Instant) = apply {
     this.submittedAt = { submittedAt }
   }

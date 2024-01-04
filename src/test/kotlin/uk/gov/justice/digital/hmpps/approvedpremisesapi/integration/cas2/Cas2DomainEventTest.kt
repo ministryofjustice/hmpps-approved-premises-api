@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 
 class Cas2DomainEventTest : IntegrationTestBase() {
@@ -70,6 +71,9 @@ class Cas2DomainEventTest : IntegrationTestBase() {
         eventType = EventType.applicationSubmitted,
         eventDetails = Cas2ApplicationSubmittedEventDetailsFactory()
           .withReferringPrisonCode("BRI")
+          .withPreferredAreas("Bradford | Leeds")
+          .withHdcEligibilityDate(LocalDate.parse("2023-03-30"))
+          .withConditionalReleaseDate(LocalDate.parse("2023-04-29"))
           .produce(),
       )
 
