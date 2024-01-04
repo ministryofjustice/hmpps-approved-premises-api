@@ -211,7 +211,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
             createdByUser = user,
             crn = unmatchedOffender.otherIds.crn,
           ) { unmatchedPlacementRequest, _ ->
-
             val withdrawnPlacementRequest = createPlacementRequest(unmatchedOffender, user, isWithdrawn = true)
 
             webTestClient.get()
@@ -241,7 +240,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `It returns the unmatched placement requests when the user is a manager`() {
+    fun `It returns the unmatched placement requests and ignores the withdrawn placement requests when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { unmatchedOffender, unmatchedInmate ->
           `Given a Placement Request`(
@@ -250,6 +249,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
             createdByUser = user,
             crn = unmatchedOffender.otherIds.crn,
           ) { unmatchedPlacementRequest, _ ->
+            createPlacementRequest(unmatchedOffender, user, isWithdrawn = true)
+
             webTestClient.get()
               .uri("/placement-requests/dashboard?status=notMatched")
               .header("Authorization", "Bearer $jwt")
