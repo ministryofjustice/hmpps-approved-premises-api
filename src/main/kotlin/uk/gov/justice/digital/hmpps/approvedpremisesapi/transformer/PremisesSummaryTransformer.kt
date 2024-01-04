@@ -32,5 +32,6 @@ class PremisesSummaryTransformer() {
     bedCount = domain.bedCount,
     apCode = domain.apCode,
     service = "CAS1",
+    probationRegion = domain.regionName,
   )
 }

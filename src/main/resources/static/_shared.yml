@@ -167,8 +167,11 @@ components:
             apCode:
               type: string
               example: NEHOPE1
+            probationRegion:
+              type: string
       required:
         - apCode
+        - probationRegion
     TemporaryAccommodationPremisesSummary:
       allOf:
         - $ref: '#/components/schemas/PremisesSummary'
