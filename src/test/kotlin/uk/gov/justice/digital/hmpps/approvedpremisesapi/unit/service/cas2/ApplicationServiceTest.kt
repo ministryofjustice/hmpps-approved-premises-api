@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
@@ -568,7 +569,17 @@ class ApplicationServiceTest {
         application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
 
-      val inmateDetail = InmateDetailFactory().produce()
+      val inmateDetail = InmateDetailFactory()
+        .withAssignedLivingUnit(
+          AssignedLivingUnit(
+            agencyId = "BRI",
+            locationId = 1234,
+            description = "description",
+            agencyName = "HMP Bristol",
+          )
+        )
+        .produce()
+
       every {
         mockOffenderService.getInmateDetailByNomsNumber(
           application.crn,
@@ -617,7 +628,8 @@ class ApplicationServiceTest {
               data.personReference.noms == application.nomsNumber &&
               data.personReference.crn == application.crn &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
-              data.submittedBy.staffMember.username == username
+              data.submittedBy.staffMember.username == username &&
+              data.referringPrisonCode == "BRI"
           },
         )
       }
