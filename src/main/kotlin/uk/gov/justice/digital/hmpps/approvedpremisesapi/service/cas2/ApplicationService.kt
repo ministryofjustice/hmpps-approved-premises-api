@@ -210,6 +210,7 @@ class ApplicationService(
     application.apply {
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
+      referringPrisonCode = retrievePrisonCode(application)
     }
 
     application = applicationRepository.save(application)
@@ -224,7 +225,6 @@ class ApplicationService(
   private fun createCas2ApplicationSubmittedEvent(application: Cas2ApplicationEntity) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = OffsetDateTime.now()
-    val prisonCode = retrievePrisonCode(application)
 
     domainEventService.saveCas2ApplicationSubmittedDomainEvent(
       DomainEvent(
@@ -245,7 +245,7 @@ class ApplicationService(
               noms = application.nomsNumber ?: "Unknown NOMS Number",
               crn = application.crn,
             ),
-            referringPrisonCode = prisonCode,
+            referringPrisonCode = application.referringPrisonCode,
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
                 staffIdentifier = application.createdByUser.nomisStaffId,
