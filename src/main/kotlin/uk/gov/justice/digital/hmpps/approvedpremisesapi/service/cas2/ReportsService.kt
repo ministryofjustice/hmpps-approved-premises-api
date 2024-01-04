@@ -31,6 +31,9 @@ class ReportsService(
         personCrn = row.getPersonCrn(),
         personNoms = row.getPersonNoms(),
         referringPrisonCode = row.getReferringPrisonCode(),
+        preferredAreas = row.getPreferredAreas(),
+        hdcEligibilityDate = row.getHdcEligibilityDate(),
+        conditionalReleaseDate = row.getConditionalReleaseDate(),
         submittedBy = row.getSubmittedBy(),
         submittedAt = row.getSubmittedAt(),
       )
