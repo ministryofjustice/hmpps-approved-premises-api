@@ -68,7 +68,9 @@ class Cas2DomainEventTest : IntegrationTestBase() {
         id = eventId,
         timestamp = Instant.now(),
         eventType = EventType.applicationSubmitted,
-        eventDetails = Cas2ApplicationSubmittedEventDetailsFactory().produce(),
+        eventDetails = Cas2ApplicationSubmittedEventDetailsFactory()
+          .withReferringPrisonCode("BRI")
+          .produce(),
       )
 
       val event = domainEventFactory.produceAndPersist {
