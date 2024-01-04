@@ -116,6 +116,9 @@ components:
           example: https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713
         personReference:
           $ref: '#/components/schemas/PersonReference'
+        referringPrisonCode:
+          type: string
+          example: 'BRI'
         submittedAt:
           type: string
           example: '2022-11-30T14:51:30'

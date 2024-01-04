@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -223,6 +224,7 @@ class ApplicationService(
   private fun createCas2ApplicationSubmittedEvent(application: Cas2ApplicationEntity) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = OffsetDateTime.now()
+    val prisonCode = retrievePrisonCode(application)
 
     domainEventService.saveCas2ApplicationSubmittedDomainEvent(
       DomainEvent(
@@ -241,7 +243,9 @@ class ApplicationService(
             submittedAt = Instant.now(),
             personReference = PersonReference(
               noms = application.nomsNumber ?: "Unknown NOMS Number",
+              crn = application.crn,
             ),
+            referringPrisonCode = prisonCode,
             submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
               staffMember = Cas2StaffMember(
                 staffIdentifier = application.createdByUser.nomisStaffId,
@@ -253,5 +257,19 @@ class ApplicationService(
         ),
       ),
     )
+  }
+
+  private fun retrievePrisonCode(application: Cas2ApplicationEntity): String {
+    val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(
+      crn = application.crn,
+      nomsNumber = application.nomsNumber.toString(),
+    )
+    val inmateDetail = when (inmateDetailResult) {
+      is AuthorisableActionResult.NotFound -> throw UpstreamApiException("Inmate Detail not found")
+      is AuthorisableActionResult.Unauthorised -> throw UpstreamApiException("Inmate Detail unauthorised")
+      is AuthorisableActionResult.Success -> inmateDetailResult.entity
+    }
+
+    return inmateDetail?.assignedLivingUnit?.agencyId ?: "no Agency ID found"
   }
 }

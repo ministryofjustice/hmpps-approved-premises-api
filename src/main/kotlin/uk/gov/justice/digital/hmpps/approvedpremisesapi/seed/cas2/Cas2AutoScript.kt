@@ -4,6 +4,7 @@ import org.springframework.core.io.DefaultResourceLoader
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
@@ -33,6 +34,7 @@ const val MINUTES_PER_DAY = 60 * 24
 @Component
 class Cas2AutoScript(
   private val seedLogger: SeedLogger,
+  private val seedConfig: SeedConfig,
   private val nomisUserRepository: NomisUserRepository,
   private val applicationRepository: Cas2ApplicationRepository,
   private val externalUserRepository: ExternalUserRepository,
@@ -61,7 +63,7 @@ class Cas2AutoScript(
       Cas2ApplicationEntity(
         id = UUID.randomUUID(),
         crn = "X320741",
-        nomsNumber = "G9542VP",
+        nomsNumber = seedConfig.autoScript.noms,
         createdAt = createdAt,
         createdByUser = applicant,
         data = dataFor(state = state, nomsNumber = "A1234AI"),

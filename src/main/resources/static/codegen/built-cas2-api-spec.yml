@@ -406,6 +406,26 @@ paths:
               schema:
                 type: string
                 format: binary
+  /reports/{reportName}:
+    get:
+      tags:
+        - Reports
+      summary: Returns a 'report' spreadsheet of metrics
+      parameters:
+        - name: reportName
+          in: path
+          description: name of the report to download
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+              schema:
+                type: string
+                format: binary
 components:
   responses:
     401Response:

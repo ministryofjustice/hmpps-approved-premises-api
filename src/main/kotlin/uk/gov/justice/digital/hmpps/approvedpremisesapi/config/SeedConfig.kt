@@ -18,4 +18,5 @@ class AutoSeedConfig {
 
 class AutoScriptConfig {
   var enabled: Boolean = false
+  var noms: String = "A1234AI"
 }

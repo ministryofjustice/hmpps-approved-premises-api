@@ -18,12 +18,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Admin`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ManageUsers_mockSuccessfulExternalUsersCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
@@ -586,7 +588,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
     fun `Submit Cas2 application returns 200`() {
       `Given a CAS2 User`() { submittingUser, jwt ->
         `Given a CAS2 User` { userEntity, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Offender` { offenderDetails, _ ->
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
             val applicationSchema =
@@ -610,6 +612,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
 
             cas2ApplicationEntityFactory.produceAndPersist {
               withCrn(offenderDetails.otherIds.crn)
+              withNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
               withId(applicationId)
               withApplicationSchema(applicationSchema)
               withCreatedByUser(submittingUser)
@@ -618,6 +621,11 @@ class Cas2SubmissionTest : IntegrationTestBase() {
                 {}
               """,
               )
+
+              val inmateDetail = InmateDetailFactory()
+                .withOffenderNo(offenderDetails.otherIds.nomsNumber.toString())
+                .produce()
+              PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
             }
 
             webTestClient.post()
@@ -641,7 +649,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
     @Test
     fun `When several concurrent submit application requests occur, only one is successful, all others return 400`() {
       `Given a CAS2 User`() { submittingUser, jwt ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
+        `Given an Offender` { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
           val applicationSchema = cas2ApplicationJsonSchemaEntityFactory
@@ -666,6 +674,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
 
           cas2ApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
+            withNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
             withId(applicationId)
             withApplicationSchema(applicationSchema)
             withCreatedByUser(submittingUser)
@@ -675,6 +684,11 @@ class Cas2SubmissionTest : IntegrationTestBase() {
               """,
             )
           }
+
+          val inmateDetail = InmateDetailFactory()
+            .withOffenderNo(offenderDetails.otherIds.nomsNumber.toString())
+            .produce()
+          PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
 
           every { realApplicationRepository.save(any()) } answers {
             Thread.sleep(1000)
