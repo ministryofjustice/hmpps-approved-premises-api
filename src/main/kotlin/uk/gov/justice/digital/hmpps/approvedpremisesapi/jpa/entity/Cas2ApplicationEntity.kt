@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Entity
@@ -97,6 +98,11 @@ data class Cas2ApplicationEntity(
   var schemaUpToDate: Boolean,
 
   var nomsNumber: String?,
+
+  var referringPrisonCode: String? = null,
+  var preferredAreas: String? = null,
+  var hdcEligibilityDate: LocalDate? = null,
+  var conditionalReleaseDate: LocalDate? =null,
 ) {
   override fun toString() = "Cas2ApplicationEntity: $id"
 }
