@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
@@ -134,7 +135,7 @@ class PersonTransformerTest {
         name = "Greggory Someone",
         dateOfBirth = LocalDate.parse("1980-09-12"),
         sex = "Male",
-        status = FullPerson.Status.unknown,
+        status = PersonStatus.unknown,
         nomsNumber = null,
         pncNumber = null,
         ethnicity = "White and Asian",
@@ -227,7 +228,7 @@ class PersonTransformerTest {
         name = "Greggory Someone",
         dateOfBirth = LocalDate.parse("1980-09-12"),
         sex = "Male",
-        status = FullPerson.Status.inCustody,
+        status = PersonStatus.inCustody,
         nomsNumber = "NOMS321",
         pncNumber = "PNC456",
         ethnicity = "White and Asian",
@@ -320,7 +321,7 @@ class PersonTransformerTest {
         name = "Greggory Someone",
         dateOfBirth = LocalDate.parse("1980-09-12"),
         sex = "Male",
-        status = FullPerson.Status.inCustody,
+        status = PersonStatus.inCustody,
         nomsNumber = "NOMS321",
         pncNumber = null,
         ethnicity = "White and Asian",
@@ -467,7 +468,7 @@ class PersonTransformerTest {
         name = "${caseSummary.name.forename} ${caseSummary.name.surname}",
         dateOfBirth = caseSummary.dateOfBirth,
         sex = caseSummary.gender!!,
-        status = FullPerson.Status.unknown,
+        status = PersonStatus.unknown,
         nomsNumber = caseSummary.nomsId,
         ethnicity = caseSummary.profile!!.ethnicity,
         nationality = caseSummary.profile!!.nationality,
@@ -530,7 +531,7 @@ class PersonTransformerTest {
           name = "${probationOffenderDetail.firstName} ${probationOffenderDetail.surname}",
           dateOfBirth = probationOffenderDetail.dateOfBirth!!,
           sex = probationOffenderDetail.gender!!,
-          status = FullPerson.Status.inCustody,
+          status = PersonStatus.inCustody,
           nomsNumber = nomsNumber,
           pncNumber = pncNumber,
           nationality = probationOffenderDetail.offenderProfile?.nationality!!,
@@ -566,7 +567,7 @@ class PersonTransformerTest {
           name = "${probationOffenderDetail.firstName} ${probationOffenderDetail.surname}",
           dateOfBirth = probationOffenderDetail.dateOfBirth!!,
           sex = "Not found",
-          status = FullPerson.Status.inCustody,
+          status = PersonStatus.inCustody,
           nomsNumber = nomsNumber,
           pncNumber = "Not found",
           nationality = "Not found",

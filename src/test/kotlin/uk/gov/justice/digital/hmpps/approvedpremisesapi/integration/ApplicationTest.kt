@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -529,7 +530,7 @@ class ApplicationTest : IntegrationTestBase() {
           application.id == it[0].id &&
             application.crn == person.crn &&
             person.nomsNumber == null &&
-            person.status == FullPerson.Status.unknown &&
+            person.status == PersonStatus.unknown &&
             person.prisonName == null
         }
       }
@@ -583,7 +584,7 @@ class ApplicationTest : IntegrationTestBase() {
         application.id == it[0].id &&
           application.crn == person.crn &&
           person.nomsNumber == null &&
-          person.status == FullPerson.Status.unknown &&
+          person.status == PersonStatus.unknown &&
           person.prisonName == null
       }
     }
@@ -739,7 +740,7 @@ class ApplicationTest : IntegrationTestBase() {
           application.id == it.id &&
             application.crn == person.crn &&
             person.nomsNumber == null &&
-            person.status == FullPerson.Status.unknown &&
+            person.status == PersonStatus.unknown &&
             person.prisonName == null
         }
       }
@@ -794,7 +795,7 @@ class ApplicationTest : IntegrationTestBase() {
         application.id == it.id &&
           application.crn == person.crn &&
           person.nomsNumber == null &&
-          person.status == FullPerson.Status.unknown &&
+          person.status == PersonStatus.unknown &&
           person.prisonName == null
       }
     }

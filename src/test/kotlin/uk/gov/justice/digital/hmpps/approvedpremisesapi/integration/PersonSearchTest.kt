@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
@@ -150,7 +151,7 @@ class PersonSearchTest : IntegrationTestBase() {
                 name = "James Someone",
                 dateOfBirth = LocalDate.parse("1985-05-05"),
                 sex = "Male",
-                status = FullPerson.Status.inCustody,
+                status = PersonStatus.inCustody,
                 nomsNumber = "NOMS321",
                 ethnicity = "White British",
                 nationality = "English",
@@ -198,7 +199,7 @@ class PersonSearchTest : IntegrationTestBase() {
                 name = "James Someone",
                 dateOfBirth = LocalDate.parse("1985-05-05"),
                 sex = "Male",
-                status = FullPerson.Status.unknown,
+                status = PersonStatus.unknown,
                 nomsNumber = null,
                 ethnicity = "White British",
                 nationality = "English",

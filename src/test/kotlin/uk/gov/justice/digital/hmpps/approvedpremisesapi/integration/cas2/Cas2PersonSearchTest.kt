@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationOffenderDetailFactory
@@ -131,7 +132,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
                 name = "James Someone",
                 dateOfBirth = LocalDate.parse("1985-05-05"),
                 sex = "Male",
-                status = FullPerson.Status.inCustody,
+                status = PersonStatus.inCustody,
                 nomsNumber = "NOMS321",
                 pncNumber = "PNC123",
                 nationality = "English",

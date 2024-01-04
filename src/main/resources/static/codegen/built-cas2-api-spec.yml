@@ -1117,11 +1117,7 @@ components:
             genderIdentity:
               type: string
             status:
-              type: string
-              enum:
-                - InCustody
-                - InCommunity
-                - Unknown
+              $ref: '#/components/schemas/PersonStatus'
             prisonName:
               type: string
             isRestricted:
@@ -1131,6 +1127,12 @@ components:
             - dateOfBirth
             - sex
             - status
+    PersonStatus:
+      type: string
+      enum:
+        - InCustody
+        - InCommunity
+        - Unknown
     NewArrival:
       type: object
       properties:
@@ -1998,6 +2000,8 @@ components:
             submittedAt:
               type: string
               format: date-time
+            personStatusOnSubmission:
+              $ref: '#/components/schemas/PersonStatus'
           required:
             - createdByUserId
             - schemaVersion
