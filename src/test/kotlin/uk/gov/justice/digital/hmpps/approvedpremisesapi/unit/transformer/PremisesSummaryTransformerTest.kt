@@ -58,6 +58,7 @@ class PremisesSummaryTransformerTest {
       status = PropertyStatus.active,
       bedCount = 1,
       apCode = "APCODE",
+      regionName = "Some region",
     )
 
     val result = premisesSummaryTransformer.transformDomainToApi(domainPremisesSummary)
@@ -73,6 +74,7 @@ class PremisesSummaryTransformerTest {
         bedCount = 1,
         apCode = "APCODE",
         service = "CAS1",
+        probationRegion = "Some region",
       ),
     )
   }

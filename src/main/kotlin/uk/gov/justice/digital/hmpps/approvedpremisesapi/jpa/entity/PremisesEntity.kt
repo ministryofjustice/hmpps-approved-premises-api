@@ -59,7 +59,27 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   )
   fun findAllTemporaryAccommodationSummary(regionId: UUID): List<TemporaryAccommodationPremisesSummary>
 
-  @Query("SELECT new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesSummary(p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.status, CAST(COUNT(b) as int), p.apCode) FROM ApprovedPremisesEntity p LEFT JOIN p.rooms r LEFT JOIN r.beds b GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.apCode, p.status")
+  @Query(
+    """
+    SELECT 
+        new uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesSummary(
+            p.id, 
+            p.name, 
+            p.addressLine1, 
+            p.addressLine2, 
+            p.postcode, 
+            p.status, 
+            CAST(COUNT(b) as int), 
+            p.apCode, 
+            region.name
+        ) 
+        FROM ApprovedPremisesEntity p 
+        LEFT JOIN p.rooms r 
+        LEFT JOIN r.beds b 
+        LEFT JOIN p.probationRegion region
+        GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.apCode, p.status, region.name
+  """,
+  )
   fun findAllApprovedPremisesSummary(): List<ApprovedPremisesSummary>
 
   @Query("SELECT p as premises, (SELECT CAST(COUNT(b) as int) FROM p.rooms r JOIN r.beds b WHERE r.premises = p GROUP BY p) as roomCount FROM PremisesEntity p WHERE TYPE(p) = :type")
@@ -273,6 +293,7 @@ data class ApprovedPremisesSummary(
   val status: PropertyStatus,
   val bedCount: Int,
   val apCode: String,
+  val regionName: String,
 )
 
 data class TemporaryAccommodationPremisesSummary(
