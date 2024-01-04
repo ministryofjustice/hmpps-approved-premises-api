@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
@@ -15,6 +17,8 @@ import java.util.Objects
 import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.EntityListeners
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
@@ -150,6 +154,16 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
     nativeQuery = true,
   )
   fun findBookings(serviceName: String, status: BookingStatus?, probationRegionId: UUID?, pageable: Pageable?): Page<BookingSearchResult>
+
+  @Modifying
+  @Query("UPDATE BookingEntity b set b.status = :status where b.id = :bookingId")
+  fun updateBookingStatus(bookingId: UUID, status: BookingStatus)
+
+  @Query(
+    "SELECT * FROM bookings WHERE status IS NULL AND service='temporary-accommodation' ",
+    nativeQuery = true,
+  )
+  fun findAllCas3bookingsWithNullStatus(pageable: Pageable?): Slice<BookingEntity>
 }
 
 @EntityListeners(BookingListener::class)
@@ -197,6 +211,8 @@ data class BookingEntity(
   var nomsNumber: String?,
   @OneToOne(mappedBy = "booking")
   var placementRequest: PlacementRequestEntity?,
+  @Enumerated(value = EnumType.STRING)
+  var status: BookingStatus?,
 ) {
   val departure: DepartureEntity?
     get() = departures.maxByOrNull { it.createdAt }

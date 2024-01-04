@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
@@ -587,6 +588,7 @@ class BookingServiceTest {
       assertThat(result.entity.destinationProvider).isEqualTo(destinationProviderEntity)
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.departed)
 
       verify(exactly = 0) { mockDomainEventService.savePersonDepartedEvent(any()) }
     }
@@ -644,6 +646,7 @@ class BookingServiceTest {
       assertThat(result.entity.destinationProvider).isEqualTo(destinationProviderEntity)
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.departed)
 
       verify(exactly = 1) {
         mockDomainEventService.savePersonDepartedEvent(
@@ -728,6 +731,7 @@ class BookingServiceTest {
       assertThat(result.entity.destinationProvider).isEqualTo(destinationProviderEntity)
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.departed)
 
       verify(exactly = 1) {
         mockDomainEventService.savePersonDepartedEvent(
@@ -817,6 +821,7 @@ class BookingServiceTest {
       assertThat(result.entity.destinationProvider).isEqualTo(destinationProviderEntity)
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.departed)
 
       verify(exactly = 0) {
         mockDomainEventService.savePersonDepartedEvent(any())
@@ -880,6 +885,7 @@ class BookingServiceTest {
       assertThat(result.entity.destinationProvider).isEqualTo(null)
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.departed)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.savePersonDepartedEvent(bookingEntity)
@@ -955,6 +961,7 @@ class BookingServiceTest {
       assertThat(result.entity.destinationProvider).isEqualTo(null)
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo(notes)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.departed)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any())
@@ -1234,6 +1241,7 @@ class BookingServiceTest {
       assertThat(result.entity.arrivalDateTime).isEqualTo(Instant.parse("2022-08-27T00:00:00Z"))
       assertThat(result.entity.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.arrived)
 
       verify(exactly = 0) { mockDomainEventService.savePersonArrivedEvent(any()) }
     }
@@ -1291,6 +1299,7 @@ class BookingServiceTest {
       assertThat(result.entity.arrivalDateTime).isEqualTo(arrivalDateTime)
       assertThat(result.entity.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.arrived)
 
       verify(exactly = 1) {
         mockDomainEventService.savePersonArrivedEvent(
@@ -1372,6 +1381,7 @@ class BookingServiceTest {
       assertThat(result.entity.arrivalDateTime).isEqualTo(arrivalDateTime)
       assertThat(result.entity.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.arrived)
 
       verify(exactly = 1) {
         mockDomainEventService.savePersonArrivedEvent(
@@ -1457,6 +1467,7 @@ class BookingServiceTest {
       assertThat(result.entity.arrivalDateTime).isEqualTo(arrivalDateTime)
       assertThat(result.entity.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.arrived)
 
       verify(exactly = 0) {
         mockDomainEventService.savePersonArrivedEvent(any())
@@ -1545,6 +1556,7 @@ class BookingServiceTest {
       assertThat(result.entity.arrivalDateTime).isEqualTo(Instant.parse("2022-08-25T00:00:00Z"))
       assertThat(result.entity.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-26"))
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.arrived)
 
       verify(exactly = 1) { mockArrivalRepository.save(any()) }
       verify(exactly = 1) { mockBookingRepository.save(any()) }
@@ -1575,6 +1587,7 @@ class BookingServiceTest {
       assertThat(result.entity.arrivalDateTime).isEqualTo(Instant.parse("2022-08-27T00:00:00Z"))
       assertThat(result.entity.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.arrived)
 
       verify(exactly = 1) { mockArrivalRepository.save(any()) }
       verify(exactly = 1) { mockBookingRepository.save(any()) }
@@ -2073,6 +2086,7 @@ class BookingServiceTest {
 
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
       val result = bookingService.createCancellation(
         booking = bookingEntity,
@@ -2087,6 +2101,11 @@ class BookingServiceTest {
       assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
     }
 
     @Test
@@ -2109,6 +2128,7 @@ class BookingServiceTest {
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockDomainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
       val offenderDetails = OffenderDetailsSummaryFactory()
         .withCrn(bookingEntity.crn)
@@ -2139,6 +2159,7 @@ class BookingServiceTest {
       assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 1) {
         mockDomainEventService.saveBookingCancelledEvent(
@@ -2167,6 +2188,9 @@ class BookingServiceTest {
           },
         )
       }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
     }
 
     @Test
@@ -2188,7 +2212,7 @@ class BookingServiceTest {
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockDomainEventService.saveBookingCancelledEvent(any()) } just Runs
-
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       val offenderDetails = OffenderDetailsSummaryFactory()
         .withCrn(bookingEntity.crn)
         .produce()
@@ -2218,6 +2242,7 @@ class BookingServiceTest {
       assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 1) {
         mockDomainEventService.saveBookingCancelledEvent(
@@ -2245,6 +2270,9 @@ class BookingServiceTest {
           },
         )
       }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
     }
 
     @Test
@@ -2266,7 +2294,7 @@ class BookingServiceTest {
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockDomainEventService.saveBookingCancelledEvent(any()) } just Runs
-
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       val offenderDetails = OffenderDetailsSummaryFactory()
         .withCrn(bookingEntity.crn)
         .produce()
@@ -2296,9 +2324,13 @@ class BookingServiceTest {
       assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 0) {
         mockDomainEventService.saveBookingCancelledEvent(any())
+      }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
       }
     }
 
@@ -2343,6 +2375,7 @@ class BookingServiceTest {
 
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every {
         mockPlacementRequestService.createPlacementRequest(
           placementRequirements = originalPlacementRequirements,
@@ -2377,6 +2410,7 @@ class BookingServiceTest {
       assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 1) {
         mockPlacementRequestService.createPlacementRequest(
@@ -2389,6 +2423,9 @@ class BookingServiceTest {
           isParole = false,
           null,
         )
+      }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
       }
     }
 
@@ -2403,6 +2440,7 @@ class BookingServiceTest {
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
       val result = bookingService.createCancellation(
         booking = bookingEntity,
@@ -2418,12 +2456,16 @@ class BookingServiceTest {
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
       assertThat(bookingEntity.cancellations).contains(result.entity)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
       }
       verify(exactly = 0) {
         mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+      }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
       }
     }
 
@@ -2437,6 +2479,7 @@ class BookingServiceTest {
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any()) } just Runs
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
       val result = bookingService.createCancellation(
         booking = bookingEntity,
@@ -2452,12 +2495,16 @@ class BookingServiceTest {
       assertThat(result.entity.reason).isEqualTo(reasonEntity)
       assertThat(result.entity.notes).isEqualTo("notes")
       assertThat(bookingEntity.cancellations).contains(result.entity)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 1) {
         mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(bookingEntity)
       }
       verify(exactly = 0) {
         mockCas3DomainEventService.saveBookingCancelledEvent(any())
+      }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
       }
     }
 
@@ -2871,6 +2918,7 @@ class BookingServiceTest {
       .produce()
 
     every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
     every { mockCas3DomainEventService.saveBookingConfirmedEvent(any()) } just Runs
 
@@ -2885,9 +2933,13 @@ class BookingServiceTest {
     assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
     assertThat(result.entity.notes).isEqualTo("notes")
     assertThat(bookingEntity.confirmation).isEqualTo(result.entity)
+    assertThat(result.entity.booking.status).isEqualTo(BookingStatus.confirmed)
 
     verify(exactly = 1) {
       mockCas3DomainEventService.saveBookingConfirmedEvent(bookingEntity)
+    }
+    verify(exactly = 1) {
+      mockBookingRepository.save(bookingEntity)
     }
   }
 
@@ -3651,7 +3703,8 @@ class BookingServiceTest {
             it.premises == premises &&
             it.arrivalDate == arrivalDate &&
             it.departureDate == departureDate &&
-            it.application == application
+            it.application == application &&
+            it.status == BookingStatus.provisional
         },
       )
     }
@@ -3717,7 +3770,8 @@ class BookingServiceTest {
             it.premises == premises &&
             it.arrivalDate == arrivalDate &&
             it.departureDate == departureDate &&
-            it.application == null
+            it.application == null &&
+            it.status == BookingStatus.provisional
         },
       )
     }
@@ -3787,7 +3841,8 @@ class BookingServiceTest {
             it.premises == premises &&
             it.arrivalDate == arrivalDate &&
             it.departureDate == departureDate &&
-            it.application == application
+            it.application == application &&
+            it.status == BookingStatus.provisional
         },
       )
     }
@@ -3862,7 +3917,8 @@ class BookingServiceTest {
             it.premises == premises &&
             it.arrivalDate == arrivalDate &&
             it.departureDate == departureDate &&
-            it.application == application
+            it.application == application &&
+            it.status == BookingStatus.provisional
         },
       )
     }
@@ -4649,7 +4705,8 @@ class BookingServiceTest {
             it.crn == application.crn &&
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
+              it.departureDate == departureDate &&
+              it.status == BookingStatus.confirmed
           },
         )
       }
