@@ -12,4 +12,5 @@ enum class ApprovedPremisesApplicationStatus {
   INAPPLICABLE,
   WITHDRAWN,
   REQUESTED_FURTHER_INFORMATION,
+  PENDING_PLACEMENT_REQUEST,
 }

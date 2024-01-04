@@ -13,20 +13,34 @@ class AssessmentListener {
   @PrePersist
   fun prePersist(assessment: ApprovedPremisesAssessmentEntity) {
     if (assessment.allocatedToUser == null) {
-      (assessment.application as ApprovedPremisesApplicationEntity).status = ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT
+      (assessment.application as ApprovedPremisesApplicationEntity).status =
+        ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT
     } else {
-      (assessment.application as ApprovedPremisesApplicationEntity).status = ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT
+      (assessment.application as ApprovedPremisesApplicationEntity).status =
+        ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT
     }
   }
 
   @PreUpdate
   fun preUpdate(assessment: ApprovedPremisesAssessmentEntity) {
     if (assessment.decision == null && assessment.data != null) {
-      (assessment.application as ApprovedPremisesApplicationEntity).status = ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS
+      (assessment.application as ApprovedPremisesApplicationEntity).status =
+        ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS
     } else if (assessment.decision == AssessmentDecision.ACCEPTED) {
-      (assessment.application as ApprovedPremisesApplicationEntity).status = ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT
+      val application = (assessment.application as ApprovedPremisesApplicationEntity)
+      application.status = applicationGetStatusFromArrivalDate(application)
     } else if (assessment.decision == AssessmentDecision.REJECTED) {
       (assessment.application as ApprovedPremisesApplicationEntity).status = ApprovedPremisesApplicationStatus.REJECTED
     }
+  }
+
+  fun applicationGetStatusFromArrivalDate(
+    application: ApprovedPremisesApplicationEntity,
+  ): ApprovedPremisesApplicationStatus {
+    val releaseDate = application.arrivalDate
+    if (releaseDate == null) {
+      return ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST
+    }
+    return ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT
   }
 }

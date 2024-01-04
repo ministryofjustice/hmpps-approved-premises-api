@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarBedInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarBookingInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarOccupancyInfo
@@ -21,7 +20,7 @@ class CalendarService(
     val calendarInfo = calendarRepository.getCalendarInfo(premisesId, startDate, endDate)
 
     val crns = calendarInfo.values.flatMap {
-        it.filterIsInstance<CalendarBookingInfo>().map { it.crn }
+      it.filterIsInstance<CalendarBookingInfo>().map { it.crn }
     }.toSet()
     val offenderSummaries = offenderService.getOffenderSummariesByCrns(crns, user.deliusUsername, user.hasQualification(UserQualification.LAO), forceApDeliusContextApi = false)
 
