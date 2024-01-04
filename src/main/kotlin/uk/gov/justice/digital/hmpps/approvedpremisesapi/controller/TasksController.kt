@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -209,7 +208,10 @@ class TasksController(
     ) ?: throw NotFoundProblem(taskType, "TaskType")
 
     val transformedTask: Task
-    val transformedAllocatableUsers: List<UserWithWorkload>
+
+    val crn: String
+    val requiredQualifications: List<UserQualification>
+    val allocationType: AllocationType
 
     when (type) {
       TaskType.assessment -> {
@@ -222,15 +224,9 @@ class TasksController(
           getPersonNameFromApplication(it.application, offenderSummaries)
         }
 
-        transformedAllocatableUsers = userService.getAllocatableUsersForAllocationType(
-          assessment.application.crn,
-          assessment.application.getRequiredQualifications(),
-          AllocationType.Assessment,
-        )
-          .map {
-            val workload = userService.getUserWorkload(it.id)
-            userTransformer.transformJpaToAPIUserWithWorkload(it, workload)
-          }
+        crn = assessment.application.crn
+        requiredQualifications = assessment.application.getRequiredQualifications()
+        allocationType = AllocationType.Assessment
       }
       TaskType.placementRequest -> {
         val (placementRequest) = extractEntityFromAuthorisableActionResult(
@@ -242,16 +238,9 @@ class TasksController(
           getPersonNameFromApplication(it.application, offenderSummaries)
         }
 
-        transformedAllocatableUsers =
-          userService.getAllocatableUsersForAllocationType(
-            placementRequest.application.crn,
-            emptyList(),
-            AllocationType.PlacementRequest,
-          )
-            .map {
-              val workload = userService.getUserWorkload(it.id)
-              userTransformer.transformJpaToAPIUserWithWorkload(it, workload)
-            }
+        crn = placementRequest.application.crn
+        requiredQualifications = emptyList()
+        allocationType = AllocationType.PlacementRequest
       }
       TaskType.placementApplication -> {
         val placementApplication = extractEntityFromAuthorisableActionResult(
@@ -263,18 +252,23 @@ class TasksController(
           getPersonNameFromApplication(it.application, offenderSummaries)
         }
 
-        transformedAllocatableUsers = userService.getAllocatableUsersForAllocationType(
-          placementApplication.application.crn,
-          placementApplication.application.getRequiredQualifications(),
-          AllocationType.PlacementApplication,
-        )
-          .map {
-            val workload = userService.getUserWorkload(it.id)
-            userTransformer.transformJpaToAPIUserWithWorkload(it, workload)
-          }
+        crn = placementApplication.application.crn
+        requiredQualifications = placementApplication.application.getRequiredQualifications()
+        allocationType = AllocationType.PlacementApplication
       } else -> {
         throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
       }
+    }
+
+    val users = userService.getAllocatableUsersForAllocationType(
+      crn,
+      requiredQualifications,
+      allocationType,
+    )
+
+    val workload = userService.getUserWorkloads(users.map { it.id })
+    val transformedAllocatableUsers = users.map {
+      userTransformer.transformJpaToAPIUserWithWorkload(it, workload[it.id]!!)
     }
 
     return ResponseEntity.ok(

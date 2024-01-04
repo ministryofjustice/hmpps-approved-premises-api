@@ -123,7 +123,8 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
 
   @Query(
     """
-      SELECT
+    SELECT
+      CAST(u.id as TEXT) as userId,
       (
         SELECT
           count(*)
@@ -156,11 +157,12 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
       ) as completedAssessmentsInTheLastThirtyDays
     FROM
       users u
-      WHERE u.id = :userId
+    WHERE
+      u.id IN (:userIds)
     """,
     nativeQuery = true,
   )
-  fun findWorkloadForUserId(userId: UUID): UserWorkload
+  fun findWorkloadForUserIds(userIds: List<UUID>): List<UserWorkload>
 }
 
 @Entity
@@ -257,6 +259,7 @@ enum class UserQualification {
 }
 
 interface UserWorkload {
+  fun getUserId(): UUID
   fun getPendingAssessments(): Int
 
   fun getCompletedAssessmentsInTheLastSevenDays(): Int

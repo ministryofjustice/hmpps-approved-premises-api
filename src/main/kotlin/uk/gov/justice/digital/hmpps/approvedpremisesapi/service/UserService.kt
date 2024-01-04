@@ -242,14 +242,14 @@ class UserService(
     return AuthorisableActionResult.Success(user)
   }
 
-  fun getUserWorkload(userId: UUID): UserWorkload {
-    val jpa = userRepository.findWorkloadForUserId(userId)
-    val apiWorkload = UserWorkload(
-      jpa.getPendingAssessments(),
-      jpa.getCompletedAssessmentsInTheLastSevenDays(),
-      jpa.getCompletedAssessmentsInTheLastThirtyDays(),
-    )
-    return apiWorkload
+  fun getUserWorkloads(userIds: List<UUID>): Map<UUID, UserWorkload> {
+    return userRepository.findWorkloadForUserIds(userIds).associate {
+      it.getUserId() to UserWorkload(
+        it.getPendingAssessments(),
+        it.getCompletedAssessmentsInTheLastSevenDays(),
+        it.getCompletedAssessmentsInTheLastThirtyDays(),
+      )
+    }
   }
 
   fun getUserForUsername(username: String, throwProblemOn404: Boolean = false): UserEntity {
