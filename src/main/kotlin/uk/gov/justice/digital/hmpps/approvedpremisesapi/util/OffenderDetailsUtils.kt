@@ -5,6 +5,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderIds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Manager
@@ -108,4 +110,18 @@ fun CaseSummary.asOffenderDetailSummary() = OffenderDetailSummary(
   currentRestriction = this.currentRestriction ?: false,
   currentExclusion = this.currentExclusion ?: false,
   isActiveProbationManagedSentence = null,
+)
+
+fun CaseAccess.asUserOffenderAccess() = UserOffenderAccess(
+  userRestricted = this.userRestricted,
+  userExcluded = this.userExcluded,
+  restrictionMessage = this.restrictionMessage,
+)
+
+fun UserOffenderAccess.asCaseAccess(crn: String) = CaseAccess(
+  crn = crn,
+  userExcluded = this.userExcluded,
+  userRestricted = this.userRestricted,
+  exclusionMessage = null,
+  restrictionMessage = this.restrictionMessage,
 )
