@@ -2018,6 +2018,18 @@ components:
           type: string
           format: uuid
           description: Id of the application being submitted
+        preferredAreas:
+          type: string
+          description: First and second preferences for where the accommodation should be located, pipe-separated
+          example: 'Leeds | Bradford'
+        hdcEligibilityDate:
+          type: string
+          example: '2023-03-30'
+          format: date
+        conditionalReleaseDate:
+          type: string
+          example: '2023-04-30'
+          format: date
       required:
         - translatedDocument
         - applicationId

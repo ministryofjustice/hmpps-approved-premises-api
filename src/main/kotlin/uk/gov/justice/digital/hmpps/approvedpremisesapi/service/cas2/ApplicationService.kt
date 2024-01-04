@@ -211,6 +211,9 @@ class ApplicationService(
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
       referringPrisonCode = retrievePrisonCode(application)
+      preferredAreas = submitApplication.preferredAreas
+      hdcEligibilityDate = submitApplication.hdcEligibilityDate
+      conditionalReleaseDate = submitApplication.conditionalReleaseDate
     }
 
     application = applicationRepository.save(application)

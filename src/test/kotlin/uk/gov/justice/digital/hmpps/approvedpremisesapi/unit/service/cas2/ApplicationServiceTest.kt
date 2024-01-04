@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.UserAccessService
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -390,10 +391,15 @@ class ApplicationServiceTest {
     val user = NomisUserEntityFactory()
       .withNomisUsername(this.username)
       .produce()
+    val hdcEligibilityDate = LocalDate.parse("2023-03-30")
+    val conditionalReleaseDate = LocalDate.parse("2023-04-29")
 
     private val submitCas2Application = SubmitCas2Application(
       translatedDocument = {},
       applicationId = applicationId,
+      preferredAreas = "Leeds | Bradford",
+      hdcEligibilityDate = hdcEligibilityDate,
+      conditionalReleaseDate = conditionalReleaseDate,
     )
 
     @BeforeEach
@@ -594,7 +600,11 @@ class ApplicationServiceTest {
       assertThat(result.entity is ValidatableActionResult.Success).isTrue
       val validatableActionResult = result.entity as ValidatableActionResult.Success
       val persistedApplication = validatableActionResult.entity
+
       assertThat(persistedApplication.crn).isEqualTo(application.crn)
+      assertThat(persistedApplication.preferredAreas).isEqualTo("Leeds | Bradford")
+      assertThat(persistedApplication.hdcEligibilityDate).isEqualTo(hdcEligibilityDate)
+      assertThat(persistedApplication.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
 
       verify { mockApplicationRepository.save(any()) }
 

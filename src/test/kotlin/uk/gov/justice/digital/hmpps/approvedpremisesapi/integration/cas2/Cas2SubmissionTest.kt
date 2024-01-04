@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -636,6 +637,9 @@ class Cas2SubmissionTest : IntegrationTestBase() {
                 SubmitCas2Application(
                   applicationId = applicationId,
                   translatedDocument = {},
+                  preferredAreas = "Leeds | Bradford",
+                  hdcEligibilityDate = LocalDate.parse("2023-03-30"),
+                  conditionalReleaseDate = LocalDate.parse("2023-04-29"),
                 ),
               )
               .exchange()
