@@ -83,7 +83,7 @@ FROM
   "user_role_assignments"
 WHERE
   "user_id" = (SELECT id FROM users where delius_username='JIMSNOWLDAP')
-ON CONFLICT (id)
+ON CONFLICT
 DO
   NOTHING;
 
@@ -99,7 +99,7 @@ FROM
 WHERE
   "user_id" = (SELECT id FROM users where delius_username='JIMSNOWLDAP')
   AND ("role" = 'CAS3_ASSESSOR' OR "role" = 'CAS3_REPORTER')
-ON CONFLICT (id)
+ON CONFLICT
 DO
   NOTHING;
 
@@ -114,7 +114,7 @@ FROM
   "user_role_assignments"
 WHERE
   "user_id" = (SELECT id FROM users where delius_username='JIMSNOWLDAP')
-ON CONFLICT (id)
+ON CONFLICT
 DO
   NOTHING;
 
@@ -129,7 +129,7 @@ FROM
   "user_role_assignments"
 WHERE
   "user_id" = (SELECT id FROM users where delius_username='JIMSNOWLDAP')
-ON CONFLICT (id)
+ON CONFLICT
 DO
   NOTHING;
 
@@ -144,7 +144,7 @@ FROM
   "user_role_assignments"
 WHERE
   "user_id" = (SELECT id FROM users where delius_username='JIMSNOWLDAP')
-ON CONFLICT (id)
+ON CONFLICT
 DO
   NOTHING;
 
@@ -159,6 +159,6 @@ FROM
   "user_role_assignments"
 WHERE
   "user_id" = (SELECT id FROM users where delius_username='JIMSNOWLDAP')
-ON CONFLICT (id)
+ON CONFLICT
 DO
   NOTHING;
