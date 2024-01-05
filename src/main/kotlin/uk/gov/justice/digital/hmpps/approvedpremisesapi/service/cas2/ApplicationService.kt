@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import java.time.Instant
@@ -38,8 +40,11 @@ class ApplicationService(
   private val userService: NomisUserService,
   private val userAccessService: UserAccessService,
   private val domainEventService: DomainEventService,
+  private val emailNotificationService: EmailNotificationService,
+  private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
   fun getAllApplicationsForUser(user: NomisUserEntity): List<Cas2ApplicationSummary> {
@@ -220,6 +225,8 @@ class ApplicationService(
 
     createCas2ApplicationSubmittedEvent(application)
 
+    sendEmailApplicationSubmitted(user, application)
+
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(application),
     )
@@ -277,5 +284,18 @@ class ApplicationService(
     }
 
     return inmateDetail?.assignedLivingUnit?.agencyId ?: "no Agency ID found"
+  }
+
+  private fun sendEmailApplicationSubmitted(user: NomisUserEntity, application: Cas2ApplicationEntity) {
+    emailNotificationService.sendEmail(
+      email = notifyConfig.emailAddresses.cas2Assessors,
+      templateId = notifyConfig.templates.cas2ApplicationSubmitted,
+      personalisation = mapOf(
+        "name" to user.name,
+        "email" to user.email,
+        "prisonNumber" to application.nomsNumber,
+        "applicationUrl" to submittedApplicationUrlTemplate.replace("#applicationId", application.id.toString()),
+      ),
+    )
   }
 }
