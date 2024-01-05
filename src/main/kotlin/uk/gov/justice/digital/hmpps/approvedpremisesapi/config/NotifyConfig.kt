@@ -26,6 +26,7 @@ class NotifyTemplates {
   var bookingMade = "1e3d2ee2-250e-4755-af38-80d24cdc3480"
   var bookingMadePremises = "337bb149-6f12-4be2-b5a3-a9a73d73c1e1"
   var placementRequestWithdrawn = "a5f44549-e849-4a26-abb1-802316081533"
+  var cas2ApplicationSubmitted = "a0823218-91dd-4cf0-9835-4b90024f62c8"
 }
 
 enum class NotifyMode {
