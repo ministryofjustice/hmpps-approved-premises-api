@@ -103,7 +103,8 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       placement_requests pq
       left join applications application on application.id = pq.application_id
     where
-      pq.reallocated_at IS NULL
+      pq.reallocated_at IS NULL 
+      AND (:status IS NULL OR pq.is_withdrawn IS FALSE)
       AND (:status IS NULL OR (
         CASE
           WHEN (
@@ -124,7 +125,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
             WHERE
               bnm.placement_request_id = pq.id
           ) > 0 THEN 'unableToMatch'
-          WHEN pq.is_withdrawn IS FALSE THEN 'notMatched'
+          ELSE 'notMatched'
         END
       ) = :#{#status?.toString()})
       AND (:crn IS NULL OR (SELECT COUNT(1) FROM applications a WHERE a.id = pq.application_id AND a.crn = UPPER(:crn)) = 1)
