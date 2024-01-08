@@ -109,6 +109,7 @@ tasks.register("bootRunLocal") {
   doFirst {
     tasks.bootRun.configure {
       systemProperty("spring.profiles.active", "local")
+      jvmArgs("-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=32323")
     }
   }
   finalizedBy("bootRun")
