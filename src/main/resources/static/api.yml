@@ -3252,13 +3252,13 @@ paths:
           description: Only assessments for this service will be returned
           schema:
             $ref: '_shared.yml#/components/schemas/ServiceName'
-        - name: sortOrder
+        - name: sortDirection
           in: query
           description: If provided, return results in the given order
           required: false
           schema:
-            $ref: "_shared.yml#/components/schemas/SortOrder"
-        - name: sortField
+            $ref: "_shared.yml#/components/schemas/SortDirection"
+        - name: sortBy
           in: query
           description: If provided, return results ordered by the given field name
           required: false

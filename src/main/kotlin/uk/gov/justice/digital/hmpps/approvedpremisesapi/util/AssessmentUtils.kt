@@ -6,11 +6,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessmentSummary
 
-fun List<AssessmentSummary>.sort(sortOrder: SortOrder?, sortField: AssessmentSortField?): List<AssessmentSummary> {
+fun List<AssessmentSummary>.sort(sortDirection: SortDirection?, sortField: AssessmentSortField?): List<AssessmentSummary> {
   if (sortField != null) {
     val comparator = Comparator<AssessmentSummary> { a, b ->
       val ascendingCompare = when (sortField) {
@@ -25,9 +25,9 @@ fun List<AssessmentSummary>.sort(sortOrder: SortOrder?, sortField: AssessmentSor
         AssessmentSortField.assessmentCreatedAt -> compareValues(a.createdAt, b.createdAt)
       }
 
-      when (sortOrder) {
-        SortOrder.ascending, null -> ascendingCompare
-        SortOrder.descending -> -ascendingCompare
+      when (sortDirection) {
+        SortDirection.asc, null -> ascendingCompare
+        SortDirection.desc -> -ascendingCompare
       }
     }
 
