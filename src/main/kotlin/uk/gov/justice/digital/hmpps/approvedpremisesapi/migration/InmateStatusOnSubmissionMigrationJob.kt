@@ -53,14 +53,20 @@ class InmateStatusOnSubmissionMigrationJob(
 
   private fun updateInOutStatus(application: ApprovedPremisesApplicationEntity) {
     log.info("Determine in out status for application ${application.id} submitted on ${application.submittedAt}")
-    when (val timelineResult = prisonsApiClient.getPrisonTimeline(application.nomsNumber!!)) {
-      is ClientResult.Success -> {
-        val inOutStatus = determineInOutStatus(application.submittedAt!!, timelineResult.body)
-        log.info("Status is $inOutStatus")
-        applicationRepository.updateInOutStatus(application.id, inOutStatus.name)
-      }
-      is ClientResult.Failure -> {
-        log.error("Unable to update application ${application.id}", timelineResult.toException())
+    if(application.nomsNumber == null) {
+      log.info("NOMS number is null, will set status to IN")
+      applicationRepository.updateInOutStatus(application.id, InOutStatus.IN.name)
+    } else {
+      when (val timelineResult = prisonsApiClient.getPrisonTimeline(application.nomsNumber!!)) {
+        is ClientResult.Success -> {
+          val inOutStatus = determineInOutStatus(application.submittedAt!!, timelineResult.body)
+          log.info("Determined status as $inOutStatus")
+          applicationRepository.updateInOutStatus(application.id, inOutStatus.name)
+        }
+
+        is ClientResult.Failure -> {
+          log.error("Unable to update application ${application.id}", timelineResult.toException())
+        }
       }
     }
   }

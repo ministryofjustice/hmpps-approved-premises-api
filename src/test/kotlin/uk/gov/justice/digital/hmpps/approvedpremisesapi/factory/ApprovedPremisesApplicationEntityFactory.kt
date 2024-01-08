@@ -46,7 +46,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var isInapplicable: Yielded<Boolean?> = { null }
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var withdrawalReason: Yielded<String?> = { null }
-  private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
+  private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
   private var name: Yielded<String> = { "${randomStringUpperCase(4)} ${randomStringUpperCase(6)}" }
   private var targetLocation: Yielded<String?> = { null }
   private var status: Yielded<ApprovedPremisesApplicationStatus> = { ApprovedPremisesApplicationStatus.STARTED }
@@ -156,7 +156,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.withdrawalReason = { withdrawalReason }
   }
 
-  fun withNomsNumber(nomsNumber: String) = apply {
+  fun withNomsNumber(nomsNumber: String?) = apply {
     this.nomsNumber = { nomsNumber }
   }
 
