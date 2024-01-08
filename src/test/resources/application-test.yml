@@ -153,6 +153,7 @@ url-templates:
     assessment: http://frontend/assessments/#id
     booking: http://frontend/premises/{premisesId}/bookings/{bookingId}
     cas2:
+      application: http://frontend/applications/#id
       submitted-application-overview: http://frontend/assess/applications/#applicationId/overview
 
 preemptive-cache-delay-ms: 250

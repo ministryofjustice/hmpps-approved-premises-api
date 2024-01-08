@@ -43,7 +43,7 @@ class ApplicationService(
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
