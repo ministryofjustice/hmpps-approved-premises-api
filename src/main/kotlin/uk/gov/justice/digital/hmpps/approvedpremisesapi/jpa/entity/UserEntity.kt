@@ -154,7 +154,71 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
           a.allocated_to_user_id = u.id
           and a.reallocated_at is null
           and a.submitted_at > current_date - interval '30' day
-      ) as completedAssessmentsInTheLastThirtyDays
+      ) as completedAssessmentsInTheLastThirtyDays,
+      (
+        SELECT
+          count(*)
+        from
+          placement_applications placement_application
+        where
+          placement_application.allocated_to_user_id = u.id
+          and placement_application.reallocated_at is null
+          and placement_application.submitted_at is null
+      ) as pendingPlacementApplications,
+      (
+        SELECT
+          count(*)
+        from
+          placement_applications placement_application
+        where
+          placement_application.allocated_to_user_id = u.id
+          and placement_application.reallocated_at is null
+          and placement_application.submitted_at > current_date - interval '7' day
+      ) as completedPlacementApplicationsInTheLastSevenDays,
+      (
+        SELECT
+          count(*)
+        from
+          placement_applications placement_application
+        where
+          placement_application.allocated_to_user_id = u.id
+          and placement_application.reallocated_at is null
+          and placement_application.submitted_at > current_date - interval '30' day
+      ) as completedPlacementApplicationsInTheLastThirtyDays,
+      (
+        SELECT
+          count(*)
+        from
+          placement_requests placement_request
+        where
+          placement_request.allocated_to_user_id = u.id
+          and placement_request.booking_id is null
+          and placement_request.reallocated_at is null
+      ) as pendingPlacementRequests,
+      (
+        SELECT
+          count(*)
+        from
+          placement_requests placement_request
+          left join bookings booking on booking.id = placement_request.booking_id
+        where
+          placement_request.allocated_to_user_id = u.id
+          and placement_request.booking_id is not null
+          and placement_request.reallocated_at is null
+          and booking.created_at > current_date - interval '7' day
+      ) as completedPlacementRequestsInTheLastSevenDays,
+      (
+        SELECT
+          count(*)
+        from
+          placement_requests placement_request
+          left join bookings booking on booking.id = placement_request.booking_id
+        where
+          placement_request.allocated_to_user_id = u.id
+          and placement_request.booking_id is not null
+          and placement_request.reallocated_at is null
+          and booking.created_at > current_date - interval '30' day
+      ) as completedPlacementRequestsInTheLastThirtyDays
     FROM
       users u
     WHERE
@@ -261,8 +325,12 @@ enum class UserQualification {
 interface UserWorkload {
   fun getUserId(): UUID
   fun getPendingAssessments(): Int
-
   fun getCompletedAssessmentsInTheLastSevenDays(): Int
-
   fun getCompletedAssessmentsInTheLastThirtyDays(): Int
+  fun getPendingPlacementRequests(): Int
+  fun getCompletedPlacementRequestsInTheLastSevenDays(): Int
+  fun getCompletedPlacementRequestsInTheLastThirtyDays(): Int
+  fun getPendingPlacementApplications(): Int
+  fun getCompletedPlacementApplicationsInTheLastSevenDays(): Int
+  fun getCompletedPlacementApplicationsInTheLastThirtyDays(): Int
 }

@@ -3017,11 +3017,11 @@ components:
         - $ref: '#/components/schemas/User'
         - type: object
           properties:
-            numAssessmentsPending:
+            numTasksPending:
               type: integer
-            numAssessmentsCompleted7Days:
+            numTasksCompleted7Days:
               type: integer
-            numAssessmentsCompleted30Days:
+            numTasksCompleted30Days:
               type: integer
             qualifications:
               type: array

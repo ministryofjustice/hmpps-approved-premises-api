@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
@@ -1433,7 +1434,7 @@ class TasksTest : IntegrationTestBase() {
                         users = listOf(
                           userTransformer.transformJpaToAPIUserWithWorkload(
                             user,
-                            UserWorkload(0, 0, 0),
+                            UserWorkload(1, 0, 0),
                           ),
                           userTransformer.transformJpaToAPIUserWithWorkload(
                             allocatableUser,
@@ -1467,43 +1468,73 @@ class TasksTest : IntegrationTestBase() {
                 crn = offenderDetails.otherIds.crn,
 
               ) { placementApplication ->
-
-                val numAssesmentsPending = 12
-                repeat(numAssesmentsPending) {
-                  `Given an Assessment for Approved Premises`(
-                    allocatedToUser = allocatableUser,
-                    createdByUser = user,
-                    crn = offenderDetails.otherIds.crn,
-                    decision = null,
-                    reallocated = false,
-                  )
+                val numAssessmentsPending = 3
+                repeat(numAssessmentsPending) {
+                  createTask(TaskType.assessment, null, allocatableUser, user, offenderDetails.otherIds.crn)
                 }
 
-                val numAssesmentsCompleted7Days = 8
-                repeat(numAssesmentsCompleted7Days) {
+                val numPlacementApplicationsPending = 4
+                repeat(numPlacementApplicationsPending) {
+                  createTask(TaskType.placementApplication, null, allocatableUser, user, offenderDetails.otherIds.crn)
+                }
+
+                val numPlacementRequestsPending = 2
+                repeat(numPlacementRequestsPending) {
+                  createTask(TaskType.placementRequest, null, allocatableUser, user, offenderDetails.otherIds.crn)
+                }
+
+                val numAssessmentsCompletedBetween1And7DaysAgo = 4
+                repeat(numAssessmentsCompletedBetween1And7DaysAgo) {
                   val days = kotlin.random.Random.nextInt(1, 7).toLong()
-                  `Given an Assessment for Approved Premises`(
-                    allocatedToUser = allocatableUser,
-                    createdByUser = user,
-                    crn = offenderDetails.otherIds.crn,
-                    decision = null,
-                    reallocated = false,
-                    submittedAt = OffsetDateTime.now().minusDays(days),
-                  )
+                  createTask(TaskType.assessment, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
                 }
 
-                val numAssesmentsCompleted30Days = 9
-                repeat(numAssesmentsCompleted30Days) {
-                  val days = kotlin.random.Random.nextInt(8, 30).toLong()
-                  `Given an Assessment for Approved Premises`(
-                    allocatedToUser = allocatableUser,
-                    createdByUser = user,
-                    crn = offenderDetails.otherIds.crn,
-                    decision = null,
-                    reallocated = false,
-                    submittedAt = OffsetDateTime.now().minusDays(days),
-                  )
+                val numPlacementApplicationsCompletedBetween1And7DaysAgo = 2
+                repeat(numPlacementApplicationsCompletedBetween1And7DaysAgo) {
+                  val days = kotlin.random.Random.nextInt(1, 7).toLong()
+                  createTask(TaskType.placementApplication, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
                 }
+
+                val numPlacementRequestsCompletedBetween1And7DaysAgo = 1
+                repeat(numPlacementRequestsCompletedBetween1And7DaysAgo) {
+                  val days = kotlin.random.Random.nextInt(1, 7).toLong()
+                  createTask(TaskType.placementRequest, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                }
+
+                val numAssessmentsCompletedBetween8And30DaysAgo = 4
+                repeat(numAssessmentsCompletedBetween8And30DaysAgo) {
+                  val days = kotlin.random.Random.nextInt(8, 30).toLong()
+                  createTask(TaskType.assessment, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                }
+
+                val numPlacementApplicationsCompletedBetween8And30DaysAgo = 3
+                repeat(numPlacementApplicationsCompletedBetween8And30DaysAgo) {
+                  val days = kotlin.random.Random.nextInt(8, 30).toLong()
+                  createTask(TaskType.placementApplication, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                }
+
+                val numPlacementRequestsCompletedBetween8And30DaysAgo = 2
+                repeat(numPlacementRequestsCompletedBetween8And30DaysAgo) {
+                  val days = kotlin.random.Random.nextInt(8, 30).toLong()
+                  createTask(TaskType.placementRequest, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                }
+
+                val numPendingTasks = listOf(
+                  numAssessmentsPending,
+                  numPlacementRequestsPending,
+                  numPlacementApplicationsPending,
+                ).sum()
+                val numTasksCompletedInTheLast7Days = listOf(
+                  numAssessmentsCompletedBetween1And7DaysAgo,
+                  numPlacementApplicationsCompletedBetween1And7DaysAgo,
+                  numPlacementRequestsCompletedBetween1And7DaysAgo,
+                ).sum()
+                val numTasksCompletedInTheLast30Days = listOf(
+                  numTasksCompletedInTheLast7Days,
+                  numAssessmentsCompletedBetween8And30DaysAgo,
+                  numPlacementApplicationsCompletedBetween8And30DaysAgo,
+                  numPlacementRequestsCompletedBetween8And30DaysAgo,
+                ).sum()
 
                 webTestClient.get()
                   .uri("/tasks/placement-application/${placementApplication.id}")
@@ -1523,9 +1554,9 @@ class TasksTest : IntegrationTestBase() {
                           userTransformer.transformJpaToAPIUserWithWorkload(
                             allocatableUser,
                             UserWorkload(
-                              12,
-                              8,
-                              17,
+                              numPendingTasks,
+                              numTasksCompletedInTheLast7Days,
+                              numTasksCompletedInTheLast30Days,
                             ),
                           ),
                         ),
@@ -1557,6 +1588,70 @@ class TasksTest : IntegrationTestBase() {
           }
         }
       }
+    }
+
+    private fun createTask(taskType: TaskType, completedAt: OffsetDateTime?, allocatedUser: UserEntity, createdByUser: UserEntity, crn: String) {
+      (
+        when (taskType) {
+          TaskType.assessment -> {
+            if (completedAt != null) {
+              `Given an Assessment for Approved Premises`(
+                allocatedToUser = allocatedUser,
+                createdByUser = createdByUser,
+                crn = crn,
+                decision = null,
+                reallocated = false,
+                submittedAt = completedAt,
+              )
+            } else {
+              `Given an Assessment for Approved Premises`(
+                allocatedToUser = allocatedUser,
+                createdByUser = createdByUser,
+                crn = crn,
+                decision = null,
+                reallocated = false,
+                submittedAt = null,
+              )
+            }
+          }
+          TaskType.placementRequest -> {
+            val booking = if (completedAt != null) {
+              val premises = approvedPremisesEntityFactory.produceAndPersist {
+                withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                withProbationRegion(createdByUser.probationRegion)
+              }
+              bookingEntityFactory.produceAndPersist {
+                withPremises(premises)
+                withCreatedAt(completedAt)
+              }
+            } else {
+              null
+            }
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = allocatedUser,
+              assessmentAllocatedTo = createdByUser,
+              createdByUser = createdByUser,
+              crn = crn,
+              booking = booking,
+            )
+          }
+          TaskType.placementApplication -> {
+            `Given a Placement Application`(
+              createdByUser = createdByUser,
+              allocatedToUser = allocatedUser,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              submittedAt = completedAt,
+              crn = crn,
+            )
+          }
+          else -> {
+            null
+          }
+        }
+        )
     }
   }
 

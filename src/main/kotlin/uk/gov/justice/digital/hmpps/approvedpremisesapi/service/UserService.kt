@@ -245,9 +245,21 @@ class UserService(
   fun getUserWorkloads(userIds: List<UUID>): Map<UUID, UserWorkload> {
     return userRepository.findWorkloadForUserIds(userIds).associate {
       it.getUserId() to UserWorkload(
-        it.getPendingAssessments(),
-        it.getCompletedAssessmentsInTheLastSevenDays(),
-        it.getCompletedAssessmentsInTheLastThirtyDays(),
+        numTasksPending = listOf(
+          it.getPendingAssessments(),
+          it.getPendingPlacementRequests(),
+          it.getPendingPlacementApplications(),
+        ).sum(),
+        numTasksCompleted7Days = listOf(
+          it.getCompletedAssessmentsInTheLastSevenDays(),
+          it.getCompletedPlacementApplicationsInTheLastSevenDays(),
+          it.getCompletedPlacementRequestsInTheLastSevenDays(),
+        ).sum(),
+        numTasksCompleted30Days = listOf(
+          it.getCompletedAssessmentsInTheLastThirtyDays(),
+          it.getCompletedPlacementApplicationsInTheLastThirtyDays(),
+          it.getCompletedPlacementRequestsInTheLastThirtyDays(),
+        ).sum(),
       )
     }
   }

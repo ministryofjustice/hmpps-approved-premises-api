@@ -30,9 +30,9 @@ class UserTransformer(
       isActive = jpa.isActive,
       region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
       service = ServiceName.approvedPremises.value,
-      numAssessmentsPending = userWorkload.numAssessmentsPending,
-      numAssessmentsCompleted30Days = userWorkload.numAssessmentsCompleted30Days,
-      numAssessmentsCompleted7Days = userWorkload.numAssessmentsCompleted7Days,
+      numTasksPending = userWorkload.numTasksPending,
+      numTasksCompleted7Days = userWorkload.numTasksCompleted7Days,
+      numTasksCompleted30Days = userWorkload.numTasksCompleted30Days,
       qualifications = jpa.qualifications.distinct().map(::transformQualificationToApi),
       roles = jpa.roles.distinct().mapNotNull(::transformApprovedPremisesRoleToApi),
     )
