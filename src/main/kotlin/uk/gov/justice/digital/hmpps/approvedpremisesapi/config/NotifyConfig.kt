@@ -14,6 +14,11 @@ class NotifyConfig {
   var apiKey: String? = null
   var guestListApiKey: String? = null
   var templates: NotifyTemplates = NotifyTemplates()
+  var emailAddresses: EmailAddressConfig = EmailAddressConfig()
+}
+
+class EmailAddressConfig {
+  var cas2Assessors: String = "example@example.com"
 }
 
 class NotifyTemplates {

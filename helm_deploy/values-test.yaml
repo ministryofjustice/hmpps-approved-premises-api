@@ -70,6 +70,10 @@ generic-service:
     DATA-SOURCES_OFFENDER-DETAILS: community_api
     DATA-SOURCES_OFFENDER-RISKS: community_api
 
+  namespace_secrets:
+    hmpps-approved-premises-api:
+      NOTIFY_EMAILADDRESSES_CAS2ASSESSORS: "NOTIFY_EMAILADDRESSES_CAS2ASSESSORS"
+
   allowlist:
     unilink-aovpn1: "194.75.210.216/29"
     unilink-aovpn2: "83.98.63.176/29"
