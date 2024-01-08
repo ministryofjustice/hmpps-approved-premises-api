@@ -202,7 +202,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `It returns the unmatched placement requests and withdrawn placement requests when the user is a manager`() {
+    fun `It returns the unmatched placement requests and withdrawn placement requests when the user is a manager and status is not defined`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { unmatchedOffender, unmatchedInmate ->
           `Given a Placement Request`(
@@ -240,7 +240,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `It returns the unmatched placement requests and ignores the withdrawn placement requests when the user is a manager`() {
+    fun `It returns the unmatched placement requests and ignores the withdrawn placement requests when the user is a manager and status is notMatched`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { unmatchedOffender, unmatchedInmate ->
           `Given a Placement Request`(
@@ -274,15 +274,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `It returns the matched placement requests when the user is a manager`() {
+    fun `It returns the matched placement requests and ignores the withdrawn placement requests when the user is a manager and status is matched`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { matchedOffender, matchedInmate ->
-          `Given a Placement Request`(
-            placementRequestAllocatedTo = user,
-            assessmentAllocatedTo = user,
-            createdByUser = user,
-            crn = matchedOffender.otherIds.crn,
-          ) { matchedPlacementRequest, _ ->
+
+          fun matchPlacementRequest(placementRequest: PlacementRequestEntity) {
             val premises = approvedPremisesEntityFactory.produceAndPersist {
               withProbationRegion(
                 probationRegionEntityFactory.produceAndPersist {
@@ -302,12 +298,31 @@ class PlacementRequestsTest : IntegrationTestBase() {
               withRoom(room)
             }
 
-            matchedPlacementRequest.booking = bookingEntityFactory.produceAndPersist {
+            placementRequest.booking = bookingEntityFactory.produceAndPersist {
               withPremises(premises)
               withBed(bed)
             }
 
-            realPlacementRequestRepository.save(matchedPlacementRequest)
+            realPlacementRequestRepository.save(placementRequest)
+          }
+
+          `Given a Placement Request`(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = matchedOffender.otherIds.crn,
+            isWithdrawn = true,
+          ) { placementRequest, _ ->
+            matchPlacementRequest(placementRequest)
+          }
+
+          `Given a Placement Request`(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = matchedOffender.otherIds.crn,
+          ) { matchedPlacementRequest, _ ->
+            matchPlacementRequest(matchedPlacementRequest)
 
             webTestClient.get()
               .uri("/placement-requests/dashboard?status=matched")
@@ -332,9 +347,24 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `It returns the unable to match placement requests when the user is a manager`() {
+    fun `It returns the unable to match placement requests and ignores the withdrawn placement requests when the user is a manager and status is unableToMatch`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { unableToMatchOffender, unableToMatchInmate ->
+
+          `Given a Placement Request`(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = unableToMatchOffender.otherIds.crn,
+            isWithdrawn = true,
+          ) { unableToMatchPlacementRequest, _ ->
+            unableToMatchPlacementRequest.bookingNotMades = mutableListOf(
+              bookingNotMadeFactory.produceAndPersist {
+                withPlacementRequest(unableToMatchPlacementRequest)
+              },
+            )
+          }
+
           `Given a Placement Request`(
             placementRequestAllocatedTo = user,
             assessmentAllocatedTo = user,

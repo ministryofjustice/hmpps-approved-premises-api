@@ -129,6 +129,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   reallocated: Boolean = false,
   expectedArrival: LocalDate? = null,
   tier: String? = null,
+  isWithdrawn: Boolean = false,
   block: (placementRequest: PlacementRequestEntity, application: ApplicationEntity) -> Unit,
 ) {
   val result = `Given a Placement Request`(
@@ -139,6 +140,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     reallocated = reallocated,
     expectedArrival = expectedArrival,
     tier = tier,
+    isWithdrawn = isWithdrawn,
   )
 
   block(result.first, result.second)
