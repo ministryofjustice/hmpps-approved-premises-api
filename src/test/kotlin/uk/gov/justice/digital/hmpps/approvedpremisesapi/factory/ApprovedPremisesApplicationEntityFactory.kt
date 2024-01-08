@@ -180,6 +180,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.status = { status }
   }
 
+  fun withInmateInOutStatusOnSubmission(inmateInOutStatusOnSubmission: String?) = apply {
+    this.inmateInOutStatusOnSubmission = { inmateInOutStatusOnSubmission }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Alert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.PrisonerInPrisonSummary
 import java.time.Duration
 
 @Component
@@ -43,5 +44,9 @@ class PrisonsApiClient(
 
   fun getAlerts(nomsNumber: String, alertCode: String) = getRequest<List<Alert>> {
     path = "/api/offenders/$nomsNumber/alerts/v2?alertCodes=HA&sort=dateCreated&direction=DESC"
+  }
+
+  fun getPrisonTimeline(nomsNumber: String) = getRequest<PrisonerInPrisonSummary> {
+    path = "/api/offenders/$nomsNumber/prison-timeline"
   }
 }

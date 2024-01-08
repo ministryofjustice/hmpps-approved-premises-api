@@ -1,15 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import io.sentry.Sentry
-import org.springframework.beans.factory.getBean
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.ApplicationContext
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.BookingStatusMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.InmateStatusOnSubmissionMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
@@ -22,6 +25,7 @@ class MigrationJobService(
   private val applicationContext: ApplicationContext,
   private val transactionTemplate: TransactionTemplate,
   private val migrationLogger: MigrationLogger,
+  @Value("\${migration-job.throttle-enabled}") private val throttle: Boolean,
 ) {
   @Async
   fun runMigrationJobAsync(migrationJobType: MigrationJobType) = runMigrationJob(migrationJobType, 50)
@@ -43,6 +47,15 @@ class MigrationJobService(
           applicationContext.getBean(BookingRepository::class.java),
           applicationContext.getBean(EntityManager::class.java),
           pageSize,
+        )
+
+        MigrationJobType.inmateStatusOnSubmission -> InmateStatusOnSubmissionMigrationJob(
+          applicationContext.getBean(ApplicationRepository::class.java),
+          applicationContext.getBean(EntityManager::class.java),
+          pageSize,
+          throttle,
+          transactionTemplate,
+          applicationContext.getBean(PrisonsApiClient::class.java),
         )
       }
 
