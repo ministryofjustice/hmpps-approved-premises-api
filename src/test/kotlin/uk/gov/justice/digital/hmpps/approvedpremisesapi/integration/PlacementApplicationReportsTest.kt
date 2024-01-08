@@ -366,7 +366,6 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         .isOk
         .expectBody()
         .consumeWith {
-
           val actualRows = DataFrame
             .readExcel(it.responseBody!!.inputStream())
             .convertTo<PlacementApplicationReportRow>(ExcessiveColumns.Remove)

@@ -589,6 +589,10 @@ components:
           example: approved-premises.application.assessed
         eventDetails:
           $ref: '#/components/schemas/ApplicationAssessed'
+        arrivalDate:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
       required:
         - id
         - timestamp

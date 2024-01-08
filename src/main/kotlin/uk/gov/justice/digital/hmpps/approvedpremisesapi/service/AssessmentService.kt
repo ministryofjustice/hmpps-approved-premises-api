@@ -47,11 +47,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
 @Service
+@Suppress("ReturnCount", "CyclomaticComplexMethod")
 class AssessmentService(
   private val userService: UserService,
   private val userAccessService: UserAccessService,
@@ -71,14 +73,26 @@ class AssessmentService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: String,
 ) {
-  fun getVisibleAssessmentSummariesForUser(user: UserEntity, serviceName: ServiceName): List<DomainAssessmentSummary> = when (serviceName) {
-    ServiceName.approvedPremises -> assessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(user.id.toString())
-    ServiceName.temporaryAccommodation -> assessmentRepository.findAllTemporaryAccommodationAssessmentSummariesForRegion(user.probationRegion.id)
-    else -> listOf()
-  }
+  fun getVisibleAssessmentSummariesForUser(user: UserEntity, serviceName: ServiceName): List<DomainAssessmentSummary> =
+    when (serviceName) {
+      ServiceName.approvedPremises -> assessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(user.id.toString())
+      ServiceName.temporaryAccommodation -> assessmentRepository.findAllTemporaryAccommodationAssessmentSummariesForRegion(
+        user.probationRegion.id,
+      )
 
-  fun getAssessmentSummariesByCrnForUser(user: UserEntity, crn: String, serviceName: ServiceName): List<DomainAssessmentSummary> = when (serviceName) {
-    ServiceName.temporaryAccommodation -> assessmentRepository.findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(user.probationRegion.id, crn)
+      else -> listOf()
+    }
+
+  fun getAssessmentSummariesByCrnForUser(
+    user: UserEntity,
+    crn: String,
+    serviceName: ServiceName,
+  ): List<DomainAssessmentSummary> = when (serviceName) {
+    ServiceName.temporaryAccommodation -> assessmentRepository.findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(
+      user.probationRegion.id,
+      crn,
+    )
+
     else -> throw RuntimeException("Only CAS3 assessments are currently supported")
   }
 
@@ -99,12 +113,14 @@ class AssessmentService(
             ApprovedPremisesAssessmentEntity::class.java,
             pageable,
           )
+
       allocatedFilter == AllocatedFilter.allocated ->
         assessments =
           assessmentRepository.findAllByReallocatedAtNullAndSubmittedAtNullAndTypeAndAllocatedToUser(
             ApprovedPremisesAssessmentEntity::class.java,
             pageable,
           )
+
       else ->
         assessments =
           assessmentRepository.findAllByReallocatedAtNullAndSubmittedAtNullAndType(
@@ -124,8 +140,14 @@ class AssessmentService(
       ?: return AuthorisableActionResult.NotFound()
 
     val latestSchema = when (assessment) {
-      is ApprovedPremisesAssessmentEntity -> jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
-      is TemporaryAccommodationAssessmentEntity -> jsonSchemaService.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java)
+      is ApprovedPremisesAssessmentEntity -> jsonSchemaService.getNewestSchema(
+        ApprovedPremisesAssessmentJsonSchemaEntity::class.java,
+      )
+
+      is TemporaryAccommodationAssessmentEntity -> jsonSchemaService.getNewestSchema(
+        TemporaryAccommodationAssessmentJsonSchemaEntity::class.java,
+      )
+
       else -> throw RuntimeException("Assessment type '${assessment::class.qualifiedName}' is not currently supported")
     }
 
@@ -135,7 +157,11 @@ class AssessmentService(
 
     assessment.schemaUpToDate = assessment.schemaVersion.id == latestSchema.id
 
-    val offenderResult = offenderService.getOffenderByCrn(assessment.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+    val offenderResult = offenderService.getOffenderByCrn(
+      assessment.application.crn,
+      user.deliusUsername,
+      user.hasQualification(UserQualification.LAO),
+    )
 
     if (offenderResult !is AuthorisableActionResult.Success) {
       return AuthorisableActionResult.Unauthorised()
@@ -144,7 +170,10 @@ class AssessmentService(
     return AuthorisableActionResult.Success(assessment)
   }
 
-  fun getAssessmentForUserAndApplication(user: UserEntity, applicationID: UUID): AuthorisableActionResult<AssessmentEntity> {
+  fun getAssessmentForUserAndApplication(
+    user: UserEntity,
+    applicationID: UUID,
+  ): AuthorisableActionResult<AssessmentEntity> {
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
 
     val assessment = assessmentRepository.findByApplication_IdAndReallocatedAtNull(applicationID)
@@ -202,7 +231,10 @@ class AssessmentService(
     return assessment
   }
 
-  fun createTemporaryAccommodationAssessment(application: TemporaryAccommodationApplicationEntity, summaryData: Any): TemporaryAccommodationAssessmentEntity {
+  fun createTemporaryAccommodationAssessment(
+    application: TemporaryAccommodationApplicationEntity,
+    summaryData: Any,
+  ): TemporaryAccommodationAssessmentEntity {
     val dateTimeNow = OffsetDateTime.now()
 
     val assessment = assessmentRepository.save(
@@ -233,7 +265,11 @@ class AssessmentService(
     return assessment
   }
 
-  fun updateAssessment(user: UserEntity, assessmentId: UUID, data: String?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  fun updateAssessment(
+    user: UserEntity,
+    assessmentId: UUID,
+    data: String?,
+  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     val assessmentResult = getAssessmentForUser(user, assessmentId)
 
     val assessment = when (assessmentResult) {
@@ -275,7 +311,14 @@ class AssessmentService(
     )
   }
 
-  fun acceptAssessment(user: UserEntity, assessmentId: UUID, document: String?, placementRequirements: PlacementRequirements?, placementDates: PlacementDates?, notes: String?): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  fun acceptAssessment(
+    user: UserEntity,
+    assessmentId: UUID,
+    document: String?,
+    placementRequirements: PlacementRequirements?,
+    placementDates: PlacementDates?,
+    notes: String?,
+  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     val domainEventId = UUID.randomUUID()
     val acceptedAt = OffsetDateTime.now()
 
@@ -362,11 +405,12 @@ class AssessmentService(
 
     val application = savedAssessment.application
 
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, true)) {
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")
-      is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
-    }
+    val offenderDetails =
+      when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, true)) {
+        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Unauthorised")
+        is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Application Assessed Domain Event: Not Found")
+      }
 
     val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
     val staffDetails = when (staffDetailsResult) {
@@ -414,6 +458,7 @@ class AssessmentService(
               decision = assessment.decision.toString(),
               decisionRationale = assessment.rejectionRationale,
             ),
+            arrivalDate = placementDates?.expectedArrival?.toLocalDateTime()?.toInstant(),
           ),
         ),
       )
@@ -435,7 +480,12 @@ class AssessmentService(
     )
   }
 
-  fun rejectAssessment(user: UserEntity, assessmentId: UUID, document: String?, rejectionRationale: String): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  fun rejectAssessment(
+    user: UserEntity,
+    assessmentId: UUID,
+    document: String?,
+    rejectionRationale: String,
+  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     val domainEventId = UUID.randomUUID()
     val rejectedAt = OffsetDateTime.now()
 
@@ -498,10 +548,11 @@ class AssessmentService(
 
     val application = savedAssessment.application
 
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, true)) {
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      else -> null
-    }
+    val offenderDetails =
+      when (val offenderDetailsResult = offenderService.getOffenderByCrn(application.crn, user.deliusUsername, true)) {
+        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        else -> null
+      }
 
     val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
     val staffDetails = when (staffDetailsResult) {
@@ -549,6 +600,7 @@ class AssessmentService(
               decision = assessment.decision.toString(),
               decisionRationale = assessment.rejectionRationale,
             ),
+            arrivalDate = null,
           ),
         ),
       )
@@ -606,13 +658,20 @@ class AssessmentService(
     )
   }
 
-  fun reallocateAssessment(assigneeUser: UserEntity, id: UUID): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
+  fun reallocateAssessment(
+    assigneeUser: UserEntity,
+    id: UUID,
+  ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     val currentAssessment = assessmentRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
     return when (currentAssessment) {
       is ApprovedPremisesAssessmentEntity -> reallocateApprovedPremisesAssessment(assigneeUser, currentAssessment)
-      is TemporaryAccommodationAssessmentEntity -> reallocateTemporaryAccommodationAssessment(assigneeUser, currentAssessment)
+      is TemporaryAccommodationAssessmentEntity -> reallocateTemporaryAccommodationAssessment(
+        assigneeUser,
+        currentAssessment,
+      )
+
       else -> throw RuntimeException("Reallocating an assessment of type '${currentAssessment::class.qualifiedName}' has not been implemented.")
     }
   }
@@ -632,13 +691,21 @@ class AssessmentService(
 
     if (!assigneeUser.hasRole(UserRole.CAS1_ASSESSOR)) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingAssessorRole" }),
+        ValidatableActionResult.FieldValidationError(
+          ValidationErrors().apply {
+            this["$.userId"] = "lackingAssessorRole"
+          },
+        ),
       )
     }
 
     if (!assigneeUser.hasAllQualifications(requiredQualifications)) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingQualifications" }),
+        ValidatableActionResult.FieldValidationError(
+          ValidationErrors().apply {
+            this["$.userId"] = "lackingQualifications"
+          },
+        ),
       )
     }
 
@@ -710,7 +777,11 @@ class AssessmentService(
   ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
     if (!assigneeUser.hasRole(UserRole.CAS3_ASSESSOR)) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(ValidationErrors().apply { this["$.userId"] = "lackingAssessorRole" }),
+        ValidatableActionResult.FieldValidationError(
+          ValidationErrors().apply {
+            this["$.userId"] = "lackingAssessorRole"
+          },
+        ),
       )
     }
 
@@ -751,7 +822,11 @@ class AssessmentService(
     )
   }
 
-  fun addAssessmentClarificationNote(user: UserEntity, assessmentId: UUID, text: String): AuthorisableActionResult<AssessmentClarificationNoteEntity> {
+  fun addAssessmentClarificationNote(
+    user: UserEntity,
+    assessmentId: UUID,
+    text: String,
+  ): AuthorisableActionResult<AssessmentClarificationNoteEntity> {
     val assessmentResult = getAssessmentForUser(user, assessmentId)
     val assessment = when (assessmentResult) {
       is AuthorisableActionResult.Success -> assessmentResult.entity
@@ -774,7 +849,13 @@ class AssessmentService(
     return AuthorisableActionResult.Success(clarificationNoteEntity)
   }
 
-  fun updateAssessmentClarificationNote(user: UserEntity, assessmentId: UUID, id: UUID, response: String, responseReceivedOn: LocalDate): AuthorisableActionResult<ValidatableActionResult<AssessmentClarificationNoteEntity>> {
+  fun updateAssessmentClarificationNote(
+    user: UserEntity,
+    assessmentId: UUID,
+    id: UUID,
+    response: String,
+    responseReceivedOn: LocalDate,
+  ): AuthorisableActionResult<ValidatableActionResult<AssessmentClarificationNoteEntity>> {
     val assessment = when (val assessmentResult = getAssessmentForUser(user, assessmentId)) {
       is AuthorisableActionResult.Success -> assessmentResult.entity
       is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
@@ -809,7 +890,11 @@ class AssessmentService(
     )
   }
 
-  fun addAssessmentReferralHistoryUserNote(user: UserEntity, assessmentId: UUID, text: String): AuthorisableActionResult<AssessmentReferralHistoryUserNoteEntity> {
+  fun addAssessmentReferralHistoryUserNote(
+    user: UserEntity,
+    assessmentId: UUID,
+    text: String,
+  ): AuthorisableActionResult<AssessmentReferralHistoryUserNoteEntity> {
     val assessment = when (val assessmentResult = getAssessmentForUser(user, assessmentId)) {
       is AuthorisableActionResult.Success -> assessmentResult.entity
       is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
