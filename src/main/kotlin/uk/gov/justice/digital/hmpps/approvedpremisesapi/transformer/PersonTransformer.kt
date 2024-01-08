@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RestrictedPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
@@ -29,7 +30,7 @@ class PersonTransformer {
         "Prefer to self-describe" -> personInfoResult.offenderDetailSummary.offenderProfile.selfDescribedGender
         else -> personInfoResult.offenderDetailSummary.offenderProfile.genderIdentity
       },
-      prisonName = inOutStatusToPersonInfoApiStatus(personInfoResult.inmateDetail?.inOutStatus).takeIf { it == FullPerson.Status.inCustody }?.let {
+      prisonName = inOutStatusToPersonInfoApiStatus(personInfoResult.inmateDetail?.inOutStatus).takeIf { it == PersonStatus.inCustody }?.let {
         personInfoResult.inmateDetail?.assignedLivingUnit?.agencyName ?: personInfoResult.inmateDetail?.assignedLivingUnit?.agencyId
       },
       isRestricted = (personInfoResult.offenderDetailSummary.currentExclusion || personInfoResult.offenderDetailSummary.currentRestriction),
@@ -51,7 +52,7 @@ class PersonTransformer {
       name = "${personInfoResult.summary.name.forename} ${personInfoResult.summary.name.surname}",
       dateOfBirth = personInfoResult.summary.dateOfBirth,
       sex = personInfoResult.summary.gender ?: "Not Found",
-      status = FullPerson.Status.unknown,
+      status = PersonStatus.unknown,
       nomsNumber = personInfoResult.summary.nomsId,
       ethnicity = personInfoResult.summary.profile?.ethnicity,
       nationality = personInfoResult.summary.profile?.nationality,
@@ -81,16 +82,17 @@ class PersonTransformer {
       nomsNumber = probationOffenderResult.probationOffenderDetail.otherIds.nomsNumber,
       pncNumber = probationOffenderResult.probationOffenderDetail.otherIds.pncNumber ?: "Not found",
       nationality = probationOffenderResult.probationOffenderDetail.offenderProfile?.nationality ?: "Not found",
-      prisonName = inOutStatusToPersonInfoApiStatus(probationOffenderResult.inmateDetail?.inOutStatus).takeIf { it == FullPerson.Status.inCustody }?.let {
+      prisonName = inOutStatusToPersonInfoApiStatus(probationOffenderResult.inmateDetail?.inOutStatus).takeIf { it == PersonStatus.inCustody }?.let {
         probationOffenderResult.inmateDetail?.assignedLivingUnit?.agencyName
           ?: probationOffenderResult.inmateDetail?.assignedLivingUnit?.agencyId
       },
       isRestricted = (probationOffenderResult.probationOffenderDetail.currentExclusion ?: false || probationOffenderResult.probationOffenderDetail.currentRestriction ?: false),
     )
-  private fun inOutStatusToPersonInfoApiStatus(inOutStatus: InOutStatus?) = when (inOutStatus) {
-    InOutStatus.IN -> FullPerson.Status.inCustody
-    InOutStatus.OUT -> FullPerson.Status.inCommunity
-    InOutStatus.TRN -> FullPerson.Status.inCustody
-    null -> FullPerson.Status.unknown
+
+  fun inOutStatusToPersonInfoApiStatus(inOutStatus: InOutStatus?) = when (inOutStatus) {
+    InOutStatus.IN -> PersonStatus.inCustody
+    InOutStatus.OUT -> PersonStatus.inCommunity
+    InOutStatus.TRN -> PersonStatus.inCustody
+    null -> PersonStatus.unknown
   }
 }

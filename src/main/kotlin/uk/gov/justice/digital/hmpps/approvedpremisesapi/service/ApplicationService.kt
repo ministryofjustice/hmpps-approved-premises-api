@@ -337,6 +337,7 @@ class ApplicationService(
       status = ApprovedPremisesApplicationStatus.STARTED,
       sentenceType = null,
       situation = null,
+      inmateInOutStatusOnSubmission = null,
     )
   }
 
@@ -743,6 +744,13 @@ class ApplicationService(
       )
     }
 
+    val inmateDetails = application.nomsNumber?.let { nomsNumber ->
+      when (val inmateDetailsResult = offenderService.getInmateDetailByNomsNumber(application.crn, nomsNumber)) {
+        is AuthorisableActionResult.Success -> inmateDetailsResult.entity
+        else -> null
+      }
+    }
+
     application.apply {
       isWomensApplication = submitApplication.isWomensApplication
       isPipeApplication = submitApplication.isPipeApplication
@@ -755,6 +763,7 @@ class ApplicationService(
       arrivalDate = getArrivalDate(submitApplication.arrivalDate)
       sentenceType = submitApplication.sentenceType.toString()
       situation = submitApplication.situation?.toString()
+      inmateInOutStatusOnSubmission = inmateDetails?.inOutStatus?.name
     }
 
     assessmentService.createApprovedPremisesAssessment(application)

@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
@@ -71,6 +72,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
@@ -1161,6 +1163,10 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+      every { mockOffenderService.getInmateDetailByNomsNumber(any(), any()) } returns AuthorisableActionResult.Success(
+        InmateDetailFactory().withInOutStatus(InOutStatus.OUT).produce(),
+      )
+
       every { mockAssessmentService.createApprovedPremisesAssessment(application) } returns ApprovedPremisesAssessmentEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(user)
@@ -1214,9 +1220,6 @@ class ApplicationServiceTest {
       val caseDetails = CaseDetailFactory().produce()
 
       every { mockApDeliusContextApiClient.getCaseDetail(application.crn) } returns ClientResult.Success(status = HttpStatus.OK, body = caseDetails)
-
-      val schema = application.schemaVersion as ApprovedPremisesApplicationJsonSchemaEntity
-
       every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
       every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
@@ -1243,6 +1246,7 @@ class ApplicationServiceTest {
         assertThat(persistedApplication.situation).isEqualTo(situation.toString())
       }
       assertThat(persistedApplication.targetLocation).isEqualTo(submitApprovedPremisesApplication.targetLocation)
+      assertThat(persistedApplication.inmateInOutStatusOnSubmission).isEqualTo("OUT")
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) { mockAssessmentService.createApprovedPremisesAssessment(application) }

@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
@@ -259,7 +260,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           application.id == it[0].id &&
             application.crn == person.crn &&
             person.nomsNumber == null &&
-            person.status == FullPerson.Status.unknown &&
+            person.status == PersonStatus.unknown &&
             person.prisonName == null
         }
       }
@@ -378,7 +379,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           application.id == it.id &&
             application.crn == person.crn &&
             person.nomsNumber == null &&
-            person.status == FullPerson.Status.unknown &&
+            person.status == PersonStatus.unknown &&
             person.prisonName == null
         }
       }

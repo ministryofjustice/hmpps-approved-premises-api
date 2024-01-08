@@ -4930,11 +4930,7 @@ components:
             genderIdentity:
               type: string
             status:
-              type: string
-              enum:
-                - InCustody
-                - InCommunity
-                - Unknown
+              $ref: '#/components/schemas/PersonStatus'
             prisonName:
               type: string
             isRestricted:
@@ -4944,6 +4940,12 @@ components:
             - dateOfBirth
             - sex
             - status
+    PersonStatus:
+      type: string
+      enum:
+        - InCustody
+        - InCommunity
+        - Unknown
     NewArrival:
       type: object
       properties:
@@ -5811,6 +5813,8 @@ components:
             submittedAt:
               type: string
               format: date-time
+            personStatusOnSubmission:
+              $ref: '#/components/schemas/PersonStatus'
           required:
             - createdByUserId
             - schemaVersion
@@ -7416,6 +7420,7 @@ components:
     MigrationJobType:
       type: string
       enum:
+        - update_inmate_status_on_submission
         - update_all_users_from_community_api
         - update_sentence_type_and_situation
         - update_booking_status

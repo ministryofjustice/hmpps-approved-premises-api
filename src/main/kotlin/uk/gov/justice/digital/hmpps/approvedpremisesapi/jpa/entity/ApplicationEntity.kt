@@ -208,6 +208,13 @@ WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NUL
 
   @Query("SELECT DISTINCT(a.nomsNumber) FROM ApplicationEntity a WHERE a.nomsNumber IS NOT NULL")
   fun getDistinctNomsNumbers(): List<String>
+
+  @Query("SELECT ap FROM ApprovedPremisesApplicationEntity ap WHERE ap.submittedAt IS NOT NULL AND ap.inmateInOutStatusOnSubmission IS NULL")
+  fun getSubmittedApprovedPremisesApplicationsWithoutInOutStatus(pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
+
+  @Modifying
+  @Query("UPDATE ApprovedPremisesApplicationEntity ap set ap.inmateInOutStatusOnSubmission = :inOutStatus where ap.id = :applicationId")
+  fun updateInOutStatus(applicationId: UUID, inOutStatus: String)
 }
 
 @Entity
@@ -291,6 +298,7 @@ class ApprovedPremisesApplicationEntity(
   var targetLocation: String?,
   @Enumerated(value = EnumType.STRING)
   var status: ApprovedPremisesApplicationStatus,
+  var inmateInOutStatusOnSubmission: String?,
 ) : ApplicationEntity(
   id,
   crn,
