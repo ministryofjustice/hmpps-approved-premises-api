@@ -39,7 +39,7 @@ class MigrateInmateStatusOnSubmissionTest : MigrationJobTestBase() {
   }
 
   @Test
-  fun `Should ignore submitted applications that already have a in out status`() {
+  fun `Should ignore submitted applications that already have an in out status`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
@@ -61,7 +61,7 @@ class MigrateInmateStatusOnSubmissionTest : MigrationJobTestBase() {
   }
 
   @Test
-  fun `Should update submitted application without an in out status set`() {
+  fun `Should update submitted application without an in out status set and NOMS number using prison timeline`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val submissionDate = OffsetDateTime.of(2023, 4, 5, 12, 55, 0, 0, ZoneOffset.UTC)
@@ -95,6 +95,31 @@ class MigrateInmateStatusOnSubmissionTest : MigrationJobTestBase() {
             ),
           ),
         )
+
+        migrationJobService.runMigrationJob(MigrationJobType.inmateStatusOnSubmission)
+
+        assertInOutStatus(application, InOutStatus.IN.name)
+      }
+    }
+  }
+
+  @Test
+  fun `Should update submitted application without an in out status set and no NOMS number to IN`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val submissionDate = OffsetDateTime.of(2023, 4, 5, 12, 55, 0, 0, ZoneOffset.UTC)
+
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withConvictionId(12345)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
+          withSubmittedAt(submissionDate)
+          withInmateInOutStatusOnSubmission(null)
+          withNomsNumber(null)
+        }
+
+        assertInOutStatusIsNull(application)
 
         migrationJobService.runMigrationJob(MigrationJobType.inmateStatusOnSubmission)
 
