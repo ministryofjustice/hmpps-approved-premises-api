@@ -274,7 +274,7 @@ class AssessmentTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @EnumSource
-  fun `Get all assessments sorts correctly when 'sortOrder' and 'sortField' query parameters are provided`(sortField: AssessmentSortField) {
+  fun `Get all assessments sorts correctly when 'sortDirection' and 'sortBy' query parameters are provided`(sortBy: AssessmentSortField) {
     `Given a User` { user, jwt ->
       `Given Some Offenders` { offenderSequence ->
         val offenders = offenderSequence.take(5).toList()
@@ -314,7 +314,7 @@ class AssessmentTest : IntegrationTestBase() {
           AssessmentParams(assessment, offenderDetails, inmateDetails)
         }
 
-        val expectedAssessments = when (sortField) {
+        val expectedAssessments = when (sortBy) {
           AssessmentSortField.personName -> assessments.sortedByDescending { "${it.offenderDetails.firstName} ${it.offenderDetails.surname}" }
           AssessmentSortField.personCrn -> assessments.sortedByDescending { it.assessment.application.crn }
           AssessmentSortField.assessmentArrivalDate -> assessments.sortedByDescending { (it.assessment.application as TemporaryAccommodationApplicationEntity).arrivalDate }
@@ -328,7 +328,7 @@ class AssessmentTest : IntegrationTestBase() {
         }.map { assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(it.assessment), PersonInfoResult.Success.Full(it.offenderDetails.otherIds.crn, it.offenderDetails, it.inmateDetails)) }
 
         webTestClient.get()
-          .uri("/assessments?sortOrder=descending&sortField=${sortField.value}")
+          .uri("/assessments?sortDirection=desc&sortBy=${sortBy.value}")
           .header("Authorization", "Bearer $jwt")
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()

@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortOrder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
@@ -53,8 +53,8 @@ class AssessmentController(
   @Suppress("NAME_SHADOWING")
   override fun assessmentsGet(
     xServiceName: ServiceName,
-    sortOrder: SortOrder?,
-    sortField: AssessmentSortField?,
+    sortDirection: SortDirection?,
+    sortBy: AssessmentSortField?,
     statuses: List<AssessmentStatus>?,
     crn: String?,
   ): ResponseEntity<List<AssessmentSummary>> {
@@ -65,14 +65,14 @@ class AssessmentController(
       else -> assessmentService.getVisibleAssessmentSummariesForUser(user, xServiceName)
     }
 
-    val sortOrder = when {
-      xServiceName == ServiceName.temporaryAccommodation && sortOrder == null -> SortOrder.ascending
-      else -> sortOrder
+    val sortDirection = when {
+      xServiceName == ServiceName.temporaryAccommodation && sortDirection == null -> SortDirection.asc
+      else -> sortDirection
     }
 
-    val sortField = when {
-      xServiceName == ServiceName.temporaryAccommodation && sortField == null -> AssessmentSortField.assessmentArrivalDate
-      else -> sortField
+    val sortBy = when {
+      xServiceName == ServiceName.temporaryAccommodation && sortBy == null -> AssessmentSortField.assessmentArrivalDate
+      else -> sortBy
     }
 
     return ResponseEntity.ok(
@@ -83,7 +83,7 @@ class AssessmentController(
           it,
           personInfo,
         )
-      }.sort(sortOrder, sortField)
+      }.sort(sortDirection, sortBy)
         .filterByStatuses(statuses),
     )
   }
