@@ -4,6 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -30,6 +31,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   tier: String? = null,
   mappa: String? = null,
   applicationSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
+  booking: BookingEntity? = null,
 ): Pair<PlacementRequestEntity, ApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -77,9 +79,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     withAssessmentSchema(assessmentSchema)
     withApplication(application)
     withSubmittedAt(OffsetDateTime.now())
-    if (placementRequestAllocatedTo != null) {
-      withAllocatedToUser(placementRequestAllocatedTo)
-    }
+    withAllocatedToUser(assessmentAllocatedTo)
     withDecision(AssessmentDecision.ACCEPTED)
   }
 
@@ -109,7 +109,9 @@ fun IntegrationTestBase.`Given a Placement Request`(
     withIsWithdrawn(isWithdrawn)
     withIsParole(isParole)
     withPlacementRequirements(placementRequirements)
-
+    if (booking != null) {
+      withBooking(booking)
+    }
     if (expectedArrival != null) {
       withExpectedArrival(expectedArrival)
     }
