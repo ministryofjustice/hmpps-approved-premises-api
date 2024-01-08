@@ -19,6 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -29,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
@@ -368,6 +371,24 @@ class ApplicationsTransformerTest {
     )
   }
 
+  @ParameterizedTest
+  @MethodSource("domainEventTypeArgs")
+  fun `transformDomainEventSummaryToTimelineEvent transforms domain event correctly`(args: Pair<DomainEventType, TimelineEventType>) {
+    val (domainEventType, timelineEventType) = args
+    val domainEvent = DomainEventSummary(
+      id = UUID.randomUUID().toString(),
+      type = domainEventType,
+      occurredAt = OffsetDateTime.now(),
+    )
+    assertThat(applicationsTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
+      TimelineEvent(
+        id = domainEvent.id,
+        type = timelineEventType,
+        occurredAt = domainEvent.occurredAt.toInstant(),
+      ),
+    )
+  }
+
   private companion object {
     @JvmStatic
     fun applicationStatusArgs() = listOf(
@@ -383,6 +404,20 @@ class ApplicationsTransformerTest {
       ApiApprovedPremisesApplicationStatus.withdrawn to ApprovedPremisesApplicationStatus.WITHDRAWN,
       ApiApprovedPremisesApplicationStatus.requestedFurtherInformation to ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION,
       ApiApprovedPremisesApplicationStatus.pendingPlacementRequest to ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST,
+    )
+
+    @JvmStatic
+    fun domainEventTypeArgs() = listOf(
+      DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED to TimelineEventType.approvedPremisesApplicationSubmitted,
+      DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED to TimelineEventType.approvedPremisesApplicationAssessed,
+      DomainEventType.APPROVED_PREMISES_BOOKING_MADE to TimelineEventType.approvedPremisesBookingMade,
+      DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED to TimelineEventType.approvedPremisesPersonArrived,
+      DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED to TimelineEventType.approvedPremisesPersonNotArrived,
+      DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED to TimelineEventType.approvedPremisesPersonDeparted,
+      DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE to TimelineEventType.approvedPremisesBookingNotMade,
+      DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED to TimelineEventType.approvedPremisesBookingCancelled,
+      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED to TimelineEventType.approvedPremisesBookingChanged,
+      DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN to TimelineEventType.approvedPremisesApplicationWithdrawn,
     )
   }
 }

@@ -224,7 +224,7 @@ class ApplicationsTransformer(
       DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> APITimelineEventType.approvedPremisesPersonDeparted
       DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> APITimelineEventType.approvedPremisesBookingNotMade
       DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> APITimelineEventType.approvedPremisesBookingCancelled
-      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> APITimelineEventType.approvedPremisesBookingCancelled
+      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> APITimelineEventType.approvedPremisesBookingChanged
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> APITimelineEventType.approvedPremisesApplicationWithdrawn
       else -> throw RuntimeException("Only CAS1 is currently supported")
     }
