@@ -125,6 +125,7 @@ class DomainEventWorkerTest {
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.application.assessed",
         eventDetails = ApplicationAssessedFactory().produce(),
+        arrivalDate = occurredAt.toInstant(),
       ),
     )
 
@@ -185,6 +186,7 @@ class DomainEventWorkerTest {
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.application.assessed",
         eventDetails = ApplicationAssessedFactory().produce(),
+        arrivalDate = occurredAt.toInstant(),
       ),
     )
 
