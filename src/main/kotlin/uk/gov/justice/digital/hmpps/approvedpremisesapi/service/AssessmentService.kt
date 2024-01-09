@@ -457,8 +457,8 @@ class AssessmentService(
               ),
               decision = assessment.decision.toString(),
               decisionRationale = assessment.rejectionRationale,
+              arrivalDate = placementDates?.expectedArrival?.toLocalDateTime()?.toInstant(),
             ),
-            arrivalDate = placementDates?.expectedArrival?.toLocalDateTime()?.toInstant(),
           ),
         ),
       )
@@ -599,8 +599,8 @@ class AssessmentService(
               ),
               decision = assessment.decision.toString(),
               decisionRationale = assessment.rejectionRationale,
+              arrivalDate = null,
             ),
-            arrivalDate = null,
           ),
         ),
       )

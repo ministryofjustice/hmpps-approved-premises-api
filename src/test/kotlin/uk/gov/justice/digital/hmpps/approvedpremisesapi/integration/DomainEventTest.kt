@@ -136,7 +136,6 @@ class DomainEventTest : IntegrationTestBase() {
       timestamp = Instant.now(),
       eventType = "approved-premises.application.assessed",
       eventDetails = ApplicationAssessedFactory().produce(),
-      arrivalDate = Instant.now(),
     )
 
     val event = domainEventFactory.produceAndPersist {

@@ -141,8 +141,8 @@ class DailyMetricsReportTest : IntegrationTestBase() {
                           ).produce(),
                       ).produce(),
                   )
+                  .withArrivalDate(LocalDate.of(year, month, 1).toLocalDateTime().toInstant())
                   .produce(),
-                arrivalDate = LocalDate.of(year, month, 1).toLocalDateTime().toInstant(),
               ),
             ),
           )
