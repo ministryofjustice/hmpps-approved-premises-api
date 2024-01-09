@@ -123,7 +123,8 @@ class BookingService(
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: String,
   @Value("\${arrived-departed-domain-events-disabled}") private val arrivedAndDepartedDomainEventsDisabled: Boolean,
 ) {
-  val approvedPremisesBookingAppealedCancellationReasonId: UUID = UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
+  val approvedPremisesBookingAppealedCancellationReasonId: UUID =
+    UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -266,7 +267,8 @@ class BookingService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    val newBed = bedRepository.findByIdOrNull(bedId) ?: return AuthorisableActionResult.NotFound("Bed", bedId.toString())
+    val newBed =
+      bedRepository.findByIdOrNull(bedId) ?: return AuthorisableActionResult.NotFound("Bed", bedId.toString())
 
     val validationResult = validated {
       if (newBed.room.premises !is ApprovedPremisesEntity) {
@@ -342,7 +344,8 @@ class BookingService(
       }
 
       val application = fetchApplication(crn, eventNumber)
-      val onlineApplication = if (application is Either.Left<ApprovedPremisesApplicationEntity>) application.value else null
+      val onlineApplication =
+        if (application is Either.Left<ApprovedPremisesApplicationEntity>) application.value else null
       val offlineApplication = if (application is Either.Right<OfflineApplicationEntity>) application.value else null
 
       if (onlineApplication != null) {
@@ -388,7 +391,8 @@ class BookingService(
 
       if (!isCalledFromSeeder) {
         val applicationId = (onlineApplication?.id ?: offlineApplication?.id)
-        val eventNumberForDomainEvent = (onlineApplication?.eventNumber ?: offlineApplication?.eventNumber ?: eventNumber)
+        val eventNumberForDomainEvent =
+          (onlineApplication?.eventNumber ?: offlineApplication?.eventNumber ?: eventNumber)
 
         log.info("Using application ID: $applicationId")
         log.info("Using Event Number: $eventNumberForDomainEvent")
@@ -453,7 +457,10 @@ class BookingService(
     }
   }
 
-  private fun fetchApplication(crn: String, eventNumber: String?): Either<ApprovedPremisesApplicationEntity, OfflineApplicationEntity> {
+  private fun fetchApplication(
+    crn: String,
+    eventNumber: String?,
+  ): Either<ApprovedPremisesApplicationEntity, OfflineApplicationEntity> {
     val newestSubmittedOnlineApplication = applicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises)
       .filter { it.submittedAt != null }
       .maxByOrNull { it.submittedAt!! } as ApprovedPremisesApplicationEntity?
@@ -473,7 +480,10 @@ class BookingService(
       )
     }
 
-    return if (newestOfflineApplication != null && newestSubmittedOnlineApplication != null && newestOfflineApplication.createdAt.isBefore(newestSubmittedOnlineApplication.submittedAt)) {
+    return if (newestOfflineApplication != null && newestSubmittedOnlineApplication != null && newestOfflineApplication.createdAt.isBefore(
+        newestSubmittedOnlineApplication.submittedAt,
+      )
+    ) {
       log.info("Offline application is created before the online application, so returning the offline application")
       Either.Right(newestOfflineApplication)
     } else if (newestSubmittedOnlineApplication != null) {
@@ -510,10 +520,11 @@ class BookingService(
   ) {
     val domainEventId = UUID.randomUUID()
 
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, true)) {
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      else -> null
-    }
+    val offenderDetails =
+      when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, true)) {
+        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        else -> null
+      }
 
     val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
     val staffDetails = when (staffDetailsResult) {
@@ -583,10 +594,11 @@ class BookingService(
     val domainEventId = UUID.randomUUID()
     val (applicationId, eventNumber) = getApplicationDetailsForBooking(booking)
 
-    val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, true)) {
-      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-      else -> null
-    }
+    val offenderDetails =
+      when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, true)) {
+        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+        else -> null
+      }
 
     val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
     val staffDetails = when (staffDetailsResult) {
@@ -651,7 +663,8 @@ class BookingService(
     enableTurnarounds: Boolean,
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
     val validationResult = validated {
-      val expectedLastUnavailableDate = workingDayCountService.addWorkingDays(departureDate, premises.turnaroundWorkingDayCount)
+      val expectedLastUnavailableDate =
+        workingDayCountService.addWorkingDays(departureDate, premises.turnaroundWorkingDayCount)
       getBookingWithConflictingDates(arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
         return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
       }
@@ -750,7 +763,12 @@ class BookingService(
     }
 
     val expectedLastUnavailableDate = workingDayCountService.addWorkingDays(booking.departureDate, workingDays)
-    getBookingWithConflictingDates(booking.arrivalDate, expectedLastUnavailableDate, booking.id, booking.bed!!.id)?.let {
+    getBookingWithConflictingDates(
+      booking.arrivalDate,
+      expectedLastUnavailableDate,
+      booking.id,
+      booking.bed!!.id,
+    )?.let {
       return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
     }
 
@@ -832,10 +850,11 @@ class BookingService(
     if (!arrivedAndDepartedDomainEventsDisabled && shouldCreateDomainEventForBooking(booking, user)) {
       val domainEventId = UUID.randomUUID()
 
-      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user!!.deliusUsername, true)) {
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-        else -> null
-      }
+      val offenderDetails =
+        when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user!!.deliusUsername, true)) {
+          is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+          else -> null
+        }
 
       val keyWorkerStaffDetailsResult = communityApiClient.getStaffUserDetailsForStaffCode(keyWorkerStaffCode!!)
       val keyWorkerStaffDetails = when (keyWorkerStaffDetailsResult) {
@@ -1025,7 +1044,13 @@ class BookingService(
       val domainEventId = UUID.randomUUID()
       val user = user as UserEntity
 
-      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
+      val offenderDetails = when (
+        val offenderDetailsResult = offenderService.getOffenderByCrn(
+          booking.crn,
+          user.deliusUsername,
+          user.hasQualification(UserQualification.LAO),
+        )
+      ) {
         is AuthorisableActionResult.Success -> offenderDetailsResult.entity
         is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Unauthorised")
         is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Not Found")
@@ -1155,7 +1180,13 @@ class BookingService(
 
       val domainEventId = UUID.randomUUID()
 
-      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user!!.deliusUsername, user.hasQualification(UserQualification.LAO))) {
+      val offenderDetails = when (
+        val offenderDetailsResult = offenderService.getOffenderByCrn(
+          booking.crn,
+          user!!.deliusUsername,
+          user.hasQualification(UserQualification.LAO),
+        )
+      ) {
         is AuthorisableActionResult.Success -> offenderDetailsResult.entity
         is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Unauthorised")
         is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Not Found")
@@ -1295,8 +1326,10 @@ class BookingService(
   ) = when (booking.premises) {
     is ApprovedPremisesEntity ->
       createCas1Departure(user, booking, dateTime, reasonId, moveOnCategoryId, destinationProviderId, notes)
+
     is TemporaryAccommodationPremisesEntity ->
       createCas3Departure(booking, dateTime, reasonId, moveOnCategoryId, notes)
+
     else ->
       throw RuntimeException("Unknown premises type ${booking.premises::class.qualifiedName}")
   }
@@ -1379,7 +1412,13 @@ class BookingService(
       val domainEventId = UUID.randomUUID()
       val user = user as UserEntity
 
-      val offenderDetails = when (val offenderDetailsResult = offenderService.getOffenderByCrn(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))) {
+      val offenderDetails = when (
+        val offenderDetailsResult = offenderService.getOffenderByCrn(
+          booking.crn,
+          user.deliusUsername,
+          user.hasQualification(UserQualification.LAO),
+        )
+      ) {
         is AuthorisableActionResult.Success -> offenderDetailsResult.entity
         is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Unauthorised")
         is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Made Domain Event: Not Found")
@@ -1519,7 +1558,8 @@ class BookingService(
     newDepartureDate: LocalDate,
     notes: String?,
   ) = validated<ExtensionEntity> {
-    val expectedLastUnavailableDate = workingDayCountService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
+    val expectedLastUnavailableDate =
+      workingDayCountService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
 
     if (booking.service != ServiceName.approvedPremises.value) {
       val bedId = booking.bed?.id
@@ -1576,7 +1616,8 @@ class BookingService(
     val effectiveNewArrivalDate = newArrivalDate ?: booking.arrivalDate
     val effectiveNewDepartureDate = newDepartureDate ?: booking.departureDate
 
-    val expectedLastUnavailableDate = workingDayCountService.addWorkingDays(effectiveNewDepartureDate, booking.turnaround?.workingDayCount ?: 0)
+    val expectedLastUnavailableDate =
+      workingDayCountService.addWorkingDays(effectiveNewDepartureDate, booking.turnaround?.workingDayCount ?: 0)
 
     if (booking.service != ServiceName.approvedPremises.value) {
       val bedId = booking.bed?.id

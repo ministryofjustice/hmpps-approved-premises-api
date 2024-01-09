@@ -63,8 +63,10 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-  fun `Get a booking for an Approved Premises returns OK with the correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+  fun `Get a booking for an Approved Premises returns OK with the correct body when user has one of roles MANAGER, MATCHER`(
+    role: UserRole,
+  ) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -295,8 +297,10 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-  fun `Get all Bookings on Premises without any Bookings returns empty list when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+  fun `Get all Bookings on Premises without any Bookings returns empty list when user has one of roles MANAGER, MATCHER`(
+    role: UserRole,
+  ) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -315,7 +319,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `Get all Bookings returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
@@ -335,7 +339,9 @@ class BookingTest : IntegrationTestBase() {
           withCrn(offenderDetails.otherIds.crn)
         }
 
-        bookings[1].let { it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList() }
+        bookings[1].let {
+          it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
+        }
         bookings[2].let {
           it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
@@ -489,7 +495,9 @@ class BookingTest : IntegrationTestBase() {
           withCrn(offenderDetails.otherIds.crn)
         }
 
-        bookings[1].let { it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList() }
+        bookings[1].let {
+          it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
+        }
         bookings[2].let {
           it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
           it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
@@ -732,6 +740,105 @@ class BookingTest : IntegrationTestBase() {
         }
 
         GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewBooking(
+              crn = offenderDetails.otherIds.crn,
+              arrivalDate = LocalDate.parse("2022-08-12"),
+              departureDate = LocalDate.parse("2022-08-30"),
+              serviceName = ServiceName.temporaryAccommodation,
+              bedId = bed.id,
+              assessmentId = assessment.id,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
+          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
+          .jsonPath("$.departureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
+          .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.keyWorker").isEqualTo(null)
+          .jsonPath("$.status").isEqualTo("provisional")
+          .jsonPath("$.arrival").isEqualTo(null)
+          .jsonPath("$.departure").isEqualTo(null)
+          .jsonPath("$.nonArrival").isEqualTo(null)
+          .jsonPath("$.cancellation").isEqualTo(null)
+          .jsonPath("$.confirmation").isEqualTo(null)
+          .jsonPath("$.serviceName").isEqualTo(ServiceName.temporaryAccommodation.value)
+          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+          .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
+          .jsonPath("$.bed.name").isEqualTo("test-bed")
+          .jsonPath("$.assessmentId").isEqualTo("${assessment.id}")
+      }
+    }
+  }
+
+  @Test
+  fun `Create Temporary Accommodation Booking returns OK with correct body when overlapping booking is a non-arrival`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withName("test-bed")
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withName("test-room")
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withProbationRegion(userEntity.probationRegion)
+          withApplicationSchema(applicationSchema)
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+        val conflictingBooking = bookingEntityFactory.produceAndPersist {
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn("CRN123")
+          withYieldedPremises { premises }
+          withYieldedBed { bed }
+
+          withArrivalDate(LocalDate.parse("2022-07-15"))
+          withDepartureDate(LocalDate.parse("2022-08-28"))
+        }
+
+        conflictingBooking.let {
+          it.nonArrival = nonArrivalEntityFactory.produceAndPersist {
+            withBooking(it)
+            withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
+          }
+        }
 
         webTestClient.post()
           .uri("/premises/${premises.id}/bookings")
@@ -1028,7 +1135,8 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("title").isEqualTo("Conflict")
           .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail").isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingBooking.id}")
+          .jsonPath("detail")
+          .isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingBooking.id}")
       }
     }
   }
@@ -1091,7 +1199,8 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("title").isEqualTo("Conflict")
           .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail").isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-22 which overlaps with the desired dates: ${existingBooking.id}")
+          .jsonPath("detail")
+          .isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-22 which overlaps with the desired dates: ${existingBooking.id}")
       }
     }
   }
@@ -1220,7 +1329,8 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("title").isEqualTo("Conflict")
           .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail").isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingLostBed.id}")
+          .jsonPath("detail")
+          .isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingLostBed.id}")
       }
     }
   }
@@ -1276,7 +1386,8 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("title").isEqualTo("Conflict")
           .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail").isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingLostBed.id}")
+          .jsonPath("detail")
+          .isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${existingLostBed.id}")
       }
     }
   }
@@ -1477,7 +1588,8 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("title").isEqualTo("Conflict")
           .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail").isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingBooking.id}")
+          .jsonPath("detail")
+          .isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingBooking.id}")
       }
     }
   }
@@ -1538,14 +1650,17 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("title").isEqualTo("Conflict")
           .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail").isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
+          .jsonPath("detail")
+          .isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
       }
     }
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-  fun `Create Arrival on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+  fun `Create Arrival on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(
+    role: UserRole,
+  ) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
       APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
@@ -1599,7 +1714,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `Create Arrival on Approved Premises Booking returns 200 with correct body when over-booking`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
@@ -1939,7 +2054,9 @@ class BookingTest : IntegrationTestBase() {
           withDepartureDate(LocalDate.parse("2022-08-30"))
           withCreatedAt(OffsetDateTime.parse("2022-07-01T12:34:56.789Z"))
         }
-        booking.let { it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(2) { withBooking(it) }.toMutableList() }
+        booking.let {
+          it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(2) { withBooking(it) }.toMutableList()
+        }
 
         webTestClient.post()
           .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
@@ -2033,8 +2150,10 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-  fun `Create Departure on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+  fun `Create Departure on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(
+    role: UserRole,
+  ) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
       APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
@@ -2165,7 +2284,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `Create Departure on Approved Premises Booking when a departure already exists returns 400 Bad Request`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
@@ -2413,7 +2532,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `Create Cancellation on Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
@@ -2456,7 +2575,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `Create Cancellation on Approved Premises Booking when a cancellation already exists returns 400 Bad Request`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
@@ -2709,7 +2828,8 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("title").isEqualTo("Conflict")
           .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail").isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingBooking.id}")
+          .jsonPath("detail")
+          .isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingBooking.id}")
       }
     }
   }
@@ -2778,7 +2898,8 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("title").isEqualTo("Conflict")
           .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail").isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingBooking.id}")
+          .jsonPath("detail")
+          .isEqualTo("A Booking already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingBooking.id}")
       }
     }
   }
@@ -2838,7 +2959,8 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("title").isEqualTo("Conflict")
           .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail").isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
+          .jsonPath("detail")
+          .isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
       }
     }
   }
@@ -2906,14 +3028,17 @@ class BookingTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("title").isEqualTo("Conflict")
           .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail").isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
+          .jsonPath("detail")
+          .isEqualTo("A Lost Bed already exists for dates from 2022-07-15 to 2022-08-15 which overlaps with the desired dates: ${conflictingLostBed.id}")
       }
     }
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-  fun `Create Extension on Approved Premises Booking returns OK with expected body, updates departureDate on Booking entity when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+  fun `Create Extension on Approved Premises Booking returns OK with expected body, updates departureDate on Booking entity when user has one of roles MANAGER, MATCHER`(
+    role: UserRole,
+  ) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
       APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")
@@ -3193,7 +3318,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `Create AP Date Change with MANAGER or MATCHER role returns 200, persists date change`(role: UserRole) {
     GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
@@ -3261,8 +3386,10 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-  fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+  fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(
+    role: UserRole,
+  ) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
@@ -3330,8 +3457,10 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = [ "CAS1_MANAGER", "CAS1_MATCHER" ])
-  fun `Create Non Arrival on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+  fun `Create Non Arrival on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(
+    role: UserRole,
+  ) {
     `Given a User`(roles = listOf(role)) { userEntity, jwt ->
       val keyWorker = ContextStaffMemberFactory().produce()
       APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, "QCODE")

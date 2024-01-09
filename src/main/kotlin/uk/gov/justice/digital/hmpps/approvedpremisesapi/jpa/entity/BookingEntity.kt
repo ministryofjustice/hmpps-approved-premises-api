@@ -25,6 +25,7 @@ import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
+
 @Repository
 interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   @Query(
@@ -62,10 +63,18 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   """,
     nativeQuery = true,
   )
-  fun findAllByPremisesIdAndOverlappingDate(premisesId: UUID, startDate: LocalDate, endDate: LocalDate): List<BookingSummaryForAvailability>
+  fun findAllByPremisesIdAndOverlappingDate(
+    premisesId: UUID,
+    startDate: LocalDate,
+    endDate: LocalDate,
+  ): List<BookingSummaryForAvailability>
 
   @Query("SELECT b FROM BookingEntity b WHERE b.premises.id IN :premisesIds AND b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND SIZE(b.cancellations) = 0")
-  fun findAllNotCancelledByPremisesIdsAndOverlappingDate(premisesIds: List<UUID>, startDate: LocalDate, endDate: LocalDate): List<BookingEntity>
+  fun findAllNotCancelledByPremisesIdsAndOverlappingDate(
+    premisesIds: List<UUID>,
+    startDate: LocalDate,
+    endDate: LocalDate,
+  ): List<BookingEntity>
 
   @Query("SELECT b FROM BookingEntity b WHERE b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND b.bed = :bed")
   fun findAllByOverlappingDateForBed(startDate: LocalDate, endDate: LocalDate, bed: BedEntity): List<BookingEntity>
@@ -74,7 +83,12 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   fun getHighestBookingDate(premisesId: UUID): LocalDate?
 
   @Query("SELECT b FROM BookingEntity b WHERE b.bed.id = :bedId AND b.arrivalDate <= :endDate AND b.departureDate >= :startDate AND SIZE(b.cancellations) = 0 AND (CAST(:thisEntityId as org.hibernate.type.UUIDCharType) IS NULL OR b.id != :thisEntityId)")
-  fun findByBedIdAndOverlappingDate(bedId: UUID, startDate: LocalDate, endDate: LocalDate, thisEntityId: UUID?): List<BookingEntity>
+  fun findByBedIdAndOverlappingDate(
+    bedId: UUID,
+    startDate: LocalDate,
+    endDate: LocalDate,
+    thisEntityId: UUID?,
+  ): List<BookingEntity>
 
   @Query("SELECT DISTINCT(b.crn) FROM BookingEntity b")
   fun getDistinctCrns(): List<String>
@@ -85,9 +99,19 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   @Query("SELECT b FROM BookingEntity b WHERE b.bed.id IN :bedIds")
   fun findByBedIds(bedIds: List<UUID>): List<BookingEntity>
 
+  /*
+  * There is a bug in Hibernate that has been around since 2010. It is the reason why we have this awful line
+  *
+  * AND NOT EXISTS (SELECT na FROM NonArrivalEntity na WHERE na.booking = b )
+
+  * * https://hibernate.atlassian.net/browse/HHH-4795
+
+  * * https://stackoverflow.com/questions/52839973/hql-to-check-for-null-in-onetoone-relation
+  * */
   @Query(
     "SELECT b FROM BookingEntity b " +
       "WHERE b.bed.id = :bedId " +
+      "AND NOT EXISTS (SELECT na FROM NonArrivalEntity na WHERE na.booking = b ) " +
       "AND b.arrivalDate <= :date " +
       "AND SIZE(b.cancellations) = 0 " +
       "AND (CAST(:thisEntityId as org.hibernate.type.UUIDCharType) IS NULL OR b.id != :thisEntityId)",
@@ -153,7 +177,12 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
     """,
     nativeQuery = true,
   )
-  fun findBookings(serviceName: String, status: BookingStatus?, probationRegionId: UUID?, pageable: Pageable?): Page<BookingSearchResult>
+  fun findBookings(
+    serviceName: String,
+    status: BookingStatus?,
+    probationRegionId: UUID?,
+    pageable: Pageable?,
+  ): Page<BookingSearchResult>
 
   @Modifying
   @Query("UPDATE BookingEntity b set b.status = :status where b.id = :bookingId")
@@ -247,7 +276,17 @@ data class BookingEntity(
     return true
   }
 
-  override fun hashCode() = Objects.hash(crn, arrivalDate, departureDate, keyWorkerStaffCode, nonArrival, confirmation, originalArrivalDate, originalDepartureDate, createdAt)
+  override fun hashCode() = Objects.hash(
+    crn,
+    arrivalDate,
+    departureDate,
+    keyWorkerStaffCode,
+    nonArrival,
+    confirmation,
+    originalArrivalDate,
+    originalDepartureDate,
+    createdAt,
+  )
 
   override fun toString() = "BookingEntity:$id"
 }
