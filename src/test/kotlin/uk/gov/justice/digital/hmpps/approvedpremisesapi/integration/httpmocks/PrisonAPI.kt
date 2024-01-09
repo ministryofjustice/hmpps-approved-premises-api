@@ -34,3 +34,15 @@ fun IntegrationTestBase.PrisonAPI_mockSuccessfulPrisonTimeLineCall(nomsNumber: S
     url = "/api/offenders/$nomsNumber/prison-timeline",
     responseBody = summary,
   )
+
+fun IntegrationTestBase.PrisonAPI_mockNotFoundPrisonTimeLineCall(nomsNumber: String) =
+  mockUnsuccessfulGetCall(
+    url = "/api/offenders/$nomsNumber/prison-timeline",
+    responseStatus = 404,
+  )
+
+fun IntegrationTestBase.PrisonAPI_mockServerErrorPrisonTimeLineCall(nomsNumber: String) =
+  mockUnsuccessfulGetCall(
+    url = "/api/offenders/$nomsNumber/prison-timeline",
+    responseStatus = 500,
+  )

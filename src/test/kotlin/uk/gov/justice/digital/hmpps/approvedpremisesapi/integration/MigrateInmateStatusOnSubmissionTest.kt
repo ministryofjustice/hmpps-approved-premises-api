@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundPrisonTimeLineCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockServerErrorPrisonTimeLineCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulPrisonTimeLineCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
@@ -61,7 +63,7 @@ class MigrateInmateStatusOnSubmissionTest : MigrationJobTestBase() {
   }
 
   @Test
-  fun `Should update submitted application without an in out status set and NOMS number using prison timeline`() {
+  fun `Should update submitted application without an in out status set and NOMS number using prison timeline to IN`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val submissionDate = OffsetDateTime.of(2023, 4, 5, 12, 55, 0, 0, ZoneOffset.UTC)
@@ -104,6 +106,49 @@ class MigrateInmateStatusOnSubmissionTest : MigrationJobTestBase() {
   }
 
   @Test
+  fun `Should update submitted application without an in out status set and NOMS number using prison timeline to OUT`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val submissionDate = OffsetDateTime.of(2023, 4, 5, 12, 55, 0, 0, ZoneOffset.UTC)
+
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withConvictionId(12345)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
+          withSubmittedAt(submissionDate)
+          withInmateInOutStatusOnSubmission(null)
+        }
+
+        assertInOutStatusIsNull(application)
+
+        PrisonAPI_mockSuccessfulPrisonTimeLineCall(
+          application.nomsNumber!!,
+          PrisonerInPrisonSummary(
+            listOf(
+              PrisonPeriod(
+                entryDate = LocalDateTime.of(2023, 5, 1, 12, 14, 0),
+                releaseDate = LocalDateTime.of(2023, 6, 1, 12, 14, 0),
+                movementDates = listOf(
+                  SignificantMovements(
+                    dateInToPrison = LocalDateTime.of(2023, 5, 1, 12, 14, 0),
+                    dateOutOfPrison = LocalDateTime.of(2023, 6, 1, 12, 14, 0),
+                  ),
+                ),
+              ),
+
+            ),
+          ),
+        )
+
+        migrationJobService.runMigrationJob(MigrationJobType.inmateStatusOnSubmission)
+
+        assertInOutStatus(application, InOutStatus.OUT.name)
+      }
+    }
+  }
+
+  @Test
   fun `Should update submitted application without an in out status set and no NOMS number to IN`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
@@ -124,6 +169,58 @@ class MigrateInmateStatusOnSubmissionTest : MigrationJobTestBase() {
         migrationJobService.runMigrationJob(MigrationJobType.inmateStatusOnSubmission)
 
         assertInOutStatus(application, InOutStatus.IN.name)
+      }
+    }
+  }
+
+  @Test
+  fun `Should update submitted application without an in out status set and no prison timeline available (404) to IN`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val submissionDate = OffsetDateTime.of(2023, 4, 5, 12, 55, 0, 0, ZoneOffset.UTC)
+
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withConvictionId(12345)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
+          withSubmittedAt(submissionDate)
+          withInmateInOutStatusOnSubmission(null)
+        }
+
+        assertInOutStatusIsNull(application)
+
+        PrisonAPI_mockNotFoundPrisonTimeLineCall(application.nomsNumber!!)
+
+        migrationJobService.runMigrationJob(MigrationJobType.inmateStatusOnSubmission)
+
+        assertInOutStatus(application, InOutStatus.IN.name)
+      }
+    }
+  }
+
+  @Test
+  fun `Should not update submitted application without an in out status set and server error getting prison timeline`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val submissionDate = OffsetDateTime.of(2023, 4, 5, 12, 55, 0, 0, ZoneOffset.UTC)
+
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withConvictionId(12345)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
+          withSubmittedAt(submissionDate)
+          withInmateInOutStatusOnSubmission(null)
+        }
+
+        assertInOutStatusIsNull(application)
+
+        PrisonAPI_mockServerErrorPrisonTimeLineCall(application.nomsNumber!!)
+
+        migrationJobService.runMigrationJob(MigrationJobType.inmateStatusOnSubmission)
+
+        assertInOutStatusIsNull(application)
       }
     }
   }
