@@ -3,7 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community
 import java.time.LocalDate
 
 data class OffenderDetailSummary(
-  val offenderId: Long,
+  val offenderId: Long?,
   val title: String?,
   val firstName: String,
   val middleNames: List<String>?,
@@ -15,11 +15,11 @@ data class OffenderDetailSummary(
   val otherIds: OffenderIds,
   val offenderProfile: OffenderProfile,
   val softDeleted: Boolean?,
-  val currentDisposal: String,
+  val currentDisposal: String?,
   val partitionArea: String?,
   val currentRestriction: Boolean,
   val currentExclusion: Boolean,
-  val isActiveProbationManagedSentence: Boolean,
+  val isActiveProbationManagedSentence: Boolean?,
 )
 
 data class OffenderIds(
