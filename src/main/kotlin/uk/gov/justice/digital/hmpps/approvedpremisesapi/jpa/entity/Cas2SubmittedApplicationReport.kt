@@ -16,6 +16,9 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
         events.data -> 'eventDetails' -> 'personReference' ->> 'noms' AS personNoms,
         events.data -> 'eventDetails' -> 'personReference' ->> 'crn' AS personCrn,
         events.data -> 'eventDetails' ->> 'referringPrisonCode' AS referringPrisonCode,
+        events.data -> 'eventDetails' ->> 'preferredAreas' AS preferredAreas,
+        CAST(events.data -> 'eventDetails' ->> 'hdcEligibilityDate' as DATE) AS hdcEligibilityDate,
+        CAST(events.data -> 'eventDetails' ->> 'conditionalReleaseDate' as DATE) AS conditionalReleaseDate,
         CAST(
           CAST(events.data -> 'eventDetails' ->> 'submittedAt' as DATE) 
          as TEXT) as submittedAt
@@ -36,4 +39,7 @@ interface Cas2SubmittedApplicationReportRow {
   fun getPersonNoms(): String
   fun getPersonCrn(): String
   fun getReferringPrisonCode(): String
+  fun getPreferredAreas(): String
+  fun getHdcEligibilityDate(): String
+  fun getConditionalReleaseDate(): String
 }

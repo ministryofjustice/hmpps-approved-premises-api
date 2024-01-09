@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
@@ -33,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.UserAccessService
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -390,10 +392,15 @@ class ApplicationServiceTest {
     val user = NomisUserEntityFactory()
       .withNomisUsername(this.username)
       .produce()
+    val hdcEligibilityDate = LocalDate.parse("2023-03-30")
+    val conditionalReleaseDate = LocalDate.parse("2023-04-29")
 
     private val submitCas2Application = SubmitCas2Application(
       translatedDocument = {},
       applicationId = applicationId,
+      preferredAreas = "Leeds | Bradford",
+      hdcEligibilityDate = hdcEligibilityDate,
+      conditionalReleaseDate = conditionalReleaseDate,
     )
 
     @BeforeEach
@@ -562,7 +569,17 @@ class ApplicationServiceTest {
         application
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
 
-      val inmateDetail = InmateDetailFactory().produce()
+      val inmateDetail = InmateDetailFactory()
+        .withAssignedLivingUnit(
+          AssignedLivingUnit(
+            agencyId = "BRI",
+            locationId = 1234,
+            description = "description",
+            agencyName = "HMP Bristol",
+          )
+        )
+        .produce()
+
       every {
         mockOffenderService.getInmateDetailByNomsNumber(
           application.crn,
@@ -594,7 +611,11 @@ class ApplicationServiceTest {
       assertThat(result.entity is ValidatableActionResult.Success).isTrue
       val validatableActionResult = result.entity as ValidatableActionResult.Success
       val persistedApplication = validatableActionResult.entity
+
       assertThat(persistedApplication.crn).isEqualTo(application.crn)
+      assertThat(persistedApplication.preferredAreas).isEqualTo("Leeds | Bradford")
+      assertThat(persistedApplication.hdcEligibilityDate).isEqualTo(hdcEligibilityDate)
+      assertThat(persistedApplication.conditionalReleaseDate).isEqualTo(conditionalReleaseDate)
 
       verify { mockApplicationRepository.save(any()) }
 
@@ -607,7 +628,11 @@ class ApplicationServiceTest {
               data.personReference.noms == application.nomsNumber &&
               data.personReference.crn == application.crn &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
-              data.submittedBy.staffMember.username == username
+              data.submittedBy.staffMember.username == username &&
+              data.referringPrisonCode == "BRI" &&
+              data.preferredAreas == "Leeds | Bradford" &&
+              data.hdcEligibilityDate == hdcEligibilityDate &&
+              data.conditionalReleaseDate == conditionalReleaseDate
           },
         )
       }

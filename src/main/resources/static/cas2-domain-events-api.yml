@@ -119,6 +119,17 @@ components:
         referringPrisonCode:
           type: string
           example: 'BRI'
+        preferredAreas:
+          type: string
+          example: 'Leeds | Bradford'
+        hdcEligibilityDate:
+          type: string
+          example: '2023-03-30'
+          format: date
+        conditionalReleaseDate:
+          type: string
+          example: '2023-04-30'
+          format: date
         submittedAt:
           type: string
           example: '2022-11-30T14:51:30'

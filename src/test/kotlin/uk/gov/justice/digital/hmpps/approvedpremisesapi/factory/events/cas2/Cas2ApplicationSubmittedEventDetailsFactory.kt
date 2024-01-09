@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Pe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 
 class Cas2ApplicationSubmittedEventDetailsFactory : Factory<Cas2ApplicationSubmittedEventDetails> {
@@ -17,6 +18,9 @@ class Cas2ApplicationSubmittedEventDetailsFactory : Factory<Cas2ApplicationSubmi
   private var applicationUrl: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var personReference: Yielded<PersonReference> = { PersonReferenceFactory().produce() }
   private var referringPrisonCode: Yielded<String> = { "BRI" }
+  private var preferredAreas: Yielded<String?> = { "Leeds | Bradford" }
+  private var hdcEligibilityDate: Yielded<LocalDate?> = { LocalDate.parse("2023-03-30") }
+  private var conditionalReleaseDate: Yielded<LocalDate?> = { LocalDate.parse("2023-04-29") }
   private var submittedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(7) }
   private var submittedByStaffMember: Yielded<Cas2StaffMember> = { StaffMemberFactory().produce() }
 
@@ -36,6 +40,18 @@ class Cas2ApplicationSubmittedEventDetailsFactory : Factory<Cas2ApplicationSubmi
     this.referringPrisonCode = { referringPrisonCode }
   }
 
+  fun withPreferredAreas(preferredAreas: String) = apply {
+    this.preferredAreas = { preferredAreas }
+  }
+
+  fun withHdcEligibilityDate(hdcEligibilityDate: LocalDate) = apply {
+    this.hdcEligibilityDate = { hdcEligibilityDate }
+  }
+
+  fun withConditionalReleaseDate(conditionalReleaseDate: LocalDate) = apply {
+    this.conditionalReleaseDate = { conditionalReleaseDate }
+  }
+
   fun withSubmittedAt(submittedAt: Instant) = apply {
     this.submittedAt = { submittedAt }
   }
@@ -49,6 +65,9 @@ class Cas2ApplicationSubmittedEventDetailsFactory : Factory<Cas2ApplicationSubmi
     applicationUrl = this.applicationUrl(),
     personReference = this.personReference(),
     referringPrisonCode = this.referringPrisonCode(),
+    preferredAreas = this.preferredAreas(),
+    hdcEligibilityDate = this.hdcEligibilityDate(),
+    conditionalReleaseDate = this.conditionalReleaseDate(),
     submittedAt = this.submittedAt(),
     submittedBy = Cas2ApplicationSubmittedEventDetailsSubmittedBy(
       staffMember = this.submittedByStaffMember(),
