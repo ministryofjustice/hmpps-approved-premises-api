@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Slice
+import org.springframework.http.HttpStatus
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
@@ -53,19 +54,32 @@ class InmateStatusOnSubmissionMigrationJob(
 
   private fun updateInOutStatus(application: ApprovedPremisesApplicationEntity) {
     log.info("Determine in out status for application ${application.id} submitted on ${application.submittedAt}")
-    if(application.nomsNumber == null) {
-      log.info("NOMS number is null, will set status to IN")
-      applicationRepository.updateInOutStatus(application.id, InOutStatus.IN.name)
-    } else {
-      when (val timelineResult = prisonsApiClient.getPrisonTimeline(application.nomsNumber!!)) {
-        is ClientResult.Success -> {
-          val inOutStatus = determineInOutStatus(application.submittedAt!!, timelineResult.body)
-          log.info("Determined status as $inOutStatus")
-          applicationRepository.updateInOutStatus(application.id, inOutStatus.name)
-        }
+    val inOutStatus = if (application.nomsNumber == null) InOutStatus.IN else getInOutStatusFromPrisonTimeline(application)
 
-        is ClientResult.Failure -> {
-          log.error("Unable to update application ${application.id}", timelineResult.toException())
+    if (inOutStatus != null) {
+      log.info("Determined status as $inOutStatus")
+      applicationRepository.updateInOutStatus(application.id, inOutStatus.name)
+    } else {
+      log.info("Could not determine in out status for application ${application.id}")
+    }
+  }
+
+  private fun getInOutStatusFromPrisonTimeline(application: ApprovedPremisesApplicationEntity): InOutStatus? {
+    return when (val timelineResult = prisonsApiClient.getPrisonTimeline(application.nomsNumber!!)) {
+      is ClientResult.Success -> {
+        determineInOutStatus(application.submittedAt!!, timelineResult.body)
+      }
+
+      is ClientResult.Failure -> {
+        if (timelineResult is ClientResult.Failure.StatusCode && timelineResult.status == HttpStatus.NOT_FOUND) {
+          log.info("404 retrieving prison timeline for application ${application.id} will mark status as IN")
+          InOutStatus.IN
+        } else {
+          log.error(
+            "Error retrieving prison timeline for application ${application.id}",
+            timelineResult.toException(),
+          )
+          null
         }
       }
     }
