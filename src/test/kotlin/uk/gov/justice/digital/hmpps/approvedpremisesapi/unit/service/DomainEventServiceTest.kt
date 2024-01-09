@@ -232,7 +232,6 @@ class DomainEventServiceTest {
       timestamp = occurredAt.toInstant(),
       eventType = "approved-premises.application.assessed",
       eventDetails = ApplicationAssessedFactory().produce(),
-      arrivalDate = occurredAt.toInstant(),
     )
 
     every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
@@ -275,7 +274,6 @@ class DomainEventServiceTest {
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.application.assessed",
         eventDetails = ApplicationAssessedFactory().produce(),
-        arrivalDate = occurredAt.toInstant(),
       ),
     )
 
@@ -331,7 +329,6 @@ class DomainEventServiceTest {
         timestamp = occurredAt.toInstant(),
         eventType = "approved-premises.application.assessed",
         eventDetails = ApplicationAssessedFactory().produce(),
-        arrivalDate = occurredAt.toInstant(),
       ),
     )
 

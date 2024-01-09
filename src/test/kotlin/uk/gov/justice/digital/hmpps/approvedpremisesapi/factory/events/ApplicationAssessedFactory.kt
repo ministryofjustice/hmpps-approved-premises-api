@@ -19,6 +19,7 @@ class ApplicationAssessedFactory : Factory<ApplicationAssessed> {
   private var assessedBy: Yielded<ApplicationAssessedAssessedBy> = { ApplicationAssessedAssessedByFactory().produce() }
   private var decision: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var decisionRationale: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
+  private var arrivalDate: Yielded<Instant> = { Instant.now().randomDateTimeBefore(5) }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -52,6 +53,10 @@ class ApplicationAssessedFactory : Factory<ApplicationAssessed> {
     this.decisionRationale = { decisionRationale }
   }
 
+  fun withArrivalDate(arrivalDate: Instant) = apply {
+    this.arrivalDate = { arrivalDate }
+  }
+
   override fun produce() = ApplicationAssessed(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
@@ -61,5 +66,6 @@ class ApplicationAssessedFactory : Factory<ApplicationAssessed> {
     assessedBy = this.assessedBy(),
     decision = this.decision(),
     decisionRationale = this.decisionRationale(),
+    arrivalDate = this.arrivalDate(),
   )
 }

@@ -210,8 +210,8 @@ class DailyMetricsReportGeneratorTest {
                       ).produce(),
                   ).produce(),
               )
+              .withArrivalDate(date.toLocalDateTime().toInstant())
               .produce(),
-            arrivalDate = date.toLocalDateTime().toInstant(),
           ),
         ),
       ).produceMany().take(count).toList()
