@@ -6,17 +6,21 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assumptions
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHistoryUserNote
@@ -68,537 +72,588 @@ class AssessmentTest : IntegrationTestBase() {
     inboundMessageListener.clearMessages()
   }
 
-  @Test
-  fun `Get all assessments without JWT returns 401`() {
-    webTestClient.get()
-      .uri("/assessments")
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
+  @Nested
+  inner class AllAssessments {
+    @Test
+    fun `Get all assessments without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/assessments")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
 
-  @ParameterizedTest
-  @EnumSource
-  @NullSource
-  fun `Get all assessments returns 200 with correct body`(assessmentDecision: AssessmentDecision?) {
-    `Given a User` { user, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
-        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
+    @ParameterizedTest
+    @EnumSource
+    @NullSource
+    fun `Get all assessments returns 200 with correct body`(assessmentDecision: AssessmentDecision?) {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
 
-        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
+          }
 
-        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedByUser(user)
-          withApplicationSchema(applicationSchema)
-        }
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(user)
+            withApplicationSchema(applicationSchema)
+          }
 
-        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(user)
-          withApplication(application)
-          withAssessmentSchema(assessmentSchema)
-          withDecision(assessmentDecision)
-        }
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(user)
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+            withDecision(assessmentDecision)
+          }
 
-        assessment.schemaUpToDate = true
+          assessment.schemaUpToDate = true
 
-        val reallocatedAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(user)
-          withApplication(application)
-          withAssessmentSchema(assessmentSchema)
-          withReallocatedAt(OffsetDateTime.now())
-        }
+          val reallocatedAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(user)
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+            withReallocatedAt(OffsetDateTime.now())
+          }
 
-        reallocatedAssessment.schemaUpToDate = true
+          reallocatedAssessment.schemaUpToDate = true
 
-        val withdrawnAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(user)
-          withApplication(application)
-          withAssessmentSchema(assessmentSchema)
-          withDecision(assessmentDecision)
-          withIsWithdrawn(true)
-        }
+          val withdrawnAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(user)
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+            withDecision(assessmentDecision)
+            withIsWithdrawn(true)
+          }
 
-        withdrawnAssessment.schemaUpToDate = true
+          withdrawnAssessment.schemaUpToDate = true
 
-        webTestClient.get()
-          .uri("/assessments")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              listOf(
-                assessmentTransformer.transformDomainToApiSummary(
-                  toAssessmentSummaryEntity(assessment),
-                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                ),
+          assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.approvedPremises,
+            "/assessments",
+            listOf(
+              assessmentTransformer.transformDomainToApiSummary(
+                toAssessmentSummaryEntity(assessment),
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
               ),
             ),
           )
+        }
       }
     }
-  }
 
-  @ParameterizedTest
-  @EnumSource(ServiceName::class, names = ["cas2"], mode = EnumSource.Mode.EXCLUDE)
-  fun `Get all assessments returns successfully when an inmate details cache failure occurs`(serviceName: ServiceName) {
-    val givenAnAssessment = when (serviceName) {
-      ServiceName.approvedPremises -> { user: UserEntity, crn: String, block: (assessment: AssessmentEntity, application: ApplicationEntity) -> Unit ->
-        `Given an Assessment for Approved Premises`(
-          createdByUser = user,
-          allocatedToUser = user,
-          crn = crn,
-          block = block,
-        )
+    @ParameterizedTest
+    @EnumSource(ServiceName::class, names = ["cas2"], mode = EnumSource.Mode.EXCLUDE)
+    @Suppress("TooGenericExceptionThrown") // The RuntimeException here will never be reached
+    fun `Get all assessments returns successfully when an inmate details cache failure occurs`(serviceName: ServiceName) {
+      val givenAnAssessment = when (serviceName) {
+        ServiceName.approvedPremises -> { user: UserEntity, crn: String, block: (assessment: AssessmentEntity, application: ApplicationEntity) -> Unit ->
+          `Given an Assessment for Approved Premises`(
+            createdByUser = user,
+            allocatedToUser = user,
+            crn = crn,
+            block = block,
+          )
+        }
+        ServiceName.temporaryAccommodation -> { user: UserEntity, crn: String, block: (assessment: AssessmentEntity, application: ApplicationEntity) -> Unit ->
+          `Given an Assessment for Temporary Accommodation`(
+            createdByUser = user,
+            allocatedToUser = user,
+            crn = crn,
+            block = block,
+          )
+        }
+        else -> throw RuntimeException()
       }
-      ServiceName.temporaryAccommodation -> { user: UserEntity, crn: String, block: (assessment: AssessmentEntity, application: ApplicationEntity) -> Unit ->
-        `Given an Assessment for Temporary Accommodation`(
-          createdByUser = user,
-          allocatedToUser = user,
-          crn = crn,
-          block = block,
-        )
-      }
-      else -> throw RuntimeException()
-    }
 
-    `Given a User` { user, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
-        givenAnAssessment(
-          user,
-          offenderDetails.otherIds.crn,
-        ) { assessment, application ->
-          // Simulate https://ministryofjustice.sentry.io/issues/4479884804 by deleting the data key from the cache while
-          // preserving the metadata key.
-          val cacheKeys = CacheKeySet(preemptiveCacheKeyPrefix, "inmateDetails", inmateDetails.offenderNo)
-          redisTemplate.delete(cacheKeys.dataKey)
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          givenAnAssessment(
+            user,
+            offenderDetails.otherIds.crn,
+          ) { assessment, application ->
+            // Simulate https://ministryofjustice.sentry.io/issues/4479884804 by deleting the data key from the cache while
+            // preserving the metadata key.
+            val cacheKeys = CacheKeySet(preemptiveCacheKeyPrefix, "inmateDetails", inmateDetails.offenderNo)
+            redisTemplate.delete(cacheKeys.dataKey)
 
-          webTestClient.get()
-            .uri("/assessments")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", serviceName.value)
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .json(
-              objectMapper.writeValueAsString(
-                listOf(
-                  assessmentTransformer.transformDomainToApiSummary(
-                    toAssessmentSummaryEntity(assessment),
-                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null),
-                  ),
-                ),
+            val url = "/assessments"
+            val expectedAssessments = listOf(
+              assessmentTransformer.transformDomainToApiSummary(
+                toAssessmentSummaryEntity(assessment),
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null),
               ),
             )
+
+            assertUrlReturnsAssessments(
+              jwt,
+              serviceName,
+              url,
+              expectedAssessments,
+            )
+          }
         }
       }
     }
-  }
 
-  @ParameterizedTest
-  @EnumSource
-  @NullSource
-  fun `Get all assessments filters correctly when 'statuses' query parameter is provided`(assessmentDecision: AssessmentDecision?) {
-    `Given a User` { user, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
-        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
+    @ParameterizedTest
+    @EnumSource
+    @NullSource
+    fun `Get all assessments filters correctly when 'statuses' query parameter is provided`(assessmentDecision: AssessmentDecision?) {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
 
-        val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
+          }
 
-        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedByUser(user)
-          withApplicationSchema(applicationSchema)
-        }
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(user)
+            withApplicationSchema(applicationSchema)
+          }
 
-        val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(user)
-          withApplication(application)
-          withAssessmentSchema(assessmentSchema)
-          withDecision(assessmentDecision)
-        }
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(user)
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+            withDecision(assessmentDecision)
+          }
 
-        assessment.schemaUpToDate = true
+          assessment.schemaUpToDate = true
 
-        val otherAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(user)
-          withApplication(application)
-          withAssessmentSchema(assessmentSchema)
-          withDecision(
-            when (assessmentDecision) {
-              null -> AssessmentDecision.ACCEPTED
-              else -> null
-            },
-          )
-        }
+          val otherAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(user)
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+            withDecision(
+              when (assessmentDecision) {
+                null -> AssessmentDecision.ACCEPTED
+                else -> null
+              },
+            )
+          }
 
-        otherAssessment.schemaUpToDate = true
+          otherAssessment.schemaUpToDate = true
 
-        val filterStatus = when (assessmentDecision) {
-          null -> AssessmentStatus.cas1InProgress
-          else -> AssessmentStatus.cas1Completed
-        }
+          val filterStatus = when (assessmentDecision) {
+            null -> AssessmentStatus.cas1InProgress
+            else -> AssessmentStatus.cas1Completed
+          }
 
-        webTestClient.get()
-          .uri("/assessments?statuses=${filterStatus.value}")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              listOf(assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails))),
+          assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.approvedPremises,
+            "/assessments?statuses=${filterStatus.value}",
+            listOf(
+              assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails)),
             ),
-            true,
           )
+        }
       }
     }
-  }
 
-  @ParameterizedTest
-  @EnumSource
-  fun `Get all assessments sorts correctly when 'sortDirection' and 'sortBy' query parameters are provided`(sortBy: AssessmentSortField) {
-    `Given a User` { user, jwt ->
-      `Given Some Offenders` { offenderSequence ->
-        val offenders = offenderSequence.take(5).toList()
-
-        data class AssessmentParams(
-          val assessment: TemporaryAccommodationAssessmentEntity,
-          val offenderDetails: OffenderDetailSummary,
-          val inmateDetails: InmateDetail,
-        )
-
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
-        val assessments = offenders.map { (offenderDetails, inmateDetails) ->
-          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(user)
-            withProbationRegion(user.probationRegion)
-            withApplicationSchema(applicationSchema)
-            withArrivalDate(LocalDate.now().randomDateAfter(14))
+    @Test
+    fun `Get all assessments filters correctly when 'page' query parameter is provided`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
           }
 
-          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-            withAllocatedToUser(user)
-            withApplication(application)
-            withAssessmentSchema(assessmentSchema)
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
           }
 
-          assessment.schemaUpToDate = true
+          val assessments = generateSequence {
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(user)
+              withApplicationSchema(applicationSchema)
+            }
 
-          AssessmentParams(assessment, offenderDetails, inmateDetails)
-        }
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(user)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+            }
 
-        val expectedAssessments = when (sortBy) {
-          AssessmentSortField.personName -> assessments.sortedByDescending { "${it.offenderDetails.firstName} ${it.offenderDetails.surname}" }
-          AssessmentSortField.personCrn -> assessments.sortedByDescending { it.assessment.application.crn }
-          AssessmentSortField.assessmentArrivalDate -> assessments.sortedByDescending { (it.assessment.application as TemporaryAccommodationApplicationEntity).arrivalDate }
-          AssessmentSortField.assessmentStatus -> {
-            // Skip test for sorting by assessment status, as it would involve replicating the logic used to determine
-            // that status.
-            Assumptions.assumeThat(true).isFalse
-            assessments
-          }
-          AssessmentSortField.assessmentCreatedAt -> assessments.sortedByDescending { it.assessment.createdAt }
-        }.map { assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(it.assessment), PersonInfoResult.Success.Full(it.offenderDetails.otherIds.crn, it.offenderDetails, it.inmateDetails)) }
+            assessment.schemaUpToDate = true
 
-        webTestClient.get()
-          .uri("/assessments?sortDirection=desc&sortBy=${sortBy.value}")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(expectedAssessments),
-            true,
+            assessment
+          }.take(2).toList()
+
+          val page1Response = assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.approvedPremises,
+            "/assessments?page=1&perPage=1",
+            listOf(
+              assessmentTransformer.transformDomainToApiSummary(
+                toAssessmentSummaryEntity(assessments[0]),
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+              ),
+            ),
           )
+
+          val page2Response = assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.approvedPremises,
+            "/assessments?page=2&perPage=1",
+            listOf(
+              assessmentTransformer.transformDomainToApiSummary(
+                toAssessmentSummaryEntity(assessments[1]),
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+              ),
+            ),
+          )
+
+          page1Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 2)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 1)
+
+          page2Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 2)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 1)
+        }
       }
     }
-  }
 
-  @Test
-  fun `Get all assessments for Temporary Accommodation sorts by closest arrival date first by default`() {
-    `Given a User` { user, jwt ->
-      `Given Some Offenders` { offenderSequence ->
-        val offenders = offenderSequence.take(5).toList()
+    @ParameterizedTest
+    @EnumSource
+    fun `Get all assessments sorts correctly when 'sortDirection' and 'sortBy' query parameters are provided`(sortBy: AssessmentSortField) {
+      `Given a User` { user, jwt ->
+        `Given Some Offenders` { offenderSequence ->
+          val offenders = offenderSequence.take(5).toList()
 
-        data class AssessmentParams(
-          val assessment: TemporaryAccommodationAssessmentEntity,
-          val offenderDetails: OffenderDetailSummary,
-          val inmateDetails: InmateDetail,
-        )
+          data class AssessmentParams(
+            val assessment: TemporaryAccommodationAssessmentEntity,
+            val offenderDetails: OffenderDetailSummary,
+            val inmateDetails: InmateDetail,
+          )
 
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
-
-        val assessments = offenders.map { (offenderDetails, inmateDetails) ->
-          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(user)
-            withProbationRegion(user.probationRegion)
-            withApplicationSchema(applicationSchema)
-            withArrivalDate(LocalDate.now().randomDateAfter(14))
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
           }
 
-          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-            withAllocatedToUser(user)
-            withApplication(application)
-            withAssessmentSchema(assessmentSchema)
+          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
           }
 
-          assessment.schemaUpToDate = true
+          val assessments = offenders.map { (offenderDetails, inmateDetails) ->
+            val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(user)
+              withProbationRegion(user.probationRegion)
+              withApplicationSchema(applicationSchema)
+              withArrivalDate(LocalDate.now().randomDateAfter(14))
+            }
 
-          AssessmentParams(assessment, offenderDetails, inmateDetails)
-        }
+            val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(user)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+            }
 
-        val expectedAssessments = assessments
-          .sortedBy { (it.assessment.application as TemporaryAccommodationApplicationEntity).arrivalDate }
-          .map {
+            assessment.schemaUpToDate = true
+
+            AssessmentParams(assessment, offenderDetails, inmateDetails)
+          }
+
+          val expectedAssessments = when (sortBy) {
+            AssessmentSortField.personName -> assessments.sortedByDescending { "${it.offenderDetails.firstName} ${it.offenderDetails.surname}" }
+            AssessmentSortField.personCrn -> assessments.sortedByDescending { it.assessment.application.crn }
+            AssessmentSortField.assessmentArrivalDate -> assessments.sortedByDescending { (it.assessment.application as TemporaryAccommodationApplicationEntity).arrivalDate }
+            AssessmentSortField.assessmentStatus -> {
+              // Skip test for sorting by assessment status, as it would involve replicating the logic used to determine
+              // that status.
+              Assumptions.assumeThat(true).isFalse
+              assessments
+            }
+            AssessmentSortField.assessmentCreatedAt -> assessments.sortedByDescending { it.assessment.createdAt }
+          }.map {
             assessmentTransformer.transformDomainToApiSummary(
               toAssessmentSummaryEntity(it.assessment),
               PersonInfoResult.Success.Full(it.offenderDetails.otherIds.crn, it.offenderDetails, it.inmateDetails),
             )
           }
 
-        webTestClient.get()
-          .uri("/assessments")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(expectedAssessments),
-            true,
+          assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            "/assessments?sortDirection=desc&sortBy=${sortBy.value}",
+            expectedAssessments,
           )
+        }
       }
     }
-  }
 
-  @Test
-  fun `Get all assessments filters correctly when 'crn' query parameter is provided`() {
-    `Given a User` { user, jwt ->
-      `Given Some Offenders` { offenderSequence ->
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
+    @Test
+    fun `Get all assessments for Temporary Accommodation sorts by closest arrival date first by default`() {
+      `Given a User` { user, jwt ->
+        `Given Some Offenders` { offenderSequence ->
+          val offenders = offenderSequence.take(5).toList()
+
+          data class AssessmentParams(
+            val assessment: TemporaryAccommodationAssessmentEntity,
+            val offenderDetails: OffenderDetailSummary,
+            val inmateDetails: InmateDetail,
+          )
+
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
+          }
+
+          val assessments = offenders.map { (offenderDetails, inmateDetails) ->
+            val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(user)
+              withProbationRegion(user.probationRegion)
+              withApplicationSchema(applicationSchema)
+              withArrivalDate(LocalDate.now().randomDateAfter(14))
+            }
+
+            val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(user)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+            }
+
+            assessment.schemaUpToDate = true
+
+            AssessmentParams(assessment, offenderDetails, inmateDetails)
+          }
+
+          val expectedAssessments = assessments
+            .sortedBy { (it.assessment.application as TemporaryAccommodationApplicationEntity).arrivalDate }
+            .map {
+              assessmentTransformer.transformDomainToApiSummary(
+                toAssessmentSummaryEntity(it.assessment),
+                PersonInfoResult.Success.Full(it.offenderDetails.otherIds.crn, it.offenderDetails, it.inmateDetails),
+              )
+            }
+
+          assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            "/assessments",
+            expectedAssessments,
+          )
         }
+      }
+    }
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
+    @Test
+    fun `Get all assessments filters correctly when 'crn' query parameter is provided`() {
+      `Given a User` { user, jwt ->
+        `Given Some Offenders` { offenderSequence ->
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
 
-        val (offender, otherOffender) = offenderSequence.take(2).toList()
+          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
+          }
 
-        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-          withCrn(offender.first.otherIds.crn)
-          withCreatedByUser(user)
-          withApplicationSchema(applicationSchema)
-          withProbationRegion(user.probationRegion)
-        }
+          val (offender, otherOffender) = offenderSequence.take(2).toList()
 
-        val otherApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-          withCrn(otherOffender.first.otherIds.crn)
-          withCreatedByUser(user)
-          withApplicationSchema(applicationSchema)
-          withProbationRegion(user.probationRegion)
-        }
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offender.first.otherIds.crn)
+            withCreatedByUser(user)
+            withApplicationSchema(applicationSchema)
+            withProbationRegion(user.probationRegion)
+          }
 
-        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(user)
-          withApplication(application)
-          withAssessmentSchema(assessmentSchema)
-        }
+          val otherApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(otherOffender.first.otherIds.crn)
+            withCreatedByUser(user)
+            withApplicationSchema(applicationSchema)
+            withProbationRegion(user.probationRegion)
+          }
 
-        assessment.schemaUpToDate = true
+          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(user)
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+          }
 
-        val otherAssessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(user)
-          withApplication(otherApplication)
-          withAssessmentSchema(assessmentSchema)
-        }
+          assessment.schemaUpToDate = true
 
-        otherAssessment.schemaUpToDate = true
+          val otherAssessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(user)
+            withApplication(otherApplication)
+            withAssessmentSchema(assessmentSchema)
+          }
 
-        webTestClient.get()
-          .uri("/assessments?crn=${offender.first.otherIds.crn}")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              listOf(
-                assessmentTransformer.transformDomainToApiSummary(
-                  toAssessmentSummaryEntity(assessment),
-                  PersonInfoResult.Success.Full(offender.first.otherIds.crn, offender.first, offender.second),
-                ),
+          otherAssessment.schemaUpToDate = true
+
+          assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            "/assessments?crn=${offender.first.otherIds.crn}",
+            listOf(
+              assessmentTransformer.transformDomainToApiSummary(
+                toAssessmentSummaryEntity(assessment),
+                PersonInfoResult.Success.Full(offender.first.otherIds.crn, offender.first, offender.second),
               ),
             ),
-            true,
           )
+        }
       }
     }
-  }
 
-  @Test
-  fun `Get all assessments returns restricted person information for LAO`() {
-    var offenderIndex = 0
-    `Given a User` { user, jwt ->
-      `Given Some Offenders`(
-        offenderDetailsConfigBlock = {
-          withCurrentExclusion(offenderIndex != 0)
-          withCurrentRestriction(offenderIndex != 0)
-          offenderIndex++
+    @Test
+    fun `Get all assessments returns restricted person information for LAO`() {
+      var offenderIndex = 0
+      `Given a User` { user, jwt ->
+        `Given Some Offenders`(
+          offenderDetailsConfigBlock = {
+            withCurrentExclusion(offenderIndex != 0)
+            withCurrentRestriction(offenderIndex != 0)
+            offenderIndex++
+          },
+        ) { offenderSequence ->
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
+          }
+
+          val (offender, otherOffender) = offenderSequence.take(2).toList()
+
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offender.first.otherIds.crn)
+            withCreatedByUser(user)
+            withApplicationSchema(applicationSchema)
+            withProbationRegion(user.probationRegion)
+          }
+
+          val otherApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(otherOffender.first.otherIds.crn)
+            withCreatedByUser(user)
+            withApplicationSchema(applicationSchema)
+            withProbationRegion(user.probationRegion)
+          }
+
+          val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(user)
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+          }
+
+          assessment.schemaUpToDate = true
+
+          val otherAssessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(user)
+            withApplication(otherApplication)
+            withAssessmentSchema(assessmentSchema)
+          }
+
+          otherAssessment.schemaUpToDate = true
+
+          mockOffenderUserAccessCommunityApiCall(user.deliusUsername, otherOffender.first.otherIds.crn, true, true)
+
+          assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            "/assessments",
+            listOf(
+              assessmentTransformer.transformDomainToApiSummary(
+                toAssessmentSummaryEntity(assessment),
+                PersonInfoResult.Success.Full(offender.first.otherIds.crn, offender.first, offender.second),
+              ),
+              assessmentTransformer.transformDomainToApiSummary(
+                toAssessmentSummaryEntity(otherAssessment),
+                PersonInfoResult.Success.Restricted(otherOffender.first.otherIds.crn, otherOffender.first.otherIds.nomsNumber),
+              ),
+            ),
+          )
+        }
+      }
+    }
+
+    private fun assertUrlReturnsAssessments(jwt: String, serviceName: ServiceName, url: String, assessmentSummaries: List<AssessmentSummary>): WebTestClient.ResponseSpec {
+      val response = webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", serviceName.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+
+      val responseBody = response
+        .returnResult<String>()
+        .responseBody
+        .blockFirst()
+
+      assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(assessmentSummaries))
+
+      return response
+    }
+
+    private fun toAssessmentSummaryEntity(assessment: AssessmentEntity): DomainAssessmentSummary =
+      DomainAssessmentSummary(
+        type = when (assessment.application) {
+          is ApprovedPremisesApplicationEntity -> "approved-premises"
+          is TemporaryAccommodationApplicationEntity -> "temporary-accommodation"
+          else -> fail()
         },
-      ) { offenderSequence ->
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
 
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-          withAddedAt(OffsetDateTime.now())
-        }
+        id = assessment.id,
 
-        val (offender, otherOffender) = offenderSequence.take(2).toList()
+        applicationId = assessment.application.id,
 
-        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-          withCrn(offender.first.otherIds.crn)
-          withCreatedByUser(user)
-          withApplicationSchema(applicationSchema)
-          withProbationRegion(user.probationRegion)
-        }
+        createdAt = assessment.createdAt,
 
-        val otherApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-          withCrn(otherOffender.first.otherIds.crn)
-          withCreatedByUser(user)
-          withApplicationSchema(applicationSchema)
-          withProbationRegion(user.probationRegion)
-        }
+        riskRatings = when (val reified = assessment.application) {
+          is ApprovedPremisesApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
+          is TemporaryAccommodationApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
+          else -> null
+        },
 
-        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(user)
-          withApplication(application)
-          withAssessmentSchema(assessmentSchema)
-        }
+        arrivalDate = when (val application = assessment.application) {
+          is ApprovedPremisesApplicationEntity -> application.arrivalDate
+          is TemporaryAccommodationApplicationEntity -> application.arrivalDate
+          else -> null
+        },
 
-        assessment.schemaUpToDate = true
+        dateOfInfoRequest = assessment
+          .clarificationNotes
+          .filter { it.response == null }
+          .minByOrNull { it.createdAt }
+          ?.createdAt,
 
-        val otherAssessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-          withAllocatedToUser(user)
-          withApplication(otherApplication)
-          withAssessmentSchema(assessmentSchema)
-        }
-
-        otherAssessment.schemaUpToDate = true
-
-        mockOffenderUserAccessCommunityApiCall(user.deliusUsername, otherOffender.first.otherIds.crn, true, true)
-
-        webTestClient.get()
-          .uri("/assessments")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              listOf(
-                assessmentTransformer.transformDomainToApiSummary(
-                  toAssessmentSummaryEntity(assessment),
-                  PersonInfoResult.Success.Full(offender.first.otherIds.crn, offender.first, offender.second),
-                ),
-                assessmentTransformer.transformDomainToApiSummary(
-                  toAssessmentSummaryEntity(otherAssessment),
-                  PersonInfoResult.Success.Restricted(otherOffender.first.otherIds.crn, otherOffender.first.otherIds.nomsNumber),
-                ),
-              ),
-            ),
-            true,
-          )
-      }
-    }
+        completed = when (assessment) {
+          is TemporaryAccommodationAssessmentEntity -> assessment.completedAt != null
+          else -> assessment.decision != null
+        },
+        decision = assessment.decision?.name,
+        crn = assessment.application.crn,
+        isStarted = assessment.data != null,
+        isAllocated = assessment.allocatedToUser != null,
+      )
   }
-
-  private fun toAssessmentSummaryEntity(assessment: AssessmentEntity): DomainAssessmentSummary =
-    DomainAssessmentSummary(
-      type = when (assessment.application) {
-        is ApprovedPremisesApplicationEntity -> "approved-premises"
-        is TemporaryAccommodationApplicationEntity -> "temporary-accommodation"
-        else -> fail()
-      },
-
-      id = assessment.id,
-
-      applicationId = assessment.application.id,
-
-      createdAt = assessment.createdAt,
-
-      riskRatings = when (val reified = assessment.application) {
-        is ApprovedPremisesApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
-        is TemporaryAccommodationApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
-        else -> null
-      },
-
-      arrivalDate = when (val application = assessment.application) {
-        is ApprovedPremisesApplicationEntity -> application.arrivalDate
-        is TemporaryAccommodationApplicationEntity -> application.arrivalDate
-        else -> null
-      },
-
-      dateOfInfoRequest = assessment
-        .clarificationNotes
-        .filter { it.response == null }
-        .minByOrNull { it.createdAt }
-        ?.createdAt,
-
-      completed = when (assessment) {
-        is TemporaryAccommodationAssessmentEntity -> assessment.completedAt != null
-        else -> assessment.decision != null
-      },
-      decision = assessment.decision?.name,
-      crn = assessment.application.crn,
-      isStarted = assessment.data != null,
-      isAllocated = assessment.allocatedToUser != null,
-    )
 
   @Test
   fun `Get assessment by ID without JWT returns 401`() {

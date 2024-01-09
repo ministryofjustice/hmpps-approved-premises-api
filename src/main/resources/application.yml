@@ -250,3 +250,6 @@ max-response-in-memory-size-bytes: 750000
 
 migration-job:
   throttle-enabled: true
+
+pagination:
+  default-page-size: 10
