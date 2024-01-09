@@ -3278,6 +3278,16 @@ paths:
           required: false
           schema:
             type: string
+        - name: page
+          in: query
+          description: Page number of results to return. If blank, returns all results
+          schema:
+            type: integer
+        - name: perPage
+          in: query
+          description: Number of items to return per page (defaults to 10)
+          schema:
+            type: integer
       responses:
         200:
           description: successfully retrieved assessments

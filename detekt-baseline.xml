@@ -12,6 +12,7 @@
     <ID>CyclomaticComplexMethod:DomainEventServiceTest.kt$DomainEventServiceTest$@Test fun `savePersonArrivedEvent persists event, emits event to SNS`()</ID>
     <ID>CyclomaticComplexMethod:DomainEventServiceTest.kt$DomainEventServiceTest$@Test fun `savePersonNotArrivedEvent persists event, emits event to SNS`()</ID>
     <ID>CyclomaticComplexMethod:DomainEventServiceTest.kt$DomainEventServiceTest$@Test fun `savePersonDepartedEvent persists event, emits event to SNS`()</ID>
+    <ID>ForbiddenComment:AssessmentController.kt$AssessmentController$// TODO: We should carry out the pagination at the database level</ID>
   </ManuallySuppressedIssues>
   <CurrentIssues>
     <ID>ComplexCondition:BookingService.kt$BookingService$booking.service == ServiceName.approvedPremises.value &amp;&amp; booking.application != null &amp;&amp; user != null &amp;&amp; !arrivedAndDepartedDomainEventsDisabled</ID>
@@ -49,7 +50,7 @@
     <ID>CyclomaticComplexMethod:PremisesService.kt$PremisesService$fun updatePremises( premisesId: UUID, addressLine1: String, addressLine2: String?, town: String?, postcode: String, localAuthorityAreaId: UUID?, probationRegionId: UUID, characteristicIds: List&lt;UUID>, notes: String?, status: PropertyStatus, probationDeliveryUnitIdentifier: Either&lt;String, UUID>?, turnaroundWorkingDayCount: Int?, ): AuthorisableActionResult&lt;ValidatableActionResult&lt;PremisesEntity>></ID>
     <ID>CyclomaticComplexMethod:SeedBookingsTest.kt$SeedBookingsTest$private fun approvedPremisesBookingSeedCsvRowsToCsv(rows: List&lt;ApprovedPremisesBookingSeedCsvRow>): String</ID>
     <ID>CyclomaticComplexMethod:SeedUtils.kt$fun getCanonicalRegionName(regionName: String): String</ID>
-    <ID>CyclomaticComplexMethod:SeedService.kt$SeedService$private fun seedData(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob&lt;*&gt;.() -&gt; String)</ID>
+    <ID>CyclomaticComplexMethod:SeedService.kt$SeedService$private fun seedData(seedFileType: SeedFileType, filename: String, resolveCsvPath: SeedJob&lt;*>.() -> String)</ID>
     <ID>CyclomaticComplexMethod:TaskService.kt$TaskService$fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, id: UUID): AuthorisableActionResult&lt;ValidatableActionResult&lt;Reallocation>></ID>
     <ID>EmptyDefaultConstructor:ArrivalTransformer.kt$ArrivalTransformer$()</ID>
     <ID>EmptyDefaultConstructor:CancellationReasonTransformer.kt$CancellationReasonTransformer$()</ID>

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -47,6 +49,7 @@ class AssessmentController(
   private val assessmentTransformer: AssessmentTransformer,
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
+  @Value("\${pagination.default-page-size}") private val defaultPageSize: Int,
 ) : AssessmentsApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -57,6 +60,8 @@ class AssessmentController(
     sortBy: AssessmentSortField?,
     statuses: List<AssessmentStatus>?,
     crn: String?,
+    page: Int?,
+    perPage: Int?,
   ): ResponseEntity<List<AssessmentSummary>> {
     val user = userService.getUserForRequest()
 
@@ -75,17 +80,30 @@ class AssessmentController(
       else -> sortBy
     }
 
-    return ResponseEntity.ok(
-      summaries.map {
-        val personInfo = offenderService.getInfoForPerson(it.crn, user.deliusUsername, false)
+    var metadata: PaginationMetadata? = null
+    var filteredSummaries = summaries.map {
+      val personInfo = offenderService.getInfoForPerson(it.crn, user.deliusUsername, false)
 
-        assessmentTransformer.transformDomainToApiSummary(
-          it,
-          personInfo,
-        )
-      }.sort(sortDirection, sortBy)
-        .filterByStatuses(statuses),
-    )
+      assessmentTransformer.transformDomainToApiSummary(
+        it,
+        personInfo,
+      )
+    }.sort(sortDirection, sortBy)
+      .filterByStatuses(statuses)
+
+    // TODO: We should carry out the pagination at the database level
+    if (page !== null) {
+      val pageSize = perPage ?: defaultPageSize
+      val chunkedSummaries = filteredSummaries.chunked(pageSize)
+      val pageIndex = page - 1
+
+      metadata = PaginationMetadata(page, chunkedSummaries.size, filteredSummaries.size.toLong(), pageSize)
+      filteredSummaries = chunkedSummaries[pageIndex]
+    }
+
+    return ResponseEntity.ok().headers(
+      metadata?.toHeaders(),
+    ).body(filteredSummaries)
   }
 
   override fun assessmentsAssessmentIdGet(assessmentId: UUID): ResponseEntity<Assessment> {
