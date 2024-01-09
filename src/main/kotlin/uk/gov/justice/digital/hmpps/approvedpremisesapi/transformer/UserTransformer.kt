@@ -33,15 +33,15 @@ class UserTransformer(
       numTasksPending = userWorkload.numTasksPending,
       numTasksCompleted7Days = userWorkload.numTasksCompleted7Days,
       numTasksCompleted30Days = userWorkload.numTasksCompleted30Days,
-      qualifications = jpa.qualifications.distinct().map(::transformQualificationToApi),
-      roles = jpa.roles.distinct().mapNotNull(::transformApprovedPremisesRoleToApi),
+      qualifications = jpa.qualifications.distinctBy { it.qualification }.map(::transformQualificationToApi),
+      roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToApi),
     )
   }
   fun transformJpaToApi(jpa: UserEntity, serviceName: ServiceName) = when (serviceName) {
     ServiceName.approvedPremises, ServiceName.cas2 -> ApprovedPremisesUser(
       id = jpa.id,
       deliusUsername = jpa.deliusUsername,
-      roles = jpa.roles.mapNotNull(::transformApprovedPremisesRoleToApi),
+      roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToApi),
       email = jpa.email,
       name = jpa.name,
       telephoneNumber = jpa.telephoneNumber,
@@ -57,7 +57,7 @@ class UserTransformer(
       name = jpa.name,
       telephoneNumber = jpa.telephoneNumber,
       isActive = jpa.isActive,
-      roles = jpa.roles.mapNotNull(::transformTemporaryAccommodationRoleToApi),
+      roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformTemporaryAccommodationRoleToApi),
       region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
       service = ServiceName.temporaryAccommodation.value,
     )
