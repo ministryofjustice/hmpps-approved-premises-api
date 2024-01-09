@@ -151,6 +151,7 @@ class ApprovedPremisesBookingSeedJob(
         nomsNumber = offender.otherIds.nomsNumber ?: "Unknown NOMS Number",
         arrivalDate = row.plannedArrivalDate,
         departureDate = row.plannedDepartureDate,
+        premises = bed.room.premises,
         bedId = bed.id,
         bookingId = row.id,
         eventNumber = null,

@@ -301,6 +301,7 @@ class BookingService(
     return AuthorisableActionResult.Success(validationResult)
   }
 
+  @Suppress("CyclomaticComplexMethod")
   @Transactional
   fun createApprovedPremisesAdHocBooking(
     user: UserEntity? = null,
@@ -308,7 +309,8 @@ class BookingService(
     nomsNumber: String?,
     arrivalDate: LocalDate,
     departureDate: LocalDate,
-    bedId: UUID,
+    premises: PremisesEntity,
+    bedId: UUID?,
     eventNumber: String?,
     bookingId: UUID = UUID.randomUUID(),
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
@@ -323,16 +325,22 @@ class BookingService(
         "$.departureDate" hasValidationError "beforeBookingArrivalDate"
       }
 
-      getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
-        return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
-      }
+      val bed = bedId?.let {
+        getLostBedWithConflictingDates(arrivalDate, departureDate, null, bedId)?.let {
+          return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
+        }
 
-      val bed = bedRepository.findByIdOrNull(bedId)
+        val bed = bedRepository.findByIdOrNull(bedId)
 
-      if (bed == null) {
-        "$.bedId" hasValidationError "doesNotExist"
-      } else if (bed.room.premises !is ApprovedPremisesEntity) {
-        "$.bedId" hasValidationError "mustBelongToApprovedPremises"
+        if (bed == null) {
+          "$.bedId" hasValidationError "doesNotExist"
+        } else if (bed.room.premises !is ApprovedPremisesEntity) {
+          "$.bedId" hasValidationError "mustBelongToApprovedPremises"
+        } else if (bed.room.premises != premises) {
+          "$.bedId" hasValidationError "mustBelongToProvidedPremise"
+        }
+
+        bed
       }
 
       if (!isCalledFromSeeder && eventNumber == null) {
@@ -371,7 +379,7 @@ class BookingService(
           cancellations = mutableListOf(),
           confirmation = null,
           extensions = mutableListOf(),
-          premises = bed!!.room.premises,
+          premises = premises,
           bed = bed,
           service = ServiceName.approvedPremises.value,
           originalArrivalDate = arrivalDate,
@@ -658,11 +666,16 @@ class BookingService(
     nomsNumber: String?,
     arrivalDate: LocalDate,
     departureDate: LocalDate,
-    bedId: UUID,
+    bedId: UUID?,
     assessmentId: UUID?,
     enableTurnarounds: Boolean,
   ): AuthorisableActionResult<ValidatableActionResult<BookingEntity>> {
     val validationResult = validated {
+      if (bedId == null) {
+        "$.bedId" hasValidationError "empty"
+        return@validated fieldValidationError
+      }
+
       val expectedLastUnavailableDate =
         workingDayCountService.addWorkingDays(departureDate, premises.turnaroundWorkingDayCount)
       getBookingWithConflictingDates(arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
