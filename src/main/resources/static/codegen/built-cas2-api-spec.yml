@@ -909,7 +909,6 @@ components:
         - crn
         - arrivalDate
         - departureDate
-        - bedId
         - serviceName
     NewPlacementRequestBooking:
       type: object
