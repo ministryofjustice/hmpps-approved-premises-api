@@ -356,14 +356,6 @@ class BookingService(
         if (application is Either.Left<ApprovedPremisesApplicationEntity>) application.value else null
       val offlineApplication = if (application is Either.Right<OfflineApplicationEntity>) application.value else null
 
-      if (onlineApplication != null) {
-        log.info("Found online application: ${onlineApplication.id}")
-      }
-
-      if (offlineApplication != null) {
-        log.info("Found offline application: ${offlineApplication.id}")
-      }
-
       val bookingCreatedAt = OffsetDateTime.now()
 
       val booking = bookingRepository.save(
@@ -398,24 +390,7 @@ class BookingService(
       associateBookingWithPlacementRequest(onlineApplication, booking)
 
       if (!isCalledFromSeeder) {
-        val applicationId = (onlineApplication?.id ?: offlineApplication?.id)
-        val eventNumberForDomainEvent =
-          (onlineApplication?.eventNumber ?: offlineApplication?.eventNumber ?: eventNumber)
-
-        log.info("Using application ID: $applicationId")
-        log.info("Using Event Number: $eventNumberForDomainEvent")
-
-        saveBookingMadeDomainEvent(
-          applicationId = applicationId!!,
-          eventNumber = eventNumberForDomainEvent!!,
-          booking = booking,
-          user = user!!,
-          bookingCreatedAt = bookingCreatedAt,
-          applicationSubmittedOn = onlineApplication?.submittedAt,
-          releaseType = onlineApplication?.releaseType,
-          sentenceType = onlineApplication?.sentenceType,
-          situation = onlineApplication?.situation,
-        )
+        createApprovedPremisesAdHocBookingDomainEvent(onlineApplication, offlineApplication, eventNumber, booking, user!!, bookingCreatedAt)
 
         if (onlineApplication != null) {
           sendEmailNotifications(onlineApplication, booking)
@@ -426,6 +401,34 @@ class BookingService(
     }
 
     return AuthorisableActionResult.Success(validationResult)
+  }
+
+  private fun createApprovedPremisesAdHocBookingDomainEvent(
+    onlineApplication: ApprovedPremisesApplicationEntity?,
+    offlineApplication: OfflineApplicationEntity?,
+    eventNumber: String?,
+    booking: BookingEntity,
+    user: UserEntity,
+    bookingCreatedAt: OffsetDateTime,
+  ) {
+    val applicationId = (onlineApplication?.id ?: offlineApplication?.id)
+    val eventNumberForDomainEvent =
+      (onlineApplication?.eventNumber ?: offlineApplication?.eventNumber ?: eventNumber)
+
+    log.info("Using application ID: $applicationId")
+    log.info("Using Event Number: $eventNumberForDomainEvent")
+
+    saveBookingMadeDomainEvent(
+      applicationId = applicationId!!,
+      eventNumber = eventNumberForDomainEvent!!,
+      booking = booking,
+      user = user,
+      bookingCreatedAt = bookingCreatedAt,
+      applicationSubmittedOn = onlineApplication?.submittedAt,
+      releaseType = onlineApplication?.releaseType,
+      sentenceType = onlineApplication?.sentenceType,
+      situation = onlineApplication?.situation,
+    )
   }
 
   private fun sendEmailNotifications(application: ApprovedPremisesApplicationEntity, booking: BookingEntity) {
@@ -492,14 +495,14 @@ class BookingService(
         newestSubmittedOnlineApplication.submittedAt,
       )
     ) {
-      log.info("Offline application is created before the online application, so returning the offline application")
+      log.info("Offline application is created before the online application, so returning the offline application with id ${newestOfflineApplication.id}")
       Either.Right(newestOfflineApplication)
     } else if (newestSubmittedOnlineApplication != null) {
-      log.info("Returning online application")
+      log.info("Returning online application with id ${newestSubmittedOnlineApplication.id}")
       Either.Left(newestSubmittedOnlineApplication)
     } else {
-      log.info("Returning offline application")
-      Either.Right(newestOfflineApplication!!)
+      log.info("Returning offline application with id ${newestOfflineApplication!!.id}")
+      Either.Right(newestOfflineApplication)
     }
   }
 
