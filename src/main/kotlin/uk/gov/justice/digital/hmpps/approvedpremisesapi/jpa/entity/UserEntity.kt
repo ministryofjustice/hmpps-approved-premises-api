@@ -28,8 +28,8 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
 
   fun findByDeliusUsername(deliusUsername: String): UserEntity?
 
-  @Query("SELECT DISTINCT u FROM UserEntity u join u.roles r where r.role = :role")
-  fun findUsersWithRole(role: UserRole): List<UserEntity>
+  @Query("SELECT DISTINCT u FROM UserEntity u join u.roles r where r.role = :role and u.isActive = true")
+  fun findActiveUsersWithRole(role: UserRole): List<UserEntity>
 
   @Query(
     """

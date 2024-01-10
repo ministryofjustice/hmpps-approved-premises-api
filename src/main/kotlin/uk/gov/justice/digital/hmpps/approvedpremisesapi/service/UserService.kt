@@ -141,7 +141,7 @@ class UserService(
       AllocationType.PlacementApplication -> UserRole.CAS1_MATCHER
     }
 
-    var users = userRepository.findUsersWithRole(requiredRole)
+    var users = userRepository.findActiveUsersWithRole(requiredRole)
 
     userQualifications.forEach { qualification ->
       users = users.filter { it.hasQualification(qualification) }
