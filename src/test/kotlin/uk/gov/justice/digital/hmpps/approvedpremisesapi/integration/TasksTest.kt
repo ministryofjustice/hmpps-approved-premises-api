@@ -1452,117 +1452,122 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get a PlacementApplication Task for an application gets UserWithWorkload and returns 200`() {
+    fun `Get a PlacementApplication Task for an application gets UserWithWorkload, ignores inactive users and returns 200`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         `Given a User` { user, _ ->
           `Given a User`(
             roles = listOf(UserRole.CAS1_MATCHER),
           ) { allocatableUser, _ ->
-            `Given an Offender` { offenderDetails, inmateDetails ->
-              `Given a Placement Application`(
-                createdByUser = user,
-                allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
+            `Given a User`(
+              roles = listOf(UserRole.CAS1_MATCHER),
+              isActive = false,
+            ) { _, _ ->
+              `Given an Offender` { offenderDetails, inmateDetails ->
+                `Given a Placement Application`(
+                  createdByUser = user,
+                  allocatedToUser = user,
+                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                    withPermissiveSchema()
+                  },
+                  crn = offenderDetails.otherIds.crn,
 
-              ) { placementApplication ->
-                val numAssessmentsPending = 3
-                repeat(numAssessmentsPending) {
-                  createTask(TaskType.assessment, null, allocatableUser, user, offenderDetails.otherIds.crn)
-                }
+                ) { placementApplication ->
+                  val numAssessmentsPending = 3
+                  repeat(numAssessmentsPending) {
+                    createTask(TaskType.assessment, null, allocatableUser, user, offenderDetails.otherIds.crn)
+                  }
 
-                val numPlacementApplicationsPending = 4
-                repeat(numPlacementApplicationsPending) {
-                  createTask(TaskType.placementApplication, null, allocatableUser, user, offenderDetails.otherIds.crn)
-                }
+                  val numPlacementApplicationsPending = 4
+                  repeat(numPlacementApplicationsPending) {
+                    createTask(TaskType.placementApplication, null, allocatableUser, user, offenderDetails.otherIds.crn)
+                  }
 
-                val numPlacementRequestsPending = 2
-                repeat(numPlacementRequestsPending) {
-                  createTask(TaskType.placementRequest, null, allocatableUser, user, offenderDetails.otherIds.crn)
-                }
+                  val numPlacementRequestsPending = 2
+                  repeat(numPlacementRequestsPending) {
+                    createTask(TaskType.placementRequest, null, allocatableUser, user, offenderDetails.otherIds.crn)
+                  }
 
-                val numAssessmentsCompletedBetween1And7DaysAgo = 4
-                repeat(numAssessmentsCompletedBetween1And7DaysAgo) {
-                  val days = kotlin.random.Random.nextInt(1, 7).toLong()
-                  createTask(TaskType.assessment, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
-                }
+                  val numAssessmentsCompletedBetween1And7DaysAgo = 4
+                  repeat(numAssessmentsCompletedBetween1And7DaysAgo) {
+                    val days = kotlin.random.Random.nextInt(1, 7).toLong()
+                    createTask(TaskType.assessment, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                  }
 
-                val numPlacementApplicationsCompletedBetween1And7DaysAgo = 2
-                repeat(numPlacementApplicationsCompletedBetween1And7DaysAgo) {
-                  val days = kotlin.random.Random.nextInt(1, 7).toLong()
-                  createTask(TaskType.placementApplication, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
-                }
+                  val numPlacementApplicationsCompletedBetween1And7DaysAgo = 2
+                  repeat(numPlacementApplicationsCompletedBetween1And7DaysAgo) {
+                    val days = kotlin.random.Random.nextInt(1, 7).toLong()
+                    createTask(TaskType.placementApplication, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                  }
 
-                val numPlacementRequestsCompletedBetween1And7DaysAgo = 1
-                repeat(numPlacementRequestsCompletedBetween1And7DaysAgo) {
-                  val days = kotlin.random.Random.nextInt(1, 7).toLong()
-                  createTask(TaskType.placementRequest, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
-                }
+                  val numPlacementRequestsCompletedBetween1And7DaysAgo = 1
+                  repeat(numPlacementRequestsCompletedBetween1And7DaysAgo) {
+                    val days = kotlin.random.Random.nextInt(1, 7).toLong()
+                    createTask(TaskType.placementRequest, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                  }
 
-                val numAssessmentsCompletedBetween8And30DaysAgo = 4
-                repeat(numAssessmentsCompletedBetween8And30DaysAgo) {
-                  val days = kotlin.random.Random.nextInt(8, 30).toLong()
-                  createTask(TaskType.assessment, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
-                }
+                  val numAssessmentsCompletedBetween8And30DaysAgo = 4
+                  repeat(numAssessmentsCompletedBetween8And30DaysAgo) {
+                    val days = kotlin.random.Random.nextInt(8, 30).toLong()
+                    createTask(TaskType.assessment, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                  }
 
-                val numPlacementApplicationsCompletedBetween8And30DaysAgo = 3
-                repeat(numPlacementApplicationsCompletedBetween8And30DaysAgo) {
-                  val days = kotlin.random.Random.nextInt(8, 30).toLong()
-                  createTask(TaskType.placementApplication, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
-                }
+                  val numPlacementApplicationsCompletedBetween8And30DaysAgo = 3
+                  repeat(numPlacementApplicationsCompletedBetween8And30DaysAgo) {
+                    val days = kotlin.random.Random.nextInt(8, 30).toLong()
+                    createTask(TaskType.placementApplication, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                  }
 
-                val numPlacementRequestsCompletedBetween8And30DaysAgo = 2
-                repeat(numPlacementRequestsCompletedBetween8And30DaysAgo) {
-                  val days = kotlin.random.Random.nextInt(8, 30).toLong()
-                  createTask(TaskType.placementRequest, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
-                }
+                  val numPlacementRequestsCompletedBetween8And30DaysAgo = 2
+                  repeat(numPlacementRequestsCompletedBetween8And30DaysAgo) {
+                    val days = kotlin.random.Random.nextInt(8, 30).toLong()
+                    createTask(TaskType.placementRequest, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                  }
 
-                val numPendingTasks = listOf(
-                  numAssessmentsPending,
-                  numPlacementRequestsPending,
-                  numPlacementApplicationsPending,
-                ).sum()
-                val numTasksCompletedInTheLast7Days = listOf(
-                  numAssessmentsCompletedBetween1And7DaysAgo,
-                  numPlacementApplicationsCompletedBetween1And7DaysAgo,
-                  numPlacementRequestsCompletedBetween1And7DaysAgo,
-                ).sum()
-                val numTasksCompletedInTheLast30Days = listOf(
-                  numTasksCompletedInTheLast7Days,
-                  numAssessmentsCompletedBetween8And30DaysAgo,
-                  numPlacementApplicationsCompletedBetween8And30DaysAgo,
-                  numPlacementRequestsCompletedBetween8And30DaysAgo,
-                ).sum()
+                  val numPendingTasks = listOf(
+                    numAssessmentsPending,
+                    numPlacementRequestsPending,
+                    numPlacementApplicationsPending,
+                  ).sum()
+                  val numTasksCompletedInTheLast7Days = listOf(
+                    numAssessmentsCompletedBetween1And7DaysAgo,
+                    numPlacementApplicationsCompletedBetween1And7DaysAgo,
+                    numPlacementRequestsCompletedBetween1And7DaysAgo,
+                  ).sum()
+                  val numTasksCompletedInTheLast30Days = listOf(
+                    numTasksCompletedInTheLast7Days,
+                    numAssessmentsCompletedBetween8And30DaysAgo,
+                    numPlacementApplicationsCompletedBetween8And30DaysAgo,
+                    numPlacementRequestsCompletedBetween8And30DaysAgo,
+                  ).sum()
 
-                webTestClient.get()
-                  .uri("/tasks/placement-application/${placementApplication.id}")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-                  .expectBody()
-                  .json(
-                    objectMapper.writeValueAsString(
-                      TaskWrapper(
-                        task = taskTransformer.transformPlacementApplicationToTask(
-                          placementApplication,
-                          "${offenderDetails.firstName} ${offenderDetails.surname}",
-                        ),
-                        users = listOf(
-                          userTransformer.transformJpaToAPIUserWithWorkload(
-                            allocatableUser,
-                            UserWorkload(
-                              numPendingTasks,
-                              numTasksCompletedInTheLast7Days,
-                              numTasksCompletedInTheLast30Days,
+                  webTestClient.get()
+                    .uri("/tasks/placement-application/${placementApplication.id}")
+                    .header("Authorization", "Bearer $jwt")
+                    .exchange()
+                    .expectStatus()
+                    .isOk
+                    .expectBody()
+                    .json(
+                      objectMapper.writeValueAsString(
+                        TaskWrapper(
+                          task = taskTransformer.transformPlacementApplicationToTask(
+                            placementApplication,
+                            "${offenderDetails.firstName} ${offenderDetails.surname}",
+                          ),
+                          users = listOf(
+                            userTransformer.transformJpaToAPIUserWithWorkload(
+                              allocatableUser,
+                              UserWorkload(
+                                numPendingTasks,
+                                numTasksCompletedInTheLast7Days,
+                                numTasksCompletedInTheLast30Days,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  )
+                    )
+                }
               }
             }
           }
