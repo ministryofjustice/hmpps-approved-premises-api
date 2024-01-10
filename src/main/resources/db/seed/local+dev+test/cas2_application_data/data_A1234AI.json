@@ -45,9 +45,6 @@
     "funding-source": {
       "fundingSource": "personalSavings"
     },
-    "identification": {
-      "idDocuments": "passport"
-    },
     "national-insurance": {
       "nationalInsuranceNumber": "NS 123 288 12"
     }
