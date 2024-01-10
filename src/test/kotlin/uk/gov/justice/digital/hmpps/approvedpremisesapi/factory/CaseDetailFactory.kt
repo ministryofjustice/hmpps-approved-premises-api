@@ -28,6 +28,14 @@ class CaseDetailFactory : Factory<CaseDetail> {
     this.case = { case }
   }
 
+  fun withRegistrations(registrations: List<Registration>) = apply {
+    this.registrations = { registrations }
+  }
+
+  fun withMappaDetail(mappaDetail: MappaDetail) = apply {
+    this.mappaDetail = { mappaDetail }
+  }
+
   override fun produce(): CaseDetail = CaseDetail(
     case = this.case(),
     offences = this.offences(),
