@@ -3299,6 +3299,23 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AssessmentSummary'
+          headers:
+            X-Pagination-CurrentPage:
+              schema:
+                type: integer
+              description: The current page number
+            X-Pagination-TotalPages:
+              schema:
+                type: integer
+              description: The total number of pages
+            X-Pagination-TotalResults:
+              schema:
+                type: integer
+              description: The total number of results
+            X-Pagination-PageSize:
+              schema:
+                type: integer
+              description: The size of each page
         401:
           $ref: '#/components/responses/401Response'
         403:
