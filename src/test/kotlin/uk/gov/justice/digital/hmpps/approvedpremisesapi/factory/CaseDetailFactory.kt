@@ -51,10 +51,12 @@ class CaseDetailOffenceFactory : Factory<Offence> {
 }
 
 class RegistrationFactory : Factory<Registration> {
+  var code: Yielded<String> = { randomStringLowerCase(6) }
   var description: Yielded<String> = { randomStringLowerCase(10) }
   var startDate: Yielded<LocalDate> = { LocalDate.now() }
 
   override fun produce(): Registration = Registration(
+    code = this.code(),
     description = this.description(),
     startDate = this.startDate(),
   )
