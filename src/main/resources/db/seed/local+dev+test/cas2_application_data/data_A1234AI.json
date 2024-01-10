@@ -348,6 +348,11 @@
       "nonStandardLicenceConditionsDetail": "There are exclusion zones, please check"
     }
   },
+  "information-needed-from-applicant": {
+    "information-needed-from-applicant": {
+      "hasInformationNeeded": "yes"
+    }
+  },
   "check-your-answers": {
     "check-your-answers": {
       "checkYourAnswers": "confirmed"
