@@ -14,6 +14,7 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
@@ -28,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
@@ -46,7 +48,9 @@ class ApplicationServiceTest {
   private val mockUserService = mockk<NomisUserService>()
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockDomainEventService = mockk<DomainEventService>()
+  private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
+  private val mockNotifyConfig = mockk<NotifyConfig>()
 
   private val applicationService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService(
     mockUserRepository,
@@ -56,8 +60,11 @@ class ApplicationServiceTest {
     mockUserService,
     mockUserAccessService,
     mockDomainEventService,
+    mockEmailNotificationService,
+    mockNotifyConfig,
     mockObjectMapper,
     "http://frontend/applications/#id",
+    "http://frontend/assess/applications/#applicationId/overview",
   )
 
   @Nested
@@ -416,6 +423,8 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns null
 
       assertThat(applicationService.submitApplication(submitCas2Application) is AuthorisableActionResult.NotFound).isTrue
+
+      verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
     }
 
     @Test
@@ -436,6 +445,7 @@ class ApplicationServiceTest {
         application
 
       assertThat(applicationService.submitApplication(submitCas2Application) is AuthorisableActionResult.Unauthorised).isTrue
+      verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
     }
 
     @Test
@@ -464,6 +474,7 @@ class ApplicationServiceTest {
       val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
+      verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
     }
 
     @Test
@@ -495,6 +506,7 @@ class ApplicationServiceTest {
       val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+      verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
     }
 
     @Test
@@ -545,6 +557,7 @@ class ApplicationServiceTest {
         applicationService.submitApplication(submitCas2Application)
       }
       assertThat(exception.message).isEqualTo("Inmate Detail not found")
+      verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
     }
 
     @Test
@@ -576,7 +589,7 @@ class ApplicationServiceTest {
             locationId = 1234,
             description = "description",
             agencyName = "HMP Bristol",
-          )
+          ),
         )
         .produce()
 
@@ -586,6 +599,10 @@ class ApplicationServiceTest {
           application.nomsNumber.toString(),
         )
       } returns AuthorisableActionResult.Success(inmateDetail)
+
+      every { mockNotifyConfig.templates.cas2ApplicationSubmitted } returns "abc123"
+      every { mockNotifyConfig.emailAddresses.cas2Assessors } returns "exampleAssessorInbox@example.com"
+      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
       every { mockApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
@@ -633,6 +650,19 @@ class ApplicationServiceTest {
               data.preferredAreas == "Leeds | Bradford" &&
               data.hdcEligibilityDate == hdcEligibilityDate &&
               data.conditionalReleaseDate == conditionalReleaseDate
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        mockEmailNotificationService.sendEmail(
+          "exampleAssessorInbox@example.com",
+          "abc123",
+          match {
+            it["name"] == user.name &&
+              it["email"] == user.email &&
+              it["prisonNumber"] == application.nomsNumber &&
+              it["applicationUrl"] == "http://frontend/assess/applications/$applicationId/overview"
           },
         )
       }

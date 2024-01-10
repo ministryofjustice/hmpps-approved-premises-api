@@ -48,6 +48,8 @@ generic-service:
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/#id
     URL-TEMPLATES_FRONTEND_ASSESSMENT: https://approved-premises-dev.hmpps.service.justice.gov.uk/assessments/#id
     URL-TEMPLATES_FRONTEND_BOOKING: https://approved-premises-dev.hmpps.service.justice.gov.uk/premises/#premisesId/bookings/#bookingId
+    URL-TEMPLATES_FRONTEND_CAS2_APPLICATION: https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/applications/#id
+    URL-TEMPLATES_FRONTEND_CAS2_SUBMITTED-APPLICATION-OVERVIEW: https://community-accommodation-tier-2-dev.hmpps.service.justice.gov.uk/assess/applications/#applicationId/overview
     URL-TEMPLATES_API_CAS1_APPLICATION-SUBMITTED-EVENT-DETAIL: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/application-submitted/#eventId
     URL-TEMPLATES_API_CAS1_APPLICATION-ASSESSED-EVENT-DETAIL: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/application-assessed/#eventId
     URL-TEMPLATES_API_CAS1_BOOKING-MADE-EVENT-DETAIL: https://approved-premises-api-dev.hmpps.service.justice.gov.uk/events/booking-made/#eventId
@@ -81,6 +83,7 @@ generic-service:
     hmpps-approved-premises-api:
       NOTIFY_APIKEY: "NOTIFY_APIKEY"
       NOTIFY_GUESTLISTAPIKEY: "NOTIFY_GUESTLISTAPIKEY"
+      NOTIFY_EMAILADDRESSES_CAS2ASSESSORS: "NOTIFY_EMAILADDRESSES_CAS2ASSESSORS"
 
   allowlist:
     unilink-aovpn1: "194.75.210.216/29"
