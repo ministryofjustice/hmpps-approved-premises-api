@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -46,6 +47,7 @@ class Cas2AutoScriptTest {
   private val mockJsonSchemaEntity = mockk<JsonSchemaEntity>()
 
   private val mockApplicationService = mockk<ApplicationService>()
+  private val mockStatusUpdateService = mockk<StatusUpdateService>()
 
   private val autoScript = Cas2AutoScript(
     mockSeedLogger,
@@ -56,6 +58,7 @@ class Cas2AutoScriptTest {
     mockStatusUpdateRepository,
     mockJsonSchemaService,
     mockApplicationService,
+    mockStatusUpdateService,
   )
 
   @BeforeEach
@@ -85,6 +88,7 @@ class Cas2AutoScriptTest {
     every { mockStatusUpdateEntity.createdAt = (any()) } answers { mockStatusUpdateEntity }
 
     every { mockApplicationService.createCas2ApplicationSubmittedEvent(any()) } answers { }
+    every { mockStatusUpdateService.createStatusUpdatedDomainEvent(any()) } answers { }
   }
 
   @Test
@@ -113,5 +117,12 @@ class Cas2AutoScriptTest {
     autoScript.script()
 
     verify(atLeast = 1) { mockApplicationService.createCas2ApplicationSubmittedEvent(any()) }
+  }
+
+  @Test
+  fun `creates at application-status-updated domain event`() {
+    autoScript.script()
+
+    verify(atLeast = 1) { mockStatusUpdateService.createStatusUpdatedDomainEvent(any()) }
   }
 }

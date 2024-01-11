@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Appl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import java.io.IOException
 import java.io.InputStreamReader
 import java.time.OffsetDateTime
@@ -42,6 +43,7 @@ class Cas2AutoScript(
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val applicationService: ApplicationService,
+  private val statusUpdateService: StatusUpdateService,
 ) {
   fun script() {
     seedLogger.info("Auto-Scripting for CAS2")
@@ -103,6 +105,7 @@ class Cas2AutoScript(
     )
     update.apply { this.createdAt = application.submittedAt!!.plusDays(idx + 1.toLong()) }
     statusUpdateRepository.save(update)
+    statusUpdateService.createStatusUpdatedDomainEvent(update)
   }
 
   private fun findStatusAtPosition(idx: Int): Cas2ApplicationStatus {
