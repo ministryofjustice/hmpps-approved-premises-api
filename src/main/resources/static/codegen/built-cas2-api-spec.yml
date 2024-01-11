@@ -2027,6 +2027,8 @@ components:
             submittedAt:
               type: string
               format: date-time
+            telephoneNumber:
+              type: string
           required:
             - createdBy
             - schemaVersion
@@ -2460,9 +2462,12 @@ components:
           type: string
           example: '2023-04-30'
           format: date
+        telephoneNumber:
+          type: string
       required:
         - translatedDocument
         - applicationId
+        - telephoneNumber
     SubmitTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/SubmitApplication'

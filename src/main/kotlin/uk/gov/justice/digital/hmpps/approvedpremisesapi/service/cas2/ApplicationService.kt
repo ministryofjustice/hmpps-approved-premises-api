@@ -114,6 +114,7 @@ class ApplicationService(
           submittedAt = null,
           schemaUpToDate = true,
           nomsNumber = offenderDetails.otherIds.nomsNumber,
+          telephoneNumber = null,
         ),
       )
 
@@ -219,6 +220,7 @@ class ApplicationService(
       preferredAreas = submitApplication.preferredAreas
       hdcEligibilityDate = submitApplication.hdcEligibilityDate
       conditionalReleaseDate = submitApplication.conditionalReleaseDate
+      telephoneNumber = submitApplication.telephoneNumber
     }
 
     application = applicationRepository.save(application)

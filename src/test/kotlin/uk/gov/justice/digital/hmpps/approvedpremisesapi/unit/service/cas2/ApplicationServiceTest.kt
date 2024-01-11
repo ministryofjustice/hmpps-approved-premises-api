@@ -408,6 +408,7 @@ class ApplicationServiceTest {
       preferredAreas = "Leeds | Bradford",
       hdcEligibilityDate = hdcEligibilityDate,
       conditionalReleaseDate = conditionalReleaseDate,
+      telephoneNumber = "123",
     )
 
     @BeforeEach

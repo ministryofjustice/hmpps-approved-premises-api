@@ -83,6 +83,7 @@ class ApplicationsTransformerTest {
 
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+      assertThat(result.telephoneNumber).isEqualTo(application.telephoneNumber)
     }
   }
 
