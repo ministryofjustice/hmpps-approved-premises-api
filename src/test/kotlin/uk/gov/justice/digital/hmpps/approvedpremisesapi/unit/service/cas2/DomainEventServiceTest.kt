@@ -118,7 +118,7 @@ class DomainEventServiceTest {
           id = id,
           applicationId = applicationId,
           crn = crn,
-          occurredAt = Instant.now(),
+          occurredAt = occurredAt.toInstant(),
           data = Cas2ApplicationSubmittedEvent(
             id = id,
             timestamp = occurredAt.toInstant(),
