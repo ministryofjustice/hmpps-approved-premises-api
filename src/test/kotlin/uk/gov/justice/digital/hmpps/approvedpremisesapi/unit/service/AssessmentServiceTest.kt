@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
@@ -107,7 +108,7 @@ class AssessmentServiceTest {
   )
 
   @Test
-  fun `getVisibleAssessmentSummariesForUser only fetches Approved Premises assessments allocated to the user that have not been reallocated`() {
+  fun `getVisibleAssessmentSummariesForUserCAS1 only fetches Approved Premises assessments allocated to the user that have not been reallocated`() {
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -123,15 +124,17 @@ class AssessmentServiceTest {
         .produce(),
     )
 
-    every { assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(any()) } returns emptyList()
+    every { assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(any(), listOf("NOT_STARTED", "IN_PROGRESS")) } returns emptyList()
 
-    assessmentService.getVisibleAssessmentSummariesForUser(user, ServiceName.approvedPremises)
+    assessmentService.getVisibleAssessmentSummariesForUserCAS1(user, statuses = listOf(DomainAssessmentSummaryStatus.NOT_STARTED, DomainAssessmentSummaryStatus.IN_PROGRESS))
 
-    verify(exactly = 1) { assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(user.id.toString()) }
+    verify(exactly = 1) {
+      assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(user.id.toString(), listOf("NOT_STARTED", "IN_PROGRESS"))
+    }
   }
 
   @Test
-  fun `getVisibleAssessmentSummariesForUser only fetches Temporary Accommodation assessments within the user's probation region`() {
+  fun `getVisibleAssessmentSummariesForUserCAS3 only fetches Temporary Accommodation assessments within the user's probation region`() {
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -149,7 +152,7 @@ class AssessmentServiceTest {
 
     every { assessmentRepositoryMock.findAllTemporaryAccommodationAssessmentSummariesForRegion(any()) } returns emptyList()
 
-    assessmentService.getVisibleAssessmentSummariesForUser(user, ServiceName.temporaryAccommodation)
+    assessmentService.getVisibleAssessmentSummariesForUserCAS3(user)
 
     verify(exactly = 1) { assessmentRepositoryMock.findAllTemporaryAccommodationAssessmentSummariesForRegion(user.probationRegion.id) }
   }

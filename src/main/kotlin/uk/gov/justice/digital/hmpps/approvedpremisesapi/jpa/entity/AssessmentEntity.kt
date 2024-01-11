@@ -34,7 +34,7 @@ import javax.persistence.Table
 @Repository
 interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   @Query(nativeQuery = true)
-  fun findAllApprovedPremisesAssessmentSummariesNotReallocated(userIdString: String? = null): List<DomainAssessmentSummary>
+  fun findAllApprovedPremisesAssessmentSummariesNotReallocated(userIdString: String? = null, statuses: List<String> = emptyList()): List<DomainAssessmentSummary>
 
   @Query(nativeQuery = true)
   fun findAllTemporaryAccommodationAssessmentSummariesForRegion(probationRegionId: UUID): List<DomainAssessmentSummary>
@@ -108,34 +108,51 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   fun findAllReferralsDataForMonthAndYear(month: Int, year: Int): List<ReferralsDataResult>
 }
 
+/**
+ * Note that the logic to determine assessment status is duplicated in
+ * [uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated]
+ * and as such changes should be synchronized
+ */
+
 @NamedNativeQuery(
   name = "AssessmentEntity.findAllApprovedPremisesAssessmentSummariesNotReallocated",
   query =
   """
-    select a.service as type,
+    select distinct a.id,
+           a.service as type,
            cast(a.id as text) as id,
            cast(a.application_id as text) as applicationId,
            a.created_at as createdAt,
            CAST(apa.risk_ratings AS TEXT) as riskRatings,
            apa.arrival_date as arrivalDate,
-           (
-            select min(acn.created_at)
-             from  assessment_clarification_notes acn
-             where acn.response is null
-                   and acn.assessment_id = a.id
-           ) as dateOfInfoRequest,
            a.decision is not null as completed,
            a.decision as decision,
-           a.data is not null as isStarted,
            a.allocated_to_user_id is not null as isAllocated,
-           ap.crn as crn
+           ap.crn as crn,
+           CASE
+             WHEN (a.decision is not null) THEN 'COMPLETED'
+             WHEN (open_acn.id IS NOT NULL) THEN 'AWAITING_RESPONSE'
+             WHEN (a.data IS NOT NULL) THEN 'IN_PROGRESS'
+             ELSE 'NOT_STARTED'
+           END as status
       from approved_premises_assessments aa
            join assessments a on aa.assessment_id = a.id
            join applications ap on a.application_id = ap.id
            left outer join approved_premises_applications apa on ap.id = apa.id
+           left outer join assessment_clarification_notes open_acn on open_acn.assessment_id = a.id AND open_acn.response IS NULL
      where a.reallocated_at is null
            and a.is_withdrawn is false
            and (?1 is null or a.allocated_to_user_id = cast(?1 as UUID))
+           AND ((?2) IS NULL OR 
+             (
+                CASE 
+                  WHEN (a.decision is not null) THEN 'COMPLETED'
+                  WHEN (open_acn.id IS NOT NULL) THEN 'AWAITING_RESPONSE'
+                  WHEN (a.data IS NOT NULL) THEN 'IN_PROGRESS'
+                  ELSE 'NOT_STARTED'
+                END
+             ) IN (?2)
+           ) 
     """,
   resultSetMapping = "DomainAssessmentSummaryMapping",
 )
@@ -154,7 +171,8 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
            a.decision as decision,
            a.data is not null as isStarted,
            a.allocated_to_user_id is not null as isAllocated,
-           ap.crn as crn
+           ap.crn as crn,
+           null as status
       from temporary_accommodation_assessments aa
            join assessments a on aa.assessment_id = a.id
            join applications ap on a.application_id = ap.id
@@ -174,12 +192,11 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
            a.created_at as createdAt,
            CAST(taa.risk_ratings AS TEXT) as riskRatings,
            taa.arrival_date as arrivalDate,
-           null as dateOfInfoRequest,
            aa.completed_at is not null as completed,
            a.decision as decision,
-           a.data is not null as isStarted,
            a.allocated_to_user_id is not null as isAllocated,
-           ap.crn as crn
+           ap.crn as crn,
+           null as status
       from temporary_accommodation_assessments aa
            join assessments a on aa.assessment_id = a.id
            join applications ap on a.application_id = ap.id
@@ -202,12 +219,11 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
         ColumnResult(name = "createdAt", type = OffsetDateTime::class),
         ColumnResult(name = "riskRatings"),
         ColumnResult(name = "arrivalDate", type = OffsetDateTime::class),
-        ColumnResult(name = "dateOfInfoRequest", type = OffsetDateTime::class),
         ColumnResult(name = "completed"),
-        ColumnResult(name = "isStarted"),
         ColumnResult(name = "isAllocated"),
         ColumnResult(name = "decision"),
         ColumnResult(name = "crn"),
+        ColumnResult(name = "status"),
       ],
     ),
   ],
@@ -348,6 +364,7 @@ class TemporaryAccommodationAssessmentEntity(
  * Summary data for an assessment - read-only, to be used when retrieving large numbers of Assessments.
  * Hibernate compatible equals, hash code and toString aren't needed.
  */
+@SuppressWarnings("LongParameterList")
 open class DomainAssessmentSummary(
   val type: String,
   val id: UUID,
@@ -355,13 +372,22 @@ open class DomainAssessmentSummary(
   val createdAt: OffsetDateTime,
   val riskRatings: String?,
   val arrivalDate: OffsetDateTime?,
-  val dateOfInfoRequest: OffsetDateTime?,
   val completed: Boolean,
-  val isStarted: Boolean,
   val isAllocated: Boolean,
   val decision: String?,
   val crn: String,
-)
+  status: String?,
+) {
+  val status = DomainAssessmentSummaryStatus.entries.firstOrNull { it.name == status }
+}
+
+enum class DomainAssessmentSummaryStatus {
+  COMPLETED,
+  AWAITING_RESPONSE,
+  IN_PROGRESS,
+  NOT_STARTED,
+  REALLOCATED,
+}
 
 enum class AssessmentDecision {
   ACCEPTED,
@@ -471,6 +497,5 @@ interface ReferralsDataResult {
   fun getAssessmentSubmittedAt(): Timestamp?
   fun getRejectionRationale(): String?
   fun getReleaseType(): String?
-
   fun getClarificationNoteCount(): Int
 }

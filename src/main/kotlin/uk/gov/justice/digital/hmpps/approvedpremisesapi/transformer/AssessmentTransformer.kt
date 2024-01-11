@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -109,12 +111,26 @@ class AssessmentTransformer(
     null -> null
   }
 
+  fun transformApiStatusToDomainSummaryState(status: AssessmentStatus) = when (status) {
+    AssessmentStatus.cas1Completed -> DomainAssessmentSummaryStatus.COMPLETED
+    AssessmentStatus.cas1AwaitingResponse -> DomainAssessmentSummaryStatus.AWAITING_RESPONSE
+    AssessmentStatus.cas1InProgress -> DomainAssessmentSummaryStatus.IN_PROGRESS
+    AssessmentStatus.cas1NotStarted -> DomainAssessmentSummaryStatus.NOT_STARTED
+    AssessmentStatus.cas1Reallocated -> DomainAssessmentSummaryStatus.REALLOCATED
+    else -> DomainAssessmentSummaryStatus.IN_PROGRESS
+  }
+
   private fun transformDomainSummaryDecisionToApi(decision: String?) = when (decision) {
     "ACCEPTED" -> ApiAssessmentDecision.accepted
     "REJECTED" -> ApiAssessmentDecision.rejected
     else -> null
   }
 
+  /**
+   * Note that the logic to determine assessment status is duplicated in
+   * [uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated]
+   * and as such changes should be synchronized
+   */
   private fun getStatusForApprovedPremisesAssessment(entity: AssessmentEntity) = when {
     entity.decision !== null -> ApprovedPremisesAssessmentStatus.completed
     entity.clarificationNotes.any { it.response == null } -> ApprovedPremisesAssessmentStatus.awaitingResponse
@@ -123,11 +139,14 @@ class AssessmentTransformer(
     else -> ApprovedPremisesAssessmentStatus.notStarted
   }
 
-  private fun getStatusForApprovedPremisesAssessment(ase: DomainAssessmentSummary) = when {
-    ase.completed -> ApprovedPremisesAssessmentStatus.completed
-    ase.dateOfInfoRequest != null -> ApprovedPremisesAssessmentStatus.awaitingResponse
-    ase.isStarted -> ApprovedPremisesAssessmentStatus.inProgress
-    else -> ApprovedPremisesAssessmentStatus.notStarted
+  private fun getStatusForApprovedPremisesAssessment(ase: DomainAssessmentSummary): ApprovedPremisesAssessmentStatus {
+    return when (ase.status) {
+      DomainAssessmentSummaryStatus.COMPLETED -> ApprovedPremisesAssessmentStatus.completed
+      DomainAssessmentSummaryStatus.AWAITING_RESPONSE -> ApprovedPremisesAssessmentStatus.awaitingResponse
+      DomainAssessmentSummaryStatus.IN_PROGRESS -> ApprovedPremisesAssessmentStatus.inProgress
+      DomainAssessmentSummaryStatus.REALLOCATED -> ApprovedPremisesAssessmentStatus.reallocated
+      else -> ApprovedPremisesAssessmentStatus.notStarted
+    }
   }
 
   private fun getStatusForTemporaryAccommodationAssessment(entity: AssessmentEntity) = when {

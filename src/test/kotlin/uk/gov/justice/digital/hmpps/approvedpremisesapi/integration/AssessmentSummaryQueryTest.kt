@@ -29,7 +29,6 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
       `Given an Assessment for Approved Premises`(user1, user1, reallocated = true) { _, _ -> }
       `Given an Assessment for Approved Premises`(user1, user1) { apAssessment, _ ->
         `Given an Assessment for Approved Premises`(user1, user1, data = null) { notStartedApAssessment, _ ->
-          val expectedApAssessmentNote = earliestUnansweredClarificationNote(apAssessment, user1)
           `Given an Assessment for Temporary Accommodation`(user1, user1) { taAssessment, _ ->
             `Given a User` { user2, _ ->
 
@@ -52,10 +51,10 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
 
               results.forEach {
                 when (it.id) {
-                  u2Assessment.id -> assertForAssessmentSummary(it, u2Assessment, null)
-                  apAssessment.id -> assertForAssessmentSummary(it, apAssessment, expectedApAssessmentNote.createdAt)
+                  u2Assessment.id -> assertForAssessmentSummary(it, u2Assessment)
+                  apAssessment.id -> assertForAssessmentSummary(it, apAssessment)
                   taAssessment.id -> fail("Did not expect a Temporary Accommodation Assessment when fetching Approved Premises Assessment summaries")
-                  notStartedApAssessment.id -> assertForAssessmentSummary(it, notStartedApAssessment, null)
+                  notStartedApAssessment.id -> assertForAssessmentSummary(it, notStartedApAssessment)
                   else -> fail()
                 }
               }
@@ -73,15 +72,13 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
         `Given an Assessment for Approved Premises`(user2, user2) { _, _ -> }
         `Given an Assessment for Approved Premises`(user1, user1, reallocated = true) { _, _ -> }
         `Given an Assessment for Approved Premises`(user1, user1) { apAssessment, _ ->
-          val expectedApAssessmentNote = earliestUnansweredClarificationNote(apAssessment, user1)
-
           `Given an Assessment for Temporary Accommodation`(user2, user2) { taAssessment, _ ->
             earliestUnansweredClarificationNote(taAssessment, user2)
 
             val results: List<DomainAssessmentSummary> = realAssessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(user1.id.toString())
 
             assertThat(results.size).isEqualTo(1)
-            assertForAssessmentSummary(results[0], apAssessment, expectedApAssessmentNote.createdAt)
+            assertForAssessmentSummary(results[0], apAssessment)
           }
         }
       }
@@ -116,10 +113,10 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
 
               results.forEach {
                 when (it.id) {
-                  u2Assessment.id -> assertForAssessmentSummary(it, u2Assessment, null)
-                  taAssessment.id -> assertForAssessmentSummary(it, taAssessment, null)
+                  u2Assessment.id -> assertForAssessmentSummary(it, u2Assessment)
+                  taAssessment.id -> assertForAssessmentSummary(it, taAssessment)
                   apAssessment.id -> fail("Did not expect an Approved Premises Assessment when fetching Temporary Accommodation Assessment summaries")
-                  notStartedTaAssessment.id -> assertForAssessmentSummary(it, notStartedTaAssessment, null)
+                  notStartedTaAssessment.id -> assertForAssessmentSummary(it, notStartedTaAssessment)
                   else -> fail()
                 }
               }
@@ -130,13 +127,11 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
     }
   }
 
-  private fun assertForAssessmentSummary(summary: DomainAssessmentSummary, assessment: AssessmentEntity, dateOfInfoRequest: OffsetDateTime?) {
+  private fun assertForAssessmentSummary(summary: DomainAssessmentSummary, assessment: AssessmentEntity) {
     assertThat(summary.id).isEqualTo(assessment.id)
     val application = assessment.application
     assertThat(summary.applicationId).isEqualTo(application.id)
     assertThat(summary.createdAt).isEqualTo(assessment.createdAt)
-    assertThat(summary.dateOfInfoRequest).isEqualTo(dateOfInfoRequest)
-    assertThat(summary.isStarted).isEqualTo(assessment.data != null)
     assertThat(summary?.decision).isEqualTo(assessment.decision?.name)
     assertThat(summary.crn).isEqualTo(application.crn)
     when (application) {
