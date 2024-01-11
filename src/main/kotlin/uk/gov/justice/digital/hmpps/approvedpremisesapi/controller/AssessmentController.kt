@@ -92,7 +92,7 @@ class AssessmentController(
       .filterByStatuses(statuses)
 
     // TODO: We should carry out the pagination at the database level
-    if (page !== null) {
+    if (page !== null && filteredSummaries.isNotEmpty()) {
       val pageSize = perPage ?: defaultPageSize
       val chunkedSummaries = filteredSummaries.chunked(pageSize)
       val pageIndex = page - 1
