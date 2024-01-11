@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assumptions
@@ -42,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
@@ -136,12 +138,7 @@ class AssessmentTest : IntegrationTestBase() {
             jwt,
             ServiceName.approvedPremises,
             "/assessments",
-            listOf(
-              assessmentTransformer.transformDomainToApiSummary(
-                toAssessmentSummaryEntity(assessment),
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-              ),
-            ),
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment),
           )
         }
       }
@@ -160,6 +157,7 @@ class AssessmentTest : IntegrationTestBase() {
             block = block,
           )
         }
+
         ServiceName.temporaryAccommodation -> { user: UserEntity, crn: String, block: (assessment: AssessmentEntity, application: ApplicationEntity) -> Unit ->
           `Given an Assessment for Temporary Accommodation`(
             createdByUser = user,
@@ -168,6 +166,7 @@ class AssessmentTest : IntegrationTestBase() {
             block = block,
           )
         }
+
         else -> throw RuntimeException()
       }
 
@@ -183,12 +182,8 @@ class AssessmentTest : IntegrationTestBase() {
             redisTemplate.delete(cacheKeys.dataKey)
 
             val url = "/assessments"
-            val expectedAssessments = listOf(
-              assessmentTransformer.transformDomainToApiSummary(
-                toAssessmentSummaryEntity(assessment),
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null),
-              ),
-            )
+            val expectedAssessments =
+              assessmentSummaryMapper(offenderDetails, inmateDetails = null).toSummaries(assessment)
 
             assertUrlReturnsAssessments(
               jwt,
@@ -201,69 +196,517 @@ class AssessmentTest : IntegrationTestBase() {
       }
     }
 
-    @ParameterizedTest
-    @EnumSource
-    @NullSource
-    fun `Get all assessments filters correctly when 'statuses' query parameter is provided`(assessmentDecision: AssessmentDecision?) {
+    @Test
+    fun `Get all assessments for Approved Premises filters correctly when status is not defined`() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
 
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
+          val allAssessments = arrayOf(
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress),
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse),
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted),
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed),
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress),
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse),
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted),
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed),
+          )
 
-          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(user)
-            withApplicationSchema(applicationSchema)
-          }
-
-          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-            withAllocatedToUser(user)
-            withApplication(application)
-            withAssessmentSchema(assessmentSchema)
-            withDecision(assessmentDecision)
-          }
-
-          assessment.schemaUpToDate = true
-
-          val otherAssessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-            withAllocatedToUser(user)
-            withApplication(application)
-            withAssessmentSchema(assessmentSchema)
-            withDecision(
-              when (assessmentDecision) {
-                null -> AssessmentDecision.ACCEPTED
-                else -> null
-              },
-            )
-          }
-
-          otherAssessment.schemaUpToDate = true
-
-          val filterStatus = when (assessmentDecision) {
-            null -> AssessmentStatus.cas1InProgress
-            else -> AssessmentStatus.cas1Completed
-          }
-
-          assertUrlReturnsAssessments(
+          assertAssessmentsReturnedGivenStatus(
             jwt,
             ServiceName.approvedPremises,
-            "/assessments?statuses=${filterStatus.value}",
-            listOf(
-              assessmentTransformer.transformDomainToApiSummary(toAssessmentSummaryEntity(assessment), PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails)),
-            ),
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(*allAssessments),
+            status = emptyArray(),
           )
         }
       }
     }
 
     @Test
-    fun `Get all assessments filters correctly when 'page' query parameter is provided`() {
+    fun `Get all assessments for Approved Premises filters correctly when status is cas1NotStarted`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
+          val assessmentNotStarted1 =
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
+          val assessmentNotStarted2 =
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.approvedPremises,
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(
+              assessmentNotStarted1,
+              assessmentNotStarted2,
+            ),
+            AssessmentStatus.cas1NotStarted,
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Approved Premises filters correctly when status is cas1InProgress`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          val assessmentInProgress1 =
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+          val assessmentInProgress2 =
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.approvedPremises,
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(
+              assessmentInProgress1,
+              assessmentInProgress2,
+            ),
+            AssessmentStatus.cas1InProgress,
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Approved Premises filters correctly when status is cas1AwaitingResponse`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
+          val assessmentAwaitingResponse1 =
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
+          val assessmentAwaitingResponse2 =
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.approvedPremises,
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(
+              assessmentAwaitingResponse1,
+              assessmentAwaitingResponse2,
+            ),
+            AssessmentStatus.cas1AwaitingResponse,
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Approved Premises filters correctly when status is cas1Completed`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
+          val assessmentCompleted1 =
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
+          val assessmentCompleted2 =
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.approvedPremises,
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(
+              assessmentCompleted1,
+              assessmentCompleted2,
+            ),
+            AssessmentStatus.cas1Completed,
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Approved Premises filters correctly when status is cas1Reallocated (none returned)`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.approvedPremises,
+            emptyList<AssessmentSummary>(),
+            AssessmentStatus.cas1Reallocated,
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Approved Premises filters correctly for multiple statuses`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
+          val notStarted1 =
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
+          val completed1 =
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
+          val notStarted2 =
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
+          val completed2 =
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.approvedPremises,
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(
+              notStarted1,
+              completed1,
+              notStarted2,
+              completed2,
+            ),
+            AssessmentStatus.cas1NotStarted,
+            AssessmentStatus.cas1Completed,
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Temporary Accommodation filters correctly when status is not defined`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          val allAssessments = arrayOf(
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated),
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview),
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Closed),
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Rejected),
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3ReadyToPlace),
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated),
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview),
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Closed),
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Rejected),
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3ReadyToPlace),
+          )
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(*allAssessments),
+            status = emptyArray(),
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Temporary Accommodation filters correctly when status is cas3Unallocated`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          val unallocated1 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Closed)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Rejected)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3ReadyToPlace)
+          val unallocated2 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Closed)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Rejected)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3ReadyToPlace)
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(unallocated1, unallocated2),
+            AssessmentStatus.cas3Unallocated,
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Temporary Accommodation filters correctly when status is cas3InReview`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
+          val inReview1 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Closed)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Rejected)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3ReadyToPlace)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
+          val inReview2 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Closed)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Rejected)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3ReadyToPlace)
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(inReview1, inReview2),
+            AssessmentStatus.cas3InReview,
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Temporary Accommodation filters correctly when status is cas3Closed`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          val closed1 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Closed)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Rejected)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3ReadyToPlace)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          val closed2 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Closed)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Rejected)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3ReadyToPlace)
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(closed1, closed2),
+            AssessmentStatus.cas3Closed,
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Temporary Accommodation filters correctly when status is cas3Rejected`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Closed)
+          val rejected1 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Rejected)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3ReadyToPlace)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Closed)
+          val rejected2 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Rejected)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3ReadyToPlace)
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(rejected1, rejected2),
+            AssessmentStatus.cas3Rejected,
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Temporary Accommodation filters correctly when status is cas3ReadyToPlace`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Closed)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Rejected)
+          val readyToPlace1 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3ReadyToPlace)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Closed)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Rejected)
+          val readyToPlace2 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3ReadyToPlace)
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(readyToPlace1, readyToPlace2),
+            AssessmentStatus.cas3ReadyToPlace,
+          )
+        }
+      }
+    }
+
+    private fun assertAssessmentsReturnedGivenStatus(
+      jwt: String,
+      serviceName: ServiceName,
+      expectedAssessments: List<AssessmentSummary>,
+      vararg status: AssessmentStatus,
+    ) {
+      val statusParams = status.map { "statuses=${it.value}" }.joinToString("&")
+
+      assertUrlReturnsAssessments(
+        jwt,
+        serviceName,
+        "/assessments?sortBy=createdAt&$statusParams",
+        expectedAssessments,
+      )
+    }
+
+    private fun createApprovedPremisesAssessmentForStatus(
+      user: UserEntity,
+      offenderDetails: OffenderDetailSummary,
+      assessmentStatus: AssessmentStatus,
+    ): ApprovedPremisesAssessmentEntity {
+      val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+      }
+
+      val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+        withAddedAt(OffsetDateTime.now())
+      }
+
+      val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+        withCrn(offenderDetails.otherIds.crn)
+        withCreatedByUser(user)
+        withApplicationSchema(applicationSchema)
+      }
+
+      val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+        withAllocatedToUser(user)
+        withApplication(application)
+        withAssessmentSchema(assessmentSchema)
+        withDecision(null)
+        withCreatedAt(OffsetDateTime.now().withNano(0))
+
+        when (assessmentStatus) {
+          AssessmentStatus.cas1Completed -> {
+            withDecision(AssessmentDecision.ACCEPTED)
+            withData(null)
+          }
+
+          AssessmentStatus.cas1AwaitingResponse -> {
+            withDecision(null)
+            withData(null)
+          }
+
+          AssessmentStatus.cas1InProgress -> {
+            withDecision(null)
+            withData("{ }")
+          }
+
+          AssessmentStatus.cas1NotStarted -> {
+            withDecision(null)
+            withData(null)
+          }
+
+          else -> throw IllegalArgumentException("status $assessmentStatus is not supported")
+        }
+      }
+
+      if (AssessmentStatus.cas1AwaitingResponse == assessmentStatus) {
+        val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
+          withAssessment(assessment)
+          withCreatedBy(user)
+          withResponse(null)
+        }
+
+        assessment.clarificationNotes.add(clarificationNote)
+      }
+
+      assessment.schemaUpToDate = true
+
+      return assessment
+    }
+
+    private fun createTemporaryAccommodationAssessmentForStatus(
+      user: UserEntity,
+      offenderDetails: OffenderDetailSummary,
+      assessmentStatus: AssessmentStatus,
+    ): TemporaryAccommodationAssessmentEntity {
+      val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+      }
+
+      val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+        withAddedAt(OffsetDateTime.now())
+      }
+
+      val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+        withCrn(offenderDetails.otherIds.crn)
+        withCreatedByUser(user)
+        withProbationRegion(user.probationRegion)
+        withApplicationSchema(applicationSchema)
+        withArrivalDate(LocalDate.now().randomDateAfter(14))
+      }
+
+      val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+        withApplication(application)
+        withAssessmentSchema(assessmentSchema)
+        withDecision(null)
+        withCreatedAt(OffsetDateTime.now().withNano(0))
+
+        when (assessmentStatus) {
+          AssessmentStatus.cas3Rejected -> {
+            withDecision(AssessmentDecision.REJECTED)
+          }
+
+          AssessmentStatus.cas3Closed -> {
+            withDecision(AssessmentDecision.ACCEPTED)
+            withCompletedAt(OffsetDateTime.now())
+          }
+
+          AssessmentStatus.cas3ReadyToPlace -> {
+            withDecision(AssessmentDecision.ACCEPTED)
+          }
+
+          AssessmentStatus.cas3InReview -> {
+            withAllocatedToUser(user)
+          }
+
+          AssessmentStatus.cas3Unallocated -> {
+          }
+
+          else -> throw IllegalArgumentException("status $assessmentStatus is not supported")
+        }
+      }
+
+      assessment.schemaUpToDate = true
+
+      return assessment
+    }
+
+    @Test
+    fun `Get all assessments for Approved Premises filters correctly when 'page' query parameter is provided`() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -297,24 +740,14 @@ class AssessmentTest : IntegrationTestBase() {
             jwt,
             ServiceName.approvedPremises,
             "/assessments?page=1&perPage=1",
-            listOf(
-              assessmentTransformer.transformDomainToApiSummary(
-                toAssessmentSummaryEntity(assessments[0]),
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-              ),
-            ),
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessments[0]),
           )
 
           val page2Response = assertUrlReturnsAssessments(
             jwt,
             ServiceName.approvedPremises,
             "/assessments?page=2&perPage=1",
-            listOf(
-              assessmentTransformer.transformDomainToApiSummary(
-                toAssessmentSummaryEntity(assessments[1]),
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-              ),
-            ),
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessments[1]),
           )
 
           page1Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
@@ -332,7 +765,9 @@ class AssessmentTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @EnumSource
-    fun `Get all assessments sorts correctly when 'sortDirection' and 'sortBy' query parameters are provided`(sortBy: AssessmentSortField) {
+    fun `Get all assessments for Temporary Accommodation sorts correctly when 'sortDirection' and 'sortBy' query parameters are provided`(
+      sortBy: AssessmentSortField,
+    ) {
       `Given a User` { user, jwt ->
         `Given Some Offenders` { offenderSequence ->
           val offenders = offenderSequence.take(5).toList()
@@ -382,12 +817,10 @@ class AssessmentTest : IntegrationTestBase() {
               Assumptions.assumeThat(true).isFalse
               assessments
             }
+
             AssessmentSortField.assessmentCreatedAt -> assessments.sortedByDescending { it.assessment.createdAt }
           }.map {
-            assessmentTransformer.transformDomainToApiSummary(
-              toAssessmentSummaryEntity(it.assessment),
-              PersonInfoResult.Success.Full(it.offenderDetails.otherIds.crn, it.offenderDetails, it.inmateDetails),
-            )
+            assessmentSummaryMapper(it.offenderDetails, it.inmateDetails).toSummary(it.assessment)
           }
 
           assertUrlReturnsAssessments(
@@ -443,12 +876,7 @@ class AssessmentTest : IntegrationTestBase() {
 
           val expectedAssessments = assessments
             .sortedBy { (it.assessment.application as TemporaryAccommodationApplicationEntity).arrivalDate }
-            .map {
-              assessmentTransformer.transformDomainToApiSummary(
-                toAssessmentSummaryEntity(it.assessment),
-                PersonInfoResult.Success.Full(it.offenderDetails.otherIds.crn, it.offenderDetails, it.inmateDetails),
-              )
-            }
+            .map { assessmentSummaryMapper(it.offenderDetails, it.inmateDetails).toSummary(it.assessment) }
 
           assertUrlReturnsAssessments(
             jwt,
@@ -461,7 +889,7 @@ class AssessmentTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all assessments filters correctly when 'crn' query parameter is provided`() {
+    fun `Get all assessments for Temporary Accommodation filters correctly when 'crn' query parameter is provided`() {
       `Given a User` { user, jwt ->
         `Given Some Offenders` { offenderSequence ->
           val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -509,12 +937,7 @@ class AssessmentTest : IntegrationTestBase() {
             jwt,
             ServiceName.temporaryAccommodation,
             "/assessments?crn=${offender.first.otherIds.crn}",
-            listOf(
-              assessmentTransformer.transformDomainToApiSummary(
-                toAssessmentSummaryEntity(assessment),
-                PersonInfoResult.Success.Full(offender.first.otherIds.crn, offender.first, offender.second),
-              ),
-            ),
+            assessmentSummaryMapper(offender.first, offender.second).toSummaries(assessment),
           )
         }
       }
@@ -579,21 +1002,20 @@ class AssessmentTest : IntegrationTestBase() {
             ServiceName.temporaryAccommodation,
             "/assessments",
             listOf(
-              assessmentTransformer.transformDomainToApiSummary(
-                toAssessmentSummaryEntity(assessment),
-                PersonInfoResult.Success.Full(offender.first.otherIds.crn, offender.first, offender.second),
-              ),
-              assessmentTransformer.transformDomainToApiSummary(
-                toAssessmentSummaryEntity(otherAssessment),
-                PersonInfoResult.Success.Restricted(otherOffender.first.otherIds.crn, otherOffender.first.otherIds.nomsNumber),
-              ),
+              assessmentSummaryMapper(offender.first, offender.second).toSummary(assessment),
+              assessmentSummaryMapper(otherOffender.first, inmateDetails = null).toRestricted(otherAssessment),
             ),
           )
         }
       }
     }
 
-    private fun assertUrlReturnsAssessments(jwt: String, serviceName: ServiceName, url: String, assessmentSummaries: List<AssessmentSummary>): WebTestClient.ResponseSpec {
+    private fun assertUrlReturnsAssessments(
+      jwt: String,
+      serviceName: ServiceName,
+      url: String,
+      expectedAssessmentSummaries: List<AssessmentSummary>,
+    ): WebTestClient.ResponseSpec {
       val response = webTestClient.get()
         .uri(url)
         .header("Authorization", "Bearer $jwt")
@@ -607,52 +1029,10 @@ class AssessmentTest : IntegrationTestBase() {
         .responseBody
         .blockFirst()
 
-      assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(assessmentSummaries))
+      assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedAssessmentSummaries))
 
       return response
     }
-
-    private fun toAssessmentSummaryEntity(assessment: AssessmentEntity): DomainAssessmentSummary =
-      DomainAssessmentSummary(
-        type = when (assessment.application) {
-          is ApprovedPremisesApplicationEntity -> "approved-premises"
-          is TemporaryAccommodationApplicationEntity -> "temporary-accommodation"
-          else -> fail()
-        },
-
-        id = assessment.id,
-
-        applicationId = assessment.application.id,
-
-        createdAt = assessment.createdAt,
-
-        riskRatings = when (val reified = assessment.application) {
-          is ApprovedPremisesApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
-          is TemporaryAccommodationApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
-          else -> null
-        },
-
-        arrivalDate = when (val application = assessment.application) {
-          is ApprovedPremisesApplicationEntity -> application.arrivalDate
-          is TemporaryAccommodationApplicationEntity -> application.arrivalDate
-          else -> null
-        },
-
-        dateOfInfoRequest = assessment
-          .clarificationNotes
-          .filter { it.response == null }
-          .minByOrNull { it.createdAt }
-          ?.createdAt,
-
-        completed = when (assessment) {
-          is TemporaryAccommodationAssessmentEntity -> assessment.completedAt != null
-          else -> assessment.decision != null
-        },
-        decision = assessment.decision?.name,
-        crn = assessment.application.crn,
-        isStarted = assessment.data != null,
-        isAllocated = assessment.allocatedToUser != null,
-      )
   }
 
   @Test
@@ -1573,5 +1953,76 @@ class AssessmentTest : IntegrationTestBase() {
           .isOk
       }
     }
+  }
+
+  fun assessmentSummaryMapper(
+    offenderDetails: OffenderDetailSummary,
+    inmateDetails: InmateDetail?,
+  ) =
+    AssessmentSummaryMapper(assessmentTransformer, objectMapper, offenderDetails, inmateDetails)
+
+  class AssessmentSummaryMapper(
+    val assessmentTransformer: AssessmentTransformer,
+    val objectMapper: ObjectMapper,
+    val offenderDetails: OffenderDetailSummary,
+    val inmateDetails: InmateDetail?,
+  ) {
+
+    fun toSummaries(vararg assessments: AssessmentEntity): List<AssessmentSummary> {
+      return assessments.map { toSummary(it) }
+    }
+
+    fun toSummary(assessment: AssessmentEntity): AssessmentSummary = assessmentTransformer.transformDomainToApiSummary(
+      toAssessmentSummaryEntity(assessment),
+      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+    )
+
+    fun toRestricted(assessment: AssessmentEntity): AssessmentSummary =
+      assessmentTransformer.transformDomainToApiSummary(
+        toAssessmentSummaryEntity(assessment),
+        PersonInfoResult.Success.Restricted(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber),
+      )
+
+    private fun toAssessmentSummaryEntity(assessment: AssessmentEntity): DomainAssessmentSummary =
+      DomainAssessmentSummary(
+        type = when (assessment.application) {
+          is ApprovedPremisesApplicationEntity -> "approved-premises"
+          is TemporaryAccommodationApplicationEntity -> "temporary-accommodation"
+          else -> fail()
+        },
+
+        id = assessment.id,
+
+        applicationId = assessment.application.id,
+
+        createdAt = assessment.createdAt,
+
+        riskRatings = when (val reified = assessment.application) {
+          is ApprovedPremisesApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
+          is TemporaryAccommodationApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
+          else -> null
+        },
+
+        arrivalDate = when (val application = assessment.application) {
+          is ApprovedPremisesApplicationEntity -> application.arrivalDate
+          is TemporaryAccommodationApplicationEntity -> application.arrivalDate
+          else -> null
+        },
+
+        dateOfInfoRequest = assessment
+          .clarificationNotes
+          .filter { it.response == null }
+          .minByOrNull { it.createdAt }
+          ?.createdAt,
+
+        completed = when (assessment) {
+          is TemporaryAccommodationAssessmentEntity -> assessment.completedAt != null
+          else -> assessment.decision != null
+        },
+        decision = assessment.decision?.name,
+        crn = assessment.application.crn,
+        isStarted = assessment.data != null,
+        isAllocated = assessment.allocatedToUser != null,
+      )
   }
 }

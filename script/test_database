@@ -6,6 +6,8 @@ set -e
 
 cd "$(dirname "$0")/.."
 
+script/utils/launch-docker.sh
+
 echo "==> Starting integration test database..."
 if [ "$(uname -m)" = "arm64" ]; then
   docker-compose -f docker-compose.test.yml -f docker-compose.test.arm64.yml up -d
