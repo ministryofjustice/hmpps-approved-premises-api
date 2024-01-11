@@ -37,6 +37,7 @@ class SubmittedApplicationTransformer(
       createdAt = jpa.createdAt.toInstant(),
       submittedAt = jpa.submittedAt?.toInstant(),
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
+      telephoneNumber = jpa.telephoneNumber,
     )
   }
 

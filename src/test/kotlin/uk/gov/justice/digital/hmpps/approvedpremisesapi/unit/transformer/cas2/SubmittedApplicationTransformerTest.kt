@@ -88,6 +88,7 @@ class SubmittedApplicationTransformerTest {
         "statusUpdates",
         "submittedAt",
         "submittedBy",
+        "telephoneNumber",
       )
     }
   }

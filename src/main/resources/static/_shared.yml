@@ -1633,6 +1633,8 @@ components:
           type: array
           items:
             $ref: '_shared.yml#/components/schemas/Cas2StatusUpdate'
+        telephoneNumber:
+          type: string
       required:
         - id
         - person

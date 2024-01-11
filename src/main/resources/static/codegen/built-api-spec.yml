@@ -5913,6 +5913,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Cas2StatusUpdate'
+        telephoneNumber:
+          type: string
       required:
         - id
         - person
