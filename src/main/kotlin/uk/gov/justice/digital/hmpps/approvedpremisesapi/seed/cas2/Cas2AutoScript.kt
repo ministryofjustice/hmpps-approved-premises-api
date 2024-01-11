@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import java.io.IOException
 import java.io.InputStreamReader
@@ -40,6 +41,7 @@ class Cas2AutoScript(
   private val externalUserRepository: ExternalUserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val jsonSchemaService: JsonSchemaService,
+  private val applicationService: ApplicationService,
 ) {
   fun script() {
     seedLogger.info("Auto-Scripting for CAS2")
@@ -73,6 +75,11 @@ class Cas2AutoScript(
         schemaUpToDate = true,
       ),
     )
+
+    if (listOf("SUBMITTED", "IN_REVIEW").contains(state)) {
+      applicationService.createCas2ApplicationSubmittedEvent(application)
+    }
+
     if (state == "IN_REVIEW") {
       val quantity = randomInt(FEWEST_UPDATES, MOST_UPDATES)
       seedLogger.info("Auto-scripting $quantity status updates for application ${application.id}")
