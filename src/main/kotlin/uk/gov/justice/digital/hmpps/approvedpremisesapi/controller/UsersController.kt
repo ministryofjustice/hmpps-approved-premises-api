@@ -35,16 +35,35 @@ class UsersController(
     return ResponseEntity(userTransformer.transformJpaToApi(userEntity, xServiceName), HttpStatus.OK)
   }
 
-  override fun usersGet(xServiceName: ServiceName, roles: List<ApprovedPremisesUserRole>?, qualifications: List<UserQualification>?, page: Int?, sortBy: UserSortField?, sortDirection: SortDirection?): ResponseEntity<List<User>> {
+  override fun usersGet(
+    xServiceName: ServiceName,
+    roles: List<ApprovedPremisesUserRole>?,
+    qualifications: List<UserQualification>?,
+    region: UUID?,
+    page: Int?,
+    sortBy: UserSortField?,
+    sortDirection: SortDirection?,
+  ): ResponseEntity<List<User>> {
     val user = userService.getUserForRequest()
-    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(JpaUserRole.CAS1_ADMIN, JpaUserRole.CAS1_WORKFLOW_MANAGER)) {
+    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(
+        JpaUserRole.CAS1_ADMIN,
+        JpaUserRole.CAS1_WORKFLOW_MANAGER,
+      )
+    ) {
       throw ForbiddenProblem()
     }
 
     var roles = roles?.map(::transformApiRole)
     var qualifications = qualifications?.map(::transformApiQualification)
 
-    val (users, metadata) = userService.getUsersWithQualificationsAndRoles(qualifications, roles, sortBy, sortDirection, page)
+    val (users, metadata) = userService.getUsersWithQualificationsAndRoles(
+      qualifications,
+      roles,
+      sortBy,
+      sortDirection,
+      page,
+      region,
+    )
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
@@ -53,9 +72,17 @@ class UsersController(
     )
   }
 
-  override fun usersIdPut(xServiceName: ServiceName, id: java.util.UUID, userRolesAndQualifications: UserRolesAndQualifications): ResponseEntity<User> {
+  override fun usersIdPut(
+    xServiceName: ServiceName,
+    id: java.util.UUID,
+    userRolesAndQualifications: UserRolesAndQualifications,
+  ): ResponseEntity<User> {
     val user = userService.getUserForRequest()
-    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(JpaUserRole.CAS1_ADMIN, JpaUserRole.CAS1_WORKFLOW_MANAGER)) {
+    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(
+        JpaUserRole.CAS1_ADMIN,
+        JpaUserRole.CAS1_WORKFLOW_MANAGER,
+      )
+    ) {
       throw ForbiddenProblem()
     }
 
@@ -70,7 +97,11 @@ class UsersController(
 
   override fun usersIdDelete(id: UUID, xServiceName: ServiceName): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
-    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(JpaUserRole.CAS1_ADMIN, JpaUserRole.CAS1_WORKFLOW_MANAGER)) {
+    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(
+        JpaUserRole.CAS1_ADMIN,
+        JpaUserRole.CAS1_WORKFLOW_MANAGER,
+      )
+    ) {
       throw ForbiddenProblem()
     }
     return ResponseEntity.ok(
@@ -80,7 +111,11 @@ class UsersController(
 
   override fun usersSearchGet(name: String, xServiceName: ServiceName): ResponseEntity<List<User>> {
     val user = userService.getUserForRequest()
-    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(JpaUserRole.CAS1_ADMIN, JpaUserRole.CAS1_WORKFLOW_MANAGER)) {
+    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(
+        JpaUserRole.CAS1_ADMIN,
+        JpaUserRole.CAS1_WORKFLOW_MANAGER,
+      )
+    ) {
       throw ForbiddenProblem()
     }
 
@@ -92,7 +127,11 @@ class UsersController(
 
   override fun usersDeliusGet(name: String, xServiceName: ServiceName): ResponseEntity<User> {
     val user = userService.getUserForRequest()
-    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(JpaUserRole.CAS1_ADMIN, JpaUserRole.CAS1_WORKFLOW_MANAGER)) {
+    if (xServiceName != ServiceName.approvedPremises || !user.hasAnyRole(
+        JpaUserRole.CAS1_ADMIN,
+        JpaUserRole.CAS1_WORKFLOW_MANAGER,
+      )
+    ) {
       throw ForbiddenProblem()
     }
 
@@ -114,11 +153,12 @@ class UsersController(
     ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation -> JpaUserRole.CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION
   }
 
-  private fun transformApiQualification(apiQualification: uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification): uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification = when (apiQualification) {
-    UserQualification.pipe -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.PIPE
-    UserQualification.womens -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.WOMENS
-    UserQualification.lao -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.LAO
-    UserQualification.emergency -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.EMERGENCY
-    UserQualification.esap -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.ESAP
-  }
+  private fun transformApiQualification(apiQualification: uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification): uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification =
+    when (apiQualification) {
+      UserQualification.pipe -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.PIPE
+      UserQualification.womens -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.WOMENS
+      UserQualification.lao -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.LAO
+      UserQualification.emergency -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.EMERGENCY
+      UserQualification.esap -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.ESAP
+    }
 }

@@ -341,6 +341,51 @@ class UsersTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
+    fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns list filtered by region`(role: UserRole) {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
+          `Given a User` { userWithNoRole, _ ->
+            `Given a User`(roles = listOf(role)) { requestUser, jwt ->
+
+              val probationRegion = probationRegionEntityFactory.produceAndPersist {
+                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+              }
+
+              val userOne = userEntityFactory.produceAndPersist {
+                withProbationRegion(probationRegion)
+              }
+
+              val userTwo = userEntityFactory.produceAndPersist {
+                withProbationRegion(probationRegion)
+              }
+
+              webTestClient.get()
+                .uri("/users?region=${probationRegion.id}")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectHeader().doesNotExist("X-Pagination-CurrentPage")
+                .expectHeader().doesNotExist("X-Pagination-TotalPages")
+                .expectHeader().doesNotExist("X-Pagination-TotalResults")
+                .expectHeader().doesNotExist("X-Pagination-PageSize")
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    listOf(userOne, userTwo).map {
+                      userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
+                    },
+                  ),
+                )
+            }
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns paginated list ordered by name`(role: UserRole) {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
         `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
@@ -429,9 +474,17 @@ class UsersTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
-    fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER allows filtering by role and qualifications`(role: UserRole) {
-      `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), qualifications = listOf(UserQualification.WOMENS)) { womensAssessor1, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR), qualifications = listOf(UserQualification.WOMENS)) { womensAssessor2, _ ->
+    fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER allows filtering by role and qualifications`(
+      role: UserRole,
+    ) {
+      `Given a User`(
+        roles = listOf(UserRole.CAS1_ASSESSOR),
+        qualifications = listOf(UserQualification.WOMENS),
+      ) { womensAssessor1, _ ->
+        `Given a User`(
+          roles = listOf(UserRole.CAS1_ASSESSOR),
+          qualifications = listOf(UserQualification.WOMENS),
+        ) { womensAssessor2, _ ->
           `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { _, _ ->
             `Given a User` { _, _ ->
               `Given a User`(roles = listOf(role)) { _, jwt ->
@@ -504,12 +557,16 @@ class UsersTest : IntegrationTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to search users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns a user`(role: UserRole) {
-      `Given a User`(staffUserDetailsConfigBlock = {
-        withForenames("SomeUserName")
-      },) { user, _ ->
-        `Given a User`(staffUserDetailsConfigBlock = {
-          withForenames("fail")
-        },) { _, _ ->
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withForenames("SomeUserName")
+        },
+      ) { user, _ ->
+        `Given a User`(
+          staffUserDetailsConfigBlock = {
+            withForenames("fail")
+          },
+        ) { _, _ ->
           `Given a User`(roles = listOf(role)) { _, jwt ->
             webTestClient.get()
               .uri("/users/search?name=some")
@@ -578,12 +635,16 @@ class UsersTest : IntegrationTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to search users delius username with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns a user`(role: UserRole) {
-      `Given a User`(staffUserDetailsConfigBlock = {
-        withUsername("SOME")
-      },) { user, _ ->
-        `Given a User`(staffUserDetailsConfigBlock = {
-          withForenames("fail")
-        },) { _, _ ->
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withUsername("SOME")
+        },
+      ) { user, _ ->
+        `Given a User`(
+          staffUserDetailsConfigBlock = {
+            withForenames("fail")
+          },
+        ) { _, _ ->
           `Given a User`(roles = listOf(role)) { _, jwt ->
             webTestClient.get()
               .uri("/users/delius?name=some")
@@ -605,7 +666,9 @@ class UsersTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
-    fun `GET to search for a delius username that does not exist with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns 404`(role: UserRole) {
+    fun `GET to search for a delius username that does not exist with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns 404`(
+      role: UserRole,
+    ) {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         webTestClient.get()
           .uri("/users/delius?name=noone")
