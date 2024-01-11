@@ -18,7 +18,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Cas2ExampleMetricsRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.SubmittedApplicationReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.UnsubmittedApplicationsReportRow
 import java.time.Instant
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class Cas2ReportsTest : IntegrationTestBase() {
@@ -275,6 +277,93 @@ class Cas2ReportsTest : IntegrationTestBase() {
           val actual = DataFrame
             .readExcel(it.responseBody!!.inputStream())
             .convertTo<ApplicationStatusUpdatesReportRow>(ExcessiveColumns.Remove)
+
+          Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
+        }
+    }
+  }
+
+  @Nested
+  inner class UnSubmittedApplications {
+    @Test
+    fun `streams spreadsheet of data from un-submitted CAS2 applications, newest first`() {
+      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withAddedAt(OffsetDateTime.now())
+        withId(UUID.randomUUID())
+      }
+
+      val user1 = nomisUserEntityFactory.produceAndPersist {
+        withNomisUsername("NOMIS_USER_1")
+      }
+
+      val user2 = nomisUserEntityFactory.produceAndPersist {
+        withNomisUsername("NOMIS_USER_2")
+      }
+
+      val application1 = cas2ApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(user1)
+        withCrn("CRN_1")
+        withNomsNumber("NOMS_1")
+        withCreatedAt(OffsetDateTime.parse("2023-12-13T12:25:33+00:00"))
+        withData("{}")
+        withSubmittedAt(null)
+      }
+
+      val application2 = cas2ApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(user2)
+        withCrn("CRN_2")
+        withNomsNumber("NOMS_2")
+        withCreatedAt(OffsetDateTime.parse("2024-01-10T14:43:21+00:00"))
+        withData("{}")
+        withSubmittedAt(null)
+      }
+
+      // submitted application, which should not feature in report
+      cas2ApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(user2)
+        withCreatedAt(OffsetDateTime.parse("2024-01-01T12:00:00+00:00"))
+        withData("{}")
+        withSubmittedAt(OffsetDateTime.parse("2024-01-02T13:00:00+00:00"))
+      }
+
+      val expectedDataFrame = listOf(
+        UnsubmittedApplicationsReportRow(
+          applicationId = application2.id.toString(),
+          personCrn = application2.crn,
+          personNoms = application2.nomsNumber.toString(),
+          startedAt = "2024-01-10T14:43:21",
+          startedBy = application2.createdByUser.nomisUsername,
+        ),
+        UnsubmittedApplicationsReportRow(
+          applicationId = application1.id.toString(),
+          personCrn = application1.crn,
+          personNoms = application1.nomsNumber.toString(),
+          startedAt = "2023-12-13T12:25:33",
+          startedBy = application1.createdByUser.nomisUsername,
+        ),
+      )
+        .toDataFrame()
+
+      val jwt = jwtAuthHelper.createClientCredentialsJwt(
+        username = "username",
+        authSource = "nomis",
+        roles = listOf("ROLE_PRISON", "ROLE_CAS2_MI"),
+      )
+
+      webTestClient.get()
+        .uri("/cas2/reports/unsubmitted-applications")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .consumeWith {
+          val actual = DataFrame
+            .readExcel(it.responseBody!!.inputStream())
+            .convertTo<UnsubmittedApplicationsReportRow>(ExcessiveColumns.Remove)
 
           Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
         }

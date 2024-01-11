@@ -22,6 +22,7 @@ class ReportsController(private val reportService: ReportsService) : ReportsCas2
     when (reportName) {
       "submitted-applications" -> reportService.createSubmittedApplicationsReport(outputStream)
       "application-status-updates" -> reportService.createApplicationStatusUpdatesReport(outputStream)
+      "unsubmitted-applications" -> reportService.createUnsubmittedApplicationsReport(outputStream)
     }
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }
