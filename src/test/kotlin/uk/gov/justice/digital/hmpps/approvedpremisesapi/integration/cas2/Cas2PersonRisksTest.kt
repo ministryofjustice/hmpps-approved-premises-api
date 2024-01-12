@@ -44,11 +44,11 @@ class Cas2PersonRisksTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Getting risks for a CRN without ROLE_PRISON returns 403`() {
+  fun `Getting risks for a CRN without ROLE_POM returns 403`() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
       authSource = "nomis",
-      roles = listOf("ROLE_PROBATION"),
+      roles = listOf("ROLE_OTHER"),
     )
 
     webTestClient.get()

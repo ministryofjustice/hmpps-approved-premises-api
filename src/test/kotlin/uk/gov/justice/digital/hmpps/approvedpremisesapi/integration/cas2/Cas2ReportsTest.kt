@@ -79,7 +79,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_PRISON"),
+        roles = listOf("ROLE_POM"),
       )
 
       webTestClient.get()
@@ -95,7 +95,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_PRISON", "ROLE_CAS2_MI"),
+        roles = listOf("ROLE_POM", "ROLE_CAS2_MI"),
       )
 
       webTestClient.get()
@@ -178,7 +178,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_PRISON", "ROLE_CAS2_MI"),
+        roles = listOf("ROLE_CAS2_MI"),
       )
 
       webTestClient.get()
@@ -375,7 +375,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
       authSource = "nomis",
-      roles = listOf("ROLE_PRISON", "ROLE_CAS2_MI"),
+      roles = listOf("ROLE_CAS2_MI"),
     )
 
     val expectedDataFrame = listOf(Cas2ExampleMetricsRow(id = "123", data = "example"))

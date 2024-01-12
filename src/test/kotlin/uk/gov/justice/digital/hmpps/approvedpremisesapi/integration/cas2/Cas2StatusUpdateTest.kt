@@ -35,7 +35,7 @@ class Cas2StatusUpdateTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_PRISON"),
+        roles = listOf("ROLE_POM"),
       )
 
       webTestClient.post()
