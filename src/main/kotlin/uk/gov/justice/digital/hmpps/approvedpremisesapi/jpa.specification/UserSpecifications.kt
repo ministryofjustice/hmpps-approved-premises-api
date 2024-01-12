@@ -1,18 +1,25 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification
 
 import org.springframework.data.jpa.domain.Specification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
+import java.util.UUID
 import javax.persistence.criteria.CriteriaBuilder
 import javax.persistence.criteria.CriteriaQuery
 import javax.persistence.criteria.Predicate
 import javax.persistence.criteria.Root
 
-fun hasQualificationsAndRoles(qualifications: List<UserQualification>?, roles: List<UserRole>?, showOnlyActive: Boolean = false): Specification<UserEntity> {
-  return Specification { root: Root<UserEntity>, _: CriteriaQuery<*>, criteriaBuilder: CriteriaBuilder ->
+fun hasQualificationsAndRoles(
+  qualifications: List<UserQualification>?,
+  roles: List<UserRole>?,
+  region: UUID?,
+  showOnlyActive: Boolean = false,
+): Specification<UserEntity> {
+  return Specification { root: Root<UserEntity>, query: CriteriaQuery<*>, criteriaBuilder: CriteriaBuilder ->
     val predicates = mutableListOf<Predicate>()
 
     if (qualifications?.isNotEmpty() == true) {
@@ -43,6 +50,16 @@ fun hasQualificationsAndRoles(qualifications: List<UserQualification>?, roles: L
       predicates.add(
         criteriaBuilder.and(
           criteriaBuilder.isTrue(root.get("isActive")),
+        ),
+      )
+    }
+
+    if (region != null) {
+      val probationRegionID = root.get<ProbationRegionEntity>("probationRegion").get<UUID>("id")
+
+      predicates.add(
+        criteriaBuilder.and(
+          criteriaBuilder.equal(probationRegionID, region),
         ),
       )
     }

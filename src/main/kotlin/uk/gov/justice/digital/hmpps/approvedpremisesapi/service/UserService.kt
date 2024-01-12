@@ -98,6 +98,7 @@ class UserService(
     sortBy: UserSortField?,
     sortDirection: SortDirection?,
     page: Int?,
+    region: UUID?,
   ): Pair<List<UserEntity>, PaginationMetadata?> {
     var metadata: PaginationMetadata? = null
     val users: List<UserEntity>
@@ -106,12 +107,12 @@ class UserService(
 
     if (pageable == null) {
       users = userRepository.findAll(
-        hasQualificationsAndRoles(qualifications, roles, true),
+        hasQualificationsAndRoles(qualifications, roles, region, true),
         Sort.by(Sort.Direction.ASC, "name"),
       )
     } else {
       val response = userRepository.findAll(
-        hasQualificationsAndRoles(qualifications, roles, true),
+        hasQualificationsAndRoles(qualifications, roles, region, true),
         pageable,
       )
 

@@ -5,7 +5,7 @@ info:
   title: Approved Premises
   version: 1.0.0
 servers:
-- url: /
+  - url: /
 paths:
   /premises:
     get:
@@ -111,13 +111,13 @@ paths:
         - Premises
       summary: Returns an approved premises
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises to return
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises to return
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successful operation
@@ -216,13 +216,13 @@ paths:
         - Operations on premises
       summary: Returns all bookings for an approved premises
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises to get bookings for
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises to get bookings for
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successful operation
@@ -249,13 +249,13 @@ paths:
         - Operations on premises
       summary: Adds a new booking for an approved premises
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises to create a booking for
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises to create a booking for
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         content:
           'application/json':
@@ -502,20 +502,20 @@ paths:
         - Operations on bookings
       summary: Posts an arrival to a specified approved premises booking
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises the booking is related to
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: bookingId
-        in: path
-        description: ID of the booking
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises the booking is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the booking
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         description: details of the arrival
         content:
@@ -661,20 +661,20 @@ paths:
         - Operations on bookings
       summary: Posts a departure to a specified approved premises booking
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises the booking is related to
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: bookingId
-        in: path
-        description: ID of the booking
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises the booking is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the booking
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         description: details of the departure
         content:
@@ -714,20 +714,20 @@ paths:
         - Operations on bookings
       summary: Posts an non-arrival to a specified approved premises booking
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises the booking is related to
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: bookingId
-        in: path
-        description: ID of the booking
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises the booking is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the booking
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         description: details of the non-arrival
         content:
@@ -767,20 +767,20 @@ paths:
         - Operations on bookings
       summary: Posts a cancellation to a specified approved premises booking
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises the cancellation is related to
-        required: true
-        schema:
-          type: string
-          format: uuid
-      - name: bookingId
-        in: path
-        description: ID of the booking
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises the cancellation is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: bookingId
+          in: path
+          description: ID of the booking
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         description: details of the cancellation
         content:
@@ -1479,13 +1479,13 @@ paths:
         - Operations on premises
       summary: Posts a lost bed to a specified approved premises
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises the lost bed is related to
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises the lost bed is related to
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         description: details of the lost bed
         content:
@@ -1524,13 +1524,13 @@ paths:
         - Operations on premises
       summary: Lists all Lost Beds entries for the Premises
       parameters:
-      - name: premisesId
-        in: path
-        description: ID of the premises to show lost beds for
-        required: true
-        schema:
-          type: string
-          format: uuid
+        - name: premisesId
+          in: path
+          description: ID of the premises to show lost beds for
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successful operation
@@ -3613,6 +3613,12 @@ paths:
             type: array
             items:
               $ref: '#/components/schemas/UserQualification'
+        - name: region
+          in: query
+          description: Region to filter results by
+          schema:
+            type: string
+            format: uuid
         - name: X-Service-Name
           in: header
           required: true
