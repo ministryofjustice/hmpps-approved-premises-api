@@ -296,6 +296,7 @@ class ApplicationService(
         "name" to user.name,
         "email" to user.email,
         "prisonNumber" to application.nomsNumber,
+        "telephoneNumber" to application.telephoneNumber,
         "applicationUrl" to submittedApplicationUrlTemplate.replace("#applicationId", application.id.toString()),
       ),
     )
