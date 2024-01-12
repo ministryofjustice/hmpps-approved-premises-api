@@ -101,7 +101,7 @@ class CommunityApiOffenderRisksDataSource(
           ),
         )
       }
-      is ClientResult.Failure.StatusCode -> return if (roshRisksResponse.status == HttpStatus.NOT_FOUND) {
+      is ClientResult.Failure.StatusCode -> return if (roshRisksResponse.status.equals(HttpStatus.NOT_FOUND)) {
         RiskWithStatus(
           status = RiskStatus.NotFound,
           value = null,
@@ -137,7 +137,7 @@ class CommunityApiOffenderRisksDataSource(
           )
         }
       }
-      is ClientResult.Failure.StatusCode -> return if (registrationsResponse.status == HttpStatus.NOT_FOUND) {
+      is ClientResult.Failure.StatusCode -> return if (registrationsResponse.status.equals(HttpStatus.NOT_FOUND)) {
         RiskWithStatus(status = RiskStatus.NotFound)
       } else {
         RiskWithStatus(status = RiskStatus.Error)
@@ -159,7 +159,7 @@ class CommunityApiOffenderRisksDataSource(
           ),
         )
       }
-      is ClientResult.Failure.StatusCode -> if (tierResponse.status == HttpStatus.NOT_FOUND) {
+      is ClientResult.Failure.StatusCode -> if (tierResponse.status.equals(HttpStatus.NOT_FOUND)) {
         RiskWithStatus(status = RiskStatus.NotFound)
       } else {
         RiskWithStatus(status = RiskStatus.Error)
@@ -178,7 +178,7 @@ class CommunityApiOffenderRisksDataSource(
         )
       }
 
-      is ClientResult.Failure.StatusCode -> if (registrationsResponse.status == HttpStatus.NOT_FOUND) {
+      is ClientResult.Failure.StatusCode -> if (registrationsResponse.status.equals(HttpStatus.NOT_FOUND)) {
         RiskWithStatus(status = RiskStatus.NotFound)
       } else {
         RiskWithStatus(status = RiskStatus.Error)

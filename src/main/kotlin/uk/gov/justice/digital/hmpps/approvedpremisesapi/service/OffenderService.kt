@@ -186,7 +186,7 @@ class OffenderService(
         val access = when (val accessResponse = userAccessProducer()) {
           is ClientResult.Success -> accessResponse.body
           is ClientResult.Failure.StatusCode -> {
-            if (accessResponse.status == HttpStatus.FORBIDDEN) {
+            if (accessResponse.status.value() == HttpStatus.FORBIDDEN.value()) {
               try {
                 accessResponse.deserializeTo<UserOffenderAccess>()
                 return AuthorisableActionResult.Unauthorised()
@@ -224,7 +224,7 @@ class OffenderService(
     return when (val accessResponse = offenderDetailsDataSource.getUserAccessForOffenderCrn(username, crn)) {
       is ClientResult.Success -> !accessResponse.body.userExcluded && !accessResponse.body.userRestricted
       is ClientResult.Failure.StatusCode -> {
-        if (accessResponse.status == HttpStatus.FORBIDDEN) {
+        if (accessResponse.status.value() == HttpStatus.FORBIDDEN.value()) {
           try {
             accessResponse.deserializeTo<UserOffenderAccess>()
             return false
@@ -501,7 +501,7 @@ class OffenderService(
     val offender = when (offenderResponse) {
       is ClientResult.Success -> offenderResponse.body
 
-      is ClientResult.Failure.StatusCode -> if (offenderResponse.status == HttpStatus.NOT_FOUND) {
+      is ClientResult.Failure.StatusCode -> if (offenderResponse.status.value() == HttpStatus.NOT_FOUND.value()) {
         return PersonInfoResult.NotFound(crn)
       } else {
         return PersonInfoResult.Unknown(crn, offenderResponse.toException())
@@ -516,7 +516,7 @@ class OffenderService(
           when (val accessResponse = offenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername, crn)) {
             is ClientResult.Success -> accessResponse.body
             is ClientResult.Failure.StatusCode -> {
-              if (accessResponse.status == HttpStatus.FORBIDDEN) {
+              if (accessResponse.status.value() == HttpStatus.FORBIDDEN.value()) {
                 try {
                   accessResponse.deserializeTo<UserOffenderAccess>()
                   return PersonInfoResult.Success.Restricted(crn, offender.otherIds.nomsNumber)

@@ -71,7 +71,7 @@ class InmateStatusOnSubmissionMigrationJob(
       }
 
       is ClientResult.Failure -> {
-        if (timelineResult is ClientResult.Failure.StatusCode && timelineResult.status == HttpStatus.NOT_FOUND) {
+        if (timelineResult is ClientResult.Failure.StatusCode && timelineResult.status.equals(HttpStatus.NOT_FOUND)) {
           log.info("404 retrieving prison timeline for application ${application.id} will mark status as IN")
           InOutStatus.IN
         } else {
