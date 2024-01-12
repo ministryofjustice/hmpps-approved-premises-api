@@ -276,7 +276,7 @@ class UserService(
     val staffUserDetails = when (staffUserDetailsResponse) {
       is ClientResult.Success -> staffUserDetailsResponse.body
       is ClientResult.Failure.StatusCode -> {
-        if (throwProblemOn404 && staffUserDetailsResponse.status === HttpStatus.NOT_FOUND) {
+        if (throwProblemOn404 && staffUserDetailsResponse.status.equals(HttpStatus.NOT_FOUND)) {
           throw NotFoundProblem(username, "user", "username")
         } else {
           staffUserDetailsResponse.throwException()

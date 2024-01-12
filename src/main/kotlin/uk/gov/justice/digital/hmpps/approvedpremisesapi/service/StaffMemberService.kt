@@ -26,7 +26,7 @@ class StaffMemberService(private val apDeliusContextApiClient: ApDeliusContextAp
 
   fun getStaffMembersForQCode(qCode: String) = when (val staffMembersResponse = apDeliusContextApiClient.getStaffMembers(qCode)) {
     is ClientResult.Success -> AuthorisableActionResult.Success(staffMembersResponse.body)
-    is ClientResult.Failure.StatusCode -> if (staffMembersResponse.status == HttpStatus.NOT_FOUND) AuthorisableActionResult.NotFound() else staffMembersResponse.throwException()
+    is ClientResult.Failure.StatusCode -> if (staffMembersResponse.status.equals(HttpStatus.NOT_FOUND)) AuthorisableActionResult.NotFound() else staffMembersResponse.throwException()
     is ClientResult.Failure -> staffMembersResponse.throwException()
   }
 }

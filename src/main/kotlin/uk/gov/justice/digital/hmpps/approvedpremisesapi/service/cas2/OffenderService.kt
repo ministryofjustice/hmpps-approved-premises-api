@@ -85,7 +85,7 @@ class OffenderService(
     val offender = when (offenderResponse) {
       is ClientResult.Success -> offenderResponse.body
 
-      is ClientResult.Failure.StatusCode -> if (offenderResponse.status == HttpStatus.NOT_FOUND) {
+      is ClientResult.Failure.StatusCode -> if (offenderResponse.status.value() == HttpStatus.NOT_FOUND.value()) {
         return PersonInfoResult.NotFound(crn)
       } else {
         return PersonInfoResult.Unknown(crn, offenderResponse.toException())
@@ -145,7 +145,7 @@ class OffenderService(
 
     val offender = when (offenderResponse) {
       is ClientResult.Success -> offenderResponse.body
-      is ClientResult.Failure.StatusCode -> if (offenderResponse.status == HttpStatus.NOT_FOUND) return AuthorisableActionResult.NotFound() else offenderResponse.throwException()
+      is ClientResult.Failure.StatusCode -> if (offenderResponse.status.equals(HttpStatus.NOT_FOUND)) return AuthorisableActionResult.NotFound() else offenderResponse.throwException()
       is ClientResult.Failure -> offenderResponse.throwException()
     }
 
@@ -198,7 +198,7 @@ class OffenderService(
           ),
         )
       }
-      is ClientResult.Failure.StatusCode -> return if (roshRisksResponse.status == HttpStatus.NOT_FOUND) {
+      is ClientResult.Failure.StatusCode -> return if (roshRisksResponse.status.value() == HttpStatus.NOT_FOUND.value()) {
         RiskWithStatus(
           status = RiskStatus.NotFound,
           value = null,
