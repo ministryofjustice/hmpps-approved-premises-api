@@ -12,8 +12,6 @@ import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.persistence.ColumnResult
-import javax.persistence.ConstructorResult
 import javax.persistence.DiscriminatorColumn
 import javax.persistence.DiscriminatorValue
 import javax.persistence.Entity
@@ -25,21 +23,108 @@ import javax.persistence.Inheritance
 import javax.persistence.InheritanceType
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
-import javax.persistence.NamedNativeQuery
 import javax.persistence.OneToMany
 import javax.persistence.PrimaryKeyJoinColumn
-import javax.persistence.SqlResultSetMapping
 import javax.persistence.Table
 
 @Repository
 interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
-  @Query(nativeQuery = true)
+
+  /**
+   * Note that the logic to determine assessment status is duplicated in
+   * [uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated]
+   * and as such changes should be synchronized
+   */
+  @Query(
+    value = """
+    select distinct cast(a.id as text) as id,
+           a.service as type,
+           cast(a.application_id as text) as applicationId,
+           a.created_at as createdAt,
+           CAST(apa.risk_ratings AS TEXT) as riskRatings,
+           apa.arrival_date as arrivalDate,
+           a.decision is not null as completed,
+           a.decision as decision,
+           a.allocated_to_user_id is not null as allocated,
+           ap.crn as crn,
+           CASE
+             WHEN (a.decision is not null) THEN 'COMPLETED'
+             WHEN (open_acn.id IS NOT NULL) THEN 'AWAITING_RESPONSE'
+             WHEN (a.data IS NOT NULL) THEN 'IN_PROGRESS'
+             ELSE 'NOT_STARTED'
+           END as status
+      from approved_premises_assessments aa
+           join assessments a on aa.assessment_id = a.id
+           join applications ap on a.application_id = ap.id
+           left outer join approved_premises_applications apa on ap.id = apa.id
+           left outer join assessment_clarification_notes open_acn on open_acn.assessment_id = a.id AND open_acn.response IS NULL
+     where a.reallocated_at is null
+           and a.is_withdrawn is false
+           and (?1 is null or a.allocated_to_user_id = cast(?1 as UUID))
+           AND ((?2) IS NULL OR 
+             (
+                CASE 
+                  WHEN (a.decision is not null) THEN 'COMPLETED'
+                  WHEN (open_acn.id IS NOT NULL) THEN 'AWAITING_RESPONSE'
+                  WHEN (a.data IS NOT NULL) THEN 'IN_PROGRESS'
+                  ELSE 'NOT_STARTED'
+                END
+             ) IN (?2)
+           ) 
+    """,
+    nativeQuery = true,
+  )
   fun findAllApprovedPremisesAssessmentSummariesNotReallocated(userIdString: String? = null, statuses: List<String> = emptyList()): List<DomainAssessmentSummary>
 
-  @Query(nativeQuery = true)
+  @Query(
+    value = """
+      select a.service as type,
+             cast(a.id as text) as id,
+             cast(a.application_id as text) as applicationId,
+             a.created_at as createdAt,
+             CAST(taa.risk_ratings AS TEXT) as riskRatings,
+             taa.arrival_date as arrivalDate,
+             null as dateOfInfoRequest,
+             aa.completed_at is not null as completed,
+             a.decision as decision,
+             a.data is not null as isStarted,
+             a.allocated_to_user_id is not null as allocated,
+             ap.crn as crn,
+             null as status
+        from temporary_accommodation_assessments aa
+             join assessments a on aa.assessment_id = a.id
+             join applications ap on a.application_id = ap.id
+             left outer join temporary_accommodation_applications taa on ap.id = taa.id
+       where taa.probation_region_id = ?1
+             and a.reallocated_at is null
+    """,
+    nativeQuery = true,
+  )
   fun findAllTemporaryAccommodationAssessmentSummariesForRegion(probationRegionId: UUID): List<DomainAssessmentSummary>
 
-  @Query(nativeQuery = true)
+  @Query(
+    value = """
+      select a.service as type,
+             cast(a.id as text) as id,
+             cast(a.application_id as text) as applicationId,
+             a.created_at as createdAt,
+             CAST(taa.risk_ratings AS TEXT) as riskRatings,
+             taa.arrival_date as arrivalDate,
+             aa.completed_at is not null as completed,
+             a.decision as decision,
+             a.allocated_to_user_id is not null as allocated,
+             ap.crn as crn,
+             null as status
+        from temporary_accommodation_assessments aa
+             join assessments a on aa.assessment_id = a.id
+             join applications ap on a.application_id = ap.id
+             left outer join temporary_accommodation_applications taa on ap.id = taa.id
+       where taa.probation_region_id = ?1
+             and ap.crn = ?2
+             and a.reallocated_at is null
+    """,
+    nativeQuery = true,
+  )
   fun findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(
     probationRegionId: UUID,
     crn: String,
@@ -108,126 +193,6 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   fun findAllReferralsDataForMonthAndYear(month: Int, year: Int): List<ReferralsDataResult>
 }
 
-/**
- * Note that the logic to determine assessment status is duplicated in
- * [uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated]
- * and as such changes should be synchronized
- */
-
-@NamedNativeQuery(
-  name = "AssessmentEntity.findAllApprovedPremisesAssessmentSummariesNotReallocated",
-  query =
-  """
-    select distinct a.id,
-           a.service as type,
-           cast(a.id as text) as id,
-           cast(a.application_id as text) as applicationId,
-           a.created_at as createdAt,
-           CAST(apa.risk_ratings AS TEXT) as riskRatings,
-           apa.arrival_date as arrivalDate,
-           a.decision is not null as completed,
-           a.decision as decision,
-           a.allocated_to_user_id is not null as isAllocated,
-           ap.crn as crn,
-           CASE
-             WHEN (a.decision is not null) THEN 'COMPLETED'
-             WHEN (open_acn.id IS NOT NULL) THEN 'AWAITING_RESPONSE'
-             WHEN (a.data IS NOT NULL) THEN 'IN_PROGRESS'
-             ELSE 'NOT_STARTED'
-           END as status
-      from approved_premises_assessments aa
-           join assessments a on aa.assessment_id = a.id
-           join applications ap on a.application_id = ap.id
-           left outer join approved_premises_applications apa on ap.id = apa.id
-           left outer join assessment_clarification_notes open_acn on open_acn.assessment_id = a.id AND open_acn.response IS NULL
-     where a.reallocated_at is null
-           and a.is_withdrawn is false
-           and (?1 is null or a.allocated_to_user_id = cast(?1 as UUID))
-           AND ((?2) IS NULL OR 
-             (
-                CASE 
-                  WHEN (a.decision is not null) THEN 'COMPLETED'
-                  WHEN (open_acn.id IS NOT NULL) THEN 'AWAITING_RESPONSE'
-                  WHEN (a.data IS NOT NULL) THEN 'IN_PROGRESS'
-                  ELSE 'NOT_STARTED'
-                END
-             ) IN (?2)
-           ) 
-    """,
-  resultSetMapping = "DomainAssessmentSummaryMapping",
-)
-@NamedNativeQuery(
-  name = "AssessmentEntity.findAllTemporaryAccommodationAssessmentSummariesForRegion",
-  query =
-  """
-    select a.service as type,
-           cast(a.id as text) as id,
-           cast(a.application_id as text) as applicationId,
-           a.created_at as createdAt,
-           CAST(taa.risk_ratings AS TEXT) as riskRatings,
-           taa.arrival_date as arrivalDate,
-           null as dateOfInfoRequest,
-           aa.completed_at is not null as completed,
-           a.decision as decision,
-           a.data is not null as isStarted,
-           a.allocated_to_user_id is not null as isAllocated,
-           ap.crn as crn,
-           null as status
-      from temporary_accommodation_assessments aa
-           join assessments a on aa.assessment_id = a.id
-           join applications ap on a.application_id = ap.id
-           left outer join temporary_accommodation_applications taa on ap.id = taa.id
-     where taa.probation_region_id = ?1
-           and a.reallocated_at is null
-  """,
-  resultSetMapping = "DomainAssessmentSummaryMapping",
-)
-@NamedNativeQuery(
-  name = "AssessmentEntity.findTemporaryAccommodationAssessmentSummariesForRegionAndCrn",
-  query =
-  """
-    select a.service as type,
-           cast(a.id as text) as id,
-           cast(a.application_id as text) as applicationId,
-           a.created_at as createdAt,
-           CAST(taa.risk_ratings AS TEXT) as riskRatings,
-           taa.arrival_date as arrivalDate,
-           aa.completed_at is not null as completed,
-           a.decision as decision,
-           a.allocated_to_user_id is not null as isAllocated,
-           ap.crn as crn,
-           null as status
-      from temporary_accommodation_assessments aa
-           join assessments a on aa.assessment_id = a.id
-           join applications ap on a.application_id = ap.id
-           left outer join temporary_accommodation_applications taa on ap.id = taa.id
-     where taa.probation_region_id = ?1
-           and ap.crn = ?2
-           and a.reallocated_at is null
-  """,
-  resultSetMapping = "DomainAssessmentSummaryMapping",
-)
-@SqlResultSetMapping(
-  name = "DomainAssessmentSummaryMapping",
-  classes = [
-    ConstructorResult(
-      targetClass = DomainAssessmentSummary::class,
-      columns = [
-        ColumnResult(name = "type"),
-        ColumnResult(name = "id", type = UUID::class),
-        ColumnResult(name = "applicationId", type = UUID::class),
-        ColumnResult(name = "createdAt", type = OffsetDateTime::class),
-        ColumnResult(name = "riskRatings"),
-        ColumnResult(name = "arrivalDate", type = OffsetDateTime::class),
-        ColumnResult(name = "completed"),
-        ColumnResult(name = "isAllocated"),
-        ColumnResult(name = "decision"),
-        ColumnResult(name = "crn"),
-        ColumnResult(name = "status"),
-      ],
-    ),
-  ],
-)
 @Entity
 @Table(name = "assessments")
 @DiscriminatorColumn(name = "service")
@@ -360,25 +325,18 @@ class TemporaryAccommodationAssessmentEntity(
   isWithdrawn,
 )
 
-/**
- * Summary data for an assessment - read-only, to be used when retrieving large numbers of Assessments.
- * Hibernate compatible equals, hash code and toString aren't needed.
- */
-@SuppressWarnings("LongParameterList")
-open class DomainAssessmentSummary(
-  val type: String,
-  val id: UUID,
-  val applicationId: UUID,
-  val createdAt: OffsetDateTime,
-  val riskRatings: String?,
-  val arrivalDate: OffsetDateTime?,
-  val completed: Boolean,
-  val isAllocated: Boolean,
-  val decision: String?,
-  val crn: String,
-  status: String?,
-) {
-  val status = DomainAssessmentSummaryStatus.entries.firstOrNull { it.name == status }
+interface DomainAssessmentSummary {
+  val type: String
+  val id: UUID
+  val applicationId: UUID
+  val createdAt: Timestamp
+  val riskRatings: String?
+  val arrivalDate: Timestamp?
+  val completed: Boolean
+  val allocated: Boolean
+  val decision: String?
+  val crn: String
+  val status: DomainAssessmentSummaryStatus?
 }
 
 enum class DomainAssessmentSummaryStatus {

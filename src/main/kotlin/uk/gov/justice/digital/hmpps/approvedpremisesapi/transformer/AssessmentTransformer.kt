@@ -162,7 +162,7 @@ class AssessmentTransformer(
     ase.decision == "REJECTED" -> TemporaryAccommodationAssessmentStatus.rejected
     ase.decision == "ACCEPTED" && ase.completed -> TemporaryAccommodationAssessmentStatus.closed
     ase.decision == "ACCEPTED" -> TemporaryAccommodationAssessmentStatus.readyToPlace
-    ase.isAllocated -> TemporaryAccommodationAssessmentStatus.inReview
+    ase.allocated -> TemporaryAccommodationAssessmentStatus.inReview
     else -> TemporaryAccommodationAssessmentStatus.unallocated
   }
 }

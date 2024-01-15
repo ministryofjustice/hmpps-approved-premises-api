@@ -68,8 +68,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toTimestamp
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toTimestampOrNull
+import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.UUID
 
 class AssessmentTest : IntegrationTestBase() {
   @Autowired
@@ -2009,7 +2014,7 @@ class AssessmentTest : IntegrationTestBase() {
       )
 
     private fun toAssessmentSummaryEntity(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus?): DomainAssessmentSummary =
-      DomainAssessmentSummary(
+      DomainAssessmentSummaryImpl(
         type = when (assessment.application) {
           is ApprovedPremisesApplicationEntity -> "approved-premises"
           is TemporaryAccommodationApplicationEntity -> "temporary-accommodation"
@@ -2020,7 +2025,7 @@ class AssessmentTest : IntegrationTestBase() {
 
         applicationId = assessment.application.id,
 
-        createdAt = assessment.createdAt,
+        createdAt = assessment.createdAt.toTimestamp(),
 
         riskRatings = when (val reified = assessment.application) {
           is ApprovedPremisesApplicationEntity -> reified.riskRatings?.let { objectMapper.writeValueAsString(it) }
@@ -2029,8 +2034,8 @@ class AssessmentTest : IntegrationTestBase() {
         },
 
         arrivalDate = when (val application = assessment.application) {
-          is ApprovedPremisesApplicationEntity -> application.arrivalDate
-          is TemporaryAccommodationApplicationEntity -> application.arrivalDate
+          is ApprovedPremisesApplicationEntity -> application.arrivalDate.toTimestampOrNull()
+          is TemporaryAccommodationApplicationEntity -> application.arrivalDate.toTimestampOrNull()
           else -> null
         },
 
@@ -2040,16 +2045,23 @@ class AssessmentTest : IntegrationTestBase() {
         },
         decision = assessment.decision?.name,
         crn = assessment.application.crn,
-        isAllocated = assessment.allocatedToUser != null,
-        status = status?.name,
+        allocated = assessment.allocatedToUser != null,
+        status = status,
       )
   }
-}
 
-const val NANO_MAX = 1E6
-
-fun OffsetDateTime.roundNanosToMillisToAccountForLossOfPrecisionInPostgres(): OffsetDateTime {
-  val millis = Math.round(this.nano / NANO_MAX)
-  val roundedNanos = (millis * NANO_MAX).toInt()
-  return this.withNano(roundedNanos)
+  @SuppressWarnings("LongParameterList")
+  class DomainAssessmentSummaryImpl(
+    override val type: String,
+    override val id: UUID,
+    override val applicationId: UUID,
+    override val createdAt: Timestamp,
+    override val riskRatings: String?,
+    override val arrivalDate: Timestamp?,
+    override val completed: Boolean,
+    override val allocated: Boolean,
+    override val decision: String?,
+    override val crn: String,
+    override val status: DomainAssessmentSummaryStatus?,
+  ) : DomainAssessmentSummary
 }
