@@ -21,6 +21,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcce
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1AwaitingResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1Completed
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1InProgress
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1NotStarted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
@@ -47,6 +51,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.AWAITING_RESPONSE
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.COMPLETED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.IN_PROGRESS
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.NOT_STARTED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -134,11 +143,17 @@ class AssessmentTest : IntegrationTestBase() {
 
           withdrawnAssessment.schemaUpToDate = true
 
+          val responseStatus = when (assessmentDecision) {
+            AssessmentDecision.ACCEPTED -> COMPLETED
+            AssessmentDecision.REJECTED -> COMPLETED
+            else -> IN_PROGRESS
+          }
+
           assertUrlReturnsAssessments(
             jwt,
             ServiceName.approvedPremises,
             "/assessments",
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment),
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment, status = responseStatus),
           )
         }
       }
@@ -183,7 +198,7 @@ class AssessmentTest : IntegrationTestBase() {
 
             val url = "/assessments"
             val expectedAssessments =
-              assessmentSummaryMapper(offenderDetails, inmateDetails = null).toSummaries(assessment)
+              assessmentSummaryMapper(offenderDetails, inmateDetails = null).toSummaries(assessment, status = IN_PROGRESS)
 
             assertUrlReturnsAssessments(
               jwt,
@@ -201,21 +216,30 @@ class AssessmentTest : IntegrationTestBase() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
 
-          val allAssessments = arrayOf(
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress),
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse),
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted),
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed),
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress),
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse),
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted),
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed),
-          )
+          val inProgress1 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
+          val awaitingResponse1 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
+          val notStarted1 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1NotStarted)
+          val completed1 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
+          val inProgress2 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
+          val awaitingResponse2 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
+          val notStarted2 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1NotStarted)
+          val completed2 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
+
+          val mapper = assessmentSummaryMapper(offenderDetails, inmateDetails)
 
           assertAssessmentsReturnedGivenStatus(
             jwt,
             ServiceName.approvedPremises,
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(*allAssessments),
+            listOf(
+              mapper.toSummary(inProgress1, IN_PROGRESS),
+              mapper.toSummary(awaitingResponse1, AWAITING_RESPONSE),
+              mapper.toSummary(notStarted1, NOT_STARTED),
+              mapper.toSummary(completed1, COMPLETED),
+              mapper.toSummary(inProgress2, IN_PROGRESS),
+              mapper.toSummary(awaitingResponse2, AWAITING_RESPONSE),
+              mapper.toSummary(notStarted2, NOT_STARTED),
+              mapper.toSummary(completed2, COMPLETED),
+            ),
             status = emptyArray(),
           )
         }
@@ -227,25 +251,24 @@ class AssessmentTest : IntegrationTestBase() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
 
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
-          val assessmentNotStarted1 =
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
-          val assessmentNotStarted2 =
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
+          val notStarted1 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
+          val notStarted2 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
 
           assertAssessmentsReturnedGivenStatus(
             jwt,
             ServiceName.approvedPremises,
             assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(
-              assessmentNotStarted1,
-              assessmentNotStarted2,
+              notStarted1,
+              notStarted2,
+              status = NOT_STARTED,
             ),
-            AssessmentStatus.cas1NotStarted,
+            cas1NotStarted,
           )
         }
       }
@@ -256,25 +279,24 @@ class AssessmentTest : IntegrationTestBase() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
 
-          val assessmentInProgress1 =
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
-          val assessmentInProgress2 =
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+          val inProgress1 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
+          val inProgress2 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
 
           assertAssessmentsReturnedGivenStatus(
             jwt,
             ServiceName.approvedPremises,
             assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(
-              assessmentInProgress1,
-              assessmentInProgress2,
+              inProgress1,
+              inProgress2,
+              status = IN_PROGRESS,
             ),
-            AssessmentStatus.cas1InProgress,
+            cas1InProgress,
           )
         }
       }
@@ -285,25 +307,24 @@ class AssessmentTest : IntegrationTestBase() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
 
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
-          val assessmentAwaitingResponse1 =
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
-          val assessmentAwaitingResponse2 =
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
+          val awaitingResponse1 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
+          val awaitingResponse2 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
 
           assertAssessmentsReturnedGivenStatus(
             jwt,
             ServiceName.approvedPremises,
             assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(
-              assessmentAwaitingResponse1,
-              assessmentAwaitingResponse2,
+              awaitingResponse1,
+              awaitingResponse2,
+              status = AWAITING_RESPONSE,
             ),
-            AssessmentStatus.cas1AwaitingResponse,
+            cas1AwaitingResponse,
           )
         }
       }
@@ -314,25 +335,24 @@ class AssessmentTest : IntegrationTestBase() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
 
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
-          val assessmentCompleted1 =
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
-          val assessmentCompleted2 =
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1NotStarted)
+          val completed1 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1NotStarted)
+          val completed2 = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
 
           assertAssessmentsReturnedGivenStatus(
             jwt,
             ServiceName.approvedPremises,
             assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(
-              assessmentCompleted1,
-              assessmentCompleted2,
+              completed1,
+              completed2,
+              status = COMPLETED,
             ),
-            AssessmentStatus.cas1Completed,
+            cas1Completed,
           )
         }
       }
@@ -343,19 +363,19 @@ class AssessmentTest : IntegrationTestBase() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
 
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1NotStarted)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
 
           assertAssessmentsReturnedGivenStatus(
             jwt,
             ServiceName.approvedPremises,
-            emptyList<AssessmentSummary>(),
+            emptyList(),
             AssessmentStatus.cas1Reallocated,
           )
         }
@@ -367,30 +387,32 @@ class AssessmentTest : IntegrationTestBase() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
 
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
           val notStarted1 =
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1NotStarted)
           val completed1 =
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1InProgress)
-          createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1AwaitingResponse)
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
+          createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
           val notStarted2 =
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1NotStarted)
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1NotStarted)
           val completed2 =
-            createApprovedPremisesAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas1Completed)
+            createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
+
+          val mapper = assessmentSummaryMapper(offenderDetails, inmateDetails)
 
           assertAssessmentsReturnedGivenStatus(
             jwt,
             ServiceName.approvedPremises,
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(
-              notStarted1,
-              completed1,
-              notStarted2,
-              completed2,
+            listOf(
+              mapper.toSummary(notStarted1, DomainAssessmentSummaryStatus.NOT_STARTED),
+              mapper.toSummary(completed1, DomainAssessmentSummaryStatus.COMPLETED),
+              mapper.toSummary(notStarted2, DomainAssessmentSummaryStatus.NOT_STARTED),
+              mapper.toSummary(completed2, DomainAssessmentSummaryStatus.COMPLETED),
             ),
-            AssessmentStatus.cas1NotStarted,
-            AssessmentStatus.cas1Completed,
+            cas1NotStarted,
+            cas1Completed,
           )
         }
       }
@@ -605,25 +627,25 @@ class AssessmentTest : IntegrationTestBase() {
         withApplication(application)
         withAssessmentSchema(assessmentSchema)
         withDecision(null)
-        withCreatedAt(OffsetDateTime.now().withNano(0))
+        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
 
         when (assessmentStatus) {
-          AssessmentStatus.cas1Completed -> {
+          cas1Completed -> {
             withDecision(AssessmentDecision.ACCEPTED)
             withData(null)
           }
 
-          AssessmentStatus.cas1AwaitingResponse -> {
+          cas1AwaitingResponse -> {
             withDecision(null)
             withData(null)
           }
 
-          AssessmentStatus.cas1InProgress -> {
+          cas1InProgress -> {
             withDecision(null)
             withData("{ }")
           }
 
-          AssessmentStatus.cas1NotStarted -> {
+          cas1NotStarted -> {
             withDecision(null)
             withData(null)
           }
@@ -632,14 +654,15 @@ class AssessmentTest : IntegrationTestBase() {
         }
       }
 
-      if (AssessmentStatus.cas1AwaitingResponse == assessmentStatus) {
-        val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
-          withAssessment(assessment)
-          withCreatedBy(user)
-          withResponse(null)
+      if (cas1AwaitingResponse == assessmentStatus) {
+        (1..5).forEach { _ ->
+          val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
+            withAssessment(assessment)
+            withCreatedBy(user)
+            withResponse(null)
+          }
+          assessment.clarificationNotes.add(clarificationNote)
         }
-
-        assessment.clarificationNotes.add(clarificationNote)
       }
 
       assessment.schemaUpToDate = true
@@ -673,7 +696,7 @@ class AssessmentTest : IntegrationTestBase() {
         withApplication(application)
         withAssessmentSchema(assessmentSchema)
         withDecision(null)
-        withCreatedAt(OffsetDateTime.now().withNano(0))
+        withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
 
         when (assessmentStatus) {
           AssessmentStatus.cas3Rejected -> {
@@ -723,12 +746,14 @@ class AssessmentTest : IntegrationTestBase() {
               withCrn(offenderDetails.otherIds.crn)
               withCreatedByUser(user)
               withApplicationSchema(applicationSchema)
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
             }
 
             val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
               withAllocatedToUser(user)
               withApplication(application)
               withAssessmentSchema(assessmentSchema)
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
             }
 
             assessment.schemaUpToDate = true
@@ -739,15 +764,15 @@ class AssessmentTest : IntegrationTestBase() {
           val page1Response = assertUrlReturnsAssessments(
             jwt,
             ServiceName.approvedPremises,
-            "/assessments?page=1&perPage=1",
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessments[0]),
+            "/assessments?page=1&perPage=1&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessments[0], status = COMPLETED),
           )
 
           val page2Response = assertUrlReturnsAssessments(
             jwt,
             ServiceName.approvedPremises,
-            "/assessments?page=2&perPage=1",
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessments[1]),
+            "/assessments?page=2&perPage=1&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessments[1], status = COMPLETED),
           )
 
           page1Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
@@ -1962,28 +1987,28 @@ class AssessmentTest : IntegrationTestBase() {
     AssessmentSummaryMapper(assessmentTransformer, objectMapper, offenderDetails, inmateDetails)
 
   class AssessmentSummaryMapper(
-    val assessmentTransformer: AssessmentTransformer,
-    val objectMapper: ObjectMapper,
-    val offenderDetails: OffenderDetailSummary,
-    val inmateDetails: InmateDetail?,
+    private val assessmentTransformer: AssessmentTransformer,
+    private val objectMapper: ObjectMapper,
+    private val offenderDetails: OffenderDetailSummary,
+    private val inmateDetails: InmateDetail?,
   ) {
 
-    fun toSummaries(vararg assessments: AssessmentEntity): List<AssessmentSummary> {
-      return assessments.map { toSummary(it) }
+    fun toSummaries(vararg assessments: AssessmentEntity, status: DomainAssessmentSummaryStatus? = null): List<AssessmentSummary> {
+      return assessments.map { toSummary(it, status) }
     }
 
-    fun toSummary(assessment: AssessmentEntity): AssessmentSummary = assessmentTransformer.transformDomainToApiSummary(
-      toAssessmentSummaryEntity(assessment),
+    fun toSummary(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus? = null): AssessmentSummary = assessmentTransformer.transformDomainToApiSummary(
+      toAssessmentSummaryEntity(assessment, status),
       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
     )
 
-    fun toRestricted(assessment: AssessmentEntity): AssessmentSummary =
+    fun toRestricted(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus? = null): AssessmentSummary =
       assessmentTransformer.transformDomainToApiSummary(
-        toAssessmentSummaryEntity(assessment),
+        toAssessmentSummaryEntity(assessment, status),
         PersonInfoResult.Success.Restricted(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber),
       )
 
-    private fun toAssessmentSummaryEntity(assessment: AssessmentEntity): DomainAssessmentSummary =
+    private fun toAssessmentSummaryEntity(assessment: AssessmentEntity, status: DomainAssessmentSummaryStatus?): DomainAssessmentSummary =
       DomainAssessmentSummary(
         type = when (assessment.application) {
           is ApprovedPremisesApplicationEntity -> "approved-premises"
@@ -2009,20 +2034,22 @@ class AssessmentTest : IntegrationTestBase() {
           else -> null
         },
 
-        dateOfInfoRequest = assessment
-          .clarificationNotes
-          .filter { it.response == null }
-          .minByOrNull { it.createdAt }
-          ?.createdAt,
-
         completed = when (assessment) {
           is TemporaryAccommodationAssessmentEntity -> assessment.completedAt != null
           else -> assessment.decision != null
         },
         decision = assessment.decision?.name,
         crn = assessment.application.crn,
-        isStarted = assessment.data != null,
         isAllocated = assessment.allocatedToUser != null,
+        status = status?.name,
       )
   }
+}
+
+const val NANO_MAX = 1E6
+
+fun OffsetDateTime.roundNanosToMillisToAccountForLossOfPrecisionInPostgres(): OffsetDateTime {
+  val millis = Math.round(this.nano / NANO_MAX)
+  val roundedNanos = (millis * NANO_MAX).toInt()
+  return this.withNano(roundedNanos)
 }

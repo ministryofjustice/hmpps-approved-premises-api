@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
@@ -355,12 +356,11 @@ class AssessmentTransformerTest {
       createdAt = OffsetDateTime.now(),
       riskRatings = null,
       arrivalDate = null,
-      dateOfInfoRequest = null,
       completed = false,
       decision = null,
       crn = randomStringMultiCaseWithNumbers(6),
-      isStarted = true,
       isAllocated = true,
+      status = null,
     )
 
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
@@ -387,12 +387,11 @@ class AssessmentTransformerTest {
       createdAt = OffsetDateTime.now(),
       riskRatings = objectMapper.writeValueAsString(personRisks),
       arrivalDate = OffsetDateTime.now().randomDateTimeBefore(),
-      dateOfInfoRequest = OffsetDateTime.now().randomDateTimeBefore(),
       completed = false,
       decision = "ACCEPTED",
       crn = randomStringMultiCaseWithNumbers(6),
-      isStarted = true,
       isAllocated = true,
+      status = DomainAssessmentSummaryStatus.AWAITING_RESPONSE.name,
     )
 
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()

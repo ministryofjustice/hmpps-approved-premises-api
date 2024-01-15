@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRef
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryUserNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -73,15 +74,12 @@ class AssessmentService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: String,
 ) {
-  fun getVisibleAssessmentSummariesForUser(user: UserEntity, serviceName: ServiceName): List<DomainAssessmentSummary> =
-    when (serviceName) {
-      ServiceName.approvedPremises -> assessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(user.id.toString())
-      ServiceName.temporaryAccommodation -> assessmentRepository.findAllTemporaryAccommodationAssessmentSummariesForRegion(
-        user.probationRegion.id,
-      )
 
-      else -> listOf()
-    }
+  fun getVisibleAssessmentSummariesForUserCAS1(user: UserEntity, statuses: List<DomainAssessmentSummaryStatus>): List<DomainAssessmentSummary> =
+    assessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(user.id.toString(), statuses.map { it.name })
+
+  fun getVisibleAssessmentSummariesForUserCAS3(user: UserEntity): List<DomainAssessmentSummary> =
+    assessmentRepository.findAllTemporaryAccommodationAssessmentSummariesForRegion(user.probationRegion.id)
 
   fun getAssessmentSummariesByCrnForUser(
     user: UserEntity,

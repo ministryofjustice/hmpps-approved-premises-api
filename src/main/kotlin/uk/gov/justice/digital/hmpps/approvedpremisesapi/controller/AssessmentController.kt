@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -51,9 +50,8 @@ class AssessmentController(
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
   @Value("\${pagination.default-page-size}") private val defaultPageSize: Int,
 ) : AssessmentsApiDelegate {
-  private val log = LoggerFactory.getLogger(this::class.java)
 
-  @Suppress("NAME_SHADOWING")
+  @Suppress("NAME_SHADOWING", "CyclomaticComplexMethod")
   override fun assessmentsGet(
     xServiceName: ServiceName,
     sortDirection: SortDirection?,
@@ -64,10 +62,16 @@ class AssessmentController(
     perPage: Int?,
   ): ResponseEntity<List<AssessmentSummary>> {
     val user = userService.getUserForRequest()
+    val manuallyFilter = xServiceName == ServiceName.temporaryAccommodation
 
     val summaries = when {
+      xServiceName == ServiceName.cas2 -> throw UnsupportedOperationException("CAS2 not supported")
       xServiceName == ServiceName.temporaryAccommodation && crn != null -> assessmentService.getAssessmentSummariesByCrnForUser(user, crn, xServiceName)
-      else -> assessmentService.getVisibleAssessmentSummariesForUser(user, xServiceName)
+      xServiceName == ServiceName.temporaryAccommodation -> assessmentService.getVisibleAssessmentSummariesForUserCAS3(user)
+      else -> {
+        val domainSummaryStatuses = statuses?.map { assessmentTransformer.transformApiStatusToDomainSummaryState(it) } ?: emptyList()
+        assessmentService.getVisibleAssessmentSummariesForUserCAS1(user, domainSummaryStatuses)
+      }
     }
 
     val sortDirection = when {
@@ -81,7 +85,7 @@ class AssessmentController(
     }
 
     var metadata: PaginationMetadata? = null
-    var filteredSummaries = summaries.map {
+    val sortedSummaries = summaries.map {
       val personInfo = offenderService.getInfoForPerson(it.crn, user.deliusUsername, false)
 
       assessmentTransformer.transformDomainToApiSummary(
@@ -89,7 +93,8 @@ class AssessmentController(
         personInfo,
       )
     }.sort(sortDirection, sortBy)
-      .filterByStatuses(statuses)
+
+    var filteredSummaries = if (manuallyFilter) sortedSummaries.filterByStatuses(statuses) else sortedSummaries
 
     // TODO: We should carry out the pagination at the database level
     if (page !== null && filteredSummaries.isNotEmpty()) {
