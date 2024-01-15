@@ -46,7 +46,7 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
               }
 
               val results: List<DomainAssessmentSummary> =
-                realAssessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated()
+                realAssessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated().toList()
 
               assertThat(results.size).isEqualTo(3)
 
@@ -76,7 +76,7 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
           `Given an Assessment for Temporary Accommodation`(user2, user2) { taAssessment, _ ->
             earliestUnansweredClarificationNote(taAssessment, user2)
 
-            val results: List<DomainAssessmentSummary> = realAssessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(user1.id.toString())
+            val results: List<DomainAssessmentSummary> = realAssessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(user1.id.toString()).toList()
 
             assertThat(results.size).isEqualTo(1)
             assertForAssessmentSummary(results[0], apAssessment)

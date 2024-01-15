@@ -47,6 +47,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
            a.decision as decision,
            a.allocated_to_user_id is not null as allocated,
            ap.crn as crn,
+           apa.name as personName,
            CASE
              WHEN (a.decision is not null) THEN 'COMPLETED'
              WHEN (open_acn.id IS NOT NULL) THEN 'AWAITING_RESPONSE'
@@ -74,7 +75,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
     """,
     nativeQuery = true,
   )
-  fun findAllApprovedPremisesAssessmentSummariesNotReallocated(userIdString: String? = null, statuses: List<String> = emptyList()): List<DomainAssessmentSummary>
+  fun findAllApprovedPremisesAssessmentSummariesNotReallocated(userIdString: String? = null, statuses: List<String> = emptyList(), page: Pageable? = null): Page<DomainAssessmentSummary>
 
   @Query(
     value = """

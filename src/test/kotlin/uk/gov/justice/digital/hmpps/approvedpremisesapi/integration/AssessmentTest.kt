@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1Completed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1InProgress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1NotStarted
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas1Reallocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewClarificationNote
@@ -90,6 +91,7 @@ class AssessmentTest : IntegrationTestBase() {
     inboundMessageListener.clearMessages()
   }
 
+  @SuppressWarnings("LargeClass")
   @Nested
   inner class AllAssessments {
     @Test
@@ -561,7 +563,7 @@ class AssessmentTest : IntegrationTestBase() {
               assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(notStarted, status = NOT_STARTED),
             ),
             sortBy = AssessmentSortField.assessmentStatus,
-            status = emptyList(),
+            status = listOf(cas1NotStarted, cas1Reallocated, cas1InProgress, cas1Completed, cas1AwaitingResponse),
           )
         }
       }
@@ -888,6 +890,7 @@ class AssessmentTest : IntegrationTestBase() {
         withCrn(offenderDetails.otherIds.crn)
         withCreatedByUser(user)
         withApplicationSchema(applicationSchema)
+        withName("${offenderDetails.firstName.uppercase()} ${offenderDetails.surname.uppercase()}")
 
         applicationMutator(this)
       }

@@ -51,7 +51,7 @@ class AssessmentController(
   @Value("\${pagination.default-page-size}") private val defaultPageSize: Int,
 ) : AssessmentsApiDelegate {
 
-  @Suppress("NAME_SHADOWING", "CyclomaticComplexMethod")
+  @Suppress("NAME_SHADOWING")
   override fun assessmentsGet(
     xServiceName: ServiceName,
     sortDirection: SortDirection?,
@@ -62,7 +62,10 @@ class AssessmentController(
     perPage: Int?,
   ): ResponseEntity<List<AssessmentSummary>> {
     val user = userService.getUserForRequest()
-    val manuallyFilter = xServiceName == ServiceName.temporaryAccommodation
+    val manuallySortAndFilter = xServiceName == ServiceName.temporaryAccommodation
+
+    val sortDirection = sortDirection ?: SortDirection.asc
+    val sortBy = sortBy ?: AssessmentSortField.assessmentArrivalDate
 
     val summaries = when {
       xServiceName == ServiceName.cas2 -> throw UnsupportedOperationException("CAS2 not supported")
@@ -70,31 +73,27 @@ class AssessmentController(
       xServiceName == ServiceName.temporaryAccommodation -> assessmentService.getVisibleAssessmentSummariesForUserCAS3(user)
       else -> {
         val domainSummaryStatuses = statuses?.map { assessmentTransformer.transformApiStatusToDomainSummaryState(it) } ?: emptyList()
-        assessmentService.getVisibleAssessmentSummariesForUserCAS1(user, domainSummaryStatuses)
+        assessmentService.getVisibleAssessmentSummariesForUserCAS1(user, domainSummaryStatuses, sortDirection, sortBy)
       }
     }
 
-    val sortDirection = when {
-      xServiceName == ServiceName.temporaryAccommodation && sortDirection == null -> SortDirection.asc
-      else -> sortDirection
-    }
-
-    val sortBy = when {
-      xServiceName == ServiceName.temporaryAccommodation && sortBy == null -> AssessmentSortField.assessmentArrivalDate
-      else -> sortBy
-    }
-
     var metadata: PaginationMetadata? = null
-    val sortedSummaries = summaries.map {
+    val transformedSummaries = summaries.map {
       val personInfo = offenderService.getInfoForPerson(it.crn, user.deliusUsername, false)
 
       assessmentTransformer.transformDomainToApiSummary(
         it,
         personInfo,
       )
-    }.sort(sortDirection, sortBy)
+    }
 
-    var filteredSummaries = if (manuallyFilter) sortedSummaries.filterByStatuses(statuses) else sortedSummaries
+    var filteredSummaries = if (manuallySortAndFilter) {
+      transformedSummaries
+        .sort(sortDirection, sortBy)
+        .filterByStatuses(statuses)
+    } else {
+      transformedSummaries
+    }
 
     // TODO: We should carry out the pagination at the database level
     if (page !== null && filteredSummaries.isNotEmpty()) {

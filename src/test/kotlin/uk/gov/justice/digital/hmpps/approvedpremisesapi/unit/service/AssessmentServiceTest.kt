@@ -14,6 +14,9 @@ import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedAssessedBy
@@ -21,7 +24,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -124,12 +129,27 @@ class AssessmentServiceTest {
         .produce(),
     )
 
-    every { assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(any(), listOf("NOT_STARTED", "IN_PROGRESS")) } returns emptyList()
+    every {
+      assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(
+        any(),
+        listOf("NOT_STARTED", "IN_PROGRESS"),
+        PageRequest.of(0, Int.MAX_VALUE, Sort.by("status").ascending()),
+      )
+    } returns Page.empty()
 
-    assessmentService.getVisibleAssessmentSummariesForUserCAS1(user, statuses = listOf(DomainAssessmentSummaryStatus.NOT_STARTED, DomainAssessmentSummaryStatus.IN_PROGRESS))
+    assessmentService.getVisibleAssessmentSummariesForUserCAS1(
+      user,
+      statuses = listOf(DomainAssessmentSummaryStatus.NOT_STARTED, DomainAssessmentSummaryStatus.IN_PROGRESS),
+      SortDirection.asc,
+      AssessmentSortField.assessmentStatus,
+    )
 
     verify(exactly = 1) {
-      assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(user.id.toString(), listOf("NOT_STARTED", "IN_PROGRESS"))
+      assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(
+        user.id.toString(),
+        listOf("NOT_STARTED", "IN_PROGRESS"),
+        PageRequest.of(0, Int.MAX_VALUE, Sort.by("status").ascending()),
+      )
     }
   }
 
