@@ -39,6 +39,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CacheKeySet
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given Some Offenders`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
@@ -245,7 +247,8 @@ class AssessmentTest : IntegrationTestBase() {
               mapper.toSummary(notStarted2, NOT_STARTED),
               mapper.toSummary(completed2, COMPLETED),
             ),
-            status = emptyArray(),
+            sortBy = AssessmentSortField.assessmentCreatedAt,
+            status = emptyList(),
           )
         }
       }
@@ -273,7 +276,8 @@ class AssessmentTest : IntegrationTestBase() {
               notStarted2,
               status = NOT_STARTED,
             ),
-            cas1NotStarted,
+            sortBy = AssessmentSortField.assessmentCreatedAt,
+            status = listOf(cas1NotStarted),
           )
         }
       }
@@ -301,7 +305,8 @@ class AssessmentTest : IntegrationTestBase() {
               inProgress2,
               status = IN_PROGRESS,
             ),
-            cas1InProgress,
+            sortBy = AssessmentSortField.assessmentCreatedAt,
+            status = listOf(cas1InProgress),
           )
         }
       }
@@ -329,7 +334,8 @@ class AssessmentTest : IntegrationTestBase() {
               awaitingResponse2,
               status = AWAITING_RESPONSE,
             ),
-            cas1AwaitingResponse,
+            sortBy = AssessmentSortField.assessmentCreatedAt,
+            status = listOf(cas1AwaitingResponse),
           )
         }
       }
@@ -357,7 +363,8 @@ class AssessmentTest : IntegrationTestBase() {
               completed2,
               status = COMPLETED,
             ),
-            cas1Completed,
+            sortBy = AssessmentSortField.assessmentCreatedAt,
+            status = listOf(cas1Completed),
           )
         }
       }
@@ -381,7 +388,8 @@ class AssessmentTest : IntegrationTestBase() {
             jwt,
             ServiceName.approvedPremises,
             emptyList(),
-            AssessmentStatus.cas1Reallocated,
+            sortBy = AssessmentSortField.assessmentCreatedAt,
+            status = listOf(AssessmentStatus.cas1Reallocated),
           )
         }
       }
@@ -411,13 +419,258 @@ class AssessmentTest : IntegrationTestBase() {
             jwt,
             ServiceName.approvedPremises,
             listOf(
-              mapper.toSummary(notStarted1, DomainAssessmentSummaryStatus.NOT_STARTED),
-              mapper.toSummary(completed1, DomainAssessmentSummaryStatus.COMPLETED),
-              mapper.toSummary(notStarted2, DomainAssessmentSummaryStatus.NOT_STARTED),
-              mapper.toSummary(completed2, DomainAssessmentSummaryStatus.COMPLETED),
+              mapper.toSummary(notStarted1, NOT_STARTED),
+              mapper.toSummary(completed1, COMPLETED),
+              mapper.toSummary(notStarted2, NOT_STARTED),
+              mapper.toSummary(completed2, COMPLETED),
             ),
-            cas1NotStarted,
-            cas1Completed,
+            sortBy = AssessmentSortField.assessmentCreatedAt,
+            status = listOf(cas1NotStarted, cas1Completed),
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Approved Premises filters correctly when 'page' query parameter is provided`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
+          }
+
+          val assessments = generateSequence {
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(user)
+              withApplicationSchema(applicationSchema)
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            }
+
+            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+              withAllocatedToUser(user)
+              withApplication(application)
+              withAssessmentSchema(assessmentSchema)
+              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            }
+
+            assessment.schemaUpToDate = true
+
+            assessment
+          }.take(2).toList()
+
+          val page1Response = assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.approvedPremises,
+            "/assessments?page=1&perPage=1&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessments[0], status = COMPLETED),
+          )
+
+          val page2Response = assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.approvedPremises,
+            "/assessments?page=2&perPage=1&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessments[1], status = COMPLETED),
+          )
+
+          page1Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 2)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 1)
+
+          page2Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 2)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 1)
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Approved Premises sorts correctly when sortDirection is createdAt`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          val new = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            assessmentMutator = { withCreatedAt(OffsetDateTime.now()) },
+          )
+
+          val veryNew = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            assessmentMutator = { withCreatedAt(OffsetDateTime.now().plusDays(1)) },
+          )
+
+          val old = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            assessmentMutator = { withCreatedAt(OffsetDateTime.now().minusDays(1)) },
+          )
+
+          val veryOld = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            assessmentMutator = { withCreatedAt(OffsetDateTime.now().minusDays(5)) },
+          )
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.approvedPremises,
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(
+              veryOld,
+              old,
+              new,
+              veryNew,
+              status = IN_PROGRESS,
+            ),
+            sortBy = AssessmentSortField.assessmentCreatedAt,
+            status = listOf(cas1InProgress),
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Approved Premises sorts correctly when sortDirection is status`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          val inProgress = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1InProgress)
+          val completed = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1Completed)
+          val awaitingResponse = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1AwaitingResponse)
+          val notStarted = createApprovedPremisesAssessmentForStatus(user, offenderDetails, cas1NotStarted)
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.approvedPremises,
+            listOf(
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(awaitingResponse, status = AWAITING_RESPONSE),
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(completed, status = COMPLETED),
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(inProgress, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(notStarted, status = NOT_STARTED),
+            ),
+            sortBy = AssessmentSortField.assessmentStatus,
+            status = emptyList(),
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Approved Premises sorts correctly when sortDirection is personName`() {
+      `Given a User` { user, jwt ->
+        val (offender1, inmate1) = `Given an Offender`({ withFirstName("Zendaya"); withLastName("") })
+        val assessZendaya = createApprovedPremisesAssessmentForStatus(user, offender1, cas1InProgress)
+
+        val (offender2, inmate2) = `Given an Offender`({ withFirstName("Arthur"); withLastName("") })
+        val assessArthur = createApprovedPremisesAssessmentForStatus(user, offender2, cas1InProgress)
+
+        val (offender3, inmate3) = `Given an Offender`({ withFirstName("Agatha"); withLastName("") })
+        val assessAgatha = createApprovedPremisesAssessmentForStatus(user, offender3, cas1InProgress)
+
+        val (offender4, inmate4) = `Given an Offender`({ withFirstName("Bagatha"); withLastName("") })
+        val assessBagatha = createApprovedPremisesAssessmentForStatus(user, offender4, cas1InProgress)
+
+        assertAssessmentsReturnedGivenStatus(
+          jwt,
+          ServiceName.approvedPremises,
+          listOf(
+            assessmentSummaryMapper(offender3, inmate3).toSummary(assessAgatha, status = IN_PROGRESS),
+            assessmentSummaryMapper(offender2, inmate2).toSummary(assessArthur, status = IN_PROGRESS),
+            assessmentSummaryMapper(offender4, inmate4).toSummary(assessBagatha, status = IN_PROGRESS),
+            assessmentSummaryMapper(offender1, inmate1).toSummary(assessZendaya, status = IN_PROGRESS),
+          ),
+          sortBy = AssessmentSortField.personName,
+          status = listOf(cas1InProgress),
+        )
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Approved Premises sorts correctly when sortDirection is personCrn`() {
+      `Given a User` { user, jwt ->
+        val (offender1, inmate1) = `Given an Offender`({ withCrn("CRN1") })
+        val assessCrn1 = createApprovedPremisesAssessmentForStatus(user, offender1, cas1InProgress)
+
+        val (offender2, inmate2) = `Given an Offender`({ withCrn("CRN4") })
+        val assessCrn4 = createApprovedPremisesAssessmentForStatus(user, offender2, cas1InProgress)
+
+        val (offender3, inmate3) = `Given an Offender`({ withCrn("CRN2") })
+        val assessCrn2 = createApprovedPremisesAssessmentForStatus(user, offender3, cas1InProgress)
+
+        val (offender4, inmate4) = `Given an Offender`({ withCrn("CRN3") })
+        val assessCrn3 = createApprovedPremisesAssessmentForStatus(user, offender4, cas1InProgress)
+
+        assertAssessmentsReturnedGivenStatus(
+          jwt,
+          ServiceName.approvedPremises,
+          listOf(
+            assessmentSummaryMapper(offender1, inmate1).toSummary(assessCrn1, status = IN_PROGRESS),
+            assessmentSummaryMapper(offender3, inmate3).toSummary(assessCrn2, status = IN_PROGRESS),
+            assessmentSummaryMapper(offender4, inmate4).toSummary(assessCrn3, status = IN_PROGRESS),
+            assessmentSummaryMapper(offender2, inmate2).toSummary(assessCrn4, status = IN_PROGRESS),
+          ),
+          sortBy = AssessmentSortField.personCrn,
+          status = listOf(cas1InProgress),
+        )
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Approved Premises sorts correctly when sortDirection is arrivalDate`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          val veryOld = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(10)) },
+          )
+
+          val veryNew = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(2)) },
+          )
+
+          val old = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(5)) },
+          )
+
+          val new = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(3)) },
+          )
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.approvedPremises,
+            listOf(
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(veryOld, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(old, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(new, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(veryNew, status = IN_PROGRESS),
+            ),
+            sortBy = AssessmentSortField.assessmentArrivalDate,
+            status = emptyList(),
           )
         }
       }
@@ -445,7 +698,8 @@ class AssessmentTest : IntegrationTestBase() {
             jwt,
             ServiceName.temporaryAccommodation,
             assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(*allAssessments),
-            status = emptyArray(),
+            sortBy = AssessmentSortField.assessmentCreatedAt,
+            status = emptyList(),
           )
         }
       }
@@ -473,7 +727,8 @@ class AssessmentTest : IntegrationTestBase() {
             jwt,
             ServiceName.temporaryAccommodation,
             assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(unallocated1, unallocated2),
-            AssessmentStatus.cas3Unallocated,
+            sortBy = AssessmentSortField.assessmentCreatedAt,
+            status = listOf(AssessmentStatus.cas3Unallocated),
           )
         }
       }
@@ -501,7 +756,8 @@ class AssessmentTest : IntegrationTestBase() {
             jwt,
             ServiceName.temporaryAccommodation,
             assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(inReview1, inReview2),
-            AssessmentStatus.cas3InReview,
+            sortBy = AssessmentSortField.assessmentCreatedAt,
+            status = listOf(AssessmentStatus.cas3InReview),
           )
         }
       }
@@ -529,7 +785,8 @@ class AssessmentTest : IntegrationTestBase() {
             jwt,
             ServiceName.temporaryAccommodation,
             assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(closed1, closed2),
-            AssessmentStatus.cas3Closed,
+            sortBy = AssessmentSortField.assessmentCreatedAt,
+            status = listOf(AssessmentStatus.cas3Closed),
           )
         }
       }
@@ -557,7 +814,8 @@ class AssessmentTest : IntegrationTestBase() {
             jwt,
             ServiceName.temporaryAccommodation,
             assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(rejected1, rejected2),
-            AssessmentStatus.cas3Rejected,
+            sortBy = AssessmentSortField.assessmentCreatedAt,
+            status = listOf(AssessmentStatus.cas3Rejected),
           )
         }
       }
@@ -585,7 +843,8 @@ class AssessmentTest : IntegrationTestBase() {
             jwt,
             ServiceName.temporaryAccommodation,
             assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(readyToPlace1, readyToPlace2),
-            AssessmentStatus.cas3ReadyToPlace,
+            sortBy = AssessmentSortField.assessmentCreatedAt,
+            status = listOf(AssessmentStatus.cas3ReadyToPlace),
           )
         }
       }
@@ -595,14 +854,16 @@ class AssessmentTest : IntegrationTestBase() {
       jwt: String,
       serviceName: ServiceName,
       expectedAssessments: List<AssessmentSummary>,
-      vararg status: AssessmentStatus,
+      sortBy: AssessmentSortField,
+      status: List<AssessmentStatus>,
     ) {
+      val sortParam = sortBy.value
       val statusParams = status.map { "statuses=${it.value}" }.joinToString("&")
 
       assertUrlReturnsAssessments(
         jwt,
         serviceName,
-        "/assessments?sortBy=createdAt&$statusParams",
+        "/assessments?sortBy=$sortParam&$statusParams",
         expectedAssessments,
       )
     }
@@ -611,6 +872,8 @@ class AssessmentTest : IntegrationTestBase() {
       user: UserEntity,
       offenderDetails: OffenderDetailSummary,
       assessmentStatus: AssessmentStatus,
+      applicationMutator: (ApprovedPremisesApplicationEntityFactory.() -> Unit) = {},
+      assessmentMutator: (ApprovedPremisesAssessmentEntityFactory.() -> Unit) = {},
     ): ApprovedPremisesAssessmentEntity {
       val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
         withPermissiveSchema()
@@ -625,6 +888,8 @@ class AssessmentTest : IntegrationTestBase() {
         withCrn(offenderDetails.otherIds.crn)
         withCreatedByUser(user)
         withApplicationSchema(applicationSchema)
+
+        applicationMutator(this)
       }
 
       val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
@@ -657,6 +922,8 @@ class AssessmentTest : IntegrationTestBase() {
 
           else -> throw IllegalArgumentException("status $assessmentStatus is not supported")
         }
+
+        assessmentMutator(this)
       }
 
       if (cas1AwaitingResponse == assessmentStatus) {
@@ -731,66 +998,6 @@ class AssessmentTest : IntegrationTestBase() {
       assessment.schemaUpToDate = true
 
       return assessment
-    }
-
-    @Test
-    fun `Get all assessments for Approved Premises filters correctly when 'page' query parameter is provided`() {
-      `Given a User` { user, jwt ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
-
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
-
-          val assessments = generateSequence {
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(user)
-              withApplicationSchema(applicationSchema)
-              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-            }
-
-            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(user)
-              withApplication(application)
-              withAssessmentSchema(assessmentSchema)
-              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-            }
-
-            assessment.schemaUpToDate = true
-
-            assessment
-          }.take(2).toList()
-
-          val page1Response = assertUrlReturnsAssessments(
-            jwt,
-            ServiceName.approvedPremises,
-            "/assessments?page=1&perPage=1&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessments[0], status = COMPLETED),
-          )
-
-          val page2Response = assertUrlReturnsAssessments(
-            jwt,
-            ServiceName.approvedPremises,
-            "/assessments?page=2&perPage=1&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessments[1], status = COMPLETED),
-          )
-
-          page1Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
-            .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-            .expectHeader().valueEquals("X-Pagination-TotalResults", 2)
-            .expectHeader().valueEquals("X-Pagination-PageSize", 1)
-
-          page2Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-            .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-            .expectHeader().valueEquals("X-Pagination-TotalResults", 2)
-            .expectHeader().valueEquals("X-Pagination-PageSize", 1)
-        }
-      }
     }
 
     @ParameterizedTest
