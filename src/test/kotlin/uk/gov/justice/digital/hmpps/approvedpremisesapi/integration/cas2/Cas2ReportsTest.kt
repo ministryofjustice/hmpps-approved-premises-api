@@ -228,15 +228,23 @@ class Cas2ReportsTest : IntegrationTestBase() {
   @Nested
   inner class ApplicationStatusUpdates {
     @Test
-    fun `streams spreadsheet of Cas2ApplicationStatusUpdatedEvents`() {
+    fun `streams spreadsheet of Cas2ApplicationStatusUpdatedEvents, last 12 months only`() {
       val event1Id = UUID.randomUUID()
       val event2Id = UUID.randomUUID()
+      val event3Id = UUID.randomUUID()
+
+      val old = Instant.now().minusSeconds(daysInSeconds(365))
+      val newer = Instant.now().minusSeconds(daysInSeconds(100))
+      val tooOld = Instant.now().minusSeconds(daysInSeconds(366))
 
       val event1Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
-        .withUpdatedAt(Instant.now().minusSeconds(daysInSeconds(100)))
+        .withUpdatedAt(old)
         .produce()
       val event2Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
-        .withUpdatedAt(Instant.now().minusSeconds(daysInSeconds(99)))
+        .withUpdatedAt(newer)
+        .produce()
+      val event3Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+        .withUpdatedAt(tooOld)
         .produce()
 
       val event1ToSave = Cas2ApplicationStatusUpdatedEvent(
@@ -253,16 +261,34 @@ class Cas2ReportsTest : IntegrationTestBase() {
         eventDetails = event2Details,
       )
 
+      val event3ToSave = Cas2ApplicationStatusUpdatedEvent(
+        id = event3Id,
+        timestamp = Instant.now(),
+        eventType = EventType.applicationStatusUpdated,
+        eventDetails = event3Details,
+      )
+
       val event1 = domainEventFactory.produceAndPersist {
         withId(event1Id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
+        withOccurredAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData(objectMapper.writeValueAsString(event1ToSave))
       }
 
       val event2 = domainEventFactory.produceAndPersist {
         withId(event2Id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
+        withOccurredAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData(objectMapper.writeValueAsString(event2ToSave))
+      }
+
+      // we don't expect this event to be included as it relates to an update
+      // outside the time range
+      domainEventFactory.produceAndPersist {
+        withId(event3Id)
+        withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
+        withOccurredAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withData(objectMapper.writeValueAsString(event3ToSave))
       }
 
       val expectedDataFrame = listOf(
