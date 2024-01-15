@@ -437,58 +437,87 @@ class AssessmentTest : IntegrationTestBase() {
     fun `Get all assessments for Approved Premises filters correctly when 'page' query parameter is provided`() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          }
 
-          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-            withAddedAt(OffsetDateTime.now())
-          }
+          val veryOld = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(10)) },
+          )
 
-          val assessments = generateSequence {
-            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(user)
-              withApplicationSchema(applicationSchema)
-              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-            }
+          val veryNew = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(2)) },
+          )
 
-            val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-              withAllocatedToUser(user)
-              withApplication(application)
-              withAssessmentSchema(assessmentSchema)
-              withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
-            }
+          val old = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(5)) },
+          )
 
-            assessment.schemaUpToDate = true
+          val new = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(3)) },
+          )
 
-            assessment
-          }.take(2).toList()
+          val ancient = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(99)) },
+          )
+
+          val mapper = assessmentSummaryMapper(offenderDetails, inmateDetails)
 
           val page1Response = assertUrlReturnsAssessments(
             jwt,
             ServiceName.approvedPremises,
-            "/assessments?page=1&perPage=1&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessments[0], status = COMPLETED),
+            "/assessments?page=1&perPage=2&sortBy=${AssessmentSortField.assessmentArrivalDate.value}&sortDirection=desc",
+            listOf(
+              mapper.toSummary(veryNew, status=IN_PROGRESS),
+              mapper.toSummary(new, status=IN_PROGRESS)
+            )
           )
 
           val page2Response = assertUrlReturnsAssessments(
             jwt,
             ServiceName.approvedPremises,
-            "/assessments?page=2&perPage=1&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessments[1], status = COMPLETED),
+            "/assessments?page=2&perPage=2&sortBy=${AssessmentSortField.assessmentArrivalDate.value}&sortDirection=desc",
+            listOf(
+              mapper.toSummary(old, status=IN_PROGRESS),
+              mapper.toSummary(veryOld, status=IN_PROGRESS)
+            )
+          )
+
+          val page3Response = assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.approvedPremises,
+            "/assessments?page=3&perPage=2&sortBy=${AssessmentSortField.assessmentArrivalDate.value}&sortDirection=desc",
+            listOf(
+              mapper.toSummary(ancient, status=IN_PROGRESS)
+            )
           )
 
           page1Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
-            .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-            .expectHeader().valueEquals("X-Pagination-TotalResults", 2)
-            .expectHeader().valueEquals("X-Pagination-PageSize", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 3)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 5)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 2)
 
           page2Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-            .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-            .expectHeader().valueEquals("X-Pagination-TotalResults", 2)
-            .expectHeader().valueEquals("X-Pagination-PageSize", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 3)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 5)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 2)
+
+          page3Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 3)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 3)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 5)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 2)
         }
       }
     }
@@ -502,28 +531,28 @@ class AssessmentTest : IntegrationTestBase() {
             user,
             offenderDetails,
             cas1InProgress,
-            assessmentMutator = { withCreatedAt(OffsetDateTime.now()) },
+            assessmentMutator = { withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres()) },
           )
 
           val veryNew = createApprovedPremisesAssessmentForStatus(
             user,
             offenderDetails,
             cas1InProgress,
-            assessmentMutator = { withCreatedAt(OffsetDateTime.now().plusDays(1)) },
+            assessmentMutator = { withCreatedAt(OffsetDateTime.now().plusDays(1).roundNanosToMillisToAccountForLossOfPrecisionInPostgres()) },
           )
 
           val old = createApprovedPremisesAssessmentForStatus(
             user,
             offenderDetails,
             cas1InProgress,
-            assessmentMutator = { withCreatedAt(OffsetDateTime.now().minusDays(1)) },
+            assessmentMutator = { withCreatedAt(OffsetDateTime.now().minusDays(1).roundNanosToMillisToAccountForLossOfPrecisionInPostgres()) },
           )
 
           val veryOld = createApprovedPremisesAssessmentForStatus(
             user,
             offenderDetails,
             cas1InProgress,
-            assessmentMutator = { withCreatedAt(OffsetDateTime.now().minusDays(5)) },
+            assessmentMutator = { withCreatedAt(OffsetDateTime.now().minusDays(5).roundNanosToMillisToAccountForLossOfPrecisionInPostgres()) },
           )
 
           assertAssessmentsReturnedGivenStatus(
@@ -1069,6 +1098,45 @@ class AssessmentTest : IntegrationTestBase() {
             "/assessments?sortDirection=desc&sortBy=${sortBy.value}",
             expectedAssessments,
           )
+        }
+      }
+    }
+
+
+    @Test
+    fun `Get all assessments for Temporary Accomodation filters correctly when 'page' query parameter is provided`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          val assessment1 = createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          val assessment2 = createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          val assessment3 = createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          val assessment4 = createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          val assessment5 = createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+
+          val page1Response = assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            "/assessments?page=1&perPage=3&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment1,assessment2,assessment3, status = COMPLETED),
+          )
+
+          val page2Response = assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            "/assessments?page=2&perPage=3&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment4,assessment5, status = COMPLETED),
+          )
+
+          page1Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 5)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 3)
+
+          page2Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 5)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 3)
         }
       }
     }
