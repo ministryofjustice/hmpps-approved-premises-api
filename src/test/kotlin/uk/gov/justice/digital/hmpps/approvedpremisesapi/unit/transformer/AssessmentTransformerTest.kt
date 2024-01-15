@@ -48,6 +48,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toTimestamp
+import java.sql.Timestamp
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -349,17 +351,17 @@ class AssessmentTransformerTest {
 
   @Test
   fun `transform domain to api summary - temporary application`() {
-    val domainSummary = DomainAssessmentSummary(
+    val domainSummary = DomainAssessmentSummaryImpl(
       type = "temporary-accommodation",
       id = UUID.randomUUID(),
       applicationId = UUID.randomUUID(),
-      createdAt = OffsetDateTime.now(),
+      createdAt = OffsetDateTime.now().toTimestamp(),
       riskRatings = null,
       arrivalDate = null,
       completed = false,
       decision = null,
       crn = randomStringMultiCaseWithNumbers(6),
-      isAllocated = true,
+      allocated = true,
       status = null,
     )
 
@@ -380,18 +382,18 @@ class AssessmentTransformerTest {
   @Test
   fun `transform domain to api summary - approved premises`() {
     val personRisks = PersonRisksFactory().produce()
-    val domainSummary = DomainAssessmentSummary(
+    val domainSummary = DomainAssessmentSummaryImpl(
       type = "approved-premises",
       id = UUID.randomUUID(),
       applicationId = UUID.randomUUID(),
-      createdAt = OffsetDateTime.now(),
+      createdAt = OffsetDateTime.now().toTimestamp(),
       riskRatings = objectMapper.writeValueAsString(personRisks),
-      arrivalDate = OffsetDateTime.now().randomDateTimeBefore(),
+      arrivalDate = OffsetDateTime.now().randomDateTimeBefore().toTimestamp(),
       completed = false,
       decision = "ACCEPTED",
       crn = randomStringMultiCaseWithNumbers(6),
-      isAllocated = true,
-      status = DomainAssessmentSummaryStatus.AWAITING_RESPONSE.name,
+      allocated = true,
+      status = DomainAssessmentSummaryStatus.AWAITING_RESPONSE,
     )
 
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
@@ -407,4 +409,19 @@ class AssessmentTransformerTest {
     assertThat(apiSummary.risks).isEqualTo(risksTransformer.transformDomainToApi(personRisks, domainSummary.crn))
     assertThat(apiSummary.person).isNotNull
   }
+
+  @SuppressWarnings("LongParameterList")
+  class DomainAssessmentSummaryImpl(
+    override val type: String,
+    override val id: UUID,
+    override val applicationId: UUID,
+    override val createdAt: Timestamp,
+    override val riskRatings: String?,
+    override val arrivalDate: Timestamp?,
+    override val completed: Boolean,
+    override val allocated: Boolean,
+    override val decision: String?,
+    override val crn: String,
+    override val status: DomainAssessmentSummaryStatus?,
+  ) : DomainAssessmentSummary
 }
