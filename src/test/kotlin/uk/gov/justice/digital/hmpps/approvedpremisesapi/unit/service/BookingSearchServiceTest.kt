@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.OffsetDateTime
 
 class BookingSearchServiceTest {
@@ -43,6 +45,11 @@ class BookingSearchServiceTest {
     cas3BookingSearchPageSize,
     defaultBookingSearchPageSize,
   )
+
+  @BeforeEach
+  fun before() {
+    PaginationConfig(defaultPageSize = 10).postInit()
+  }
 
   @Test
   fun `findBookings returns results from repository when offender details are found for all bookings`() {

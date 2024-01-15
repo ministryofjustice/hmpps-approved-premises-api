@@ -72,6 +72,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -133,22 +134,21 @@ class AssessmentServiceTest {
       assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(
         any(),
         listOf("NOT_STARTED", "IN_PROGRESS"),
-        PageRequest.of(0, Int.MAX_VALUE, Sort.by("status").ascending()),
+        PageRequest.of(4, 7, Sort.by("status").ascending()),
       )
     } returns Page.empty()
 
     assessmentService.getVisibleAssessmentSummariesForUserCAS1(
       user,
       statuses = listOf(DomainAssessmentSummaryStatus.NOT_STARTED, DomainAssessmentSummaryStatus.IN_PROGRESS),
-      SortDirection.asc,
-      AssessmentSortField.assessmentStatus,
+      PageCriteria(sortBy = AssessmentSortField.assessmentStatus, sortDirection = SortDirection.asc, page = 5, perPage = 7),
     )
 
     verify(exactly = 1) {
       assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(
         user.id.toString(),
         listOf("NOT_STARTED", "IN_PROGRESS"),
-        PageRequest.of(0, Int.MAX_VALUE, Sort.by("status").ascending()),
+        PageRequest.of(4, 7, Sort.by("status").ascending()),
       )
     }
   }
@@ -195,7 +195,7 @@ class AssessmentServiceTest {
     )
 
     assertThatExceptionOfType(RuntimeException::class.java)
-      .isThrownBy { assessmentService.getAssessmentSummariesByCrnForUser(user, "SOMECRN", ServiceName.approvedPremises) }
+      .isThrownBy { assessmentService.getAssessmentSummariesByCrnForUserCAS3(user, "SOMECRN", ServiceName.approvedPremises) }
       .withMessage("Only CAS3 assessments are currently supported")
   }
 
@@ -218,7 +218,7 @@ class AssessmentServiceTest {
 
     every { assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(any(), any()) } returns emptyList()
 
-    assessmentService.getAssessmentSummariesByCrnForUser(user, "SOMECRN", ServiceName.temporaryAccommodation)
+    assessmentService.getAssessmentSummariesByCrnForUserCAS3(user, "SOMECRN", ServiceName.temporaryAccommodation)
 
     verify(exactly = 1) { assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(user.probationRegion.id, "SOMECRN") }
   }

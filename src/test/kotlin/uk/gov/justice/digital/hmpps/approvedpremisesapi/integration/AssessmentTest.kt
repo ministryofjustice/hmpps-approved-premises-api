@@ -462,7 +462,7 @@ class AssessmentTest : IntegrationTestBase() {
           val new = createApprovedPremisesAssessmentForStatus(
             user,
             offenderDetails,
-            cas1InProgress,
+            cas1AwaitingResponse,
             applicationMutator = { withArrivalDate(OffsetDateTime.now().minusDays(3)) },
           )
 
@@ -478,30 +478,11 @@ class AssessmentTest : IntegrationTestBase() {
           val page1Response = assertUrlReturnsAssessments(
             jwt,
             ServiceName.approvedPremises,
-            "/assessments?page=1&perPage=2&sortBy=${AssessmentSortField.assessmentArrivalDate.value}&sortDirection=desc",
+            "/assessments?page=1&sortBy=${AssessmentSortField.assessmentArrivalDate.value}&perPage=2&sortDirection=desc",
             listOf(
-              mapper.toSummary(veryNew, status=IN_PROGRESS),
-              mapper.toSummary(new, status=IN_PROGRESS)
-            )
-          )
-
-          val page2Response = assertUrlReturnsAssessments(
-            jwt,
-            ServiceName.approvedPremises,
-            "/assessments?page=2&perPage=2&sortBy=${AssessmentSortField.assessmentArrivalDate.value}&sortDirection=desc",
-            listOf(
-              mapper.toSummary(old, status=IN_PROGRESS),
-              mapper.toSummary(veryOld, status=IN_PROGRESS)
-            )
-          )
-
-          val page3Response = assertUrlReturnsAssessments(
-            jwt,
-            ServiceName.approvedPremises,
-            "/assessments?page=3&perPage=2&sortBy=${AssessmentSortField.assessmentArrivalDate.value}&sortDirection=desc",
-            listOf(
-              mapper.toSummary(ancient, status=IN_PROGRESS)
-            )
+              mapper.toSummary(veryNew, status = IN_PROGRESS),
+              mapper.toSummary(new, status = AWAITING_RESPONSE),
+            ),
           )
 
           page1Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
@@ -509,10 +490,29 @@ class AssessmentTest : IntegrationTestBase() {
             .expectHeader().valueEquals("X-Pagination-TotalResults", 5)
             .expectHeader().valueEquals("X-Pagination-PageSize", 2)
 
+          val page2Response = assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.approvedPremises,
+            "/assessments?page=2&sortBy=${AssessmentSortField.assessmentArrivalDate.value}&perPage=2&sortDirection=desc",
+            listOf(
+              mapper.toSummary(old, status = IN_PROGRESS),
+              mapper.toSummary(veryOld, status = IN_PROGRESS),
+            ),
+          )
+
           page2Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
             .expectHeader().valueEquals("X-Pagination-TotalPages", 3)
             .expectHeader().valueEquals("X-Pagination-TotalResults", 5)
             .expectHeader().valueEquals("X-Pagination-PageSize", 2)
+
+          val page3Response = assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.approvedPremises,
+            "/assessments?page=3&sortBy=${AssessmentSortField.assessmentArrivalDate.value}&perPage=2&sortDirection=desc",
+            listOf(
+              mapper.toSummary(ancient, status = IN_PROGRESS),
+            ),
+          )
 
           page3Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 3)
             .expectHeader().valueEquals("X-Pagination-TotalPages", 3)
@@ -959,6 +959,7 @@ class AssessmentTest : IntegrationTestBase() {
       }
 
       if (cas1AwaitingResponse == assessmentStatus) {
+        // create multiple notes to ensure the left outer join doesn't result in duplicate assessments being returned
         (1..5).forEach { _ ->
           val clarificationNote = assessmentClarificationNoteEntityFactory.produceAndPersist {
             withAssessment(assessment)
@@ -1102,7 +1103,6 @@ class AssessmentTest : IntegrationTestBase() {
       }
     }
 
-
     @Test
     fun `Get all assessments for Temporary Accomodation filters correctly when 'page' query parameter is provided`() {
       `Given a User` { user, jwt ->
@@ -1118,14 +1118,14 @@ class AssessmentTest : IntegrationTestBase() {
             jwt,
             ServiceName.temporaryAccommodation,
             "/assessments?page=1&perPage=3&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment1,assessment2,assessment3, status = COMPLETED),
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment1, assessment2, assessment3, status = COMPLETED),
           )
 
           val page2Response = assertUrlReturnsAssessments(
             jwt,
             ServiceName.temporaryAccommodation,
             "/assessments?page=2&perPage=3&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment4,assessment5, status = COMPLETED),
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment4, assessment5, status = COMPLETED),
           )
 
           page1Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 1)

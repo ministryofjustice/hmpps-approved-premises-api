@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
@@ -80,29 +81,21 @@ class AssessmentService(
   fun getVisibleAssessmentSummariesForUserCAS1(
     user: UserEntity,
     statuses: List<DomainAssessmentSummaryStatus>,
-    sortDirection: SortDirection,
-    sortField: AssessmentSortField,
-  ): Page<DomainAssessmentSummary> {
-    val pageable = buildPageable(sortDirection, sortField, null)
+    pageCriteria: PageCriteria<AssessmentSortField>,
+  ): Pair<List<DomainAssessmentSummary>, PaginationMetadata?> {
+    val pageable = buildPageable(pageCriteria)
 
-    return assessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(
+    val response = assessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(
       user.id.toString(),
       statuses.map { it.name },
       pageable,
     )
+
+    return Pair(response.content, getMetadata(response, pageCriteria))
   }
 
-  private fun buildPageable(
-    sortDirection: SortDirection,
-    sortField: AssessmentSortField,
-    page: Int?,
-  ): Pageable? {
-    val sortingField = sortFieldToDBField(sortField)
-    return getPageableOrAllPages(sortingField, sortDirection, page)
-  }
-
-  fun sortFieldToDBField(sortField: AssessmentSortField) =
-    when (sortField) {
+  private fun buildPageable(pageCriteria: PageCriteria<AssessmentSortField>): Pageable? {
+    val sortFieldString = when (pageCriteria.sortBy) {
       AssessmentSortField.assessmentStatus -> "status"
       AssessmentSortField.assessmentArrivalDate -> "arrivalDate"
       AssessmentSortField.assessmentCreatedAt -> "createdAt"
@@ -110,10 +103,13 @@ class AssessmentService(
       AssessmentSortField.personName -> "personName"
     }
 
+    return getPageableOrAllPages(pageCriteria.withSortBy(sortFieldString))
+  }
+
   fun getVisibleAssessmentSummariesForUserCAS3(user: UserEntity): List<DomainAssessmentSummary> =
     assessmentRepository.findAllTemporaryAccommodationAssessmentSummariesForRegion(user.probationRegion.id)
 
-  fun getAssessmentSummariesByCrnForUser(
+  fun getAssessmentSummariesByCrnForUserCAS3(
     user: UserEntity,
     crn: String,
     serviceName: ServiceName,

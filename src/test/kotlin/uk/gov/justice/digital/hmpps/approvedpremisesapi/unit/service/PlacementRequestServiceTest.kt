@@ -7,6 +7,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -52,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.LocalDate
 import java.util.UUID
 
@@ -97,17 +99,10 @@ class PlacementRequestServiceTest {
     }
     .produce()
 
-  private val application = ApprovedPremisesApplicationEntityFactory()
-    .withCreatedByUser(
-      UserEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce(),
-    )
-    .produce()
+  @BeforeEach
+  fun before() {
+    PaginationConfig(defaultPageSize = 10).postInit()
+  }
 
   @Test
   fun `reallocatePlacementRequest returns General Validation Error when request already has an associated booking`() {

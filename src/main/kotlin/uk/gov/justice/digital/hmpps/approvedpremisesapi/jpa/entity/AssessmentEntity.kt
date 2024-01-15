@@ -73,6 +73,29 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
              ) IN (?2)
            ) 
     """,
+    countQuery = """
+      select count(*) from (
+        select distinct a.id
+        from approved_premises_assessments aa
+             join assessments a on aa.assessment_id = a.id
+             join applications ap on a.application_id = ap.id
+             left outer join approved_premises_applications apa on ap.id = apa.id
+             left outer join assessment_clarification_notes open_acn on open_acn.assessment_id = a.id AND open_acn.response IS NULL
+        where a.reallocated_at is null
+             and a.is_withdrawn is false
+             and (?1 is null or a.allocated_to_user_id = cast(?1 as UUID))
+             AND ((?2) IS NULL OR 
+               (
+                  CASE 
+                    WHEN (a.decision is not null) THEN 'COMPLETED'
+                    WHEN (open_acn.id IS NOT NULL) THEN 'AWAITING_RESPONSE'
+                    WHEN (a.data IS NOT NULL) THEN 'IN_PROGRESS'
+                    ELSE 'NOT_STARTED'
+                  END
+               ) IN (?2)
+             ) 
+      ) as resultToCount
+    """,
     nativeQuery = true,
   )
   fun findAllApprovedPremisesAssessmentSummariesNotReallocated(userIdString: String? = null, statuses: List<String> = emptyList(), page: Pageable? = null): Page<DomainAssessmentSummary>

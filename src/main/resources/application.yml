@@ -35,7 +35,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
-    show-sql: true
 
   redis:
     database: 5
