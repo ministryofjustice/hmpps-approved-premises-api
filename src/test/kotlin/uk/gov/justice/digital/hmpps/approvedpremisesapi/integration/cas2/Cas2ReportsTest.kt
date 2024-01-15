@@ -340,6 +340,10 @@ class Cas2ReportsTest : IntegrationTestBase() {
   inner class UnSubmittedApplications {
     @Test
     fun `streams spreadsheet of data from un-submitted CAS2 applications, newest first`() {
+      val old = Instant.now().minusSeconds(daysInSeconds(365))
+      val newer = Instant.now().minusSeconds(daysInSeconds(100))
+      val tooOld = Instant.now().minusSeconds(daysInSeconds(366))
+
       val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
         withAddedAt(OffsetDateTime.now())
         withId(UUID.randomUUID())
@@ -358,7 +362,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withCreatedByUser(user1)
         withCrn("CRN_1")
         withNomsNumber("NOMS_1")
-        withCreatedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(100))
+        withCreatedAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData("{}")
         withSubmittedAt(null)
       }
@@ -368,7 +372,16 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withCreatedByUser(user2)
         withCrn("CRN_2")
         withNomsNumber("NOMS_2")
-        withCreatedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(99))
+        withCreatedAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withData("{}")
+        withSubmittedAt(null)
+      }
+
+      // outside time limit -- should not feature in report
+      cas2ApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(user2)
+        withCreatedAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData("{}")
         withSubmittedAt(null)
       }
