@@ -68,6 +68,8 @@ generic-service:
     DATA-SOURCES_OFFENDER-DETAILS: community_api
     DATA-SOURCES_OFFENDER-RISKS: community_api
 
+    PAGINATION_CAS3_BOOKING-SEARCH-PAGE-SIZE: 100
+
   namespace_secrets:
     hmpps-domain-events-topic:
       HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
