@@ -88,6 +88,12 @@ paths:
           description: If given, only premises for this service will be returned
           schema:
             $ref: '_shared.yml#/components/schemas/ServiceName'
+        - name: probationRegionId
+          in: query
+          description: ID of the probation region to filter by
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successful operation

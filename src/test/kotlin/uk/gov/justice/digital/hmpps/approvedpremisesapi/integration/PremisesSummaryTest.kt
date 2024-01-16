@@ -4,11 +4,8 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesSummaryTransformer
 import java.util.UUID
 class PremisesSummaryTest : IntegrationTestBase() {
-  lateinit var premisesSummaryTransformer: PremisesSummaryTransformer
-
   @Test
   fun `Get all CAS3 Premises returns OK with correct body`() {
     `Given a User` { user, jwt ->
@@ -87,7 +84,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
     `Given a User` { _, jwt ->
       val uuid = UUID.randomUUID()
 
-      val cas3Premises = approvedPremisesEntityFactory.produceAndPersist {
+      val cas1Premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
@@ -102,7 +99,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
       }
 
       val room = roomEntityFactory.produceAndPersist {
-        withYieldedPremises { cas3Premises }
+        withYieldedPremises { cas1Premises }
       }
 
       bedEntityFactory.produceAndPersistMultiple(5) {
@@ -124,6 +121,35 @@ class PremisesSummaryTest : IntegrationTestBase() {
         .jsonPath("$[0].status").isEqualTo("active")
         .jsonPath("$[0].apCode").isEqualTo("APCODE")
         .jsonPath("$[0].bedCount").isEqualTo(5)
+    }
+  }
+
+  @Test
+  fun `Get all CAS1 Premises filters by probation region`() {
+    `Given a User` { _, jwt ->
+      val region1 = probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+      val region2 = probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+
+      val region1Premises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withProbationRegion(region1)
+      }
+
+      approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withProbationRegion(region2)
+      }
+
+      webTestClient.get()
+        .uri("/premises/summary?probationRegionId=${region1.id}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$.length()").isEqualTo(1)
+        .jsonPath("$[0].id").isEqualTo(region1Premises.id.toString())
     }
   }
 }
