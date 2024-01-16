@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessed
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -46,8 +48,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -74,14 +78,38 @@ class AssessmentService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: String,
 ) {
+  fun getVisibleAssessmentSummariesForUserCAS1(
+    user: UserEntity,
+    statuses: List<DomainAssessmentSummaryStatus>,
+    pageCriteria: PageCriteria<AssessmentSortField>,
+  ): Pair<List<DomainAssessmentSummary>, PaginationMetadata?> {
+    val pageable = buildPageable(pageCriteria)
 
-  fun getVisibleAssessmentSummariesForUserCAS1(user: UserEntity, statuses: List<DomainAssessmentSummaryStatus>): List<DomainAssessmentSummary> =
-    assessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(user.id.toString(), statuses.map { it.name })
+    val response = assessmentRepository.findAllApprovedPremisesAssessmentSummariesNotReallocated(
+      user.id.toString(),
+      statuses.map { it.name },
+      pageable,
+    )
+
+    return Pair(response.content, getMetadata(response, pageCriteria))
+  }
+
+  private fun buildPageable(pageCriteria: PageCriteria<AssessmentSortField>): Pageable? {
+    val sortFieldString = when (pageCriteria.sortBy) {
+      AssessmentSortField.assessmentStatus -> "status"
+      AssessmentSortField.assessmentArrivalDate -> "arrivalDate"
+      AssessmentSortField.assessmentCreatedAt -> "createdAt"
+      AssessmentSortField.personCrn -> "crn"
+      AssessmentSortField.personName -> "personName"
+    }
+
+    return getPageableOrAllPages(pageCriteria.withSortBy(sortFieldString))
+  }
 
   fun getVisibleAssessmentSummariesForUserCAS3(user: UserEntity): List<DomainAssessmentSummary> =
     assessmentRepository.findAllTemporaryAccommodationAssessmentSummariesForRegion(user.probationRegion.id)
 
-  fun getAssessmentSummariesByCrnForUser(
+  fun getAssessmentSummariesByCrnForUserCAS3(
     user: UserEntity,
     crn: String,
     serviceName: ServiceName,
