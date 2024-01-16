@@ -24,6 +24,7 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
          as TEXT) as submittedAt
       FROM domain_events events
       WHERE events.type = 'CAS2_APPLICATION_SUBMITTED'
+        AND events.occurred_at  > CURRENT_DATE - 365
       ORDER BY submittedAt DESC;
     """,
     nativeQuery = true,

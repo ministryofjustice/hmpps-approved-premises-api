@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.Sub
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.UnsubmittedApplicationsReportRow
 import java.time.Instant
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 class Cas2ReportsTest : IntegrationTestBase() {
@@ -110,15 +111,23 @@ class Cas2ReportsTest : IntegrationTestBase() {
   @Nested
   inner class SubmittedApplications {
     @Test
-    fun `streams spreadsheet of Cas2SubmittedApplicationEvents`() {
+    fun `streams spreadsheet of Cas2SubmittedApplicationEvents, last 12 months only`() {
       val event1Id = UUID.randomUUID()
       val event2Id = UUID.randomUUID()
+      val event3Id = UUID.randomUUID()
+
+      val old = Instant.now().minusSeconds(daysInSeconds(365))
+      val newer = Instant.now().minusSeconds(daysInSeconds(100))
+      val tooOld = Instant.now().minusSeconds(daysInSeconds(366))
 
       val event1Details = Cas2ApplicationSubmittedEventDetailsFactory()
-        .withSubmittedAt(Instant.parse("2023-12-31T10:00:00+01:00"))
+        .withSubmittedAt(old)
         .produce()
       val event2Details = Cas2ApplicationSubmittedEventDetailsFactory()
-        .withSubmittedAt(Instant.parse("2024-01-01T10:00:00+01:00"))
+        .withSubmittedAt(newer)
+        .produce()
+      val event3Details = Cas2ApplicationSubmittedEventDetailsFactory()
+        .withSubmittedAt(tooOld)
         .produce()
 
       val event1ToSave = Cas2ApplicationSubmittedEvent(
@@ -135,16 +144,34 @@ class Cas2ReportsTest : IntegrationTestBase() {
         eventDetails = event2Details,
       )
 
+      val event3ToSave = Cas2ApplicationSubmittedEvent(
+        id = event3Id,
+        timestamp = Instant.now(),
+        eventType = EventType.applicationSubmitted,
+        eventDetails = event3Details,
+      )
+
       val event1 = domainEventFactory.produceAndPersist {
         withId(event1Id)
         withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
         withData(objectMapper.writeValueAsString(event1ToSave))
+        withOccurredAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
       }
 
       val event2 = domainEventFactory.produceAndPersist {
         withId(event2Id)
         withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
         withData(objectMapper.writeValueAsString(event2ToSave))
+        withOccurredAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+      }
+
+      // we don't expect this event to be included as it relates to an application
+      // outside the time range
+      domainEventFactory.produceAndPersist {
+        withId(event3Id)
+        withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
+        withData(objectMapper.writeValueAsString(event3ToSave))
+        withOccurredAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
       }
 
       val expectedDataFrame = listOf(
@@ -201,15 +228,23 @@ class Cas2ReportsTest : IntegrationTestBase() {
   @Nested
   inner class ApplicationStatusUpdates {
     @Test
-    fun `streams spreadsheet of Cas2ApplicationStatusUpdatedEvents`() {
+    fun `streams spreadsheet of Cas2ApplicationStatusUpdatedEvents, last 12 months only`() {
       val event1Id = UUID.randomUUID()
       val event2Id = UUID.randomUUID()
+      val event3Id = UUID.randomUUID()
+
+      val old = Instant.now().minusSeconds(daysInSeconds(365))
+      val newer = Instant.now().minusSeconds(daysInSeconds(100))
+      val tooOld = Instant.now().minusSeconds(daysInSeconds(366))
 
       val event1Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
-        .withUpdatedAt(Instant.parse("2023-12-31T10:12:34+01:00"))
+        .withUpdatedAt(old)
         .produce()
       val event2Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
-        .withUpdatedAt(Instant.parse("2024-01-01T10:12:34+01:00"))
+        .withUpdatedAt(newer)
+        .produce()
+      val event3Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+        .withUpdatedAt(tooOld)
         .produce()
 
       val event1ToSave = Cas2ApplicationStatusUpdatedEvent(
@@ -226,16 +261,34 @@ class Cas2ReportsTest : IntegrationTestBase() {
         eventDetails = event2Details,
       )
 
+      val event3ToSave = Cas2ApplicationStatusUpdatedEvent(
+        id = event3Id,
+        timestamp = Instant.now(),
+        eventType = EventType.applicationStatusUpdated,
+        eventDetails = event3Details,
+      )
+
       val event1 = domainEventFactory.produceAndPersist {
         withId(event1Id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
+        withOccurredAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData(objectMapper.writeValueAsString(event1ToSave))
       }
 
       val event2 = domainEventFactory.produceAndPersist {
         withId(event2Id)
         withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
+        withOccurredAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData(objectMapper.writeValueAsString(event2ToSave))
+      }
+
+      // we don't expect this event to be included as it relates to an update
+      // outside the time range
+      domainEventFactory.produceAndPersist {
+        withId(event3Id)
+        withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
+        withOccurredAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withData(objectMapper.writeValueAsString(event3ToSave))
       }
 
       val expectedDataFrame = listOf(
@@ -245,7 +298,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personCrn = event2Details.personReference.crn.toString(),
           personNoms = event2Details.personReference.noms,
           newStatus = event2Details.newStatus.name,
-          updatedAt = event2Details.updatedAt.toString().dropLast(1),
+          updatedAt = event2Details.updatedAt.toString().split(".").first(),
           updatedBy = event2Details.updatedBy.username,
         ),
         ApplicationStatusUpdatesReportRow(
@@ -254,7 +307,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           personCrn = event1Details.personReference.crn.toString(),
           personNoms = event1Details.personReference.noms,
           newStatus = event1Details.newStatus.name,
-          updatedAt = event1Details.updatedAt.toString().dropLast(1),
+          updatedAt = event1Details.updatedAt.toString().split(".").first(),
           updatedBy = event1Details.updatedBy.username,
         ),
       )
@@ -287,6 +340,10 @@ class Cas2ReportsTest : IntegrationTestBase() {
   inner class UnSubmittedApplications {
     @Test
     fun `streams spreadsheet of data from un-submitted CAS2 applications, newest first`() {
+      val old = Instant.now().minusSeconds(daysInSeconds(365))
+      val newer = Instant.now().minusSeconds(daysInSeconds(100))
+      val tooOld = Instant.now().minusSeconds(daysInSeconds(366))
+
       val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
         withAddedAt(OffsetDateTime.now())
         withId(UUID.randomUUID())
@@ -305,7 +362,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withCreatedByUser(user1)
         withCrn("CRN_1")
         withNomsNumber("NOMS_1")
-        withCreatedAt(OffsetDateTime.parse("2023-12-13T12:25:33+00:00"))
+        withCreatedAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData("{}")
         withSubmittedAt(null)
       }
@@ -315,7 +372,16 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withCreatedByUser(user2)
         withCrn("CRN_2")
         withNomsNumber("NOMS_2")
-        withCreatedAt(OffsetDateTime.parse("2024-01-10T14:43:21+00:00"))
+        withCreatedAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withData("{}")
+        withSubmittedAt(null)
+      }
+
+      // outside time limit -- should not feature in report
+      cas2ApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(user2)
+        withCreatedAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
         withData("{}")
         withSubmittedAt(null)
       }
@@ -324,9 +390,9 @@ class Cas2ReportsTest : IntegrationTestBase() {
       cas2ApplicationEntityFactory.produceAndPersist {
         withApplicationSchema(applicationSchema)
         withCreatedByUser(user2)
-        withCreatedAt(OffsetDateTime.parse("2024-01-01T12:00:00+00:00"))
+        withCreatedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(51))
         withData("{}")
-        withSubmittedAt(OffsetDateTime.parse("2024-01-02T13:00:00+00:00"))
+        withSubmittedAt(Instant.now().atOffset(ZoneOffset.ofHoursMinutes(0, 0)).minusDays(50))
       }
 
       val expectedDataFrame = listOf(
@@ -334,14 +400,14 @@ class Cas2ReportsTest : IntegrationTestBase() {
           applicationId = application2.id.toString(),
           personCrn = application2.crn,
           personNoms = application2.nomsNumber.toString(),
-          startedAt = "2024-01-10T14:43:21",
+          startedAt = application2.createdAt.toString().split(".").first(),
           startedBy = application2.createdByUser.nomisUsername,
         ),
         UnsubmittedApplicationsReportRow(
           applicationId = application1.id.toString(),
           personCrn = application1.crn,
           personNoms = application1.nomsNumber.toString(),
-          startedAt = "2023-12-13T12:25:33",
+          startedAt = application1.createdAt.toString().split(".").first(),
           startedBy = application1.createdByUser.nomisUsername,
         ),
       )
@@ -395,5 +461,9 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
         Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
       }
+  }
+
+  private fun daysInSeconds(days: Int): Long {
+    return days.toLong() * 60 * 60 * 24
   }
 }
