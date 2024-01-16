@@ -33,11 +33,15 @@ class BookingSearchServiceTest {
   private val mockOffenderService = mockk<OffenderService>()
   private val mockUserService = mockk<UserService>()
   private val mockBookingRepository = mockk<BookingRepository>()
+  private val cas3BookingSearchPageSize = 50
+  private val defaultBookingSearchPageSize = 20
 
   private val bookingSearchService = BookingSearchService(
     mockOffenderService,
     mockUserService,
     mockBookingRepository,
+    cas3BookingSearchPageSize,
+    defaultBookingSearchPageSize,
   )
 
   @Test
@@ -187,7 +191,7 @@ class BookingSearchServiceTest {
       SortOrder.ascending -> Sort.by("created_at").ascending()
       SortOrder.descending -> Sort.by("created_at").descending()
     }
-    val pageable = PageRequest.of(0, 10, pageSort)
+    val pageable = PageRequest.of(0, cas3BookingSearchPageSize, pageSort)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -213,6 +217,58 @@ class BookingSearchServiceTest {
 
     val (results, metaData) = bookingSearchService.findBookings(
       ServiceName.temporaryAccommodation,
+      null,
+      sortOrder,
+      BookingSearchSortField.personName,
+      1,
+    )
+
+    assertThat(results).hasSize(3)
+    assertThat(results.map { it.personName }).isSortedAccordingTo { a, b ->
+      when (sortOrder) {
+        SortOrder.ascending -> compareValues(a, b)
+        SortOrder.descending -> compareValues(b, a)
+      }
+    }
+    assertThat(metaData).isNotNull()
+    verify(exactly = 1) {
+      mockBookingRepository.findBookings(any(), any(), any(), pageable)
+    }
+  }
+
+  @EnumSource(value = SortOrder::class)
+  @ParameterizedTest
+  fun `findBookings returns sorted approved premises booking results by person name and database default sort when page number is given`(sortOrder: SortOrder) {
+    val pageSort = when (sortOrder) {
+      SortOrder.ascending -> Sort.by("created_at").ascending()
+      SortOrder.descending -> Sort.by("created_at").descending()
+    }
+    val pageable = PageRequest.of(0, defaultBookingSearchPageSize, pageSort)
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea {
+            ApAreaEntityFactory().produce()
+          }
+          .produce()
+      }
+      .produce()
+    every { mockBookingRepository.findBookings(any(), any(), any(), pageable) } returns PageImpl(
+      listOf(
+        TestBookingSearchResult().withPersonCrn("crn1"),
+        TestBookingSearchResult().withPersonCrn("crn2"),
+        TestBookingSearchResult().withPersonCrn("crn3"),
+      ),
+    )
+    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2", "crn3"), any(), any(), any()) } returns
+      listOf(
+        PersonSummaryInfoResult.Success.Full("crn1", CaseSummaryFactory().produce()),
+        PersonSummaryInfoResult.Success.Full("crn2", CaseSummaryFactory().produce()),
+        PersonSummaryInfoResult.Success.Full("crn3", CaseSummaryFactory().produce()),
+      )
+
+    val (results, metaData) = bookingSearchService.findBookings(
+      ServiceName.approvedPremises,
       null,
       sortOrder,
       BookingSearchSortField.personName,
@@ -291,7 +347,7 @@ class BookingSearchServiceTest {
       SortOrder.ascending -> Sort.by("crn").ascending()
       SortOrder.descending -> Sort.by("crn").descending()
     }
-    val pageable = PageRequest.of(1, 10, pageSort)
+    val pageable = PageRequest.of(1, cas3BookingSearchPageSize, pageSort)
     every { mockUserService.getUserForRequest() } returns UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()

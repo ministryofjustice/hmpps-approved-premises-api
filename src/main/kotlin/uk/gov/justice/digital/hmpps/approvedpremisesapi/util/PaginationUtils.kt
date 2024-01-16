@@ -8,21 +8,25 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 
 fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?): Pageable? {
+  return getPageableWithSize(sortBy, sortDirection, page, 10)
+}
+
+fun getPageableWithSize(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int): Pageable? {
   return if (page != null) {
     val sort = if (sortDirection == SortDirection.desc) {
       Sort.by(sortBy).descending()
     } else {
       Sort.by(sortBy).ascending()
     }
-    PageRequest.of(page - 1, 10, sort)
+    PageRequest.of(page - 1, pageSize, sort)
   } else {
     null
   }
 }
 
-fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?): Pageable? {
+fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int): Pageable? {
   return if (page != null) {
-    getPageable(sortBy, sortDirection, page)
+    getPageableWithSize(sortBy, sortDirection, page, pageSize)
   } else {
     val sort = if (sortDirection == SortDirection.desc) {
       Sort.by(sortBy).descending()

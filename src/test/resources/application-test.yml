@@ -170,3 +170,8 @@ data-sources:
 
 migration-job:
   throttle-enabled: false
+
+pagination:
+  default-page-size: 10
+  cas3:
+    booking-search-page-size: 10
