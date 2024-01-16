@@ -8,12 +8,15 @@ import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationStatusUpdatedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationSubmittedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Cas2ExampleMetricsRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.SubmittedApplicationReportRow
 import java.time.Instant
 import java.util.UUID
@@ -187,6 +190,91 @@ class Cas2ReportsTest : IntegrationTestBase() {
           val actual = DataFrame
             .readExcel(it.responseBody!!.inputStream())
             .convertTo<SubmittedApplicationReportRow>(ExcessiveColumns.Remove)
+
+          Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
+        }
+    }
+  }
+
+  @Nested
+  inner class ApplicationStatusUpdates {
+    @Test
+    fun `streams spreadsheet of Cas2ApplicationStatusUpdatedEvents`() {
+      val event1Id = UUID.randomUUID()
+      val event2Id = UUID.randomUUID()
+
+      val event1Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+        .withUpdatedAt(Instant.parse("2023-12-31T10:12:34+01:00"))
+        .produce()
+      val event2Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+        .withUpdatedAt(Instant.parse("2024-01-01T10:12:34+01:00"))
+        .produce()
+
+      val event1ToSave = Cas2ApplicationStatusUpdatedEvent(
+        id = event1Id,
+        timestamp = Instant.now(),
+        eventType = EventType.applicationStatusUpdated,
+        eventDetails = event1Details,
+      )
+
+      val event2ToSave = Cas2ApplicationStatusUpdatedEvent(
+        id = event2Id,
+        timestamp = Instant.now(),
+        eventType = EventType.applicationStatusUpdated,
+        eventDetails = event2Details,
+      )
+
+      val event1 = domainEventFactory.produceAndPersist {
+        withId(event1Id)
+        withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
+        withData(objectMapper.writeValueAsString(event1ToSave))
+      }
+
+      val event2 = domainEventFactory.produceAndPersist {
+        withId(event2Id)
+        withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
+        withData(objectMapper.writeValueAsString(event2ToSave))
+      }
+
+      val expectedDataFrame = listOf(
+        ApplicationStatusUpdatesReportRow(
+          eventId = event2Id.toString(),
+          applicationId = event2.applicationId.toString(),
+          personCrn = event2Details.personReference.crn.toString(),
+          personNoms = event2Details.personReference.noms,
+          newStatus = event2Details.newStatus.name,
+          updatedAt = event2Details.updatedAt.toString().dropLast(1),
+          updatedBy = event2Details.updatedBy.username,
+        ),
+        ApplicationStatusUpdatesReportRow(
+          eventId = event1Id.toString(),
+          applicationId = event1.applicationId.toString(),
+          personCrn = event1Details.personReference.crn.toString(),
+          personNoms = event1Details.personReference.noms,
+          newStatus = event1Details.newStatus.name,
+          updatedAt = event1Details.updatedAt.toString().dropLast(1),
+          updatedBy = event1Details.updatedBy.username,
+        ),
+      )
+        .toDataFrame()
+
+      val jwt = jwtAuthHelper.createClientCredentialsJwt(
+        username = "username",
+        authSource = "nomis",
+        roles = listOf("ROLE_PRISON", "ROLE_CAS2_MI"),
+      )
+
+      webTestClient.get()
+        .uri("/cas2/reports/application-status-updates")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .consumeWith {
+          val actual = DataFrame
+            .readExcel(it.responseBody!!.inputStream())
+            .convertTo<ApplicationStatusUpdatesReportRow>(ExcessiveColumns.Remove)
 
           Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
         }

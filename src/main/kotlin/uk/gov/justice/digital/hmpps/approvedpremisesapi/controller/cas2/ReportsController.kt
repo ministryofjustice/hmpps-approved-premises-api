@@ -19,7 +19,10 @@ class ReportsController(private val reportService: ReportsService) : ReportsCas2
 
   override fun reportsReportNameGet(reportName: String): ResponseEntity<Resource> {
     val outputStream = ByteArrayOutputStream()
-    reportService.createSubmittedApplicationsReport(outputStream)
+    when (reportName) {
+      "submitted-applications" -> reportService.createSubmittedApplicationsReport(outputStream)
+      "application-status-updates" -> reportService.createApplicationStatusUpdatesReport(outputStream)
+    }
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }
 }

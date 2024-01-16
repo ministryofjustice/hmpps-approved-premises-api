@@ -4,14 +4,17 @@ import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationStatusUpdatesReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2SubmittedApplicationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Cas2ExampleMetricsRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.SubmittedApplicationReportRow
 import java.io.OutputStream
 
 @Service
 class ReportsService(
   private val submittedApplicationReportRepository: Cas2SubmittedApplicationReportRepository,
+  private val applicationStatusUpdatesReportRepository: Cas2ApplicationStatusUpdatesReportRepository,
 ) {
   fun createCas2ExampleReport(outputStream: OutputStream) {
     // TODO replace this with a real report
@@ -36,6 +39,25 @@ class ReportsService(
         conditionalReleaseDate = row.getConditionalReleaseDate(),
         submittedBy = row.getSubmittedBy(),
         submittedAt = row.getSubmittedAt(),
+      )
+    }
+
+    reportData.toDataFrame()
+      .writeExcel(outputStream) {
+        WorkbookFactory.create(true)
+      }
+  }
+
+  fun createApplicationStatusUpdatesReport(outputStream: OutputStream) {
+    val reportData = applicationStatusUpdatesReportRepository.generateApplicationStatusUpdatesReportRows().map { row ->
+      ApplicationStatusUpdatesReportRow(
+        eventId = row.getId(),
+        applicationId = row.getApplicationId(),
+        personCrn = row.getPersonCrn(),
+        personNoms = row.getPersonNoms(),
+        newStatus = row.getNewStatus(),
+        updatedBy = row.getUpdatedBy(),
+        updatedAt = row.getUpdatedAt(),
       )
     }
 
