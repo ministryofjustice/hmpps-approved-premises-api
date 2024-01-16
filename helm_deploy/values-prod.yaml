@@ -37,7 +37,7 @@ generic-service:
     SENTRY_ENVIRONMENT: prod
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 300
     DOMAIN-EVENTS_CAS1_EMIT-ENABLED: true
-    DOMAIN-EVENTS_CAS2_EMIT-ENABLED: false
+    DOMAIN-EVENTS_CAS2_EMIT-ENABLED: true
     DOMAIN-EVENTS_CAS3_EMIT-ENABLED: referralSubmitted,bookingProvisionallyMade,bookingConfirmed,bookingCancelled,bookingCancelledUpdated
     DOMAIN-EVENTS_CAS1_ASYNC-SAVE-ENABLED: false
     DOMAIN-EVENTS_CAS2_ASYNC-SAVE-ENABLED: false
