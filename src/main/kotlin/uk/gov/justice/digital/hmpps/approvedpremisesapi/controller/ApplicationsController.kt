@@ -146,11 +146,16 @@ class ApplicationsController(
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val user = userService.getUserForRequest()
 
-    val personInfo = when (val personInfoResult = offenderService.getInfoForPerson(body.crn, user.deliusUsername, false)) {
-      is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(personInfoResult.crn, "Offender")
-      is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem()
-      is PersonInfoResult.Success.Full -> personInfoResult
-    }
+    val personInfo =
+      when (val personInfoResult = offenderService.getInfoForPerson(body.crn, user.deliusUsername, false)) {
+        is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(
+          personInfoResult.crn,
+          "Offender",
+        )
+
+        is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem()
+        is PersonInfoResult.Success.Full -> personInfoResult
+      }
 
     val applicationResult = createApplication(
       xServiceName ?: ServiceName.approvedPremises,
@@ -164,10 +169,13 @@ class ApplicationsController(
     val application = when (applicationResult) {
       is ValidatableActionResult.GeneralValidationError ->
         throw BadRequestProblem(errorDetail = applicationResult.message)
+
       is ValidatableActionResult.FieldValidationError ->
         throw BadRequestProblem(invalidParams = applicationResult.validationMessages)
+
       is ValidatableActionResult.ConflictError ->
         throw ConflictProblem(id = applicationResult.conflictingEntityId, conflictReason = applicationResult.message)
+
       is ValidatableActionResult.Success -> applicationResult.entity
     }
 
@@ -238,10 +246,12 @@ class ApplicationsController(
         arrivalDate = body.arrivalDate,
         isInapplicable = body.isInapplicable,
       )
+
       is UpdateTemporaryAccommodationApplication -> applicationService.updateTemporaryAccommodationApplication(
         applicationId = applicationId,
         data = serializedData,
       )
+
       else -> throw RuntimeException("Unsupported UpdateApplication type: ${body::class.qualifiedName}")
     }
 
@@ -254,10 +264,13 @@ class ApplicationsController(
     val updatedApplication = when (validationResult) {
       is ValidatableActionResult.GeneralValidationError ->
         throw BadRequestProblem(errorDetail = validationResult.message)
+
       is ValidatableActionResult.FieldValidationError ->
         throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+
       is ValidatableActionResult.ConflictError ->
         throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
+
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
@@ -307,15 +320,25 @@ class ApplicationsController(
     val username = deliusPrincipal.name
 
     val submitResult = when (submitApplication) {
-      is SubmitApprovedPremisesApplication ->
+      is SubmitApprovedPremisesApplication -> {
+        var probationRegionId = submitApplication.probationRegionId
+
+        if (probationRegionId == null) {
+          val user = userService.getUserForRequest()
+          probationRegionId = user.probationRegion.id
+        }
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           submitApplication,
           username,
           deliusPrincipal.token.tokenValue,
+          probationRegionId,
         )
+      }
+
       is SubmitTemporaryAccommodationApplication ->
         applicationService.submitTemporaryAccommodationApplication(applicationId, submitApplication)
+
       else -> throw RuntimeException("Unsupported SubmitApplication type: ${submitApplication::class.qualifiedName}")
     }
 
@@ -328,10 +351,13 @@ class ApplicationsController(
     when (validationResult) {
       is ValidatableActionResult.GeneralValidationError ->
         throw BadRequestProblem(errorDetail = validationResult.message)
+
       is ValidatableActionResult.FieldValidationError ->
         throw BadRequestProblem(invalidParams = validationResult.validationMessages)
+
       is ValidatableActionResult.ConflictError ->
         throw ConflictProblem(id = validationResult.conflictingEntityId, conflictReason = validationResult.message)
+
       is ValidatableActionResult.Success -> Unit
     }
 

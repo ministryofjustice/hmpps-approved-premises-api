@@ -218,5 +218,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     status = this.status(),
     situation = this.situation(),
     inmateInOutStatusOnSubmission = this.inmateInOutStatusOnSubmission(),
+    probationRegion = null,
   )
 }

@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -99,6 +100,7 @@ class ApplicationService(
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
+  private val probationRegionRepository: ProbationRegionRepository,
 ) {
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationSummary> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
@@ -110,6 +112,7 @@ class ApplicationService(
         "CAS2 applications now require " +
           "NomisUser",
       )
+
       ServiceName.temporaryAccommodation -> getAllTemporaryAccommodationApplicationsForUser(userEntity)
     }
 
@@ -150,8 +153,10 @@ class ApplicationService(
     return when (userAccessService.getTemporaryAccommodationApplicationAccessLevelForUser(user)) {
       TemporaryAccommodationApplicationAccessLevel.SUBMITTED_IN_REGION ->
         applicationRepository.findAllSubmittedTemporaryAccommodationSummariesByRegion(user.probationRegion.id)
+
       TemporaryAccommodationApplicationAccessLevel.SELF ->
         applicationRepository.findAllTemporaryAccommodationSummariesCreatedByUser(user.id)
+
       TemporaryAccommodationApplicationAccessLevel.NONE -> emptyList()
     }
   }
@@ -338,6 +343,7 @@ class ApplicationService(
       sentenceType = null,
       situation = null,
       inmateInOutStatusOnSubmission = null,
+      probationRegion = null,
     )
   }
 
@@ -366,6 +372,7 @@ class ApplicationService(
             is AuthorisableActionResult.NotFound -> return@validated "$.crn" hasSingleValidationError "doesNotExist"
             is AuthorisableActionResult.Unauthorised ->
               return@validated "$.crn" hasSingleValidationError "userPermission"
+
             is AuthorisableActionResult.Success -> offenderDetailsResult.entity
           }
 
@@ -393,8 +400,10 @@ class ApplicationService(
           riskRatings = when (riskRatingsResult) {
             is AuthorisableActionResult.NotFound ->
               return@validated "$.crn" hasSingleValidationError "doesNotExist"
+
             is AuthorisableActionResult.Unauthorised ->
               return@validated "$.crn" hasSingleValidationError "userPermission"
+
             is AuthorisableActionResult.Success -> riskRatingsResult.entity
           }
         }
@@ -697,6 +706,7 @@ class ApplicationService(
     submitApplication: SubmitApprovedPremisesApplication,
     username: String,
     jwt: String,
+    probationRegionId: UUID?,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     var application = applicationRepository.findByIdOrNullWithWriteLock(
       applicationId,
@@ -764,6 +774,7 @@ class ApplicationService(
       sentenceType = submitApplication.sentenceType.toString()
       situation = submitApplication.situation?.toString()
       inmateInOutStatusOnSubmission = inmateDetails?.inOutStatus?.name
+      probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
     }
 
     assessmentService.createApprovedPremisesAssessment(application)
@@ -892,6 +903,7 @@ class ApplicationService(
             "Unable to get Offender Details when creating Application" +
               "Submitted Domain Event: Unauthorised",
           )
+
         is AuthorisableActionResult.NotFound ->
           throw RuntimeException(
             "Unable to get Offender Details when creating Application" +
@@ -904,6 +916,7 @@ class ApplicationService(
         is AuthorisableActionResult.Success -> riskResult.entity
         is AuthorisableActionResult.Unauthorised ->
           throw RuntimeException("Unable to get Risks when creating Application Submitted Domain Event: Unauthorised")
+
         is AuthorisableActionResult.NotFound ->
           throw RuntimeException("Unable to get Risks when creating Application Submitted Domain Event: Not Found")
       }
@@ -995,6 +1008,7 @@ class ApplicationService(
       name = caseDetail.case.manager.team.ldu.name,
     )
   }
+
   private fun getTeamFromCaseDetail(caseDetail: CaseDetail): Team {
     return Team(
       code = caseDetail.case.manager.team.code,
