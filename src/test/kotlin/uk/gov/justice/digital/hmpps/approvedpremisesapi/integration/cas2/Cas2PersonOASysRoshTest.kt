@@ -42,7 +42,7 @@ class Cas2PersonOASysRoshTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Getting RoSH for a CRN without ROLE_PROBATION or ROLE_PRISON returns 403`() {
+  fun `Getting RoSH for a CRN without ROLE_PROBATION or ROLE_POM returns 403`() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
       authSource = "nomis",

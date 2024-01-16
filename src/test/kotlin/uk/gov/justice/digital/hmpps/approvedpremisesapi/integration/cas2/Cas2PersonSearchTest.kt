@@ -50,7 +50,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Searching for a NOMIS ID without ROLE_PRISON returns 403`() {
+    fun `Searching for a NOMIS ID without ROLE_POM returns 403`() {
       val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
         subject = "username",
         authSource = "nomis",

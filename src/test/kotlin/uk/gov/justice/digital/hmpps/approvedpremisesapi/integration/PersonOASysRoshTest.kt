@@ -72,11 +72,11 @@ class PersonOASysRoshTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Getting RoSH for a CRN with ROLE_PRISON returns 403`() {
+  fun `Getting RoSH for a CRN with ROLE_POM returns 403`() {
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = "username",
       authSource = "delius",
-      roles = listOf("ROLE_PRISON"),
+      roles = listOf("ROLE_POM"),
     )
 
     webTestClient.get()

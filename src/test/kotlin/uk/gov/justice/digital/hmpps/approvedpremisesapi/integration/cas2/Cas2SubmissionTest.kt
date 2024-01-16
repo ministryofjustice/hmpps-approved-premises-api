@@ -59,7 +59,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
     fun `submitting an application is forbidden to external users based on role`() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
-        authSource = "nomis",
+        authSource = "auth",
         roles = listOf("ROLE_CAS2_ASSESSOR"),
       )
 
@@ -76,7 +76,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_PRISON"),
+        roles = listOf("ROLE_POM"),
       )
 
       webTestClient.get()
@@ -92,7 +92,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_PRISON"),
+        roles = listOf("ROLE_POM"),
       )
 
       webTestClient.get()
