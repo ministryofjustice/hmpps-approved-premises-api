@@ -6,15 +6,18 @@ import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationStatusUpdatesReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2SubmittedApplicationReportRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2UnsubmittedApplicationsReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Cas2ExampleMetricsRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.SubmittedApplicationReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.UnsubmittedApplicationsReportRow
 import java.io.OutputStream
 
 @Service
 class ReportsService(
   private val submittedApplicationReportRepository: Cas2SubmittedApplicationReportRepository,
   private val applicationStatusUpdatesReportRepository: Cas2ApplicationStatusUpdatesReportRepository,
+  private val unsubmittedApplicationsReportRepository: Cas2UnsubmittedApplicationsReportRepository,
 ) {
   fun createCas2ExampleReport(outputStream: OutputStream) {
     // TODO replace this with a real report
@@ -58,6 +61,23 @@ class ReportsService(
         newStatus = row.getNewStatus(),
         updatedBy = row.getUpdatedBy(),
         updatedAt = row.getUpdatedAt(),
+      )
+    }
+
+    reportData.toDataFrame()
+      .writeExcel(outputStream) {
+        WorkbookFactory.create(true)
+      }
+  }
+
+  fun createUnsubmittedApplicationsReport(outputStream: OutputStream) {
+    val reportData = unsubmittedApplicationsReportRepository.generateUnsubmittedApplicationsReportRows().map { row ->
+      UnsubmittedApplicationsReportRow(
+        applicationId = row.getApplicationId(),
+        personCrn = row.getPersonCrn(),
+        personNoms = row.getPersonNoms(),
+        startedBy = row.getStartedBy(),
+        startedAt = row.getStartedAt(),
       )
     }
 
