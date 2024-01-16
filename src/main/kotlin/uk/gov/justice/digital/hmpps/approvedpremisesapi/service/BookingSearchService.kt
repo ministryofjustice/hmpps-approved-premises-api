@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -14,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSearchResultDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadataWithSize
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -25,6 +26,8 @@ class BookingSearchService(
   private val offenderService: OffenderService,
   private val userService: UserService,
   private val bookingRepository: BookingRepository,
+  @Value("\${pagination.cas3.booking-search-page-size}") private val cas3BookingSearchPageSize: Int,
+  @Value("\${pagination.default-page-size}") private val defaultSearchPageSize: Int,
 ) {
   fun findBookings(
     serviceName: ServiceName,
@@ -38,11 +41,15 @@ class BookingSearchService(
       ServiceName.temporaryAccommodation -> user.probationRegion.id
       else -> null
     }
+    val pageSize = when (serviceName) {
+      ServiceName.temporaryAccommodation -> cas3BookingSearchPageSize
+      else -> defaultSearchPageSize
+    }
     val findBookings = bookingRepository.findBookings(
       serviceName.value,
       status,
       probationRegionId,
-      buildPage(sortOrder, sortField, page),
+      buildPage(sortOrder, sortField, page, pageSize),
     )
     var results = removeRestrictedAndUpdatePersonNameFromOffenderDetail(
       mapToBookingSearchResults(findBookings),
@@ -52,7 +59,7 @@ class BookingSearchService(
       results = sortBookingResultByPersonName(results, sortOrder)
     }
 
-    return Pair(results, getMetadata(findBookings, page))
+    return Pair(results, getMetadataWithSize(findBookings, page, pageSize))
   }
 
   private fun removeRestrictedAndUpdatePersonNameFromOffenderDetail(
@@ -107,13 +114,14 @@ class BookingSearchService(
     sortOrder: SortOrder,
     sortField: BookingSearchSortField,
     page: Int?,
+    pageSize: Int,
   ): Pageable? {
     val sortDirection = when (sortOrder) {
       SortOrder.ascending -> SortDirection.asc
       else -> SortDirection.desc
     }
     val sortingField = convertSortFieldToDBField(sortField)
-    return getPageableOrAllPages(sortingField, sortDirection, page)
+    return getPageableOrAllPages(sortingField, sortDirection, page, pageSize)
   }
 
   private fun convertSortFieldToDBField(sortField: BookingSearchSortField) =
