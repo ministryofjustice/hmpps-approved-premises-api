@@ -175,3 +175,9 @@ pagination:
   default-page-size: 10
   cas3:
     booking-search-page-size: 10
+
+user-allocations:
+  rules:
+    legacy-allocator:
+      enabled: true
+      priority: -1
