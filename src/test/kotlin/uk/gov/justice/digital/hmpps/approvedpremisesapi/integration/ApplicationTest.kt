@@ -1192,7 +1192,10 @@ class ApplicationTest : IntegrationTestBase() {
             assertThat(body[0].createdByUserId).isEqualTo(placementApplicationEntity.createdByUser.id)
             assertThat(body[0].schemaVersion).isEqualTo(placementApplicationEntity.schemaVersion.id)
             assertThat(body[0].createdAt).isEqualTo(placementApplicationEntity.createdAt.toInstant())
-            assertThat(body[0].submittedAt).isCloseTo(placementApplicationEntity.submittedAt!!.toInstant(), within(1, ChronoUnit.SECONDS))
+            assertThat(body[0].submittedAt).isCloseTo(
+              placementApplicationEntity.submittedAt!!.toInstant(),
+              within(1, ChronoUnit.SECONDS),
+            )
           }
         }
       }
@@ -1862,12 +1865,13 @@ class ApplicationTest : IntegrationTestBase() {
             .isOk
 
           val persistedApplication =
-            approvedPremisesApplicationRepository.findByIdOrNull(applicationId)!! as ApprovedPremisesApplicationEntity
+            approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
 
           assertThat(persistedApplication?.isWomensApplication).isTrue
           assertThat(persistedApplication?.isPipeApplication).isTrue
           assertThat(persistedApplication?.targetLocation).isEqualTo("SW1A 1AA")
           assertThat(persistedApplication?.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
+          assertThat(persistedApplication?.probationRegion?.id).isEqualTo(submittingUser.probationRegion.id)
 
           val createdAssessment =
             approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
@@ -1890,6 +1894,140 @@ class ApplicationTest : IntegrationTestBase() {
             SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
             SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
           )
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Submit application returns 200, creates and allocates an assessment, has given probation region id`() {
+    `Given a User`(
+      staffUserDetailsConfigBlock = {
+        withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory().produce(),
+          ),
+        )
+      },
+    ) { submittingUser, jwt ->
+      `Given a User`(
+        roles = listOf(UserRole.CAS1_ASSESSOR),
+        qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+      ) { assessorUser, _ ->
+        `Given an Offender` { offenderDetails, _ ->
+          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+            withSchema(
+              """
+              {
+                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                "${"\$id"}": "https://example.com/product.schema.json",
+                "title": "Thing",
+                "description": "A thing",
+                "type": "object",
+                "properties": {
+                  "isWomensApplication": {
+                    "description": "whether this is a womens application",
+                    "type": "boolean"
+                  },
+                  "isPipeApplication": {
+                    "description": "whether this is a PIPE application",
+                    "type": "boolean"
+                  }
+                },
+                "required": [ "isWomensApplication", "isPipeApplication" ]
+              }
+            """,
+            )
+          }
+
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withId(applicationId)
+            withApplicationSchema(applicationSchema)
+            withCreatedByUser(submittingUser)
+            withData(
+              """
+              {
+                 "isWomensApplication": true,
+                 "isPipeApplication": true
+              }
+            """,
+            )
+          }
+
+          CommunityAPI_mockSuccessfulRegistrationsCall(
+            offenderDetails.otherIds.crn,
+            Registrations(
+              registrations = listOf(
+                RegistrationClientResponseFactory()
+                  .withType(
+                    RegistrationKeyValue(
+                      code = "MAPP",
+                      description = "MAPPA",
+                    ),
+                  )
+                  .withRegisterCategory(
+                    RegistrationKeyValue(
+                      code = "A",
+                      description = "A",
+                    ),
+                  )
+                  .withRegisterLevel(
+                    RegistrationKeyValue(
+                      code = "1",
+                      description = "1",
+                    ),
+                  )
+                  .produce(),
+              ),
+            ),
+          )
+
+          APDeliusContext_mockSuccessfulCaseDetailCall(
+            offenderDetails.otherIds.crn,
+            CaseDetailFactory().produce(),
+          )
+
+          val apArea = apAreaEntityFactory.produceAndPersist {
+          }
+
+          val probationRegion = probationRegionEntityFactory.produceAndPersist {
+            withApArea(apArea)
+          }
+
+          webTestClient.post()
+            .uri("/applications/$applicationId/submission")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              SubmitApprovedPremisesApplication(
+                translatedDocument = {},
+                isPipeApplication = true,
+                isWomensApplication = true,
+                isEmergencyApplication = true,
+                isEsapApplication = true,
+                targetLocation = "SW1A 1AA",
+                releaseType = ReleaseTypeOption.licence,
+                sentenceType = SentenceTypeOption.nonStatutory,
+                type = "CAS1",
+                probationRegionId = probationRegion.id,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val persistedApplication =
+            approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
+
+          assertThat(persistedApplication?.isWomensApplication).isTrue
+          assertThat(persistedApplication?.isPipeApplication).isTrue
+          assertThat(persistedApplication?.targetLocation).isEqualTo("SW1A 1AA")
+          assertThat(persistedApplication?.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
+          assertThat(persistedApplication?.probationRegion?.id).isEqualTo(probationRegion.id)
         }
       }
     }

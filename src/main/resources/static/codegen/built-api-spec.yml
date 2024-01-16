@@ -6274,6 +6274,9 @@ components:
             arrivalDate:
               type: string
               format: date
+            probationRegionId:
+              type: string
+              format: uuid
           required:
             - isPipeApplication
             - isWomensApplication

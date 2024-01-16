@@ -99,7 +99,10 @@ AND (
       "WHERE apa.name IS NULL",
     nativeQuery = true,
   )
-  fun <T : ApplicationEntity> findAllForServiceAndNameNull(type: Class<T>, pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
+  fun <T : ApplicationEntity> findAllForServiceAndNameNull(
+    type: Class<T>,
+    pageable: Pageable?,
+  ): Slice<ApprovedPremisesApplicationEntity>
 
   @Query(
     "SELECT * FROM approved_premises_applications apa " +
@@ -117,14 +120,20 @@ AND (
       "AND application.service = 'approved-premises'",
     nativeQuery = true,
   )
-  fun findAllApprovedPremisesApplicationsCreatedInMonth(month: Int, year: Int): List<ApprovedPremisesApplicationMetricsSummary>
+  fun findAllApprovedPremisesApplicationsCreatedInMonth(
+    month: Int,
+    year: Int,
+  ): List<ApprovedPremisesApplicationMetricsSummary>
 
   @Query(
     "SELECT a FROM ApplicationEntity a " +
       "LEFT JOIN ApplicationTeamCodeEntity atc ON a = atc.application " +
       "WHERE TYPE(a) = :type AND atc.teamCode IN (:managingTeamCodes)",
   )
-  fun <T : ApplicationEntity> findAllByManagingTeam(managingTeamCodes: List<String>, type: Class<T>): List<ApplicationEntity>
+  fun <T : ApplicationEntity> findAllByManagingTeam(
+    managingTeamCodes: List<String>,
+    type: Class<T>,
+  ): List<ApplicationEntity>
 
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.crn = :crn")
   fun <T : ApplicationEntity> findByCrn(crn: String, type: Class<T>): List<ApplicationEntity>
@@ -299,6 +308,9 @@ class ApprovedPremisesApplicationEntity(
   @Enumerated(value = EnumType.STRING)
   var status: ApprovedPremisesApplicationStatus,
   var inmateInOutStatusOnSubmission: String?,
+  @ManyToOne
+  @JoinColumn(name = "probation_region_id")
+  var probationRegion: ProbationRegionEntity?,
 ) : ApplicationEntity(
   id,
   crn,
