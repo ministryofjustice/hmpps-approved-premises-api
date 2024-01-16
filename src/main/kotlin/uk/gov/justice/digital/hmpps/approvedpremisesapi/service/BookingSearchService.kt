@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.BookingSearchResultDto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadataWithSize
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -59,7 +59,7 @@ class BookingSearchService(
       results = sortBookingResultByPersonName(results, sortOrder)
     }
 
-    return Pair(results, getMetadata(findBookings, page))
+    return Pair(results, getMetadataWithSize(findBookings, page, pageSize))
   }
 
   private fun removeRestrictedAndUpdatePersonNameFromOffenderDetail(

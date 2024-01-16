@@ -38,8 +38,12 @@ fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: I
 }
 
 fun <T>getMetadata(response: Page<T>, page: Int?): PaginationMetadata? {
+  return getMetadataWithSize(response, page, 10)
+}
+
+fun <T>getMetadataWithSize(response: Page<T>, page: Int?, pageSize: Int): PaginationMetadata? {
   return if (page != null) {
-    PaginationMetadata(page, response.totalPages, response.totalElements, 10)
+    PaginationMetadata(page, response.totalPages, response.totalElements, pageSize)
   } else {
     null
   }

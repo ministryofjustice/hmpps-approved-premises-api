@@ -2,13 +2,17 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Sort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.TestBookingSearchResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getIndices
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadataWithSize
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableWithSize
+import java.time.OffsetDateTime
 
 class PaginationUtilsTests {
 
@@ -171,4 +175,46 @@ class PaginationUtilsTests {
     assertThat(pageableWithSize?.isPaged).isTrue()
     assertThat(pageableWithSize?.sort).isEqualTo(Sort.by(sortBy).ascending())
   }
+
+  @Test
+  fun `getMetadataWithSize return correct meta data with specified page size`() {
+    val page = 3
+    val pageSize = 100
+    val results = buildBookingSearchResultPageWithPagination()
+
+    val metadata = getMetadataWithSize(results, page, pageSize)
+
+    assertThat(metadata?.pageSize).isEqualTo(pageSize)
+    assertThat(metadata?.totalPages).isEqualTo(1)
+    assertThat(metadata?.currentPage).isEqualTo(page)
+  }
+
+  @Test
+  fun `getMetadataWithSize return correct meta data with default page size`() {
+    val page = 1
+    val results = buildBookingSearchResultPageWithPagination()
+
+    val metadata = getMetadata(results, page)
+
+    assertThat(metadata?.pageSize).isEqualTo(10)
+    assertThat(metadata?.totalPages).isEqualTo(1)
+    assertThat(metadata?.currentPage).isEqualTo(page)
+  }
+
+  @Test
+  fun `getMetadataWithSize gives null when page is not provided`() {
+    val results = buildBookingSearchResultPageWithPagination()
+
+    val metadata = getMetadataWithSize(results, null, 100)
+
+    assertThat(metadata).isNull()
+  }
+
+  private fun buildBookingSearchResultPageWithPagination() = PageImpl(
+    listOf(
+      TestBookingSearchResult()
+        .withPersonCrn("crn1")
+        .withBookingCreatedAt(OffsetDateTime.now().minusDays(3)),
+    ),
+  )
 }
