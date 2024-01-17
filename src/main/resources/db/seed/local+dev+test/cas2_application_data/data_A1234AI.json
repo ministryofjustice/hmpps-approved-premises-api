@@ -125,9 +125,11 @@
       "substanceMisuseHistory": "Mr Bertrand is a heroin user",
       "substanceMisuseDetail": "Daily intravenous use",
       "engagedWithDrugAndAlcoholService": "yes",
+      "intentToReferToServiceOnRelease": "yes",
       "drugAndAlcoholServiceDetail": "Drug Awareness Service",
       "requiresSubstituteMedication": "yes",
-      "substituteMedicationDetail": "Methadone"
+      "substituteMedicationDetail": "Methadone",
+      "releasedWithNaloxone": "yes"
     },
     "physical-health": {
       "hasPhyHealthNeeds": "yes",
@@ -146,7 +148,7 @@
       "hasMentalHealthNeeds": "yes",
       "needsDetail": "Mr Bertrand has a history of schizophrenic episodes and also suffers from epilepsy",
       "isEngagedWithCommunity": "no",
-      "servicesDetail": "",
+      "isEngagedWithServicesInCustody": "yes",
       "hasPrescribedMedication": "yes",
       "isInPossessionOfMeds": "yes",
       "medicationDetail": "carbamazepine",
@@ -203,7 +205,9 @@
       "confirmation": "confirmed"
     },
     "oasys-import": {
-      "oasysImportDate": "2023-11-28T11:42:22.183Z"
+      "oasysImportedDate": "2023-11-28T11:42:22.183Z",
+      "oasysStartedDate": "2023-11-20",
+      "oasysCompletedDate": "2023-11-22"
     },
     "acct": {},
     "additional-information": {
@@ -222,7 +226,9 @@
         "riskToStaff": "Low",
         "lastUpdated": "2022-11-02"
       },
-      "dateOfOasysImport": "2023-11-28T11:43:06.137Z"
+      "oasysImportedDate": "2023-11-28T11:42:22.183Z",
+      "oasysStartedDate": "2023-11-20",
+      "oasysCompletedDate": "2023-11-22"
     },
     "risk-to-others": {
       "whoIsAtRisk": "[R10.1] IN CUSTODY\r\n\r\nKNOWN ADULTS:\r\nSuch as Ms Elaine Underhill and any of the victims of the index offence if they are placed close to Mr Smith cell.\r\n\r\nCHILDREN:\r\nSimon Smith, Roger Smith, Lindy Smith",
@@ -239,7 +245,7 @@
       "confirmation": "confirmed"
     },
     "oasys-import": {
-      "oasysImportDate": "2023-11-28T11:43:06.137Z"
+      "oasysImportedDate": "2023-11-28T11:43:06.137Z"
     },
     "summary": {
       "additionalComments": ""
