@@ -76,7 +76,7 @@ class StatusUpdateService(
       .find { status -> status.name == statusName }
   }
 
-  private fun createStatusUpdatedDomainEvent(statusUpdate: Cas2StatusUpdateEntity) {
+  fun createStatusUpdatedDomainEvent(statusUpdate: Cas2StatusUpdateEntity) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = statusUpdate.createdAt ?: OffsetDateTime.now()
     val application = statusUpdate.application

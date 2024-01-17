@@ -232,9 +232,9 @@ class ApplicationService(
     )
   }
 
-  private fun createCas2ApplicationSubmittedEvent(application: Cas2ApplicationEntity) {
+  fun createCas2ApplicationSubmittedEvent(application: Cas2ApplicationEntity) {
     val domainEventId = UUID.randomUUID()
-    val eventOccurredAt = OffsetDateTime.now()
+    val eventOccurredAt = application.submittedAt ?: OffsetDateTime.now()
 
     domainEventService.saveCas2ApplicationSubmittedDomainEvent(
       DomainEvent(
