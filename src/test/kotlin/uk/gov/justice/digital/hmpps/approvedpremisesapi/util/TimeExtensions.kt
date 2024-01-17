@@ -2,8 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
 import java.sql.Timestamp
 import java.time.OffsetDateTime
-
-const val NANO_MAX = 1E6
+import java.util.concurrent.TimeUnit
 
 fun OffsetDateTime?.toTimestampOrNull(): Timestamp? {
   return this?.toTimestamp()
@@ -14,7 +13,7 @@ fun OffsetDateTime.toTimestamp(): Timestamp {
 }
 
 fun OffsetDateTime.roundNanosToMillisToAccountForLossOfPrecisionInPostgres(): OffsetDateTime {
-  val millis = Math.round(this.nano / NANO_MAX)
-  val roundedNanos = (millis * NANO_MAX).toInt()
+  val millis = TimeUnit.NANOSECONDS.toMillis(this.nano.toLong())
+  val roundedNanos = TimeUnit.MILLISECONDS.toNanos(millis).toInt()
   return this.withNano(roundedNanos)
 }
