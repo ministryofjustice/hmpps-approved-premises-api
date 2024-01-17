@@ -19,6 +19,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedAssessedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
@@ -91,6 +92,7 @@ class AssessmentServiceTest {
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
   private val emailNotificationServiceMock = mockk<EmailNotificationService>()
   private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
+  private val userAllocatorMock = mockk<UserAllocator>()
   private val objectMapperMock = spyk<ObjectMapper>()
 
   private val assessmentService = AssessmentService(
@@ -108,6 +110,7 @@ class AssessmentServiceTest {
     emailNotificationServiceMock,
     NotifyConfig(),
     placementRequirementsServiceMock,
+    userAllocatorMock,
     objectMapperMock,
     "http://frontend/applications/#id",
     "http://frontend/assessments/#id",
@@ -2090,6 +2093,7 @@ class AssessmentServiceTest {
     private val placementRequestServiceMock = mockk<PlacementRequestService>()
     private val emailNotificationServiceMock = mockk<EmailNotificationService>()
     private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
+    private val userAllocatorMock = mockk<UserAllocator>()
     private val objectMapperMock = spyk<ObjectMapper>()
 
     private val assessmentService = AssessmentService(
@@ -2107,6 +2111,7 @@ class AssessmentServiceTest {
       emailNotificationServiceMock,
       NotifyConfig(),
       placementRequirementsServiceMock,
+      userAllocatorMock,
       objectMapperMock,
       "http://frontend/applications/#id",
       "http://frontend/assessments/#id",
@@ -2335,7 +2340,7 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
-      every { userServiceMock.getUserForAssessmentAllocation(application) } returns userWithLeastAllocatedAssessments
+      every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns userWithLeastAllocatedAssessments
 
       every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 

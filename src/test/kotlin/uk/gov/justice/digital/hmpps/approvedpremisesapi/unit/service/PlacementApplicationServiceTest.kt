@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -51,6 +52,7 @@ class PlacementApplicationServiceTest {
   private val placementRequestService = mockk<PlacementRequestService>()
   private val placementRequestRepository = mockk<PlacementRequestRepository>()
   private val emailNotificationService = mockk<EmailNotificationService>()
+  private val userAllocator = mockk<UserAllocator>()
   private val notifyConfig = mockk<NotifyConfig>()
 
   private val placementApplicationService = PlacementApplicationService(
@@ -61,6 +63,7 @@ class PlacementApplicationServiceTest {
     placementRequestService,
     placementRequestRepository,
     emailNotificationService,
+    userAllocator,
     notifyConfig,
   )
 

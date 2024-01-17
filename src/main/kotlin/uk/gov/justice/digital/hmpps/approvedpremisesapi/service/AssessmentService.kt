@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedAssessedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
@@ -74,6 +75,7 @@ class AssessmentService(
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
   private val placementRequirementsService: PlacementRequirementsService,
+  private val userAllocator: UserAllocator,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: String,
@@ -215,30 +217,31 @@ class AssessmentService(
   }
 
   fun createApprovedPremisesAssessment(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
-    val allocatedUser = userService.getUserForAssessmentAllocation(application)
-
     val dateTimeNow = OffsetDateTime.now()
 
-    val assessment = assessmentRepository.save(
-      ApprovedPremisesAssessmentEntity(
-        id = UUID.randomUUID(),
-        application = application,
-        data = null,
-        document = null,
-        schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java),
-        allocatedToUser = allocatedUser,
-        allocatedAt = dateTimeNow,
-        reallocatedAt = null,
-        createdAt = dateTimeNow,
-        submittedAt = null,
-        decision = null,
-        schemaUpToDate = true,
-        rejectionRationale = null,
-        clarificationNotes = mutableListOf(),
-        referralHistoryNotes = mutableListOf(),
-        isWithdrawn = false,
-      ),
+    var assessment = ApprovedPremisesAssessmentEntity(
+      id = UUID.randomUUID(),
+      application = application,
+      data = null,
+      document = null,
+      schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java),
+      allocatedToUser = null,
+      allocatedAt = dateTimeNow,
+      reallocatedAt = null,
+      createdAt = dateTimeNow,
+      submittedAt = null,
+      decision = null,
+      schemaUpToDate = true,
+      rejectionRationale = null,
+      clarificationNotes = mutableListOf(),
+      referralHistoryNotes = mutableListOf(),
+      isWithdrawn = false,
     )
+
+    val allocatedUser = userAllocator.getUserForAssessmentAllocation(assessment)
+    assessment.allocatedToUser = allocatedUser
+
+    assessment = assessmentRepository.save(assessment)
 
     if (allocatedUser != null) {
       if (allocatedUser.email != null) {
