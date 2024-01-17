@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import java.io.IOException
 import java.io.InputStreamReader
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -79,7 +80,8 @@ class Cas2AutoScript(
     )
 
     if (listOf("SUBMITTED", "IN_REVIEW").contains(state)) {
-      applicationService.createCas2ApplicationSubmittedEvent(application)
+      val appWithPromotedProperties = applyFirstClassProperties(application)
+      applicationService.createCas2ApplicationSubmittedEvent(appWithPromotedProperties)
     }
 
     if (state == "IN_REVIEW") {
@@ -89,6 +91,16 @@ class Cas2AutoScript(
     }
   }
 
+  private fun applyFirstClassProperties(application: Cas2ApplicationEntity): Cas2ApplicationEntity {
+    return applicationRepository.saveAndFlush(
+      application.apply {
+        referringPrisonCode = "BRI"
+        preferredAreas = "Luton | Hertford"
+        hdcEligibilityDate = LocalDate.parse("2024-02-28")
+        conditionalReleaseDate = LocalDate.parse("2024-02-22")
+      },
+    )
+  }
   private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
     seedLogger.info("Auto-scripting status update $idx for application ${application.id}")
     val assessor = externalUserRepository.findAll().random()

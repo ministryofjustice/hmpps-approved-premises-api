@@ -35,7 +35,7 @@ class Cas2AutoScriptTest {
   private val mockNomisUserEntity = mockk<NomisUserEntity>()
 
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
-  private val mockApplicationEntity = mockk<Cas2ApplicationEntity>()
+  private val mockApplicationEntity = mockk<Cas2ApplicationEntity>(relaxed = true)
 
   private val mockExternalUserRepository = mockk<ExternalUserRepository>()
   private val mockExternalUserEntity = mockk<ExternalUserEntity>()
@@ -79,6 +79,7 @@ class Cas2AutoScriptTest {
     } answers { mockJsonSchemaEntity }
 
     every { mockApplicationRepository.save(any()) } answers { mockApplicationEntity }
+    every { mockApplicationRepository.saveAndFlush(any()) } answers { mockApplicationEntity }
     every { mockApplicationEntity.id } answers {
       UUID.fromString("6c8d4bbb-72e6-47fe-9cde-ca2eefc5274b")
     }
