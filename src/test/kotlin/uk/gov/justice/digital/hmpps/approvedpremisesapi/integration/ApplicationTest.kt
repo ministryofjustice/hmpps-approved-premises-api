@@ -99,7 +99,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
@@ -116,7 +116,7 @@ class ApplicationTest : IntegrationTestBase() {
   lateinit var assessmentTransformer: AssessmentTransformer
 
   @Autowired
-  lateinit var applicationsTransformer: ApplicationsTransformer
+  lateinit var applicationTimelineTransformer: ApplicationTimelineTransformer
 
   @SpykBean
   lateinit var realApplicationTeamCodeRepository: ApplicationTeamCodeRepository
@@ -2423,7 +2423,7 @@ class ApplicationTest : IntegrationTestBase() {
         val domainEvents = createTenDomainEvents()
         val summaries = domainEvents.map {
           TimelineEvent(
-            applicationsTransformer.transformDomainEventTypeToTimelineEventType(it.type),
+            applicationTimelineTransformer.transformDomainEventTypeToTimelineEventType(it.type),
             it.id.toString(),
             it.occurredAt.toInstant(),
           )
@@ -2454,7 +2454,7 @@ class ApplicationTest : IntegrationTestBase() {
         val domainEvents = createTenDomainEvents()
         val summaries = domainEvents.map {
           TimelineEvent(
-            applicationsTransformer.transformDomainEventTypeToTimelineEventType(it.type),
+            applicationTimelineTransformer.transformDomainEventTypeToTimelineEventType(it.type),
             it.id.toString(),
             it.occurredAt.toInstant(),
           )

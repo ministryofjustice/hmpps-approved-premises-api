@@ -87,7 +87,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import java.sql.Timestamp
 import java.time.Instant
@@ -102,7 +102,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEvent
 class ApplicationServiceTest {
   private val mockUserRepository = mockk<UserRepository>()
   private val mockApplicationRepository = mockk<ApplicationRepository>()
-  private val applicationsTransformerMock = mockk<ApplicationsTransformer>()
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockUserService = mockk<UserService>()
@@ -120,11 +119,11 @@ class ApplicationServiceTest {
   private val mockAssessmentClarificationNoteTransformer = mockk<AssessmentClarificationNoteTransformer>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
+  private val applicationTimelineTransformerMock = mockk<ApplicationTimelineTransformer>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
     mockApplicationRepository,
-    applicationsTransformerMock,
     mockJsonSchemaService,
     mockOffenderService,
     mockUserService,
@@ -144,6 +143,7 @@ class ApplicationServiceTest {
     mockObjectMapper,
     "http://frontend/applications/#id",
     mockProbationRegionRepository,
+    applicationTimelineTransformerMock,
   )
 
   @Test

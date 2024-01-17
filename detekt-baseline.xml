@@ -401,7 +401,6 @@
     <ID>TooGenericExceptionThrown:ApplicationsController.kt$ApplicationsController$throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")</ID>
     <ID>TooGenericExceptionThrown:ApplicationsController.kt$ApplicationsController$throw RuntimeException("Unsupported SubmitApplication type: ${submitApplication::class.qualifiedName}")</ID>
     <ID>TooGenericExceptionThrown:ApplicationsController.kt$ApplicationsController$throw RuntimeException("Unsupported UpdateApplication type: ${body::class.qualifiedName}")</ID>
-    <ID>TooGenericExceptionThrown:ApplicationsTransformer.kt$ApplicationsTransformer$throw RuntimeException("Only CAS1 is currently supported")</ID>
     <ID>TooGenericExceptionThrown:ApplicationsTransformer.kt$ApplicationsTransformer$throw RuntimeException("Unrecognised application type when transforming: ${domain::class.qualifiedName}")</ID>
     <ID>TooGenericExceptionThrown:ApplicationsTransformer.kt$ApplicationsTransformer$throw RuntimeException("Unrecognised application type when transforming: ${jpa::class.qualifiedName}")</ID>
     <ID>TooGenericExceptionThrown:ApprovedPremisesApplicationEntityFactory.kt$ApprovedPremisesApplicationEntityFactory$throw RuntimeException("Must provide a createdByUser")</ID>
