@@ -7419,6 +7419,20 @@ components:
           type: string
         createdBy:
           type: string
+        associatedUrls:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineEventAssociatedUrl'
+    TimelineEventAssociatedUrl:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/TimelineEventUrlType'
+        url:
+          type: string
+      required:
+        - type
+        - url
     TimelineEventType:
       type: string
       enum:
@@ -7436,6 +7450,12 @@ components:
         - cas3_person_arrived
         - cas3_person_departed
         - application_timeline_note
+    TimelineEventUrlType:
+      type: string
+      enum:
+        - application
+        - booking
+        - assessment
     SeedRequest:
       type: object
       properties:

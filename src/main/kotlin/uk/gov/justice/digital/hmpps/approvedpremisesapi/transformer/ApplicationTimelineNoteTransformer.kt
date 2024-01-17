@@ -22,5 +22,6 @@ class ApplicationTimelineNoteTransformer {
     occurredAt = jpa.createdAt.toInstant(),
     content = jpa.body,
     createdBy = jpa.createdBy.toString(),
+    associatedUrls = emptyList(),
   )
 }

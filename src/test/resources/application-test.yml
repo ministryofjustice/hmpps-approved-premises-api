@@ -151,7 +151,7 @@ url-templates:
   frontend:
     application: http://frontend/applications/#id
     assessment: http://frontend/assessments/#id
-    booking: http://frontend/premises/{premisesId}/bookings/{bookingId}
+    booking: http://frontend/premises/#premisesId/bookings/#bookingId
     cas2:
       application: http://cas2.frontend/applications/#id
       submitted-application-overview: http://cas2.frontend/assess/applications/#applicationId/overview

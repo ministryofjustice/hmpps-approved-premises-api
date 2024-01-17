@@ -48,7 +48,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporar
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventAssociatedUrl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventUrlType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
@@ -101,6 +103,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -2426,6 +2429,7 @@ class ApplicationTest : IntegrationTestBase() {
             applicationTimelineTransformer.transformDomainEventTypeToTimelineEventType(it.type),
             it.id.toString(),
             it.occurredAt.toInstant(),
+            associatedUrls = listOf(TimelineEventAssociatedUrl(type = TimelineEventUrlType.application, url = "http://frontend/applications/${it.applicationId}")),
           )
         }
 
@@ -2457,6 +2461,7 @@ class ApplicationTest : IntegrationTestBase() {
             applicationTimelineTransformer.transformDomainEventTypeToTimelineEventType(it.type),
             it.id.toString(),
             it.occurredAt.toInstant(),
+            associatedUrls = listOf(TimelineEventAssociatedUrl(type = TimelineEventUrlType.application, url = "http://frontend/applications/${it.applicationId}")),
           )
         }
 
@@ -2466,6 +2471,7 @@ class ApplicationTest : IntegrationTestBase() {
             TimelineEventType.approvedPremisesInformationRequest,
             it.id.toString(),
             it.createdAt.toInstant(),
+            associatedUrls = emptyList(),
           )
         }
 
@@ -2537,6 +2543,80 @@ class ApplicationTest : IntegrationTestBase() {
       }
     }
 
+    @Test
+    fun `Get application timeline includes URLs where applicable`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+
+        val applicationId = UUID.randomUUID()
+        val assessmentId = UUID.randomUUID()
+
+        val applicationAndAssessmentIdDomainEvent = domainEventFactory.produceAndPersist {
+          withOccurredAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withApplicationId(applicationId)
+          withType(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
+          withApplicationId(applicationId)
+          withAssessmentId(assessmentId)
+          withBookingId(null)
+        }
+
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withArrivalDate(LocalDate.parse("2023-03-08"))
+          withDepartureDate(LocalDate.parse("2023-03-10"))
+        }
+
+        val bookingIdDomainEvent = domainEventFactory.produceAndPersist {
+          withOccurredAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+          withApplicationId(applicationId)
+          withType(DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
+          withBookingId(booking.id)
+          withAssessmentId(null)
+        }
+
+        val applicationAndAssessmentTimelineEvent = TimelineEvent(
+          TimelineEventType.approvedPremisesApplicationAssessed,
+          applicationAndAssessmentIdDomainEvent.id.toString(),
+          applicationAndAssessmentIdDomainEvent.occurredAt.toInstant(),
+          associatedUrls = listOf(
+            TimelineEventAssociatedUrl(type = TimelineEventUrlType.application, url = "http://frontend/applications/$applicationId"),
+            TimelineEventAssociatedUrl(type = TimelineEventUrlType.assessment, url = "http://frontend/assessments/$assessmentId"),
+          ),
+        )
+
+        val bookingTimelineEvent = TimelineEvent(
+          TimelineEventType.approvedPremisesBookingMade,
+          bookingIdDomainEvent.id.toString(),
+          bookingIdDomainEvent.occurredAt.toInstant(),
+          associatedUrls = listOf(
+            TimelineEventAssociatedUrl(type = TimelineEventUrlType.application, url = "http://frontend/applications/$applicationId"),
+            TimelineEventAssociatedUrl(type = TimelineEventUrlType.booking, url = "http://frontend/premises/${premises.id}/bookings/${booking.id}"),
+          ),
+        )
+
+        val expected = listOf(
+          applicationAndAssessmentTimelineEvent,
+          bookingTimelineEvent,
+        )
+
+        webTestClient.get()
+          .uri("/applications/$applicationId/timeline")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(objectMapper.writeValueAsString(expected))
+      }
+    }
+
     private fun createThreeTimelineEventsOfType(userId: String): List<TimelineEvent> {
       return listOf(
         TimelineEvent(
@@ -2545,6 +2625,7 @@ class ApplicationTest : IntegrationTestBase() {
           note1CreatedAt.toInstant(),
           "note1",
           userId,
+          associatedUrls = emptyList(),
         ),
         TimelineEvent(
           TimelineEventType.applicationTimelineNote,
@@ -2552,6 +2633,7 @@ class ApplicationTest : IntegrationTestBase() {
           note2CreatedAt.toInstant(),
           "note2",
           userId,
+          associatedUrls = emptyList(),
         ),
         TimelineEvent(
           TimelineEventType.applicationTimelineNote,
@@ -2559,6 +2641,7 @@ class ApplicationTest : IntegrationTestBase() {
           note3CreatedAt.toInstant(),
           "note3",
           userId,
+          associatedUrls = emptyList(),
         ),
       )
     }
@@ -2606,7 +2689,7 @@ class ApplicationTest : IntegrationTestBase() {
     private fun createDomainEvent(dayOfMonth: Int, type: DomainEventType): DomainEventEntity {
       return domainEventFactory.produceAndPersist {
         withOccurredAt(
-          LocalDate.of(year, month, dayOfMonth).toLocalDateTime(),
+          LocalDate.of(year, month, dayOfMonth).toLocalDateTime().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
         )
         withApplicationId(applicationId)
         withType(type)
