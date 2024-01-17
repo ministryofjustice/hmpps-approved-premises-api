@@ -26,12 +26,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.LostBedsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.LostBedReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toBookingsReportDataAndPersonInfo
@@ -928,6 +931,97 @@ class ReportsTest : IntegrationTestBase() {
               .readExcel(it.responseBody!!.inputStream())
               .convertTo<BookingsReportRow>(ExcessiveColumns.Remove)
               .sortBy(BookingsReportRow::bookingId)
+            Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
+          }
+      }
+    }
+  }
+
+  @Test
+  fun `Get lost beds report returns OK with correct body`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val bed1 = bedEntityFactory.produceAndPersist {
+          withRoom(
+            roomEntityFactory.produceAndPersist {
+              withPremises(premises)
+            },
+          )
+        }
+
+        val bed2 = bedEntityFactory.produceAndPersist {
+          withRoom(
+            roomEntityFactory.produceAndPersist {
+              withPremises(premises)
+            },
+          )
+        }
+
+        val bed3 = bedEntityFactory.produceAndPersist {
+          withRoom(
+            roomEntityFactory.produceAndPersist {
+              withPremises(premises)
+            },
+          )
+        }
+
+        lostBedsEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBed(bed1)
+          withStartDate(LocalDate.of(2023, 4, 5))
+          withEndDate(LocalDate.of(2023, 7, 8))
+          withYieldedReason {
+            lostBedReasonEntityFactory.produceAndPersist()
+          }
+        }
+
+        lostBedsEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBed(bed2)
+          withStartDate(LocalDate.of(2023, 4, 12))
+          withEndDate(LocalDate.of(2023, 7, 5))
+          withYieldedReason {
+            lostBedReasonEntityFactory.produceAndPersist()
+          }
+        }
+
+        val lostBed3 = lostBedsEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withBed(bed3)
+          withStartDate(LocalDate.of(2023, 4, 1))
+          withEndDate(LocalDate.of(2023, 7, 5))
+          withYieldedReason {
+            lostBedReasonEntityFactory.produceAndPersist()
+          }
+        }
+
+        lostBedCancellationEntityFactory.produceAndPersist {
+          withLostBed(lostBed3)
+        }
+
+        val expectedDataFrame = LostBedsReportGenerator(realLostBedsRepository)
+          .createReport(
+            listOf(bed1, bed2),
+            LostBedReportProperties(ServiceName.approvedPremises, null, 2023, 4),
+          )
+
+        webTestClient.get()
+          .uri("/reports/lost-beds?year=2023&month=4")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .consumeWith {
+            val actual = DataFrame
+              .readExcel(it.responseBody!!.inputStream())
+              .convertTo<LostBedReportRow>(ExcessiveColumns.Remove)
             Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
           }
       }
