@@ -28,6 +28,14 @@ class CaseDetailFactory : Factory<CaseDetail> {
     this.case = { case }
   }
 
+  fun withRegistrations(registrations: List<Registration>) = apply {
+    this.registrations = { registrations }
+  }
+
+  fun withMappaDetail(mappaDetail: MappaDetail) = apply {
+    this.mappaDetail = { mappaDetail }
+  }
+
   override fun produce(): CaseDetail = CaseDetail(
     case = this.case(),
     offences = this.offences(),
@@ -51,10 +59,12 @@ class CaseDetailOffenceFactory : Factory<Offence> {
 }
 
 class RegistrationFactory : Factory<Registration> {
+  var code: Yielded<String> = { randomStringLowerCase(6) }
   var description: Yielded<String> = { randomStringLowerCase(10) }
   var startDate: Yielded<LocalDate> = { LocalDate.now() }
 
   override fun produce(): Registration = Registration(
+    code = this.code(),
     description = this.description(),
     startDate = this.startDate(),
   )
