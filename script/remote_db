@@ -14,6 +14,14 @@ pod=$(kubectl -n "$namespace" get pods -l app=hmpps-approved-premises-api -o jso
 script="""
 cd ~
 curl -L https://github.com/Teradata/jaqy/releases/download/v1.2.0/jaqy-1.2.0.jar --output jaqy-1.2.0.jar
+
+jaqyChecksumResult=\$(sha256sum --check jaqy-1.2.0.jar.checksum.sha256)
+if [ \$? -ne 0 ]; then
+  echo \"* jaqy checksum failed: \$jaqyChecksumResult *\"
+  echo \"* PLEASE INVESTIGATE *\"
+  exit 1
+fi
+
 curl -L https://jdbc.postgresql.org/download/postgresql-42.5.1.jar --output postgresql-42.5.1.jar
 java -jar jaqy-1.2.0.jar -- .classpath postgresql postgresql-42.5.1.jar \; .open -u \${SPRING_DATASOURCE_USERNAME} -p \${SPRING_DATASOURCE_PASSWORD} postgresql://\${DB_HOST}/\${DB_NAME}
 """
