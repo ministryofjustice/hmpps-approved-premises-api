@@ -27,7 +27,7 @@ class StatusUpdateService(
   private val applicationRepository: Cas2ApplicationRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val domainEventService: DomainEventService,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
 ) {
 
   fun isValidStatus(statusUpdate: Cas2ApplicationStatusUpdate): Boolean {
@@ -95,7 +95,7 @@ class StatusUpdateService(
           eventType = EventType.applicationStatusUpdated,
           eventDetails = Cas2ApplicationStatusUpdatedEventDetails(
             applicationId = application.id,
-            applicationUrl = applicationUrlTemplate.replace("id", application.id.toString()),
+            applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
             personReference = PersonReference(
               crn = application.crn,
               noms = application.nomsNumber.toString(),

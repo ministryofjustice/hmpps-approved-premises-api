@@ -7,6 +7,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
+import org.springframework.beans.factory.annotation.Value
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
@@ -14,8 +16,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
 import java.time.OffsetDateTime
+import java.util.UUID
 
-class Cas2StatusUpdateTest : IntegrationTestBase() {
+class Cas2StatusUpdateTest(
+  @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
+) : IntegrationTestBase() {
 
   @SpykBean
   lateinit var realStatusUpdateRepository: Cas2StatusUpdateRepository
@@ -63,10 +68,13 @@ class Cas2StatusUpdateTest : IntegrationTestBase() {
   inner class PostToCreate {
     @Test
     fun `Create status update returns 201 and creates StatusUpdate when given status is valid`() {
+      val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
       `Given a CAS2 Assessor`() { _, jwt ->
         `Given a CAS2 User` { applicant, _ ->
           val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
           val application = cas2ApplicationEntityFactory.produceAndPersist {
+            withId(applicationId)
             withCreatedByUser(applicant)
             withApplicationSchema(jsonSchema)
             withSubmittedAt(OffsetDateTime.now())
@@ -94,6 +102,17 @@ class Cas2StatusUpdateTest : IntegrationTestBase() {
 
           Assertions.assertThat(appliedStatus!!.name).isEqualTo("moreInfoRequested")
         }
+
+        // verify that generated 'application.status-updated' domain event links
+        // to the CAS2 domain
+        val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", applicationId.toString())
+        val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
+        val domainEventFromJson = objectMapper.readValue(
+          persistedDomainEvent!!.data,
+          Cas2ApplicationStatusUpdatedEvent::class.java,
+        )
+        Assertions.assertThat(domainEventFromJson.eventDetails.applicationUrl)
+          .isEqualTo(expectedFrontEndUrl)
       }
     }
 
