@@ -15,7 +15,7 @@ script="""
 cd ~
 curl -L https://github.com/Teradata/jaqy/releases/download/v1.2.0/jaqy-1.2.0.jar --output jaqy-1.2.0.jar
 
-jaqyChecksumResult=\$(sha256sum --check jaqy-1.2.0.jar.checksum.sha256)
+jaqyChecksumResult=\$(sha256sum --check /app/jaqy-1.2.0.jar.checksum.sha256)
 if [ \$? -ne 0 ]; then
   echo \"* jaqy checksum failed: \$jaqyChecksumResult *\"
   echo \"* PLEASE INVESTIGATE *\"
