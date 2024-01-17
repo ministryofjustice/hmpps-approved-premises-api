@@ -863,7 +863,7 @@ class BookingService(
     booking.status = BookingStatus.arrived
     updateBooking(booking)
 
-    if (!arrivedAndDepartedDomainEventsDisabled && shouldCreateDomainEventForBooking(booking, user)) {
+    if (shouldCreateDomainEventForBooking(booking, user)) {
       val domainEventId = UUID.randomUUID()
 
       val offenderDetails =
@@ -882,7 +882,8 @@ class BookingService(
       val approvedPremises = booking.premises as ApprovedPremisesEntity
 
       domainEventService.savePersonArrivedEvent(
-        DomainEvent(
+        emit = !arrivedAndDepartedDomainEventsDisabled,
+        domainEvent = DomainEvent(
           id = domainEventId,
           applicationId = applicationId,
           crn = booking.crn,
@@ -1056,7 +1057,7 @@ class BookingService(
       ),
     )
 
-    if (!arrivedAndDepartedDomainEventsDisabled && shouldCreateDomainEventForBooking(booking, user)) {
+    if (shouldCreateDomainEventForBooking(booking, user)) {
       val domainEventId = UUID.randomUUID()
       val user = user as UserEntity
 
@@ -1078,11 +1079,12 @@ class BookingService(
         is ClientResult.Failure -> staffDetailsResult.throwException()
       }
 
-      val (applicationId, eventNumber, createdAt) = getApplicationDetailsForBooking(booking)
+      val (applicationId, eventNumber, _) = getApplicationDetailsForBooking(booking)
       val approvedPremises = booking.premises as ApprovedPremisesEntity
 
       domainEventService.savePersonNotArrivedEvent(
-        DomainEvent(
+        emit = !arrivedAndDepartedDomainEventsDisabled,
+        domainEvent = DomainEvent(
           id = domainEventId,
           applicationId = applicationId,
           crn = booking.crn,
@@ -1424,7 +1426,7 @@ class BookingService(
     updateBooking(booking)
     booking.departures += departureEntity
 
-    if (!arrivedAndDepartedDomainEventsDisabled && shouldCreateDomainEventForBooking(booking, user)) {
+    if (shouldCreateDomainEventForBooking(booking, user)) {
       val domainEventId = UUID.randomUUID()
       val user = user as UserEntity
 
@@ -1450,7 +1452,8 @@ class BookingService(
       val approvedPremises = booking.premises as ApprovedPremisesEntity
 
       domainEventService.savePersonDepartedEvent(
-        DomainEvent(
+        emit = !arrivedAndDepartedDomainEventsDisabled,
+        domainEvent = DomainEvent(
           id = domainEventId,
           applicationId = applicationId,
           crn = booking.crn,
