@@ -45,9 +45,6 @@
     "funding-source": {
       "fundingSource": "personalSavings"
     },
-    "identification": {
-      "idDocuments": "passport"
-    },
     "national-insurance": {
       "nationalInsuranceNumber": "NS 123 288 12"
     }
@@ -349,6 +346,11 @@
     "non-standard-licence-conditions": {
       "nonStandardLicenceConditions": "yes",
       "nonStandardLicenceConditionsDetail": "There are exclusion zones, please check"
+    }
+  },
+  "information-needed-from-applicant": {
+    "information-needed-from-applicant": {
+      "hasInformationNeeded": "yes"
     }
   },
   "check-your-answers": {

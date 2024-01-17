@@ -45,6 +45,15 @@
               "answer": "07777 777 777"
             }
           ]
+        },
+        {
+          "title": "Check information needed from the applicant",
+          "questionsAndAnswers": [
+            {
+              "question": "Have you got all the information you need from the applicant?",
+              "answer": "Yes"
+            }
+          ]
         }
       ]
     },
@@ -210,10 +219,6 @@
             {
               "question": "How will Aadland Bertrand pay for their accommodation and service charge?",
               "answer": "Personal money or savings"
-            },
-            {
-              "question": "What identification documentation (ID) does Aadland Bertrand have?",
-              "answer": "Passport"
             },
             {
               "question": "What is Aadland Bertrand's National Insurance number? (Optional)",
