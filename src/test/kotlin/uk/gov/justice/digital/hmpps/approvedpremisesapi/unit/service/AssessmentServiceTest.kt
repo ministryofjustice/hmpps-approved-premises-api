@@ -1309,6 +1309,7 @@ class AssessmentServiceTest {
           val data = it.data.eventDetails
 
           it.applicationId == assessment.application.id &&
+            it.assessmentId == assessment.id &&
             it.crn == assessment.application.crn &&
             data.applicationId == assessment.application.id &&
             data.applicationUrl == "http://frontend/applications/${assessment.application.id}" &&

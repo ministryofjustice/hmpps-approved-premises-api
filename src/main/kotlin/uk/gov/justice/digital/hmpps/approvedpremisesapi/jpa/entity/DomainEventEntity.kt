@@ -46,6 +46,7 @@ data class DomainEventEntity(
   @Id
   val id: UUID,
   val applicationId: UUID?,
+  val assessmentId: UUID?,
   val bookingId: UUID?,
   val crn: String,
   @Enumerated(value = EnumType.STRING)

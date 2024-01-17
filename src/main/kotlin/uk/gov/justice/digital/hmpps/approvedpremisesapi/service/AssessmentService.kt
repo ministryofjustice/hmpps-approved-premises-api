@@ -452,6 +452,7 @@ class AssessmentService(
         DomainEvent(
           id = domainEventId,
           applicationId = application.id,
+          assessmentId = assessment.id,
           crn = application.crn,
           occurredAt = acceptedAt.toInstant(),
           data = ApplicationAssessedEnvelope(
@@ -594,6 +595,7 @@ class AssessmentService(
         DomainEvent(
           id = domainEventId,
           applicationId = application.id,
+          assessmentId = assessment.id,
           crn = application.crn,
           occurredAt = rejectedAt.toInstant(),
           data = ApplicationAssessedEnvelope(
