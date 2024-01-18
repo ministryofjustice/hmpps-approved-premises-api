@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
@@ -51,7 +52,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.LocalDate
@@ -59,7 +59,6 @@ import java.util.UUID
 
 class PlacementRequestServiceTest {
   private val placementRequestRepository = mockk<PlacementRequestRepository>()
-  private val userService = mockk<UserService>()
   private val bookingNotMadeRepository = mockk<BookingNotMadeRepository>()
   private val domainEventService = mockk<DomainEventService>()
   private val offenderService = mockk<OffenderService>()
@@ -68,10 +67,10 @@ class PlacementRequestServiceTest {
   private val placementRequirementsRepository = mockk<PlacementRequirementsRepository>()
   private val placementDateRepository = mockk<PlacementDateRepository>()
   private val cancellationRepository = mockk<CancellationRepository>()
+  private val userAllocator = mockk<UserAllocator>()
 
   private val placementRequestService = PlacementRequestService(
     placementRequestRepository,
-    userService,
     bookingNotMadeRepository,
     domainEventService,
     offenderService,
@@ -80,6 +79,7 @@ class PlacementRequestServiceTest {
     placementRequirementsRepository,
     placementDateRepository,
     cancellationRepository,
+    userAllocator,
     "http://frontend/applications/#id",
   )
 

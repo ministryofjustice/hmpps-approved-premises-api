@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
@@ -35,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UserAllocationsEngine
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformQualifications
@@ -149,33 +147,6 @@ class UserService(
     }
 
     return users
-  }
-
-  fun getUserForAssessmentAllocation(application: ApplicationEntity): UserEntity? {
-    val qualifications = application.getRequiredQualifications().toMutableList()
-    val isLao = offenderService.isLao(application.crn)
-
-    val allocationsEngine = UserAllocationsEngine(this.userRepository, AllocationType.Assessment, qualifications, isLao)
-
-    return allocationsEngine.getAllocatedUser()
-  }
-
-  fun getUserForPlacementRequestAllocation(crn: String): UserEntity? {
-    val isLao = offenderService.isLao(crn)
-
-    val allocationsEngine =
-      UserAllocationsEngine(this.userRepository, AllocationType.PlacementRequest, emptyList(), isLao)
-
-    return allocationsEngine.getAllocatedUser()
-  }
-
-  fun getUserForPlacementApplicationAllocation(crn: String): UserEntity? {
-    val isLao = offenderService.isLao(crn)
-
-    val allocationsEngine =
-      UserAllocationsEngine(this.userRepository, AllocationType.PlacementApplication, emptyList(), isLao)
-
-    return allocationsEngine.getAllocatedUser()
   }
 
   fun deleteUser(id: UUID) {

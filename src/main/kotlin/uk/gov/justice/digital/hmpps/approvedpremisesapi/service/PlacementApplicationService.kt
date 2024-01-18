@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.data.domain.Page
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
@@ -47,6 +48,7 @@ class PlacementApplicationService(
   private val placementRequestService: PlacementRequestService,
   private val placementRequestRepository: PlacementRequestRepository,
   private val emailNotificationService: EmailNotificationService,
+  private val userAllocator: UserAllocator,
   private val notifyConfig: NotifyConfig,
 ) {
 
@@ -258,7 +260,7 @@ class PlacementApplicationService(
 
     val placementApplicationEntity = placementApplicationValidationResult.entity
 
-    val allocatedUser = userService.getUserForPlacementApplicationAllocation(placementApplicationEntity.application.crn)
+    val allocatedUser = userAllocator.getUserForPlacementApplicationAllocation(placementApplicationEntity)
 
     placementApplicationEntity.apply {
       document = translatedDocument
