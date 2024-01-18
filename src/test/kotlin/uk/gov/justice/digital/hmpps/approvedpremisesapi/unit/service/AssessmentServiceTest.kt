@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Probati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -158,6 +159,14 @@ class AssessmentServiceTest {
 
   @Test
   fun `getVisibleAssessmentSummariesForUserCAS3 only fetches Temporary Accommodation assessments within the user's probation region`() {
+    val pageCriteria = PageCriteria(
+      sortBy = AssessmentSortField.assessmentStatus,
+      sortDirection = SortDirection.asc,
+      page = 5,
+      perPage = 7,
+    )
+    val pageRequest = PageRequest.of(4, 7, Sort.by("status").ascending())
+
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -173,15 +182,36 @@ class AssessmentServiceTest {
         .produce(),
     )
 
-    every { assessmentRepositoryMock.findAllTemporaryAccommodationAssessmentSummariesForRegion(any()) } returns emptyList()
+    every {
+      assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
+        any(),
+        null,
+        emptyList(),
+        pageRequest,
+      )
+    } returns Page.empty()
 
-    assessmentService.getVisibleAssessmentSummariesForUserCAS3(user)
+    assessmentService.getAssessmentSummariesForUserCAS3(user, null, temporaryAccommodation, emptyList(), pageCriteria)
 
-    verify(exactly = 1) { assessmentRepositoryMock.findAllTemporaryAccommodationAssessmentSummariesForRegion(user.probationRegion.id) }
+    verify(exactly = 1) {
+      assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
+        user.probationRegion.id,
+        null,
+        emptyList(),
+        pageRequest,
+      )
+    }
   }
 
   @Test
   fun `getAssessmentSummariesByCrnForUser is not supported for Approved Premises`() {
+    val pageCriteria = PageCriteria(
+      sortBy = AssessmentSortField.assessmentStatus,
+      sortDirection = SortDirection.asc,
+      page = 5,
+      perPage = 7,
+    )
+
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -198,12 +228,20 @@ class AssessmentServiceTest {
     )
 
     assertThatExceptionOfType(RuntimeException::class.java)
-      .isThrownBy { assessmentService.getAssessmentSummariesByCrnForUserCAS3(user, "SOMECRN", ServiceName.approvedPremises) }
+      .isThrownBy { assessmentService.getAssessmentSummariesForUserCAS3(user, "SOMECRN", ServiceName.approvedPremises, emptyList(), pageCriteria) }
       .withMessage("Only CAS3 assessments are currently supported")
   }
 
   @Test
   fun `getAssessmentSummariesByCrnForUser only fetches Temporary Accommodation assessments for the given CRN and within the user's probation region`() {
+    val pageCriteria = PageCriteria(
+      sortBy = AssessmentSortField.assessmentStatus,
+      sortDirection = SortDirection.asc,
+      page = 5,
+      perPage = 7,
+    )
+    val pageRequest = PageRequest.of(4, 7, Sort.by("status").ascending())
+
     val user = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -219,11 +257,71 @@ class AssessmentServiceTest {
         .produce(),
     )
 
-    every { assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(any(), any()) } returns emptyList()
+    every {
+      assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
+        user.probationRegion.id,
+        "SOMECRN",
+        emptyList(),
+        pageRequest,
+      )
+    } returns Page.empty()
 
-    assessmentService.getAssessmentSummariesByCrnForUserCAS3(user, "SOMECRN", ServiceName.temporaryAccommodation)
+    assessmentService.getAssessmentSummariesForUserCAS3(user, "SOMECRN", temporaryAccommodation, emptyList(), pageCriteria)
 
-    verify(exactly = 1) { assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(user.probationRegion.id, "SOMECRN") }
+    verify(exactly = 1) {
+      assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
+        user.probationRegion.id,
+        "SOMECRN",
+        emptyList(),
+        pageRequest,
+      )
+    }
+  }
+
+  @Test
+  fun `getAssessmentSummariesForUserCAS3 only fetches Temporary Accommodation assessments sorted by default arrivalDate when requested sort field is personName`() {
+    val pageCriteria = PageCriteria(
+      sortBy = AssessmentSortField.personName,
+      sortDirection = SortDirection.asc,
+      page = 5,
+      perPage = 7,
+    )
+    val pageRequest = PageRequest.of(4, 7, Sort.by("arrivalDate").ascending())
+
+    val user = UserEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    user.roles.add(
+      UserRoleAssignmentEntityFactory()
+        .withRole(UserRole.CAS3_ASSESSOR)
+        .withUser(user)
+        .produce(),
+    )
+
+    every {
+      assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
+        user.probationRegion.id,
+        "SOMECRN",
+        listOf(),
+        pageRequest,
+      )
+    } returns Page.empty()
+
+    assessmentService.getAssessmentSummariesForUserCAS3(user, "SOMECRN", temporaryAccommodation, emptyList(), pageCriteria)
+
+    verify(exactly = 1) {
+      assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
+        user.probationRegion.id,
+        "SOMECRN",
+        emptyList(),
+        pageRequest,
+      )
+    }
   }
 
   @Test

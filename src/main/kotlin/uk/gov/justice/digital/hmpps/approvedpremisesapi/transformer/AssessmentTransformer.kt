@@ -117,7 +117,11 @@ class AssessmentTransformer(
     AssessmentStatus.cas1InProgress -> DomainAssessmentSummaryStatus.IN_PROGRESS
     AssessmentStatus.cas1NotStarted -> DomainAssessmentSummaryStatus.NOT_STARTED
     AssessmentStatus.cas1Reallocated -> DomainAssessmentSummaryStatus.REALLOCATED
-    else -> DomainAssessmentSummaryStatus.IN_PROGRESS
+    AssessmentStatus.cas3InReview -> DomainAssessmentSummaryStatus.IN_REVIEW
+    AssessmentStatus.cas3Unallocated -> DomainAssessmentSummaryStatus.UNALLOCATED
+    AssessmentStatus.cas3Rejected -> DomainAssessmentSummaryStatus.REJECTED
+    AssessmentStatus.cas3Closed -> DomainAssessmentSummaryStatus.CLOSED
+    AssessmentStatus.cas3ReadyToPlace -> DomainAssessmentSummaryStatus.READY_TO_PLACE
   }
 
   private fun transformDomainSummaryDecisionToApi(decision: String?) = when (decision) {

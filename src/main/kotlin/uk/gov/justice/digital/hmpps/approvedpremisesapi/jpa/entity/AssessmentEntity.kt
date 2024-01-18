@@ -114,45 +114,61 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
              a.data is not null as isStarted,
              a.allocated_to_user_id is not null as allocated,
              ap.crn as crn,
-             null as status
+             CASE
+                  WHEN a.decision='REJECTED' THEN 'REJECTED'
+                  WHEN a.decision='ACCEPTED' AND aa.completed_at is not null THEN 'CLOSED'
+                  WHEN a.decision='ACCEPTED' AND aa.completed_at is null THEN 'READY_TO_PLACE'
+                  WHEN a.decision is null AND a.allocated_to_user_id is not null THEN 'IN_REVIEW'
+                  WHEN a.decision is null AND a.allocated_to_user_id is null THEN 'UNALLOCATED'
+             END  as status
         from temporary_accommodation_assessments aa
              join assessments a on aa.assessment_id = a.id
              join applications ap on a.application_id = ap.id
              left outer join temporary_accommodation_applications taa on ap.id = taa.id
        where taa.probation_region_id = ?1
+             and (?2 is null OR ap.crn = ?2)
              and a.reallocated_at is null
+             and (?3 is null OR
+                                (
+                                  CASE
+                                    WHEN a.decision='REJECTED' THEN 'REJECTED'
+                                    WHEN a.decision='ACCEPTED' AND aa.completed_at is not null THEN 'CLOSED'
+                                    WHEN a.decision='ACCEPTED' AND aa.completed_at is null THEN 'READY_TO_PLACE'
+                                    WHEN a.decision is null AND a.allocated_to_user_id is not null THEN 'IN_REVIEW'
+                                    WHEN a.decision is null AND a.allocated_to_user_id is null THEN 'UNALLOCATED'
+                                  END  
+                                ) IN (?3)                       
+                )
+    """,
+    countQuery = """
+       select count(*)  
+          from temporary_accommodation_assessments aa
+               join assessments a on aa.assessment_id = a.id
+               join applications ap on a.application_id = ap.id
+               left outer join temporary_accommodation_applications taa on ap.id = taa.id
+         where taa.probation_region_id = ?1
+               and (?2 is null OR ap.crn = ?2)
+               and a.reallocated_at is null
+               and (?3 is null OR
+                                (
+                                  CASE
+                                    WHEN a.decision='REJECTED' THEN 'REJECTED'
+                                    WHEN a.decision='ACCEPTED' AND aa.completed_at is not null THEN 'CLOSED'
+                                    WHEN a.decision='ACCEPTED' AND aa.completed_at is null THEN 'READY_TO_PLACE'
+                                    WHEN a.decision is null AND a.allocated_to_user_id is not null THEN 'IN_REVIEW'
+                                    WHEN a.decision is null AND a.allocated_to_user_id is null THEN 'UNALLOCATED'
+                                  END  
+                                ) IN (?3)                       
+                )
     """,
     nativeQuery = true,
   )
-  fun findAllTemporaryAccommodationAssessmentSummariesForRegion(probationRegionId: UUID): List<DomainAssessmentSummary>
-
-  @Query(
-    value = """
-      select a.service as type,
-             cast(a.id as text) as id,
-             cast(a.application_id as text) as applicationId,
-             a.created_at as createdAt,
-             CAST(taa.risk_ratings AS TEXT) as riskRatings,
-             taa.arrival_date as arrivalDate,
-             aa.completed_at is not null as completed,
-             a.decision as decision,
-             a.allocated_to_user_id is not null as allocated,
-             ap.crn as crn,
-             null as status
-        from temporary_accommodation_assessments aa
-             join assessments a on aa.assessment_id = a.id
-             join applications ap on a.application_id = ap.id
-             left outer join temporary_accommodation_applications taa on ap.id = taa.id
-       where taa.probation_region_id = ?1
-             and ap.crn = ?2
-             and a.reallocated_at is null
-    """,
-    nativeQuery = true,
-  )
-  fun findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(
+  fun findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
     probationRegionId: UUID,
-    crn: String,
-  ): List<DomainAssessmentSummary>
+    crn: String?,
+    statuses: List<String> = emptyList(),
+    page: Pageable? = null,
+  ): Page<DomainAssessmentSummary>
 
   @Query(
     "SELECT a FROM AssessmentEntity a WHERE a.reallocatedAt IS NULL " +
@@ -369,6 +385,11 @@ enum class DomainAssessmentSummaryStatus {
   IN_PROGRESS,
   NOT_STARTED,
   REALLOCATED,
+  REJECTED,
+  CLOSED,
+  READY_TO_PLACE,
+  IN_REVIEW,
+  UNALLOCATED,
 }
 
 enum class AssessmentDecision {
