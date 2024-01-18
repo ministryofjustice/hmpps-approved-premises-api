@@ -9,7 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
@@ -22,6 +24,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
@@ -435,7 +439,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `It searches by name when the user is a manager`() {
+    fun `It searches by name via crnOrName when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender`(
           offenderDetailsConfigBlock = {
@@ -470,7 +474,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `It searches by crnOrName by CRN when the user is a manager`() {
+    fun `It searches by crn via crnOrName when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { otherOffenderDetails, _ ->
           `Given an Offender` { offenderDetails, inmateDetails ->
@@ -490,6 +494,135 @@ class PlacementRequestsTest : IntegrationTestBase() {
                     placementRequestTransformer.transformJpaToApi(
                       placementRequest,
                       PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `It searches by arrivalDateStart where user is manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 1))
+          val placementRequest5thJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 5))
+          val placementRequest10thJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 10))
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?arrivalDateStart=2022-01-04")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  placementRequestTransformer.transformJpaToApi(
+                    placementRequest5thJan,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                  placementRequestTransformer.transformJpaToApi(
+                    placementRequest10thJan,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
+    fun `It searches by arrivalDateEnd where user is manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val placementRequest1stJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 1))
+          val placementRequest5thJan = createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 5))
+          createPlacementRequest(offenderDetails, user, expectedArrival = LocalDate.of(2022, 1, 10))
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?arrivalDateEnd=2022-01-09")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  placementRequestTransformer.transformJpaToApi(
+                    placementRequest1stJan,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                  placementRequestTransformer.transformJpaToApi(
+                    placementRequest5thJan,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
+    fun `It searches by tier where user is manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a0)
+          val placementRequestA1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a1)
+          createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a2)
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?tier=A1")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  placementRequestTransformer.transformJpaToApi(
+                    placementRequestA1,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
+    fun `It searches using multiple criteria where user is manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offender1Details, inmate1Details ->
+          `Given an Offender` { offender2Details, _ ->
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 1), tier = RiskTierLevel.a2)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a1)
+            val placementOffender1On5thJanTierA2 =
+              createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2)
+            createPlacementRequest(offender2Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 10), tier = RiskTierLevel.a2)
+
+            webTestClient.get()
+              .uri("/placement-requests/dashboard?arrivalDateStart=2022-01-02&arrivalDateEnd=2022-01-09&crnOrName=${offender1Details.otherIds.crn}&tier=A2")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    placementRequestTransformer.transformJpaToApi(
+                      placementOffender1On5thJanTierA2,
+                      PersonInfoResult.Success.Full(offender1Details.otherIds.crn, offender1Details, inmate1Details),
                     ),
                   ),
                 ),
@@ -646,6 +779,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
       createdAt: OffsetDateTime = OffsetDateTime.now(),
       applicationDate: OffsetDateTime = OffsetDateTime.now(),
       isWithdrawn: Boolean = false,
+      tier: RiskTierLevel = RiskTierLevel.b1,
     ): PlacementRequestEntity {
       val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
         withPermissiveSchema()
@@ -663,6 +797,17 @@ class PlacementRequestsTest : IntegrationTestBase() {
         withReleaseType("licence")
         withSubmittedAt(applicationDate)
         withName("${offenderDetails.firstName} ${offenderDetails.surname}")
+        withRiskRatings(
+          PersonRisksFactory()
+            .withTier(
+              RiskWithStatus(
+                RiskTier(
+                  level = tier.value,
+                  lastUpdated = LocalDate.parse("2023-06-26"),
+                ),
+              ),
+            ).produce(),
+        )
       }
 
       val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
