@@ -35,6 +35,7 @@ generic-service:
     DOMAIN-EVENTS_CAS2_ASYNC-SAVE-ENABLED: false
     DOMAIN-EVENTS_CAS3_ASYNC-SAVE-ENABLED: false
     HMPPS_SQS_USE_WEB_TOKEN: true
+    NOTIFY_MODE: TEST_AND_GUEST_LIST
 
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises-preprod.hmpps.service.justice.gov.uk/applications/#id
     URL-TEMPLATES_FRONTEND_ASSESSMENT: https://approved-premises-preprod.hmpps.service.justice.gov.uk/assessments/#id
@@ -77,6 +78,8 @@ generic-service:
     hmpps-domain-events-topic:
       HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
     hmpps-approved-premises-api:
+      NOTIFY_APIKEY: "NOTIFY_APIKEY"
+      NOTIFY_GUESTLISTAPIKEY: "NOTIFY_GUESTLISTAPIKEY"
       NOTIFY_EMAILADDRESSES_CAS2ASSESSORS: "NOTIFY_EMAILADDRESSES_CAS2ASSESSORS"
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
