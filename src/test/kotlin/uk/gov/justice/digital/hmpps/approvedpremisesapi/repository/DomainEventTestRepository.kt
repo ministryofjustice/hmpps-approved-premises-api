@@ -6,4 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEn
 import java.util.UUID
 
 @Repository
-interface DomainEventTestRepository : JpaRepository<DomainEventEntity, UUID>
+interface DomainEventTestRepository : JpaRepository<DomainEventEntity, UUID> {
+  fun findFirstByOrderByCreatedAtDesc(): DomainEventEntity?
+}
