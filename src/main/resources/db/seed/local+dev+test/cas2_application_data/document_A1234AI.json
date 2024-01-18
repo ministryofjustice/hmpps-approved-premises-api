@@ -323,16 +323,8 @@
               "answer": "Yes"
             },
             {
-              "question": "Are they prescribed any medication for their mental health?",
-              "answer": "Yes"
-            },
-            {
-              "question": "Are they in possession of their medication?",
-              "answer": "Yes"
-            },
-            {
-              "question": "Please list any medications.",
-              "answer": "carbamazepine"
+              "question": "Can they manage their own mental health medication on release?",
+              "answer": "They are not prescribed medication for their mental health"
             },
             {
               "question": "Do they have any additional communication needs?",
