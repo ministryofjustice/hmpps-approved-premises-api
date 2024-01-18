@@ -247,7 +247,7 @@ class CalendarServiceTest {
       listOf(
         PersonSummaryInfoResult.Success.Full(
           crn,
-          CaseSummaryFactory().withName(NameFactory().withForename("Firstname").withMiddleNames(listOf("Middle")).withSurname("Lastname").produce()).produce(),
+          CaseSummaryFactory().withName(NameFactory().withForename("Firstname").withSurname("Lastname").produce()).produce(),
         ),
       )
 
@@ -261,7 +261,7 @@ class CalendarServiceTest {
             endDate = endDate,
             bookingId = booking.id,
             crn = crn,
-            personName = "Firstname Middle Lastname",
+            personName = "Firstname Lastname",
           ),
         ),
       ),

@@ -18,7 +18,6 @@ fun getNameFromPersonSummaryInfoResult(result: PersonSummaryInfoResult): String 
   is PersonSummaryInfoResult.Success.Full -> {
     listOf(
       listOf(result.summary.name.forename),
-      result.summary.name.middleNames,
       listOf(result.summary.name.surname),
     ).flatten().joinToString(" ")
   }
