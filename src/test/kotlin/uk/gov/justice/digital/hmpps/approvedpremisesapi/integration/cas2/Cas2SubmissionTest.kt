@@ -645,6 +645,7 @@ class Cas2SubmissionTest(
                   preferredAreas = "Leeds | Bradford",
                   hdcEligibilityDate = LocalDate.parse("2023-03-30"),
                   conditionalReleaseDate = LocalDate.parse("2023-04-29"),
+                  telephoneNumber = "123 456 7891",
                 ),
               )
               .exchange()
@@ -725,6 +726,7 @@ class Cas2SubmissionTest(
                   SubmitCas2Application(
                     applicationId = applicationId,
                     translatedDocument = {},
+                    telephoneNumber = "123 456 7891",
                   ),
                 )
                 .exchange()

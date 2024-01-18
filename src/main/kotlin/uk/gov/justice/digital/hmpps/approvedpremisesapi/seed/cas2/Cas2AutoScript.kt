@@ -98,6 +98,7 @@ class Cas2AutoScript(
         preferredAreas = "Luton | Hertford"
         hdcEligibilityDate = LocalDate.parse("2024-02-28")
         conditionalReleaseDate = LocalDate.parse("2024-02-22")
+        telephoneNumber = "0800 123 456"
       },
     )
   }

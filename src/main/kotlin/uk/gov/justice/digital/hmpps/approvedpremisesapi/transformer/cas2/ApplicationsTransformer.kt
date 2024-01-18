@@ -31,6 +31,7 @@ class ApplicationsTransformer(
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
       status = getStatus(jpa),
       type = "CAS2",
+      telephoneNumber = jpa.telephoneNumber,
     )
   }
 

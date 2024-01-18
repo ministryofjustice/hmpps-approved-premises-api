@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
 import java.time.OffsetDateTime
@@ -27,6 +28,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var statusUpdates: Yielded<MutableList<Cas2StatusUpdateEntity>> = { mutableListOf() }
   private var eventNumber: Yielded<String> = { randomInt(1, 9).toString() }
   private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
+  private var telephoneNumber: Yielded<String?> = { randomNumberChars(12) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -92,5 +94,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     statusUpdates = this.statusUpdates(),
     schemaUpToDate = false,
     nomsNumber = this.nomsNumber(),
+    telephoneNumber = this.telephoneNumber(),
   )
 }
