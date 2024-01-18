@@ -56,7 +56,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
@@ -81,7 +81,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEvent
 class ApplicationService(
   private val userRepository: UserRepository,
   private val applicationRepository: ApplicationRepository,
-  private val applicationsTransformer: ApplicationsTransformer,
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
   private val userService: UserService,
@@ -101,6 +100,7 @@ class ApplicationService(
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   private val probationRegionRepository: ProbationRegionRepository,
+  private val applicationTimelineTransformer: ApplicationTimelineTransformer,
 ) {
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationSummary> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
@@ -1039,7 +1039,7 @@ class ApplicationService(
   fun getApplicationTimeline(applicationId: UUID): List<TimelineEvent> {
     val domainEvents = domainEventService.getAllDomainEventsForApplication(applicationId)
     val timelineEvents = domainEvents.map {
-      applicationsTransformer.transformDomainEventSummaryToTimelineEvent(it)
+      applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(it)
     }.toMutableList()
 
     timelineEvents += getAllInformationRequestEventsForApplication(applicationId)

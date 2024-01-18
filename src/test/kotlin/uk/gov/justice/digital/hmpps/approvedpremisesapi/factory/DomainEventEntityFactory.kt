@@ -14,6 +14,7 @@ import java.util.UUID
 class DomainEventEntityFactory : Factory<DomainEventEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var applicationId: Yielded<UUID?> = { UUID.randomUUID() }
+  private var assessmentId: Yielded<UUID?> = { null }
   private var bookingId: Yielded<UUID?> = { null }
   private var crn: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var type: Yielded<DomainEventType> = { DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED }
@@ -26,11 +27,15 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     this.id = { id }
   }
 
-  fun withApplicationId(applicationId: UUID) = apply {
+  fun withApplicationId(applicationId: UUID?) = apply {
     this.applicationId = { applicationId }
   }
 
-  fun withBookingId(bookingId: UUID) = apply {
+  fun withAssessmentId(assessmentId: UUID?) = apply {
+    this.assessmentId = { assessmentId }
+  }
+
+  fun withBookingId(bookingId: UUID?) = apply {
     this.bookingId = { bookingId }
   }
 
@@ -67,6 +72,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
   override fun produce(): DomainEventEntity = DomainEventEntity(
     id = this.id(),
     applicationId = this.applicationId(),
+    assessmentId = this.assessmentId(),
     bookingId = this.bookingId(),
     crn = this.crn(),
     type = this.type(),

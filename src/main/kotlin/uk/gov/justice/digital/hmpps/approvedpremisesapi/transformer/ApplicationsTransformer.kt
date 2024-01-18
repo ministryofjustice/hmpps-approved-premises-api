@@ -12,10 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
@@ -23,8 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSum
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary as ApiApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary as ApiTemporaryAccommodationApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent as APITimelineEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType as APITimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary as DomainApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary as DomainApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary as DomainCas2ApplicationSummary
@@ -204,29 +200,5 @@ class ApplicationsTransformer(
     AssessmentDecision.ACCEPTED -> uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.accepted
     AssessmentDecision.REJECTED -> uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.rejected
     null -> null
-  }
-
-  fun transformDomainEventSummaryToTimelineEvent(domainEventSummary: DomainEventSummary): APITimelineEvent {
-    return APITimelineEvent(
-      id = domainEventSummary.id,
-      type = transformDomainEventTypeToTimelineEventType(domainEventSummary.type),
-      occurredAt = domainEventSummary.occurredAt.toInstant(),
-    )
-  }
-
-  fun transformDomainEventTypeToTimelineEventType(domainEventType: DomainEventType): APITimelineEventType {
-    return when (domainEventType) {
-      DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED -> APITimelineEventType.approvedPremisesApplicationSubmitted
-      DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED -> APITimelineEventType.approvedPremisesApplicationAssessed
-      DomainEventType.APPROVED_PREMISES_BOOKING_MADE -> APITimelineEventType.approvedPremisesBookingMade
-      DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> APITimelineEventType.approvedPremisesPersonArrived
-      DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED -> APITimelineEventType.approvedPremisesPersonNotArrived
-      DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> APITimelineEventType.approvedPremisesPersonDeparted
-      DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> APITimelineEventType.approvedPremisesBookingNotMade
-      DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> APITimelineEventType.approvedPremisesBookingCancelled
-      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> APITimelineEventType.approvedPremisesBookingChanged
-      DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> APITimelineEventType.approvedPremisesApplicationWithdrawn
-      else -> throw RuntimeException("Only CAS1 is currently supported")
-    }
   }
 }

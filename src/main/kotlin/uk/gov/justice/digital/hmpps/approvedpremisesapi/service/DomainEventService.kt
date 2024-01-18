@@ -199,6 +199,7 @@ class DomainEventService(
       DomainEventEntity(
         id = domainEvent.id,
         applicationId = domainEvent.applicationId,
+        assessmentId = domainEvent.assessmentId,
         bookingId = bookingId,
         crn = domainEvent.crn,
         type = enumTypeFromDataType(domainEvent.data!!::class.java),

@@ -234,7 +234,7 @@ url-templates:
   frontend:
     application: http://localhost:3000/applications/#id
     assessment: http://localhost:3000/assessments/#id
-    booking: http://localhost:3000/premises/{premisesId}/bookings/{bookingId}
+    booking: http://localhost:3000/premises/#premisesId/bookings/#bookingId
     cas2:
       application: http://localhost:3000/applications/#id
       submitted-application-overview: http://localhost:3000/assess/applications/#applicationId/overview
