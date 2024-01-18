@@ -66,14 +66,36 @@ class PlacementRequestsController(
     )
   }
 
-  override fun placementRequestsDashboardGet(status: PlacementRequestStatus?, crn: String?, crnOrName: String?, tier: RiskTierLevel?, arrivalDateStart: LocalDate?, arrivalDateEnd: LocalDate?, page: Int?, sortBy: PlacementRequestSortField?, sortDirection: SortDirection?): ResponseEntity<List<PlacementRequest>> {
+  override fun placementRequestsDashboardGet(
+    status: PlacementRequestStatus?,
+    crn: String?,
+    crnOrName: String?,
+    tier: RiskTierLevel?,
+    arrivalDateStart: LocalDate?,
+    arrivalDateEnd: LocalDate?,
+    page: Int?,
+    sortBy: PlacementRequestSortField?,
+    sortDirection: SortDirection?,
+    probationRegionId: UUID?,
+  ): ResponseEntity<List<PlacementRequest>> {
     val user = userService.getUserForRequest()
 
     if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       throw ForbiddenProblem()
     }
 
-    val (requests, metadata) = placementRequestService.getAllActive(status, crn, crnOrName, tier?.value, arrivalDateStart, arrivalDateEnd, page, sortBy ?: PlacementRequestSortField.createdAt, sortDirection)
+    val (requests, metadata) = placementRequestService.getAllActive(
+      status,
+      crn,
+      crnOrName,
+      tier?.value,
+      arrivalDateStart,
+      arrivalDateEnd,
+      page,
+      sortBy ?: PlacementRequestSortField.createdAt,
+      sortDirection,
+      probationRegionId,
+    )
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
@@ -100,7 +122,10 @@ class PlacementRequestsController(
     )
   }
 
-  override fun placementRequestsIdBookingPost(id: UUID, newPlacementRequestBooking: NewPlacementRequestBooking): ResponseEntity<NewPlacementRequestBookingConfirmation> {
+  override fun placementRequestsIdBookingPost(
+    id: UUID,
+    newPlacementRequestBooking: NewPlacementRequestBooking,
+  ): ResponseEntity<NewPlacementRequestBookingConfirmation> {
     val user = userService.getUserForRequest()
 
     val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
@@ -114,21 +139,32 @@ class PlacementRequestsController(
 
     val validatableResult = when (authorisableResult) {
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(authorisableResult.id!!, authorisableResult.entityType!!)
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(
+        authorisableResult.id!!,
+        authorisableResult.entityType!!,
+      )
+
       is AuthorisableActionResult.Success -> authorisableResult.entity
     }
 
     val createdBooking = when (validatableResult) {
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = validatableResult.message)
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = validatableResult.validationMessages)
-      is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = validatableResult.conflictingEntityId, conflictReason = validatableResult.message)
+      is ValidatableActionResult.ConflictError -> throw ConflictProblem(
+        id = validatableResult.conflictingEntityId,
+        conflictReason = validatableResult.message,
+      )
+
       is ValidatableActionResult.Success -> validatableResult.entity
     }
 
     return ResponseEntity.ok(bookingConfirmationTransformer.transformJpaToApi(createdBooking))
   }
 
-  override fun placementRequestsIdBookingNotMadePost(id: UUID, newBookingNotMade: NewBookingNotMade): ResponseEntity<BookingNotMade> {
+  override fun placementRequestsIdBookingNotMadePost(
+    id: UUID,
+    newBookingNotMade: NewBookingNotMade,
+  ): ResponseEntity<BookingNotMade> {
     val user = userService.getUserForRequest()
 
     val authorisableResult = placementRequestService.createBookingNotMade(
@@ -139,7 +175,11 @@ class PlacementRequestsController(
 
     val bookingNotMade = when (authorisableResult) {
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(authorisableResult.id!!, authorisableResult.entityType!!)
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(
+        authorisableResult.id!!,
+        authorisableResult.entityType!!,
+      )
+
       is AuthorisableActionResult.Success -> authorisableResult.entity
     }
 
@@ -156,9 +196,16 @@ class PlacementRequestsController(
     return ResponseEntity.ok(result)
   }
 
-  private fun mapPersonDetailOntoPlacementRequests(placementRequests: List<PlacementRequestEntity>, user: UserEntity): List<PlacementRequest> {
+  private fun mapPersonDetailOntoPlacementRequests(
+    placementRequests: List<PlacementRequestEntity>,
+    user: UserEntity,
+  ): List<PlacementRequest> {
     return placementRequests.mapNotNull {
-      val personInfo = offenderService.getInfoForPerson(it.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+      val personInfo = offenderService.getInfoForPerson(
+        it.application.crn,
+        user.deliusUsername,
+        user.hasQualification(UserQualification.LAO),
+      )
 
       if (personInfo !is PersonInfoResult.Success) throw InternalServerErrorProblem("Unable to get Person Info for CRN: ${it.application.crn}")
 

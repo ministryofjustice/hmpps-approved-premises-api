@@ -94,9 +94,11 @@ class PlacementRequestService(
       allocatedFilter == AllocatedFilter.unallocated ->
         allReallocatable =
           placementRequestRepository.findAllReallocatableUnallocated(pageable)
+
       allocatedFilter == AllocatedFilter.allocated ->
         allReallocatable =
           placementRequestRepository.findAllReallocatableAllocated(pageable)
+
       else ->
         allReallocatable =
           placementRequestRepository.findAllReallocatable(pageable)
@@ -115,6 +117,7 @@ class PlacementRequestService(
     page: Int?,
     sortBy: PlacementRequestSortField,
     sortDirection: SortDirection?,
+    probationRegionId: UUID? = null,
   ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
     val sortField = when (sortBy) {
       PlacementRequestSortField.applicationSubmittedAt -> "application.submitted_at"
@@ -130,6 +133,7 @@ class PlacementRequestService(
       arrivalDateStart,
       arrivalDateEnd,
       pageable,
+      probationRegionId,
     )
 
     return Pair(response.content, getMetadata(response, page))
@@ -223,7 +227,8 @@ class PlacementRequestService(
         duration = placementDateEntity.duration,
       )
       val isParole = placementApplicationEntity.placementType == PlacementType.RELEASE_FOLLOWING_DECISION
-      val placementRequest = this.createPlacementRequest(placementRequirements, placementDates, notes, isParole, placementApplicationEntity)
+      val placementRequest =
+        this.createPlacementRequest(placementRequirements, placementDates, notes, isParole, placementApplicationEntity)
 
       placementDateRepository.save(
         placementDateEntity.apply {
@@ -245,7 +250,6 @@ class PlacementRequestService(
     placementApplicationEntity: PlacementApplicationEntity?,
   ): PlacementRequestEntity {
     val user = userService
-
     return placementRequestRepository.save(
       PlacementRequestEntity(
         id = UUID.randomUUID(),
@@ -261,7 +265,7 @@ class PlacementRequestService(
         bookingNotMades = mutableListOf(),
         reallocatedAt = null,
         notes = notes,
-        isParole = isParole ?: false,
+        isParole = isParole,
         isWithdrawn = false,
       ),
     )
@@ -329,6 +333,7 @@ class PlacementRequestService(
         "Unable to get Offender Details when " +
           "creating Booking Not Made Domain Event: Unauthorised",
       )
+
       is AuthorisableActionResult.NotFound -> throw RuntimeException(
         "Unable to get Offender Details when " +
           "creating Booking Not Made Domain Event: Not Found",

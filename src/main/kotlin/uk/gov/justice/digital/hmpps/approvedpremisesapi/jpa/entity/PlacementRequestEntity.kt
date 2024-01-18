@@ -102,6 +102,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     from
       placement_requests pq
       left join applications application on application.id = pq.application_id
+      left join approved_premises_applications apa on apa.id = application.id
     where
       pq.reallocated_at IS NULL 
       AND (:status IS NULL OR pq.is_withdrawn IS FALSE)
@@ -140,6 +141,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       AND (:tier IS NULL OR (SELECT COUNT(1) FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier) = 1) 
       AND (CAST(:arrivalDateFrom AS date) IS NULL OR pq.expected_arrival >= :arrivalDateFrom) 
       AND (CAST(:arrivalDateTo AS date) IS NULL OR pq.expected_arrival <= :arrivalDateTo)
+      AND (CAST(:probationRegionId AS pg_catalog.uuid) IS NULL OR apa.probation_region_id = :probationRegionId)
   """,
     nativeQuery = true,
   )
@@ -151,6 +153,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     arrivalDateFrom: LocalDate?,
     arrivalDateTo: LocalDate?,
     pageable: Pageable?,
+    probationRegionId: UUID? = null,
   ): Page<PlacementRequestEntity>
 }
 

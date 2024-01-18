@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -51,6 +52,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var targetLocation: Yielded<String?> = { null }
   private var status: Yielded<ApprovedPremisesApplicationStatus> = { ApprovedPremisesApplicationStatus.STARTED }
   private var inmateInOutStatusOnSubmission: Yielded<String?> = { null }
+  private var probationRegion: Yielded<ProbationRegionEntity?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -184,6 +186,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.inmateInOutStatusOnSubmission = { inmateInOutStatusOnSubmission }
   }
 
+  fun withProbationRegion(probationRegion: ProbationRegionEntity) = apply {
+    this.probationRegion = { probationRegion }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -218,6 +224,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     status = this.status(),
     situation = this.situation(),
     inmateInOutStatusOnSubmission = this.inmateInOutStatusOnSubmission(),
-    probationRegion = null,
+    probationRegion = this.probationRegion(),
   )
 }

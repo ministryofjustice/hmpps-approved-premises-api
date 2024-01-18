@@ -470,6 +470,44 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `It searches by probationRegionId when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withFirstName("JOHN")
+            withLastName("SMITH")
+          },
+        ) { offenderDetails, inmateDetails ->
+          `Given an Offender` { otherOffenderDetails, _ ->
+
+            val placementRequest = createPlacementRequest(offenderDetails, user, probationRegion = true)
+            createPlacementRequest(otherOffenderDetails, user)
+
+            val probationRegionId = user.probationRegion!!.id.toString()
+
+            webTestClient.get()
+              .uri("/placement-requests/dashboard?probationRegionId=$probationRegionId")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    placementRequestTransformer.transformJpaToApi(
+                      placementRequest,
+                      PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
     fun `It searches by crnOrName by CRN when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { otherOffenderDetails, _ ->
@@ -646,6 +684,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
       createdAt: OffsetDateTime = OffsetDateTime.now(),
       applicationDate: OffsetDateTime = OffsetDateTime.now(),
       isWithdrawn: Boolean = false,
+      probationRegion: Boolean = false,
     ): PlacementRequestEntity {
       val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
         withPermissiveSchema()
@@ -663,6 +702,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
         withReleaseType("licence")
         withSubmittedAt(applicationDate)
         withName("${offenderDetails.firstName} ${offenderDetails.surname}")
+        if (probationRegion) {
+          withProbationRegion(user.probationRegion)
+        }
       }
 
       val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {

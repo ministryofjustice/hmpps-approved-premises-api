@@ -2904,6 +2904,13 @@ paths:
           description: The direction to sort the results by. If blank, will sort in descending order
           schema:
             $ref: '#/components/schemas/SortDirection'
+        - name: probationRegionId
+          in: query
+          required: false
+          description: If provided, only bookings for this region will be returned
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successfully retrieved placement requests
