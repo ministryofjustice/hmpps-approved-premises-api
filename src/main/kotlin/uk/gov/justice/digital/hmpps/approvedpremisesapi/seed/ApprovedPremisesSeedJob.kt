@@ -29,7 +29,6 @@ class ApprovedPremisesSeedJob(
     "addressLine2",
     "town",
     "postcode",
-    "totalBeds",
     "notes",
     "emailAddress",
     "probationRegion",
@@ -70,7 +69,6 @@ class ApprovedPremisesSeedJob(
     addressLine2 = columns["addressLine2"]!!,
     town = columns["town"]!!,
     postcode = columns["postcode"]!!,
-    totalBeds = Integer.parseInt(columns["totalBeds"]!!),
     notes = columns["notes"]!!,
     emailAddress = columns["emailAddress"]!!,
     probationRegion = columns["probationRegion"]!!,
@@ -168,7 +166,6 @@ class ApprovedPremisesSeedJob(
         addressLine2 = row.addressLine2,
         town = row.town,
         postcode = row.postcode,
-        totalBeds = row.totalBeds,
         notes = row.notes,
         emailAddress = row.emailAddress,
         probationRegion = probationRegion,
@@ -221,7 +218,6 @@ class ApprovedPremisesSeedJob(
       this.postcode = row.postcode
       this.longitude = row.longitude
       this.latitude = row.latitude
-      this.totalBeds = row.totalBeds
       this.notes = row.notes
       this.probationRegion = probationRegion
       this.localAuthorityArea = localAuthorityArea
@@ -250,7 +246,6 @@ data class ApprovedPremisesSeedCsvRow(
   val addressLine2: String?,
   val town: String,
   val postcode: String,
-  val totalBeds: Int,
   val notes: String,
   val emailAddress: String,
   val probationRegion: String,

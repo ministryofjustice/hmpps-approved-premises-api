@@ -97,7 +97,6 @@ class TemporaryAccommodationPremisesSeedJob(
         postcode = row.postcode,
         latitude = null,
         longitude = null,
-        totalBeds = 0,
         notes = row.notes,
         emailAddress = row.emailAddress,
         probationRegion = probationRegion,
@@ -135,7 +134,6 @@ class TemporaryAccommodationPremisesSeedJob(
       this.addressLine2 = row.addressLine2
       this.town = row.town
       this.postcode = row.postcode
-      this.totalBeds = 0
       this.notes = row.notes
       this.probationRegion = probationRegion
       this.localAuthorityArea = localAuthorityArea
