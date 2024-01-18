@@ -29,12 +29,13 @@ generic-service:
     SENTRY_ENVIRONMENT: preprod
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 20
     DOMAIN-EVENTS_CAS1_EMIT-ENABLED: true
-    DOMAIN-EVENTS_CAS2_EMIT-ENABLED: false
+    DOMAIN-EVENTS_CAS2_EMIT-ENABLED: true
     DOMAIN-EVENTS_CAS3_EMIT-ENABLED: bookingCancelled,bookingConfirmed,bookingProvisionallyMade,personArrived,personDeparted,referralSubmitted,bookingCancelledUpdated,personDepartureUpdated,personArrivedUpdated
     DOMAIN-EVENTS_CAS1_ASYNC-SAVE-ENABLED: false
     DOMAIN-EVENTS_CAS2_ASYNC-SAVE-ENABLED: false
     DOMAIN-EVENTS_CAS3_ASYNC-SAVE-ENABLED: false
     HMPPS_SQS_USE_WEB_TOKEN: true
+    NOTIFY_MODE: TEST_AND_GUEST_LIST
 
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises-preprod.hmpps.service.justice.gov.uk/applications/#id
     URL-TEMPLATES_FRONTEND_ASSESSMENT: https://approved-premises-preprod.hmpps.service.justice.gov.uk/assessments/#id
@@ -70,10 +71,15 @@ generic-service:
 
     PAGINATION_CAS3_BOOKING-SEARCH-PAGE-SIZE: 100
 
+    USER-ALLOCATIONS_RULES_LEGACY-ALLOCATOR_ENABLED: true
+    USER-ALLOCATIONS_RULES_LEGACY-ALLOCATOR_PRIORITY: -1
+
   namespace_secrets:
     hmpps-domain-events-topic:
       HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
     hmpps-approved-premises-api:
+      NOTIFY_APIKEY: "NOTIFY_APIKEY"
+      NOTIFY_GUESTLISTAPIKEY: "NOTIFY_GUESTLISTAPIKEY"
       NOTIFY_EMAILADDRESSES_CAS2ASSESSORS: "NOTIFY_EMAILADDRESSES_CAS2ASSESSORS"
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack

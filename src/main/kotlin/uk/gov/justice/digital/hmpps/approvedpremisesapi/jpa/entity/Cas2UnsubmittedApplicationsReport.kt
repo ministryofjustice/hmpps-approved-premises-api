@@ -19,6 +19,7 @@ interface Cas2UnsubmittedApplicationsReportRepository : JpaRepository<Cas2Applic
       FROM cas_2_applications applications
       JOIN nomis_users users ON users.id = applications.created_by_user_id
       WHERE applications.submitted_at IS NULL
+        AND applications.created_at  > CURRENT_DATE - 365
       ORDER BY startedAt DESC;
     """,
     nativeQuery = true,

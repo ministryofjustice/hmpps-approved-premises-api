@@ -90,6 +90,12 @@ paths:
           description: If given, only premises for this service will be returned
           schema:
             $ref: '#/components/schemas/ServiceName'
+        - name: probationRegionId
+          in: query
+          description: ID of the probation region to filter by
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successful operation
@@ -5880,6 +5886,8 @@ components:
             submittedAt:
               type: string
               format: date-time
+            telephoneNumber:
+              type: string
           required:
             - createdBy
             - schemaVersion
@@ -5912,6 +5920,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Cas2StatusUpdate'
+        telephoneNumber:
+          type: string
       required:
         - id
         - person
@@ -6313,9 +6323,12 @@ components:
           type: string
           example: '2023-04-30'
           format: date
+        telephoneNumber:
+          type: string
       required:
         - translatedDocument
         - applicationId
+        - telephoneNumber
     SubmitTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/SubmitApplication'
@@ -7420,6 +7433,20 @@ components:
           type: string
         createdBy:
           type: string
+        associatedUrls:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineEventAssociatedUrl'
+    TimelineEventAssociatedUrl:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/TimelineEventUrlType'
+        url:
+          type: string
+      required:
+        - type
+        - url
     TimelineEventType:
       type: string
       enum:
@@ -7437,6 +7464,12 @@ components:
         - cas3_person_arrived
         - cas3_person_departed
         - application_timeline_note
+    TimelineEventUrlType:
+      type: string
+      enum:
+        - application
+        - booking
+        - assessment
     SeedRequest:
       type: object
       properties:

@@ -45,6 +45,15 @@
               "answer": "07777 777 777"
             }
           ]
+        },
+        {
+          "title": "Check information needed from the applicant",
+          "questionsAndAnswers": [
+            {
+              "question": "Have you got all the information you need from the applicant?",
+              "answer": "Yes"
+            }
+          ]
         }
       ]
     },
@@ -212,10 +221,6 @@
               "answer": "Personal money or savings"
             },
             {
-              "question": "What identification documentation (ID) does Aadland Bertrand have?",
-              "answer": "Passport"
-            },
-            {
               "question": "What is Aadland Bertrand's National Insurance number? (Optional)",
               "answer": "NS 123 288 12"
             }
@@ -246,6 +251,10 @@
               "answer": "Yes"
             },
             {
+              "question": "Is there an intention to refer them to a drug and alcohol service when they are released?",
+              "answer": "Yes"
+            },
+            {
               "question": "Name the drug and alcohol service",
               "answer": "Drug Awareness Service"
             },
@@ -256,6 +265,10 @@
             {
               "question": "What substitute medication do they take?",
               "answer": "Methadone"
+            },
+            {
+              "question": "Are they being released with naloxone?",
+              "answer": "Yes"
             },
             {
               "question": "Do they have any physical health needs?",
@@ -300,6 +313,10 @@
             {
               "question": "Are they engaged with any community mental health services?",
               "answer": "No"
+            },
+            {
+              "question": "Are they engaged with any mental health services in custody?",
+              "answer": "Yes"
             },
             {
               "question": "Are they prescribed any medication for their mental health?",

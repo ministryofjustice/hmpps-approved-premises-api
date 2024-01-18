@@ -28,7 +28,22 @@ import javax.persistence.Table
 @Repository
 interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 
-  @Query("SELECT new uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary(cast(d.id as string), d.type, d.occurredAt)  FROM DomainEventEntity d WHERE d.applicationId = :applicationId")
+  @Query(
+    """
+      SELECT 
+        cast(d.id as TEXT), 
+        d.type, 
+        d.occurred_at as occurredAt,
+        cast(d.application_id as TEXT) as applicationId,
+        cast(d.assessment_id as TEXT) as assessmentId,
+        cast(d.booking_id as TEXT) as bookingId,
+        cast(b.premises_id as TEXT) as premisesId
+      FROM domain_events d 
+      LEFT OUTER JOIN bookings b ON b.id = d.booking_id
+      WHERE d.application_id = :applicationId
+    """,
+    nativeQuery = true,
+  )
   fun findAllTimelineEventsByApplicationId(applicationId: UUID): List<DomainEventSummary>
 
   @Query(
@@ -46,6 +61,7 @@ data class DomainEventEntity(
   @Id
   val id: UUID,
   val applicationId: UUID?,
+  val assessmentId: UUID?,
   val bookingId: UUID?,
   val crn: String,
   @Enumerated(value = EnumType.STRING)
@@ -81,9 +97,11 @@ data class DomainEventEntity(
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${this.type.name}")
     }
 
+    checkNotNull(this.applicationId) { "application id should not be null" }
+
     return DomainEvent(
       id = this.id,
-      applicationId = this.applicationId!!,
+      applicationId = this.applicationId,
       crn = this.crn,
       occurredAt = this.occurredAt.toInstant(),
       data = data,

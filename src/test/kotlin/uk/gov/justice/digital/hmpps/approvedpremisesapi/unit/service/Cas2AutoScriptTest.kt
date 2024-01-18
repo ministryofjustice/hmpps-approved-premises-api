@@ -18,7 +18,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.LogEntry
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -33,7 +35,7 @@ class Cas2AutoScriptTest {
   private val mockNomisUserEntity = mockk<NomisUserEntity>()
 
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
-  private val mockApplicationEntity = mockk<Cas2ApplicationEntity>()
+  private val mockApplicationEntity = mockk<Cas2ApplicationEntity>(relaxed = true)
 
   private val mockExternalUserRepository = mockk<ExternalUserRepository>()
   private val mockExternalUserEntity = mockk<ExternalUserEntity>()
@@ -44,6 +46,9 @@ class Cas2AutoScriptTest {
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockJsonSchemaEntity = mockk<JsonSchemaEntity>()
 
+  private val mockApplicationService = mockk<ApplicationService>()
+  private val mockStatusUpdateService = mockk<StatusUpdateService>()
+
   private val autoScript = Cas2AutoScript(
     mockSeedLogger,
     mockSeedConfig,
@@ -52,6 +57,8 @@ class Cas2AutoScriptTest {
     mockExternalUserRepository,
     mockStatusUpdateRepository,
     mockJsonSchemaService,
+    mockApplicationService,
+    mockStatusUpdateService,
   )
 
   @BeforeEach
@@ -72,6 +79,7 @@ class Cas2AutoScriptTest {
     } answers { mockJsonSchemaEntity }
 
     every { mockApplicationRepository.save(any()) } answers { mockApplicationEntity }
+    every { mockApplicationRepository.saveAndFlush(any()) } answers { mockApplicationEntity }
     every { mockApplicationEntity.id } answers {
       UUID.fromString("6c8d4bbb-72e6-47fe-9cde-ca2eefc5274b")
     }
@@ -79,6 +87,9 @@ class Cas2AutoScriptTest {
 
     every { mockStatusUpdateRepository.save(any()) } answers { mockStatusUpdateEntity }
     every { mockStatusUpdateEntity.createdAt = (any()) } answers { mockStatusUpdateEntity }
+
+    every { mockApplicationService.createCas2ApplicationSubmittedEvent(any()) } answers { }
+    every { mockStatusUpdateService.createStatusUpdatedDomainEvent(any()) } answers { }
   }
 
   @Test
@@ -100,5 +111,19 @@ class Cas2AutoScriptTest {
     autoScript.script()
 
     verify(atLeast = 1) { mockStatusUpdateRepository.save(any()) }
+  }
+
+  @Test
+  fun `creates at application-submitted domain event`() {
+    autoScript.script()
+
+    verify(atLeast = 1) { mockApplicationService.createCas2ApplicationSubmittedEvent(any()) }
+  }
+
+  @Test
+  fun `creates at application-status-updated domain event`() {
+    autoScript.script()
+
+    verify(atLeast = 1) { mockStatusUpdateService.createStatusUpdatedDomainEvent(any()) }
   }
 }

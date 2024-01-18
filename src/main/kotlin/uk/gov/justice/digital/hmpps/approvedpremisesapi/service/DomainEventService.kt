@@ -99,7 +99,7 @@ class DomainEventService(
     )
 
   @Transactional
-  fun savePersonArrivedEvent(domainEvent: DomainEvent<PersonArrivedEnvelope>) =
+  fun savePersonArrivedEvent(domainEvent: DomainEvent<PersonArrivedEnvelope>, emit: Boolean) =
     saveAndEmit(
       domainEvent = domainEvent,
       typeName = "approved-premises.person.arrived",
@@ -108,10 +108,11 @@ class DomainEventService(
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       bookingId = domainEvent.bookingId,
+      emit = emit,
     )
 
   @Transactional
-  fun savePersonNotArrivedEvent(domainEvent: DomainEvent<PersonNotArrivedEnvelope>) =
+  fun savePersonNotArrivedEvent(domainEvent: DomainEvent<PersonNotArrivedEnvelope>, emit: Boolean) =
     saveAndEmit(
       domainEvent = domainEvent,
       typeName = "approved-premises.person.not-arrived",
@@ -120,10 +121,11 @@ class DomainEventService(
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       bookingId = domainEvent.bookingId,
+      emit = emit,
     )
 
   @Transactional
-  fun savePersonDepartedEvent(domainEvent: DomainEvent<PersonDepartedEnvelope>) =
+  fun savePersonDepartedEvent(domainEvent: DomainEvent<PersonDepartedEnvelope>, emit: Boolean) =
     saveAndEmit(
       domainEvent = domainEvent,
       typeName = "approved-premises.person.departed",
@@ -132,6 +134,7 @@ class DomainEventService(
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       bookingId = domainEvent.bookingId,
+      emit = emit,
     )
 
   @Transactional
@@ -190,11 +193,13 @@ class DomainEventService(
     crn: String,
     nomsNumber: String,
     bookingId: UUID? = null,
+    emit: Boolean = true,
   ) {
     domainEventRepository.save(
       DomainEventEntity(
         id = domainEvent.id,
         applicationId = domainEvent.applicationId,
+        assessmentId = domainEvent.assessmentId,
         bookingId = bookingId,
         crn = domainEvent.crn,
         type = enumTypeFromDataType(domainEvent.data!!::class.java),
@@ -204,6 +209,10 @@ class DomainEventService(
         service = "CAS1",
       ),
     )
+
+    if (!emit) {
+      return
+    }
 
     if (!emitDomainEventsEnabled) {
       log.info("Not emitting SNS event for domain event because domain-events.cas1.emit-enabled is not enabled")

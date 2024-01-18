@@ -1,9 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
-import io.mockk.EqMatcher
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkConstructor
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -17,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
@@ -36,8 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UserAllocationsEngine
 import java.util.UUID
 import javax.servlet.http.HttpServletRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
@@ -249,170 +244,6 @@ class UserServiceTest {
     verify(exactly = 0) {
       mockUserRoleAssignmentRepository.save(any())
     }
-  }
-
-  @Test
-  fun `getUserForAssessmentAllocation sets isLao to true when the application is for an LAO CRN`() {
-    val createdByUser = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val userForAllocation = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(createdByUser)
-      .produce()
-
-    every { mockOffenderService.isLao(application.crn) } returns true
-
-    mockkConstructor(UserAllocationsEngine::class)
-
-    every {
-      constructedWith<UserAllocationsEngine>(
-        EqMatcher(mockUserRepository),
-        EqMatcher(AllocationType.Assessment),
-        EqMatcher<List<UserQualification>>(emptyList()),
-        EqMatcher(true),
-        EqMatcher(true),
-      ).getAllocatedUser()
-    } returns userForAllocation
-
-    assertThat(userService.getUserForAssessmentAllocation(application)).isEqualTo(userForAllocation)
-  }
-
-  @Test
-  fun `getUserForAssessmentAllocation sends qualifications to the allocations engine`() {
-    val createdByUser = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val userForAllocation = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(createdByUser)
-      .withIsEmergencyApplication(true)
-      .withIsPipeApplication(true)
-      .produce()
-
-    every { mockOffenderService.isLao(application.crn) } returns false
-
-    mockkConstructor(UserAllocationsEngine::class)
-
-    every {
-      constructedWith<UserAllocationsEngine>(
-        EqMatcher(mockUserRepository),
-        EqMatcher(AllocationType.Assessment),
-        EqMatcher(listOf(UserQualification.PIPE, UserQualification.EMERGENCY)),
-        EqMatcher(false),
-        EqMatcher(true),
-      ).getAllocatedUser()
-    } returns userForAllocation
-
-    assertThat(userService.getUserForAssessmentAllocation(application)).isEqualTo(userForAllocation)
-  }
-
-  @Test
-  fun `getUserForPlacementRequestAllocation sets isLao to true when the application is for an LAO CRN`() {
-    val userForAllocation = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val crn = "CRN123"
-
-    every { mockOffenderService.isLao(crn) } returns true
-
-    mockkConstructor(UserAllocationsEngine::class)
-
-    every {
-      constructedWith<UserAllocationsEngine>(
-        EqMatcher(mockUserRepository),
-        EqMatcher(AllocationType.PlacementRequest),
-        EqMatcher<List<UserQualification>>(emptyList()),
-        EqMatcher(true),
-        EqMatcher(true),
-      ).getAllocatedUser()
-    } returns userForAllocation
-
-    assertThat(userService.getUserForPlacementRequestAllocation(crn)).isEqualTo(userForAllocation)
-  }
-
-  @Test
-  fun `getUserForPlacementRequestAllocation sets isLao to false when the application is not for an LAO CRN`() {
-    val userForAllocation = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val crn = "CRN123"
-
-    every { mockOffenderService.isLao(crn) } returns false
-
-    mockkConstructor(UserAllocationsEngine::class)
-
-    every {
-      constructedWith<UserAllocationsEngine>(
-        EqMatcher(mockUserRepository),
-        EqMatcher(AllocationType.PlacementRequest),
-        EqMatcher<List<UserQualification>>(emptyList()),
-        EqMatcher(false),
-        EqMatcher(true),
-      ).getAllocatedUser()
-    } returns userForAllocation
-
-    assertThat(userService.getUserForPlacementRequestAllocation(crn)).isEqualTo(userForAllocation)
-  }
-
-  @Test
-  fun `getUserForPlacementApplicationAllocation sets isLao to true when the application is for an LAO CRN`() {
-    val userForAllocation = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val crn = "CRN123"
-
-    every { mockOffenderService.isLao(crn) } returns true
-
-    mockkConstructor(UserAllocationsEngine::class)
-
-    every {
-      constructedWith<UserAllocationsEngine>(
-        EqMatcher(mockUserRepository),
-        EqMatcher(AllocationType.PlacementApplication),
-        EqMatcher<List<UserQualification>>(emptyList()),
-        EqMatcher(true),
-        EqMatcher(true),
-      ).getAllocatedUser()
-    } returns userForAllocation
-
-    assertThat(userService.getUserForPlacementApplicationAllocation(crn)).isEqualTo(userForAllocation)
-  }
-
-  @Test
-  fun `getUserForPlacementApplicationAllocation sets isLao to false when the application is not for an LAO CRN`() {
-    val userForAllocation = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val crn = "CRN123"
-
-    every { mockOffenderService.isLao(crn) } returns false
-
-    mockkConstructor(UserAllocationsEngine::class)
-
-    every {
-      constructedWith<UserAllocationsEngine>(
-        EqMatcher(mockUserRepository),
-        EqMatcher(AllocationType.PlacementApplication),
-        EqMatcher<List<UserQualification>>(emptyList()),
-        EqMatcher(false),
-        EqMatcher(true),
-      ).getAllocatedUser()
-    } returns userForAllocation
-
-    assertThat(userService.getUserForPlacementApplicationAllocation(crn)).isEqualTo(userForAllocation)
   }
 
   @Test

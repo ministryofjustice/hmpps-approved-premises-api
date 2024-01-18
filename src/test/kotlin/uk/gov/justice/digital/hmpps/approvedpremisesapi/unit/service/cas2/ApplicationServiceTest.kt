@@ -408,6 +408,7 @@ class ApplicationServiceTest {
       preferredAreas = "Leeds | Bradford",
       hdcEligibilityDate = hdcEligibilityDate,
       conditionalReleaseDate = conditionalReleaseDate,
+      telephoneNumber = "123",
     )
 
     @BeforeEach
@@ -662,6 +663,7 @@ class ApplicationServiceTest {
             it["name"] == user.name &&
               it["email"] == user.email &&
               it["prisonNumber"] == application.nomsNumber &&
+              it["telephoneNumber"] == application.telephoneNumber &&
               it["applicationUrl"] == "http://frontend/assess/applications/$applicationId/overview"
           },
         )

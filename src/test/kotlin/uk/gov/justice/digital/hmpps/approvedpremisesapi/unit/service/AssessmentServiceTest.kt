@@ -14,14 +14,20 @@ import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedAssessedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -67,6 +73,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -85,6 +92,7 @@ class AssessmentServiceTest {
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
   private val emailNotificationServiceMock = mockk<EmailNotificationService>()
   private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
+  private val userAllocatorMock = mockk<UserAllocator>()
   private val objectMapperMock = spyk<ObjectMapper>()
 
   private val assessmentService = AssessmentService(
@@ -102,6 +110,7 @@ class AssessmentServiceTest {
     emailNotificationServiceMock,
     NotifyConfig(),
     placementRequirementsServiceMock,
+    userAllocatorMock,
     objectMapperMock,
     "http://frontend/applications/#id",
     "http://frontend/assessments/#id",
@@ -124,12 +133,26 @@ class AssessmentServiceTest {
         .produce(),
     )
 
-    every { assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(any(), listOf("NOT_STARTED", "IN_PROGRESS")) } returns emptyList()
+    every {
+      assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(
+        any(),
+        listOf("NOT_STARTED", "IN_PROGRESS"),
+        PageRequest.of(4, 7, Sort.by("status").ascending()),
+      )
+    } returns Page.empty()
 
-    assessmentService.getVisibleAssessmentSummariesForUserCAS1(user, statuses = listOf(DomainAssessmentSummaryStatus.NOT_STARTED, DomainAssessmentSummaryStatus.IN_PROGRESS))
+    assessmentService.getVisibleAssessmentSummariesForUserCAS1(
+      user,
+      statuses = listOf(DomainAssessmentSummaryStatus.NOT_STARTED, DomainAssessmentSummaryStatus.IN_PROGRESS),
+      PageCriteria(sortBy = AssessmentSortField.assessmentStatus, sortDirection = SortDirection.asc, page = 5, perPage = 7),
+    )
 
     verify(exactly = 1) {
-      assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(user.id.toString(), listOf("NOT_STARTED", "IN_PROGRESS"))
+      assessmentRepositoryMock.findAllApprovedPremisesAssessmentSummariesNotReallocated(
+        user.id.toString(),
+        listOf("NOT_STARTED", "IN_PROGRESS"),
+        PageRequest.of(4, 7, Sort.by("status").ascending()),
+      )
     }
   }
 
@@ -175,7 +198,7 @@ class AssessmentServiceTest {
     )
 
     assertThatExceptionOfType(RuntimeException::class.java)
-      .isThrownBy { assessmentService.getAssessmentSummariesByCrnForUser(user, "SOMECRN", ServiceName.approvedPremises) }
+      .isThrownBy { assessmentService.getAssessmentSummariesByCrnForUserCAS3(user, "SOMECRN", ServiceName.approvedPremises) }
       .withMessage("Only CAS3 assessments are currently supported")
   }
 
@@ -198,7 +221,7 @@ class AssessmentServiceTest {
 
     every { assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(any(), any()) } returns emptyList()
 
-    assessmentService.getAssessmentSummariesByCrnForUser(user, "SOMECRN", ServiceName.temporaryAccommodation)
+    assessmentService.getAssessmentSummariesByCrnForUserCAS3(user, "SOMECRN", ServiceName.temporaryAccommodation)
 
     verify(exactly = 1) { assessmentRepositoryMock.findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(user.probationRegion.id, "SOMECRN") }
   }
@@ -1286,6 +1309,7 @@ class AssessmentServiceTest {
           val data = it.data.eventDetails
 
           it.applicationId == assessment.application.id &&
+            it.assessmentId == assessment.id &&
             it.crn == assessment.application.crn &&
             data.applicationId == assessment.application.id &&
             data.applicationUrl == "http://frontend/applications/${assessment.application.id}" &&
@@ -2070,6 +2094,7 @@ class AssessmentServiceTest {
     private val placementRequestServiceMock = mockk<PlacementRequestService>()
     private val emailNotificationServiceMock = mockk<EmailNotificationService>()
     private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
+    private val userAllocatorMock = mockk<UserAllocator>()
     private val objectMapperMock = spyk<ObjectMapper>()
 
     private val assessmentService = AssessmentService(
@@ -2087,6 +2112,7 @@ class AssessmentServiceTest {
       emailNotificationServiceMock,
       NotifyConfig(),
       placementRequirementsServiceMock,
+      userAllocatorMock,
       objectMapperMock,
       "http://frontend/applications/#id",
       "http://frontend/assessments/#id",
@@ -2315,7 +2341,7 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
-      every { userServiceMock.getUserForAssessmentAllocation(application) } returns userWithLeastAllocatedAssessments
+      every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns userWithLeastAllocatedAssessments
 
       every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 

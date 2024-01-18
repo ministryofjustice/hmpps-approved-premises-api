@@ -31,7 +31,7 @@ class LostBedsReportGenerator(
       LostBedReportRow(
         roomName = room.name,
         bedName = bed.name,
-        id = it.id,
+        id = it.id.toString(),
         workOrderId = it.referenceNumber,
         region = premises.probationRegion.name,
         ap = premises.name,

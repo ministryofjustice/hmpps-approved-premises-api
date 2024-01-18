@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeBookedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
@@ -48,7 +49,6 @@ import javax.transaction.Transactional
 @Suppress("TooGenericExceptionThrown")
 class PlacementRequestService(
   private val placementRequestRepository: PlacementRequestRepository,
-  private val userService: UserService,
   private val bookingNotMadeRepository: BookingNotMadeRepository,
   private val domainEventService: DomainEventService,
   private val offenderService: OffenderService,
@@ -57,6 +57,7 @@ class PlacementRequestService(
   private val placementRequirementsRepository: PlacementRequirementsRepository,
   private val placementDateRepository: PlacementDateRepository,
   private val cancellationRepository: CancellationRepository,
+  private val userAllocator: UserAllocator,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
 
@@ -249,26 +250,28 @@ class PlacementRequestService(
     isParole: Boolean,
     placementApplicationEntity: PlacementApplicationEntity?,
   ): PlacementRequestEntity {
-    val user = userService
-    return placementRequestRepository.save(
-      PlacementRequestEntity(
-        id = UUID.randomUUID(),
-        duration = placementDates.duration,
-        expectedArrival = placementDates.expectedArrival,
-        placementApplication = placementApplicationEntity,
-        placementRequirements = placementRequirements,
-        createdAt = OffsetDateTime.now(),
-        assessment = placementRequirements.assessment,
-        application = placementRequirements.application,
-        allocatedToUser = user.getUserForPlacementRequestAllocation(placementRequirements.application.crn),
-        booking = null,
-        bookingNotMades = mutableListOf(),
-        reallocatedAt = null,
-        notes = notes,
-        isParole = isParole,
-        isWithdrawn = false,
-      ),
+    val placementRequest = PlacementRequestEntity(
+      id = UUID.randomUUID(),
+      duration = placementDates.duration,
+      expectedArrival = placementDates.expectedArrival,
+      placementApplication = placementApplicationEntity,
+      placementRequirements = placementRequirements,
+      createdAt = OffsetDateTime.now(),
+      assessment = placementRequirements.assessment,
+      application = placementRequirements.application,
+      allocatedToUser = null,
+      booking = null,
+      bookingNotMades = mutableListOf(),
+      reallocatedAt = null,
+      notes = notes,
+      isParole = isParole,
+      isWithdrawn = false,
     )
+
+    val allocatedUser = userAllocator.getUserForPlacementRequestAllocation(placementRequest)
+    placementRequest.allocatedToUser = allocatedUser
+
+    return placementRequestRepository.save(placementRequest)
   }
 
   @Transactional

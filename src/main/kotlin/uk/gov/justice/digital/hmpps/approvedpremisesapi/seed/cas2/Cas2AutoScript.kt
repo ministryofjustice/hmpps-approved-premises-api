@@ -15,9 +15,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import java.io.IOException
 import java.io.InputStreamReader
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
@@ -40,6 +43,8 @@ class Cas2AutoScript(
   private val externalUserRepository: ExternalUserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val jsonSchemaService: JsonSchemaService,
+  private val applicationService: ApplicationService,
+  private val statusUpdateService: StatusUpdateService,
 ) {
   fun script() {
     seedLogger.info("Auto-Scripting for CAS2")
@@ -73,6 +78,12 @@ class Cas2AutoScript(
         schemaUpToDate = true,
       ),
     )
+
+    if (listOf("SUBMITTED", "IN_REVIEW").contains(state)) {
+      val appWithPromotedProperties = applyFirstClassProperties(application)
+      applicationService.createCas2ApplicationSubmittedEvent(appWithPromotedProperties)
+    }
+
     if (state == "IN_REVIEW") {
       val quantity = randomInt(FEWEST_UPDATES, MOST_UPDATES)
       seedLogger.info("Auto-scripting $quantity status updates for application ${application.id}")
@@ -80,6 +91,17 @@ class Cas2AutoScript(
     }
   }
 
+  private fun applyFirstClassProperties(application: Cas2ApplicationEntity): Cas2ApplicationEntity {
+    return applicationRepository.saveAndFlush(
+      application.apply {
+        referringPrisonCode = "BRI"
+        preferredAreas = "Luton | Hertford"
+        hdcEligibilityDate = LocalDate.parse("2024-02-28")
+        conditionalReleaseDate = LocalDate.parse("2024-02-22")
+        telephoneNumber = "0800 123 456"
+      },
+    )
+  }
   private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
     seedLogger.info("Auto-scripting status update $idx for application ${application.id}")
     val assessor = externalUserRepository.findAll().random()
@@ -96,6 +118,7 @@ class Cas2AutoScript(
     )
     update.apply { this.createdAt = application.submittedAt!!.plusDays(idx + 1.toLong()) }
     statusUpdateRepository.save(update)
+    statusUpdateService.createStatusUpdatedDomainEvent(update)
   }
 
   private fun findStatusAtPosition(idx: Int): Cas2ApplicationStatus {

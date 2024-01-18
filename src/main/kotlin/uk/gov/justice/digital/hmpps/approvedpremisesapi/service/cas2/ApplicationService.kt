@@ -114,6 +114,7 @@ class ApplicationService(
           submittedAt = null,
           schemaUpToDate = true,
           nomsNumber = offenderDetails.otherIds.nomsNumber,
+          telephoneNumber = null,
         ),
       )
 
@@ -219,6 +220,7 @@ class ApplicationService(
       preferredAreas = submitApplication.preferredAreas
       hdcEligibilityDate = submitApplication.hdcEligibilityDate
       conditionalReleaseDate = submitApplication.conditionalReleaseDate
+      telephoneNumber = submitApplication.telephoneNumber
     }
 
     application = applicationRepository.save(application)
@@ -232,9 +234,9 @@ class ApplicationService(
     )
   }
 
-  private fun createCas2ApplicationSubmittedEvent(application: Cas2ApplicationEntity) {
+  fun createCas2ApplicationSubmittedEvent(application: Cas2ApplicationEntity) {
     val domainEventId = UUID.randomUUID()
-    val eventOccurredAt = OffsetDateTime.now()
+    val eventOccurredAt = application.submittedAt ?: OffsetDateTime.now()
 
     domainEventService.saveCas2ApplicationSubmittedDomainEvent(
       DomainEvent(
@@ -294,6 +296,7 @@ class ApplicationService(
         "name" to user.name,
         "email" to user.email,
         "prisonNumber" to application.nomsNumber,
+        "telephoneNumber" to application.telephoneNumber,
         "applicationUrl" to submittedApplicationUrlTemplate.replace("#applicationId", application.id.toString()),
       ),
     )

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedAssessedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
@@ -81,6 +82,7 @@ class AcceptAssessmentTest {
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
   private val emailNotificationServiceMock = mockk<EmailNotificationService>()
   private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
+  private val userAllocator = mockk<UserAllocator>()
   private val objectMapperMock = mockk<ObjectMapper>()
 
   private val assessmentService = AssessmentService(
@@ -98,6 +100,7 @@ class AcceptAssessmentTest {
     emailNotificationServiceMock,
     NotifyConfig(),
     placementRequirementsServiceMock,
+    userAllocator,
     objectMapperMock,
     "http://frontend/applications/#id",
     "http://frontend/assessments/#id",

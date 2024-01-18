@@ -23,6 +23,7 @@ interface Cas2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainEve
 
       FROM domain_events events
       WHERE events.type = 'CAS2_APPLICATION_STATUS_UPDATED'
+        AND events.occurred_at  > CURRENT_DATE - 365
       ORDER BY updatedAt DESC;
     """,
     nativeQuery = true,

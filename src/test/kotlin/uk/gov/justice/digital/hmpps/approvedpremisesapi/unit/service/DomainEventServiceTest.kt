@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -37,7 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomainEventWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
-import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -852,7 +852,7 @@ class DomainEventServiceTest {
 
     every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
-    domainEventService.savePersonArrivedEvent(domainEventToSave)
+    domainEventService.savePersonArrivedEvent(domainEventToSave, emit = true)
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(
@@ -907,7 +907,7 @@ class DomainEventServiceTest {
     )
 
     try {
-      domainEventService.savePersonArrivedEvent(domainEventToSave)
+      domainEventService.savePersonArrivedEvent(domainEventToSave, emit = true)
     } catch (_: Exception) {
     }
 
@@ -923,9 +923,47 @@ class DomainEventServiceTest {
       )
     }
 
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
+    verify { domainEventWorkerMock wasNot Called }
+  }
+
+  @Test
+  fun `savePersonArrivedEvent persists event, does not emit event to SNS if emit flag is false`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = PersonArrivedEnvelope(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = "approved-premises.person.arrived",
+        eventDetails = PersonArrivedFactory().produce(),
+      ),
+    )
+
+    domainEventService.savePersonArrivedEvent(domainEventToSave, emit = false)
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.bookingId == domainEventToSave.bookingId
+        },
+      )
     }
+
+    verify { domainEventWorkerMock wasNot Called }
   }
 
   @Test
@@ -996,7 +1034,7 @@ class DomainEventServiceTest {
 
     every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
-    domainEventService.savePersonNotArrivedEvent(domainEventToSave)
+    domainEventService.savePersonNotArrivedEvent(domainEventToSave, emit = true)
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(
@@ -1051,7 +1089,7 @@ class DomainEventServiceTest {
     )
 
     try {
-      domainEventService.savePersonNotArrivedEvent(domainEventToSave)
+      domainEventService.savePersonNotArrivedEvent(domainEventToSave, emit = true)
     } catch (_: Exception) {
     }
 
@@ -1067,9 +1105,49 @@ class DomainEventServiceTest {
       )
     }
 
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
+    verify { domainEventWorkerMock wasNot Called }
+  }
+
+  @Test
+  fun `savePersonNotArrivedEvent persists event, does not emit event to SNS if emit flag is false`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = PersonNotArrivedEnvelope(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = "approved-premises.person.not-arrived",
+        eventDetails = PersonNotArrivedFactory().produce(),
+      ),
+    )
+
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
+
+    domainEventService.savePersonNotArrivedEvent(domainEventToSave, emit = false)
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.bookingId == domainEventToSave.bookingId
+        },
+      )
     }
+
+    verify { domainEventWorkerMock wasNot Called }
   }
 
   @Test
@@ -1140,7 +1218,7 @@ class DomainEventServiceTest {
 
     every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
-    domainEventService.savePersonDepartedEvent(domainEventToSave)
+    domainEventService.savePersonDepartedEvent(domainEventToSave, emit = true)
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(
@@ -1181,8 +1259,6 @@ class DomainEventServiceTest {
 
     every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
 
-    val mockHmppsTopic = mockk<HmppsTopic>()
-
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
@@ -1197,7 +1273,7 @@ class DomainEventServiceTest {
     )
 
     try {
-      domainEventService.savePersonDepartedEvent(domainEventToSave)
+      domainEventService.savePersonDepartedEvent(domainEventToSave, emit = true)
     } catch (_: Exception) {
     }
 
@@ -1213,9 +1289,49 @@ class DomainEventServiceTest {
       )
     }
 
-    verify(exactly = 0) {
-      mockHmppsTopic.snsClient.publish(any())
+    verify { domainEventWorkerMock wasNot Called }
+  }
+
+  @Test
+  fun `savePersonDepartedEvent persists event, does not emit event to SNS if emit flag is false`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = PersonDepartedEnvelope(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = "approved-premises.person.departed",
+        eventDetails = PersonDepartedFactory().produce(),
+      ),
+    )
+
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
+
+    domainEventService.savePersonDepartedEvent(domainEventToSave, emit = false)
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.bookingId == domainEventToSave.bookingId
+        },
+      )
     }
+
+    verify { domainEventWorkerMock wasNot Called }
   }
 
   @Test

@@ -20,6 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -34,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.filterByStatuses
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.sort
 import java.util.UUID
@@ -51,7 +54,6 @@ class AssessmentController(
   @Value("\${pagination.default-page-size}") private val defaultPageSize: Int,
 ) : AssessmentsApiDelegate {
 
-  @Suppress("NAME_SHADOWING", "CyclomaticComplexMethod")
   override fun assessmentsGet(
     xServiceName: ServiceName,
     sortDirection: SortDirection?,
@@ -62,53 +64,54 @@ class AssessmentController(
     perPage: Int?,
   ): ResponseEntity<List<AssessmentSummary>> {
     val user = userService.getUserForRequest()
-    val manuallyFilter = xServiceName == ServiceName.temporaryAccommodation
+    val resolvedSortDirection = sortDirection ?: SortDirection.asc
+    val resolvedSortBy = sortBy ?: AssessmentSortField.assessmentArrivalDate
 
-    val summaries = when {
-      xServiceName == ServiceName.cas2 -> throw UnsupportedOperationException("CAS2 not supported")
-      xServiceName == ServiceName.temporaryAccommodation && crn != null -> assessmentService.getAssessmentSummariesByCrnForUser(user, crn, xServiceName)
-      xServiceName == ServiceName.temporaryAccommodation -> assessmentService.getVisibleAssessmentSummariesForUserCAS3(user)
+    val (summaries, metadata) = when (xServiceName) {
+      ServiceName.cas2 -> throw UnsupportedOperationException("CAS2 not supported")
+      ServiceName.temporaryAccommodation -> {
+        val summaries = if (crn != null) {
+          assessmentService.getAssessmentSummariesByCrnForUserCAS3(user, crn, xServiceName)
+        } else {
+          assessmentService.getVisibleAssessmentSummariesForUserCAS3(user)
+        }
+
+        var filteredSummaries = transformDomainToApi(user, summaries)
+          .sort(resolvedSortDirection, resolvedSortBy)
+          .filterByStatuses(statuses)
+
+        var metadata: PaginationMetadata? = null
+
+        if (page !== null && filteredSummaries.isNotEmpty()) {
+          val pageSize = perPage ?: defaultPageSize
+          val chunkedSummaries = filteredSummaries.chunked(pageSize)
+          val pageIndex = page - 1
+
+          metadata = PaginationMetadata(page, chunkedSummaries.size, filteredSummaries.size.toLong(), pageSize)
+          filteredSummaries = chunkedSummaries[pageIndex]
+        }
+
+        Pair(filteredSummaries, metadata)
+      }
       else -> {
         val domainSummaryStatuses = statuses?.map { assessmentTransformer.transformApiStatusToDomainSummaryState(it) } ?: emptyList()
-        assessmentService.getVisibleAssessmentSummariesForUserCAS1(user, domainSummaryStatuses)
+        val (summaries, metadata) = assessmentService.getVisibleAssessmentSummariesForUserCAS1(user, domainSummaryStatuses, PageCriteria(resolvedSortBy, resolvedSortDirection, page, perPage))
+        Pair(transformDomainToApi(user, summaries), metadata)
       }
     }
 
-    val sortDirection = when {
-      xServiceName == ServiceName.temporaryAccommodation && sortDirection == null -> SortDirection.asc
-      else -> sortDirection
-    }
+    return ResponseEntity.ok()
+      .headers(metadata?.toHeaders())
+      .body(summaries)
+  }
 
-    val sortBy = when {
-      xServiceName == ServiceName.temporaryAccommodation && sortBy == null -> AssessmentSortField.assessmentArrivalDate
-      else -> sortBy
-    }
+  private fun transformDomainToApi(user: UserEntity, summaries: List<DomainAssessmentSummary>) = summaries.map {
+    val personInfo = offenderService.getInfoForPerson(it.crn, user.deliusUsername, false)
 
-    var metadata: PaginationMetadata? = null
-    val sortedSummaries = summaries.map {
-      val personInfo = offenderService.getInfoForPerson(it.crn, user.deliusUsername, false)
-
-      assessmentTransformer.transformDomainToApiSummary(
-        it,
-        personInfo,
-      )
-    }.sort(sortDirection, sortBy)
-
-    var filteredSummaries = if (manuallyFilter) sortedSummaries.filterByStatuses(statuses) else sortedSummaries
-
-    // TODO: We should carry out the pagination at the database level
-    if (page !== null && filteredSummaries.isNotEmpty()) {
-      val pageSize = perPage ?: defaultPageSize
-      val chunkedSummaries = filteredSummaries.chunked(pageSize)
-      val pageIndex = page - 1
-
-      metadata = PaginationMetadata(page, chunkedSummaries.size, filteredSummaries.size.toLong(), pageSize)
-      filteredSummaries = chunkedSummaries[pageIndex]
-    }
-
-    return ResponseEntity.ok().headers(
-      metadata?.toHeaders(),
-    ).body(filteredSummaries)
+    assessmentTransformer.transformDomainToApiSummary(
+      it,
+      personInfo,
+    )
   }
 
   override fun assessmentsAssessmentIdGet(assessmentId: UUID): ResponseEntity<Assessment> {

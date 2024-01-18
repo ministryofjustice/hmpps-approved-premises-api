@@ -38,7 +38,7 @@ interface LostBedsRepository : JpaRepository<LostBedsEntity, UUID> {
   )
   fun findByBedIdAndOverlappingDate(bedId: UUID, startDate: LocalDate, endDate: LocalDate, thisEntityId: UUID?): List<LostBedsEntity>
 
-  @Query("SELECT lb FROM LostBedsEntity lb WHERE lb.startDate <= :endDate AND lb.endDate >= :startDate AND lb.bed = :bed")
+  @Query("SELECT lb FROM LostBedsEntity lb LEFT JOIN lb.cancellation c WHERE lb.startDate <= :endDate AND lb.endDate >= :startDate AND lb.bed = :bed AND c is NULL")
   fun findAllByOverlappingDateForBed(startDate: LocalDate, endDate: LocalDate, bed: BedEntity): List<LostBedsEntity>
 
   @Query("SELECT lb FROM LostBedsEntity lb LEFT JOIN lb.cancellation c WHERE lb.premises.id = :premisesId AND c is NULL")

@@ -47,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import java.util.UUID
 
@@ -298,6 +299,8 @@ class TaskServiceTest {
   @Test
   fun `getAllReallocatable returns all tasks for a particular page`() {
     mockkStatic("uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationUtilsKt")
+
+    PaginationConfig(defaultPageSize = 10).postInit()
 
     val assessments = List(3) { generateAssessment() }
     val placementApplications = List(4) { generatePlacementApplication() }

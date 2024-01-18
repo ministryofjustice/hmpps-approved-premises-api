@@ -67,11 +67,11 @@ class UsersTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Getting a user with the PRISON role returns 403`() {
+  fun `Getting a user with the POM role returns 403`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
       authSource = "nomis",
-      roles = listOf("ROLE_PRISON"),
+      roles = listOf("ROLE_POM"),
     )
 
     webTestClient.get()

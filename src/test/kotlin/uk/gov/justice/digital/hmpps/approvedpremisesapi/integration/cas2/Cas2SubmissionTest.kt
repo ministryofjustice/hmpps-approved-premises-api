@@ -11,8 +11,10 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -34,7 +36,9 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class Cas2SubmissionTest : IntegrationTestBase() {
+class Cas2SubmissionTest(
+  @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
+) : IntegrationTestBase() {
   @SpykBean
   lateinit var realApplicationRepository: ApplicationRepository
 
@@ -59,7 +63,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
     fun `submitting an application is forbidden to external users based on role`() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
-        authSource = "nomis",
+        authSource = "auth",
         roles = listOf("ROLE_CAS2_ASSESSOR"),
       )
 
@@ -76,7 +80,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_PRISON"),
+        roles = listOf("ROLE_POM"),
       )
 
       webTestClient.get()
@@ -92,7 +96,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_PRISON"),
+        roles = listOf("ROLE_POM"),
       )
 
       webTestClient.get()
@@ -587,10 +591,11 @@ class Cas2SubmissionTest : IntegrationTestBase() {
   inner class PostToCreate {
     @Test
     fun `Submit Cas2 application returns 200`() {
+      val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
       `Given a CAS2 User`() { submittingUser, jwt ->
         `Given a CAS2 User` { userEntity, _ ->
           `Given an Offender` { offenderDetails, _ ->
-            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
             val applicationSchema =
               cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -640,12 +645,23 @@ class Cas2SubmissionTest : IntegrationTestBase() {
                   preferredAreas = "Leeds | Bradford",
                   hdcEligibilityDate = LocalDate.parse("2023-03-30"),
                   conditionalReleaseDate = LocalDate.parse("2023-04-29"),
+                  telephoneNumber = "123 456 7891",
                 ),
               )
               .exchange()
               .expectStatus()
               .isOk
           }
+
+          // verify that generated 'application.submitted' domain event links to the CAS2 domain
+          val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", applicationId.toString())
+          val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
+          val domainEventFromJson = objectMapper.readValue(
+            persistedDomainEvent!!.data,
+            Cas2ApplicationSubmittedEvent::class.java,
+          )
+          Assertions.assertThat(domainEventFromJson.eventDetails.applicationUrl)
+            .isEqualTo(expectedFrontEndUrl)
         }
       }
     }
@@ -710,6 +726,7 @@ class Cas2SubmissionTest : IntegrationTestBase() {
                   SubmitCas2Application(
                     applicationId = applicationId,
                     translatedDocument = {},
+                    telephoneNumber = "123 456 7891",
                   ),
                 )
                 .exchange()
