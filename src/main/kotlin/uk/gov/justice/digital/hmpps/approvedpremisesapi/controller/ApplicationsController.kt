@@ -30,12 +30,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotImplementedProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
@@ -303,10 +303,8 @@ class ApplicationsController(
   override fun applicationsApplicationIdTimelineGet(applicationId: UUID, xServiceName: ServiceName):
     ResponseEntity<List<TimelineEvent>> {
     val user = userService.getUserForRequest()
-    if (xServiceName != ServiceName.approvedPremises ||
-      !user.hasAnyRole(UserRole.CAS1_ADMIN, UserRole.CAS1_WORKFLOW_MANAGER)
-    ) {
-      throw ForbiddenProblem()
+    if (xServiceName != ServiceName.approvedPremises) {
+      throw NotImplementedProblem("Timeline is only supported for Approved Premises applications")
     }
     val events = applicationService.getApplicationTimeline(applicationId)
     return ResponseEntity(events, HttpStatus.OK)

@@ -2394,7 +2394,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get application timeline returns 403 forbidden when not approved premises service`() {
+    fun `Get application timeline returns 501 not implemented when not approved premises service`() {
       `Given a User`(roles = listOf(UserRole.CAS1_ADMIN)) { _, jwt ->
         webTestClient.get()
           .uri("/applications/$applicationId/timeline")
@@ -2402,13 +2402,13 @@ class ApplicationTest : IntegrationTestBase() {
           .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .exchange()
           .expectStatus()
-          .isForbidden
+          .isEqualTo(HttpStatus.NOT_IMPLEMENTED)
       }
     }
 
     @Test
     fun `Get application timeline returns 200 when user has permission and approved premises service`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_ADMIN)) { _, jwt ->
+      `Given a User` { _, jwt ->
         webTestClient.get()
           .uri("/applications/$applicationId/timeline")
           .header("Authorization", "Bearer $jwt")
@@ -2421,7 +2421,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get application timeline returns correct ten DomainEvents when no information requests`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_ADMIN)) { _, jwt ->
+      `Given a User` { _, jwt ->
 
         val domainEvents = createTenDomainEvents()
         val summaries = domainEvents.map {
@@ -2451,7 +2451,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get application timeline returns correct twenty DomainEvents when we have ten information requests`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      `Given a User` { user, jwt ->
 
         val assessment = createAssessment(user)
 
@@ -2494,7 +2494,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get application timeline returns correct manually added application timeline notes`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+      `Given a User` { user, jwt ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }
@@ -2545,7 +2545,7 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get application timeline includes URLs where applicable`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+      `Given a User` { _, jwt ->
 
         val applicationId = UUID.randomUUID()
         val assessmentId = UUID.randomUUID()
