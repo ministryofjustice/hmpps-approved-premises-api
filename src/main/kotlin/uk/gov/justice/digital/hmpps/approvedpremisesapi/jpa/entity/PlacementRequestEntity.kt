@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -143,17 +144,26 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       AND (:tier IS NULL OR (SELECT COUNT(1) FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier) = 1) 
       AND (CAST(:arrivalDateFrom AS date) IS NULL OR pq.expected_arrival >= :arrivalDateFrom) 
       AND (CAST(:arrivalDateTo AS date) IS NULL OR pq.expected_arrival <= :arrivalDateTo)
+      AND (
+        :requestType IS NULL OR 
+        (
+            (:#{#requestType?.toString()} = 'parole' AND pq.is_parole IS TRUE)
+            OR
+            (:#{#requestType?.toString()} = 'standardRelease' AND pq.is_parole IS FALSE)
+        )
+      )
   """,
     nativeQuery = true,
   )
   fun allForDashboard(
-    status: PlacementRequestStatus?,
-    crn: String?,
-    crnOrName: String?,
-    tier: String?,
-    arrivalDateFrom: LocalDate?,
-    arrivalDateTo: LocalDate?,
-    pageable: Pageable?,
+    status: PlacementRequestStatus? = null,
+    crn: String? = null,
+    crnOrName: String? = null,
+    tier: String? = null,
+    arrivalDateFrom: LocalDate? = null,
+    arrivalDateTo: LocalDate? = null,
+    requestType: PlacementRequestRequestType? = null,
+    pageable: Pageable? = null,
   ): Page<PlacementRequestEntity>
 }
 

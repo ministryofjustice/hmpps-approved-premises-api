@@ -2936,6 +2936,11 @@ paths:
           schema:
             type: string
             format: date
+        - name: requestType
+          in: query
+          description: filter by request type
+          schema:
+            $ref: '#/components/schemas/PlacementRequestRequestType'
         - name: page
           in: query
           description: Page number of results to return. If blank, returns all results
@@ -7745,6 +7750,8 @@ components:
               type: string
             booking:
               $ref: '#/components/schemas/BookingSummary'
+            requestType:
+              $ref: '#/components/schemas/PlacementRequestRequestType'
           required:
             - person
             - risks
@@ -7758,6 +7765,11 @@ components:
             - applicationDate
             - assessor
             - isParole
+    PlacementRequestRequestType:
+      type: string
+      enum:
+        - parole
+        - standardRelease
     PlacementRequestDetail:
       allOf:
         - $ref: '#/components/schemas/PlacementRequest'

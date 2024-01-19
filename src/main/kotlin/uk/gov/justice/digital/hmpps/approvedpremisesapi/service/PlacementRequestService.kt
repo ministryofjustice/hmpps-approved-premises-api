@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
@@ -124,25 +125,27 @@ class PlacementRequestService(
 
     val pageable = getPageable(pageCriteria.withSortBy(sortField))
     val response = placementRequestRepository.allForDashboard(
-      searchCriteria.status,
-      searchCriteria.crn,
-      searchCriteria.crnOrName,
-      searchCriteria.tier,
-      searchCriteria.arrivalDateStart,
-      searchCriteria.arrivalDateEnd,
-      pageable,
+      status = searchCriteria.status,
+      crn = searchCriteria.crn,
+      crnOrName = searchCriteria.crnOrName,
+      tier = searchCriteria.tier,
+      arrivalDateFrom = searchCriteria.arrivalDateStart,
+      arrivalDateTo = searchCriteria.arrivalDateEnd,
+      requestType = searchCriteria.requestType,
+      pageable = pageable,
     )
 
     return Pair(response.content, getMetadata(response, pageCriteria))
   }
 
   data class AllActiveSearchCriteria(
-    val status: PlacementRequestStatus?,
-    val crn: String?,
-    val crnOrName: String?,
-    val tier: String?,
-    val arrivalDateStart: LocalDate?,
-    val arrivalDateEnd: LocalDate?,
+    val status: PlacementRequestStatus? = null,
+    val crn: String? = null,
+    val crnOrName: String? = null,
+    val tier: String? = null,
+    val arrivalDateStart: LocalDate? = null,
+    val arrivalDateEnd: LocalDate? = null,
+    val requestType: PlacementRequestRequestType? = null,
   )
 
   fun getPlacementRequestForUser(
