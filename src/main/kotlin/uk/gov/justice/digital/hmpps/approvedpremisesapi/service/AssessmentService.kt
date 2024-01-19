@@ -108,20 +108,33 @@ class AssessmentService(
     return getPageableOrAllPages(pageCriteria.withSortBy(sortFieldString))
   }
 
-  fun getVisibleAssessmentSummariesForUserCAS3(user: UserEntity): List<DomainAssessmentSummary> =
-    assessmentRepository.findAllTemporaryAccommodationAssessmentSummariesForRegion(user.probationRegion.id)
-
-  fun getAssessmentSummariesByCrnForUserCAS3(
+  fun getAssessmentSummariesForUserCAS3(
     user: UserEntity,
-    crn: String,
+    crn: String?,
     serviceName: ServiceName,
-  ): List<DomainAssessmentSummary> = when (serviceName) {
-    ServiceName.temporaryAccommodation -> assessmentRepository.findTemporaryAccommodationAssessmentSummariesForRegionAndCrn(
-      user.probationRegion.id,
-      crn,
-    )
+    statuses: List<DomainAssessmentSummaryStatus>,
+    pageCriteria: PageCriteria<AssessmentSortField>,
+  ): Pair<List<DomainAssessmentSummary>, PaginationMetadata?> {
+    when (serviceName) {
+      ServiceName.temporaryAccommodation -> {
+        val sortFieldString = when (pageCriteria.sortBy) {
+          AssessmentSortField.assessmentStatus -> "status"
+          AssessmentSortField.assessmentArrivalDate -> "arrivalDate"
+          AssessmentSortField.assessmentCreatedAt -> "createdAt"
+          AssessmentSortField.personCrn -> "crn"
+          else -> "arrivalDate"
+        }
+        val response = assessmentRepository.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(
+          user.probationRegion.id,
+          crn,
+          statuses.map { it.name },
+          getPageableOrAllPages(pageCriteria.withSortBy(sortFieldString)),
+        )
 
-    else -> throw RuntimeException("Only CAS3 assessments are currently supported")
+        return Pair(response.content, getMetadata(response, pageCriteria))
+      }
+      else -> throw RuntimeException("Only CAS3 assessments are currently supported")
+    }
   }
 
   fun getAllReallocatable(

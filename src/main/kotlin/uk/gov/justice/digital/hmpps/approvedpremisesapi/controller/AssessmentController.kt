@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -22,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -37,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentCl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentReferralHistoryNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.filterByStatuses
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.sort
 import java.util.UUID
 import javax.transaction.Transactional
@@ -51,7 +48,6 @@ class AssessmentController(
   private val assessmentTransformer: AssessmentTransformer,
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val assessmentReferralHistoryNoteTransformer: AssessmentReferralHistoryNoteTransformer,
-  @Value("\${pagination.default-page-size}") private val defaultPageSize: Int,
 ) : AssessmentsApiDelegate {
 
   override fun assessmentsGet(
@@ -66,35 +62,25 @@ class AssessmentController(
     val user = userService.getUserForRequest()
     val resolvedSortDirection = sortDirection ?: SortDirection.asc
     val resolvedSortBy = sortBy ?: AssessmentSortField.assessmentArrivalDate
+    val domainSummaryStatuses = statuses?.map { assessmentTransformer.transformApiStatusToDomainSummaryState(it) } ?: emptyList()
 
     val (summaries, metadata) = when (xServiceName) {
       ServiceName.cas2 -> throw UnsupportedOperationException("CAS2 not supported")
       ServiceName.temporaryAccommodation -> {
-        val summaries = if (crn != null) {
-          assessmentService.getAssessmentSummariesByCrnForUserCAS3(user, crn, xServiceName)
-        } else {
-          assessmentService.getVisibleAssessmentSummariesForUserCAS3(user)
+        val (summaries, metadata) = assessmentService.getAssessmentSummariesForUserCAS3(
+          user,
+          crn,
+          xServiceName,
+          domainSummaryStatuses,
+          PageCriteria(resolvedSortBy, resolvedSortDirection, page, perPage),
+        )
+        val transformSummaries = when (sortBy) {
+          AssessmentSortField.personName -> transformDomainToApi(user, summaries).sort(resolvedSortDirection, sortBy)
+          else -> transformDomainToApi(user, summaries)
         }
-
-        var filteredSummaries = transformDomainToApi(user, summaries)
-          .sort(resolvedSortDirection, resolvedSortBy)
-          .filterByStatuses(statuses)
-
-        var metadata: PaginationMetadata? = null
-
-        if (page !== null && filteredSummaries.isNotEmpty()) {
-          val pageSize = perPage ?: defaultPageSize
-          val chunkedSummaries = filteredSummaries.chunked(pageSize)
-          val pageIndex = page - 1
-
-          metadata = PaginationMetadata(page, chunkedSummaries.size, filteredSummaries.size.toLong(), pageSize)
-          filteredSummaries = chunkedSummaries[pageIndex]
-        }
-
-        Pair(filteredSummaries, metadata)
+        Pair(transformSummaries, metadata)
       }
       else -> {
-        val domainSummaryStatuses = statuses?.map { assessmentTransformer.transformApiStatusToDomainSummaryState(it) } ?: emptyList()
         val (summaries, metadata) = assessmentService.getVisibleAssessmentSummariesForUserCAS1(user, domainSummaryStatuses, PageCriteria(resolvedSortBy, resolvedSortDirection, page, perPage))
         Pair(transformDomainToApi(user, summaries), metadata)
       }

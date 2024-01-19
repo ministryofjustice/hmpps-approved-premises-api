@@ -4,6 +4,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.fail
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
@@ -107,12 +110,14 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
                 withDecision(AssessmentDecision.ACCEPTED)
               }
 
-              val results: List<DomainAssessmentSummary> =
-                realAssessmentRepository.findAllTemporaryAccommodationAssessmentSummariesForRegion(user1.probationRegion.id)
+              val pageRequest = PageRequest.of(0, 10, Sort.by("arrivalDate").ascending())
 
-              assertThat(results.size).isEqualTo(3)
+              val results: Page<DomainAssessmentSummary> =
+                realAssessmentRepository.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(user1.probationRegion.id, null, emptyList(), pageRequest)
 
-              results.forEach {
+              assertThat(results.content.size).isEqualTo(3)
+
+              results.content.forEach {
                 when (it.id) {
                   u2Assessment.id -> assertForAssessmentSummary(it, u2Assessment)
                   taAssessment.id -> assertForAssessmentSummary(it, taAssessment)
@@ -121,6 +126,82 @@ class AssessmentSummaryQueryTest : IntegrationTestBase() {
                   else -> fail()
                 }
               }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Temporary Accommodation assessment summary query returns assessments in the region with specific crn`() {
+    `Given a User` { user1, _ ->
+      `Given an Assessment for Temporary Accommodation`(user1, user1, reallocated = true) { _, _ -> }
+      `Given an Assessment for Temporary Accommodation`(user1, user1) { taAssessment, _ ->
+        `Given an Assessment for Temporary Accommodation`(user1, user1, data = null) { notStartedTaAssessment, _ ->
+          `Given an Assessment for Approved Premises`(user1, user1) { apAssessment, _ ->
+            `Given a User`(probationRegion = user1.probationRegion) { user2, _ ->
+
+              val u2Assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+                val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(taAssessment.application.schemaVersion)
+                  withCreatedByUser(user2)
+                  withProbationRegion(user2.probationRegion)
+                }
+                withAllocatedToUser(user2)
+                withAssessmentSchema(taAssessment.schemaVersion)
+                withApplication(application)
+                withDecision(AssessmentDecision.ACCEPTED)
+              }
+              val pageRequest = PageRequest.of(0, 10, Sort.by("arrivalDate").ascending())
+
+              val results: Page<DomainAssessmentSummary> =
+                realAssessmentRepository.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(user1.probationRegion.id, taAssessment.application.crn, emptyList(), pageRequest)
+
+              assertThat(results.content.size).isEqualTo(1)
+
+              results.content.forEach {
+                when (it.id) {
+                  u2Assessment.id -> assertForAssessmentSummary(it, u2Assessment)
+                  taAssessment.id -> assertForAssessmentSummary(it, taAssessment)
+                  apAssessment.id -> fail("Did not expect an Approved Premises Assessment when fetching Temporary Accommodation Assessment summaries")
+                  notStartedTaAssessment.id -> assertForAssessmentSummary(it, notStartedTaAssessment)
+                  else -> fail()
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Temporary Accommodation assessment summary query returns no assessments when searched for specific status which doesn't exists`() {
+    `Given a User` { user1, _ ->
+      `Given an Assessment for Temporary Accommodation`(user1, user1, reallocated = true) { _, _ -> }
+      `Given an Assessment for Temporary Accommodation`(user1, user1) { taAssessment, _ ->
+        `Given an Assessment for Temporary Accommodation`(user1, user1, data = null) { notStartedTaAssessment, _ ->
+          `Given an Assessment for Approved Premises`(user1, user1) { apAssessment, _ ->
+            `Given a User`(probationRegion = user1.probationRegion) { user2, _ ->
+
+              val u2Assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+                val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(taAssessment.application.schemaVersion)
+                  withCreatedByUser(user2)
+                  withProbationRegion(user2.probationRegion)
+                }
+                withAllocatedToUser(user2)
+                withAssessmentSchema(taAssessment.schemaVersion)
+                withApplication(application)
+                withDecision(AssessmentDecision.ACCEPTED)
+              }
+              val pageRequest = PageRequest.of(0, 10, Sort.by("arrivalDate").ascending())
+
+              val results: Page<DomainAssessmentSummary> =
+                realAssessmentRepository.findTemporaryAccommodationAssessmentSummariesForRegionAndCrnAndStatus(user1.probationRegion.id, null, listOf("IN_REVIEW"), pageRequest)
+
+              assertThat(results.content.size).isEqualTo(0)
             }
           }
         }
