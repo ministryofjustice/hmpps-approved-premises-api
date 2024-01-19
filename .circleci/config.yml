@@ -373,11 +373,9 @@ workflows:
       - request-preprod-approval:
           type: approval
           requires:
-#            TODO: Uncomment this when we have confirmed the e2es work correctly
-#            - cas1_e2e_tests
-#            - cas2_e2e_tests
-#            - cas3_e2e_tests
-            - deploy_dev
+           - cas1_e2e_tests
+           - cas2_e2e_tests
+           - cas3_e2e_tests
       - hmpps/deploy_env:
           name: deploy_preprod
           env: "preprod"
