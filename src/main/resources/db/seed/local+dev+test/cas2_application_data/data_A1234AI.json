@@ -123,7 +123,6 @@
     "substance-misuse": {
       "usesIllegalSubstances": "yes",
       "substanceMisuseHistory": "Mr Bertrand is a heroin user",
-      "substanceMisuseDetail": "Daily intravenous use",
       "engagedWithDrugAndAlcoholService": "yes",
       "intentToReferToServiceOnRelease": "yes",
       "drugAndAlcoholServiceDetail": "Drug Awareness Service",
