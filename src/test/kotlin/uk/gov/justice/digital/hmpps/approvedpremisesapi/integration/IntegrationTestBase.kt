@@ -193,6 +193,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalRea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.NonArrivalTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.OfflineApplicationTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PlacementApplicationTestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PlacementRequestTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.PostCodeDistrictTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationAreaProbationRegionMappingTestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.ProbationDeliveryUnitTestRepository
@@ -477,6 +478,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var assessmentTestRepository: AssessmentTestRepository
+
+  @Autowired
+  lateinit var placementRequestTestRepository: PlacementRequestTestRepository
 
   lateinit var probationRegionEntityFactory: PersistedFactory<ProbationRegionEntity, UUID, ProbationRegionEntityFactory>
   lateinit var apAreaEntityFactory: PersistedFactory<ApAreaEntity, UUID, ApAreaEntityFactory>

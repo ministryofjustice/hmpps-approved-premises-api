@@ -315,7 +315,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
             placementDate = placementDate1
             this.application = application
             booking = createBookingForPlacementRequest(
-              placementRequestRepository.findAllByApplication(application)
+              placementRequestTestRepository.findAllByApplication(application)
                 .first { it.expectedArrival == placementDate1.expectedArrival },
             )
           },
@@ -324,7 +324,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
             placementDate = placementDate2
             this.application = application
             booking = createBookingForPlacementRequest(
-              placementRequestRepository.findAllByApplication(application)
+              placementRequestTestRepository.findAllByApplication(application)
                 .first { it.expectedArrival == placementDate2.expectedArrival },
             )
           },
@@ -350,7 +350,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
             placementDate = placementDate2
             this.application = application
             booking = createBookingForPlacementRequest(
-              placementRequestRepository.findAllByApplication(application)
+              placementRequestTestRepository.findAllByApplication(application)
                 .first { it.expectedArrival == placementDate2.expectedArrival },
             )
           },
