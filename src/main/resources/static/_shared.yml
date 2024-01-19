@@ -3996,6 +3996,9 @@ components:
         - expected_arrival
         - created_at
         - application_date
+        - request_type
+        - person_name
+        - person_risks_tier
       x-enum-varnames:
         - duration
         - expectedArrival

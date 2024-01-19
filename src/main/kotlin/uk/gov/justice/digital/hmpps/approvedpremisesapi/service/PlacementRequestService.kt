@@ -121,6 +121,9 @@ class PlacementRequestService(
       PlacementRequestSortField.createdAt -> "created_at"
       PlacementRequestSortField.expectedArrival -> "expected_arrival"
       PlacementRequestSortField.duration -> "duration"
+      PlacementRequestSortField.requestType -> "request_type"
+      PlacementRequestSortField.personName -> "person_name"
+      PlacementRequestSortField.personRisksTier -> "person_risks_tier"
     }
 
     val pageable = getPageable(pageCriteria.withSortBy(sortField))

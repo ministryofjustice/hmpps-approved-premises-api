@@ -102,10 +102,17 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     """
     SELECT
       pq.*,
-      application.created_at as application_date
+      application.created_at as application_date,
+      CASE
+        WHEN (pq.is_parole) THEN 'parole'
+        ELSE 'standardRequest'
+      END as request_type,
+      apa.name as person_name,
+      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as person_risks_tier
     from
       placement_requests pq
       left join applications application on application.id = pq.application_id
+      left join approved_premises_applications apa on apa.id = pq.application_id
     where
       pq.reallocated_at IS NULL 
       AND (:status IS NULL OR pq.is_withdrawn IS FALSE)

@@ -757,6 +757,122 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `It sorts by requestType when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val placementRequest1WithStatusParole = createPlacementRequest(offenderDetails, user, isParole = true)
+          val placementRequest2WithStatusStandard = createPlacementRequest(offenderDetails, user, isParole = false)
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?page=1&sortBy=request_type&sortDirection=asc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequest1WithStatusParole.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequest2WithStatusStandard.id.toString())
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?page=1&sortBy=request_type&sortDirection=desc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequest2WithStatusStandard.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequest1WithStatusParole.id.toString())
+        }
+      }
+    }
+
+    @Test
+    fun `It sorts by personName when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+
+        val (offenderJohnSmithDetails, _) = `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withFirstName("JOHN")
+            withLastName("SMITH")
+          },
+        )
+
+        val (offenderZackeryZoikesDetails, _) = `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withFirstName("ZAKERY")
+            withLastName("ZOIKES")
+          },
+        )
+
+        val (offenderHarryHarrisonDetails, _) = `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withFirstName("HARRY")
+            withLastName("HARRISON")
+          },
+        )
+
+        val placementRequestJohnSmith = createPlacementRequest(offenderJohnSmithDetails, user)
+        val placementRequestZakeryZoikes = createPlacementRequest(offenderZackeryZoikesDetails, user)
+        val placementRequestHarryHarrisonDetails = createPlacementRequest(offenderHarryHarrisonDetails, user)
+
+        webTestClient.get()
+          .uri("/placement-requests/dashboard?page=1&sortBy=person_name&sortDirection=asc")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$[0].id").isEqualTo(placementRequestHarryHarrisonDetails.id.toString())
+          .jsonPath("$[1].id").isEqualTo(placementRequestJohnSmith.id.toString())
+          .jsonPath("$[2].id").isEqualTo(placementRequestZakeryZoikes.id.toString())
+
+        webTestClient.get()
+          .uri("/placement-requests/dashboard?page=1&sortBy=person_name&sortDirection=desc")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$[0].id").isEqualTo(placementRequestZakeryZoikes.id.toString())
+          .jsonPath("$[1].id").isEqualTo(placementRequestJohnSmith.id.toString())
+          .jsonPath("$[2].id").isEqualTo(placementRequestHarryHarrisonDetails.id.toString())
+      }
+    }
+
+    @Test
+    fun `It sorts by personRisksTier when the user is a manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val placementRequest1TierB1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.b1)
+          val placementRequest2TierA0 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a0)
+          val placementRequest3TierA1 = createPlacementRequest(offenderDetails, user, tier = RiskTierLevel.a1)
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?page=1&sortBy=person_risks_tier&sortDirection=asc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequest2TierA0.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequest3TierA1.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequest1TierB1.id.toString())
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?page=1&sortBy=person_risks_tier&sortDirection=desc")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("$[0].id").isEqualTo(placementRequest1TierB1.id.toString())
+            .jsonPath("$[1].id").isEqualTo(placementRequest3TierA1.id.toString())
+            .jsonPath("$[2].id").isEqualTo(placementRequest2TierA0.id.toString())
+        }
+      }
+    }
+
+    @Test
     fun `It sorts by createdAt when the user is a manager`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->

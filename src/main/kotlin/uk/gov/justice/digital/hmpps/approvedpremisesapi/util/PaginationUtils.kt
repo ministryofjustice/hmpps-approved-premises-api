@@ -5,6 +5,8 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
+import org.springframework.data.domain.Sort.Direction.ASC
+import org.springframework.data.domain.Sort.Direction.DESC
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
@@ -31,40 +33,34 @@ data class PageCriteria<S>(
   }
 }
 
-fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?): Pageable? {
-  return getPageableWithSize(sortBy, sortDirection, page)
+fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int? = null): Pageable? {
+  return if (page != null) {
+    PageRequest.of(
+      page - 1,
+      resolvePageSize(pageSize),
+      toSort(sortBy, sortDirection),
+    )
+  } else {
+    null
+  }
 }
 
-fun getPageable(criteria: PageCriteria<String>): Pageable? = getPageableWithSize(
+fun getPageable(criteria: PageCriteria<String>): Pageable? = getPageable(
   criteria.sortBy,
   criteria.sortDirection,
   criteria.page,
   criteria.perPage,
 )
 
-fun getPageableWithSize(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int? = null): Pageable? {
-  return if (page != null) {
-    val sort = if (sortDirection == SortDirection.desc) {
-      Sort.by(sortBy).descending()
-    } else {
-      Sort.by(sortBy).ascending()
-    }
-    PageRequest.of(page - 1, resolvePageSize(pageSize), sort)
-  } else {
-    null
-  }
-}
-
 fun getPageableOrAllPages(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int?): Pageable? {
   return if (page != null) {
-    getPageableWithSize(sortBy, sortDirection, page, pageSize)
+    getPageable(sortBy, sortDirection, page, pageSize)
   } else {
-    val sort = if (sortDirection == SortDirection.desc) {
-      Sort.by(sortBy).descending()
-    } else {
-      Sort.by(sortBy).ascending()
-    }
-    PageRequest.of(0, Int.MAX_VALUE, sort)
+    PageRequest.of(
+      0,
+      Int.MAX_VALUE,
+      toSort(sortBy, sortDirection),
+    )
   }
 }
 
@@ -90,4 +86,7 @@ fun <T> getMetadataWithSize(response: Page<T>, page: Int?, pageSize: Int?): Pagi
   }
 }
 
-fun resolvePageSize(perPage: Int?) = perPage ?: config.defaultPageSize
+private fun resolvePageSize(perPage: Int?) = perPage ?: config.defaultPageSize
+
+private fun toSort(sortBy: String, sortDirection: SortDirection?): Sort =
+  Sort.by(if (sortDirection == SortDirection.desc) DESC else ASC, sortBy)
