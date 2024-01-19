@@ -141,34 +141,59 @@ class BookingSearchTest : IntegrationTestBase() {
 
         val allBookings = mutableListOf<BookingEntity>()
         allBeds.forEachIndexed { index, bed ->
-          val booking = bookingEntityFactory.produceAndPersist {
-            withPremises(bed.room.premises)
-            withCrn(offenderDetails.otherIds.crn)
-            withBed(bed)
-            withServiceName(ServiceName.temporaryAccommodation)
-          }
-
           when (index % 5) {
             // Provisional
-            0 -> {}
+            0 -> {
+              val booking = bookingEntityFactory.produceAndPersist {
+                withPremises(bed.room.premises)
+                withCrn(offenderDetails.otherIds.crn)
+                withBed(bed)
+                withStatus(BookingStatus.provisional)
+                withServiceName(ServiceName.temporaryAccommodation)
+              }
+              allBookings += booking
+            }
             // Confirmed
             1 -> {
+              val booking = bookingEntityFactory.produceAndPersist {
+                withPremises(bed.room.premises)
+                withCrn(offenderDetails.otherIds.crn)
+                withBed(bed)
+                withStatus(BookingStatus.confirmed)
+                withServiceName(ServiceName.temporaryAccommodation)
+              }
               val confirmation = confirmationEntityFactory.produceAndPersist {
                 withBooking(booking)
               }
 
               booking.confirmation = confirmation
+              allBookings += booking
             }
             // Active
             2 -> {
+              val booking = bookingEntityFactory.produceAndPersist {
+                withPremises(bed.room.premises)
+                withCrn(offenderDetails.otherIds.crn)
+                withBed(bed)
+                withStatus(BookingStatus.arrived)
+                withServiceName(ServiceName.temporaryAccommodation)
+              }
               val arrival = arrivalEntityFactory.produceAndPersist {
                 withBooking(booking)
               }
 
               booking.arrivals.add(arrival)
+              allBookings += booking
             }
             // Closed
             3 -> {
+              val booking = bookingEntityFactory.produceAndPersist {
+                withPremises(bed.room.premises)
+                withCrn(offenderDetails.otherIds.crn)
+                withBed(bed)
+                withStatus(BookingStatus.closed)
+                withServiceName(ServiceName.temporaryAccommodation)
+              }
               val departure = departureEntityFactory.produceAndPersist {
                 withBooking(booking)
                 withYieldedReason {
@@ -180,9 +205,17 @@ class BookingSearchTest : IntegrationTestBase() {
               }
 
               booking.departures.add(departure)
+              allBookings += booking
             }
             // Cancelled
             4 -> {
+              val booking = bookingEntityFactory.produceAndPersist {
+                withPremises(bed.room.premises)
+                withCrn(offenderDetails.otherIds.crn)
+                withBed(bed)
+                withStatus(BookingStatus.cancelled)
+                withServiceName(ServiceName.temporaryAccommodation)
+              }
               val cancellation = cancellationEntityFactory.produceAndPersist {
                 withBooking(booking)
                 withYieldedReason {
@@ -191,10 +224,9 @@ class BookingSearchTest : IntegrationTestBase() {
               }
 
               booking.cancellations.add(cancellation)
+              allBookings += booking
             }
           }
-
-          allBookings += booking
         }
 
         val expectedBookings = allBookings.filter { it.cancellation != null }
@@ -612,6 +644,7 @@ class BookingSearchTest : IntegrationTestBase() {
         withPremises(bed.room.premises)
         withCrn(offenderDetails.otherIds.crn)
         withBed(bed)
+        withStatus(BookingStatus.provisional)
         withServiceName(ServiceName.temporaryAccommodation)
         withArrivalDate(LocalDate.now().minusDays((60 - index).toLong()))
         withDepartureDate(LocalDate.now().minusDays((30 - index).toLong()))

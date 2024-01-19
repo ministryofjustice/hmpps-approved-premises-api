@@ -139,7 +139,10 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       SELECT
         b.crn AS personCrn,
         Cast(b.id as varchar) bookingId,
-        s.booking_status AS bookingStatus,
+        CASE 
+              WHEN :serviceName='approved-premises' THEN COALESCE(b.status, 'awaiting-arrival')
+              ELSE COALESCE(b.status, 'provisional')
+        END as bookingStatus,
         b.arrival_date AS bookingStartDate,
         b.departure_date AS bookingEndDate,
         b.created_at AS bookingCreatedAt,
@@ -154,25 +157,11 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
         Cast(b2.id as varchar) bedId,
         b2.name AS bedName
       FROM bookings b
-      LEFT JOIN (
-        SELECT
-          b.id,
-          CASE
-              WHEN EXISTS (SELECT 1 FROM cancellations c WHERE c.booking_id = b.id) THEN 'cancelled'
-              WHEN EXISTS (SELECT 1 FROM departures d WHERE d.booking_id = b.id) THEN 'departed'
-              WHEN EXISTS (SELECT 1 FROM arrivals a WHERE a.booking_id = b.id) THEN 'arrived'
-              WHEN EXISTS (SELECT 1 FROM confirmations c2 WHERE c2.booking_id = b.id) THEN 'confirmed'
-              WHEN EXISTS (SELECT 1 FROM non_arrivals n WHERE n.booking_id = n.id) THEN 'not-arrived'
-              WHEN :serviceName = 'approved-premises' THEN 'awaiting-arrival'
-              ELSE 'provisional'
-          END AS booking_status
-        FROM bookings b
-      ) as s ON b.id = s.id
       LEFT JOIN beds b2 ON b.bed_id = b2.id
       LEFT JOIN rooms r ON b2.room_id = r.id
       LEFT JOIN premises p ON r.premises_id = p.id
       WHERE b.service = :serviceName
-      AND (:status is null or s.booking_status = :#{#status?.toString()})
+      AND (:status is null or b.status = :#{#status?.toString()})
       AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
     """,
     nativeQuery = true,
