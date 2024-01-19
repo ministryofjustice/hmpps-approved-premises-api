@@ -108,12 +108,7 @@ class PlacementRequestService(
   }
 
   fun getAllActive(
-    status: PlacementRequestStatus?,
-    crn: String?,
-    crnOrName: String?,
-    tier: String?,
-    arrivalDateStart: LocalDate?,
-    arrivalDateEnd: LocalDate?,
+    searchCriteria: AllActiveSearchCriteria,
     pageCriteria: PageCriteria<PlacementRequestSortField>,
   ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
     val sortField = when (pageCriteria.sortBy) {
@@ -125,17 +120,26 @@ class PlacementRequestService(
 
     val pageable = getPageable(pageCriteria.withSortBy(sortField))
     val response = placementRequestRepository.allForDashboard(
-      status,
-      crn,
-      crnOrName,
-      tier,
-      arrivalDateStart,
-      arrivalDateEnd,
+      searchCriteria.status,
+      searchCriteria.crn,
+      searchCriteria.crnOrName,
+      searchCriteria.tier,
+      searchCriteria.arrivalDateStart,
+      searchCriteria.arrivalDateEnd,
       pageable,
     )
 
     return Pair(response.content, getMetadata(response, pageCriteria))
   }
+
+  data class AllActiveSearchCriteria(
+    val status: PlacementRequestStatus?,
+    val crn: String?,
+    val crnOrName: String?,
+    val tier: String?,
+    val arrivalDateStart: LocalDate?,
+    val arrivalDateEnd: LocalDate?,
+  )
 
   fun getPlacementRequestForUser(
     user: UserEntity,

@@ -580,12 +580,14 @@ class PlacementRequestServiceTest {
     every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, null, null) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
-      PlacementRequestStatus.matched,
-      null,
-      null,
-      null,
-      null,
-      null,
+      PlacementRequestService.AllActiveSearchCriteria(
+        PlacementRequestStatus.matched,
+        null,
+        null,
+        null,
+        null,
+        null,
+      ),
       PageCriteria(page = null, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.asc),
     )
 
@@ -609,12 +611,14 @@ class PlacementRequestServiceTest {
     every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, null, pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
-      PlacementRequestStatus.matched,
-      null,
-      null,
-      null,
-      null,
-      null,
+      PlacementRequestService.AllActiveSearchCriteria(
+        PlacementRequestStatus.matched,
+        null,
+        null,
+        null,
+        null,
+        null,
+      ),
       PageCriteria(page = 1, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.asc),
     )
 
@@ -641,12 +645,14 @@ class PlacementRequestServiceTest {
     every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, null, pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
-      PlacementRequestStatus.matched,
-      null,
-      null,
-      null,
-      null,
-      null,
+      PlacementRequestService.AllActiveSearchCriteria(
+        PlacementRequestStatus.matched,
+        null,
+        null,
+        null,
+        null,
+        null,
+      ),
       PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
     )
 
@@ -674,12 +680,14 @@ class PlacementRequestServiceTest {
     every { placementRequestRepository.allForDashboard(null, crn, null, null, null, null, pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
-      null,
-      crn,
-      null,
-      null,
-      null,
-      null,
+      PlacementRequestService.AllActiveSearchCriteria(
+        null,
+        crn,
+        null,
+        null,
+        null,
+        null,
+      ),
       PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
     )
 
@@ -708,12 +716,14 @@ class PlacementRequestServiceTest {
     every { placementRequestRepository.allForDashboard(null, null, null, tier, null, null, pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
-      null,
-      null,
-      null,
-      tier,
-      null,
-      null,
+      PlacementRequestService.AllActiveSearchCriteria(
+        null,
+        null,
+        null,
+        tier,
+        null,
+        null,
+      ),
       PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
     )
 
@@ -742,12 +752,14 @@ class PlacementRequestServiceTest {
     every { placementRequestRepository.allForDashboard(null, null, null, null, startDate, null, pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
-      null,
-      null,
-      null,
-      null,
-      startDate,
-      null,
+      PlacementRequestService.AllActiveSearchCriteria(
+        null,
+        null,
+        null,
+        null,
+        startDate,
+        null,
+      ),
       PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
     )
 
@@ -776,12 +788,14 @@ class PlacementRequestServiceTest {
     every { placementRequestRepository.allForDashboard(null, null, null, null, endDate, null, pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
-      null,
-      null,
-      null,
-      null,
-      endDate,
-      null,
+      PlacementRequestService.AllActiveSearchCriteria(
+        null,
+        null,
+        null,
+        null,
+        endDate,
+        null,
+      ),
       PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
     )
 

@@ -85,12 +85,14 @@ class PlacementRequestsController(
     }
 
     val (requests, metadata) = placementRequestService.getAllActive(
-      status,
-      crn,
-      crnOrName,
-      tier?.value,
-      arrivalDateStart,
-      arrivalDateEnd,
+      PlacementRequestService.AllActiveSearchCriteria(
+        status,
+        crn,
+        crnOrName,
+        tier?.value,
+        arrivalDateStart,
+        arrivalDateEnd,
+      ),
       PageCriteria(
         sortBy = sortBy ?: PlacementRequestSortField.createdAt,
         sortDirection = sortDirection ?: SortDirection.asc,
