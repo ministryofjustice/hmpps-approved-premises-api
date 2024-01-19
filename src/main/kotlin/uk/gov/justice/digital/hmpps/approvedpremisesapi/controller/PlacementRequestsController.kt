@@ -51,7 +51,6 @@ class PlacementRequestsController(
   private val bookingConfirmationTransformer: NewPlacementRequestBookingConfirmationTransformer,
   private val bookingNotMadeTransformer: BookingNotMadeTransformer,
 ) : PlacementRequestsApiDelegate {
-  private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun placementRequestsGet(): ResponseEntity<List<PlacementRequest>> {
     val user = userService.getUserForRequest()

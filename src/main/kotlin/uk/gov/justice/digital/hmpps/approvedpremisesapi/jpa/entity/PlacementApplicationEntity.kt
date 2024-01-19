@@ -27,8 +27,22 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
 
   fun findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNullAndAllocatedToUserNull(pageable: Pageable?): Page<PlacementApplicationEntity>
 
-  fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndDecisionNull(
+  @Query(
+    """
+      SELECT pa FROM PlacementApplicationEntity pa
+      JOIN pa.application a
+      LEFT OUTER JOIN a.probationRegion region
+      LEFT OUTER JOIN region.apArea area
+      WHERE 
+        pa.allocatedToUser.id = :userId AND 
+        ((cast(:apAreaId as org.hibernate.type.UUIDCharType) IS NULL) OR area.id = :apAreaId) AND
+        pa.reallocatedAt IS NULL AND 
+        pa.decision IS NULL
+    """,
+  )
+  fun findOpenRequestsAssignedToUser(
     userId: UUID,
+    apAreaId: UUID?,
     pageable: Pageable?,
   ): Page<PlacementApplicationEntity>
 

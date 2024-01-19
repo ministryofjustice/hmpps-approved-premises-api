@@ -51,6 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
 import java.util.UUID
 import javax.transaction.Transactional
+
 @Service
 class TasksController(
   private val userService: UserService,
@@ -106,11 +107,13 @@ class TasksController(
           user,
           null,
           null,
+          null,
         )
 
       val placementApplications =
         placementApplicationService.getVisiblePlacementApplicationsForUser(
           user,
+          null,
           null,
           null,
         )
@@ -141,6 +144,7 @@ class TasksController(
     taskType: String,
     page: Int?,
     sortDirection: SortDirection?,
+    apAreaId: UUID?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val user = userService.getUserForRequest()
     val tasks = mutableListOf<Task>()
@@ -158,6 +162,7 @@ class TasksController(
               user,
               page,
               sortDirection,
+              apAreaId,
             )
           val crns = placementApplications.map { it.application.crn }
           val offenderSummaries = getOffenderSummariesForCrns(crns, user)
@@ -170,12 +175,14 @@ class TasksController(
             )
           }
         }
+
         TaskType.placementRequest -> {
           val (placementRequests, metaData) =
             placementRequestService.getVisiblePlacementRequestsForUser(
               user,
               page,
               sortDirection,
+              apAreaId,
             )
           val crns = placementRequests.map { it.application.crn }
           val offenderSummaries = getOffenderSummariesForCrns(crns, user)
@@ -188,6 +195,7 @@ class TasksController(
             )
           }
         }
+
         else -> {
           throw BadRequestProblem()
         }
@@ -228,6 +236,7 @@ class TasksController(
         requiredQualifications = assessment.application.getRequiredQualifications()
         allocationType = AllocationType.Assessment
       }
+
       TaskType.placementRequest -> {
         val (placementRequest) = extractEntityFromAuthorisableActionResult(
           placementRequestService.getPlacementRequestForUser(user, id),
@@ -242,6 +251,7 @@ class TasksController(
         requiredQualifications = emptyList()
         allocationType = AllocationType.PlacementRequest
       }
+
       TaskType.placementApplication -> {
         val placementApplication = extractEntityFromAuthorisableActionResult(
           placementApplicationService.getApplication(id),
@@ -255,7 +265,9 @@ class TasksController(
         crn = placementApplication.application.crn
         requiredQualifications = placementApplication.application.getRequiredQualifications()
         allocationType = AllocationType.PlacementApplication
-      } else -> {
+      }
+
+      else -> {
         throw NotAllowedProblem(detail = "The Task Type $taskType is not currently supported")
       }
     }
@@ -297,6 +309,7 @@ class TasksController(
       body?.userId == null -> throw BadRequestProblem(
         invalidParams = ValidationErrors(mutableMapOf("$.userId" to "empty")),
       )
+
       else -> body.userId
     }
 
@@ -310,13 +323,16 @@ class TasksController(
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(
         errorDetail = validationResult.message,
       )
+
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(
         invalidParams = validationResult.validationMessages,
       )
+
       is ValidatableActionResult.ConflictError -> throw ConflictProblem(
         id = validationResult.conflictingEntityId,
         conflictReason = validationResult.message,
       )
+
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
@@ -341,13 +357,16 @@ class TasksController(
       is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(
         errorDetail = validationResult.message,
       )
+
       is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(
         invalidParams = validationResult.validationMessages,
       )
+
       is ValidatableActionResult.ConflictError -> throw ConflictProblem(
         id = validationResult.conflictingEntityId,
         conflictReason = validationResult.message,
       )
+
       is ValidatableActionResult.Success -> validationResult.entity
     }
 
@@ -435,9 +454,11 @@ class TasksController(
         is TypedTask.Assessment -> getAssessmentTask(it.entity) { assessment ->
           getPersonNameFromApplication(assessment.application, offenderSummaries)
         }
+
         is TypedTask.PlacementRequest -> getPlacementRequestTask(it.entity) { placementRequest ->
           getPersonNameFromApplication(placementRequest.application, offenderSummaries)
         }
+
         is TypedTask.PlacementApplication -> getPlacementApplicationTask(it.entity) { placementApplication ->
           getPersonNameFromApplication(placementApplication.application, offenderSummaries)
         }
@@ -529,7 +550,10 @@ class TasksController(
     )
   }
 
-  private fun getPersonNameFromApplication(application: ApplicationEntity, offenderSummaries: List<PersonSummaryInfoResult>): String {
+  private fun getPersonNameFromApplication(
+    application: ApplicationEntity,
+    offenderSummaries: List<PersonSummaryInfoResult>,
+  ): String {
     val crn = application.crn
     val offenderSummary = offenderSummaries.first { it.crn == crn }
     return getNameFromPersonSummaryInfoResult(offenderSummary)

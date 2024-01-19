@@ -11,7 +11,7 @@ fun IntegrationTestBase.`Given a Probation Region`(
   apArea: ApAreaEntity? = null,
   deliusCode: String? = null,
   block: (probationRegion: ProbationRegionEntity) -> Unit,
-) {
+): ProbationRegionEntity {
   val probationRegion = probationRegionEntityFactory.produceAndPersist {
     withId(id)
     if (name != null) {
@@ -30,4 +30,6 @@ fun IntegrationTestBase.`Given a Probation Region`(
   }
 
   block(probationRegion)
+
+  return probationRegion
 }

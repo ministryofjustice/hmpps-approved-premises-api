@@ -66,12 +66,14 @@ class PlacementRequestService(
     user: UserEntity,
     page: Int?,
     sortDirection: SortDirection?,
+    apAreaId: UUID? = null,
   ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
     val sortField = "createdAt"
     val pageable = getPageable(sortField, sortDirection, page)
-    val response = placementRequestRepository.findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(
-      user.id,
-      pageable,
+    val response = placementRequestRepository.findOpenRequestsAssignedToUser(
+      userId = user.id,
+      apAreaId = apAreaId,
+      pageable = pageable,
     )
     return Pair(response.content, getMetadata(response, page))
   }
@@ -96,9 +98,11 @@ class PlacementRequestService(
       allocatedFilter == AllocatedFilter.unallocated ->
         allReallocatable =
           placementRequestRepository.findAllReallocatableUnallocated(pageable)
+
       allocatedFilter == AllocatedFilter.allocated ->
         allReallocatable =
           placementRequestRepository.findAllReallocatableAllocated(pageable)
+
       else ->
         allReallocatable =
           placementRequestRepository.findAllReallocatable(pageable)
@@ -229,7 +233,8 @@ class PlacementRequestService(
         duration = placementDateEntity.duration,
       )
       val isParole = placementApplicationEntity.placementType == PlacementType.RELEASE_FOLLOWING_DECISION
-      val placementRequest = this.createPlacementRequest(placementRequirements, placementDates, notes, isParole, placementApplicationEntity)
+      val placementRequest =
+        this.createPlacementRequest(placementRequirements, placementDates, notes, isParole, placementApplicationEntity)
 
       placementDateRepository.save(
         placementDateEntity.apply {
@@ -336,6 +341,7 @@ class PlacementRequestService(
         "Unable to get Offender Details when " +
           "creating Booking Not Made Domain Event: Unauthorised",
       )
+
       is AuthorisableActionResult.NotFound -> throw RuntimeException(
         "Unable to get Offender Details when " +
           "creating Booking Not Made Domain Event: Not Found",

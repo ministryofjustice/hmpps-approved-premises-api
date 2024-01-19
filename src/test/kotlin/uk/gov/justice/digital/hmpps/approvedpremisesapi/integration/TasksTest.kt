@@ -14,7 +14,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
@@ -1692,10 +1694,30 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Get an non-implemented task type for an application returns 405`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given an Assessment for Approved Premises`(
+            allocatedToUser = user,
+            createdByUser = user,
+            crn = offenderDetails.otherIds.crn,
+          ) { _, _ ->
+            webTestClient.get()
+              .uri("/tasks/booking-appeal")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isEqualTo(HttpStatus.BAD_REQUEST)
+          }
+        }
+      }
+    }
+
+    @Test
     fun `Get tasks by taskType for a user returns the relevant placement requests tasks for a user`() {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Offender` { offenderDetails, _ ->
             val (placementRequestAllocatedToMe) = `Given a Placement Request`(
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
@@ -1760,10 +1782,118 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Get tasks by taskType for a user returns the relevant placement requests tasks for a user page 2`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val numberOfPlacementRequests = 12
+            repeat(numberOfPlacementRequests) {
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = user,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            `Given a Placement Application`(
+              createdByUser = otherUser,
+              allocatedToUser = otherUser,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              reallocated = true,
+            )
+
+            webTestClient.get()
+              .uri("/tasks/placement-request?page=2")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .expectBody()
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get tasks by taskType for a user returns the relevant placement requests tasks for a user and ap area`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val apArea1 = `Given an AP Area`()
+            val apArea2 = `Given an AP Area`()
+
+            val probationRegion1 = `Given a Probation Region`(apArea = apArea1) { }
+            val probationRegion2 = `Given a Probation Region`(apArea = apArea2) { }
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              probationRegion = probationRegion1,
+            )
+
+            val (placementRequestRegion2AllocatedToMe, _) = `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              probationRegion = probationRegion2,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              probationRegion = probationRegion1,
+            )
+
+            webTestClient.get()
+              .uri("/tasks/placement-request?apAreaId=${apArea2.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    taskTransformer.transformPlacementRequestToTask(
+                      placementRequestRegion2AllocatedToMe,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
     fun `Get tasks by taskType for a user returns the relevant placement applications tasks for a user`() {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Offender` { offenderDetails, _ ->
 
             val placementApplicationAllocatedToMe = `Given a Placement Application`(
               createdByUser = user,
@@ -1842,80 +1972,10 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get an non-implemented task type for an application returns 405`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          `Given an Assessment for Approved Premises`(
-            allocatedToUser = user,
-            createdByUser = user,
-            crn = offenderDetails.otherIds.crn,
-          ) { _, application ->
-            webTestClient.get()
-              .uri("/tasks/booking-appeal")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isEqualTo(HttpStatus.BAD_REQUEST)
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get tasks by taskType for a user returns the relevant placement requests tasks for a user page 2`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
-            val numberOfPlacementRequests = 12
-            repeat(numberOfPlacementRequests) {
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = user,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            `Given a Placement Application`(
-              createdByUser = otherUser,
-              allocatedToUser = otherUser,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-              reallocated = true,
-            )
-
-            webTestClient.get()
-              .uri("/tasks/placement-request?page=2")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
-              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
-              .expectBody()
-          }
-        }
-      }
-    }
-
-    @Test
     fun `Get tasks by taskType for a user returns the relevant placement application tasks for a user page 2`() {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Offender` { offenderDetails, _ ->
 
             `Given a Placement Request`(
               placementRequestAllocatedTo = user,
@@ -1957,6 +2017,71 @@ class TasksTest : IntegrationTestBase() {
               .expectHeader().valueEquals("X-Pagination-PageSize", 10)
               .expectBody()
           }
+        }
+      }
+    }
+
+    @Test
+    fun `Get tasks by taskType for a user returns the relevant placement applications tasks for a user and ap area`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+
+          val apArea1 = `Given an AP Area`()
+          val apArea2 = `Given an AP Area`()
+
+          val probationRegion1 = `Given a Probation Region`(apArea = apArea1) { }
+          val probationRegion2 = `Given a Probation Region`(apArea = apArea2) { }
+
+          val placementApplicationAllocatedToMeInRegion1 = `Given a Placement Application`(
+            createdByUser = user,
+            allocatedToUser = user,
+            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+            crn = offenderDetails.otherIds.crn,
+            decision = null,
+            probationRegionEntity = probationRegion1,
+          )
+
+          `Given a Placement Application`(
+            createdByUser = user,
+            allocatedToUser = user,
+            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+            crn = offenderDetails.otherIds.crn,
+            decision = null,
+            probationRegionEntity = probationRegion2,
+          )
+
+          `Given a Placement Application`(
+            createdByUser = user,
+            allocatedToUser = user,
+            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+            crn = offenderDetails.otherIds.crn,
+            reallocated = true,
+            probationRegionEntity = probationRegion1,
+          )
+
+          webTestClient.get()
+            .uri("/tasks/placement-application?apAreaId=${apArea1.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  taskTransformer.transformPlacementApplicationToTask(
+                    placementApplicationAllocatedToMeInRegion1,
+                    "${offenderDetails.firstName} ${offenderDetails.surname}",
+                  ),
+                ),
+              ),
+            )
         }
       }
     }
