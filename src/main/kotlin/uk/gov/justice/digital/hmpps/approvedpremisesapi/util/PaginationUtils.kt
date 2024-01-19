@@ -24,7 +24,7 @@ data class PageCriteria<S>(
   val sortBy: S,
   val sortDirection: SortDirection,
   val page: Int?,
-  val perPage: Int?,
+  val perPage: Int? = null,
 ) {
   fun <S2> withSortBy(sortBy: S2): PageCriteria<S2> {
     return PageCriteria(sortBy, this.sortDirection, this.page, this.perPage)
@@ -34,6 +34,13 @@ data class PageCriteria<S>(
 fun getPageable(sortBy: String, sortDirection: SortDirection?, page: Int?): Pageable? {
   return getPageableWithSize(sortBy, sortDirection, page)
 }
+
+fun getPageable(criteria: PageCriteria<String>): Pageable? = getPageableWithSize(
+  criteria.sortBy,
+  criteria.sortDirection,
+  criteria.page,
+  criteria.perPage,
+)
 
 fun getPageableWithSize(sortBy: String, sortDirection: SortDirection?, page: Int?, pageSize: Int? = null): Pageable? {
   return if (page != null) {

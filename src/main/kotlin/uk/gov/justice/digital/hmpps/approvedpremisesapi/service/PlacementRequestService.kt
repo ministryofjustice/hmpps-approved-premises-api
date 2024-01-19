@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.time.LocalDate
@@ -113,16 +114,16 @@ class PlacementRequestService(
     tier: String?,
     arrivalDateStart: LocalDate?,
     arrivalDateEnd: LocalDate?,
-    page: Int?,
-    sortBy: PlacementRequestSortField,
-    sortDirection: SortDirection?,
+    pageCriteria: PageCriteria<PlacementRequestSortField>,
   ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
-    val sortField = when (sortBy) {
+    val sortField = when (pageCriteria.sortBy) {
       PlacementRequestSortField.applicationSubmittedAt -> "application.submitted_at"
-      else -> sortBy.value
+      PlacementRequestSortField.createdAt -> "created_at"
+      PlacementRequestSortField.expectedArrival -> "expected_arrival"
+      PlacementRequestSortField.duration -> "duration"
     }
 
-    val pageable = getPageable(sortField, sortDirection, page)
+    val pageable = getPageable(pageCriteria.withSortBy(sortField))
     val response = placementRequestRepository.allForDashboard(
       status,
       crn,
@@ -133,7 +134,7 @@ class PlacementRequestService(
       pageable,
     )
 
-    return Pair(response.content, getMetadata(response, page))
+    return Pair(response.content, getMetadata(response, pageCriteria))
   }
 
   fun getPlacementRequestForUser(

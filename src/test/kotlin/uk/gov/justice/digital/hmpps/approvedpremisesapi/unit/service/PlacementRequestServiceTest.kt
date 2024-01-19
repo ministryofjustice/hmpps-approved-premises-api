@@ -53,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.LocalDate
 import java.util.UUID
@@ -578,7 +579,15 @@ class PlacementRequestServiceTest {
 
     every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, null, null) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(PlacementRequestStatus.matched, null, null, null, null, null, null, PlacementRequestSortField.createdAt, null)
+    val (requests, metadata) = placementRequestService.getAllActive(
+      PlacementRequestStatus.matched,
+      null,
+      null,
+      null,
+      null,
+      null,
+      PageCriteria(page = null, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.asc),
+    )
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata).isNull()
@@ -599,7 +608,15 @@ class PlacementRequestServiceTest {
 
     every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, null, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(PlacementRequestStatus.matched, null, null, null, null, null, 1, PlacementRequestSortField.createdAt, null)
+    val (requests, metadata) = placementRequestService.getAllActive(
+      PlacementRequestStatus.matched,
+      null,
+      null,
+      null,
+      null,
+      null,
+      PageCriteria(page = 1, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.asc),
+    )
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
@@ -623,7 +640,15 @@ class PlacementRequestServiceTest {
 
     every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, null, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(PlacementRequestStatus.matched, null, null, null, null, null, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
+    val (requests, metadata) = placementRequestService.getAllActive(
+      PlacementRequestStatus.matched,
+      null,
+      null,
+      null,
+      null,
+      null,
+      PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
+    )
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
@@ -648,7 +673,15 @@ class PlacementRequestServiceTest {
 
     every { placementRequestRepository.allForDashboard(null, crn, null, null, null, null, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(null, crn, null, null, null, null, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
+    val (requests, metadata) = placementRequestService.getAllActive(
+      null,
+      crn,
+      null,
+      null,
+      null,
+      null,
+      PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
+    )
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
@@ -674,7 +707,15 @@ class PlacementRequestServiceTest {
 
     every { placementRequestRepository.allForDashboard(null, null, null, tier, null, null, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(null, null, null, tier, null, null, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
+    val (requests, metadata) = placementRequestService.getAllActive(
+      null,
+      null,
+      null,
+      tier,
+      null,
+      null,
+      PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
+    )
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
@@ -700,7 +741,15 @@ class PlacementRequestServiceTest {
 
     every { placementRequestRepository.allForDashboard(null, null, null, null, startDate, null, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(null, null, null, null, startDate, null, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
+    val (requests, metadata) = placementRequestService.getAllActive(
+      null,
+      null,
+      null,
+      null,
+      startDate,
+      null,
+      PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
+    )
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)
@@ -726,7 +775,15 @@ class PlacementRequestServiceTest {
 
     every { placementRequestRepository.allForDashboard(null, null, null, null, endDate, null, pageRequest) } returns page
 
-    val (requests, metadata) = placementRequestService.getAllActive(null, null, null, null, endDate, null, 1, PlacementRequestSortField.expectedArrival, SortDirection.desc)
+    val (requests, metadata) = placementRequestService.getAllActive(
+      null,
+      null,
+      null,
+      null,
+      endDate,
+      null,
+      PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
+    )
 
     assertThat(requests).isEqualTo(placementRequests)
     assertThat(metadata?.currentPage).isEqualTo(1)

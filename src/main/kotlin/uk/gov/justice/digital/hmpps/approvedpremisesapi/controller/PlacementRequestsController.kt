@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NewPlacementRequestBookingConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import java.time.LocalDate
 import java.util.UUID
@@ -83,7 +84,19 @@ class PlacementRequestsController(
       throw ForbiddenProblem()
     }
 
-    val (requests, metadata) = placementRequestService.getAllActive(status, crn, crnOrName, tier?.value, arrivalDateStart, arrivalDateEnd, page, sortBy ?: PlacementRequestSortField.createdAt, sortDirection)
+    val (requests, metadata) = placementRequestService.getAllActive(
+      status,
+      crn,
+      crnOrName,
+      tier?.value,
+      arrivalDateStart,
+      arrivalDateEnd,
+      PageCriteria(
+        sortBy = sortBy ?: PlacementRequestSortField.createdAt,
+        sortDirection = sortDirection ?: SortDirection.asc,
+        page = page,
+      ),
+    )
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
