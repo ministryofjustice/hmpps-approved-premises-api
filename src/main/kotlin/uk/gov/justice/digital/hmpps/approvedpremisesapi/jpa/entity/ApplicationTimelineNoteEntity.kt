@@ -5,6 +5,8 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Entity
 import javax.persistence.Id
+import javax.persistence.JoinColumn
+import javax.persistence.ManyToOne
 import javax.persistence.Table
 
 interface ApplicationTimelineNoteRepository : JpaRepository<ApplicationTimelineNoteEntity, UUID> {
@@ -18,7 +20,9 @@ data class ApplicationTimelineNoteEntity(
   @Id
   val id: UUID,
   val applicationId: UUID,
-  val createdBy: UUID,
+  @ManyToOne
+  @JoinColumn(name = "created_by_user_id")
+  val createdBy: UserEntity,
   val createdAt: OffsetDateTime,
   val body: String,
 )

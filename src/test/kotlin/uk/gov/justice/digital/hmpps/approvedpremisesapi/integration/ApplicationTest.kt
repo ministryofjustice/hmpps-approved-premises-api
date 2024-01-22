@@ -54,6 +54,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
@@ -103,6 +104,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
@@ -117,6 +119,9 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var assessmentTransformer: AssessmentTransformer
+
+  @Autowired
+  lateinit var userTransformer: UserTransformer
 
   @Autowired
   lateinit var applicationTimelineTransformer: ApplicationTimelineTransformer
@@ -2529,7 +2534,7 @@ class ApplicationTest : IntegrationTestBase() {
           withCreatedBy(user)
         }
 
-        val notes = createThreeTimelineEventsOfType(user.id.toString())
+        val notes = createThreeTimelineEventsOfType(userTransformer.transformJpaToApi(user, ServiceName.approvedPremises))
 
         webTestClient.get()
           .uri("/applications/$applicationId/timeline")
@@ -2617,14 +2622,14 @@ class ApplicationTest : IntegrationTestBase() {
       }
     }
 
-    private fun createThreeTimelineEventsOfType(userId: String): List<TimelineEvent> {
+    private fun createThreeTimelineEventsOfType(user: User): List<TimelineEvent> {
       return listOf(
         TimelineEvent(
           TimelineEventType.applicationTimelineNote,
           note1Id.toString(),
           note1CreatedAt.toInstant(),
           "note1",
-          userId,
+          user,
           associatedUrls = emptyList(),
         ),
         TimelineEvent(
@@ -2632,7 +2637,7 @@ class ApplicationTest : IntegrationTestBase() {
           note2Id.toString(),
           note2CreatedAt.toInstant(),
           "note2",
-          userId,
+          user,
           associatedUrls = emptyList(),
         ),
         TimelineEvent(
@@ -2640,7 +2645,7 @@ class ApplicationTest : IntegrationTestBase() {
           note3Id.toString(),
           note3CreatedAt.toInstant(),
           "note3",
-          userId,
+          user,
           associatedUrls = emptyList(),
         ),
       )
@@ -2765,7 +2770,7 @@ class ApplicationTest : IntegrationTestBase() {
           withCreatedByUser(user)
           withApplicationSchema(applicationSchema)
         }
-        val body = ApplicationTimelineNote(user.id, "some note")
+        val body = ApplicationTimelineNote(note = "some note")
         webTestClient.post()
           .uri("/applications/$applicationId/notes")
           .header("Authorization", "Bearer $jwt")
@@ -2781,7 +2786,7 @@ class ApplicationTest : IntegrationTestBase() {
         savedNote.map {
           assertThat(it.body).isEqualTo("some note")
           assertThat(it.applicationId).isEqualTo(applicationId)
-          assertThat(it.createdBy).isEqualTo(user.id)
+          assertThat(it.createdBy.id).isEqualTo(user.id)
         }
       }
     }

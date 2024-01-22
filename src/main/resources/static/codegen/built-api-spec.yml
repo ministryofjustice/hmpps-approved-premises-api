@@ -1953,7 +1953,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/ApplicationTimelineNote'
+              $ref: '#/components/schemas/NewApplicationTimelineNote'
         required: true
       responses:
         200:
@@ -6159,9 +6159,8 @@ components:
         id:
           type: string
           format: uuid
-        createdByUserId:
-          type: string
-          format: uuid
+        createdByUser:
+          $ref: '#/components/schemas/User'
         note:
           type: string
         createdAt:
@@ -6171,6 +6170,14 @@ components:
         - createdByUserId
         - note
       description: Notes added to an application
+    NewApplicationTimelineNote:
+      type: object
+      properties:
+        note:
+          type: string
+      required:
+        - note
+      description: A note to add to an application
     NewApplication:
       type: object
       properties:
@@ -7425,7 +7432,7 @@ components:
         content:
           type: string
         createdBy:
-          type: string
+          $ref: '#/components/schemas/User'
         associatedUrls:
           type: array
           items:
