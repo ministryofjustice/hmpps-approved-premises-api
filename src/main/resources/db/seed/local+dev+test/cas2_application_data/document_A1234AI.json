@@ -243,8 +243,12 @@
               "answer": "Mr Bertrand is a heroin user"
             },
             {
-              "question": "How often do they take these substances, by what method, and how much?",
-              "answer": "Daily intravenous use"
+              "question": "Did they have any past issues with substance misuse before custody?",
+              "answer": "Yes"
+            },
+            {
+              "question": "Describe their previous substance misuse",
+              "answer": "Mr Bertrand frequently used heroin"
             },
             {
               "question": "Are they engaged with a drug and alcohol service in custody?",
