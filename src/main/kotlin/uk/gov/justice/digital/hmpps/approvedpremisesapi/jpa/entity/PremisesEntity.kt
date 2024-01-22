@@ -71,14 +71,16 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
             p.status, 
             CAST(COUNT(b) as int), 
             p.apCode, 
-            region.name
+            region.name,
+            apArea.name
         ) 
         FROM ApprovedPremisesEntity p 
         LEFT JOIN p.rooms r 
         LEFT JOIN r.beds b 
         LEFT JOIN p.probationRegion region
+        LEFT JOIN region.apArea apArea
         WHERE(cast(:probationRegionId as text) IS NULL OR region.id = :probationRegionId)
-        GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.apCode, p.status, region.name
+        GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.apCode, p.status, region.name, apArea.name
   """,
   )
   fun findAllApprovedPremisesSummary(probationRegionId: UUID?): List<ApprovedPremisesSummary>
@@ -295,6 +297,7 @@ data class ApprovedPremisesSummary(
   val bedCount: Int,
   val apCode: String,
   val regionName: String,
+  val apAreaName: String,
 )
 
 data class TemporaryAccommodationPremisesSummary(

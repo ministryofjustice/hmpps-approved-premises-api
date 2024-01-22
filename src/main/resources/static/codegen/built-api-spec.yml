@@ -4449,9 +4449,12 @@ components:
               example: NEHOPE1
             probationRegion:
               type: string
+            apArea:
+              type: string
       required:
         - apCode
         - probationRegion
+        - apArea
     TemporaryAccommodationPremisesSummary:
       allOf:
         - $ref: '#/components/schemas/PremisesSummary'

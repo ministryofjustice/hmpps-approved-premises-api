@@ -83,12 +83,14 @@ class PremisesSummaryTest : IntegrationTestBase() {
   fun `Get all CAS1 Premises returns OK with correct body`() {
     `Given a User` { _, jwt ->
       val uuid = UUID.randomUUID()
+      val apArea = apAreaEntityFactory.produceAndPersist()
+      val probationRegion = probationRegionEntityFactory.produceAndPersist {
+        withApArea(apArea)
+      }
 
       val cas1Premises = approvedPremisesEntityFactory.produceAndPersist {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-        }
+        withProbationRegion(probationRegion)
         withId(uuid)
         withAddressLine1("221 Baker Street")
         withAddressLine2("221B")
@@ -121,6 +123,8 @@ class PremisesSummaryTest : IntegrationTestBase() {
         .jsonPath("$[0].status").isEqualTo("active")
         .jsonPath("$[0].apCode").isEqualTo("APCODE")
         .jsonPath("$[0].bedCount").isEqualTo(5)
+        .jsonPath("$[0].probationRegion").isEqualTo(probationRegion.name)
+        .jsonPath("$[0].apArea").isEqualTo(apArea.name)
     }
   }
 
