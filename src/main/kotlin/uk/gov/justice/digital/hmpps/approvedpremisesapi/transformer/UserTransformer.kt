@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualificat
 @Component
 class UserTransformer(
   private val probationRegionTransformer: ProbationRegionTransformer,
+  private val apAreaTransformer: ApAreaTransformer,
 ) {
 
   fun transformJpaToAPIUserWithWorkload(jpa: UserEntity, userWorkload: UserWorkload): UserWithWorkload {
@@ -38,7 +39,7 @@ class UserTransformer(
     )
   }
   fun transformJpaToApi(jpa: UserEntity, serviceName: ServiceName) = when (serviceName) {
-    ServiceName.approvedPremises, ServiceName.cas2 -> ApprovedPremisesUser(
+    ServiceName.approvedPremises -> ApprovedPremisesUser(
       id = jpa.id,
       deliusUsername = jpa.deliusUsername,
       roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToApi),
@@ -49,6 +50,7 @@ class UserTransformer(
       qualifications = jpa.qualifications.map(::transformQualificationToApi),
       region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
       service = ServiceName.approvedPremises.value,
+      apArea = apAreaTransformer.transformJpaToApi(jpa.probationRegion.apArea),
     )
     ServiceName.temporaryAccommodation -> TemporaryAccommodationUser(
       id = jpa.id,
@@ -61,6 +63,7 @@ class UserTransformer(
       region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
       service = ServiceName.temporaryAccommodation.value,
     )
+    ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")
   }
 
   private fun transformApprovedPremisesRoleToApi(userRole: UserRoleAssignmentEntity): ApprovedPremisesUserRole? = when (userRole.role) {

@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
@@ -194,6 +195,7 @@ class UsersTest : IntegrationTestBase() {
             qualifications = emptyList(),
             service = ServiceName.approvedPremises.value,
             isActive = true,
+            apArea = ApArea(region.apArea.id, region.apArea.identifier, region.apArea.name),
           ),
         ),
       )

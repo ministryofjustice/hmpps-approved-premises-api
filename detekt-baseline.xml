@@ -14,6 +14,7 @@
     <ID>CyclomaticComplexMethod:DomainEventServiceTest.kt$DomainEventServiceTest$@Test fun `savePersonDepartedEvent persists event, emits event to SNS`()</ID>
     <ID>ForbiddenComment:AssessmentController.kt$AssessmentController$// TODO: We should carry out the pagination at the database level</ID>
     <ID>TooGenericExceptionThrown:ApplicationTimelineNoteEntityFactory.kt$ApplicationTimelineNoteEntityFactory$throw RuntimeException("Must provide a createdBy User")</ID>
+    <ID>TooGenericExceptionThrown:UserTransformer.kt$UserTransformer$throw RuntimeException("CAS2 not supported")</ID>
   </ManuallySuppressedIssues>
   <CurrentIssues>
     <ID>ComplexCondition:BookingService.kt$BookingService$booking.service == ServiceName.approvedPremises.value &amp;&amp; booking.application != null &amp;&amp; user != null &amp;&amp; !arrivedAndDepartedDomainEventsDisabled</ID>
