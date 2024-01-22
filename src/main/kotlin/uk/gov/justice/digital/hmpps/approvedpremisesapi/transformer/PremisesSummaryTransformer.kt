@@ -33,5 +33,6 @@ class PremisesSummaryTransformer() {
     apCode = domain.apCode,
     service = "CAS1",
     probationRegion = domain.regionName,
+    apArea = domain.apAreaName,
   )
 }

@@ -133,10 +133,10 @@ class PremisesController(
 ) : PremisesApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  override fun premisesSummaryGet(xServiceName: ServiceName, probationRegionId: UUID?): ResponseEntity<List<PremisesSummary>> {
+  override fun premisesSummaryGet(xServiceName: ServiceName, probationRegionId: UUID?, apAreaId: UUID?): ResponseEntity<List<PremisesSummary>> {
     val transformedSummaries = when (xServiceName) {
       ServiceName.approvedPremises -> {
-        val summaries = premisesService.getAllApprovedPremisesSummaries(probationRegionId)
+        val summaries = premisesService.getAllApprovedPremisesSummaries(probationRegionId, apAreaId)
 
         summaries.map(premisesSummaryTransformer::transformDomainToApi)
       }

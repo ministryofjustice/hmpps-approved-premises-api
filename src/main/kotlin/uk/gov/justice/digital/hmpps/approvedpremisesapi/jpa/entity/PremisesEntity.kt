@@ -71,17 +71,20 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
             p.status, 
             CAST(COUNT(b) as int), 
             p.apCode, 
-            region.name
+            region.name,
+            apArea.name
         ) 
         FROM ApprovedPremisesEntity p 
         LEFT JOIN p.rooms r 
         LEFT JOIN r.beds b 
         LEFT JOIN p.probationRegion region
+        LEFT JOIN region.apArea apArea
         WHERE(cast(:probationRegionId as text) IS NULL OR region.id = :probationRegionId)
-        GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.apCode, p.status, region.name
+        AND(cast(:apAreaId as text) IS NULL OR apArea.id = :apAreaId)
+        GROUP BY p.id, p.name, p.addressLine1, p.addressLine2, p.postcode, p.apCode, p.status, region.name, apArea.name
   """,
   )
-  fun findAllApprovedPremisesSummary(probationRegionId: UUID?): List<ApprovedPremisesSummary>
+  fun findAllApprovedPremisesSummary(probationRegionId: UUID?, apAreaId: UUID?): List<ApprovedPremisesSummary>
 
   @Query("SELECT p as premises, (SELECT CAST(COUNT(b) as int) FROM p.rooms r JOIN r.beds b WHERE r.premises = p GROUP BY p) as roomCount FROM PremisesEntity p WHERE TYPE(p) = :type")
   fun <T : PremisesEntity> findAllByType(type: Class<T>): List<PremisesWithRoomCount>
@@ -295,6 +298,7 @@ data class ApprovedPremisesSummary(
   val bedCount: Int,
   val apCode: String,
   val regionName: String,
+  val apAreaName: String,
 )
 
 data class TemporaryAccommodationPremisesSummary(

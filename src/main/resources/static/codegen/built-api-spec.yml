@@ -96,6 +96,12 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: apAreaId
+          in: query
+          description: ID of the AP area to filter by
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successful operation
@@ -2538,6 +2544,26 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /reference-data/ap-areas:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all probation regions
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApArea'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /reference-data/characteristics:
     get:
       tags:
@@ -4449,9 +4475,12 @@ components:
               example: NEHOPE1
             probationRegion:
               type: string
+            apArea:
+              type: string
       required:
         - apCode
         - probationRegion
+        - apArea
     TemporaryAccommodationPremisesSummary:
       allOf:
         - $ref: '#/components/schemas/PremisesSummary'
