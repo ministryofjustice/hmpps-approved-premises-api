@@ -281,7 +281,8 @@ class ApplicationsController(
     applicationId: UUID,
     body: ApplicationTimelineNote,
   ): ResponseEntity<ApplicationTimelineNote> {
-    val savedNote = applicationService.addNoteToApplication(applicationId, body)
+    val user = userService.getUserForRequest()
+    val savedNote = applicationService.addNoteToApplication(applicationId, body, user)
     return ResponseEntity.ok(savedNote)
   }
 
