@@ -171,31 +171,30 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
   ): Page<DomainAssessmentSummary>
 
   @Query(
-    "SELECT a FROM AssessmentEntity a WHERE a.reallocatedAt IS NULL " +
-      "AND a.isWithdrawn != true AND a.submittedAt IS NULL AND TYPE(a) = :type AND a.allocatedToUser IS NULL",
+    """
+      SELECT a FROM AssessmentEntity a 
+      WHERE TYPE(a) = :type AND
+            a.reallocatedAt IS NULL AND  
+            a.isWithdrawn != true AND 
+            a.submittedAt IS NULL AND 
+            (
+              (:#{#allocationStatus?.toString()} = 'ALLOCATED' AND a.allocatedToUser IS NOT NULL) OR
+              (:#{#allocationStatus?.toString()} = 'UNALLOCATED' AND a.allocatedToUser IS NULL) OR
+              (:#{#allocationStatus?.toString()} = 'EITHER')
+            )
+    """,
   )
-  fun <T : AssessmentEntity> findAllByReallocatedAtNullAndSubmittedAtNullAndTypeAndAllocatedToUserNull(
+  fun <T : AssessmentEntity> findByAllocationStatus(
     type: Class<T>,
+    allocationStatus: AllocationStatus,
     pageable: Pageable?,
   ): Page<AssessmentEntity>
 
-  @Query(
-    "SELECT a FROM AssessmentEntity a WHERE a.reallocatedAt IS NULL " +
-      "AND a.isWithdrawn != true AND a.submittedAt IS NULL AND TYPE(a) = :type AND a.allocatedToUser IS NOT NULL",
-  )
-  fun <T : AssessmentEntity> findAllByReallocatedAtNullAndSubmittedAtNullAndTypeAndAllocatedToUser(
-    type: Class<T>,
-    pageable: Pageable?,
-  ): Page<AssessmentEntity>
-
-  @Query(
-    "SELECT a FROM AssessmentEntity a WHERE a.reallocatedAt IS NULL " +
-      "AND a.isWithdrawn != true AND a.submittedAt IS NULL AND TYPE(a) = :type",
-  )
-  fun <T : AssessmentEntity> findAllByReallocatedAtNullAndSubmittedAtNullAndType(
-    type: Class<T>,
-    pageable: Pageable?,
-  ): Page<AssessmentEntity>
+  enum class AllocationStatus {
+    ALLOCATED,
+    UNALLOCATED,
+    EITHER,
+  }
 
   fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
 

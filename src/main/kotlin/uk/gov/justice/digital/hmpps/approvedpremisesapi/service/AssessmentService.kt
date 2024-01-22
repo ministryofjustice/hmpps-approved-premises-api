@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -19,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSort
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -54,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.wrapWithMetadata
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -138,42 +137,33 @@ class AssessmentService(
   }
 
   fun getAllReallocatable(
-    page: Int?,
-    sortField: TaskSortField,
-    sortDirection: SortDirection?,
+    pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
   ): Pair<List<AssessmentEntity>, PaginationMetadata?> {
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
-    val pageable = getPageable(sortField.value, sortDirection, page)
-    var assessments: Page<AssessmentEntity>?
+    val pageable = getPageable(
+      pageCriteria.withSortBy(
+        when (pageCriteria.sortBy) {
+          TaskSortField.createdAt -> "createdAt"
+        },
+      ),
+    )
 
-    when {
-      allocatedFilter == AllocatedFilter.unallocated ->
-        assessments =
-          assessmentRepository.findAllByReallocatedAtNullAndSubmittedAtNullAndTypeAndAllocatedToUserNull(
-            ApprovedPremisesAssessmentEntity::class.java,
-            pageable,
-          )
-
-      allocatedFilter == AllocatedFilter.allocated ->
-        assessments =
-          assessmentRepository.findAllByReallocatedAtNullAndSubmittedAtNullAndTypeAndAllocatedToUser(
-            ApprovedPremisesAssessmentEntity::class.java,
-            pageable,
-          )
-
-      else ->
-        assessments =
-          assessmentRepository.findAllByReallocatedAtNullAndSubmittedAtNullAndType(
-            ApprovedPremisesAssessmentEntity::class.java,
-            pageable,
-          )
-    }
+    val assessments = assessmentRepository.findByAllocationStatus(
+      ApprovedPremisesAssessmentEntity::class.java,
+      when (allocatedFilter) {
+        AllocatedFilter.allocated -> AssessmentRepository.AllocationStatus.ALLOCATED
+        AllocatedFilter.unallocated -> AssessmentRepository.AllocationStatus.UNALLOCATED
+        null -> AssessmentRepository.AllocationStatus.EITHER
+      },
+      pageable,
+    )
 
     assessments.forEach {
       it.schemaUpToDate = it.schemaVersion.id == latestSchema.id
     }
-    return Pair(assessments.content, getMetadata(assessments, page))
+
+    return wrapWithMetadata(assessments, pageCriteria)
   }
 
   fun getAssessmentForUser(user: UserEntity, assessmentId: UUID): AuthorisableActionResult<AssessmentEntity> {

@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotAllowedProble
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.util.UUID
@@ -42,17 +43,14 @@ class TaskService(
 ) {
   fun getAllReallocatable(
     allocatedFilter: AllocatedFilter?,
-    page: Int?,
-    sortField: TaskSortField,
-    sortDirection: SortDirection,
+    pageCriteria: PageCriteria<TaskSortField>,
   ): Pair<List<TypedTask>, PaginationMetadata?> {
     val pageable = getPageable(
-      // Convert to snake_case, because getAllReallocatable is a native SQL query
-      when (sortField) {
-        TaskSortField.createdAt -> "created_at"
-      },
-      sortDirection,
-      page,
+      pageCriteria.withSortBy(
+        when (pageCriteria.sortBy) {
+          TaskSortField.createdAt -> "created_at"
+        },
+      ),
     )
 
     val isAllocated = if (allocatedFilter == null) { null } else { allocatedFilter == AllocatedFilter.allocated }
@@ -70,17 +68,16 @@ class TaskService(
     ).flatten()
 
     tasks = tasks.sortedBy {
-      when (sortField) {
+      when (pageCriteria.sortBy) {
         TaskSortField.createdAt -> it.createdAt
       }
     }
 
-    if (sortDirection == SortDirection.desc) {
+    if (pageCriteria.sortDirection == SortDirection.desc) {
       tasks = tasks.reversed()
     }
 
-    val metadata = getMetadata(reallocatableTaskResult, page)
-
+    val metadata = getMetadata(reallocatableTaskResult, pageCriteria)
     return Pair(tasks, metadata)
   }
 

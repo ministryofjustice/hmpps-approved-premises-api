@@ -45,7 +45,7 @@ class TasksTest : IntegrationTestBase() {
 
   @Nested
   inner class GetAllReallocatableTest {
-    val pageSize = 10
+    private val pageSize = 10
 
     @Test
     fun `Get all reallocatable tasks without JWT returns 401`() {

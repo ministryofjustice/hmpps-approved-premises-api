@@ -21,11 +21,31 @@ import javax.persistence.Table
 @Suppress("FunctionNaming")
 @Repository
 interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEntity, UUID> {
-  fun findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNull(pageable: Pageable?): Page<PlacementApplicationEntity>
 
-  fun findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNullAndAllocatedToUserIsNotNull(pageable: Pageable?): Page<PlacementApplicationEntity>
+  @Query(
+    """
+    SELECT
+      pa
+    FROM
+      PlacementApplicationEntity pa
+    where
+      pa.submittedAt IS NOT NULL AND
+      pa.reallocatedAt IS NULL AND
+      pa.decision IS NULL AND 
+      (
+        (:#{#allocationStatus?.toString()} = 'ALLOCATED' AND pa.allocatedToUser IS NOT NULL) OR
+        (:#{#allocationStatus?.toString()} = 'UNALLOCATED' AND pa.allocatedToUser IS NULL) OR
+        (:#{#allocationStatus?.toString()} = 'EITHER')
+      )
+    """,
+  )
+  fun findByAllocationStatus(allocationStatus: AllocationStatus, pageable: Pageable?): Page<PlacementApplicationEntity>
 
-  fun findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNullAndAllocatedToUserNull(pageable: Pageable?): Page<PlacementApplicationEntity>
+  enum class AllocationStatus {
+    ALLOCATED,
+    UNALLOCATED,
+    EITHER,
+  }
 
   @Query(
     """

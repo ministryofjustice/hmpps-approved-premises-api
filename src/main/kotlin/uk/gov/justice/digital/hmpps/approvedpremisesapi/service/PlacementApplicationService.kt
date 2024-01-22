@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import org.springframework.data.domain.Page
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
@@ -26,8 +25,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.wrapWithMetadata
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
@@ -352,39 +353,27 @@ class PlacementApplicationService(
   }
 
   fun getAllReallocatable(
-    page: Int?,
-    sortField: TaskSortField,
-    sortDirection: SortDirection?,
+    pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
   ): Pair<List<PlacementApplicationEntity>, PaginationMetadata?> {
-    val pageable = getPageable(sortField.value, sortDirection, page)
-    var allReallocatable: Page<PlacementApplicationEntity>?
+    val pageable = getPageable(
+      pageCriteria.withSortBy(
+        when (pageCriteria.sortBy) {
+          TaskSortField.createdAt -> "createdAt"
+        },
+      ),
+    )
 
-    when {
-      allocatedFilter == AllocatedFilter.unallocated ->
-        allReallocatable =
-          placementApplicationRepository
-            .findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNullAndAllocatedToUserNull(
-              pageable,
-            )
+    val allReallocatable = placementApplicationRepository.findByAllocationStatus(
+      when (allocatedFilter) {
+        AllocatedFilter.allocated -> PlacementApplicationRepository.AllocationStatus.ALLOCATED
+        AllocatedFilter.unallocated -> PlacementApplicationRepository.AllocationStatus.UNALLOCATED
+        null -> PlacementApplicationRepository.AllocationStatus.EITHER
+      },
+      pageable,
+    )
 
-      allocatedFilter == AllocatedFilter.allocated ->
-        allReallocatable =
-          placementApplicationRepository
-            .findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNullAndAllocatedToUserIsNotNull(
-              pageable,
-            )
-
-      else ->
-        allReallocatable =
-          placementApplicationRepository
-            .findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNull(
-              pageable,
-            )
-    }
-
-    val metaData = getMetadata(allReallocatable, page)
-    return Pair(allReallocatable.content, metaData)
+    return wrapWithMetadata(allReallocatable, pageCriteria)
   }
 
   private fun setSchemaUpToDate(placementApplicationEntity: PlacementApplicationEntity): PlacementApplicationEntity {
