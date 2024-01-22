@@ -2318,6 +2318,14 @@ components:
         - createdByUserId
         - note
       description: Notes added to an application
+    NewApplicationTimelineNote:
+      type: object
+      properties:
+        note:
+          type: string
+      required:
+        - note
+      description: A note to add to an application
     NewApplication:
       type: object
       properties:

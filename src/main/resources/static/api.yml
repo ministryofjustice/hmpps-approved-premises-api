@@ -1951,7 +1951,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '_shared.yml#/components/schemas/ApplicationTimelineNote'
+              $ref: '_shared.yml#/components/schemas/NewApplicationTimelineNote'
         required: true
       responses:
         200:

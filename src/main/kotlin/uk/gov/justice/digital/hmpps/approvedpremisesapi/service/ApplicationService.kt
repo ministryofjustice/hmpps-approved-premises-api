@@ -1065,10 +1065,10 @@ class ApplicationService(
 
   fun addNoteToApplication(
     applicationId: UUID,
-    applicationTimelineNote: ApplicationTimelineNote,
+    note: String,
     user: UserEntity,
   ): ApplicationTimelineNote {
-    val savedNote = applicationTimelineNoteService.saveApplicationTimelineNote(applicationId, applicationTimelineNote, user)
+    val savedNote = applicationTimelineNoteService.saveApplicationTimelineNote(applicationId, note, user)
     return applicationTimelineNoteTransformer.transformJpaToApi(savedNote)
   }
 }

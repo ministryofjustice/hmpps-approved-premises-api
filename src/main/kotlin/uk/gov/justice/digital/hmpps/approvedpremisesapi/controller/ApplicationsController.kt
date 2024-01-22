@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -279,10 +280,10 @@ class ApplicationsController(
 
   override fun applicationsApplicationIdNotesPost(
     applicationId: UUID,
-    body: ApplicationTimelineNote,
+    body: NewApplicationTimelineNote,
   ): ResponseEntity<ApplicationTimelineNote> {
     val user = userService.getUserForRequest()
-    val savedNote = applicationService.addNoteToApplication(applicationId, body, user)
+    val savedNote = applicationService.addNoteToApplication(applicationId, body.note, user)
     return ResponseEntity.ok(savedNote)
   }
 
