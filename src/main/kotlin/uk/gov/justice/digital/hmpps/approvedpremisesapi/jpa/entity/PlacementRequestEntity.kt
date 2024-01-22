@@ -22,12 +22,6 @@ import javax.persistence.Table
 @Suppress("FunctionNaming")
 @Repository
 interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUID> {
-  fun findByApplication(application: ApplicationEntity): PlacementRequestEntity?
-
-  fun findAllByApplication(application: ApplicationEntity): List<PlacementRequestEntity>
-
-  fun findAllByPlacementApplication(placementApplication: PlacementApplicationEntity): List<PlacementRequestEntity>
-
   fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(
     userId: UUID,
     pageable: Pageable?,
@@ -88,11 +82,6 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     nativeQuery = true,
   )
   fun findAllReallocatableUnallocated(pageable: Pageable?): Page<PlacementRequestEntity>
-
-  fun findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(
-    isParole: Boolean,
-    pageable: Pageable?,
-  ): Page<PlacementRequestEntity>
 
   @Query(
     """

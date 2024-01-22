@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostCodeDistrictEntity
-import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -17,8 +16,6 @@ class PlacementRequirementsEntityFactory : Factory<PlacementRequirementsEntity> 
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var gender: Yielded<Gender> = { Gender.male }
   private var apType: Yielded<ApType> = { ApType.normal }
-  private var expectedArrival: Yielded<LocalDate> = { LocalDate.now() }
-  private var duration: Yielded<Int> = { 12 }
   private var postcodeDistrict: Yielded<PostCodeDistrictEntity> = { PostCodeDistrictEntityFactory().produce() }
   private var application: Yielded<ApprovedPremisesApplicationEntity>? = null
   private var assessment: Yielded<AssessmentEntity>? = null

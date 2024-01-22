@@ -896,7 +896,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                       assertThat(updatedPlacementApplication.decisionMadeAt).isWithinTheLastMinute()
 
                       val createdPlacementRequests =
-                        placementRequestRepository.findAllByApplication(placementApplicationEntity.application)
+                        placementRequestTestRepository.findAllByApplication(placementApplicationEntity.application)
 
                       assertThat(createdPlacementRequests.size).isEqualTo(1)
 

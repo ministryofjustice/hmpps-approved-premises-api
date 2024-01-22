@@ -39,8 +39,8 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
 
     @Test
     fun `findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse returns all results when no page is provided`() {
-      val nonParoleResults = realPlacementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(false, null)
-      val paroleResults = realPlacementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(true, null)
+      val nonParoleResults = placementRequestTestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(false, null)
+      val paroleResults = placementRequestTestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(true, null)
 
       assertThat(nonParoleResults.content.map { it.id }).isEqualTo(nonParolePlacementRequests.map { it.id })
       assertThat(paroleResults.content.map { it.id }).isEqualTo(parolePlacementRequests.map { it.id })
@@ -49,8 +49,8 @@ class PlacementRequestRepositoryTest : IntegrationTestBase() {
     @Test
     fun `findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse returns paginated results when a page is provided`() {
       val pageable = PageRequest.of(1, 2, Sort.by("createdAt"))
-      val nonParoleResults = realPlacementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(false, pageable)
-      val paroleResults = realPlacementRequestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(true, pageable)
+      val nonParoleResults = placementRequestTestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(false, pageable)
+      val paroleResults = placementRequestTestRepository.findAllByIsParoleAndReallocatedAtNullAndIsWithdrawnFalse(true, pageable)
 
       assertThat(nonParoleResults.content.map { it.id }).isEqualTo(listOf(nonParolePlacementRequests[2], nonParolePlacementRequests[3]).map { it.id })
       assertThat(paroleResults.content.map { it.id }).isEqualTo(listOf(parolePlacementRequests[2], parolePlacementRequests[3]).map { it.id })

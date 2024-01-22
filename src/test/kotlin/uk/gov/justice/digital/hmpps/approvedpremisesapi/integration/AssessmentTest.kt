@@ -1800,7 +1800,7 @@ class AssessmentTest : IntegrationTestBase() {
               SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
             )
 
-            val persistedPlacementRequest = placementRequestRepository.findByApplication(application)!!
+            val persistedPlacementRequest = placementRequestTestRepository.findByApplication(application)!!
 
             assertThat(persistedPlacementRequest.allocatedToUser!!.id).isIn(listOf(matcher1.id, matcher2.id))
             assertThat(persistedPlacementRequest.application.id).isEqualTo(application.id)
@@ -1892,7 +1892,7 @@ class AssessmentTest : IntegrationTestBase() {
               SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
             )
 
-            assertThat(placementRequestRepository.findByApplication(application)).isNull()
+            assertThat(placementRequestTestRepository.findByApplication(application)).isNull()
 
             val persistedPlacementRequirements = placementRequirementsRepository.findTopByApplicationOrderByCreatedAtDesc(application)!!
 
