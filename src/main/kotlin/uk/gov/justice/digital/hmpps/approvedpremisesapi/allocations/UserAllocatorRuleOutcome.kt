@@ -14,5 +14,5 @@ sealed interface UserAllocatorRuleOutcome {
   /**
    * Allocate a specific user to the task.
    */
-  class AllocateToUser(val userName: String) : UserAllocatorRuleOutcome
+  data class AllocateToUser(val userName: String) : UserAllocatorRuleOutcome
 }
