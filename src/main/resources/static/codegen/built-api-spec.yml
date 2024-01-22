@@ -7432,7 +7432,7 @@ components:
         content:
           type: string
         createdBy:
-          type: string
+          $ref: '#/components/schemas/User'
         associatedUrls:
           type: array
           items:
