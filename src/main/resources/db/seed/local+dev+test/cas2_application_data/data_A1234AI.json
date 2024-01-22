@@ -150,10 +150,10 @@
       "needsDetail": "Mr Bertrand has a history of schizophrenic episodes and also suffers from epilepsy",
       "isEngagedWithCommunity": "no",
       "isEngagedWithServicesInCustody": "yes",
-      "hasPrescribedMedication": "yes",
-      "isInPossessionOfMeds": "yes",
-      "medicationDetail": "carbamazepine",
-      "medicationIssues": ""
+      "canManageMedication": "notPrescribedMedication",
+      "canManageMedicationNotes": "",
+      "medicationIssues": "",
+      "cantManageMedicationNotes": ""
     },
     "communication-and-language": {
       "hasCommunicationNeeds": "no",
