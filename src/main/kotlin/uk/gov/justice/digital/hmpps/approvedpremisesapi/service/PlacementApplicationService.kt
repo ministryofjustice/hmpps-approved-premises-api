@@ -54,8 +54,8 @@ class PlacementApplicationService(
 
   fun getVisiblePlacementApplicationsForUser(
     user: UserEntity,
-    page: Int?,
-    sortDirection: SortDirection?,
+    page: Int? = null,
+    sortDirection: SortDirection? = null,
     apAreaId: UUID?,
   ): Pair<List<PlacementApplicationEntity>, PaginationMetadata?> {
     val sortField = "createdAt"

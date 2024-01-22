@@ -97,25 +97,21 @@ class TasksController(
     }
   }
 
-  override fun tasksGet(): ResponseEntity<List<Task>> = runBlocking {
+  override fun tasksGet(apAreaId: UUID?): ResponseEntity<List<Task>> = runBlocking {
     val user = userService.getUserForRequest()
     var tasks = listOf<Task>()
 
     if (user.hasRole(UserRole.CAS1_MATCHER)) {
       val placementRequests =
         placementRequestService.getVisiblePlacementRequestsForUser(
-          user,
-          null,
-          null,
-          null,
+          user = user,
+          apAreaId = apAreaId,
         )
 
       val placementApplications =
         placementApplicationService.getVisiblePlacementApplicationsForUser(
-          user,
-          null,
-          null,
-          null,
+          user = user,
+          apAreaId = apAreaId,
         )
 
       val crns = listOf(

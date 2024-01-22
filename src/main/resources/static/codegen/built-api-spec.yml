@@ -2630,6 +2630,14 @@ paths:
       tags:
         - Task data
       summary: List all tasks
+      parameters:
+        - name: apAreaId
+          in: query
+          required: false
+          description: If provided, only tasks for this area will be returned
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successfully retrieved tasks

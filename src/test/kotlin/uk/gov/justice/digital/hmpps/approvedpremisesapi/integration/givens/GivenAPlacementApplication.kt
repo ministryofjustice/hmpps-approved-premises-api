@@ -22,7 +22,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
   decision: PlacementApplicationDecision? = null,
   reallocated: Boolean = false,
   placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
-  probationRegionEntity: ProbationRegionEntity? = null,
+  probationRegion: ProbationRegionEntity? = null,
 ): PlacementApplicationEntity {
   val (_, application) = `Given an Assessment for Approved Premises`(
     decision = assessmentDecision,
@@ -42,7 +42,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
         }
       }
     },
-    probationRegionEntity = probationRegionEntity,
+    probationRegionEntity = probationRegion,
   )
 
   return placementApplicationFactory.produceAndPersist {

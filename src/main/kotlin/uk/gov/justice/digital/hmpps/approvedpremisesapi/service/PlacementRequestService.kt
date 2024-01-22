@@ -64,8 +64,8 @@ class PlacementRequestService(
 
   fun getVisiblePlacementRequestsForUser(
     user: UserEntity,
-    page: Int?,
-    sortDirection: SortDirection?,
+    page: Int? = null,
+    sortDirection: SortDirection? = null,
     apAreaId: UUID? = null,
   ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
     val sortField = "createdAt"

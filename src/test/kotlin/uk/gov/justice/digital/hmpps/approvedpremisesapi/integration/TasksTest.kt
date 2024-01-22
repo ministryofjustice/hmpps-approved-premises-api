@@ -1142,7 +1142,7 @@ class TasksTest : IntegrationTestBase() {
     fun `Get all tasks for a user returns the relevant tasks for a user`() {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Offender` { offenderDetails, _ ->
             val (placementRequestAllocatedToMe) = `Given a Placement Request`(
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
@@ -1195,6 +1195,108 @@ class TasksTest : IntegrationTestBase() {
 
             webTestClient.get()
               .uri("/tasks")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    taskTransformer.transformPlacementRequestToTask(
+                      placementRequestAllocatedToMe,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                    ),
+                    taskTransformer.transformPlacementApplicationToTask(
+                      placementApplicationAllocatedToMe,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all tasks for a user returns the relevant tasks for a user and ap area`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+
+          val apArea1 = `Given an AP Area`()
+          val apArea2 = `Given an AP Area`()
+
+          val probationRegion1 = `Given a Probation Region`(apArea = apArea1) { }
+          val probationRegion2 = `Given a Probation Region`(apArea = apArea2) { }
+
+          `Given an Offender` { offenderDetails, _ ->
+            val (placementRequestAllocatedToMe) = `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              probationRegion = probationRegion2,
+            )
+
+            val placementApplicationAllocatedToMe = `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              probationRegion = probationRegion2,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              probationRegion = probationRegion1,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              probationRegion = probationRegion1,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              reallocated = true,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = otherUser,
+              allocatedToUser = otherUser,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              probationRegion = probationRegion2,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              reallocated = true,
+            )
+
+            webTestClient.get()
+              .uri("/tasks?apAreaId=${apArea2.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -2040,7 +2142,7 @@ class TasksTest : IntegrationTestBase() {
             },
             crn = offenderDetails.otherIds.crn,
             decision = null,
-            probationRegionEntity = probationRegion1,
+            probationRegion = probationRegion1,
           )
 
           `Given a Placement Application`(
@@ -2051,7 +2153,7 @@ class TasksTest : IntegrationTestBase() {
             },
             crn = offenderDetails.otherIds.crn,
             decision = null,
-            probationRegionEntity = probationRegion2,
+            probationRegion = probationRegion2,
           )
 
           `Given a Placement Application`(
@@ -2062,7 +2164,7 @@ class TasksTest : IntegrationTestBase() {
             },
             crn = offenderDetails.otherIds.crn,
             reallocated = true,
-            probationRegionEntity = probationRegion1,
+            probationRegion = probationRegion1,
           )
 
           webTestClient.get()
