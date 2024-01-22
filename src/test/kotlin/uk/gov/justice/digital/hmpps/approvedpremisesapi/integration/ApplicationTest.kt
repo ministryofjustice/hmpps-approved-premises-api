@@ -2765,7 +2765,7 @@ class ApplicationTest : IntegrationTestBase() {
           withCreatedByUser(user)
           withApplicationSchema(applicationSchema)
         }
-        val body = ApplicationTimelineNote(user.id, "some note")
+        val body = ApplicationTimelineNote(note = "some note")
         webTestClient.post()
           .uri("/applications/$applicationId/notes")
           .header("Authorization", "Bearer $jwt")
@@ -2781,7 +2781,7 @@ class ApplicationTest : IntegrationTestBase() {
         savedNote.map {
           assertThat(it.body).isEqualTo("some note")
           assertThat(it.applicationId).isEqualTo(applicationId)
-          assertThat(it.createdBy).isEqualTo(user.id)
+          assertThat(it.createdBy.id).isEqualTo(user.id)
         }
       }
     }

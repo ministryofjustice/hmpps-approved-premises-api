@@ -2,17 +2,20 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelineNoteEntity
 
 @Component
-class ApplicationTimelineNoteTransformer {
+class ApplicationTimelineNoteTransformer(
+  private val userTransformer: UserTransformer,
+) {
 
   fun transformJpaToApi(jpa: ApplicationTimelineNoteEntity) = ApplicationTimelineNote(
     id = jpa.id,
     createdAt = jpa.createdAt.toInstant(),
-    createdByUserId = jpa.createdBy,
+    createdByUser = userTransformer.transformJpaToApi(jpa.createdBy, ServiceName.approvedPremises),
     note = jpa.body,
   )
 

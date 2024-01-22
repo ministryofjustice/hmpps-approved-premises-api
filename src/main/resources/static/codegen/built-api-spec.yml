@@ -6159,9 +6159,8 @@ components:
         id:
           type: string
           format: uuid
-        createdByUserId:
-          type: string
-          format: uuid
+        createdByUser:
+          $ref: '#/components/schemas/User'
         note:
           type: string
         createdAt:
