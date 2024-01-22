@@ -156,4 +156,34 @@ class PremisesSummaryTest : IntegrationTestBase() {
         .jsonPath("$[0].id").isEqualTo(region1Premises.id.toString())
     }
   }
+
+  @Test
+  fun `Get all CAS1 Premises filters by AP Area`() {
+    `Given a User` { _, jwt ->
+      val apArea = apAreaEntityFactory.produceAndPersist()
+      val region1 = probationRegionEntityFactory.produceAndPersist { withApArea(apArea) }
+      val region2 = probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+
+      val apAreaPremises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withProbationRegion(region1)
+      }
+
+      approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withProbationRegion(region2)
+      }
+
+      webTestClient.get()
+        .uri("/premises/summary?apAreaId=${apArea.id}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("$.length()").isEqualTo(1)
+        .jsonPath("$[0].id").isEqualTo(apAreaPremises.id.toString())
+    }
+  }
 }
