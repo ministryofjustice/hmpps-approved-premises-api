@@ -1,0 +1,1 @@
+ALTER TABLE application_timeline_notes RENAME COLUMN "created_by" TO "created_by_user_id";
