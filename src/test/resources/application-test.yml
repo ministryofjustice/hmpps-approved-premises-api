@@ -184,3 +184,5 @@ user-allocations:
     esap-assessments:
       enabled: true
       allocate-to-user: JIMSNOWLDAP
+    emergency-assessments:
+      enabled: true
