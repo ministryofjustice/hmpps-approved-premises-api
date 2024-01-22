@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CancellationReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.CharacteristicTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DepartureReasonTransformer
@@ -43,6 +44,9 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var probationRegionTransformer: ProbationRegionTransformer
+
+  @Autowired
+  lateinit var apAreaTransformer: ApAreaTransformer
 
   @Autowired
   lateinit var nonArrivalReasonTransformer: NonArrivalReasonTransformer
@@ -653,6 +657,30 @@ class ReferenceDataTest : IntegrationTestBase() {
 
     webTestClient.get()
       .uri("/reference-data/probation-regions")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get AP Areas returns 200 with correct body`() {
+    probationAreaProbationRegionMappingRepository.deleteAll()
+    probationDeliveryUnitRepository.deleteAll()
+    probationRegionRepository.deleteAll()
+    apAreaRepository.deleteAll()
+
+    val apAreas = apAreaEntityFactory.produceAndPersistMultiple(10)
+    val expectedJson = objectMapper.writeValueAsString(
+      apAreas.map(apAreaTransformer::transformJpaToApi),
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/ap-areas")
       .header("Authorization", "Bearer $jwt")
       .exchange()
       .expectStatus()
