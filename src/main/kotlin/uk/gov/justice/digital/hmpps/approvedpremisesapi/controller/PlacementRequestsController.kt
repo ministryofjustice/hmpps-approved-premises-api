@@ -74,6 +74,7 @@ class PlacementRequestsController(
     arrivalDateStart: LocalDate?,
     arrivalDateEnd: LocalDate?,
     requestType: PlacementRequestRequestType?,
+    apAreaId: UUID?,
     page: Int?,
     sortBy: PlacementRequestSortField?,
     sortDirection: SortDirection?,
@@ -86,13 +87,14 @@ class PlacementRequestsController(
 
     val (requests, metadata) = placementRequestService.getAllActive(
       PlacementRequestService.AllActiveSearchCriteria(
-        status,
-        crn,
-        crnOrName,
-        tier?.value,
-        arrivalDateStart,
-        arrivalDateEnd,
-        requestType,
+        status = status,
+        crn = crn,
+        crnOrName = crnOrName,
+        tier = tier?.value,
+        arrivalDateStart = arrivalDateStart,
+        arrivalDateEnd = arrivalDateEnd,
+        requestType = requestType,
+        apAreaId = apAreaId,
       ),
       PageCriteria(
         sortBy = sortBy ?: PlacementRequestSortField.createdAt,
