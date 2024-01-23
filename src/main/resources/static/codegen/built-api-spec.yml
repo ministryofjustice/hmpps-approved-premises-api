@@ -6430,6 +6430,8 @@ components:
         - pss
         - in_community
         - not_applicable
+        - extendedDeterminateLicence
+        - paroleDirectedLicence
     SentenceTypeOption:
       type: string
       enum:
