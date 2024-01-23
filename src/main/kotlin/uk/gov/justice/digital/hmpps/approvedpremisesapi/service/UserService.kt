@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
@@ -54,7 +53,6 @@ class UserService(
   private val userQualificationAssignmentRepository: UserQualificationAssignmentRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingRepository,
-  private val userTransformer: UserTransformer,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 

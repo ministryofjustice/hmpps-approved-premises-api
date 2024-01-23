@@ -2736,6 +2736,12 @@ paths:
           description: Filter by allocated or not
           schema:
             $ref: '_shared.yml#/components/schemas/AllocatedFilter'
+        - name: apAreaId
+          in: query
+          description: Approved Premises Area ID to filter results by
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successfully retrieved tasks

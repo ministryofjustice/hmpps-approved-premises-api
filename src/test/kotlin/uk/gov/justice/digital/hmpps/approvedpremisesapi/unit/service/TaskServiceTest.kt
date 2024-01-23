@@ -303,6 +303,9 @@ class TaskServiceTest {
 
     PaginationConfig(defaultPageSize = 10).postInit()
 
+    val isAllocated = true
+    val apAreaId = UUID.randomUUID()
+
     val assessments = List(3) { generateAssessment() }
     val placementApplications = List(4) { generatePlacementApplication() }
     val placementRequests = List(4) { generatePlacementRequest() }
@@ -321,7 +324,7 @@ class TaskServiceTest {
     val metadata = mockk<PaginationMetadata>()
 
     every { page.content } returns tasks
-    every { taskRepositoryMock.getAllReallocatable(true, PageRequest.of(0, 10, Sort.by("created_at").ascending())) } returns page
+    every { taskRepositoryMock.getAllReallocatable(isAllocated, apAreaId, PageRequest.of(0, 10, Sort.by("created_at").ascending())) } returns page
     every { assessmentRepositoryMock.findAllById(assessments.map { it.id }) } returns assessments
     every { placementApplicationRepositoryMock.findAllById(placementApplications.map { it.id }) } returns placementApplications
     every { placementRequestRepositoryMock.findAllById(placementRequests.map { it.id }) } returns placementRequests
@@ -330,7 +333,7 @@ class TaskServiceTest {
 
     every { getMetadata(page, pageCriteria) } returns metadata
 
-    val result = taskService.getAllReallocatable(AllocatedFilter.allocated, pageCriteria)
+    val result = taskService.getAllReallocatable(AllocatedFilter.allocated, apAreaId, pageCriteria)
 
     val expectedTasks = listOf(
       assessments.map { TypedTask.Assessment(it) },

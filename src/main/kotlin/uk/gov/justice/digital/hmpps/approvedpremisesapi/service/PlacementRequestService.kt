@@ -82,6 +82,7 @@ class PlacementRequestService(
   fun getAllReallocatable(
     pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
+    apAreaId: UUID?,
   ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
     val pageable = getPageable(
       pageCriteria.withSortBy(
@@ -97,7 +98,7 @@ class PlacementRequestService(
       null -> PlacementRequestRepository.AllocationStatus.EITHER
     }
 
-    val allReallocatable = placementRequestRepository.findByAllocationStatus(allocationStatus, pageable)
+    val allReallocatable = placementRequestRepository.findByAllocationStatus(allocationStatus, apAreaId, pageable)
 
     return wrapWithMetadata(allReallocatable, pageCriteria)
   }

@@ -355,6 +355,7 @@ class PlacementApplicationService(
   fun getAllReallocatable(
     pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
+    apAreaId: UUID?,
   ): Pair<List<PlacementApplicationEntity>, PaginationMetadata?> {
     val pageable = getPageable(
       pageCriteria.withSortBy(
@@ -370,6 +371,7 @@ class PlacementApplicationService(
         AllocatedFilter.unallocated -> PlacementApplicationRepository.AllocationStatus.UNALLOCATED
         null -> PlacementApplicationRepository.AllocationStatus.EITHER
       },
+      apAreaId,
       pageable,
     )
 

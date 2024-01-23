@@ -42,7 +42,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
         }
       }
     },
-    apAreaEntity = apArea,
+    apArea = apArea,
   )
 
   return placementApplicationFactory.produceAndPersist {

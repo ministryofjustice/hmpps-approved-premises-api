@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.util.UUID
 import javax.servlet.http.HttpServletRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
@@ -47,7 +46,6 @@ class UserServiceTest {
   private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
   private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
   private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
-  private val mockUserTransformer = mockk<UserTransformer>()
 
   private val userService = UserService(
     false,
@@ -60,7 +58,6 @@ class UserServiceTest {
     mockUserQualificationAssignmentRepository,
     mockProbationRegionRepository,
     mockProbationAreaProbationRegionMappingRepository,
-    mockUserTransformer,
   )
 
   @Test
@@ -304,7 +301,6 @@ class UserServiceTest {
     private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
     private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
     private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
-    private val mockUserTransformer = mockk<UserTransformer>()
 
     private val userService = UserService(
       false,
@@ -317,7 +313,6 @@ class UserServiceTest {
       mockUserQualificationAssignmentRepository,
       mockProbationRegionRepository,
       mockProbationAreaProbationRegionMappingRepository,
-      mockUserTransformer,
     )
 
     private val id = UUID.fromString("21b61d19-3a96-4b88-8df9-a5e89bc6fe73")
@@ -540,7 +535,6 @@ class UserServiceTest {
     private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
     private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
     private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
-    private val mockUserTransformer = mockk<UserTransformer>()
 
     private val userService = UserService(
       false,
@@ -553,7 +547,6 @@ class UserServiceTest {
       mockUserQualificationAssignmentRepository,
       mockProbationRegionRepository,
       mockProbationAreaProbationRegionMappingRepository,
-      mockUserTransformer,
     )
 
     private val userFactory = UserEntityFactory()
@@ -607,7 +600,6 @@ class UserServiceTest {
     private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
     private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
     private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
-    private val mockUserTransformer = mockk<UserTransformer>()
 
     private val userService = UserService(
       false,
@@ -620,7 +612,6 @@ class UserServiceTest {
       mockUserQualificationAssignmentRepository,
       mockProbationRegionRepository,
       mockProbationAreaProbationRegionMappingRepository,
-      mockUserTransformer,
     )
 
     private val userFactory = UserEntityFactory()
