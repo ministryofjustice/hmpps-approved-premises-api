@@ -309,8 +309,8 @@ class ApprovedPremisesApplicationEntity(
   var status: ApprovedPremisesApplicationStatus,
   var inmateInOutStatusOnSubmission: String?,
   @ManyToOne
-  @JoinColumn(name = "probation_region_id")
-  var probationRegion: ProbationRegionEntity?,
+  @JoinColumn(name = "ap_area_id")
+  var apArea: ApAreaEntity?,
 ) : ApplicationEntity(
   id,
   crn,

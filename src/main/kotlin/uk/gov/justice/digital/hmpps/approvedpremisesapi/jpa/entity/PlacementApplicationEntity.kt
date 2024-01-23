@@ -51,11 +51,10 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
     """
       SELECT pa FROM PlacementApplicationEntity pa
       JOIN pa.application a
-      LEFT OUTER JOIN a.probationRegion region
-      LEFT OUTER JOIN region.apArea area
+      LEFT OUTER JOIN a.apArea apArea
       WHERE 
         pa.allocatedToUser.id = :userId AND 
-        ((cast(:apAreaId as org.hibernate.type.UUIDCharType) IS NULL) OR area.id = :apAreaId) AND
+        ((cast(:apAreaId as org.hibernate.type.UUIDCharType) IS NULL) OR apArea.id = :apAreaId) AND
         pa.reallocatedAt IS NULL AND 
         pa.decision IS NULL
     """,

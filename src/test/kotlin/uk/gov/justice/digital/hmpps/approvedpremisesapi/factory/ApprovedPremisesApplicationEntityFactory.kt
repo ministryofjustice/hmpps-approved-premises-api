@@ -2,12 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -52,7 +52,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var targetLocation: Yielded<String?> = { null }
   private var status: Yielded<ApprovedPremisesApplicationStatus> = { ApprovedPremisesApplicationStatus.STARTED }
   private var inmateInOutStatusOnSubmission: Yielded<String?> = { null }
-  private var probationRegion: Yielded<ProbationRegionEntity?> = { null }
+  private var apArea: Yielded<ApAreaEntity?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -186,8 +186,8 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.inmateInOutStatusOnSubmission = { inmateInOutStatusOnSubmission }
   }
 
-  fun withProbationRegion(probationRegion: ProbationRegionEntity?) = apply {
-    this.probationRegion = { probationRegion }
+  fun withApArea(apArea: ApAreaEntity?) = apply {
+    this.apArea = { apArea }
   }
 
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
@@ -224,6 +224,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     status = this.status(),
     situation = this.situation(),
     inmateInOutStatusOnSubmission = this.inmateInOutStatusOnSubmission(),
-    probationRegion = this.probationRegion(),
+    apArea = this.apArea(),
   )
 }

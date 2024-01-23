@@ -321,18 +321,18 @@ class ApplicationsController(
 
     val submitResult = when (submitApplication) {
       is SubmitApprovedPremisesApplication -> {
-        var probationRegionId = submitApplication.probationRegionId
+        var apAreaId = submitApplication.apAreaId
 
-        if (probationRegionId == null) {
+        if (apAreaId == null) {
           val user = userService.getUserForRequest()
-          probationRegionId = user.probationRegion.id
+          apAreaId = user.probationRegion.apArea.id
         }
         applicationService.submitApprovedPremisesApplication(
           applicationId,
           submitApplication,
           username,
           deliusPrincipal.token.tokenValue,
-          probationRegionId,
+          apAreaId,
         )
       }
 
