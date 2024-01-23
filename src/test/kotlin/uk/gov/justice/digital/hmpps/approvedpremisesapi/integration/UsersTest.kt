@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
@@ -194,6 +195,7 @@ class UsersTest : IntegrationTestBase() {
             qualifications = emptyList(),
             service = ServiceName.approvedPremises.value,
             isActive = true,
+            apArea = ApArea(region.apArea.id, region.apArea.identifier, region.apArea.name),
           ),
         ),
       )
@@ -360,7 +362,53 @@ class UsersTest : IntegrationTestBase() {
               }
 
               webTestClient.get()
-                .uri("/users?region=${probationRegion.id}")
+                .uri("/users?probationRegionId=${probationRegion.id}")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectHeader().doesNotExist("X-Pagination-CurrentPage")
+                .expectHeader().doesNotExist("X-Pagination-TotalPages")
+                .expectHeader().doesNotExist("X-Pagination-TotalResults")
+                .expectHeader().doesNotExist("X-Pagination-PageSize")
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    listOf(userOne, userTwo).map {
+                      userTransformer.transformJpaToApi(it, ServiceName.approvedPremises)
+                    },
+                  ),
+                )
+            }
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
+    fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns list filtered by AP area`(role: UserRole) {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
+          `Given a User` { userWithNoRole, _ ->
+            `Given a User`(roles = listOf(role)) { requestUser, jwt ->
+              val apArea = apAreaEntityFactory.produceAndPersist()
+
+              val probationRegion = probationRegionEntityFactory.produceAndPersist {
+                withApArea(apArea)
+              }
+
+              val userOne = userEntityFactory.produceAndPersist {
+                withProbationRegion(probationRegion)
+              }
+
+              val userTwo = userEntityFactory.produceAndPersist {
+                withProbationRegion(probationRegion)
+              }
+
+              webTestClient.get()
+                .uri("/users?apAreaId=${apArea.id}")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.approvedPremises.value)
                 .exchange()

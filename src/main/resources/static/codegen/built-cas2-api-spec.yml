@@ -3075,9 +3075,12 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ApprovedPremisesUserRole'
+            apArea:
+              $ref: '#/components/schemas/ApArea'
           required:
             - qualifications
             - roles
+            - apArea
     UserRolesAndQualifications:
       type: object
       properties:

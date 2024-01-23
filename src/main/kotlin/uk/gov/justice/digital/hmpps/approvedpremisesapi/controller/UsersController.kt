@@ -39,7 +39,8 @@ class UsersController(
     xServiceName: ServiceName,
     roles: List<ApprovedPremisesUserRole>?,
     qualifications: List<UserQualification>?,
-    region: UUID?,
+    probationRegionId: UUID?,
+    apAreaId: UUID?,
     page: Int?,
     sortBy: UserSortField?,
     sortDirection: SortDirection?,
@@ -62,7 +63,8 @@ class UsersController(
       sortBy,
       sortDirection,
       page,
-      region,
+      probationRegionId,
+      apAreaId,
     )
 
     return ResponseEntity.ok().headers(

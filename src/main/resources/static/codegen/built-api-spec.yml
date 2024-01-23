@@ -3645,9 +3645,15 @@ paths:
             type: array
             items:
               $ref: '#/components/schemas/UserQualification'
-        - name: region
+        - name: probationRegionId
           in: query
-          description: Region to filter results by
+          description: Probation region ID to filter results by
+          schema:
+            type: string
+            format: uuid
+        - name: apAreaId
+          in: query
+          description: Approved premises area ID to filter results by
           schema:
             type: string
             format: uuid
@@ -6953,9 +6959,12 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ApprovedPremisesUserRole'
+            apArea:
+              $ref: '#/components/schemas/ApArea'
           required:
             - qualifications
             - roles
+            - apArea
     UserRolesAndQualifications:
       type: object
       properties:

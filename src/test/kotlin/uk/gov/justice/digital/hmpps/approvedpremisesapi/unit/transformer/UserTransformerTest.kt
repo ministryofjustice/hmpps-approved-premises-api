@@ -6,6 +6,7 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.matcher
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.workflowManager
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addQualificationForUnitTest
@@ -32,11 +34,14 @@ import java.util.UUID.randomUUID
 
 class UserTransformerTest {
   private val probationRegionTransformer = mockk<ProbationRegionTransformer>()
-  private val userTransformer = UserTransformer(probationRegionTransformer)
+  private val apAreaTransformer = mockk<ApAreaTransformer>()
+
+  private val userTransformer = UserTransformer(probationRegionTransformer, apAreaTransformer)
 
   @BeforeEach
   fun setup() {
     every { probationRegionTransformer.transformJpaToApi(any()) } returns ProbationRegion(randomUUID(), "someName")
+    every { apAreaTransformer.transformJpaToApi(any()) } returns ApArea(randomUUID(), "someIdentifier", "someName")
   }
 
   @Test

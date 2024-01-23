@@ -3643,9 +3643,15 @@ paths:
             type: array
             items:
               $ref: '_shared.yml#/components/schemas/UserQualification'
-        - name: region
+        - name: probationRegionId
           in: query
-          description: Region to filter results by
+          description: Probation region ID to filter results by
+          schema:
+            type: string
+            format: uuid
+        - name: apAreaId
+          in: query
+          description: Approved premises area ID to filter results by
           schema:
             type: string
             format: uuid
