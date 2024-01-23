@@ -5,7 +5,6 @@ import io.sentry.Sentry
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AdjudicationsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
@@ -51,7 +50,6 @@ class OffenderService(
   private val prisonsApiClient: PrisonsApiClient,
   private val caseNotesClient: CaseNotesClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
-  private val adjudicationsApiClient: AdjudicationsApiClient,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
   private val offenderRisksDataSource: OffenderRisksDataSource,
@@ -79,7 +77,7 @@ class OffenderService(
     )
 
     adjudicationsConfig = PrisonAdjudicationsConfig(
-      adjudicationsApiPageSize = adjudicationsConfigBindingModel.prisonApiPageSize ?: throw RuntimeException("No prison-adjudications.adjudications-api-page-size configuration provided"),
+      adjudicationsApiPageSize = adjudicationsConfigBindingModel.prisonApiPageSize ?: throw RuntimeException("No prison-adjudications.prison-api-page-size configuration provided"),
     )
   }
 
@@ -331,7 +329,9 @@ class OffenderService(
         currentPageIndex += 1
       }
 
-      val adjudicationsPageResponse = adjudicationsApiClient.getAdjudicationsPage(nomsNumber, currentPageIndex, adjudicationsConfig.adjudicationsApiPageSize)
+      val offset = currentPageIndex * adjudicationsConfig.adjudicationsApiPageSize
+
+      val adjudicationsPageResponse = prisonsApiClient.getAdjudicationsPage(nomsNumber, offset, adjudicationsConfig.adjudicationsApiPageSize)
       currentPage = when (adjudicationsPageResponse) {
         is ClientResult.Success -> adjudicationsPageResponse.body
         is ClientResult.Failure.StatusCode -> when (adjudicationsPageResponse.status) {
