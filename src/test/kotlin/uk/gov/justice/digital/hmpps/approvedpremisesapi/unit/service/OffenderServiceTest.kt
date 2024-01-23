@@ -551,7 +551,7 @@ class OffenderServiceTest {
     every {
       mockPrisonsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
-        offset = 0,
+        offset = 2,
         pageSize = 2,
       )
     } returns ClientResult.Success(
