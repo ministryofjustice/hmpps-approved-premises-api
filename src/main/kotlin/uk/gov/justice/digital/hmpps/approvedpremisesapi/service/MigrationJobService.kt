@@ -8,9 +8,12 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApAreaMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApAreaMigrationJobApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.BookingStatusMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.InmateStatusOnSubmissionMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
@@ -56,6 +59,12 @@ class MigrationJobService(
           throttle,
           transactionTemplate,
           applicationContext.getBean(PrisonsApiClient::class.java),
+        )
+
+        MigrationJobType.applicationApAreas -> ApAreaMigrationJob(
+          applicationContext.getBean(ApAreaMigrationJobApplicationRepository::class.java),
+          applicationContext.getBean(ApAreaRepository::class.java),
+          transactionTemplate,
         )
       }
 
