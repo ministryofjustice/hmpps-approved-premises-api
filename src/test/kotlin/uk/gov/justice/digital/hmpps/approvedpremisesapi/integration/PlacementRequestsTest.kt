@@ -109,8 +109,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
               )
             }
 
-            val postcodeDistrict = postCodeDistrictRepository.findAll()[0]
-
             val placementRequest = placementRequestFactory.produceAndPersist {
               withAllocatedToUser(user)
               withApplication(application1)

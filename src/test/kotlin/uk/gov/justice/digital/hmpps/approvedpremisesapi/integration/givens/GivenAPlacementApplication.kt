@@ -6,10 +6,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.OffsetDateTime
 
+@SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.`Given a Placement Application`(
   assessmentDecision: AssessmentDecision = AssessmentDecision.ACCEPTED,
   createdByUser: UserEntity,
@@ -20,6 +22,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
   decision: PlacementApplicationDecision? = null,
   reallocated: Boolean = false,
   placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
+  probationRegion: ProbationRegionEntity? = null,
 ): PlacementApplicationEntity {
   val (_, application) = `Given an Assessment for Approved Premises`(
     decision = assessmentDecision,
@@ -39,6 +42,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
         }
       }
     },
+    probationRegionEntity = probationRegion,
   )
 
   return placementApplicationFactory.produceAndPersist {

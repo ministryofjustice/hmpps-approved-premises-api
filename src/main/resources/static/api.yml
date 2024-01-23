@@ -2628,6 +2628,14 @@ paths:
       tags:
         - Task data
       summary: List all tasks
+      parameters:
+        - name: apAreaId
+          in: query
+          required: false
+          description: If provided, only tasks for this area will be returned
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successfully retrieved tasks
@@ -2662,9 +2670,16 @@ paths:
             type: integer
         - name: sortDirection
           in: query
-          description: The direction to sort the results by. If blank eill sort by descending order
+          description: The direction to sort the results by. If blank, will sort by descending order
           schema:
             $ref: '_shared.yml#/components/schemas/SortDirection'
+        - name: apAreaId
+          in: query
+          required: false
+          description: If provided, only tasks for this area will be returned
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successfully retrieved tasks

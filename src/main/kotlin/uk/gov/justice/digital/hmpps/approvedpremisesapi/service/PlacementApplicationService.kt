@@ -54,21 +54,25 @@ class PlacementApplicationService(
 
   fun getVisiblePlacementApplicationsForUser(
     user: UserEntity,
-    page: Int?,
-    sortDirection: SortDirection?,
+    page: Int? = null,
+    sortDirection: SortDirection? = null,
+    apAreaId: UUID?,
   ): Pair<List<PlacementApplicationEntity>, PaginationMetadata?> {
     val sortField = "createdAt"
     val pageable = getPageable(sortField, sortDirection, page)
     val response =
-      placementApplicationRepository.findAllByAllocatedToUser_IdAndReallocatedAtNullAndDecisionNull(
+      placementApplicationRepository.findOpenRequestsAssignedToUser(
         user.id,
+        apAreaId,
         pageable,
       )
     return Pair(response.content, getMetadata(response, page))
   }
 
   fun getAllPlacementApplicationEntitiesForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
-    return placementApplicationRepository.findAllSubmittedNonReallocatedAndNonWithdrawnApplicationsForApplicationId(applicationId)
+    return placementApplicationRepository.findAllSubmittedNonReallocatedAndNonWithdrawnApplicationsForApplicationId(
+      applicationId,
+    )
   }
 
   fun createApplication(
@@ -363,12 +367,14 @@ class PlacementApplicationService(
             .findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNullAndAllocatedToUserNull(
               pageable,
             )
+
       allocatedFilter == AllocatedFilter.allocated ->
         allReallocatable =
           placementApplicationRepository
             .findAllBySubmittedAtNotNullAndReallocatedAtNullAndDecisionNullAndAllocatedToUserIsNotNull(
               pageable,
             )
+
       else ->
         allReallocatable =
           placementApplicationRepository

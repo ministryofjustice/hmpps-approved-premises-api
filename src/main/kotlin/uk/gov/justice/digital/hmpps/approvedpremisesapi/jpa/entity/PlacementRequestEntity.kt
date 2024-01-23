@@ -22,8 +22,22 @@ import javax.persistence.Table
 @Suppress("FunctionNaming")
 @Repository
 interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUID> {
-  fun findAllByAllocatedToUser_IdAndReallocatedAtNullAndIsWithdrawnFalse(
+  @Query(
+    """
+      SELECT p FROM PlacementRequestEntity p
+      JOIN p.application a
+      LEFT OUTER JOIN a.probationRegion region
+      LEFT OUTER JOIN region.apArea area
+      WHERE
+        p.allocatedToUser.id = :userId AND
+        ((cast(:apAreaId as org.hibernate.type.UUIDCharType) IS NULL) OR area.id = :apAreaId) AND
+        p.reallocatedAt IS NULL AND 
+        p.isWithdrawn IS FALSE
+    """,
+  )
+  fun findOpenRequestsAssignedToUser(
     userId: UUID,
+    apAreaId: UUID?,
     pageable: Pageable?,
   ): Page<PlacementRequestEntity>
 
