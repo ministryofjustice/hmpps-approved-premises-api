@@ -6,7 +6,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import java.util.UUID
 
 @Component
 class UserAllocator(
@@ -20,34 +23,86 @@ class UserAllocator(
   }
 
   fun getUserForAssessmentAllocation(assessmentEntity: AssessmentEntity): UserEntity? =
-    getUserForAllocation { it.evaluateAssessment(assessmentEntity) }
+    getUserForAllocation(
+      evaluate = { it.evaluateAssessment(assessmentEntity) },
+      selectUser = { userRepository.findUserWithLeastPendingOrCompletedInLastWeekAssessments(it) },
+    )
 
   fun getUserForPlacementRequestAllocation(placementRequestEntity: PlacementRequestEntity): UserEntity? =
-    getUserForAllocation { it.evaluatePlacementRequest(placementRequestEntity) }
+    getUserForAllocation(
+      evaluate = { it.evaluatePlacementRequest(placementRequestEntity) },
+      selectUser = { userRepository.findUserWithLeastPendingOrCompletedInLastWeekPlacementRequests(it) },
+    )
 
   fun getUserForPlacementApplicationAllocation(placementApplicationEntity: PlacementApplicationEntity): UserEntity? =
-    getUserForAllocation { it.evaluatePlacementApplication(placementApplicationEntity) }
+    getUserForAllocation(
+      evaluate = { it.evaluatePlacementApplication(placementApplicationEntity) },
+      selectUser = { userRepository.findUserWithLeastPendingOrCompletedInLastWeekPlacementApplications(it) },
+    )
 
-  private fun getUserForAllocation(evaluate: (UserAllocatorRule) -> UserAllocatorRuleOutcome): UserEntity? {
+  private fun getUserForAllocation(evaluate: (UserAllocatorRule) -> UserAllocatorRuleOutcome, selectUser: (List<UUID>) -> UserEntity?): UserEntity? {
     userAllocatorRulesInPriorityOrder.forEach { rule ->
-      when (val outcome = evaluate(rule)) {
-        is UserAllocatorRuleOutcome.AllocateToUser -> {
-          when (val user = userRepository.findByDeliusUsername(outcome.userName)) {
-            null -> {
-              log.warn("Rule '${rule.name}' attempted to allocate a task to user '${outcome.userName}', but they could not be found. This rule has been skipped.")
-            }
-            else -> return user
-          }
-        }
-
+      val allocationResult = when (val outcome = evaluate(rule)) {
+        is UserAllocatorRuleOutcome.AllocateToUser -> allocateToUser(outcome.userName, rule.name)
+        is UserAllocatorRuleOutcome.AllocateByQualification -> allocateByQualification(outcome.qualification, rule.name, selectUser)
+        is UserAllocatorRuleOutcome.AllocateByRole -> allocateByRole(outcome.role, rule.name, selectUser)
+        UserAllocatorRuleOutcome.Skip -> AllocationResult.Failed
         UserAllocatorRuleOutcome.DoNotAllocate -> return null
+      }
 
-        UserAllocatorRuleOutcome.Skip -> {
+      when (allocationResult) {
+        is AllocationResult.Success -> return allocationResult.user
+        is AllocationResult.Failed -> {
           // Do nothing.
         }
       }
     }
 
     return null
+  }
+
+  private fun allocateToUser(userName: String, ruleName: String): AllocationResult =
+    when (val user = userRepository.findByDeliusUsername(userName)) {
+      null -> {
+        log.warn("Rule '$ruleName' attempted to allocate a task to user '$userName', but they could not be found. This rule has been skipped.")
+        AllocationResult.Failed
+      }
+
+      else -> AllocationResult.Success(user)
+    }
+
+  private fun allocateByQualification(qualification: UserQualification, ruleName: String, selectUser: (List<UUID>) -> UserEntity?): AllocationResult {
+    val users = userRepository.findActiveUsersWithQualification(qualification)
+
+    val user = selectUser(users.map { it.id })
+
+    return when (user) {
+      null -> {
+        log.warn("Rule '$ruleName' attempted to allocate a task to a user with qualification '$qualification', but not suitable user could be found. This rule has been skipped.")
+        AllocationResult.Failed
+      }
+
+      else -> AllocationResult.Success(user)
+    }
+  }
+
+  private fun allocateByRole(role: UserRole, ruleName: String, selectUser: (List<UUID>) -> UserEntity?): AllocationResult {
+    val users = userRepository.findActiveUsersWithRole(role)
+
+    val user = selectUser(users.map { it.id })
+
+    return when (user) {
+      null -> {
+        log.warn("Rule '$ruleName' attempted to allocate a task to a user with role '$role', but not suitable user could be found. This rule has been skipped.")
+        AllocationResult.Failed
+      }
+
+      else -> AllocationResult.Success(user)
+    }
+  }
+
+  private sealed interface AllocationResult {
+    data class Success(val user: UserEntity) : AllocationResult
+    data object Failed : AllocationResult
   }
 }

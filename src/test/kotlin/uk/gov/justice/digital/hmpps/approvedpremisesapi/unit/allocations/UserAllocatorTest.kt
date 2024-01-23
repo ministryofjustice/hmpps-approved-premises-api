@@ -8,6 +8,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -29,11 +30,30 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addQualificationForUnitTest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.util.stream.Stream
 
 class UserAllocatorTest {
   private val mockUserRepository = mockk<UserRepository>()
+
+  @BeforeEach
+  fun beforeEach() {
+    every { mockUserRepository.findActiveUsersWithQualification(UserQualification.EMERGENCY) } returns listOf(user1)
+    every { mockUserRepository.findActiveUsersWithRole(UserRole.CAS1_ADMIN) } returns listOf(user2)
+
+    every { mockUserRepository.findUserWithLeastPendingOrCompletedInLastWeekAssessments(listOf(user1.id)) } returns user1
+    every { mockUserRepository.findUserWithLeastPendingOrCompletedInLastWeekAssessments(listOf(user2.id)) } returns user2
+
+    every { mockUserRepository.findUserWithLeastPendingOrCompletedInLastWeekPlacementRequests(listOf(user1.id)) } returns user1
+    every { mockUserRepository.findUserWithLeastPendingOrCompletedInLastWeekPlacementRequests(listOf(user2.id)) } returns user2
+
+    every { mockUserRepository.findUserWithLeastPendingOrCompletedInLastWeekPlacementApplications(listOf(user1.id)) } returns user1
+    every { mockUserRepository.findUserWithLeastPendingOrCompletedInLastWeekPlacementApplications(listOf(user2.id)) } returns user2
+  }
 
   @Nested
   inner class GetUserForAssessmentAllocation {
@@ -252,11 +272,13 @@ class UserAllocatorTest {
       .withDeliusUsername("USER-1")
       .withProbationRegion(probationRegion)
       .produce()
+      .addQualificationForUnitTest(UserQualification.EMERGENCY)
 
     val user2 = UserEntityFactory()
       .withDeliusUsername("USER-2")
       .withProbationRegion(probationRegion)
       .produce()
+      .addRoleForUnitTest(UserRole.CAS1_ADMIN)
 
     private val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(createdByUser)
@@ -328,6 +350,22 @@ class UserAllocatorTest {
           user2,
         ),
 
+        // Outcome is `AllocateByQualification(EMERGENCY)`.
+        Arguments.of(
+          listOf(
+            TestRule.allocateByQualification(ruleType, UserQualification.EMERGENCY),
+          ),
+          user1,
+        ),
+
+        // Outcome is `AllocateByRole(CAS1_ADMIN)`.
+        Arguments.of(
+          listOf(
+            TestRule.allocateByRole(ruleType, UserRole.CAS1_ADMIN),
+          ),
+          user2,
+        ),
+
         // Multiple active rules. Rules with a lower priority value takes precedence.
         // --------------------------------------------------------------------------
 
@@ -382,7 +420,7 @@ class UserAllocatorTest {
   }
 }
 
-class TestRule(
+data class TestRule(
   override val priority: Int = 0,
   override val name: String = "test rule",
   private val evaluateAssessmentOutcome: UserAllocatorRuleOutcome = UserAllocatorRuleOutcome.Skip,
@@ -415,6 +453,18 @@ class TestRule(
       RuleType.ASSESSMENT -> TestRule(priority = priority, name = name, evaluateAssessmentOutcome = UserAllocatorRuleOutcome.AllocateToUser(user.deliusUsername))
       RuleType.PLACEMENT_REQUEST -> TestRule(priority = priority, name = name, evaluatePlacementRequestOutcome = UserAllocatorRuleOutcome.AllocateToUser(user.deliusUsername))
       RuleType.PLACEMENT_APPLICATION -> TestRule(priority = priority, name = name, evaluatePlacementApplicationOutcome = UserAllocatorRuleOutcome.AllocateToUser(user.deliusUsername))
+    }
+
+    fun allocateByQualification(ruleType: RuleType, qualification: UserQualification, priority: Int = 0, name: String = "test rule") = when (ruleType) {
+      RuleType.ASSESSMENT -> TestRule(priority = priority, name = name, evaluateAssessmentOutcome = UserAllocatorRuleOutcome.AllocateByQualification(qualification))
+      RuleType.PLACEMENT_REQUEST -> TestRule(priority = priority, name = name, evaluatePlacementRequestOutcome = UserAllocatorRuleOutcome.AllocateByQualification(qualification))
+      RuleType.PLACEMENT_APPLICATION -> TestRule(priority = priority, name = name, evaluatePlacementApplicationOutcome = UserAllocatorRuleOutcome.AllocateByQualification(qualification))
+    }
+
+    fun allocateByRole(ruleType: RuleType, role: UserRole, priority: Int = 0, name: String = "test rule") = when (ruleType) {
+      RuleType.ASSESSMENT -> TestRule(priority = priority, name = name, evaluateAssessmentOutcome = UserAllocatorRuleOutcome.AllocateByRole(role))
+      RuleType.PLACEMENT_REQUEST -> TestRule(priority = priority, name = name, evaluatePlacementRequestOutcome = UserAllocatorRuleOutcome.AllocateByRole(role))
+      RuleType.PLACEMENT_APPLICATION -> TestRule(priority = priority, name = name, evaluatePlacementApplicationOutcome = UserAllocatorRuleOutcome.AllocateByRole(role))
     }
   }
 }

@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+
 sealed interface UserAllocatorRuleOutcome {
   /**
    * Continue processing the next rule.
@@ -15,4 +18,14 @@ sealed interface UserAllocatorRuleOutcome {
    * Allocate a specific user to the task.
    */
   data class AllocateToUser(val userName: String) : UserAllocatorRuleOutcome
+
+  /**
+   * Allocate to any suitable user that possesses the given qualification.
+   */
+  data class AllocateByQualification(val qualification: UserQualification) : UserAllocatorRuleOutcome
+
+  /**
+   * Allocate to any suitable user that possesses the given role.
+   */
+  data class AllocateByRole(val role: UserRole) : UserAllocatorRuleOutcome
 }
