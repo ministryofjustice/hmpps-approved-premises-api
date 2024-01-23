@@ -172,23 +172,27 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
 
   @Query(
     """
-      SELECT a FROM AssessmentEntity a 
-      WHERE TYPE(a) = :type AND
-            a.reallocatedAt IS NULL AND  
+      SELECT a FROM ApprovedPremisesAssessmentEntity a 
+      JOIN a.application app
+      LEFT OUTER JOIN app.apArea area
+      WHERE a.reallocatedAt IS NULL AND
             a.isWithdrawn != true AND 
             a.submittedAt IS NULL AND 
             (
               (:#{#allocationStatus?.toString()} = 'ALLOCATED' AND a.allocatedToUser IS NOT NULL) OR
               (:#{#allocationStatus?.toString()} = 'UNALLOCATED' AND a.allocatedToUser IS NULL) OR
               (:#{#allocationStatus?.toString()} = 'EITHER')
+            ) AND (
+              (cast(:apAreaId as org.hibernate.type.UUIDCharType) IS NULL) OR 
+              (area.id = :apAreaId)
             )
     """,
   )
-  fun <T : AssessmentEntity> findByAllocationStatus(
-    type: Class<T>,
+  fun findByAllocationStatus(
     allocationStatus: AllocationStatus,
+    apAreaId: UUID?,
     pageable: Pageable?,
-  ): Page<AssessmentEntity>
+  ): Page<ApprovedPremisesAssessmentEntity>
 
   enum class AllocationStatus {
     ALLOCATED,

@@ -28,6 +28,8 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
       pa
     FROM
       PlacementApplicationEntity pa
+      JOIN pa.application app
+      LEFT OUTER JOIN app.apArea area
     where
       pa.submittedAt IS NOT NULL AND
       pa.reallocatedAt IS NULL AND
@@ -36,10 +38,13 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
         (:#{#allocationStatus?.toString()} = 'ALLOCATED' AND pa.allocatedToUser IS NOT NULL) OR
         (:#{#allocationStatus?.toString()} = 'UNALLOCATED' AND pa.allocatedToUser IS NULL) OR
         (:#{#allocationStatus?.toString()} = 'EITHER')
+      ) AND (
+        (cast(:apAreaId as org.hibernate.type.UUIDCharType) IS NULL) OR 
+        (area.id = :apAreaId)
       )
     """,
   )
-  fun findByAllocationStatus(allocationStatus: AllocationStatus, pageable: Pageable?): Page<PlacementApplicationEntity>
+  fun findByAllocationStatus(allocationStatus: AllocationStatus, apAreaId: UUID?, pageable: Pageable?): Page<PlacementApplicationEntity>
 
   enum class AllocationStatus {
     ALLOCATED,

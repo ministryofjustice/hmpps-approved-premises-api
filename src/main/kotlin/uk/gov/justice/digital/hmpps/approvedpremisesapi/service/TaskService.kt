@@ -43,6 +43,7 @@ class TaskService(
 ) {
   fun getAllReallocatable(
     allocatedFilter: AllocatedFilter?,
+    apAreaId: UUID?,
     pageCriteria: PageCriteria<TaskSortField>,
   ): Pair<List<TypedTask>, PaginationMetadata?> {
     val pageable = getPageable(
@@ -54,7 +55,7 @@ class TaskService(
     )
 
     val isAllocated = if (allocatedFilter == null) { null } else { allocatedFilter == AllocatedFilter.allocated }
-    val reallocatableTaskResult = taskRespository.getAllReallocatable(isAllocated, pageable)
+    val reallocatableTaskResult = taskRespository.getAllReallocatable(isAllocated, apAreaId, pageable)
     val reallocatableTasks = reallocatableTaskResult.content
 
     val assessmentIds = reallocatableTasks.filter { it.type == "assessment" }.map { it.id }

@@ -23,7 +23,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   submittedAt: OffsetDateTime? = null,
   createdAt: OffsetDateTime? = null,
   isWithdrawn: Boolean = false,
-  apAreaEntity: ApAreaEntity? = null,
+  apArea: ApAreaEntity? = null,
 ): Pair<AssessmentEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -41,7 +41,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     withSubmittedAt(OffsetDateTime.now())
     withReleaseType("licence")
     withIsWithdrawn(isWithdrawn)
-    withApArea(apAreaEntity)
+    withApArea(apArea)
   }
 
   val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {

@@ -42,6 +42,7 @@ class TasksTest : IntegrationTestBase() {
     GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
   }
 
+  @SuppressWarnings("LargeClass")
   @Nested
   inner class GetAllReallocatableTest {
     private val pageSize = 10
@@ -218,7 +219,7 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body when type assessment is passed as parameter`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and type assessment`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -251,7 +252,52 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body when type placement request is passed as parameter`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and type assessment and ap area defined`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val apArea1 = `Given an AP Area`()
+            val apArea2 = `Given an AP Area`()
+
+            val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea1,
+            )
+
+            `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea2,
+            )
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=assessment&apAreaId=${apArea1.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    taskTransformer.transformAssessmentToTask(
+                      allocatableAssessment,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body and type placement request`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -286,7 +332,7 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body when type placement application is passed as parameter`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and type placement application`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -324,7 +370,60 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body when type assessment and page is two and no allocated filter`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and type placement application and ap area defined`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val apArea1 = `Given an AP Area`()
+            val apArea2 = `Given an AP Area`()
+
+            val allocatablePlacementApplication = `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+              apArea = apArea1,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+              apArea = apArea2,
+            )
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=PlacementApplication&apAreaId=${apArea1.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    taskTransformer.transformPlacementApplicationToTask(
+                      allocatablePlacementApplication,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body and type assessment and page is two and no allocated filter`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -365,7 +464,7 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body when type assessment and page is two and allocated filter allocated`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and type assessment and page is two and allocated filter allocated`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -405,7 +504,7 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body when type assessment and page is two and allocated filter unallocated`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and type assessment and page is two and allocated filter unallocated`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -445,7 +544,7 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body with type placement requests and page two no allocated filter`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and type placement requests and page two no allocated filter`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -489,7 +588,54 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body with type placement requests and page two and allocated filter allocated`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and type placement requests and ap area defined`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val apArea1 = `Given an AP Area`()
+            val apArea2 = `Given an AP Area`()
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea1,
+            )
+
+            val (allocatablePlacementRequest) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea2,
+            )
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=PlacementRequest&apAreaId=${apArea2.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    taskTransformer.transformPlacementRequestToTask(
+                      allocatablePlacementRequest,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body and type placement requests and page two and allocated filter allocated`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -532,7 +678,7 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body with type placement requests and page two and allocated filter unallocated`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and type placement requests and page two and allocated filter unallocated`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -575,7 +721,7 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns retains original sort order`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and no type retains original sort order`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -669,7 +815,100 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body with type placement application and page two`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and no type and ap area defined`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val apArea1 = `Given an AP Area`()
+            val apArea2 = `Given an AP Area`()
+
+            val (task1) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea1,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea2,
+            )
+
+            val (task2) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea1,
+            )
+
+            `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea2,
+            )
+
+            val task3 = `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+              apArea = apArea1,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+              apArea = apArea2,
+            )
+
+            val expectedTasks = listOf(
+              taskTransformer.transformPlacementRequestToTask(
+                task1,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformAssessmentToTask(
+                task2,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformPlacementApplicationToTask(
+                task3,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+            )
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?page=1&sortBy=createdAt&sortDirection=asc&apAreaId=${apArea1.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  expectedTasks,
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 with correct body and type placement application and page two`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -705,7 +944,7 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body with type placement application and page two and no allocated filter`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and type placement application and page two and no allocated filter`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -754,7 +993,7 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body with type placement application and page two and unallocated filter`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and type placement application and page two and unallocated filter`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -802,7 +1041,7 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body with type placement application and page two and allocated filter`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and type placement application and page two and allocated filter`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -850,7 +1089,7 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body with no type and page two and no allocated filter`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and no type and page two and no allocated filter`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -943,7 +1182,7 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body with no type and page two and allocated filter`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and no type and page two and allocated filter`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -1033,7 +1272,7 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks returns 200 with correct body with no type and page two and unallocated filter`() {
+    fun `Get all reallocatable tasks returns 200 with correct body and no type and page two and unallocated filter`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->

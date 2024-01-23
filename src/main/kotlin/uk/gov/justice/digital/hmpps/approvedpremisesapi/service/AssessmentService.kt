@@ -139,7 +139,8 @@ class AssessmentService(
   fun getAllReallocatable(
     pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
-  ): Pair<List<AssessmentEntity>, PaginationMetadata?> {
+    apAreaId: UUID?,
+  ): Pair<List<ApprovedPremisesAssessmentEntity>, PaginationMetadata?> {
     val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
     val pageable = getPageable(
       pageCriteria.withSortBy(
@@ -150,12 +151,12 @@ class AssessmentService(
     )
 
     val assessments = assessmentRepository.findByAllocationStatus(
-      ApprovedPremisesAssessmentEntity::class.java,
       when (allocatedFilter) {
         AllocatedFilter.allocated -> AssessmentRepository.AllocationStatus.ALLOCATED
         AllocatedFilter.unallocated -> AssessmentRepository.AllocationStatus.UNALLOCATED
         null -> AssessmentRepository.AllocationStatus.EITHER
       },
+      apAreaId,
       pageable,
     )
 

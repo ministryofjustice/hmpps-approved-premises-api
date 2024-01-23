@@ -71,6 +71,7 @@ class TasksController(
     sortBy: TaskSortField?,
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
+    apAreaId: UUID?,
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
     val pageCriteria = PageCriteria(
@@ -79,23 +80,23 @@ class TasksController(
       page = page,
     )
 
-    if (user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
-      if (type != null) {
-        val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
-          type.kebabCaseToPascalCase(),
-        ) ?: throw NotFoundProblem(type, "TaskType")
-
-        return when (taskType) {
-          TaskType.assessment -> assessmentTasksResponse(user, pageCriteria, allocatedFilter)
-          TaskType.placementRequest -> placementRequestTasks(user, pageCriteria, allocatedFilter)
-          TaskType.placementApplication -> placementApplicationTasks(user, pageCriteria, allocatedFilter)
-          else -> throw BadRequestProblem()
-        }
-      }
-
-      return responseForAllTypes(user, pageCriteria, allocatedFilter)
-    } else {
+    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       throw ForbiddenProblem()
+    }
+
+    if (type == null) {
+      return responseForAllTypes(user, pageCriteria, allocatedFilter, apAreaId)
+    }
+
+    val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
+      type.kebabCaseToPascalCase(),
+    ) ?: throw NotFoundProblem(type, "TaskType")
+
+    return when (taskType) {
+      TaskType.assessment -> assessmentTasksResponse(user, pageCriteria, allocatedFilter, apAreaId)
+      TaskType.placementRequest -> placementRequestTasks(user, pageCriteria, allocatedFilter, apAreaId)
+      TaskType.placementApplication -> placementApplicationTasks(user, pageCriteria, allocatedFilter, apAreaId)
+      else -> throw BadRequestProblem()
     }
   }
 
@@ -433,9 +434,11 @@ class TasksController(
     user: UserEntity,
     pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
+    apAreaId: UUID?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allocatedTasks, metadata) = taskService.getAllReallocatable(
       allocatedFilter,
+      apAreaId,
       pageCriteria,
     )
 
@@ -470,11 +473,13 @@ class TasksController(
     user: UserEntity,
     pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
+    apAreaId: UUID?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatable, metaData) =
       assessmentService.getAllReallocatable(
         pageCriteria,
         allocatedFilter,
+        apAreaId,
       )
     val offenderSummaries = getOffenderSummariesForCrns(allReallocatable.map { it.application.crn }, user)
     val assessmentTasks = getAssessmentTasks(allReallocatable, offenderSummaries)
@@ -489,11 +494,13 @@ class TasksController(
     user: UserEntity,
     pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
+    apAreaId: UUID?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatable, metaData) =
       placementRequestService.getAllReallocatable(
         pageCriteria,
         allocatedFilter,
+        apAreaId,
       )
     val offenderSummaries = getOffenderSummariesForCrns(allReallocatable.map { it.application.crn }, user)
     val placementRequestTasks = getPlacementRequestTasks(
@@ -511,11 +518,13 @@ class TasksController(
     user: UserEntity,
     pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
+    apAreaId: UUID?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatable, metaData) =
       placementApplicationService.getAllReallocatable(
         pageCriteria,
         allocatedFilter,
+        apAreaId,
       )
 
     val offenderSummaries = getOffenderSummariesForCrns(allReallocatable.map { it.application.crn }, user)
