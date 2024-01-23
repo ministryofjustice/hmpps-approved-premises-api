@@ -15,9 +15,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
@@ -598,6 +600,39 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `It searches by AP Area ID where user is manager`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          val apArea1 = `Given an AP Area`()
+          val apArea2 = `Given an AP Area`()
+
+          createPlacementRequest(offenderDetails, user, apArea = apArea1)
+          val placementRequestA1 = createPlacementRequest(offenderDetails, user, apArea = apArea2)
+          createPlacementRequest(offenderDetails, user, apArea = apArea1)
+
+          webTestClient.get()
+            .uri("/placement-requests/dashboard?apAreaId=${apArea2.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                listOf(
+                  placementRequestTransformer.transformJpaToApi(
+                    placementRequestA1,
+                    PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  ),
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
     fun `It searches by requestType where type is standardRelease`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
@@ -658,16 +693,21 @@ class PlacementRequestsTest : IntegrationTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offender1Details, inmate1Details ->
           `Given an Offender` { offender2Details, _ ->
+
+            val apArea1 = `Given an AP Area`()
+            val apArea2 = `Given an AP Area`()
+
             createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 1), tier = RiskTierLevel.a2)
             createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a1)
             val placementOffender1On5thJanTierA2Parole =
-              createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = true)
+              createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = true, apArea = apArea1)
+            createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = true, apArea = apArea2)
             createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2, isParole = false)
             createPlacementRequest(offender2Details, user, expectedArrival = LocalDate.of(2022, 1, 5), tier = RiskTierLevel.a2)
             createPlacementRequest(offender1Details, user, expectedArrival = LocalDate.of(2022, 1, 10), tier = RiskTierLevel.a2)
 
             webTestClient.get()
-              .uri("/placement-requests/dashboard?arrivalDateStart=2022-01-02&arrivalDateEnd=2022-01-09&crnOrName=${offender1Details.otherIds.crn}&tier=A2&requestType=parole")
+              .uri("/placement-requests/dashboard?arrivalDateStart=2022-01-02&arrivalDateEnd=2022-01-09&crnOrName=${offender1Details.otherIds.crn}&tier=A2&requestType=parole&apAreaId=${apArea1.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -953,6 +993,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
       isWithdrawn: Boolean = false,
       tier: RiskTierLevel = RiskTierLevel.b1,
       isParole: Boolean = false,
+      apArea: ApAreaEntity? = null,
     ): PlacementRequestEntity {
       val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
         withPermissiveSchema()
@@ -981,6 +1022,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               ),
             ).produce(),
         )
+        withApArea(apArea)
       }
 
       val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {

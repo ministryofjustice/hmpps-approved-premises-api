@@ -125,6 +125,7 @@ class PlacementRequestService(
       arrivalDateFrom = searchCriteria.arrivalDateStart,
       arrivalDateTo = searchCriteria.arrivalDateEnd,
       requestType = searchCriteria.requestType,
+      apAreaId = searchCriteria.apAreaId,
       pageable = pageable,
     )
 
@@ -139,6 +140,7 @@ class PlacementRequestService(
     val arrivalDateStart: LocalDate? = null,
     val arrivalDateEnd: LocalDate? = null,
     val requestType: PlacementRequestRequestType? = null,
+    val apAreaId: UUID? = null,
   )
 
   fun getPlacementRequestForUser(

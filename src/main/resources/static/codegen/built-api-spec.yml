@@ -2941,6 +2941,13 @@ paths:
           description: filter by request type
           schema:
             $ref: '#/components/schemas/PlacementRequestRequestType'
+        - name: apAreaId
+          in: query
+          required: false
+          description: filter by approved premises area ID
+          schema:
+            type: string
+            format: uuid
         - name: page
           in: query
           description: Page number of results to return. If blank, returns all results

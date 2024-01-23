@@ -84,6 +84,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       placement_requests pq
       left join applications application on application.id = pq.application_id
       left join approved_premises_applications apa on apa.id = pq.application_id
+      left join ap_areas area on area.id = apa.ap_area_id
     where
       pq.reallocated_at IS NULL 
       AND (:status IS NULL OR pq.is_withdrawn IS FALSE)
@@ -130,6 +131,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
             (:#{#requestType?.toString()} = 'standardRelease' AND pq.is_parole IS FALSE)
         )
       )
+      AND ((CAST(:apAreaId AS pg_catalog.uuid) IS NULL) OR area.id = :apAreaId)
   """,
     nativeQuery = true,
   )
@@ -141,6 +143,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     arrivalDateFrom: LocalDate? = null,
     arrivalDateTo: LocalDate? = null,
     requestType: PlacementRequestRequestType? = null,
+    apAreaId: UUID? = null,
     pageable: Pageable? = null,
   ): Page<PlacementRequestEntity>
 }
