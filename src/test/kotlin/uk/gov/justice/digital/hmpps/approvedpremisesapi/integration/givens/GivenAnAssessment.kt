@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -23,7 +23,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   submittedAt: OffsetDateTime? = null,
   createdAt: OffsetDateTime? = null,
   isWithdrawn: Boolean = false,
-  probationRegionEntity: ProbationRegionEntity? = null,
+  apAreaEntity: ApAreaEntity? = null,
 ): Pair<AssessmentEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -41,7 +41,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     withSubmittedAt(OffsetDateTime.now())
     withReleaseType("licence")
     withIsWithdrawn(isWithdrawn)
-    withProbationRegion(probationRegionEntity)
+    withApArea(apAreaEntity)
   }
 
   val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {

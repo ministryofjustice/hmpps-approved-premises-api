@@ -1879,7 +1879,7 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(persistedApplication?.isPipeApplication).isTrue
           assertThat(persistedApplication?.targetLocation).isEqualTo("SW1A 1AA")
           assertThat(persistedApplication?.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
-          assertThat(persistedApplication?.probationRegion?.id).isEqualTo(submittingUser.probationRegion.id)
+          assertThat(persistedApplication?.apArea?.id).isEqualTo(submittingUser.probationRegion.apArea.id)
 
           val createdAssessment =
             approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
@@ -2021,7 +2021,7 @@ class ApplicationTest : IntegrationTestBase() {
                 releaseType = ReleaseTypeOption.licence,
                 sentenceType = SentenceTypeOption.nonStatutory,
                 type = "CAS1",
-                probationRegionId = probationRegion.id,
+                apAreaId = apArea.id,
               ),
             )
             .exchange()
@@ -2035,7 +2035,7 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(persistedApplication?.isPipeApplication).isTrue
           assertThat(persistedApplication?.targetLocation).isEqualTo("SW1A 1AA")
           assertThat(persistedApplication?.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
-          assertThat(persistedApplication?.probationRegion?.id).isEqualTo(probationRegion.id)
+          assertThat(persistedApplication?.apArea?.id).isEqualTo(apArea.id)
         }
       }
     }

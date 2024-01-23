@@ -27,11 +27,10 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     """
       SELECT p FROM PlacementRequestEntity p
       JOIN p.application a
-      LEFT OUTER JOIN a.probationRegion region
-      LEFT OUTER JOIN region.apArea area
+      LEFT OUTER JOIN a.apArea apArea
       WHERE
         p.allocatedToUser.id = :userId AND
-        ((cast(:apAreaId as org.hibernate.type.UUIDCharType) IS NULL) OR area.id = :apAreaId) AND
+        ((cast(:apAreaId as org.hibernate.type.UUIDCharType) IS NULL) OR apArea.id = :apAreaId) AND
         p.reallocatedAt IS NULL AND 
         p.isWithdrawn IS FALSE
     """,

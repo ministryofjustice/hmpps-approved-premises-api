@@ -2442,7 +2442,7 @@ components:
             arrivalDate:
               type: string
               format: date
-            probationRegionId:
+            apAreaId:
               type: string
               format: uuid
           required:

@@ -2,11 +2,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -33,7 +33,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   mappa: String? = null,
   applicationSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
   booking: BookingEntity? = null,
-  probationRegion: ProbationRegionEntity? = null,
+  apArea: ApAreaEntity? = null,
 ): Pair<PlacementRequestEntity, ApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -71,7 +71,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     withRiskRatings(
       risksFactory.produce(),
     )
-    withProbationRegion(probationRegion)
+    withApArea(apArea)
   }
 
   val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {

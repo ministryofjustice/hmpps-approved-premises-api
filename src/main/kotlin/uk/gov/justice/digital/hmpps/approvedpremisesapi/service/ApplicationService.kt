@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary
@@ -38,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -99,7 +99,7 @@ class ApplicationService(
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
-  private val probationRegionRepository: ProbationRegionRepository,
+  private val apAreaRepository: ApAreaRepository,
   private val applicationTimelineTransformer: ApplicationTimelineTransformer,
 ) {
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationSummary> {
@@ -343,7 +343,7 @@ class ApplicationService(
       sentenceType = null,
       situation = null,
       inmateInOutStatusOnSubmission = null,
-      probationRegion = null,
+      apArea = null,
     )
   }
 
@@ -706,7 +706,7 @@ class ApplicationService(
     submitApplication: SubmitApprovedPremisesApplication,
     username: String,
     jwt: String,
-    probationRegionId: UUID?,
+    apAreaId: UUID?,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     var application = applicationRepository.findByIdOrNullWithWriteLock(
       applicationId,
@@ -774,7 +774,7 @@ class ApplicationService(
       sentenceType = submitApplication.sentenceType.toString()
       situation = submitApplication.situation?.toString()
       inmateInOutStatusOnSubmission = inmateDetails?.inOutStatus?.name
-      probationRegion = probationRegionRepository.findByIdOrNull(probationRegionId)
+      apArea = apAreaRepository.findByIdOrNull(apAreaId)
     }
 
     assessmentService.createApprovedPremisesAssessment(application)

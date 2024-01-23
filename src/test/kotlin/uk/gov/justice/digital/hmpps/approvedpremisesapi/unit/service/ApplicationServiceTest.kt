@@ -55,6 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
@@ -63,7 +64,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -118,7 +118,7 @@ class ApplicationServiceTest {
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockAssessmentClarificationNoteTransformer = mockk<AssessmentClarificationNoteTransformer>()
   private val mockObjectMapper = mockk<ObjectMapper>()
-  private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
+  private val mockApAreaRepository = mockk<ApAreaRepository>()
   private val applicationTimelineTransformerMock = mockk<ApplicationTimelineTransformer>()
 
   private val applicationService = ApplicationService(
@@ -142,7 +142,7 @@ class ApplicationServiceTest {
     mockAssessmentClarificationNoteTransformer,
     mockObjectMapper,
     "http://frontend/applications/#id",
-    mockProbationRegionRepository,
+    mockApAreaRepository,
     applicationTimelineTransformerMock,
   )
 
@@ -1225,7 +1225,7 @@ class ApplicationServiceTest {
         InmateDetailFactory().withInOutStatus(InOutStatus.OUT).produce(),
       )
 
-      every { mockProbationRegionRepository.findByIdOrNull(any()) } returns null
+      every { mockApAreaRepository.findByIdOrNull(any()) } returns null
 
       every { mockAssessmentService.createApprovedPremisesAssessment(application) } returns ApprovedPremisesAssessmentEntityFactory()
         .withApplication(application)

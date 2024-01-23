@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an AP Area`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
@@ -1227,16 +1226,13 @@ class TasksTest : IntegrationTestBase() {
           val apArea1 = `Given an AP Area`()
           val apArea2 = `Given an AP Area`()
 
-          val probationRegion1 = `Given a Probation Region`(apArea = apArea1) { }
-          val probationRegion2 = `Given a Probation Region`(apArea = apArea2) { }
-
           `Given an Offender` { offenderDetails, _ ->
             val (placementRequestAllocatedToMe) = `Given a Placement Request`(
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
-              probationRegion = probationRegion2,
+              apArea = apArea2,
             )
 
             val placementApplicationAllocatedToMe = `Given a Placement Application`(
@@ -1246,7 +1242,7 @@ class TasksTest : IntegrationTestBase() {
                 withPermissiveSchema()
               },
               crn = offenderDetails.otherIds.crn,
-              probationRegion = probationRegion2,
+              apArea = apArea2,
             )
 
             `Given a Placement Request`(
@@ -1254,7 +1250,7 @@ class TasksTest : IntegrationTestBase() {
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
-              probationRegion = probationRegion1,
+              apArea = apArea1,
             )
 
             `Given a Placement Application`(
@@ -1264,7 +1260,7 @@ class TasksTest : IntegrationTestBase() {
                 withPermissiveSchema()
               },
               crn = offenderDetails.otherIds.crn,
-              probationRegion = probationRegion1,
+              apArea = apArea1,
             )
 
             `Given a Placement Request`(
@@ -1282,7 +1278,7 @@ class TasksTest : IntegrationTestBase() {
                 withPermissiveSchema()
               },
               crn = offenderDetails.otherIds.crn,
-              probationRegion = probationRegion2,
+              apArea = apArea2,
             )
 
             `Given a Placement Application`(
@@ -1942,23 +1938,20 @@ class TasksTest : IntegrationTestBase() {
             val apArea1 = `Given an AP Area`()
             val apArea2 = `Given an AP Area`()
 
-            val probationRegion1 = `Given a Probation Region`(apArea = apArea1) { }
-            val probationRegion2 = `Given a Probation Region`(apArea = apArea2) { }
-
             `Given a Placement Request`(
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
-              probationRegion = probationRegion1,
+              apArea = apArea1,
             )
 
-            val (placementRequestRegion2AllocatedToMe, _) = `Given a Placement Request`(
+            val (apArea2AllocatedToMe, _) = `Given a Placement Request`(
               placementRequestAllocatedTo = user,
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
-              probationRegion = probationRegion2,
+              apArea = apArea2,
             )
 
             `Given a Placement Request`(
@@ -1966,7 +1959,7 @@ class TasksTest : IntegrationTestBase() {
               assessmentAllocatedTo = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
-              probationRegion = probationRegion1,
+              apArea = apArea1,
             )
 
             webTestClient.get()
@@ -1980,7 +1973,7 @@ class TasksTest : IntegrationTestBase() {
                 objectMapper.writeValueAsString(
                   listOf(
                     taskTransformer.transformPlacementRequestToTask(
-                      placementRequestRegion2AllocatedToMe,
+                      apArea2AllocatedToMe,
                       "${offenderDetails.firstName} ${offenderDetails.surname}",
                     ),
                   ),
@@ -2131,10 +2124,7 @@ class TasksTest : IntegrationTestBase() {
           val apArea1 = `Given an AP Area`()
           val apArea2 = `Given an AP Area`()
 
-          val probationRegion1 = `Given a Probation Region`(apArea = apArea1) { }
-          val probationRegion2 = `Given a Probation Region`(apArea = apArea2) { }
-
-          val placementApplicationAllocatedToMeInRegion1 = `Given a Placement Application`(
+          val placementApplicationAllocatedToMeInApArea1 = `Given a Placement Application`(
             createdByUser = user,
             allocatedToUser = user,
             schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2142,7 +2132,7 @@ class TasksTest : IntegrationTestBase() {
             },
             crn = offenderDetails.otherIds.crn,
             decision = null,
-            probationRegion = probationRegion1,
+            apArea = apArea1,
           )
 
           `Given a Placement Application`(
@@ -2153,7 +2143,7 @@ class TasksTest : IntegrationTestBase() {
             },
             crn = offenderDetails.otherIds.crn,
             decision = null,
-            probationRegion = probationRegion2,
+            apArea = apArea2,
           )
 
           `Given a Placement Application`(
@@ -2164,7 +2154,7 @@ class TasksTest : IntegrationTestBase() {
             },
             crn = offenderDetails.otherIds.crn,
             reallocated = true,
-            probationRegion = probationRegion1,
+            apArea = apArea1,
           )
 
           webTestClient.get()
@@ -2178,7 +2168,7 @@ class TasksTest : IntegrationTestBase() {
               objectMapper.writeValueAsString(
                 listOf(
                   taskTransformer.transformPlacementApplicationToTask(
-                    placementApplicationAllocatedToMeInRegion1,
+                    placementApplicationAllocatedToMeInApArea1,
                     "${offenderDetails.firstName} ${offenderDetails.surname}",
                   ),
                 ),
