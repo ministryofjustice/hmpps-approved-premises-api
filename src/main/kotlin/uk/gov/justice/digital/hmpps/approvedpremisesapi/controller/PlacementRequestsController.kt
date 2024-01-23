@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRequestBookingConfirmation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
@@ -72,6 +73,7 @@ class PlacementRequestsController(
     tier: RiskTierLevel?,
     arrivalDateStart: LocalDate?,
     arrivalDateEnd: LocalDate?,
+    requestType: PlacementRequestRequestType?,
     page: Int?,
     sortBy: PlacementRequestSortField?,
     sortDirection: SortDirection?,
@@ -90,6 +92,7 @@ class PlacementRequestsController(
         tier?.value,
         arrivalDateStart,
         arrivalDateEnd,
+        requestType,
       ),
       PageCriteria(
         sortBy = sortBy ?: PlacementRequestSortField.createdAt,

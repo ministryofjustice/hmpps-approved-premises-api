@@ -3846,6 +3846,8 @@ components:
               type: string
             booking:
               $ref: '#/components/schemas/BookingSummary'
+            requestType:
+              $ref: '#/components/schemas/PlacementRequestRequestType'
           required:
             - person
             - risks
@@ -3859,6 +3861,11 @@ components:
             - applicationDate
             - assessor
             - isParole
+    PlacementRequestRequestType:
+      type: string
+      enum:
+        - parole
+        - standardRelease
     PlacementRequestDetail:
       allOf:
         - $ref: '#/components/schemas/PlacementRequest'
@@ -4417,6 +4424,9 @@ components:
         - expected_arrival
         - created_at
         - application_date
+        - request_type
+        - person_name
+        - person_risks_tier
       x-enum-varnames:
         - duration
         - expectedArrival

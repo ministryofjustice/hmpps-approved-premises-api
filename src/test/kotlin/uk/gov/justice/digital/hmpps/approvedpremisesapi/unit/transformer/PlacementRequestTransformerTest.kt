@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -170,6 +171,7 @@ class PlacementRequestTransformerTest {
         assessor = mockUser,
         notes = placementRequestEntity.notes,
         isParole = placementRequestEntity.isParole,
+        requestType = PlacementRequestRequestType.standardRelease,
         booking = null,
       ),
     )
@@ -223,6 +225,30 @@ class PlacementRequestTransformerTest {
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
     assertThat(result.status).isEqualTo(PlacementRequestStatus.unableToMatch)
+  }
+
+  @Test
+  fun `transformJpaToApi returns a requestStatus of parole when a placement request is for parole`() {
+    val placementRequestEntity = placementRequestFactory
+      .withPlacementRequirements(placementRequirementsFactory.produce())
+      .withIsParole(true)
+      .produce()
+
+    val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
+
+    assertThat(result.requestType).isEqualTo(PlacementRequestRequestType.parole)
+  }
+
+  @Test
+  fun `transformJpaToApi returns a requestStatus of standardRelease when a placement request is not for parole`() {
+    val placementRequestEntity = placementRequestFactory
+      .withPlacementRequirements(placementRequirementsFactory.produce())
+      .withIsParole(false)
+      .produce()
+
+    val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
+
+    assertThat(result.requestType).isEqualTo(PlacementRequestRequestType.standardRelease)
   }
 
   @Test

@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -101,10 +102,17 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
     """
     SELECT
       pq.*,
-      application.created_at as application_date
+      application.created_at as application_date,
+      CASE
+        WHEN (pq.is_parole) THEN 'parole'
+        ELSE 'standardRequest'
+      END as request_type,
+      apa.name as person_name,
+      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as person_risks_tier
     from
       placement_requests pq
       left join applications application on application.id = pq.application_id
+      left join approved_premises_applications apa on apa.id = pq.application_id
     where
       pq.reallocated_at IS NULL 
       AND (:status IS NULL OR pq.is_withdrawn IS FALSE)
@@ -143,17 +151,26 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       AND (:tier IS NULL OR (SELECT COUNT(1) FROM approved_premises_applications apa WHERE apa.id = pq.application_id AND apa.risk_ratings -> 'tier' -> 'value' ->> 'level' = :tier) = 1) 
       AND (CAST(:arrivalDateFrom AS date) IS NULL OR pq.expected_arrival >= :arrivalDateFrom) 
       AND (CAST(:arrivalDateTo AS date) IS NULL OR pq.expected_arrival <= :arrivalDateTo)
+      AND (
+        :requestType IS NULL OR 
+        (
+            (:#{#requestType?.toString()} = 'parole' AND pq.is_parole IS TRUE)
+            OR
+            (:#{#requestType?.toString()} = 'standardRelease' AND pq.is_parole IS FALSE)
+        )
+      )
   """,
     nativeQuery = true,
   )
   fun allForDashboard(
-    status: PlacementRequestStatus?,
-    crn: String?,
-    crnOrName: String?,
-    tier: String?,
-    arrivalDateFrom: LocalDate?,
-    arrivalDateTo: LocalDate?,
-    pageable: Pageable?,
+    status: PlacementRequestStatus? = null,
+    crn: String? = null,
+    crnOrName: String? = null,
+    tier: String? = null,
+    arrivalDateFrom: LocalDate? = null,
+    arrivalDateTo: LocalDate? = null,
+    requestType: PlacementRequestRequestType? = null,
+    pageable: Pageable? = null,
   ): Page<PlacementRequestEntity>
 }
 

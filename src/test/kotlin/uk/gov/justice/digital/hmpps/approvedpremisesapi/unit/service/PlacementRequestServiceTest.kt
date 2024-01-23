@@ -577,16 +577,11 @@ class PlacementRequestServiceTest {
 
     every { page.content } returns placementRequests
 
-    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, null, null) } returns page
+    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
       PlacementRequestService.AllActiveSearchCriteria(
         PlacementRequestStatus.matched,
-        null,
-        null,
-        null,
-        null,
-        null,
       ),
       PageCriteria(page = null, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.asc),
     )
@@ -608,16 +603,11 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, null, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched, pageable = pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
       PlacementRequestService.AllActiveSearchCriteria(
         PlacementRequestStatus.matched,
-        null,
-        null,
-        null,
-        null,
-        null,
       ),
       PageCriteria(page = 1, sortBy = PlacementRequestSortField.createdAt, sortDirection = SortDirection.asc),
     )
@@ -642,7 +632,7 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(PlacementRequestStatus.matched, null, null, null, null, null, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(status = PlacementRequestStatus.matched, pageable = pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
       PlacementRequestService.AllActiveSearchCriteria(
@@ -677,16 +667,11 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(null, crn, null, null, null, null, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(crn = crn, pageable = pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
       PlacementRequestService.AllActiveSearchCriteria(
-        null,
-        crn,
-        null,
-        null,
-        null,
-        null,
+        crn = crn,
       ),
       PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
     )
@@ -713,16 +698,11 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(null, null, null, tier, null, null, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(tier = tier, pageable = pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
       PlacementRequestService.AllActiveSearchCriteria(
-        null,
-        null,
-        null,
-        tier,
-        null,
-        null,
+        tier = tier,
       ),
       PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
     )
@@ -749,16 +729,11 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(null, null, null, null, startDate, null, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(arrivalDateFrom = startDate, pageable = pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
       PlacementRequestService.AllActiveSearchCriteria(
-        null,
-        null,
-        null,
-        null,
-        startDate,
-        null,
+        arrivalDateStart = startDate,
       ),
       PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
     )
@@ -785,16 +760,11 @@ class PlacementRequestServiceTest {
     every { page.totalPages } returns 10
     every { page.totalElements } returns 100
 
-    every { placementRequestRepository.allForDashboard(null, null, null, null, endDate, null, pageRequest) } returns page
+    every { placementRequestRepository.allForDashboard(arrivalDateTo = endDate, pageable = pageRequest) } returns page
 
     val (requests, metadata) = placementRequestService.getAllActive(
       PlacementRequestService.AllActiveSearchCriteria(
-        null,
-        null,
-        null,
-        null,
-        endDate,
-        null,
+        arrivalDateEnd = endDate,
       ),
       PageCriteria(page = 1, sortBy = PlacementRequestSortField.expectedArrival, sortDirection = SortDirection.desc),
     )
