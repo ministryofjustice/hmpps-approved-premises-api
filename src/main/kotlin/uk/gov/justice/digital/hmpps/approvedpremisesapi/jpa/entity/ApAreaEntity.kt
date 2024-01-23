@@ -9,7 +9,9 @@ import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Repository
-interface ApAreaRepository : JpaRepository<ApAreaEntity, UUID>
+interface ApAreaRepository : JpaRepository<ApAreaEntity, UUID> {
+  fun findByName(name: String): ApAreaEntity?
+}
 
 @Entity
 @Table(name = "ap_areas")
