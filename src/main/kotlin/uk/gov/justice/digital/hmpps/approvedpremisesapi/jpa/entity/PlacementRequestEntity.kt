@@ -45,8 +45,7 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   @Query(
     """
     SELECT
-      placement_request.*,
-      booking_not_made.id
+      placement_request.*
     FROM
       placement_requests placement_request
       left join booking_not_mades booking_not_made on booking_not_made.placement_request_id = placement_request.id
@@ -55,48 +54,21 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
       AND placement_request.reallocated_at IS NULL
       AND placement_request.is_withdrawn is false
       AND booking_not_made.id IS NULL
+      AND (
+        (:#{#allocationStatus?.toString()} = 'ALLOCATED' AND placement_request.allocated_to_user_id IS NOT NULL) OR
+        (:#{#allocationStatus?.toString()} = 'UNALLOCATED' AND placement_request.allocated_to_user_id IS NULL) OR
+        (:#{#allocationStatus?.toString()} = 'EITHER')
+      )
     """,
     nativeQuery = true,
   )
-  fun findAllReallocatable(pageable: Pageable?): Page<PlacementRequestEntity>
+  fun findByAllocationStatus(allocationStatus: AllocationStatus, pageable: Pageable?): Page<PlacementRequestEntity>
 
-  @Query(
-    """
-    SELECT
-      placement_request.*,
-      booking_not_made.id
-    FROM
-      placement_requests placement_request
-      left join booking_not_mades booking_not_made on booking_not_made.placement_request_id = placement_request.id
-    where
-      placement_request.booking_id IS NULL
-      AND placement_request.reallocated_at IS NULL
-      AND placement_request.is_withdrawn is false
-      AND booking_not_made.id IS NULL
-      AND placement_request.allocated_to_user_id IS NOT NULL
-    """,
-    nativeQuery = true,
-  )
-  fun findAllReallocatableAllocated(pageable: Pageable?): Page<PlacementRequestEntity>
-
-  @Query(
-    """
-    SELECT
-      placement_request.*,
-      booking_not_made.id
-    FROM
-      placement_requests placement_request
-      left join booking_not_mades booking_not_made on booking_not_made.placement_request_id = placement_request.id
-    where
-      placement_request.booking_id IS NULL
-      AND placement_request.reallocated_at IS NULL
-      AND placement_request.is_withdrawn is false
-      AND booking_not_made.id IS NULL
-      AND placement_request.allocated_to_user_id IS NULL
-    """,
-    nativeQuery = true,
-  )
-  fun findAllReallocatableUnallocated(pageable: Pageable?): Page<PlacementRequestEntity>
+  enum class AllocationStatus {
+    ALLOCATED,
+    UNALLOCATED,
+    EITHER,
+  }
 
   @Query(
     """

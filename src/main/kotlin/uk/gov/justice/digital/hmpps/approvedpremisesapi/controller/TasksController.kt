@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
@@ -72,8 +73,11 @@ class TasksController(
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
-    val sortBy = sortBy ?: TaskSortField.createdAt
-    val sortDirection = sortDirection ?: SortDirection.asc
+    val pageCriteria = PageCriteria(
+      sortBy = sortBy ?: TaskSortField.createdAt,
+      sortDirection = sortDirection ?: SortDirection.asc,
+      page = page,
+    )
 
     if (user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       if (type != null) {
@@ -82,16 +86,14 @@ class TasksController(
         ) ?: throw NotFoundProblem(type, "TaskType")
 
         return when (taskType) {
-          TaskType.assessment -> assessmentTasksResponse(user, page, sortBy, sortDirection, allocatedFilter)
-          TaskType.placementRequest -> placementRequestTasks(user, page, sortBy, sortDirection, allocatedFilter)
-          TaskType.placementApplication -> placementApplicationTasks(user, page, sortBy, sortDirection, allocatedFilter)
-          else -> {
-            throw BadRequestProblem()
-          }
+          TaskType.assessment -> assessmentTasksResponse(user, pageCriteria, allocatedFilter)
+          TaskType.placementRequest -> placementRequestTasks(user, pageCriteria, allocatedFilter)
+          TaskType.placementApplication -> placementApplicationTasks(user, pageCriteria, allocatedFilter)
+          else -> throw BadRequestProblem()
         }
       }
 
-      return responseForAllTypes(user, page, sortBy, sortDirection, allocatedFilter)
+      return responseForAllTypes(user, pageCriteria, allocatedFilter)
     } else {
       throw ForbiddenProblem()
     }
@@ -429,16 +431,12 @@ class TasksController(
 
   private fun responseForAllTypes(
     user: UserEntity,
-    page: Int?,
-    sortBy: TaskSortField,
-    sortDirection: SortDirection,
+    pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allocatedTasks, metadata) = taskService.getAllReallocatable(
       allocatedFilter,
-      page,
-      sortBy,
-      sortDirection,
+      pageCriteria,
     )
 
     val crns = allocatedTasks.map { it.crn }
@@ -470,16 +468,12 @@ class TasksController(
 
   private fun assessmentTasksResponse(
     user: UserEntity,
-    page: Int?,
-    sortField: TaskSortField,
-    sortDirection: SortDirection?,
+    pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatable, metaData) =
       assessmentService.getAllReallocatable(
-        page,
-        sortField,
-        sortDirection,
+        pageCriteria,
         allocatedFilter,
       )
     val offenderSummaries = getOffenderSummariesForCrns(allReallocatable.map { it.application.crn }, user)
@@ -493,16 +487,12 @@ class TasksController(
 
   private fun placementRequestTasks(
     user: UserEntity,
-    page: Int?,
-    sortField: TaskSortField,
-    sortDirection: SortDirection?,
+    pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatable, metaData) =
       placementRequestService.getAllReallocatable(
-        page,
-        sortField,
-        sortDirection,
+        pageCriteria,
         allocatedFilter,
       )
     val offenderSummaries = getOffenderSummariesForCrns(allReallocatable.map { it.application.crn }, user)
@@ -519,20 +509,16 @@ class TasksController(
 
   private fun placementApplicationTasks(
     user: UserEntity,
-    page: Int?,
-    sortField: TaskSortField,
-    sortDirection: SortDirection?,
+    pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
   ): ResponseEntity<List<Task>> = runBlocking {
     val (allReallocatable, metaData) =
       placementApplicationService.getAllReallocatable(
-        page,
-        sortField,
-        sortDirection,
+        pageCriteria,
         allocatedFilter,
       )
-    val offenderSummaries = getOffenderSummariesForCrns(allReallocatable.map { it.application.crn }, user)
 
+    val offenderSummaries = getOffenderSummariesForCrns(allReallocatable.map { it.application.crn }, user)
     val placementApplicationTasks =
       getPlacementApplicationTasks(
         allReallocatable,

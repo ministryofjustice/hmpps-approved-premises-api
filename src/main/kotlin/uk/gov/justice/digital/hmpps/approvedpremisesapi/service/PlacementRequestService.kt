@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.data.domain.Page
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
@@ -42,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.wrapWithMetadata
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -80,36 +80,26 @@ class PlacementRequestService(
   }
 
   fun getAllReallocatable(
-    page: Int?,
-    sortField: TaskSortField,
-    sortDirection: SortDirection?,
+    pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
   ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
     val pageable = getPageable(
-      // Convert to snake_case, because the findAllReallocatable* methods are native SQL queries
-      when (sortField) {
-        TaskSortField.createdAt -> "created_at"
-      },
-      sortDirection,
-      page,
+      pageCriteria.withSortBy(
+        when (pageCriteria.sortBy) {
+          TaskSortField.createdAt -> "created_at"
+        },
+      ),
     )
-    val allReallocatable: Page<PlacementRequestEntity>?
 
-    when {
-      allocatedFilter == AllocatedFilter.unallocated ->
-        allReallocatable =
-          placementRequestRepository.findAllReallocatableUnallocated(pageable)
-
-      allocatedFilter == AllocatedFilter.allocated ->
-        allReallocatable =
-          placementRequestRepository.findAllReallocatableAllocated(pageable)
-
-      else ->
-        allReallocatable =
-          placementRequestRepository.findAllReallocatable(pageable)
+    val allocationStatus = when (allocatedFilter) {
+      AllocatedFilter.allocated -> PlacementRequestRepository.AllocationStatus.ALLOCATED
+      AllocatedFilter.unallocated -> PlacementRequestRepository.AllocationStatus.UNALLOCATED
+      null -> PlacementRequestRepository.AllocationStatus.EITHER
     }
 
-    return Pair(allReallocatable.content, getMetadata(allReallocatable, page))
+    val allReallocatable = placementRequestRepository.findByAllocationStatus(allocationStatus, pageable)
+
+    return wrapWithMetadata(allReallocatable, pageCriteria)
   }
 
   fun getAllActive(

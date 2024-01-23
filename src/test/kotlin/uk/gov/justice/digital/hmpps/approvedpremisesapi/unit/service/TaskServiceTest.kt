@@ -47,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import java.util.UUID
@@ -325,9 +326,11 @@ class TaskServiceTest {
     every { placementApplicationRepositoryMock.findAllById(placementApplications.map { it.id }) } returns placementApplications
     every { placementRequestRepositoryMock.findAllById(placementRequests.map { it.id }) } returns placementRequests
 
-    every { getMetadata(page, 1) } returns metadata
+    val pageCriteria = PageCriteria(TaskSortField.createdAt, SortDirection.asc, 1)
 
-    val result = taskService.getAllReallocatable(AllocatedFilter.allocated, 1, TaskSortField.createdAt, SortDirection.asc)
+    every { getMetadata(page, pageCriteria) } returns metadata
+
+    val result = taskService.getAllReallocatable(AllocatedFilter.allocated, pageCriteria)
 
     val expectedTasks = listOf(
       assessments.map { TypedTask.Assessment(it) },

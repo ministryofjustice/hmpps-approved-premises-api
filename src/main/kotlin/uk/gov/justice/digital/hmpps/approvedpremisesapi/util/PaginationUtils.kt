@@ -72,7 +72,12 @@ fun getPageableOrAllPages(criteria: PageCriteria<String>): Pageable? =
     criteria.perPage,
   )
 
-fun <T> getMetadata(response: Page<T>, pageCriteria: PageCriteria<*>): PaginationMetadata? = getMetadataWithSize(response, pageCriteria.page, pageCriteria.perPage)
+fun <T> wrapWithMetadata(page: Page<T>, pageCriteria: PageCriteria<*>): Pair<List<T>, PaginationMetadata?> {
+  return Pair(page.content, getMetadata(page, pageCriteria))
+}
+
+fun <T> getMetadata(response: Page<T>, pageCriteria: PageCriteria<*>): PaginationMetadata? =
+  getMetadataWithSize(response, pageCriteria.page, pageCriteria.perPage)
 
 fun <T> getMetadata(response: Page<T>, page: Int?): PaginationMetadata? {
   return getMetadataWithSize(response, page, 10)
