@@ -619,6 +619,22 @@ class OffenderServiceTest {
     assertThat(offenderService.isLao(offenderDetails.otherIds.crn)).isFalse
   }
 
+  @Test
+  fun `returns false and parse getUserAccessForOffenderCrn response successfully by ignoring unexpected element in the 403 response`() {
+    val crn = "ABC123"
+    val deliusUsername = "USER"
+    every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername, crn) } returns StatusCode(
+      status = HttpStatus.FORBIDDEN,
+      method = HttpMethod.GET,
+      path = "/secure/offenders/crn/$crn/user/$deliusUsername/userAccess",
+      body = "{\"userRestricted\":false,\"userExcluded\":true,\"exclusionMessage\":\"You are excluded\"}",
+    )
+
+    val result = offenderService.canAccessOffender(deliusUsername, crn)
+
+    assertThat(result).isFalse()
+  }
+
   @Nested
   inner class GetInfoForPerson {
     @Test

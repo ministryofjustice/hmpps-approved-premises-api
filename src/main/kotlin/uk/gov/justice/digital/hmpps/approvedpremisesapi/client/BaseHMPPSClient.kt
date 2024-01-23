@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.client
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.http.HttpHeaders
@@ -136,7 +137,9 @@ sealed interface ClientResult<ResponseType> {
 
       override fun toException(): Throwable = RuntimeException("Unable to complete $method request to $path: $status")
 
-      inline fun <reified ResponseType> deserializeTo(): ResponseType = jacksonObjectMapper().readValue(body, ResponseType::class.java)
+      inline fun <reified ResponseType> deserializeTo(): ResponseType = jacksonObjectMapper()
+        .configure(FAIL_ON_UNKNOWN_PROPERTIES, false)
+        .readValue(body, ResponseType::class.java)
     }
 
     data class PreemptiveCacheTimeout<ResponseType>(
