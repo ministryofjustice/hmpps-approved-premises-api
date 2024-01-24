@@ -32,7 +32,7 @@ VALUES
     'temporary-accommodation',
     CURRENT_DATE,
     NULL,
-    "provisional"
+    'provisional'
   )
 ON CONFLICT(id) DO NOTHING;
 
