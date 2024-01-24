@@ -45,9 +45,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
@@ -76,8 +79,10 @@ class AssessmentService(
   private val placementRequirementsService: PlacementRequirementsService,
   private val userAllocator: UserAllocator,
   private val objectMapper: ObjectMapper,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: String,
+  @Value("\${notify.send-placement-request-notifications}")
+  private val sendPlacementRequestNotifications: Boolean,
 ) {
   fun getVisibleAssessmentSummariesForUserCAS1(
     user: UserEntity,
@@ -352,8 +357,8 @@ class AssessmentService(
     placementDates: PlacementDates?,
     notes: String?,
   ): AuthorisableActionResult<ValidatableActionResult<AssessmentEntity>> {
-    val domainEventId = UUID.randomUUID()
     val acceptedAt = OffsetDateTime.now()
+    val createPlacementRequest = placementDates != null
 
     val assessmentResult = getAssessmentForUser(user, assessmentId)
     val assessment = when (assessmentResult) {
@@ -425,10 +430,10 @@ class AssessmentService(
         )
       }
 
-      if (placementDates != null) {
+      if (createPlacementRequest) {
         placementRequestService.createPlacementRequest(
           placementRequirementsValidationResult.entity,
-          placementDates,
+          placementDates!!,
           notes,
           false,
           null,
@@ -452,65 +457,89 @@ class AssessmentService(
     }
 
     if (application is ApprovedPremisesApplicationEntity) {
-      domainEventService.saveApplicationAssessedDomainEvent(
-        DomainEvent(
-          id = domainEventId,
-          applicationId = application.id,
-          assessmentId = assessment.id,
-          crn = application.crn,
-          occurredAt = acceptedAt.toInstant(),
-          data = ApplicationAssessedEnvelope(
-            id = domainEventId,
-            timestamp = acceptedAt.toInstant(),
-            eventType = "approved-premises.application.assessed",
-            eventDetails = ApplicationAssessed(
-              applicationId = application.id,
-              applicationUrl = applicationUrlTemplate
-                .replace("#id", application.id.toString()),
-              personReference = PersonReference(
-                crn = offenderDetails.otherIds.crn,
-                noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
-              ),
-              deliusEventNumber = application.eventNumber,
-              assessedAt = acceptedAt.toInstant(),
-              assessedBy = ApplicationAssessedAssessedBy(
-                staffMember = StaffMember(
-                  staffCode = staffDetails.staffCode,
-                  staffIdentifier = staffDetails.staffIdentifier,
-                  forenames = staffDetails.staff.forenames,
-                  surname = staffDetails.staff.surname,
-                  username = staffDetails.username,
-                ),
-                probationArea = ProbationArea(
-                  code = staffDetails.probationArea.code,
-                  name = staffDetails.probationArea.description,
-                ),
-                cru = Cru(
-                  name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
-                ),
-              ),
-              decision = assessment.decision.toString(),
-              decisionRationale = assessment.rejectionRationale,
-              arrivalDate = placementDates?.expectedArrival?.toLocalDateTime()?.toInstant(),
-            ),
-          ),
-        ),
-      )
-      if (application.createdByUser.email != null) {
+      saveCas1ApplicationAssessedDomainEvent(application, assessment, offenderDetails, staffDetails, placementDates)
+
+      application.createdByUser.email?.let { email ->
         emailNotificationService.sendEmail(
-          email = application.createdByUser.email!!,
+          email = email,
           templateId = notifyConfig.templates.assessmentAccepted,
           personalisation = mapOf(
             "name" to application.createdByUser.name,
-            "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
+            "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
             "crn" to application.crn,
           ),
         )
+
+        if (createPlacementRequest && sendPlacementRequestNotifications) {
+          emailNotificationService.sendEmail(
+            email = email,
+            templateId = notifyConfig.templates.placementRequestSubmitted,
+            personalisation = mapOf(
+              "crn" to application.crn,
+            ),
+          )
+        }
       }
     }
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedAssessment),
+    )
+  }
+
+  private fun saveCas1ApplicationAssessedDomainEvent(
+    application: ApprovedPremisesApplicationEntity,
+    assessment: AssessmentEntity,
+    offenderDetails: OffenderDetailSummary,
+    staffDetails: StaffUserDetails,
+    placementDates: PlacementDates?,
+  ) {
+    val domainEventId = UUID.randomUUID()
+    val acceptedAt = assessment.submittedAt!!
+
+    domainEventService.saveApplicationAssessedDomainEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        assessmentId = assessment.id,
+        crn = application.crn,
+        occurredAt = acceptedAt.toInstant(),
+        data = ApplicationAssessedEnvelope(
+          id = domainEventId,
+          timestamp = acceptedAt.toInstant(),
+          eventType = "approved-premises.application.assessed",
+          eventDetails = ApplicationAssessed(
+            applicationId = application.id,
+            applicationUrl = applicationUrlTemplate
+              .resolve("id", application.id.toString()),
+            personReference = PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
+            ),
+            deliusEventNumber = application.eventNumber,
+            assessedAt = acceptedAt.toInstant(),
+            assessedBy = ApplicationAssessedAssessedBy(
+              staffMember = StaffMember(
+                staffCode = staffDetails.staffCode,
+                staffIdentifier = staffDetails.staffIdentifier,
+                forenames = staffDetails.staff.forenames,
+                surname = staffDetails.staff.surname,
+                username = staffDetails.username,
+              ),
+              probationArea = ProbationArea(
+                code = staffDetails.probationArea.code,
+                name = staffDetails.probationArea.description,
+              ),
+              cru = Cru(
+                name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
+              ),
+            ),
+            decision = assessment.decision.toString(),
+            decisionRationale = assessment.rejectionRationale,
+            arrivalDate = placementDates?.expectedArrival?.toLocalDateTime()?.toInstant(),
+          ),
+        ),
+      ),
     )
   }
 
@@ -609,7 +638,7 @@ class AssessmentService(
             eventDetails = ApplicationAssessed(
               applicationId = application.id,
               applicationUrl = applicationUrlTemplate
-                .replace("#id", application.id.toString()),
+                .resolve("id", application.id.toString()),
               personReference = PersonReference(
                 crn = assessment.application.crn,
                 noms = offenderDetails?.otherIds?.nomsNumber ?: "Unknown NOMS Number",
@@ -645,7 +674,7 @@ class AssessmentService(
           templateId = notifyConfig.templates.assessmentRejected,
           personalisation = mapOf(
             "name" to application.createdByUser.name,
-            "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
+            "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
             "crn" to application.crn,
           ),
         )
