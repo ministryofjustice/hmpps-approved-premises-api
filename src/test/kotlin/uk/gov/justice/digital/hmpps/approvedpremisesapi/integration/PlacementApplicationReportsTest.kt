@@ -216,11 +216,22 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         booking = createBookingForPlacementRequest(application.getLatestPlacementRequest()!!)
       }
 
+      val singleDateBookedPlacementApplicationSubmittedOutsideOfDateRange = expectedRow {
+        hasBooking = true
+
+        placementDate = placementDateStarting(LocalDate.now().plusMonths(2))
+        application = createAssessedApplication("singleDateBookedOutOfDateRange")
+        val placementApplication = createAndAcceptPlacementApplication(application, listOf(placementDate!!))
+        placementApplicationTestRepository.updateSubmittedOn(placementApplication.id, OffsetDateTime.now().plusMonths(2))
+
+        booking = createBookingForPlacementRequest(application.getLatestPlacementRequest()!!)
+      }
+
       val singleDateReallocatedAssessment = expectedRow {
         hasBooking = true
 
         placementDate = placementDateStarting(LocalDate.now())
-        application = createAndSubmitApplication("singleDateReallocatedAssessment", ApType.normal)
+        application = createAndSubmitApplication("singleDateReallocatedAssessment")
         reallocateAssessment(application)
         acceptAssessmentForApplication(application)
         createAndAcceptPlacementApplication(application, listOf(placementDate!!))
@@ -376,6 +387,9 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
           val unsubmittedPlacementApplication = getPlacementApplication(singleDateUnsubmittedPlacement.application)
           assertThat(actualRows).noneMatch { row -> row.placementRequestId == unsubmittedPlacementApplication.id.toString() }
 
+          val outOfDateRangePlacementApplication = getPlacementApplication(singleDateBookedPlacementApplicationSubmittedOutsideOfDateRange.application)
+          assertThat(actualRows).noneMatch { row -> row.placementRequestId == outOfDateRangePlacementApplication.id.toString() }
+
           assertApplicationRowHasCorrectData(actualRows, singleDateNoBookingReallocated, userEntity)
           assertApplicationRowHasCorrectData(actualRows, singleDateBooked, userEntity)
           assertApplicationRowHasCorrectData(actualRows, singleDateReallocatedAssessment, userEntity)
@@ -425,7 +439,6 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     val placementApplication = getPlacementApplication(application)
     val assessment = application.getLatestAssessment()!!
     val offenderDetailSummary = getOffenderDetailForApplication(application, userEntity.deliusUsername)
-    val caseDetail = getCaseDetailForApplication(application)
 
     val reportRow = report.find {
       it.placementRequestId == placementApplication.id.toString() &&
@@ -460,8 +473,11 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     assertThat(reportRow.noms).isEqualTo(application.nomsNumber)
     assertThat(reportRow.sentenceType).isEqualTo(application.sentenceType)
     assertThat(reportRow.releaseType).isEqualTo(application.releaseType)
+
+    val caseDetail = getCaseDetailForApplication(application)
     assertThat(reportRow.referralLdu).isEqualTo(caseDetail.case.manager.team.ldu.name)
     assertThat(reportRow.referralTeam).isEqualTo(caseDetail.case.manager.team.name)
+
     assertThat(reportRow.referralRegion).isEqualTo(referrerProbationArea)
     assertThat(reportRow.referrerUsername).isEqualTo(referrerEntity.deliusUsername)
     assertThat(reportRow.targetLocation).isEqualTo(application.targetLocation)
@@ -533,12 +549,12 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
   }
 
   private fun createAssessedApplication(crn: String): ApprovedPremisesApplicationEntity {
-    val application = createAndSubmitApplication(crn, ApType.normal)
+    val application = createAndSubmitApplication(crn)
     acceptAssessmentForApplication(application)
     return application
   }
 
-  private fun createAndSubmitApplication(crn: String, apType: ApType): ApprovedPremisesApplicationEntity {
+  private fun createAndSubmitApplication(crn: String): ApprovedPremisesApplicationEntity {
     val (referrer, jwt) = referrerDetails
     val (offenderDetails, _) = `Given an Offender`({ withCrn(crn) })
 
@@ -588,6 +604,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       )
     }
 
+    val apType = ApType.normal
     webTestClient.post()
       .uri("/applications/${application.id}/submission")
       .header("Authorization", "Bearer $jwt")
