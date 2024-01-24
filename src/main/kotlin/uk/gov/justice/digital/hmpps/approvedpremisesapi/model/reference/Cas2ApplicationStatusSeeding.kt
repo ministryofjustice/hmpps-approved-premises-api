@@ -14,36 +14,43 @@ object Cas2ApplicationStatusSeeding {
     return listOf(
       Cas2ApplicationStatus(
         id = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905"),
+        isActive = true,
         name = "moreInfoRequested",
         label = "More information requested",
       ),
       Cas2ApplicationStatus(
         id = UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1"),
+        isActive = true,
         name = "awaitingDecision",
         label = "Awaiting decision",
       ),
       Cas2ApplicationStatus(
         id = UUID.fromString("176bbda0-0766-4d77-8d56-18ed8f9a4ef2"),
+        isActive = true,
         name = "placeOffered",
         label = "Place offered",
       ),
       Cas2ApplicationStatus(
         id = UUID.fromString("a919097d-b324-471c-9834-756f255e87ea"),
+        isActive = true,
         name = "onWaitingList",
         label = "On waiting list",
       ),
       Cas2ApplicationStatus(
         id = UUID.fromString("758eee61-2a6d-46b9-8bdd-869536d77f1b"),
+        isActive = true,
         name = "noPlaceOffered",
         label = "Could not be placed",
       ),
       Cas2ApplicationStatus(
         id = UUID.fromString("4ad9bbfa-e5b0-456f-b746-146f7fd511dd"),
+        isActive = true,
         name = "incomplete",
         label = "Incomplete",
       ),
       Cas2ApplicationStatus(
         id = UUID.fromString("004e2419-9614-4c1e-a207-a8418009f23d"),
+        isActive = true,
         name = "withdrawn",
         label = "Withdrawn",
       ),

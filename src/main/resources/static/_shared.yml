@@ -1776,6 +1776,8 @@ components:
         id:
           type: string
           format: uuid
+        isActive:
+          type: boolean
         name:
           type: string
           example: 'moreInfoRequested'
@@ -1787,6 +1789,7 @@ components:
           example: 'More information about the application has been requested from the POM (Prison Offender Manager).'
       required:
         - id
+        - isActive
         - name
         - label
     Cas2ApplicationStatusUpdate:
