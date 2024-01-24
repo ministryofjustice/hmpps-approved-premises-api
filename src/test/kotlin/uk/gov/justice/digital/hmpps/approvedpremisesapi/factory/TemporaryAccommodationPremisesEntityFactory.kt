@@ -21,7 +21,6 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var postcode: Yielded<String> = { randomPostCode() }
-  private var totalBeds: Yielded<Int> = { randomInt(1, 100) }
   private var addressLine1: Yielded<String> = { randomStringUpperCase(10) }
   private var addressLine2: Yielded<String> = { randomStringUpperCase(10) }
   private var town: Yielded<String> = { randomStringUpperCase(10) }
@@ -125,7 +124,6 @@ class TemporaryAccommodationPremisesEntityFactory : Factory<TemporaryAccommodati
     postcode = this.postcode(),
     latitude = null,
     longitude = null,
-    totalBeds = this.totalBeds(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("Must provide a probation region"),
     localAuthorityArea = this.localAuthorityArea?.invoke() ?: throw RuntimeException("Must provide a local authority area"),
     bookings = mutableListOf(),

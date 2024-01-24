@@ -1,0 +1,1 @@
+ALTER TABLE premises DROP COLUMN total_beds;

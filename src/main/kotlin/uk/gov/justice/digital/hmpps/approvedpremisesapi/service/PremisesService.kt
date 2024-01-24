@@ -306,7 +306,6 @@ class PremisesService(
       lostBeds = mutableListOf(),
       notes = if (notes.isNullOrEmpty()) "" else notes,
       emailAddress = null,
-      totalBeds = 0,
       rooms = mutableListOf(),
       characteristics = mutableListOf(),
       status = status,

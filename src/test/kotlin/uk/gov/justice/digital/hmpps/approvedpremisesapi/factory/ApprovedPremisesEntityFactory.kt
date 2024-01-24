@@ -28,7 +28,6 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var postcode: Yielded<String> = { randomPostCode() }
   private var latitude: Yielded<Double> = { randomDouble(53.50, 54.99) }
   private var longitude: Yielded<Double> = { randomDouble(-1.56, 1.10) }
-  private var totalBeds: Yielded<Int> = { randomInt(1, 100) }
   private var addressLine1: Yielded<String> = { randomStringUpperCase(10) }
   private var addressLine2: Yielded<String> = { randomStringUpperCase(10) }
   private var town: Yielded<String> = { randomStringUpperCase(10) }
@@ -143,7 +142,6 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     postcode = this.postcode(),
     latitude = this.latitude(),
     longitude = this.longitude(),
-    totalBeds = this.totalBeds(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("Must provide a probation region"),
     localAuthorityArea = this.localAuthorityArea?.invoke() ?: throw RuntimeException("Must provide a local authority area"),
     bookings = mutableListOf(),
