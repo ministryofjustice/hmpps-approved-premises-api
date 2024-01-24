@@ -99,8 +99,8 @@ interface PlacementApplicationEntityReportRowRepository : JpaRepository<Placemen
       where
         pa.reallocated_at is null
         AND pa.submitted_at is not null
-        AND date_part('month', application.submitted_at) = :month
-        AND date_part('year', application.submitted_at) = :year
+        AND date_part('month', pa.submitted_at) = :month
+        AND date_part('year', pa.submitted_at) = :year
         AND application.service = 'approved-premises';
     """,
     nativeQuery = true,
