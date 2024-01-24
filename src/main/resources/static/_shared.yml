@@ -1789,7 +1789,6 @@ components:
         - id
         - name
         - label
-        - description
     Cas2ApplicationStatusUpdate:
       type: object
       properties:
