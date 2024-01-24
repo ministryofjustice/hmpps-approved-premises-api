@@ -16,7 +16,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -30,7 +31,8 @@ VALUES
     'e8887df9-b31b-4e9c-931a-e063d778ab0d',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
+    "provisional"
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -432,7 +434,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -446,7 +449,8 @@ VALUES
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
+    'departed'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -504,7 +508,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -519,6 +524,7 @@ VALUES
     'temporary-accommodation',
     CURRENT_DATE,
     NULL
+    'departed'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -576,7 +582,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -590,7 +597,8 @@ VALUES
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
+    'departed'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -648,7 +656,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -662,7 +671,8 @@ VALUES
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
+    'departed'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -720,7 +730,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -734,7 +745,8 @@ VALUES
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
+    'departed'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -792,7 +804,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -806,7 +819,8 @@ VALUES
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
+    'departed'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -864,7 +878,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -878,7 +893,8 @@ VALUES
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
+    'departed'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -936,7 +952,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -950,7 +967,8 @@ VALUES
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
+    'departed'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -1008,7 +1026,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -1022,7 +1041,8 @@ VALUES
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
+    'departed'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -1080,7 +1100,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -1094,7 +1115,8 @@ VALUES
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
+    'departed'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -1152,7 +1174,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -1166,7 +1189,8 @@ VALUES
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
+    'departed'
   )
 ON CONFLICT(id) DO NOTHING;
 

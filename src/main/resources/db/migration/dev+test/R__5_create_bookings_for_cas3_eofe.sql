@@ -16,7 +16,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -30,7 +31,8 @@ VALUES
     '38e6b775-88c5-4571-8b6e-da3711aeaca6',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
+    'provisional'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -64,7 +66,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -78,7 +81,8 @@ VALUES
     '38e6b775-88c5-4571-8b6e-da3711aeaca6',
     'temporary-accommodation',
     CURRENT_DATE + 80,
-    NULL
+    NULL,
+    'confirmed'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -116,7 +120,7 @@ VALUES
   )
 ON CONFLICT(id) DO NOTHING;
 
---- Add a Booking departing today ---
+--- Add a Booking arrivals today ---
 
 INSERT INTO
   bookings (
@@ -130,7 +134,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -144,7 +149,8 @@ VALUES
     '38e6b775-88c5-4571-8b6e-da3711aeaca6',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
+    'arrived'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -209,7 +215,7 @@ VALUES
     '38e6b775-88c5-4571-8b6e-da3711aeaca6'
   )
 ON CONFLICT(id) DO NOTHING;
---- Add a Booking departing soon ---
+--- Add a Booking arrived soon ---
 
 INSERT INTO
   bookings (
@@ -223,7 +229,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -237,7 +244,8 @@ VALUES
     'fd1c7078-43c8-41f5-8e57-a4d59f3c831a',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
+    'arrived'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -291,7 +299,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -305,7 +314,8 @@ VALUES
     '64fd8f3d-1fb6-4346-a190-65588b998301',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
+    'arrived'
   )
 ON CONFLICT(id) DO NOTHING;
 
@@ -359,7 +369,8 @@ INSERT INTO
     "bed_id",
     "service",
     "created_at",
-    "noms_number"
+    "noms_number",
+    "status"
   )
 VALUES
   (
@@ -373,7 +384,8 @@ VALUES
     '38e6b775-88c5-4571-8b6e-da3711aeaca6',
     'temporary-accommodation',
     CURRENT_DATE - 200,
-    NULL
+    NULL,
+    'departed'
   )
 ON CONFLICT(id) DO NOTHING;
 
