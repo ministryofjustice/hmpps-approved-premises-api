@@ -26,7 +26,7 @@ data class Cas2StatusUpdateEntity(
   val id: UUID,
 
   val statusId: UUID,
-  val description: String,
+  val description: String? = null,
   val label: String,
 
   @ManyToOne

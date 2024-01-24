@@ -188,7 +188,6 @@ components:
       required:
         - name
         - label
-        - description
     ExternalUser:
       type: object
       properties:

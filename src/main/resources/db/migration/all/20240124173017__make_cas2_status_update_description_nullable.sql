@@ -1,0 +1,1 @@
+ALTER TABLE cas_2_status_updates ALTER COLUMN description DROP NOT NULL;

@@ -1845,7 +1845,6 @@ components:
         - id
         - name
         - label
-        - description
     ApplicationStatus:
       type: string
       enum:

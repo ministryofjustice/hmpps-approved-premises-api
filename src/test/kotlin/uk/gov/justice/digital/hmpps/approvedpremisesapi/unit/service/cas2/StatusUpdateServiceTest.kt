@@ -127,7 +127,6 @@ class StatusUpdateServiceTest {
                 it.data.eventDetails.newStatus == Cas2Status(
                 name = "moreInfoRequested",
                 label = "More information requested",
-                description = "The prison offender manager (POM) must provide information requested for the application to progress.",
               )
             },
           )
