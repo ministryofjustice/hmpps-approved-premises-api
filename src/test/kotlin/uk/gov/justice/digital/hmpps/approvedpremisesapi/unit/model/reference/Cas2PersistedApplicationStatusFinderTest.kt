@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.model.reference
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import java.util.UUID
@@ -36,6 +37,37 @@ class Cas2PersistedApplicationStatusFinderTest {
           "moreInfoRequested",
           "placeOffered",
         ),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetById {
+    @Test
+    fun `returns the matching status regardless of _isActive_ flag`() {
+      val finder = Cas2PersistedApplicationStatusFinder(statusList())
+
+      Assertions.assertThat(
+        finder.getById(UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905")).name).isEqualTo(
+        "moreInfoRequested"
+      )
+
+      Assertions.assertThat(
+        finder.getById(UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1")).name).isEqualTo(
+        "awaitingDecision"
+      )
+    }
+
+    @Test
+    fun `throws an exception if the matching status is not found`() {
+      val finder = Cas2PersistedApplicationStatusFinder(statusList())
+
+      val exception = assertThrows<RuntimeException> {
+        finder.getById(UUID.fromString("9887f81e-1a81-49b8-b0a6-5a17b3c9d7d1"))
+      }
+
+      Assertions.assertThat(exception.message).isEqualTo(
+        "Status with id 9887f81e-1a81-49b8-b0a6-5a17b3c9d7d1 not found"
       )
     }
   }
