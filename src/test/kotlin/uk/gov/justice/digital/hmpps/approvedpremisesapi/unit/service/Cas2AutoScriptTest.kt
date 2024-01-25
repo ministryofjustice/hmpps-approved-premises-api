@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
@@ -48,6 +49,7 @@ class Cas2AutoScriptTest {
 
   private val mockApplicationService = mockk<ApplicationService>()
   private val mockStatusUpdateService = mockk<StatusUpdateService>()
+  private val statusFinder = Cas2PersistedApplicationStatusFinder()
 
   private val autoScript = Cas2AutoScript(
     mockSeedLogger,
@@ -59,6 +61,7 @@ class Cas2AutoScriptTest {
     mockJsonSchemaService,
     mockApplicationService,
     mockStatusUpdateService,
+    statusFinder,
   )
 
   @BeforeEach

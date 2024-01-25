@@ -12,8 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpd
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
@@ -45,6 +45,7 @@ class Cas2AutoScript(
   private val jsonSchemaService: JsonSchemaService,
   private val applicationService: ApplicationService,
   private val statusUpdateService: StatusUpdateService,
+  private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) {
   fun script() {
     seedLogger.info("Auto-Scripting for CAS2")
@@ -122,7 +123,7 @@ class Cas2AutoScript(
   }
 
   private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus {
-    return Cas2ApplicationStatusSeeding.statusList()[idx]
+    return statusFinder.active()[idx]
   }
 
   private fun randomDateTime(minDays: Int = LATEST_CREATION, maxDays: Int = EARLIEST_CREATION): OffsetDateTime {

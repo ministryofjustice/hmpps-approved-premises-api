@@ -11,8 +11,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpd
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import java.io.IOException
@@ -27,6 +27,7 @@ class Cas2ApplicationsSeedJob(
   private val externalUserRepository: ExternalUserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val jsonSchemaService: JsonSchemaService,
+  private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) : SeedJob<Cas2ApplicationSeedCsvRow>(
   id = UUID.randomUUID(),
   fileName = fileName,
@@ -98,7 +99,7 @@ class Cas2ApplicationsSeedJob(
   }
 
   private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus {
-    return Cas2ApplicationStatusSeeding.statusList()[idx]
+    return statusFinder.active()[idx]
   }
 
   private fun dataFor(state: String, nomsNumber: String): String {

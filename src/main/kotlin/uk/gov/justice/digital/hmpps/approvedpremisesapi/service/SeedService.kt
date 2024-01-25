@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepos
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesBookingCancelSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesBookingSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesOfflineApplicationsSeedJob
@@ -157,6 +158,7 @@ class SeedService(
           applicationContext.getBean(ExternalUserRepository::class.java),
           applicationContext.getBean(Cas2StatusUpdateRepository::class.java),
           applicationContext.getBean(JsonSchemaService::class.java),
+          applicationContext.getBean(Cas2PersistedApplicationStatusFinder::class.java),
         )
         SeedFileType.approvedPremisesUsers -> UsersSeedJob(
           filename,
