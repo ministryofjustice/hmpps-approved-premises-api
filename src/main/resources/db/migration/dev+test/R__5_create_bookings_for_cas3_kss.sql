@@ -523,7 +523,7 @@ VALUES
     '6d6d4c56-9989-4fb5-a486-d32f525748e6',
     'temporary-accommodation',
     CURRENT_DATE,
-    NULL
+    NULL,
     'departed'
   )
 ON CONFLICT(id) DO NOTHING;
