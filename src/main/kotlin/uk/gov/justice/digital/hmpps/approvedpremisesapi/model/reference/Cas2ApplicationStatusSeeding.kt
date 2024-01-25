@@ -50,6 +50,30 @@ object Cas2ApplicationStatusSeeding {
         label = "Referral withdrawn",
         description = "The prison offender manager (POM) withdrew the application.",
       ),
+      Cas2PersistedApplicationStatus(
+        id = UUID.fromString("fe254d88-ce1d-4cd8-8bd6-88de88f39019"),
+        name = "offerAccepted",
+        label = "Offer accepted",
+        description = "The accommodation offered has been accepted.",
+      ),
+      Cas2PersistedApplicationStatus(
+        id = UUID.fromString("9a381bc6-22d3-41d6-804d-4e49f428c1de"),
+        name = "offerDeclined",
+        label = "Offer declined or withdrawn",
+        description = "The accommodation offered has been declined or withdrawn.",
+      ),
+      Cas2PersistedApplicationStatus(
+        id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
+        name = "cancelled",
+        label = "Referral cancelled",
+        description = "The application has been cancelled.",
+      ),
+      Cas2PersistedApplicationStatus(
+        id = UUID.fromString("89458555-3219-44a2-9584-c4f715d6b565"),
+        name = "awaitingArrival",
+        label = "Awaiting arrival",
+        description = "The accommodation is arranged for the agreed dates.",
+      ),
     )
   }
 }
