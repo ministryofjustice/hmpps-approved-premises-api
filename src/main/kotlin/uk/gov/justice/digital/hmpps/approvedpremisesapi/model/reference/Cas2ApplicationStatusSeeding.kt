@@ -47,7 +47,7 @@ object Cas2ApplicationStatusSeeding {
       Cas2PersistedApplicationStatus(
         id = UUID.fromString("004e2419-9614-4c1e-a207-a8418009f23d"),
         name = "withdrawn",
-        label = "Withdrawn",
+        label = "Referral withdrawn",
         description = "The prison offender manager (POM) withdrew the application.",
       ),
     )
