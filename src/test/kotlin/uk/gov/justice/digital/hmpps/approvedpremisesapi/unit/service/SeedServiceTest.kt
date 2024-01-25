@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LocalAuthorit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesAutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesRoomsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
@@ -35,9 +36,17 @@ class SeedServiceTest {
   private val mockTransactionTemplate = mockk<TransactionTemplate>()
   private val mockSeedLogger = mockk<SeedLogger>()
   private val mockCas2AutoScript = mockk<Cas2AutoScript>()
+  private val mockApprovedPremisesAutoScript = mockk<ApprovedPremisesAutoScript>()
   private val logEntries = mutableListOf<LogEntry>()
 
-  private val seedService = SeedService(seedConfig, mockApplicationContext, mockTransactionTemplate, mockSeedLogger, mockCas2AutoScript)
+  private val seedService = SeedService(
+    seedConfig,
+    mockApplicationContext,
+    mockTransactionTemplate,
+    mockSeedLogger,
+    mockApprovedPremisesAutoScript,
+    mockCas2AutoScript,
+  )
 
   @BeforeEach
   fun setUp() {
@@ -54,6 +63,7 @@ class SeedServiceTest {
       logEntries += LogEntry(it.invocation.args[0] as String, "error", it.invocation.args[1] as Throwable)
     }
     every { mockCas2AutoScript.script() } answers { }
+    every { mockApprovedPremisesAutoScript.script() } answers { }
   }
 
   @Test
@@ -160,16 +170,18 @@ class SeedServiceTest {
       seedService.autoSeed()
 
       verify(exactly = 0) { mockCas2AutoScript.script() }
+      verify(exactly = 0) { mockApprovedPremisesAutoScript.script() }
     }
 
     @Test
-    fun `runs Cas2AutoScript when autoScript IS enabled (along with auto-seeding)`() {
+    fun `runs both AutoScripts when autoScript IS enabled (along with auto-seeding)`() {
       seedConfig.auto.enabled = true
 
       seedConfig.autoScript.enabled = true
       seedService.autoSeed()
 
       verify { mockCas2AutoScript.script() }
+      verify { mockApprovedPremisesAutoScript.script() }
     }
   }
 }
