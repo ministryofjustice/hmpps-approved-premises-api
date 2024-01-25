@@ -184,7 +184,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           preferredAreas = event2Details.preferredAreas.toString(),
           hdcEligibilityDate = event2Details.hdcEligibilityDate.toString(),
           conditionalReleaseDate = event2Details.conditionalReleaseDate.toString(),
-          submittedAt = event2Details.submittedAt.toString().split("T").first(),
+          submittedAt = event2Details.submittedAt.toString().split(".").first(),
           submittedBy = event2Details.submittedBy.staffMember.username.toString(),
         ),
         SubmittedApplicationReportRow(
@@ -196,7 +196,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           preferredAreas = event1Details.preferredAreas.toString(),
           hdcEligibilityDate = event1Details.hdcEligibilityDate.toString(),
           conditionalReleaseDate = event1Details.conditionalReleaseDate.toString(),
-          submittedAt = event1Details.submittedAt.toString().split("T").first(),
+          submittedAt = event1Details.submittedAt.toString().split(".").first(),
           submittedBy = event1Details.submittedBy.staffMember.username.toString(),
         ),
       )

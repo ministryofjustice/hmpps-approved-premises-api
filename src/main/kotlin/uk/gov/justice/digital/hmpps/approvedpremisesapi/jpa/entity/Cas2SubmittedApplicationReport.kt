@@ -19,9 +19,10 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
         events.data -> 'eventDetails' ->> 'preferredAreas' AS preferredAreas,
         CAST(events.data -> 'eventDetails' ->> 'hdcEligibilityDate' as DATE) AS hdcEligibilityDate,
         CAST(events.data -> 'eventDetails' ->> 'conditionalReleaseDate' as DATE) AS conditionalReleaseDate,
-        CAST(
-          CAST(events.data -> 'eventDetails' ->> 'submittedAt' as DATE) 
-         as TEXT) as submittedAt
+        TO_CHAR(
+          CAST(events.data -> 'eventDetails' ->> 'submittedAt' AS TIMESTAMP),
+          'YYYY-MM-DD"T"HH24:MI:SS'
+        ) AS submittedAt
       FROM domain_events events
       WHERE events.type = 'CAS2_APPLICATION_SUBMITTED'
         AND events.occurred_at  > CURRENT_DATE - 365
