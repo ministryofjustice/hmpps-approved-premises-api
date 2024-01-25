@@ -48,13 +48,15 @@ class Cas2PersistedApplicationStatusFinderTest {
       val finder = Cas2PersistedApplicationStatusFinder(statusList())
 
       Assertions.assertThat(
-        finder.getById(UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905")).name).isEqualTo(
-        "moreInfoRequested"
+        finder.getById(UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905")).name,
+      ).isEqualTo(
+        "moreInfoRequested",
       )
 
       Assertions.assertThat(
-        finder.getById(UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1")).name).isEqualTo(
-        "awaitingDecision"
+        finder.getById(UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1")).name,
+      ).isEqualTo(
+        "awaitingDecision",
       )
     }
 
@@ -67,7 +69,7 @@ class Cas2PersistedApplicationStatusFinderTest {
       }
 
       Assertions.assertThat(exception.message).isEqualTo(
-        "Status with id 9887f81e-1a81-49b8-b0a6-5a17b3c9d7d1 not found"
+        "Status with id 9887f81e-1a81-49b8-b0a6-5a17b3c9d7d1 not found",
       )
     }
   }

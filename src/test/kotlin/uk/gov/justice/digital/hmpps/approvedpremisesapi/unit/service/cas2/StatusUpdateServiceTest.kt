@@ -18,15 +18,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
+import java.util.UUID
 
 class StatusUpdateServiceTest {
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockStatusUpdateRepository = mockk<Cas2StatusUpdateRepository>()
-  private val status = Cas2ApplicationStatusSeeding.statusList().find { it.name == "moreInfoRequested" }
-  private val applicationStatusUpdate = Cas2ApplicationStatusUpdate(newStatus = status!!.name)
   private val assessor = ExternalUserEntityFactory()
     .withUsername("JOHN_SMITH_NACRO")
     .withName("John Smith")
@@ -43,24 +43,40 @@ class StatusUpdateServiceTest {
     .withNomsNumber("NOMSABC")
     .produce()
   private val applicationId = application.id
+  private val mockStatusFinder = mockk<Cas2PersistedApplicationStatusFinder>()
   private val applicationUrlTemplate = "http://example.com/application-status-updated/#eventId"
 
   private val statusUpdateService = StatusUpdateService(
     mockApplicationRepository,
     mockStatusUpdateRepository,
     mockDomainEventService,
+    mockStatusFinder,
     applicationUrlTemplate,
   )
+
+  val activeStatus = Cas2PersistedApplicationStatus(
+    id = UUID.fromString("f5cd423b-08eb-4efb-96ff-5cc6bb073905"),
+    name = "activeStatusName",
+    label = "",
+    description = "",
+    isActive = true,
+  )
+  private val applicationStatusUpdate = Cas2ApplicationStatusUpdate(newStatus = activeStatus.name)
+  private val activeStatusList = listOf(activeStatus)
+
+  @BeforeEach
+  fun setup() {
+    every { mockStatusFinder.active() } returns activeStatusList
+  }
 
   @Nested
   inner class IsValidStatus {
 
     @Test
     fun `returns true when the given newStatus is valid`() {
-      Cas2ApplicationStatusSeeding.statusList().forEach { status ->
-        val validUpdate = Cas2ApplicationStatusUpdate(newStatus = status.name)
-        assertThat(statusUpdateService.isValidStatus(validUpdate)).isTrue()
-      }
+      val validUpdate = Cas2ApplicationStatusUpdate(newStatus = "activeStatusName")
+
+      assertThat(statusUpdateService.isValidStatus(validUpdate)).isTrue()
     }
 
     @Test
@@ -82,7 +98,7 @@ class StatusUpdateServiceTest {
         val cas2StatusUpdateEntity = Cas2StatusUpdateEntityFactory()
           .withApplication(application)
           .withAssessor(assessor)
-          .withStatusId(status!!.id)
+          .withStatusId(activeStatus.id)
           .produce()
 
         every { mockApplicationRepository.findSubmittedApplicationById(applicationId) } answers

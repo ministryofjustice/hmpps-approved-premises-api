@@ -15,8 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpd
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2ApplicationStatusSeeding
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.OffsetDateTime
@@ -27,11 +27,12 @@ class StatusUpdateService(
   private val applicationRepository: Cas2ApplicationRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val domainEventService: DomainEventService,
+  private val statusFinder: Cas2PersistedApplicationStatusFinder,
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
 ) {
 
   fun isValidStatus(statusUpdate: Cas2ApplicationStatusUpdate): Boolean {
-    return findStatusByName(statusUpdate.newStatus) != null
+    return findActiveStatusByName(statusUpdate.newStatus) != null
   }
 
   fun create(
@@ -42,7 +43,7 @@ class StatusUpdateService(
     val application = applicationRepository.findSubmittedApplicationById(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
-    val status = findStatusByName(statusUpdate.newStatus)
+    val status = findActiveStatusByName(statusUpdate.newStatus)
       ?: return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("The status ${statusUpdate.newStatus} is not valid"),
       )
@@ -71,8 +72,8 @@ class StatusUpdateService(
     )
   }
 
-  private fun findStatusByName(statusName: String): Cas2PersistedApplicationStatus? {
-    return Cas2ApplicationStatusSeeding.statusList()
+  private fun findActiveStatusByName(statusName: String): Cas2PersistedApplicationStatus? {
+    return statusFinder.active()
       .find { status -> status.name == statusName }
   }
 
