@@ -8,6 +8,7 @@ import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
 import io.mockk.every
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.fail
 import org.assertj.core.api.Assertions.within
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
@@ -22,6 +23,16 @@ import org.springframework.http.HttpStatus
 import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
@@ -70,6 +81,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationSubmittedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationWithdrawnFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCancelledFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingChangedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArrivedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNotArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Probation Region`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
@@ -118,6 +139,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
@@ -2409,12 +2431,27 @@ class ApplicationTest : IntegrationTestBase() {
       `Given a User` { _, jwt ->
 
         val domainEvents = createTenDomainEvents()
-        val summaries = domainEvents.map {
+
+        val domainEventDescriptions = listOf(
+          "The application was submitted",
+          "The application was assessed and accepted",
+          "A booking was made for between 2024-01-01 and 2024-04-01",
+          "The person moved into the premises on 2024-01-01",
+          "The person was due to move into the premises on 2024-01-01 but did not arrive",
+          "The person moved out of the premises on 2024-04-01",
+          "A booking was not made for the placement request. The reason was: no suitable premises",
+          "The booking was cancelled. The reason was: additional sentencing",
+          "The booking had its arrival or departure date changed",
+          "The application was withdrawn",
+        )
+
+        val summaries = domainEvents.zip(domainEventDescriptions).map {
           TimelineEvent(
-            applicationTimelineTransformer.transformDomainEventTypeToTimelineEventType(it.type),
-            it.id.toString(),
-            it.occurredAt.toInstant(),
-            associatedUrls = listOf(TimelineEventAssociatedUrl(type = TimelineEventUrlType.application, url = "http://frontend/applications/${it.applicationId}")),
+            applicationTimelineTransformer.transformDomainEventTypeToTimelineEventType(it.first.type),
+            it.first.id.toString(),
+            it.first.occurredAt.toInstant(),
+            associatedUrls = listOf(TimelineEventAssociatedUrl(type = TimelineEventUrlType.application, url = "http://frontend/applications/${it.first.applicationId}")),
+            content = it.second,
           )
         }
 
@@ -2440,13 +2477,27 @@ class ApplicationTest : IntegrationTestBase() {
 
         val assessment = createAssessment(user)
 
+        val domainEventDescriptions = listOf(
+          "The application was submitted",
+          "The application was assessed and accepted",
+          "A booking was made for between 2024-01-01 and 2024-04-01",
+          "The person moved into the premises on 2024-01-01",
+          "The person was due to move into the premises on 2024-01-01 but did not arrive",
+          "The person moved out of the premises on 2024-04-01",
+          "A booking was not made for the placement request. The reason was: no suitable premises",
+          "The booking was cancelled. The reason was: additional sentencing",
+          "The booking had its arrival or departure date changed",
+          "The application was withdrawn",
+        )
+
         val domainEvents = createTenDomainEvents()
-        val summaries = domainEvents.map {
+        val summaries = domainEvents.zip(domainEventDescriptions).map {
           TimelineEvent(
-            applicationTimelineTransformer.transformDomainEventTypeToTimelineEventType(it.type),
-            it.id.toString(),
-            it.occurredAt.toInstant(),
-            associatedUrls = listOf(TimelineEventAssociatedUrl(type = TimelineEventUrlType.application, url = "http://frontend/applications/${it.applicationId}")),
+            applicationTimelineTransformer.transformDomainEventTypeToTimelineEventType(it.first.type),
+            it.first.id.toString(),
+            it.first.occurredAt.toInstant(),
+            associatedUrls = listOf(TimelineEventAssociatedUrl(type = TimelineEventUrlType.application, url = "http://frontend/applications/${it.first.applicationId}")),
+            content = it.second,
           )
         }
 
@@ -2542,6 +2593,17 @@ class ApplicationTest : IntegrationTestBase() {
           withApplicationId(applicationId)
           withAssessmentId(assessmentId)
           withBookingId(null)
+          withData(
+            ApplicationAssessedEnvelope(
+              id = UUID.randomUUID(),
+              timestamp = Instant.now(),
+              eventType = "approved-premises.application.assessed",
+              eventDetails = ApplicationAssessedFactory()
+                .withApplicationId(applicationId)
+                .withDecision("accepted")
+                .produce(),
+            ),
+          )
         }
 
         val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -2563,6 +2625,19 @@ class ApplicationTest : IntegrationTestBase() {
           withType(DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
           withBookingId(booking.id)
           withAssessmentId(null)
+          withData(
+            BookingMadeEnvelope(
+              id = UUID.randomUUID(),
+              timestamp = Instant.now(),
+              eventType = "approved-premises.booking.made",
+              eventDetails = BookingMadeFactory()
+                .withApplicationId(applicationId)
+                .withBookingId(booking.id)
+                .withArrivalOn(LocalDate.parse("2024-01-01"))
+                .withDepartureOn(LocalDate.parse("2024-04-01"))
+                .produce(),
+            ),
+          )
         }
 
         val applicationAndAssessmentTimelineEvent = TimelineEvent(
@@ -2573,6 +2648,7 @@ class ApplicationTest : IntegrationTestBase() {
             TimelineEventAssociatedUrl(type = TimelineEventUrlType.application, url = "http://frontend/applications/$applicationId"),
             TimelineEventAssociatedUrl(type = TimelineEventUrlType.assessment, url = "http://frontend/assessments/$assessmentId"),
           ),
+          content = "The application was assessed and accepted",
         )
 
         val bookingTimelineEvent = TimelineEvent(
@@ -2583,6 +2659,7 @@ class ApplicationTest : IntegrationTestBase() {
             TimelineEventAssociatedUrl(type = TimelineEventUrlType.application, url = "http://frontend/applications/$applicationId"),
             TimelineEventAssociatedUrl(type = TimelineEventUrlType.booking, url = "http://frontend/premises/${premises.id}/bookings/${booking.id}"),
           ),
+          content = "A booking was made for between 2024-01-01 and 2024-04-01",
         )
 
         val expected = listOf(
@@ -2678,6 +2755,128 @@ class ApplicationTest : IntegrationTestBase() {
         )
         withApplicationId(applicationId)
         withType(type)
+
+        when (type) {
+          DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED -> withData(
+            ApplicationSubmittedEnvelope(
+              id = UUID.randomUUID(),
+              timestamp = Instant.now(),
+              eventType = "approved-premises.application.submitted",
+              eventDetails = ApplicationSubmittedFactory()
+                .withApplicationId(applicationId)
+                .produce(),
+            ),
+          )
+
+          DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED -> withData(
+            ApplicationAssessedEnvelope(
+              id = UUID.randomUUID(),
+              timestamp = Instant.now(),
+              eventType = "approved-premises.application.assessed",
+              eventDetails = ApplicationAssessedFactory()
+                .withDecision("accepted")
+                .withApplicationId(applicationId)
+                .produce(),
+            ),
+          )
+
+          DomainEventType.APPROVED_PREMISES_BOOKING_MADE -> withData(
+            BookingMadeEnvelope(
+              id = UUID.randomUUID(),
+              timestamp = Instant.now(),
+              eventType = "approved-premises.booking.made",
+              eventDetails = BookingMadeFactory()
+                .withApplicationId(applicationId)
+                .withArrivalOn(LocalDate.parse("2024-01-01"))
+                .withDepartureOn(LocalDate.parse("2024-04-01"))
+                .produce(),
+            ),
+          )
+
+          DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> withData(
+            PersonArrivedEnvelope(
+              id = UUID.randomUUID(),
+              timestamp = Instant.now(),
+              eventType = "approved-premises.person.arrived",
+              eventDetails = PersonArrivedFactory()
+                .withApplicationId(applicationId)
+                .withArrivedAt(Instant.parse("2024-01-01T12:34:56.789Z"))
+                .produce(),
+            ),
+          )
+
+          DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED -> withData(
+            PersonNotArrivedEnvelope(
+              id = UUID.randomUUID(),
+              timestamp = Instant.now(),
+              eventType = "approved-premises.person.not-arrived",
+              eventDetails = PersonNotArrivedFactory()
+                .withApplicationId(applicationId)
+                .withExpectedArrivalOn(LocalDate.parse("2024-01-01"))
+                .produce(),
+            ),
+          )
+
+          DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> withData(
+            PersonDepartedEnvelope(
+              id = UUID.randomUUID(),
+              timestamp = Instant.now(),
+              eventType = "approved-premises.person.departed",
+              eventDetails = PersonDepartedFactory()
+                .withApplicationId(applicationId)
+                .withDepartedAt(Instant.parse("2024-04-01T12:34:56.789Z"))
+                .produce(),
+            ),
+          )
+
+          DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> withData(
+            BookingNotMadeEnvelope(
+              id = UUID.randomUUID(),
+              timestamp = Instant.now(),
+              eventType = "approved-premises.booking.not-made",
+              eventDetails = BookingNotMadeFactory()
+                .withApplicationId(applicationId)
+                .withFailureDescription("no suitable premises")
+                .produce(),
+            ),
+          )
+
+          DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> withData(
+            BookingCancelledEnvelope(
+              id = UUID.randomUUID(),
+              timestamp = Instant.now(),
+              eventType = "approved-premises.booking.cancelled",
+              eventDetails = BookingCancelledFactory()
+                .withApplicationId(applicationId)
+                .withCancellationReason("additional sentencing")
+                .produce(),
+            ),
+          )
+
+          DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> withData(
+            BookingChangedEnvelope(
+              id = UUID.randomUUID(),
+              timestamp = Instant.now(),
+              eventType = "approved-premises.booking.changed",
+              eventDetails = BookingChangedFactory()
+                .withApplicationId(applicationId)
+                .produce(),
+            ),
+          )
+
+          DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> withData(
+            ApplicationWithdrawnEnvelope(
+              id = UUID.randomUUID(),
+              timestamp = Instant.now(),
+              eventType = "approved-premises.application.withdrawn",
+              eventDetails = ApplicationWithdrawnFactory()
+                .withApplicationId(applicationId)
+                .produce(),
+            ),
+          )
+
+          else -> fail("Only CAS1 domain events should be used in this test.")
+        }
       }
     }
 
