@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -57,6 +58,10 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
 
   fun withData(data: String) = apply {
     this.data = { data }
+  }
+
+  fun withData(data: Any) = apply {
+    this.data = { ObjectMapper().findAndRegisterModules().writeValueAsString(data) }
   }
 
   fun withService(service: ServiceName) = apply {
