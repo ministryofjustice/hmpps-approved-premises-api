@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
+import io.mockk.every
+import io.mockk.mockk
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -9,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventAssociatedUrl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventUrlType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
@@ -19,11 +22,13 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApplicationTimelineTransformerTest {
+  private val mockDomainEventDescriber = mockk<DomainEventDescriber>()
 
   private val applicationTimelineTransformer = ApplicationTimelineTransformer(
     UrlTemplate("http://somehost:3000/applications/#id"),
     UrlTemplate("http://somehost:3000/assessments/#id"),
     UrlTemplate("http://somehost:3000/premises/#premisesId/bookings/#bookingId"),
+    mockDomainEventDescriber,
   )
 
   data class DomainEventSummaryImpl(
@@ -49,12 +54,16 @@ class ApplicationTimelineTransformerTest {
       assessmentId = null,
       premisesId = null,
     )
+
+    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
         id = domainEvent.id,
         type = timelineEventType,
         occurredAt = domainEvent.occurredAt.toInstant(),
         associatedUrls = emptyList(),
+        content = "Some event",
       ),
     )
   }
@@ -82,6 +91,8 @@ class ApplicationTimelineTransformerTest {
       premisesId = null,
     )
 
+    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
         id = domainEvent.id,
@@ -90,6 +101,7 @@ class ApplicationTimelineTransformerTest {
         associatedUrls = listOf(
           TimelineEventAssociatedUrl(TimelineEventUrlType.application, "http://somehost:3000/applications/$applicationId"),
         ),
+        content = "Some event",
       ),
     )
   }
@@ -108,6 +120,8 @@ class ApplicationTimelineTransformerTest {
       premisesId = premisesId,
     )
 
+    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
         id = domainEvent.id,
@@ -116,6 +130,7 @@ class ApplicationTimelineTransformerTest {
         associatedUrls = listOf(
           TimelineEventAssociatedUrl(TimelineEventUrlType.booking, "http://somehost:3000/premises/$premisesId/bookings/$bookingId"),
         ),
+        content = "Some event",
       ),
     )
   }
@@ -133,6 +148,8 @@ class ApplicationTimelineTransformerTest {
       premisesId = null,
     )
 
+    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
         id = domainEvent.id,
@@ -141,6 +158,7 @@ class ApplicationTimelineTransformerTest {
         associatedUrls = listOf(
           TimelineEventAssociatedUrl(TimelineEventUrlType.assessment, "http://somehost:3000/assessments/$assessmentId"),
         ),
+        content = "Some event",
       ),
     )
   }
@@ -161,6 +179,8 @@ class ApplicationTimelineTransformerTest {
       premisesId = premisesId,
     )
 
+    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
         id = domainEvent.id,
@@ -171,6 +191,7 @@ class ApplicationTimelineTransformerTest {
           TimelineEventAssociatedUrl(TimelineEventUrlType.assessment, "http://somehost:3000/assessments/$assessmentId"),
           TimelineEventAssociatedUrl(TimelineEventUrlType.booking, "http://somehost:3000/premises/$premisesId/bookings/$bookingId"),
         ),
+        content = "Some event",
       ),
     )
   }
