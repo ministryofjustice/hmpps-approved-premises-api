@@ -1561,50 +1561,51 @@ class PlacementRequestsTest : IntegrationTestBase() {
       }
     }
 
-    @Nested
-    inner class WithdrawPlacementRequest {
-      @Test
-      fun `Withdraw Placement Request without a JWT returns 401`() {
+  }
+
+  @Nested
+  inner class WithdrawPlacementRequest {
+    @Test
+    fun `Withdraw Placement Request without a JWT returns 401`() {
+      webTestClient.post()
+        .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/withdrawal")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Withdraw Placement Request without CAS1_WORKFLOW_MANAGER returns 403`() {
+      `Given a User` { _, jwt ->
         webTestClient.post()
           .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/withdrawal")
+          .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
-          .isUnauthorized
+          .isForbidden
       }
+    }
 
-      @Test
-      fun `Withdraw Placement Request without CAS1_WORKFLOW_MANAGER returns 403`() {
-        `Given a User` { _, jwt ->
-          webTestClient.post()
-            .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/withdrawal")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isForbidden
-        }
-      }
+    @Test
+    fun `Withdraw Placement Request returns 200, sets isWithdrawn to true`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          `Given an Application`(createdByUser = user) {
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = user,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            ) { placementRequest, _ ->
+              webTestClient.post()
+                .uri("/placement-requests/${placementRequest.id}/withdrawal")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
 
-      @Test
-      fun `Withdraw Placement Request returns 200, sets isWithdrawn to true`() {
-        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
-            `Given an Application`(createdByUser = user) {
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = user,
-                assessmentAllocatedTo = user,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              ) { placementRequest, _ ->
-                webTestClient.post()
-                  .uri("/placement-requests/${placementRequest.id}/withdrawal")
-                  .header("Authorization", "Bearer $jwt")
-                  .exchange()
-                  .expectStatus()
-                  .isOk
-
-                val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
-                assertThat(persistedPlacementRequest.isWithdrawn).isTrue
-              }
+              val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
+              assertThat(persistedPlacementRequest.isWithdrawn).isTrue
             }
           }
         }
