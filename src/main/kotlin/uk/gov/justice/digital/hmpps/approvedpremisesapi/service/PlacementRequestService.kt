@@ -311,12 +311,12 @@ class PlacementRequestService(
     user: UserEntity,
     reason: WithdrawPlacementRequest.Reason?
   ): AuthorisableActionResult<Unit> {
-    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
+
+    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && placementRequest.application.createdByUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
 
     placementRequest.isWithdrawn = true
     placementRequest.withdrawalReason = when(reason) {

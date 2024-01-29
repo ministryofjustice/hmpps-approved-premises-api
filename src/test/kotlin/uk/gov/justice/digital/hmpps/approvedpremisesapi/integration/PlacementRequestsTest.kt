@@ -1579,25 +1579,38 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @Test
     fun `Withdraw Placement Request without CAS1_WORKFLOW_MANAGER returns 403`() {
-      `Given a User` { _, jwt ->
-        webTestClient.post()
-          .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/withdrawal")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest(
-              reason = duplicatePlacementRequest
-            )
-          )
-          .exchange()
-          .expectStatus()
-          .isForbidden
+      `Given a User` { creator, _ ->
+        `Given a User` { user, jwt ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            `Given an Application`(createdByUser = user) {
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = user,
+                assessmentAllocatedTo = user,
+                createdByUser = creator,
+                crn = offenderDetails.otherIds.crn,
+              ) { placementRequest, _ ->
+                webTestClient.post()
+                  .uri("/placement-requests/${placementRequest.id}/withdrawal")
+                  .header("Authorization", "Bearer $jwt")
+                  .bodyValue(
+                    WithdrawPlacementRequest(
+                      reason = duplicatePlacementRequest
+                    )
+                  )
+                  .exchange()
+                  .expectStatus()
+                  .isForbidden
+              }
+            }
+          }
+        }
       }
     }
 
     @Test
     fun `Withdraw Placement Request returns 200, sets isWithdrawn to true`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
+        `Given an Offender` { offenderDetails, _ ->
           `Given an Application`(createdByUser = user) {
             `Given a Placement Request`(
               placementRequestAllocatedTo = user,
@@ -1608,7 +1621,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
               webTestClient.post()
                 .uri("/placement-requests/${placementRequest.id}/withdrawal")
                 .bodyValue(
-                  uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest(
+                  WithdrawPlacementRequest(
                     reason = duplicatePlacementRequest
                   )
                 )
