@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventAssociatedUrl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventUrlType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -15,6 +16,7 @@ class ApplicationTimelineTransformer(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: UrlTemplate,
+  private val domainEventDescriber: DomainEventDescriber,
 ) {
 
   fun transformDomainEventSummaryToTimelineEvent(domainEventSummary: DomainEventSummary): TimelineEvent {
@@ -29,6 +31,7 @@ class ApplicationTimelineTransformer(
       type = transformDomainEventTypeToTimelineEventType(domainEventSummary.type),
       occurredAt = domainEventSummary.occurredAt.toInstant(),
       associatedUrls = associatedUrls,
+      content = domainEventDescriber.getDescription(domainEventSummary),
     )
   }
 
