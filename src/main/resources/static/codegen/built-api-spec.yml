@@ -3060,6 +3060,12 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        description: Withdrawal details
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/WithdrawPlacementRequest'
       responses:
         200:
           description: successful operation
@@ -3316,6 +3322,12 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        description: Withdrawal details
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/WithdrawPlacementApplication'
       responses:
         200:
           description: Placement application withdrawn
@@ -4878,6 +4890,18 @@ components:
       required:
         - arrivalDate
         - departureDate
+    WithdrawPlacementRequest:
+      type: object
+      properties:
+        reason:
+          $ref: '#/components/schemas/WithdrawPlacementRequestReason'
+      required:
+        - reason
+    WithdrawPlacementRequestReason:
+        type: string
+        enum:
+          - DuplicatePlacementRequest
+          - AlternativeProvisionIdentified
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'
@@ -7755,6 +7779,13 @@ components:
         - rotl
         - release_following_decision
         - additional_placement
+    WithdrawPlacementApplication:
+      type: object
+      properties:
+        reason:
+          $ref: '#/components/schemas/WithdrawPlacementRequestReason'
+      required:
+        - reason
     PlacementRequest:
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'

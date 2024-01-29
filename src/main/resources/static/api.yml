@@ -3058,6 +3058,12 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        description: Withdrawal details
+        content:
+          'application/json':
+            schema:
+              $ref: '_shared.yml#/components/schemas/WithdrawPlacementRequest'
       responses:
         200:
           description: successful operation
@@ -3314,6 +3320,12 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        description: Withdrawal details
+        content:
+          'application/json':
+            schema:
+              $ref: '_shared.yml#/components/schemas/WithdrawPlacementApplication'
       responses:
         200:
           description: Placement application withdrawn

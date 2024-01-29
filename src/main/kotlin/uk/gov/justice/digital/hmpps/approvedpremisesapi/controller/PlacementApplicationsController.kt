@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementAppli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -104,8 +105,11 @@ class PlacementApplicationsController(
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
   }
 
-  override fun placementApplicationsIdWithdrawPost(id: UUID): ResponseEntity<PlacementApplication> {
-    val result = placementApplicationService.withdrawPlacementApplication(id)
+  override fun placementApplicationsIdWithdrawPost(
+    id: UUID,
+    withdrawPlacementApplication: WithdrawPlacementApplication?
+  ): ResponseEntity<PlacementApplication> {
+    val result = placementApplicationService.withdrawPlacementApplication(id, withdrawPlacementApplication?.reason)
 
     val validationResult = extractEntityFromAuthorisableActionResult(result)
     val placementApplication = extractEntityFromValidatableActionResult(validationResult)

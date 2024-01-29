@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
@@ -12,6 +13,8 @@ import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Entity
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
@@ -197,4 +200,12 @@ data class PlacementRequestEntity(
 
   var isParole: Boolean,
   var isWithdrawn: Boolean,
+
+  @Enumerated(value = EnumType.STRING)
+  var withdrawalReason: PlacementRequestWithdrawalReason?,
 )
+
+enum class PlacementRequestWithdrawalReason {
+  DUPLICATE_PLACEMENT_REQUEST,
+  ALTERNATIVE_PROVISION_IDENTIFIED,
+}

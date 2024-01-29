@@ -9,16 +9,12 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
@@ -29,8 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -258,7 +252,10 @@ class PlacementApplicationServiceTest {
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
-      val result = placementApplicationService.withdrawPlacementApplication(placementApplication.id)
+      val result = placementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        WithdrawPlacementRequestReason.duplicatePlacementRequest
+      )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -298,7 +295,10 @@ class PlacementApplicationServiceTest {
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
 
-      val result = placementApplicationService.withdrawPlacementApplication(placementApplication.id)
+      val result = placementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        WithdrawPlacementRequestReason.duplicatePlacementRequest
+      )
 
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
     }
@@ -322,7 +322,10 @@ class PlacementApplicationServiceTest {
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
 
-      val result = placementApplicationService.withdrawPlacementApplication(placementApplication.id)
+      val result = placementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        WithdrawPlacementRequestReason.duplicatePlacementRequest
+      )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       val validationResult = (result as AuthorisableActionResult.Success).entity

@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -174,11 +175,11 @@ class PlacementRequestsController(
     return ResponseEntity(bookingNotMadeTransformer.transformJpaToApi(bookingNotMade), HttpStatus.OK)
   }
 
-  override fun placementRequestsIdWithdrawalPost(id: UUID): ResponseEntity<Unit> {
+  override fun placementRequestsIdWithdrawalPost(id: UUID, body: WithdrawPlacementRequest?): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
     val result = extractEntityFromAuthorisableActionResult(
-      placementRequestService.withdrawPlacementRequest(id, user),
+      placementRequestService.withdrawPlacementRequest(id, user, body?.reason),
     )
 
     return ResponseEntity.ok(result)

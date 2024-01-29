@@ -9,6 +9,9 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.NullSource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -19,6 +22,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -35,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
@@ -42,7 +48,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
@@ -496,12 +504,40 @@ class PlacementRequestServiceTest {
   }
 
   @Test
-  fun `withdrawPlacementRequest returns Unauthorised if User is not WORKFLOW_MANAGER`() {
+  fun `withdrawPlacementRequest returns Unauthorised if User is not application creator or WORKFLOW_MANAGER`() {
+    val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
+
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
       .produce()
 
-    val result = placementRequestService.withdrawPlacementRequest(UUID.randomUUID(), user)
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
+      .produce()
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withId(placementRequestId)
+      .withApplication(application)
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
+          .withApplication(application)
+          .withAssessment(assessment)
+          .produce(),
+      )
+      .withAssessment(assessment)
+      .produce()
+
+    every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
+
+    val result = placementRequestService.withdrawPlacementRequest(
+      placementRequestId,
+      user,
+      WithdrawPlacementRequestReason.duplicatePlacementRequest,
+    )
 
     assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -517,23 +553,48 @@ class PlacementRequestServiceTest {
 
     every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns null
 
-    val result = placementRequestService.withdrawPlacementRequest(placementRequestId, user)
+    val result = placementRequestService.withdrawPlacementRequest(
+      placementRequestId,
+      user,
+      WithdrawPlacementRequestReason.duplicatePlacementRequest,
+    )
 
     assertThat(result is AuthorisableActionResult.NotFound).isTrue
   }
 
-  @Test
-  fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true`() {
-    val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
-
+  @ParameterizedTest
+  @EnumSource(WithdrawPlacementRequestReason::class)
+  @NullSource
+  fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true for cas workflow manager`(reason: WithdrawPlacementRequestReason?) {
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
       .produce()
       .addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
 
     val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
+      .produce()
+
+    createPlacementRequestTest(application, user, reason)
+  }
+
+  @ParameterizedTest
+  @EnumSource(WithdrawPlacementRequestReason::class)
+  @NullSource
+  fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true for application creator`(reason: WithdrawPlacementRequestReason?) {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(user)
       .produce()
+
+    createPlacementRequestTest(application, user, reason)
+  }
+
+  private fun createPlacementRequestTest(application: ApprovedPremisesApplicationEntity, user: UserEntity, reason: WithdrawPlacementRequestReason?) {
+    val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
 
     val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
@@ -556,15 +617,26 @@ class PlacementRequestServiceTest {
     every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
     every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
 
-    val result = placementRequestService.withdrawPlacementRequest(placementRequestId, user)
+    val result = placementRequestService.withdrawPlacementRequest(
+      placementRequestId,
+      user,
+      reason,
+    )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
+
+    val expectedReason = when(reason) {
+      WithdrawPlacementRequestReason.duplicatePlacementRequest -> PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
+      WithdrawPlacementRequestReason.alternativeProvisionIdentified -> PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
+      null -> null
+    }
 
     verify {
       placementRequestRepository.save(
         match {
           it.id == placementRequestId &&
-            it.isWithdrawn
+            it.isWithdrawn &&
+            it.withdrawalReason == expectedReason
         },
       )
     }

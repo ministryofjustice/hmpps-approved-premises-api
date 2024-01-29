@@ -17,6 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Submitted Application`
@@ -999,6 +1001,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/placement-applications/${UUID.randomUUID()}/withdraw")
           .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest)
+          )
           .exchange()
           .expectStatus()
           .isNotFound
@@ -1025,6 +1030,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           webTestClient.post()
             .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
             .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest)
+            )
             .exchange()
             .expectStatus()
             .isForbidden
@@ -1051,6 +1059,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             val rawResult = webTestClient.post()
               .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
               .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest)
+              )
               .exchange()
               .expectStatus()
               .isOk
@@ -1101,6 +1112,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             val rawResult = webTestClient.post()
               .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
               .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest)
+              )
               .exchange()
               .expectStatus()
               .isOk
