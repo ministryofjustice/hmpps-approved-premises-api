@@ -467,8 +467,8 @@ class UsersTest : IntegrationTestBase() {
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
     fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER allows filtering by roles`(role: UserRole) {
-      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER, UserRole.CAS1_MATCHER)) { matcher, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MANAGER, UserRole.CAS1_MANAGER, UserRole.CAS1_MANAGER)) { manager, _ ->
           `Given a User` { _, _ ->
             `Given a User`(roles = listOf(role)) { _, jwt ->
               webTestClient.get()
