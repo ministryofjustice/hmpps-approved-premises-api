@@ -31,6 +31,9 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
   @Query("SELECT DISTINCT u FROM UserEntity u join u.roles r where r.role = :role and u.isActive = true")
   fun findActiveUsersWithRole(role: UserRole): List<UserEntity>
 
+  @Query("SELECT DISTINCT u FROM UserEntity u join u.qualifications q where q.qualification = :qualification and u.isActive = true")
+  fun findActiveUsersWithQualification(qualification: UserQualification): List<UserEntity>
+
   @Query(
     """
     SELECT u.*,
