@@ -1080,7 +1080,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `withdrawing a submitted placement request application returns successfully and updates placement request isWithdrawn`() {
+    fun `withdrawing a submitted placement request application returns successfully`() {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { _, _ ->
         `Given a User` { user, jwt ->
           `Given a Placement Application`(
@@ -1091,26 +1091,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             decision = null,
             submittedAt = OffsetDateTime.now(),
           ) { placementApplicationEntity ->
-
-            val placementRequirements = placementRequirementsFactory.produceAndPersist {
-              withApplication(placementApplicationEntity.application)
-              withAssessment(placementApplicationEntity.application.assessments.first())
-              withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
-              withDesirableCriteria(
-                characteristicEntityFactory.produceAndPersistMultiple(5),
-              )
-              withEssentialCriteria(
-                characteristicEntityFactory.produceAndPersistMultiple(3),
-              )
-            }
-
-            val placementRequests = placementRequestFactory.produceAndPersistMultiple(4) {
-              withAllocatedToUser(user)
-              withPlacementApplication(placementApplicationEntity)
-              withApplication(placementApplicationEntity.application)
-              withAssessment(placementApplicationEntity.application.assessments.first())
-              withPlacementRequirements(placementRequirements)
-            }
 
             CommunityAPI_mockSuccessfulOffenderDetailsCall(
               OffenderDetailsSummaryFactory()
@@ -1137,12 +1117,6 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 placementApplicationEntity.schemaVersion.id == it.schemaVersion &&
                 placementApplicationEntity.createdAt.toInstant() == it.createdAt &&
                 serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
-            }
-
-            placementRequests.map {
-              val request = placementRequestRepository.findByIdOrNull(it.id)
-              assertThat(request).isNotNull
-              assertThat(request?.isWithdrawn).isEqualTo(true)
             }
           }
         }

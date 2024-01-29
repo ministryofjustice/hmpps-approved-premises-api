@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import java.time.OffsetDateTime
 
@@ -105,7 +106,7 @@ class PlacementApplicationTransformerTest {
   }
 
   @Test
-  fun `transformJpaToApi returns canBeWithdrawn when associated bookings are present`() {
+  fun `transformJpaToApi returns canBeWithdrawn false if a decision has been made`() {
     val data = "{\"data\": \"something\"}"
     val document = "{\"document\": \"something\"}"
     val placementApplication = PlacementApplicationEntityFactory()
@@ -113,37 +114,8 @@ class PlacementApplicationTransformerTest {
       .withApplication(applicationMock)
       .withData(data)
       .withDocument(document)
+      .withDecision(PlacementApplicationDecision.ACCEPTED)
       .produce()
-
-    val placementRequest = PlacementRequestEntityFactory()
-      .withPlacementRequirements(
-        PlacementRequirementsEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .produce(),
-      )
-      .withApplication(application)
-      .withPlacementApplication(placementApplication)
-      .withAssessment(assessment)
-      .withAllocatedToUser(user)
-      .produce()
-
-    val premisesEntity = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
-
-    placementRequest.booking = BookingEntityFactory()
-      .withYieldedPremises { premisesEntity }
-      .produce()
-
-    placementApplication.placementRequests = mutableListOf(
-      placementRequest,
-    )
 
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
 

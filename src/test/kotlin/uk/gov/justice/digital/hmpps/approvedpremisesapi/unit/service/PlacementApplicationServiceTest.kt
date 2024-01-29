@@ -50,7 +50,6 @@ class PlacementApplicationServiceTest {
   private val userService = mockk<UserService>()
   private val placementDateRepository = mockk<PlacementDateRepository>()
   private val placementRequestService = mockk<PlacementRequestService>()
-  private val placementRequestRepository = mockk<PlacementRequestRepository>()
   private val emailNotificationService = mockk<EmailNotificationService>()
   private val userAllocator = mockk<UserAllocator>()
   private val notifyConfig = mockk<NotifyConfig>()
@@ -61,10 +60,7 @@ class PlacementApplicationServiceTest {
     userService,
     placementDateRepository,
     placementRequestService,
-    placementRequestRepository,
-    emailNotificationService,
     userAllocator,
-    notifyConfig,
   )
 
   @Nested
@@ -239,7 +235,7 @@ class PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `it withdraws an application and associated placement requests, emailing allocated users`() {
+    fun `it withdraws an application`() {
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(
@@ -251,29 +247,13 @@ class PlacementApplicationServiceTest {
             }
             .produce(),
         )
-        .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .withDecision(null)
         .withCreatedByUser(user)
         .produce()
-
-      val placementRequestAllocatedUser1 = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .withEmail("user@example.com")
-        .produce()
-
-      val placementRequestAllocatedUser2 = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .withEmail(null)
-        .produce()
-
-      placementApplication.placementRequests = mutableListOf(
-        createPlacementRequestForApplication(placementApplication, placementRequestAllocatedUser1),
-        createPlacementRequestForApplication(placementApplication, placementRequestAllocatedUser2),
-      )
 
       val templateId = UUID.randomUUID().toString()
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -289,17 +269,6 @@ class PlacementApplicationServiceTest {
       val entity = validationResult.entity
 
       assertThat(entity.decision).isEqualTo(PlacementApplicationDecision.WITHDRAWN_BY_PP)
-
-      verify(exactly = 1) {
-        emailNotificationService.sendEmail(
-          placementRequestAllocatedUser1.email!!,
-          templateId,
-          mapOf(
-            "name" to placementRequestAllocatedUser1.name,
-            "crn" to placementApplication.application.crn,
-          ),
-        )
-      }
     }
 
     @Test
@@ -335,7 +304,7 @@ class PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `it does not allow placement applications with bookings to be withdrawn`() {
+    fun `it does not allow placement applications to be withdrawn if a decision has been made`() {
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(
@@ -351,25 +320,6 @@ class PlacementApplicationServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      val placementRequest = createPlacementRequestForApplication(placementApplication, user)
-
-      val premisesEntity = ApprovedPremisesEntityFactory()
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-        .produce()
-
-      placementRequest.booking = BookingEntityFactory()
-        .withYieldedPremises { premisesEntity }
-        .produce()
-
-      placementApplication.placementRequests = mutableListOf(
-        placementRequest,
-      )
-
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
 
       val result = placementApplicationService.withdrawPlacementApplication(placementApplication.id)
@@ -378,21 +328,9 @@ class PlacementApplicationServiceTest {
       val validationResult = (result as AuthorisableActionResult.Success).entity
 
       assertThat(validationResult is ValidatableActionResult.GeneralValidationError).isTrue()
-    }
-
-    private fun createPlacementRequestForApplication(placementApplication: PlacementApplicationEntity, allocatedUser: UserEntity): PlacementRequestEntity {
-      return PlacementRequestEntityFactory()
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(placementApplication.application)
-            .withAssessment(placementApplication.application.assessments[0])
-            .produce(),
-        )
-        .withApplication(placementApplication.application)
-        .withPlacementApplication(placementApplication)
-        .withAssessment(placementApplication.application.assessments[0])
-        .withAllocatedToUser(allocatedUser)
-        .produce()
+      (validationResult as ValidatableActionResult.GeneralValidationError).let {
+        assertThat(validationResult.message).isEqualTo("The Placement Application cannot be withdrawn because it has an associated decision")
+      }
     }
   }
 }
