@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
@@ -7,8 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilte
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
@@ -19,7 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -49,6 +48,10 @@ class PlacementApplicationService(
   private val placementDateRepository: PlacementDateRepository,
   private val placementRequestService: PlacementRequestService,
   private val userAllocator: UserAllocator,
+  private val emailNotificationService: EmailNotificationService,
+  private val notifyConfig: NotifyConfig,
+  @Value("\${notify.send-placement-request-notifications}")
+  private val sendPlacementRequestNotifications: Boolean
 ) {
 
   fun getVisiblePlacementApplicationsForUser(
@@ -166,6 +169,11 @@ class PlacementApplicationService(
         )
       },
     )
+
+    val applicationWasntPreviouslyAllocated = currentPlacementApplication.allocatedToUser == null
+    if (applicationWasntPreviouslyAllocated) {
+      sendPlacementRequestAllocatedEmail(newPlacementApplication)
+    }
 
     newPlacementApplication.placementDates = newPlacementDates
 
@@ -292,8 +300,13 @@ class PlacementApplicationService(
     }.toMutableList()
 
     placementDateRepository.saveAll(placementDates)
-
     placementApplicationEntity.placementDates = placementDates
+
+    sendPlacementRequestCreatedEmail(placementApplicationEntity)
+
+    if (allocatedUser != null) {
+      sendPlacementRequestAllocatedEmail(placementApplicationEntity)
+    }
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedApplication),
@@ -343,9 +356,42 @@ class PlacementApplicationService(
 
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
 
+    sendAcceptedRejectedNotification(
+      placementApplicationEntity,
+      placementApplicationDecisionEnvelope,
+    )
+
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedApplication),
     )
+  }
+
+  private fun sendAcceptedRejectedNotification(
+      placementApplicationEntity: PlacementApplicationEntity,
+      placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope
+  ) {
+    if(!sendPlacementRequestNotifications) {
+      return
+    }
+
+    val applicationCreatedBy = placementApplicationEntity.createdByUser
+    applicationCreatedBy.email?.let { email ->
+
+      val template = when (placementApplicationDecisionEnvelope.decision) {
+        ApiPlacementApplicationDecision.accepted -> notifyConfig.templates.placementRequestDecisionAccepted
+        ApiPlacementApplicationDecision.rejected -> notifyConfig.templates.placementRequestDecisionRejected
+        ApiPlacementApplicationDecision.withdraw -> notifyConfig.templates.placementRequestDecisionRejected
+        ApiPlacementApplicationDecision.withdrawnByPp -> notifyConfig.templates.placementRequestDecisionRejected
+      }
+
+      emailNotificationService.sendEmail(
+        email,
+        template,
+        mapOf(
+          "crn" to placementApplicationEntity.application.crn,
+        ),
+      )
+    }
   }
 
   private fun getPlacementType(apiPlacementType: ApiPlacementType): PlacementType {
@@ -423,4 +469,37 @@ class PlacementApplicationService(
     return ValidatableActionResult.Success(placementApplicationEntity)
   }
 
+  private fun sendPlacementRequestCreatedEmail(placementApplication: PlacementApplicationEntity) {
+    if(!sendPlacementRequestNotifications) {
+      return
+    }
+
+    val createdByUser = placementApplication.createdByUser
+    createdByUser.email?.let { email ->
+      emailNotificationService.sendEmail(
+        email = email,
+        templateId = notifyConfig.templates.placementRequestSubmitted,
+        personalisation = mapOf(
+          "crn" to placementApplication.application.crn,
+        ),
+      )
+    }
+  }
+
+  private fun sendPlacementRequestAllocatedEmail(placementApplication: PlacementApplicationEntity) {
+    if(!sendPlacementRequestNotifications) {
+      return
+    }
+
+    val createdByUser = placementApplication.createdByUser
+    createdByUser.email?.let { email ->
+      emailNotificationService.sendEmail(
+        email = email,
+        templateId = notifyConfig.templates.placementRequestAllocated,
+        personalisation = mapOf(
+          "crn" to placementApplication.application.crn,
+        ),
+      )
+    }
+  }
 }

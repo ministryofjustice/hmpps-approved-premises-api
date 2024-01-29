@@ -73,6 +73,13 @@ class UserEntityFactory : Factory<UserEntity> {
     this.probationRegion = probationRegion
   }
 
+  fun withDefaultProbationRegion() =
+    withYieldedProbationRegion {
+      ProbationRegionEntityFactory()
+        .withYieldedApArea { ApAreaEntityFactory().produce() }
+        .produce()
+    }
+
   fun withIsActive(isActive: Boolean) = apply {
     this.isActive = { isActive }
   }
