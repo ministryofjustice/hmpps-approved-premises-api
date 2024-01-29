@@ -3322,6 +3322,12 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        description: Withdrawal details
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/WithdrawPlacementApplication'
       responses:
         200:
           description: Placement application withdrawn
@@ -7771,6 +7777,16 @@ components:
         - rotl
         - release_following_decision
         - additional_placement
+    WithdrawPlacementApplication:
+      type: object
+      properties:
+        reason:
+          type: string
+          enum:
+            - DuplicatePlacementRequest
+            - AlternativeProvisionIdentified
+      required:
+        - reason
     PlacementRequest:
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'

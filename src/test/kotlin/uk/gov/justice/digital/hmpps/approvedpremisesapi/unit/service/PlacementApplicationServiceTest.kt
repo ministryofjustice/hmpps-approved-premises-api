@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication.Reason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -258,7 +260,10 @@ class PlacementApplicationServiceTest {
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
-      val result = placementApplicationService.withdrawPlacementApplication(placementApplication.id)
+      val result = placementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        Reason.duplicatePlacementRequest
+      )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       val validationResult = (result as AuthorisableActionResult.Success).entity
@@ -298,7 +303,10 @@ class PlacementApplicationServiceTest {
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
 
-      val result = placementApplicationService.withdrawPlacementApplication(placementApplication.id)
+      val result = placementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        Reason.duplicatePlacementRequest
+      )
 
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
     }
@@ -322,7 +330,10 @@ class PlacementApplicationServiceTest {
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
 
-      val result = placementApplicationService.withdrawPlacementApplication(placementApplication.id)
+      val result = placementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        Reason.duplicatePlacementRequest
+      )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       val validationResult = (result as AuthorisableActionResult.Success).entity

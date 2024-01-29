@@ -3392,6 +3392,16 @@ components:
         - rotl
         - release_following_decision
         - additional_placement
+    WithdrawPlacementApplication:
+      type: object
+      properties:
+        reason:
+          type: string
+          enum:
+            - DuplicatePlacementRequest
+            - AlternativeProvisionIdentified
+      required:
+        - reason
     PlacementRequest:
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'

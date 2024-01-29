@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -29,6 +30,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   private var placementDates: Yielded<MutableList<PlacementDateEntity>?> = { null }
   private var placementType: Yielded<PlacementType?> = { null }
+  private var withdrawalReason: Yielded<PlacementApplicationWithdrawalReason?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -100,5 +102,6 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     placementType = this.placementType(),
     placementDates = this.placementDates() ?: mutableListOf(),
     placementRequests = mutableListOf(),
+    withdrawalReason = this.withdrawalReason(),
   )
 }

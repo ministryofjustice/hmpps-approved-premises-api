@@ -136,6 +136,9 @@ data class PlacementApplicationEntity(
 
   @OneToMany(mappedBy = "placementApplication")
   var placementRequests: MutableList<PlacementRequestEntity>,
+
+  @Enumerated(value = EnumType.STRING)
+  var withdrawalReason: PlacementApplicationWithdrawalReason?,
 ) {
   fun canBeWithdrawn() = decision == null
 
@@ -153,4 +156,9 @@ enum class PlacementApplicationDecision {
   REJECTED,
   WITHDRAW,
   WITHDRAWN_BY_PP,
+}
+
+enum class PlacementApplicationWithdrawalReason {
+  DUPLICATE_PLACEMENT_REQUEST,
+  ALTERNATIVE_PROVISION_IDENTIFIED,
 }
