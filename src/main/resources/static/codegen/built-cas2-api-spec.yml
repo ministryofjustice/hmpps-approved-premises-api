@@ -4409,6 +4409,40 @@ components:
         - UnknownPerson
         - FullPersonInfo
         - RestrictedPersonInfo
+    Withdrawable:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          $ref: '#/components/schemas/WithdrawableType'
+        dates:
+          type: array
+          items:
+            $ref: '#/components/schemas/DatePeriod'
+      required:
+        - id
+        - type
+        - dates
+    DatePeriod:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+      required:
+        - startDate
+        - endDate
+    WithdrawableType:
+      type: string
+      enum:
+        - placement_request
+        - placement_application
+        - booking
     WithdrawalReason:
       type: string
       enum:

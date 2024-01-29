@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilte
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -16,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -37,8 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision as JpaPlacementApplicationDecision
 
-class AssociatedPlacementRequestsHaveAtLeastOneBookingError(message: String) : Exception(message)
-
 @Service
 @Suppress("ReturnCount")
 class PlacementApplicationService(
@@ -47,10 +43,7 @@ class PlacementApplicationService(
   private val userService: UserService,
   private val placementDateRepository: PlacementDateRepository,
   private val placementRequestService: PlacementRequestService,
-  private val placementRequestRepository: PlacementRequestRepository,
-  private val emailNotificationService: EmailNotificationService,
   private val userAllocator: UserAllocator,
-  private val notifyConfig: NotifyConfig,
 ) {
 
   fun getVisiblePlacementApplicationsForUser(
@@ -191,11 +184,9 @@ class PlacementApplicationService(
 
     val placementApplicationEntity = placementApplicationAuthorisationResult.entity
 
-    try {
-      withdrawAssociatedPlacementRequests(placementApplicationEntity)
-    } catch (e: AssociatedPlacementRequestsHaveAtLeastOneBookingError) {
+    if (!placementApplicationEntity.canBeWithdrawn()) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError(e.message!!),
+        ValidatableActionResult.GeneralValidationError("The Placement Application cannot be withdrawn because it has an associated decision"),
       )
     }
 
@@ -419,28 +410,4 @@ class PlacementApplicationService(
     return ValidatableActionResult.Success(placementApplicationEntity)
   }
 
-  private fun withdrawAssociatedPlacementRequests(placementApplicationEntity: PlacementApplicationEntity) {
-    if (!placementApplicationEntity.canBeWithdrawn()) {
-      throw AssociatedPlacementRequestsHaveAtLeastOneBookingError(
-        "The Placement Application " +
-          "already has at least one associated booking",
-      )
-    }
-
-    placementApplicationEntity.placementRequests.forEach {
-      it.isWithdrawn = true
-      placementRequestRepository.save(it)
-      val allocatedUser = it.allocatedToUser
-      if (allocatedUser?.email != null) {
-        emailNotificationService.sendEmail(
-          email = allocatedUser.email!!,
-          templateId = notifyConfig.templates.placementRequestWithdrawn,
-          personalisation = mapOf(
-            "name" to allocatedUser.name,
-            "crn" to it.application.crn,
-          ),
-        )
-      }
-    }
-  }
 }

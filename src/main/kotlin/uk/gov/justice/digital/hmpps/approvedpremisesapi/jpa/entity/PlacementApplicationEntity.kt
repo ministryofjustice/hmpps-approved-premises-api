@@ -137,7 +137,7 @@ data class PlacementApplicationEntity(
   @OneToMany(mappedBy = "placementApplication")
   var placementRequests: MutableList<PlacementRequestEntity>,
 ) {
-  fun canBeWithdrawn() = placementRequests.all { it.booking == null }
+  fun canBeWithdrawn() = decision == null
 
   override fun toString() = "PlacementApplicationEntity: $id"
 }

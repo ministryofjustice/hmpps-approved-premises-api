@@ -20,6 +20,14 @@ class PlacementDateEntityFactory : Factory<PlacementDateEntity> {
     this.placementApplication = { placementApplication }
   }
 
+  fun withExpectedArrival(expectedArrival: LocalDate) = apply {
+    this.expectedArrival = { expectedArrival }
+  }
+
+  fun withDuration(duration: Int) = apply {
+    this.duration = { duration }
+  }
+
   override fun produce(): PlacementDateEntity = PlacementDateEntity(
     id = this.id(),
     createdAt = this.createdAt(),

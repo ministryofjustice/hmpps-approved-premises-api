@@ -27,6 +27,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSum
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FlagsEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MappaEnvelope
@@ -55,11 +57,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
@@ -82,9 +90,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
@@ -2341,37 +2352,6 @@ class ApplicationTest : IntegrationTestBase() {
         }
       }
     }
-
-    private fun produceAndPersistApplicationAndAssessment(
-      applicant: UserEntity,
-      assignee: UserEntity,
-      offenderDetails: OffenderDetailSummary,
-    ): Pair<ApprovedPremisesApplicationEntity, AssessmentEntity> {
-      val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-      }
-
-      val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
-        withPermissiveSchema()
-        withAddedAt(OffsetDateTime.now())
-      }
-
-      val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-        withCrn(offenderDetails.otherIds.crn)
-        withCreatedByUser(applicant)
-        withApplicationSchema(applicationSchema)
-      }
-
-      val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
-        withAllocatedToUser(assignee)
-        withApplication(application)
-        withAssessmentSchema(assessmentSchema)
-      }
-
-      assessment.schemaUpToDate = true
-
-      return Pair(application, assessment)
-    }
   }
 
   @Nested
@@ -2837,6 +2817,369 @@ class ApplicationTest : IntegrationTestBase() {
         assertThat(updatedAssessment.isWithdrawn).isTrue
       }
     }
+  }
+
+  @Nested
+  inner class GetWithdrawables {
+
+    @Test
+    fun `Get withdrawables for an application returns nothing if no associated withdrawables`() {
+      `Given a User` { user, jwt ->
+
+        val application = produceAndPersistBasicApplication("ABC123", user, "TEAM")
+
+        webTestClient.get()
+          .uri("/applications/${application.id}/withdrawables")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json("[]")
+      }
+    }
+
+    @Test
+    fun `Get withdrawables for an application returns withdrawable placement requests`() {
+      `Given a User` { applicant, _ ->
+        `Given a User` { user, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
+
+            val placementRequest1 = produceAndPersistPlacementRequest(application)
+            val placementRequest2 = produceAndPersistPlacementRequest(application)
+
+            produceAndPersistPlacementRequest(application) {
+              withReallocatedAt(OffsetDateTime.now())
+            }
+
+            produceAndPersistPlacementRequest(application) {
+              val premises = approvedPremisesEntityFactory.produceAndPersist {
+                withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+              }
+
+              withBooking(
+                bookingEntityFactory.produceAndPersist {
+                  withPremises(premises)
+                },
+              )
+            }
+
+            produceAndPersistPlacementRequest(application) {
+              withIsWithdrawn(true)
+            }
+
+            val expected = listOf(
+              Withdrawable(
+                placementRequest1.id,
+                WithdrawableType.placementRequest,
+                listOf(datePeriodForDuration(placementRequest1.expectedArrival, placementRequest1.duration)),
+              ),
+              Withdrawable(
+                placementRequest2.id,
+                WithdrawableType.placementRequest,
+                listOf(datePeriodForDuration(placementRequest2.expectedArrival, placementRequest2.duration)),
+              ),
+            )
+
+            webTestClient.get()
+              .uri("/applications/${application.id}/withdrawables")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(objectMapper.writeValueAsString(expected))
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get withdrawables for an application returns withdrawable placement applications`() {
+      `Given a User` { applicant, _ ->
+        `Given a User` { user, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
+
+            val application1ExpectedArrival1 = LocalDate.now().plusDays(1)
+            val application1Duration1 = 5
+            val application1ExpectedArrival2 = LocalDate.now().plusDays(10)
+            val application1Duration2 = 10
+
+            val placementApplication1 = produceAndPersistPlacementApplication(
+              application,
+              listOf(application1ExpectedArrival1 to application1Duration1, application1ExpectedArrival2 to application1Duration2),
+            )
+
+            val application2ExpectedArrival1 = LocalDate.now().plusDays(50)
+            val application2Duration1 = 6
+
+            val placementApplication2 = produceAndPersistPlacementApplication(
+              application,
+              listOf(application2ExpectedArrival1 to application2Duration1),
+            )
+
+            produceAndPersistPlacementApplication(application, listOf(LocalDate.now() to 2)) {
+              withSubmittedAt(null)
+            }
+
+            produceAndPersistPlacementApplication(application, listOf(LocalDate.now() to 2)) {
+              withReallocatedAt(OffsetDateTime.now())
+            }
+
+            produceAndPersistPlacementApplication(application, listOf(LocalDate.now() to 2)) {
+              withDecision(PlacementApplicationDecision.ACCEPTED)
+            }
+
+            produceAndPersistPlacementApplication(application, listOf(LocalDate.now() to 2)) {
+              withDecision(PlacementApplicationDecision.WITHDRAW)
+            }
+
+            produceAndPersistPlacementApplication(application, listOf(LocalDate.now() to 2)) {
+              withDecision(PlacementApplicationDecision.WITHDRAWN_BY_PP)
+            }
+
+            produceAndPersistPlacementApplication(application, listOf(LocalDate.now() to 2)) {
+              withDecision(PlacementApplicationDecision.REJECTED)
+            }
+
+            val expected = listOf(
+              Withdrawable(
+                placementApplication1.id,
+                WithdrawableType.placementApplication,
+                listOf(
+                  datePeriodForDuration(application1ExpectedArrival1, application1Duration1),
+                  datePeriodForDuration(application1ExpectedArrival2, application1Duration2),
+                ),
+              ),
+              Withdrawable(
+                placementApplication2.id,
+                WithdrawableType.placementApplication,
+                listOf(datePeriodForDuration(application2ExpectedArrival1, application2Duration1)),
+              ),
+            )
+
+            webTestClient.get()
+              .uri("/applications/${application.id}/withdrawables")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(objectMapper.writeValueAsString(expected))
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get withdrawables for an application returns withdrawable bookings`() {
+      `Given a User` { applicant, _ ->
+        `Given a User` { user, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
+
+            val booking1expectedArrival = LocalDate.now().plusDays(1)
+            val booking1expectedDeparture = LocalDate.now().plusDays(6)
+            val booking1 = produceAndPersistBooking(
+              application,
+              booking1expectedArrival,
+              booking1expectedDeparture,
+            )
+
+            val booking2expectedArrival = LocalDate.now().plusDays(1)
+            val booking2expectedDeparture = LocalDate.now().plusDays(6)
+            val booking2 = produceAndPersistBooking(
+              application,
+              booking2expectedArrival,
+              booking2expectedDeparture,
+            )
+
+            produceAndPersistBooking(
+              application,
+              LocalDate.now(),
+              LocalDate.now().plusDays(1),
+            ) {
+              withStatus(BookingStatus.cancelled)
+            }
+
+            val bookingWithArrival = produceAndPersistBooking(
+              application,
+              LocalDate.now(),
+              LocalDate.now().plusDays(1),
+            )
+            arrivalEntityFactory.produceAndPersist() {
+              withBooking(bookingWithArrival)
+            }
+
+            val expected = listOf(
+              Withdrawable(
+                booking1.id,
+                WithdrawableType.booking,
+                listOf(DatePeriod(booking1expectedArrival, booking1expectedDeparture)),
+              ),
+              Withdrawable(
+                booking2.id,
+                WithdrawableType.booking,
+                listOf(DatePeriod(booking2expectedArrival, booking2expectedDeparture)),
+              ),
+            )
+
+            webTestClient.get()
+              .uri("/applications/${application.id}/withdrawables")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(objectMapper.writeValueAsString(expected))
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get withdrawables for all possible types`() {
+      `Given a User` { applicant, _ ->
+        `Given a User` { user, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
+
+            val booking1ExpectedArrival = LocalDate.now().plusDays(1)
+            val booking1ExpectedDeparture = LocalDate.now().plusDays(6)
+            val booking1 = produceAndPersistBooking(
+              application,
+              booking1ExpectedArrival,
+              booking1ExpectedDeparture,
+            )
+
+            val placementApplicationExpectedArrival = LocalDate.now().plusDays(1)
+            val placementApplicationDuration = 5
+
+            val placementApplication = produceAndPersistPlacementApplication(
+              application,
+              listOf(placementApplicationExpectedArrival to placementApplicationDuration),
+            )
+
+            val placementRequest = produceAndPersistPlacementRequest(application)
+
+            val expected = listOf(
+              Withdrawable(
+                booking1.id,
+                WithdrawableType.booking,
+                listOf(DatePeriod(booking1ExpectedArrival, booking1ExpectedDeparture)),
+              ),
+              Withdrawable(
+                placementApplication.id,
+                WithdrawableType.placementApplication,
+                listOf(datePeriodForDuration(placementApplicationExpectedArrival, placementApplicationDuration)),
+              ),
+              Withdrawable(
+                placementRequest.id,
+                WithdrawableType.placementRequest,
+                listOf(datePeriodForDuration(placementRequest.expectedArrival, placementRequest.duration)),
+              ),
+            )
+
+            webTestClient.get()
+              .uri("/applications/${application.id}/withdrawables")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(objectMapper.writeValueAsString(expected))
+          }
+        }
+      }
+    }
+
+    fun datePeriodForDuration(start: LocalDate, duration: Int) = DatePeriod(start, start.plusDays(duration.toLong()))
+
+    private fun produceAndPersistBooking(
+      application: ApprovedPremisesApplicationEntity,
+      startDate: LocalDate,
+      endDate: LocalDate,
+      configuration: (BookingEntityFactory.() -> Unit)? = null,
+    ): BookingEntity {
+      val premises = approvedPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+      }
+
+      return bookingEntityFactory.produceAndPersist {
+        withApplication(application)
+        withPremises(premises)
+        withCrn(application.crn)
+        withServiceName(ServiceName.approvedPremises)
+        withArrivalDate(startDate)
+        withDepartureDate(endDate)
+        configuration?.invoke(this)
+      }
+    }
+
+    private fun produceAndPersistPlacementApplication(
+      application: ApprovedPremisesApplicationEntity,
+      arrivalAndDurations: List<Pair<LocalDate, Int>>,
+      configuration: (PlacementApplicationEntityFactory.() -> Unit)? = null,
+    ): PlacementApplicationEntity {
+      val placementApplication = placementApplicationFactory.produceAndPersist {
+        withCreatedByUser(application.createdByUser)
+        withAllocatedToUser(application.createdByUser)
+        withApplication(application)
+        withSchemaVersion(
+          approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          },
+        )
+        withSubmittedAt(OffsetDateTime.now())
+        withDecision(null)
+        withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
+        configuration?.invoke(this)
+      }
+
+      arrivalAndDurations.forEach { (start, duration) ->
+        placementDateFactory.produceAndPersist {
+          withPlacementApplication(placementApplication)
+          withExpectedArrival(start)
+          withDuration(duration)
+        }
+      }
+
+      return placementApplication
+    }
+
+    private fun produceAndPersistPlacementRequest(
+      application: ApprovedPremisesApplicationEntity,
+      configuration: (PlacementRequestEntityFactory.() -> Unit)? = null,
+    ) =
+      placementRequestFactory.produceAndPersist {
+        val assessment = application.assessments.get(0)
+
+        val placementRequirements = placementRequirementsFactory.produceAndPersist {
+          withApplication(application)
+          withAssessment(assessment)
+          withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+          withDesirableCriteria(
+            characteristicEntityFactory.produceAndPersistMultiple(5),
+          )
+          withEssentialCriteria(
+            characteristicEntityFactory.produceAndPersistMultiple(3),
+          )
+        }
+
+        withAllocatedToUser(application.createdByUser)
+        withApplication(application)
+        withAssessment(assessment)
+        withPlacementRequirements(placementRequirements)
+        configuration?.invoke(this)
+      }
   }
 
   @Nested
@@ -3734,6 +4077,38 @@ class ApplicationTest : IntegrationTestBase() {
     )
 
     return application
+  }
+
+  private fun produceAndPersistApplicationAndAssessment(
+    applicant: UserEntity,
+    assignee: UserEntity,
+    offenderDetails: OffenderDetailSummary,
+  ): Pair<ApprovedPremisesApplicationEntity, AssessmentEntity> {
+    val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+      withPermissiveSchema()
+    }
+
+    val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+      withPermissiveSchema()
+      withAddedAt(OffsetDateTime.now())
+    }
+
+    val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+      withCrn(offenderDetails.otherIds.crn)
+      withCreatedByUser(applicant)
+      withApplicationSchema(applicationSchema)
+    }
+
+    val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+      withAllocatedToUser(assignee)
+      withApplication(application)
+      withAssessmentSchema(assessmentSchema)
+    }
+
+    assessment.schemaUpToDate = true
+    application.assessments.add(assessment)
+
+    return Pair(application, assessment)
   }
 }
 
