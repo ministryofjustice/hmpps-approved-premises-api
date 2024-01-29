@@ -505,6 +505,16 @@ components:
       required:
         - arrivalDate
         - departureDate
+    WithdrawPlacementRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          enum:
+            - DuplicatePlacementRequest
+            - AlternativeProvisionIdentified
+      required:
+        - reason
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'

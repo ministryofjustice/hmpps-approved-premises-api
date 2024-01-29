@@ -3060,6 +3060,12 @@ paths:
           schema:
             type: string
             format: uuid
+      requestBody:
+        description: Withdrawal details
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/WithdrawPlacementRequest'
       responses:
         200:
           description: successful operation
@@ -4878,6 +4884,16 @@ components:
       required:
         - arrivalDate
         - departureDate
+    WithdrawPlacementRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          enum:
+            - DuplicatePlacementRequest
+            - AlternativeProvisionIdentified
+      required:
+        - reason
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'

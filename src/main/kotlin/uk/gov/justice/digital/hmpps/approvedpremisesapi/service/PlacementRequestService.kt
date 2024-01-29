@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
@@ -270,6 +272,7 @@ class PlacementRequestService(
       notes = notes,
       isParole = isParole,
       isWithdrawn = false,
+      withdrawalReason = null,
     )
 
     val allocatedUser = userAllocator.getUserForPlacementRequestAllocation(placementRequest)
@@ -303,7 +306,11 @@ class PlacementRequestService(
     )
   }
 
-  fun withdrawPlacementRequest(placementRequestId: UUID, user: UserEntity): AuthorisableActionResult<Unit> {
+  fun withdrawPlacementRequest(
+    placementRequestId: UUID,
+    user: UserEntity,
+    reason: WithdrawPlacementRequest.Reason?
+  ): AuthorisableActionResult<Unit> {
     if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       return AuthorisableActionResult.Unauthorised()
     }
@@ -312,6 +319,11 @@ class PlacementRequestService(
       ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
 
     placementRequest.isWithdrawn = true
+    placementRequest.withdrawalReason = when(reason) {
+      WithdrawPlacementRequest.Reason.duplicatePlacementRequest -> PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
+      WithdrawPlacementRequest.Reason.alternativeProvisionIdentified -> PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
+      null -> null
+    }
 
     placementRequestRepository.save(placementRequest)
 

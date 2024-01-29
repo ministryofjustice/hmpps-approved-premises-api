@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import java.time.LocalDate
@@ -30,6 +31,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
   private var isParole: Yielded<Boolean> = { false }
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var placementApplication: () -> PlacementApplicationEntity? = { null }
+  private var withdrawalReason: Yielded<PlacementRequestWithdrawalReason?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -107,5 +109,6 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     isParole = this.isParole(),
     isWithdrawn = this.isWithdrawn(),
     placementApplication = this.placementApplication(),
+    withdrawalReason = this.withdrawalReason(),
   )
 }

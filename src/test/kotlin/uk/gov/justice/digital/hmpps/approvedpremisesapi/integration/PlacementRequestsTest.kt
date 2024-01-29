@@ -12,6 +12,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest.Reason.duplicatePlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
@@ -23,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -1580,6 +1583,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
         webTestClient.post()
           .uri("/placement-requests/62faf6f4-1dac-4139-9a18-09c1b2852a0f/withdrawal")
           .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest(
+              reason = duplicatePlacementRequest
+            )
+          )
           .exchange()
           .expectStatus()
           .isForbidden
@@ -1599,6 +1607,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
             ) { placementRequest, _ ->
               webTestClient.post()
                 .uri("/placement-requests/${placementRequest.id}/withdrawal")
+                .bodyValue(
+                  uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest(
+                    reason = duplicatePlacementRequest
+                  )
+                )
                 .header("Authorization", "Bearer $jwt")
                 .exchange()
                 .expectStatus()
@@ -1606,6 +1619,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
               val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
               assertThat(persistedPlacementRequest.isWithdrawn).isTrue
+              assertThat(persistedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
             }
           }
         }
