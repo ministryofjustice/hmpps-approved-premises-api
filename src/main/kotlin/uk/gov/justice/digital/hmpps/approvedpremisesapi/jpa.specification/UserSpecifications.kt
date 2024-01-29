@@ -76,6 +76,7 @@ fun hasQualificationsAndRoles(
       )
     }
 
+    query.distinct(true)
     criteriaBuilder.and(*predicates.toTypedArray())
   }
 }
