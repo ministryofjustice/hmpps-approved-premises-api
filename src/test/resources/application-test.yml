@@ -186,3 +186,5 @@ user-allocations:
       allocate-to-user: JIMSNOWLDAP
     emergency-assessments:
       enabled: true
+    female-assessments:
+      enabled: true
