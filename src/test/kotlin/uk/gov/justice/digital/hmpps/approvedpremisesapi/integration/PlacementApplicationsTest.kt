@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Submitted Application`
@@ -1001,7 +1002,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           .uri("/placement-applications/${UUID.randomUUID()}/withdraw")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            WithdrawPlacementApplication(WithdrawPlacementApplication.Reason.duplicatePlacementRequest)
+            WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest)
           )
           .exchange()
           .expectStatus()
@@ -1030,7 +1031,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              WithdrawPlacementApplication(WithdrawPlacementApplication.Reason.duplicatePlacementRequest)
+              WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest)
             )
             .exchange()
             .expectStatus()
@@ -1059,7 +1060,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
-                WithdrawPlacementApplication(WithdrawPlacementApplication.Reason.duplicatePlacementRequest)
+                WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest)
               )
               .exchange()
               .expectStatus()
@@ -1112,7 +1113,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
-                WithdrawPlacementApplication(WithdrawPlacementApplication.Reason.duplicatePlacementRequest)
+                WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest)
               )
               .exchange()
               .expectStatus()

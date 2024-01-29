@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -178,7 +179,7 @@ class PlacementApplicationService(
   @Transactional
   fun withdrawPlacementApplication(
     id: UUID,
-    reason: WithdrawPlacementApplication.Reason?,
+    reason: WithdrawPlacementRequestReason?,
   ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
 
@@ -199,8 +200,8 @@ class PlacementApplicationService(
     placementApplicationEntity.decision = PlacementApplicationDecision.WITHDRAWN_BY_PP
     placementApplicationEntity.decisionMadeAt = OffsetDateTime.now()
     placementApplicationEntity.withdrawalReason = when(reason) {
-      WithdrawPlacementApplication.Reason.duplicatePlacementRequest -> PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
-      WithdrawPlacementApplication.Reason.alternativeProvisionIdentified -> PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
+      WithdrawPlacementRequestReason.duplicatePlacementRequest -> PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
+      WithdrawPlacementRequestReason.alternativeProvisionIdentified -> PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
       null -> null
     }
 

@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest.Reason.duplicatePlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
@@ -1594,7 +1594,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   .header("Authorization", "Bearer $jwt")
                   .bodyValue(
                     WithdrawPlacementRequest(
-                      reason = duplicatePlacementRequest
+                      reason = WithdrawPlacementRequestReason.duplicatePlacementRequest
                     )
                   )
                   .exchange()
@@ -1622,7 +1622,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 .uri("/placement-requests/${placementRequest.id}/withdrawal")
                 .bodyValue(
                   WithdrawPlacementRequest(
-                    reason = duplicatePlacementRequest
+                    reason = WithdrawPlacementRequestReason.duplicatePlacementRequest
                   )
                 )
                 .header("Authorization", "Bearer $jwt")

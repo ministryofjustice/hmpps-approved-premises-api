@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -535,7 +536,7 @@ class PlacementRequestServiceTest {
     val result = placementRequestService.withdrawPlacementRequest(
       placementRequestId,
       user,
-      WithdrawPlacementRequest.Reason.duplicatePlacementRequest,
+      WithdrawPlacementRequestReason.duplicatePlacementRequest,
     )
 
     assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
@@ -555,16 +556,16 @@ class PlacementRequestServiceTest {
     val result = placementRequestService.withdrawPlacementRequest(
       placementRequestId,
       user,
-      WithdrawPlacementRequest.Reason.duplicatePlacementRequest,
+      WithdrawPlacementRequestReason.duplicatePlacementRequest,
     )
 
     assertThat(result is AuthorisableActionResult.NotFound).isTrue
   }
 
   @ParameterizedTest
-  @EnumSource(WithdrawPlacementRequest.Reason::class)
+  @EnumSource(WithdrawPlacementRequestReason::class)
   @NullSource
-  fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true for cas workflow manager`(reason: WithdrawPlacementRequest.Reason?) {
+  fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true for cas workflow manager`(reason: WithdrawPlacementRequestReason?) {
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
       .produce()
@@ -578,9 +579,9 @@ class PlacementRequestServiceTest {
   }
 
   @ParameterizedTest
-  @EnumSource(WithdrawPlacementRequest.Reason::class)
+  @EnumSource(WithdrawPlacementRequestReason::class)
   @NullSource
-  fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true for application creator`(reason: WithdrawPlacementRequest.Reason?) {
+  fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true for application creator`(reason: WithdrawPlacementRequestReason?) {
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
       .produce()
@@ -592,7 +593,7 @@ class PlacementRequestServiceTest {
     createPlacementRequestTest(application, user, reason)
   }
 
-  private fun createPlacementRequestTest(application: ApprovedPremisesApplicationEntity, user: UserEntity, reason: WithdrawPlacementRequest.Reason?) {
+  private fun createPlacementRequestTest(application: ApprovedPremisesApplicationEntity, user: UserEntity, reason: WithdrawPlacementRequestReason?) {
     val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
 
     val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -625,8 +626,8 @@ class PlacementRequestServiceTest {
     assertThat(result is AuthorisableActionResult.Success).isTrue
 
     val expectedReason = when(reason) {
-      WithdrawPlacementRequest.Reason.duplicatePlacementRequest -> PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
-      WithdrawPlacementRequest.Reason.alternativeProvisionIdentified -> PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
+      WithdrawPlacementRequestReason.duplicatePlacementRequest -> PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
+      WithdrawPlacementRequestReason.alternativeProvisionIdentified -> PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
       null -> null
     }
 

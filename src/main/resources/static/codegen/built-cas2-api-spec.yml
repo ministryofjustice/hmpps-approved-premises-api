@@ -937,12 +937,14 @@ components:
       type: object
       properties:
         reason:
-          type: string
-          enum:
-            - DuplicatePlacementRequest
-            - AlternativeProvisionIdentified
+          $ref: '#/components/schemas/WithdrawPlacementRequestReason'
       required:
         - reason
+    WithdrawPlacementRequestReason:
+        type: string
+        enum:
+          - DuplicatePlacementRequest
+          - AlternativeProvisionIdentified
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'
@@ -3824,10 +3826,7 @@ components:
       type: object
       properties:
         reason:
-          type: string
-          enum:
-            - DuplicatePlacementRequest
-            - AlternativeProvisionIdentified
+          $ref: '#/components/schemas/WithdrawPlacementRequestReason'
       required:
         - reason
     PlacementRequest:
