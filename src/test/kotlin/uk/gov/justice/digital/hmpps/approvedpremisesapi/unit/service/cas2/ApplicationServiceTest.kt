@@ -5,14 +5,19 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -25,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -36,6 +42,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -66,6 +77,50 @@ class ApplicationServiceTest {
     "http://frontend/applications/#id",
     "http://frontend/assess/applications/#applicationId/overview",
   )
+
+  @Nested
+  inner class GetAllSubmittedApplicationsForAssessor {
+    @Test
+    fun `returns Success result with entity from db`() {
+      val applicationSummary = object : Cas2ApplicationSummary {
+        override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
+        override fun getCrn() = randomStringMultiCaseWithNumbers(6)
+        override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
+        override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
+        override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
+      }
+
+      PaginationConfig(defaultPageSize = 10).postInit()
+      val page = mockk<Page<Cas2ApplicationSummary>>()
+      val pageRequest = mockk<PageRequest>()
+      val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
+
+      mockkStatic(PageRequest::class)
+
+      every { PageRequest.of(2, 10, Sort.by("submitted_at").ascending()) } returns pageRequest
+      every { page.content } returns listOf(applicationSummary)
+      every { page.totalPages } returns 10
+      every { page.totalElements } returns 100
+
+      every {
+        mockApplicationRepository.findAllSubmittedCas2ApplicationSummaries(
+          PageRequest.of(
+            2,
+            10,
+            Sort.by(Sort.Direction.ASC, "submitted_at"),
+          ),
+        )
+      } returns page
+
+      val (applicationSummaries, metadata) = applicationService.getAllSubmittedApplicationsForAssessor(pageCriteria)
+
+      assertThat(applicationSummaries).isEqualTo(listOf(applicationSummary))
+      assertThat(metadata?.currentPage).isEqualTo(3)
+      assertThat(metadata?.pageSize).isEqualTo(10)
+      assertThat(metadata?.totalPages).isEqualTo(10)
+      assertThat(metadata?.totalResults).isEqualTo(100)
+    }
+  }
 
   @Nested
   inner class GetApplicationForUsername {

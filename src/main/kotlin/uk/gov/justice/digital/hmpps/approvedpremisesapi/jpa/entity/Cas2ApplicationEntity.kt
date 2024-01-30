@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.hibernate.annotations.OrderBy
 import org.hibernate.annotations.Type
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
@@ -48,9 +50,15 @@ SELECT
 FROM cas_2_applications a
 WHERE a.submitted_at IS NOT NULL
 """,
+    countQuery =
+    """
+    SELECT COUNT(*)
+      FROM cas_2_applications a
+      WHERE a.submitted_at IS NOT NULL
+    """,
     nativeQuery = true,
   )
-  fun findAllSubmittedCas2ApplicationSummaries(): List<Cas2ApplicationSummary>
+  fun findAllSubmittedCas2ApplicationSummaries(pageable: Pageable?): Page<Cas2ApplicationSummary>
 
   @Query(
     "SELECT a FROM Cas2ApplicationEntity a WHERE a.id = :id AND " +

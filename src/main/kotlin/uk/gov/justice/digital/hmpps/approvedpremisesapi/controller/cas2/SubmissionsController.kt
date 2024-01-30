@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.SubmissionsCas2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmittedApplicationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getFullInfoForPersonOrThrow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getInfoForPersonOrThrowInternalServerError
 import java.util.UUID
@@ -40,15 +42,22 @@ class SubmissionsController(
   private val statusUpdateService: StatusUpdateService,
 ) : SubmissionsCas2Delegate {
 
-  override fun submissionsGet(): ResponseEntity<List<Cas2SubmittedApplicationSummary>> {
+  override fun submissionsGet(page: Int?): ResponseEntity<List<Cas2SubmittedApplicationSummary>> {
     val principal = httpAuthService.getCas2AuthenticatedPrincipalOrThrow()
     if (principal.isExternalUser()) {
       ensureExternalUserPersisted()
     } else {
       ensureNomisUserPersisted()
     }
-    val applications = applicationService.getAllSubmittedApplicationsForAssessor()
-    return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it) })
+
+    val sortDirection = SortDirection.asc
+    val sortBy = "submitted_at"
+
+    val (applications, metadata) = applicationService.getAllSubmittedApplicationsForAssessor(PageCriteria(sortBy, sortDirection, page))
+
+    return ResponseEntity.ok().headers(
+      metadata?.toHeaders(),
+    ).body(applications.map { getPersonDetailAndTransformToSummary(it) })
   }
 
   override fun submissionsApplicationIdGet(applicationId: UUID): ResponseEntity<Cas2SubmittedApplication> {
