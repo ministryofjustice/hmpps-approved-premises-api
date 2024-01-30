@@ -210,6 +210,7 @@ class SeedService(
         SeedFileType.approvedPremisesCancelBookings -> ApprovedPremisesBookingCancelSeedJob(
           filename,
           applicationContext.getBean(BookingService::class.java),
+          applicationContext.getBean(BookingRepository::class.java),
         )
       }
 

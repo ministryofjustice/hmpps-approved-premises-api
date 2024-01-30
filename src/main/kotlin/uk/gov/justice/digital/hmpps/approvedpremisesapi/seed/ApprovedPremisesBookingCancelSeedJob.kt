@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed
 
 import org.slf4j.LoggerFactory
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import java.time.LocalDate
@@ -10,6 +12,7 @@ import java.util.UUID
 class ApprovedPremisesBookingCancelSeedJob(
   fileName: String,
   private val bookingService: BookingService,
+  private val bookingRepository: BookingRepository,
 ) : SeedJob<CancelBookingSeedCsvRow>(
   fileName = fileName,
   requiredHeaders = setOf(
@@ -25,7 +28,7 @@ class ApprovedPremisesBookingCancelSeedJob(
   override fun processRow(row: CancelBookingSeedCsvRow) {
     val errorInBookingDetailsCancellationReason = UUID.fromString("7c310cfd-3952-456d-b0ee-0f7817afe64a")
 
-    val booking = bookingService.getBooking(row.id)
+    val booking = bookingRepository.findByIdOrNull(row.id)
       ?: throw RuntimeException("No Booking with Id of ${row.id} exists")
 
     if (booking.service != ServiceName.approvedPremises.value) {

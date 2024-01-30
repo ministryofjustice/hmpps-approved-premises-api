@@ -129,7 +129,6 @@ class BookingService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
-  fun getBooking(id: UUID) = bookingRepository.findByIdOrNull(id)
 
   @Transactional
   fun createApprovedPremisesBookingFromPlacementRequest(
@@ -1697,7 +1696,7 @@ class BookingService(
     val premises = premisesService.getPremises(premisesId)
       ?: return GetBookingForPremisesResult.PremisesNotFound
 
-    val booking = getBooking(bookingId)
+    val booking = bookingRepository.findByIdOrNull(bookingId)
       ?: return GetBookingForPremisesResult.BookingNotFound
 
     if (booking.premises.id != premises.id) {
