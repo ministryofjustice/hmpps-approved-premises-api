@@ -66,6 +66,40 @@ class BookingTest : IntegrationTestBase() {
   @Nested
   inner class GetBookingForPremises {
 
+    @Test
+    fun `Get a booking belonging to another premises returns not found`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withNomsNumber(null)
+          },
+        ) { offenderDetails, _ ->
+          val premises = approvedPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+          }
+
+          val keyWorker = ContextStaffMemberFactory().produce()
+          APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+
+          val booking = bookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withStaffKeyWorkerCode(keyWorker.code)
+            withCrn(offenderDetails.otherIds.crn)
+            withNomsNumber(null)
+            withServiceName(ServiceName.approvedPremises)
+          }
+
+          webTestClient.get()
+            .uri("/premises/${UUID.randomUUID()}/bookings/${booking.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isNotFound()
+        }
+      }
+    }
+
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
     fun `Get a booking for an Approved Premises returns OK with the correct body when user has one of roles MANAGER, MATCHER`(
