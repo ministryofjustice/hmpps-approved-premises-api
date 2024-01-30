@@ -323,7 +323,7 @@ class PremisesController(
     val apiBooking = bookingTransformer.transformJpaToApi(
       bookingAndPersons.booking,
       bookingAndPersons.personInfo,
-      bookingAndPersons.staffMember
+      bookingAndPersons.staffMember,
     )
 
     if (apiBooking.premises.id != premisesId) {

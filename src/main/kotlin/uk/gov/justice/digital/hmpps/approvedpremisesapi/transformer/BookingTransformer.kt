@@ -95,7 +95,7 @@ class BookingTransformer(
   fun transformToWithdrawable(jpa: BookingEntity) = Withdrawable(
     jpa.id,
     WithdrawableType.booking,
-    listOf(DatePeriod(jpa.arrivalDate, jpa.departureDate))
+    listOf(DatePeriod(jpa.arrivalDate, jpa.departureDate)),
   )
 
   private fun determineApprovedPremisesStatus(jpa: BookingEntity) = when {

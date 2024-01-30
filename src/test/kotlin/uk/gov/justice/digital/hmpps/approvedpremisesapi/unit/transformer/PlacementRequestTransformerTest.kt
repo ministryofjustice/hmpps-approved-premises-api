@@ -303,7 +303,7 @@ class PlacementRequestTransformerTest {
       .withId(id)
       .withPlacementRequirements(placementRequirementsFactory.produce())
       .withNotes("Some notes")
-      .withExpectedArrival(LocalDate.of(2023,12,11))
+      .withExpectedArrival(LocalDate.of(2023, 12, 11))
       .withDuration(30)
       .produce()
 
@@ -315,11 +315,11 @@ class PlacementRequestTransformerTest {
         WithdrawableType.placementRequest,
         listOf(
           DatePeriod(
-            LocalDate.of(2023,12,11),
-            LocalDate.of(2024,1,10)
-          )
-        )
-      )
+            LocalDate.of(2023, 12, 11),
+            LocalDate.of(2024, 1, 10),
+          ),
+        ),
+      ),
     )
   }
 }

@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -2008,8 +2007,8 @@ class BookingTransformerTest {
 
     val jpa = baseBookingEntity.copy(
       id = id,
-      arrivalDate = LocalDate.of(2023,12,11),
-      departureDate = LocalDate.of(2024,11,29)
+      arrivalDate = LocalDate.of(2023, 12, 11),
+      departureDate = LocalDate.of(2024, 11, 29),
     )
 
     val result = bookingTransformer.transformToWithdrawable(jpa)
@@ -2020,11 +2019,11 @@ class BookingTransformerTest {
         WithdrawableType.booking,
         listOf(
           DatePeriod(
-            LocalDate.of(2023,12,11),
-            LocalDate.of(2024,11,29)
-          )
-        )
-      )
+            LocalDate.of(2023, 12, 11),
+            LocalDate.of(2024, 11, 29),
+          ),
+        ),
+      ),
     )
   }
 }

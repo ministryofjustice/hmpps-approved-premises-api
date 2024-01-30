@@ -38,7 +38,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSum
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FlagsEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
@@ -3114,7 +3113,8 @@ class ApplicationTest : IntegrationTestBase() {
               application,
               listOf(
                 submittedApplication1ExpectedArrival1 to submittedApplication1Duration1,
-                submittedApplication1ExpectedArrival2 to submittedApplication1Duration2),
+                submittedApplication1ExpectedArrival2 to submittedApplication1Duration2,
+              ),
             )
 
             val submittedApplication2ExpectedArrival1 = LocalDate.now().plusDays(50)
@@ -3128,7 +3128,7 @@ class ApplicationTest : IntegrationTestBase() {
             val unsubmittedApplicationDuration1 = 6
             val unsubmittedPlacementApplication = produceAndPersistPlacementApplication(
               application,
-              listOf(unsubmittedApplicationExpectedArrival1 to unsubmittedApplicationDuration1)
+              listOf(unsubmittedApplicationExpectedArrival1 to unsubmittedApplicationDuration1),
             ) {
               withSubmittedAt(null)
             }

@@ -107,7 +107,7 @@ class PlacementApplicationsController(
 
   override fun placementApplicationsIdWithdrawPost(
     id: UUID,
-    withdrawPlacementApplication: WithdrawPlacementApplication?
+    withdrawPlacementApplication: WithdrawPlacementApplication?,
   ): ResponseEntity<PlacementApplication> {
     val result = placementApplicationService.withdrawPlacementApplication(id, withdrawPlacementApplication?.reason)
 

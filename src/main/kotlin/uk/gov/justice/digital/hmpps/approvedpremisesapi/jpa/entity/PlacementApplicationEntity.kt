@@ -86,7 +86,6 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
   fun findAllSubmittedNonReallocatedAndNonWithdrawnApplicationsForApplicationId(applicationId: UUID): List<PlacementApplicationEntity>
 
   fun findByApplication(application: ApplicationEntity): List<PlacementApplicationEntity>
-
 }
 
 @Entity

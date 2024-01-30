@@ -1002,7 +1002,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
           .uri("/placement-applications/${UUID.randomUUID()}/withdraw")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest)
+            WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
           )
           .exchange()
           .expectStatus()
@@ -1031,7 +1031,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest)
+              WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
             )
             .exchange()
             .expectStatus()
@@ -1060,7 +1060,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
-                WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest)
+                WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
               )
               .exchange()
               .expectStatus()
@@ -1113,7 +1113,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
-                WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest)
+                WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
               )
               .exchange()
               .expectStatus()

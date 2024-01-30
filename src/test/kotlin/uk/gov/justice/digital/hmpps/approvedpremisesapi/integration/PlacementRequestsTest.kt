@@ -1563,7 +1563,6 @@ class PlacementRequestsTest : IntegrationTestBase() {
         }
       }
     }
-
   }
 
   @Nested
@@ -1594,8 +1593,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   .header("Authorization", "Bearer $jwt")
                   .bodyValue(
                     WithdrawPlacementRequest(
-                      reason = WithdrawPlacementRequestReason.duplicatePlacementRequest
-                    )
+                      reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
+                    ),
                   )
                   .exchange()
                   .expectStatus()
@@ -1622,8 +1621,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
                 .uri("/placement-requests/${placementRequest.id}/withdrawal")
                 .bodyValue(
                   WithdrawPlacementRequest(
-                    reason = WithdrawPlacementRequestReason.duplicatePlacementRequest
-                  )
+                    reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
+                  ),
                 )
                 .header("Authorization", "Bearer $jwt")
                 .exchange()

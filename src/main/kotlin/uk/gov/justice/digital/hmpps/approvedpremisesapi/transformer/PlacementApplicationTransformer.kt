@@ -37,6 +37,6 @@ class PlacementApplicationTransformer(
     WithdrawableType.placementApplication,
     placementApplication.placementDates.map {
       DatePeriod(it.expectedArrival, it.expectedDeparture())
-    }
+    },
   )
 }
