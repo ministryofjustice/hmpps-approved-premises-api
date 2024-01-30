@@ -2251,6 +2251,30 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /bookings/{bookingId}:
+    get:
+      summary: Gets a booking
+      parameters:
+        - in: path
+          name: bookingId
+          required: true
+          description: ID of the booking
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: successfully retrieved booking
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Booking'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /bookings/search:
     get:
       summary: Searches for bookings with the given parameters
