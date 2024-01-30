@@ -5,7 +5,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilte
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -15,7 +14,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRespository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
@@ -36,7 +36,7 @@ class TaskService(
   private val placementRequestService: PlacementRequestService,
   private val userTransformer: UserTransformer,
   private val placementApplicationService: PlacementApplicationService,
-  private val taskRespository: TaskRespository,
+  private val taskRepository: TaskRepository,
   private val assessmentRepository: AssessmentRepository,
   private val placementApplicationRepository: PlacementApplicationRepository,
   private val placementRequestRepository: PlacementRequestRepository,
@@ -55,31 +55,31 @@ class TaskService(
     )
 
     val isAllocated = if (allocatedFilter == null) { null } else { allocatedFilter == AllocatedFilter.allocated }
-    val reallocatableTaskResult = taskRespository.getAllReallocatable(isAllocated, apAreaId, pageable)
-    val reallocatableTasks = reallocatableTaskResult.content
+    val tasksResult = taskRepository.getAllReallocatable(isAllocated, apAreaId, pageable)
+    val tasks = tasksResult.content
 
-    val assessmentIds = reallocatableTasks.filter { it.type == "assessment" }.map { it.id }
-    val placementApplicationIds = reallocatableTasks.filter { it.type == "placement_application" }.map { it.id }
-    val placementRequestIds = reallocatableTasks.filter { it.type == "placement_request" }.map { it.id }
+    val assessmentIds = tasks.filter { it.type == TaskEntityType.ASSESSMENT }.map { it.id }
+    val assessments = assessmentRepository.findAllById(assessmentIds).map { TypedTask.Assessment(it as ApprovedPremisesAssessmentEntity) }
 
-    var tasks = listOf(
-      assessmentRepository.findAllById(assessmentIds).map { TypedTask.Assessment(it as ApprovedPremisesAssessmentEntity) },
-      placementApplicationRepository.findAllById(placementApplicationIds).map { TypedTask.PlacementApplication(it) },
-      placementRequestRepository.findAllById(placementRequestIds).map { TypedTask.PlacementRequest(it) },
-    ).flatten()
+    val placementApplicationIds = tasks.filter { it.type == TaskEntityType.PLACEMENT_APPLICATION }.map { it.id }
+    val placementApplications = placementApplicationRepository.findAllById(placementApplicationIds).map { TypedTask.PlacementApplication(it) }
 
-    tasks = tasks.sortedBy {
-      when (pageCriteria.sortBy) {
-        TaskSortField.createdAt -> it.createdAt
+    val placementRequestIds = tasks.filter { it.type == TaskEntityType.PLACEMENT_REQUEST }.map { it.id }
+    val placementRequests = placementRequestRepository.findAllById(placementRequestIds).map { TypedTask.PlacementRequest(it) }
+
+    val typedTasks = tasks
+      .map { task ->
+        val candidateList = when(task.type) {
+          TaskEntityType.ASSESSMENT -> assessments
+          TaskEntityType.PLACEMENT_APPLICATION -> placementApplications
+          TaskEntityType.PLACEMENT_REQUEST -> placementRequests
+        }
+
+        candidateList.first { it.id == task.id }
       }
-    }
 
-    if (pageCriteria.sortDirection == SortDirection.desc) {
-      tasks = tasks.reversed()
-    }
-
-    val metadata = getMetadata(reallocatableTaskResult, pageCriteria)
-    return Pair(tasks, metadata)
+    val metadata = getMetadata(tasksResult, pageCriteria)
+    return Pair(typedTasks, metadata)
   }
 
   fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, id: UUID): AuthorisableActionResult<ValidatableActionResult<Reallocation>> {

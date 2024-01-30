@@ -85,7 +85,7 @@ class TasksController(
     }
 
     if (type == null) {
-      return responseForAllTypes(user, pageCriteria, allocatedFilter, apAreaId)
+      return reallocatableResponseForAllTypes(user, pageCriteria, allocatedFilter, apAreaId)
     }
 
     val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
@@ -93,9 +93,9 @@ class TasksController(
     ) ?: throw NotFoundProblem(type, "TaskType")
 
     return when (taskType) {
-      TaskType.assessment -> assessmentTasksResponse(user, pageCriteria, allocatedFilter, apAreaId)
-      TaskType.placementRequest -> placementRequestTasks(user, pageCriteria, allocatedFilter, apAreaId)
-      TaskType.placementApplication -> placementApplicationTasks(user, pageCriteria, allocatedFilter, apAreaId)
+      TaskType.assessment -> reallocatableResponseForAssessments(user, pageCriteria, allocatedFilter, apAreaId)
+      TaskType.placementRequest -> reallocatableResponseForPlacementRequests(user, pageCriteria, allocatedFilter, apAreaId)
+      TaskType.placementApplication -> reallocatbleResponseForPlacementApplications(user, pageCriteria, allocatedFilter, apAreaId)
       else -> throw BadRequestProblem()
     }
   }
@@ -430,7 +430,7 @@ class TasksController(
       }
     }
 
-  private fun responseForAllTypes(
+  private fun reallocatableResponseForAllTypes(
     user: UserEntity,
     pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
@@ -469,7 +469,7 @@ class TasksController(
     )
   }
 
-  private fun assessmentTasksResponse(
+  private fun reallocatableResponseForAssessments(
     user: UserEntity,
     pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
@@ -490,7 +490,7 @@ class TasksController(
     )
   }
 
-  private fun placementRequestTasks(
+  private fun reallocatableResponseForPlacementRequests(
     user: UserEntity,
     pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
@@ -514,7 +514,7 @@ class TasksController(
     )
   }
 
-  private fun placementApplicationTasks(
+  private fun reallocatbleResponseForPlacementApplications(
     user: UserEntity,
     pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,

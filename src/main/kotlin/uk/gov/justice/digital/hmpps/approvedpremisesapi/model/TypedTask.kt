@@ -4,12 +4,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import java.time.OffsetDateTime
+import java.util.UUID
 
 sealed class TypedTask(
+  val id: UUID,
   val createdAt: OffsetDateTime,
   val crn: String,
 ) {
-  data class Assessment(val entity: ApprovedPremisesAssessmentEntity) : TypedTask(entity.createdAt, entity.application.crn)
-  data class PlacementRequest(val entity: PlacementRequestEntity) : TypedTask(entity.createdAt, entity.application.crn)
-  data class PlacementApplication(val entity: PlacementApplicationEntity) : TypedTask(entity.createdAt, entity.application.crn)
+  data class Assessment(val entity: ApprovedPremisesAssessmentEntity) : TypedTask(entity.id, entity.createdAt, entity.application.crn)
+  data class PlacementRequest(val entity: PlacementRequestEntity) : TypedTask(entity.id, entity.createdAt, entity.application.crn)
+  data class PlacementApplication(val entity: PlacementApplicationEntity) : TypedTask(entity.id, entity.createdAt, entity.application.crn)
 }

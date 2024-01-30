@@ -8,16 +8,18 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.persistence.Entity
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
 import javax.persistence.Id
 
 @Repository
-interface TaskRespository : JpaRepository<Task, UUID> {
+interface TaskRepository : JpaRepository<Task, UUID> {
   companion object {
     private const val ALLOCATABLE_QUERY = """
       SELECT
         cast(assessment.id as TEXT) as id,
         assessment.created_at as created_at,
-        'assessment' as type
+        'ASSESSMENT' as type
       from
         assessments assessment
         inner join approved_premises_applications application on assessment.application_id = application.id
@@ -40,7 +42,7 @@ interface TaskRespository : JpaRepository<Task, UUID> {
       SELECT
         cast(placement_application.id as TEXT) as id,
         placement_application.created_at as created_at,
-        'placement_application' as type
+        'PLACEMENT_APPLICATION' as type
       from
         placement_applications placement_application
         inner join approved_premises_applications application on placement_application.application_id = application.id
@@ -63,7 +65,7 @@ interface TaskRespository : JpaRepository<Task, UUID> {
       SELECT
         cast(placement_request.id as TEXT) as id,
         placement_request.created_at as created_at,
-        'placement_request' as type
+        'PLACEMENT_REQUEST' as type
       from
         placement_requests placement_request
         inner join approved_premises_applications application on placement_request.application_id = application.id
@@ -100,5 +102,12 @@ data class Task(
   @Id
   val id: UUID,
   val createdAt: LocalDateTime,
-  val type: String,
+  @Enumerated(EnumType.STRING)
+  val type: TaskEntityType,
 )
+
+enum class TaskEntityType {
+  ASSESSMENT,
+  PLACEMENT_APPLICATION,
+  PLACEMENT_REQUEST,
+}

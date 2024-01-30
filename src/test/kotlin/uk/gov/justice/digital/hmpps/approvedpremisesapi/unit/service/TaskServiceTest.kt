@@ -33,7 +33,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Task
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRespository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
@@ -59,7 +60,7 @@ class TaskServiceTest {
   private val placementRequestServiceMock = mockk<PlacementRequestService>()
   private val userTransformerMock = mockk<UserTransformer>()
   private val placementApplicationServiceMock = mockk<PlacementApplicationService>()
-  private val taskRepositoryMock = mockk<TaskRespository>()
+  private val taskRepositoryMock = mockk<TaskRepository>()
   private val assessmentRepositoryMock = mockk<AssessmentRepository>()
   private val placementApplicationRepositoryMock = mockk<PlacementApplicationRepository>()
   private val placementRequestRepositoryMock = mockk<PlacementRequestRepository>()
@@ -310,9 +311,9 @@ class TaskServiceTest {
     val placementApplications = List(4) { generatePlacementApplication() }
     val placementRequests = List(4) { generatePlacementRequest() }
 
-    val assessmentTasks = assessments.map { Task(it.id, it.createdAt.toLocalDateTime(), "assessment") }
-    val placementApplicationTasks = placementApplications.map { Task(it.id, it.createdAt.toLocalDateTime(), "placement_application") }
-    val placementRequestTasks = placementRequests.map { Task(it.id, it.createdAt.toLocalDateTime(), "placement_request") }
+    val assessmentTasks = assessments.map { Task(it.id, it.createdAt.toLocalDateTime(), TaskEntityType.ASSESSMENT) }
+    val placementApplicationTasks = placementApplications.map { Task(it.id, it.createdAt.toLocalDateTime(), TaskEntityType.PLACEMENT_APPLICATION) }
+    val placementRequestTasks = placementRequests.map { Task(it.id, it.createdAt.toLocalDateTime(), TaskEntityType.PLACEMENT_REQUEST) }
 
     val tasks = listOf(
       assessmentTasks,
@@ -339,7 +340,7 @@ class TaskServiceTest {
       assessments.map { TypedTask.Assessment(it) },
       placementApplications.map { TypedTask.PlacementApplication(it) },
       placementRequests.map { TypedTask.PlacementRequest(it) },
-    ).flatten().sortedBy { it.createdAt }
+    ).flatten()
 
     Assertions.assertThat(result.first).isEqualTo(expectedTasks)
     Assertions.assertThat(result.second).isEqualTo(metadata)
