@@ -77,9 +77,8 @@ class UserTransformer(
     UserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION -> ApprovedPremisesUserRole.excludedFromAssessAllocation
     UserRole.CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION -> ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation
     UserRole.CAS1_REPORT_VIEWER -> ApprovedPremisesUserRole.reportViewer
-    UserRole.CAS3_ASSESSOR -> null
-    UserRole.CAS3_REFERRER -> null
-    UserRole.CAS3_REPORTER -> null
+    UserRole.CAS1_APPEALS_MANAGER -> ApprovedPremisesUserRole.appealsManager
+    UserRole.CAS3_ASSESSOR, UserRole.CAS3_REFERRER, UserRole.CAS3_REPORTER -> null
   }
 
   private fun transformTemporaryAccommodationRoleToApi(userRole: UserRoleAssignmentEntity): TemporaryAccommodationUserRole? = when (userRole.role) {

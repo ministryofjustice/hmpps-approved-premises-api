@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.appealsManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.matcher
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole.workflowManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
@@ -85,6 +86,7 @@ class UserTransformerTest {
     user.addRoleForUnitTest(UserRole.CAS1_MATCHER)
     user.addRoleForUnitTest(UserRole.CAS1_MATCHER)
     user.addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
+    user.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
 
     val result =
       userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
@@ -93,6 +95,7 @@ class UserTransformerTest {
       listOf(
         matcher,
         workflowManager,
+        appealsManager,
       ),
     )
   }

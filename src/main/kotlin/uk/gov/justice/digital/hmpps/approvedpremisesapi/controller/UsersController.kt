@@ -153,6 +153,7 @@ class UsersController(
     ApprovedPremisesUserRole.excludedFromAssessAllocation -> JpaUserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION
     ApprovedPremisesUserRole.excludedFromMatchAllocation -> JpaUserRole.CAS1_EXCLUDED_FROM_MATCH_ALLOCATION
     ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation -> JpaUserRole.CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION
+    ApprovedPremisesUserRole.appealsManager -> JpaUserRole.CAS1_APPEALS_MANAGER
   }
 
   private fun transformApiQualification(apiQualification: uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification): uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification =
