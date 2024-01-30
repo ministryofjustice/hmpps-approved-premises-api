@@ -312,7 +312,6 @@ class BookingTest : IntegrationTestBase() {
         }
       }
     }
-
   }
 
   @Test

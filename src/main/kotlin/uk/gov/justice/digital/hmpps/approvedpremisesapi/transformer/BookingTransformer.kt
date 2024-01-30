@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PremisesBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -48,6 +49,7 @@ class BookingTransformer(
       status = jpa.getStatus(),
     )
   }
+
   fun transformJpaToApi(jpa: BookingEntity, personInfo: PersonInfoResult, staffMember: StaffMember?): Booking {
     val hasNonZeroDayTurnaround = jpa.turnaround != null && jpa.turnaround!!.workingDayCount != 0
 
@@ -77,6 +79,7 @@ class BookingTransformer(
       effectiveEndDate = if (hasNonZeroDayTurnaround) workingDayCountService.addWorkingDays(jpa.departureDate, jpa.turnaround!!.workingDayCount) else jpa.departureDate,
       applicationId = jpa.application?.id,
       assessmentId = jpa.application?.getLatestAssessment()?.id,
+      premises = jpa.premises.let { BookingPremisesSummary(it.id, it.name) },
     )
   }
 

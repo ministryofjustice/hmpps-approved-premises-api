@@ -312,32 +312,25 @@ class PremisesController(
   }
 
   override fun premisesPremisesIdBookingsBookingIdGet(premisesId: UUID, bookingId: UUID): ResponseEntity<Booking> {
-    val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
+    val bookingResult = bookingService.getBooking(bookingId)
 
-    val user = usersService.getUserForRequest()
-
-    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
-      throw ForbiddenProblem()
+    val bookingAndPersons = when (bookingResult) {
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(bookingResult.id!!, bookingResult.entityType!!)
+      is AuthorisableActionResult.Success -> bookingResult.entity
     }
 
-    val personInfo = offenderService.getInfoForPerson(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+    val apiBooking = bookingTransformer.transformJpaToApi(
+      bookingAndPersons.booking,
+      bookingAndPersons.personInfo,
+      bookingAndPersons.staffMember
+    )
 
-    val staffMember = booking.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
-      val premises = booking.premises
-
-      // TODO: Bookings will need to be specialised in a similar way to Premises so that TA Bookings do not have a keyWorkerStaffCode field
-      if (premises !is ApprovedPremisesEntity) throw RuntimeException("Booking has a Key Worker specified but Premises is not an ApprovedPremises")
-
-      val staffMemberResult = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)
-
-      if (staffMemberResult !is AuthorisableActionResult.Success) {
-        throw InternalServerErrorProblem("Unable to get Key Worker via Staff Code: $keyWorkerStaffCode / Q Code: ${premises.qCode}")
-      }
-
-      staffMemberResult.entity
+    if (apiBooking.premises.id != premisesId) {
+      throw NotFoundProblem(premisesId, "Premises")
     }
 
-    return ResponseEntity.ok(bookingTransformer.transformJpaToApi(booking, personInfo, staffMember))
+    return ResponseEntity.ok(apiBooking)
   }
 
   @Transactional

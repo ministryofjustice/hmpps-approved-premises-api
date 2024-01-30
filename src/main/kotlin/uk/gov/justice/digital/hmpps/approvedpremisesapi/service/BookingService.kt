@@ -71,6 +71,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -122,6 +123,8 @@ class BookingService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: String,
   @Value("\${arrived-departed-domain-events-disabled}") private val arrivedAndDepartedDomainEventsDisabled: Boolean,
+  private val userService: UserService,
+  private val userAccessService: UserAccessService,
 ) {
   val approvedPremisesBookingAppealedCancellationReasonId: UUID =
     UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
@@ -129,6 +132,42 @@ class BookingService(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   fun updateBooking(bookingEntity: BookingEntity): BookingEntity = bookingRepository.save(bookingEntity)
+
+  fun getBooking(id: UUID): AuthorisableActionResult<BookingAndPersons> {
+    val booking = bookingRepository.findByIdOrNull(id)
+      ?: return AuthorisableActionResult.NotFound("Booking", id.toString())
+
+    val user = userService.getUserForRequest()
+
+    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    val personInfo = offenderService.getInfoForPerson(booking.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+
+    val staffMember = booking.keyWorkerStaffCode?.let { keyWorkerStaffCode ->
+      val premises = booking.premises
+
+      // Bookings will need to be specialised in a similar way to Premises so that TA Bookings do not have a keyWorkerStaffCode field
+      check (premises is ApprovedPremisesEntity) { "Booking has a Key Worker specified but Premises is not an ApprovedPremises" }
+
+      val staffMemberResult = staffMemberService.getStaffMemberByCode(keyWorkerStaffCode, premises.qCode)
+
+      if (staffMemberResult !is AuthorisableActionResult.Success) {
+        throw InternalServerErrorProblem("Unable to get Key Worker via Staff Code: $keyWorkerStaffCode / Q Code: ${premises.qCode}")
+      }
+
+      staffMemberResult.entity
+    }
+
+    return AuthorisableActionResult.Success(BookingAndPersons(booking, personInfo, staffMember))
+  }
+
+  data class BookingAndPersons(
+    val booking: BookingEntity,
+    val personInfo: PersonInfoResult,
+    val staffMember: uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember?,
+  )
 
   @Transactional
   fun createApprovedPremisesBookingFromPlacementRequest(

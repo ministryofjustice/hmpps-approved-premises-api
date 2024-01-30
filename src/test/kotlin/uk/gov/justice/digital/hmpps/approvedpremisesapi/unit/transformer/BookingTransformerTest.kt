@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
@@ -255,6 +256,7 @@ class BookingTransformerTest {
         cancellations = listOf(),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
+        premises = BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
       ),
     )
   }
@@ -335,6 +337,7 @@ class BookingTransformerTest {
         effectiveEndDate = LocalDate.parse("2022-08-30"),
         applicationId = application.id,
         assessmentId = latestAssessment.id,
+        premises = BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
       ),
     )
   }
@@ -380,6 +383,7 @@ class BookingTransformerTest {
         cancellations = listOf(),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
+        premises = BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
       ),
     )
   }
@@ -449,6 +453,7 @@ class BookingTransformerTest {
         cancellations = listOf(),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
+        premises = BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
       ),
     )
   }
@@ -523,6 +528,7 @@ class BookingTransformerTest {
         cancellations = listOf(),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
+        premises = BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
       ),
     )
   }
@@ -603,6 +609,7 @@ class BookingTransformerTest {
         ),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
+        premises = BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
       ),
     )
   }
@@ -715,6 +722,7 @@ class BookingTransformerTest {
         ),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
+        premises = BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
       ),
     )
   }
@@ -892,6 +900,7 @@ class BookingTransformerTest {
         cancellations = listOf(),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
+        premises = BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
       ),
     )
   }
@@ -1096,6 +1105,7 @@ class BookingTransformerTest {
           ),
         ),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
+        premises = BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
       ),
     )
   }
@@ -1314,6 +1324,7 @@ class BookingTransformerTest {
         ),
         turnaroundStartDate = departedAt.toLocalDate().plusDays(1),
         effectiveEndDate = expectedEffectiveEndDate,
+        premises = BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
       ),
     )
   }
@@ -1532,6 +1543,7 @@ class BookingTransformerTest {
         ),
         turnaroundStartDate = departedAt.toLocalDate().plusDays(1),
         effectiveEndDate = expectedEffectiveEndDate,
+        premises = BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
       ),
     )
   }
@@ -1792,6 +1804,7 @@ class BookingTransformerTest {
         cancellations = listOf(),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
+        premises = BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
       ),
     )
   }
@@ -1862,6 +1875,7 @@ class BookingTransformerTest {
         cancellations = listOf(),
         turnarounds = listOf(),
         effectiveEndDate = LocalDate.parse("2022-08-30"),
+        premises = BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
       ),
     )
   }
@@ -1979,6 +1993,7 @@ class BookingTransformerTest {
         ),
         turnaroundStartDate = LocalDate.parse("2022-08-31"),
         effectiveEndDate = LocalDate.parse("2022-09-05"),
+        premises = BookingPremisesSummary(premisesEntity.id, premisesEntity.name),
       ),
     )
   }
