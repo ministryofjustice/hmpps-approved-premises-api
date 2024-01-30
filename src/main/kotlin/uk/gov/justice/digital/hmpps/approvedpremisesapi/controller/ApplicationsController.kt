@@ -42,14 +42,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import java.net.URI
 import java.util.UUID
@@ -70,6 +74,10 @@ class ApplicationsController(
   private val documentTransformer: DocumentTransformer,
   private val assessmentService: AssessmentService,
   private val userService: UserService,
+  private val bookingService: BookingService,
+  private val placementRequestService: PlacementRequestService,
+  private val placementRequestTransformer: PlacementRequestTransformer,
+  private val bookingTransformer: BookingTransformer,
 ) : ApplicationsApiDelegate {
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
@@ -429,21 +437,37 @@ class ApplicationsController(
     return ResponseEntity.ok(placementApplications)
   }
 
-  override fun applicationsApplicationIdWithdrawablesGet(applicationId: UUID): ResponseEntity<List<Withdrawable>> {
+  override fun applicationsApplicationIdWithdrawablesGet(
+    applicationId: UUID,
+    xServiceName: ServiceName
+  ): ResponseEntity<List<Withdrawable>> {
+    if (xServiceName != ServiceName.approvedPremises) {
+      throw ForbiddenProblem()
+    }
+
     val user = userService.getUserForRequest()
 
-    when (
-      val applicationResult =
-        applicationService.getApplicationForUsername(applicationId, user.deliusUsername)
+    val application = when (
+      val applicationResult = applicationService.getApplicationForUsername(applicationId, user.deliusUsername)
     ) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> applicationResult.entity
     }
 
-    val withdrawables = applicationService.getWithdrawables(applicationId)
+    if (application !is ApprovedPremisesApplicationEntity) {
+      throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
+    }
 
-    return ResponseEntity.ok(withdrawables)
+    val allWithdrawables =
+      placementRequestService.getWithdrawablePlacementRequests(application)
+        .map { placementRequestTransformer.transformToWithdrawable(it) } +
+      bookingService.getCancelleableBookings(application)
+        .map { bookingTransformer.transformToWithdrawable(it) } +
+      placementApplicationService.getWithdrawablePlacementApplications(application)
+        .map { placementApplicationTransformer.transformToWithdrawable(it) }
+
+    return ResponseEntity.ok(allWithdrawables)
   }
 
   private fun getPersonDetailAndTransform(application: ApplicationEntity, user: UserEntity): Application {

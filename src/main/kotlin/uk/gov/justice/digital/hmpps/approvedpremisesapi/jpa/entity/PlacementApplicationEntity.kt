@@ -84,6 +84,9 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
     """,
   )
   fun findAllSubmittedNonReallocatedAndNonWithdrawnApplicationsForApplicationId(applicationId: UUID): List<PlacementApplicationEntity>
+
+  fun findByApplication(application: ApplicationEntity): List<PlacementApplicationEntity>
+
 }
 
 @Entity
@@ -140,7 +143,11 @@ data class PlacementApplicationEntity(
   @Enumerated(value = EnumType.STRING)
   var withdrawalReason: PlacementApplicationWithdrawalReason?,
 ) {
-  fun canBeWithdrawn() = decision == null
+  fun isReallocated() = reallocatedAt != null
+
+  fun hasADecision() = decision != null
+
+  fun canBeWithdrawn() = !isReallocated() && !hasADecision()
 
   override fun toString() = "PlacementApplicationEntity: $id"
 }

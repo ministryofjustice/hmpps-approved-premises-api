@@ -71,7 +71,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
@@ -3030,6 +3029,7 @@ class ApplicationTest : IntegrationTestBase() {
         webTestClient.get()
           .uri("/applications/${application.id}/withdrawables")
           .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
           .exchange()
           .expectStatus()
           .isOk
@@ -3086,6 +3086,7 @@ class ApplicationTest : IntegrationTestBase() {
             webTestClient.get()
               .uri("/applications/${application.id}/withdrawables")
               .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
               .expectStatus()
               .isOk
@@ -3104,25 +3105,31 @@ class ApplicationTest : IntegrationTestBase() {
 
             val (application, _) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
 
-            val application1ExpectedArrival1 = LocalDate.now().plusDays(1)
-            val application1Duration1 = 5
-            val application1ExpectedArrival2 = LocalDate.now().plusDays(10)
-            val application1Duration2 = 10
+            val submittedApplication1ExpectedArrival1 = LocalDate.now().plusDays(1)
+            val submittedApplication1Duration1 = 5
+            val submittedApplication1ExpectedArrival2 = LocalDate.now().plusDays(10)
+            val submittedApplication1Duration2 = 10
 
-            val placementApplication1 = produceAndPersistPlacementApplication(
+            val submittedPlacementApplication1 = produceAndPersistPlacementApplication(
               application,
-              listOf(application1ExpectedArrival1 to application1Duration1, application1ExpectedArrival2 to application1Duration2),
+              listOf(
+                submittedApplication1ExpectedArrival1 to submittedApplication1Duration1,
+                submittedApplication1ExpectedArrival2 to submittedApplication1Duration2),
             )
 
-            val application2ExpectedArrival1 = LocalDate.now().plusDays(50)
-            val application2Duration1 = 6
-
-            val placementApplication2 = produceAndPersistPlacementApplication(
+            val submittedApplication2ExpectedArrival1 = LocalDate.now().plusDays(50)
+            val submittedApplication2Duration1 = 6
+            val submittedPlacementApplication2 = produceAndPersistPlacementApplication(
               application,
-              listOf(application2ExpectedArrival1 to application2Duration1),
+              listOf(submittedApplication2ExpectedArrival1 to submittedApplication2Duration1),
             )
 
-            produceAndPersistPlacementApplication(application, listOf(LocalDate.now() to 2)) {
+            val unsubmittedApplicationExpectedArrival1 = LocalDate.now().plusDays(50)
+            val unsubmittedApplicationDuration1 = 6
+            val unsubmittedPlacementApplication = produceAndPersistPlacementApplication(
+              application,
+              listOf(unsubmittedApplicationExpectedArrival1 to unsubmittedApplicationDuration1)
+            ) {
               withSubmittedAt(null)
             }
 
@@ -3148,23 +3155,29 @@ class ApplicationTest : IntegrationTestBase() {
 
             val expected = listOf(
               Withdrawable(
-                placementApplication1.id,
+                submittedPlacementApplication1.id,
                 WithdrawableType.placementApplication,
                 listOf(
-                  datePeriodForDuration(application1ExpectedArrival1, application1Duration1),
-                  datePeriodForDuration(application1ExpectedArrival2, application1Duration2),
+                  datePeriodForDuration(submittedApplication1ExpectedArrival1, submittedApplication1Duration1),
+                  datePeriodForDuration(submittedApplication1ExpectedArrival2, submittedApplication1Duration2),
                 ),
               ),
               Withdrawable(
-                placementApplication2.id,
+                submittedPlacementApplication2.id,
                 WithdrawableType.placementApplication,
-                listOf(datePeriodForDuration(application2ExpectedArrival1, application2Duration1)),
+                listOf(datePeriodForDuration(submittedApplication2ExpectedArrival1, submittedApplication2Duration1)),
+              ),
+              Withdrawable(
+                unsubmittedPlacementApplication.id,
+                WithdrawableType.placementApplication,
+                listOf(datePeriodForDuration(unsubmittedApplicationExpectedArrival1, unsubmittedApplicationDuration1)),
               ),
             )
 
             webTestClient.get()
               .uri("/applications/${application.id}/withdrawables")
               .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
               .expectStatus()
               .isOk
@@ -3199,12 +3212,14 @@ class ApplicationTest : IntegrationTestBase() {
               booking2expectedDeparture,
             )
 
-            produceAndPersistBooking(
+            val cancelledBooking = produceAndPersistBooking(
               application,
               LocalDate.now(),
               LocalDate.now().plusDays(1),
-            ) {
-              withStatus(BookingStatus.cancelled)
+            )
+            cancellationEntityFactory.produceAndPersist {
+              withBooking(cancelledBooking)
+              withReason(cancellationReasonEntityFactory.produceAndPersist())
             }
 
             val bookingWithArrival = produceAndPersistBooking(
@@ -3232,6 +3247,7 @@ class ApplicationTest : IntegrationTestBase() {
             webTestClient.get()
               .uri("/applications/${application.id}/withdrawables")
               .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
               .expectStatus()
               .isOk
@@ -3289,6 +3305,7 @@ class ApplicationTest : IntegrationTestBase() {
             webTestClient.get()
               .uri("/applications/${application.id}/withdrawables")
               .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
               .exchange()
               .expectStatus()
               .isOk

@@ -2,7 +2,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 
 @Component
@@ -10,7 +13,7 @@ class PlacementApplicationTransformer(
   private val objectMapper: ObjectMapper,
 ) {
   fun transformJpaToApi(jpa: PlacementApplicationEntity): PlacementApplication {
-    var latestAssessment = jpa.application.getLatestAssessment()!!
+    val latestAssessment = jpa.application.getLatestAssessment()!!
 
     return PlacementApplication(
       id = jpa.id,
@@ -28,4 +31,12 @@ class PlacementApplicationTransformer(
       canBeWithdrawn = jpa.canBeWithdrawn(),
     )
   }
+
+  fun transformToWithdrawable(placementApplication: PlacementApplicationEntity): Withdrawable = Withdrawable(
+    placementApplication.id,
+    WithdrawableType.placementApplication,
+    placementApplication.placementDates.map {
+      DatePeriod(it.expectedArrival, it.expectedDeparture())
+    }
+  )
 }

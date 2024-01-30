@@ -9,6 +9,9 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -16,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementDateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -23,7 +27,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
+import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.UUID
 
 class PlacementApplicationTransformerTest {
   private val objectMapper = ObjectMapper().apply {
@@ -121,5 +127,52 @@ class PlacementApplicationTransformerTest {
 
     assertThat(result.id).isEqualTo(placementApplication.id)
     assertThat(result.canBeWithdrawn).isEqualTo(false)
+  }
+
+  @Test
+  fun `transformToWithdrawable converts correctly`() {
+    val id = UUID.randomUUID()
+
+    val jpa = PlacementApplicationEntityFactory()
+      .withId(id)
+      .withCreatedByUser(user)
+      .withApplication(applicationMock)
+      .withDecision(PlacementApplicationDecision.ACCEPTED)
+      .produce()
+
+    jpa.placementDates.add(
+      PlacementDateEntityFactory()
+        .withExpectedArrival(LocalDate.of(2023,12,11))
+        .withDuration(30)
+        .withPlacementApplication(jpa)
+        .produce()
+    )
+
+    jpa.placementDates.add(
+      PlacementDateEntityFactory()
+        .withExpectedArrival(LocalDate.of(2024,1,31))
+        .withDuration(15)
+        .withPlacementApplication(jpa)
+        .produce()
+    )
+
+    val result = placementApplicationTransformer.transformToWithdrawable(jpa)
+
+    assertThat(result).isEqualTo(
+      Withdrawable(
+        id,
+        WithdrawableType.placementApplication,
+        listOf(
+          DatePeriod(
+            LocalDate.of(2023,12,11),
+            LocalDate.of(2024,1,10)
+          ),
+          DatePeriod(
+            LocalDate.of(2024,1,31),
+            LocalDate.of(2024,2,15)
+          ),
+        )
+      )
+    )
   }
 }

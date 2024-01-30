@@ -5,8 +5,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingPremisesSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PremisesBooking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.convert.EnumConverterFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingSummary
@@ -88,6 +91,12 @@ class BookingTransformer(
     jpa.service == ServiceName.temporaryAccommodation.value -> determineTemporaryAccommodationStatus(jpa)
     else -> throw RuntimeException("Could not determine service for Booking ${jpa.id}")
   }
+
+  fun transformToWithdrawable(jpa: BookingEntity) = Withdrawable(
+    jpa.id,
+    WithdrawableType.booking,
+    listOf(DatePeriod(jpa.arrivalDate, jpa.departureDate))
+  )
 
   private fun determineApprovedPremisesStatus(jpa: BookingEntity) = when {
     jpa.nonArrival != null -> BookingStatus.notMinusArrived
