@@ -26,8 +26,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -1180,6 +1183,11 @@ class BookingService(
     is TemporaryAccommodationPremisesEntity -> createCas3Cancellation(booking, cancelledAt, reasonId, notes)
     else -> throw RuntimeException("Unknown premises type ${booking.premises::class.qualifiedName}")
   }
+
+  fun getCancelleableBookings(application: ApprovedPremisesApplicationEntity): List<BookingEntity> =
+    bookingRepository.findAllByApplication(application).filter { isCancellableCas1(it) }
+
+  private fun isCancellableCas1(booking: BookingEntity) = (booking.cancellation == null) && (booking.arrivals.isEmpty())
 
   private fun createCas1Cancellation(
     user: UserEntity?,

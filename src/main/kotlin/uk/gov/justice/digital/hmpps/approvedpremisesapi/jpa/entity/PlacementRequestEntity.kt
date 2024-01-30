@@ -26,6 +26,8 @@ import javax.persistence.Table
 @Suppress("FunctionNaming")
 @Repository
 interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUID> {
+  fun findByApplication(application: ApprovedPremisesApplicationEntity): List<PlacementRequestEntity>
+
   @Query(
     """
       SELECT p FROM PlacementRequestEntity p
@@ -203,7 +205,11 @@ data class PlacementRequestEntity(
 
   @Enumerated(value = EnumType.STRING)
   var withdrawalReason: PlacementRequestWithdrawalReason?,
-)
+) {
+  fun canBeWithdrawn() = reallocatedAt == null && booking == null && !isWithdrawn
+
+  fun expectedDeparture() = expectedArrival.plusDays(duration.toLong())
+}
 
 enum class PlacementRequestWithdrawalReason {
   DUPLICATE_PLACEMENT_REQUEST,

@@ -5,11 +5,15 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -27,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
@@ -51,7 +56,7 @@ class PlacementApplicationService(
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
   @Value("\${notify.send-placement-request-notifications}")
-  private val sendPlacementRequestNotifications: Boolean
+  private val sendPlacementRequestNotifications: Boolean,
 ) {
 
   fun getVisiblePlacementApplicationsForUser(
@@ -427,6 +432,9 @@ class PlacementApplicationService(
 
     return wrapWithMetadata(allReallocatable, pageCriteria)
   }
+
+  fun getWithdrawablePlacementApplications(application: ApprovedPremisesApplicationEntity) =
+    placementApplicationRepository.findByApplication(application).filter { it.canBeWithdrawn() }
 
   private fun setSchemaUpToDate(placementApplicationEntity: PlacementApplicationEntity): PlacementApplicationEntity {
     val latestSchema = jsonSchemaService.getNewestSchema(

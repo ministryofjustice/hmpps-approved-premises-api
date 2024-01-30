@@ -39,5 +39,6 @@ data class PlacementDateEntity(
 
   val duration: Int,
 ) {
+  fun expectedDeparture() = expectedArrival.plusDays(duration.toLong())
   override fun toString() = "PlacementDateEntity: $id"
 }

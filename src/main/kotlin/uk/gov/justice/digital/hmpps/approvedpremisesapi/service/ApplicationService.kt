@@ -18,12 +18,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -38,7 +40,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1WithdrawableDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -60,7 +61,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.Cas1WithdrawableDateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.time.Instant
@@ -104,8 +104,6 @@ class ApplicationService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   private val apAreaRepository: ApAreaRepository,
   private val applicationTimelineTransformer: ApplicationTimelineTransformer,
-  private val cas1WithdrawableDateRepository: Cas1WithdrawableDateRepository,
-  private val cas1WithdrawableDateTransformer: Cas1WithdrawableDateTransformer,
 ) {
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationSummary> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
@@ -1075,11 +1073,5 @@ class ApplicationService(
   ): ApplicationTimelineNote {
     val savedNote = applicationTimelineNoteService.saveApplicationTimelineNote(applicationId, note, user)
     return applicationTimelineNoteTransformer.transformJpaToApi(savedNote)
-  }
-
-  fun getWithdrawables(applicationId: UUID): List<Withdrawable> {
-    val withdrawableDate = cas1WithdrawableDateRepository.getWithdrawablesForApplication(applicationId)
-
-    return cas1WithdrawableDateTransformer.transformJpaToAPI(withdrawableDate)
   }
 }
