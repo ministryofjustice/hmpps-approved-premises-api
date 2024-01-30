@@ -120,7 +120,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.time.Instant
 import java.time.LocalDate
@@ -160,82 +163,53 @@ class BookingServiceTest {
   private val mockBedMoveRepository = mockk<BedMoveRepository>()
   private val mockPremisesRepository = mockk<PremisesRepository>()
   private val mockAssessmentRepository = mockk<AssessmentRepository>()
+  private val mockUserService = mockk<UserService>()
+  private val mockUserAccessService = mockk<UserAccessService>()
 
-  private val bookingService = BookingService(
-    premisesService = mockPremisesService,
-    staffMemberService = mockStaffMemberService,
-    offenderService = mockOffenderService,
-    domainEventService = mockDomainEventService,
-    cas3DomainEventService = mockCas3DomainEventService,
-    cruService = mockCruService,
-    applicationService = mockApplicationService,
-    workingDayCountService = mockWorkingDayCountService,
-    emailNotificationService = mockEmailNotificationService,
-    placementRequestService = mockPlacementRequestService,
-    communityApiClient = mockCommunityApiClient,
-    bookingRepository = mockBookingRepository,
-    arrivalRepository = mockArrivalRepository,
-    cancellationRepository = mockCancellationRepository,
-    confirmationRepository = mockConfirmationRepository,
-    extensionRepository = mockExtensionRepository,
-    dateChangeRepository = mockDateChangeRepository,
-    departureRepository = mockDepartureRepository,
-    nonArrivalRepository = mockNonArrivalRepository,
-    departureReasonRepository = mockDepartureReasonRepository,
-    moveOnCategoryRepository = mockMoveOnCategoryRepository,
-    destinationProviderRepository = mockDestinationProviderRepository,
-    nonArrivalReasonRepository = mockNonArrivalReasonRepository,
-    cancellationReasonRepository = mockCancellationReasonRepository,
-    bedRepository = mockBedRepository,
-    placementRequestRepository = mockPlacementRequestRepository,
-    lostBedsRepository = mockLostBedsRepository,
-    turnaroundRepository = mockTurnaroundRepository,
-    bedMoveRepository = mockBedMoveRepository,
-    premisesRepository = mockPremisesRepository,
-    assessmentRepository = mockAssessmentRepository,
-    notifyConfig = NotifyConfig(),
-    applicationUrlTemplate = "http://frontend/applications/#id",
-    bookingUrlTemplate = "http://frontend/premises/#premisesId/bookings/#bookingId",
-    arrivedAndDepartedDomainEventsDisabled = false,
-  )
+  fun createBookingService(arrivedAndDepartedDomainEventsDisabled: Boolean): BookingService {
+    return BookingService(
+      premisesService = mockPremisesService,
+      staffMemberService = mockStaffMemberService,
+      offenderService = mockOffenderService,
+      domainEventService = mockDomainEventService,
+      cas3DomainEventService = mockCas3DomainEventService,
+      cruService = mockCruService,
+      applicationService = mockApplicationService,
+      workingDayCountService = mockWorkingDayCountService,
+      emailNotificationService = mockEmailNotificationService,
+      placementRequestService = mockPlacementRequestService,
+      communityApiClient = mockCommunityApiClient,
+      bookingRepository = mockBookingRepository,
+      arrivalRepository = mockArrivalRepository,
+      cancellationRepository = mockCancellationRepository,
+      confirmationRepository = mockConfirmationRepository,
+      extensionRepository = mockExtensionRepository,
+      dateChangeRepository = mockDateChangeRepository,
+      departureRepository = mockDepartureRepository,
+      nonArrivalRepository = mockNonArrivalRepository,
+      departureReasonRepository = mockDepartureReasonRepository,
+      moveOnCategoryRepository = mockMoveOnCategoryRepository,
+      destinationProviderRepository = mockDestinationProviderRepository,
+      nonArrivalReasonRepository = mockNonArrivalReasonRepository,
+      cancellationReasonRepository = mockCancellationReasonRepository,
+      bedRepository = mockBedRepository,
+      placementRequestRepository = mockPlacementRequestRepository,
+      lostBedsRepository = mockLostBedsRepository,
+      turnaroundRepository = mockTurnaroundRepository,
+      bedMoveRepository = mockBedMoveRepository,
+      premisesRepository = mockPremisesRepository,
+      assessmentRepository = mockAssessmentRepository,
+      notifyConfig = NotifyConfig(),
+      applicationUrlTemplate = "http://frontend/applications/#id",
+      bookingUrlTemplate = "http://frontend/premises/#premisesId/bookings/#bookingId",
+      arrivedAndDepartedDomainEventsDisabled = arrivedAndDepartedDomainEventsDisabled,
+      userService = mockUserService,
+      userAccessService = mockUserAccessService,
+    )
+  }
 
-  private val bookingServiceWithArrivedAndDepartedDomainEventsDisabled = BookingService(
-    premisesService = mockPremisesService,
-    staffMemberService = mockStaffMemberService,
-    offenderService = mockOffenderService,
-    domainEventService = mockDomainEventService,
-    cas3DomainEventService = mockCas3DomainEventService,
-    cruService = mockCruService,
-    applicationService = mockApplicationService,
-    workingDayCountService = mockWorkingDayCountService,
-    emailNotificationService = mockEmailNotificationService,
-    placementRequestService = mockPlacementRequestService,
-    communityApiClient = mockCommunityApiClient,
-    bookingRepository = mockBookingRepository,
-    arrivalRepository = mockArrivalRepository,
-    cancellationRepository = mockCancellationRepository,
-    confirmationRepository = mockConfirmationRepository,
-    extensionRepository = mockExtensionRepository,
-    dateChangeRepository = mockDateChangeRepository,
-    departureRepository = mockDepartureRepository,
-    nonArrivalRepository = mockNonArrivalRepository,
-    departureReasonRepository = mockDepartureReasonRepository,
-    moveOnCategoryRepository = mockMoveOnCategoryRepository,
-    destinationProviderRepository = mockDestinationProviderRepository,
-    nonArrivalReasonRepository = mockNonArrivalReasonRepository,
-    cancellationReasonRepository = mockCancellationReasonRepository,
-    bedRepository = mockBedRepository,
-    placementRequestRepository = mockPlacementRequestRepository,
-    lostBedsRepository = mockLostBedsRepository,
-    turnaroundRepository = mockTurnaroundRepository,
-    bedMoveRepository = mockBedMoveRepository,
-    premisesRepository = mockPremisesRepository,
-    assessmentRepository = mockAssessmentRepository,
-    notifyConfig = NotifyConfig(),
-    applicationUrlTemplate = "http://frontend/applications/#id",
-    bookingUrlTemplate = "http://frontend/premises/#premisesId/bookings/#bookingId",
-    arrivedAndDepartedDomainEventsDisabled = true,
-  )
+  private val bookingService = createBookingService(arrivedAndDepartedDomainEventsDisabled = false)
+  private val bookingServiceWithArrivedAndDepartedDomainEventsDisabled = createBookingService(arrivedAndDepartedDomainEventsDisabled = true)
 
   private val user = UserEntityFactory()
     .withUnitTestControlProbationRegion()

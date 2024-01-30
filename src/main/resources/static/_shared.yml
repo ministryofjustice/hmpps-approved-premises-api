@@ -582,11 +582,25 @@ components:
             assessmentId:
               type: string
               format: uuid
+            premises:
+              $ref: '#/components/schemas/BookingPremisesSummary'
           required:
             - status
             - extensions
             - departures
             - cancellations
+            - premises
+    BookingPremisesSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+        - id
+        - name
     ExtendedPremisesSummary:
       type: object
       properties:
