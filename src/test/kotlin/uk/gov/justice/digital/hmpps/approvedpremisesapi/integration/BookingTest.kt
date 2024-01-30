@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -62,153 +63,67 @@ class BookingTest : IntegrationTestBase() {
       .isUnauthorized
   }
 
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `Get a booking for an Approved Premises returns OK with the correct body when user has one of roles MANAGER, MATCHER`(
-    role: UserRole,
-  ) {
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
-        }
+  @Nested
+  inner class GetBookingForPremises {
 
-        val keyWorker = ContextStaffMemberFactory().produce()
-        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
-
-        val booking = bookingEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withStaffKeyWorkerCode(keyWorker.code)
-          withCrn(offenderDetails.otherIds.crn)
-          withServiceName(ServiceName.approvedPremises)
-        }
-
-        webTestClient.get()
-          .uri("/premises/${premises.id}/bookings/${booking.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              bookingTransformer.transformJpaToApi(
-                booking,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                keyWorker,
-              ),
-            ),
-          )
-      }
-    }
-  }
-
-  @Test
-  fun `Get a booking returns OK with the correct body when person details for a booking could not be found`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
-      }
-
-      val keyWorker = ContextStaffMemberFactory().produce()
-      APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
-
-      val booking = bookingEntityFactory.produceAndPersist {
-        withPremises(premises)
-        withStaffKeyWorkerCode(keyWorker.code)
-        withCrn("SOME-CRN")
-        withServiceName(ServiceName.approvedPremises)
-      }
-
-      webTestClient.get()
-        .uri("/premises/${premises.id}/bookings/${booking.id}")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .json(
-          objectMapper.writeValueAsString(
-            bookingTransformer.transformJpaToApi(
-              booking,
-              PersonInfoResult.NotFound("SOME-CRN"),
-              keyWorker,
-            ),
-          ),
-        )
-    }
-  }
-
-  @Test
-  fun `Get a booking for an Approved Premises returns OK with the correct body when the NOMS number is null`() {
-    `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
-      `Given an Offender`(
-        offenderDetailsConfigBlock = {
-          withNomsNumber(null)
-        },
-      ) { offenderDetails, _ ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
-        }
-
-        val keyWorker = ContextStaffMemberFactory().produce()
-        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
-
-        val booking = bookingEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withStaffKeyWorkerCode(keyWorker.code)
-          withCrn(offenderDetails.otherIds.crn)
-          withNomsNumber(null)
-          withServiceName(ServiceName.approvedPremises)
-        }
-
-        webTestClient.get()
-          .uri("/premises/${premises.id}/bookings/${booking.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              bookingTransformer.transformJpaToApi(
-                booking,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null),
-                keyWorker,
-              ),
-            ),
-          )
-      }
-    }
-  }
-
-  @Test
-  fun `Get a booking for an Temporary Accommodation Premises returns OK with the correct body`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
-        }
-
-        val bed = bedEntityFactory.produceAndPersist {
-          withName("test-bed")
-          withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
-              withName("test-room")
-              withYieldedPremises { premises }
-            }
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    fun `Get a booking for an Approved Premises returns OK with the correct body when user has one of roles MANAGER, MATCHER`(
+      role: UserRole,
+    ) {
+      `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val premises = approvedPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
           }
+
+          val keyWorker = ContextStaffMemberFactory().produce()
+          APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+
+          val booking = bookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withStaffKeyWorkerCode(keyWorker.code)
+            withCrn(offenderDetails.otherIds.crn)
+            withServiceName(ServiceName.approvedPremises)
+          }
+
+          webTestClient.get()
+            .uri("/premises/${premises.id}/bookings/${booking.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                bookingTransformer.transformJpaToApi(
+                  booking,
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  keyWorker,
+                ),
+              ),
+            )
         }
+      }
+    }
+
+    @Test
+    fun `Get a booking returns OK with the correct body when person details for a booking could not be found`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+        }
+
+        val keyWorker = ContextStaffMemberFactory().produce()
+        APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
 
         val booking = bookingEntityFactory.produceAndPersist {
           withPremises(premises)
-          withCrn(offenderDetails.otherIds.crn)
-          withServiceName(ServiceName.temporaryAccommodation)
-          withYieldedBed { bed }
+          withStaffKeyWorkerCode(keyWorker.code)
+          withCrn("SOME-CRN")
+          withServiceName(ServiceName.approvedPremises)
         }
 
         webTestClient.get()
@@ -222,57 +137,148 @@ class BookingTest : IntegrationTestBase() {
             objectMapper.writeValueAsString(
               bookingTransformer.transformJpaToApi(
                 booking,
-                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
-                null,
+                PersonInfoResult.NotFound("SOME-CRN"),
+                keyWorker,
               ),
             ),
           )
       }
     }
-  }
 
-  @Test
-  fun `Get a booking for a Temporary Accommodation Premises not in the user's region returns 403 Forbidden`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withId(UUID.randomUUID())
-              withYieldedApArea {
-                apAreaEntityFactory.produceAndPersist()
+    @Test
+    fun `Get a booking for an Approved Premises returns OK with the correct body when the NOMS number is null`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { _, jwt ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withNomsNumber(null)
+          },
+        ) { offenderDetails, _ ->
+          val premises = approvedPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+          }
+
+          val keyWorker = ContextStaffMemberFactory().produce()
+          APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+
+          val booking = bookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withStaffKeyWorkerCode(keyWorker.code)
+            withCrn(offenderDetails.otherIds.crn)
+            withNomsNumber(null)
+            withServiceName(ServiceName.approvedPremises)
+          }
+
+          webTestClient.get()
+            .uri("/premises/${premises.id}/bookings/${booking.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                bookingTransformer.transformJpaToApi(
+                  booking,
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, null),
+                  keyWorker,
+                ),
+              ),
+            )
+        }
+      }
+    }
+
+    @Test
+    fun `Get a booking for an Temporary Accommodation Premises returns OK with the correct body`() {
+      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+          }
+
+          val bed = bedEntityFactory.produceAndPersist {
+            withName("test-bed")
+            withYieldedRoom {
+              roomEntityFactory.produceAndPersist {
+                withName("test-room")
+                withYieldedPremises { premises }
               }
             }
           }
-        }
 
-        val bed = bedEntityFactory.produceAndPersist {
-          withName("test-bed")
-          withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
-              withName("test-room")
-              withYieldedPremises { premises }
-            }
+          val booking = bookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withCrn(offenderDetails.otherIds.crn)
+            withServiceName(ServiceName.temporaryAccommodation)
+            withYieldedBed { bed }
           }
-        }
 
-        val booking = bookingEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withCrn(offenderDetails.otherIds.crn)
-          withServiceName(ServiceName.temporaryAccommodation)
-          withYieldedBed { bed }
+          webTestClient.get()
+            .uri("/premises/${premises.id}/bookings/${booking.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                bookingTransformer.transformJpaToApi(
+                  booking,
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  null,
+                ),
+              ),
+            )
         }
-
-        webTestClient.get()
-          .uri("/premises/${premises.id}/bookings/${booking.id}")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isForbidden
       }
     }
+
+    @Test
+    fun `Get a booking for a Temporary Accommodation Premises not in the user's region returns 403 Forbidden`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion {
+              probationRegionEntityFactory.produceAndPersist {
+                withId(UUID.randomUUID())
+                withYieldedApArea {
+                  apAreaEntityFactory.produceAndPersist()
+                }
+              }
+            }
+          }
+
+          val bed = bedEntityFactory.produceAndPersist {
+            withName("test-bed")
+            withYieldedRoom {
+              roomEntityFactory.produceAndPersist {
+                withName("test-room")
+                withYieldedPremises { premises }
+              }
+            }
+          }
+
+          val booking = bookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withCrn(offenderDetails.otherIds.crn)
+            withServiceName(ServiceName.temporaryAccommodation)
+            withYieldedBed { bed }
+          }
+
+          webTestClient.get()
+            .uri("/premises/${premises.id}/bookings/${booking.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+    }
+
   }
 
   @Test
