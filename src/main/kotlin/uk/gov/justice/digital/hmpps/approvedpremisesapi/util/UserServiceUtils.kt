@@ -24,4 +24,5 @@ fun transformUserRoles(approvedPremisesUserRole: ApprovedPremisesUserRole): User
   ApprovedPremisesUserRole.excludedFromAssessAllocation -> UserRole.CAS1_EXCLUDED_FROM_ASSESS_ALLOCATION
   ApprovedPremisesUserRole.excludedFromMatchAllocation -> UserRole.CAS1_EXCLUDED_FROM_MATCH_ALLOCATION
   ApprovedPremisesUserRole.excludedFromPlacementApplicationAllocation -> UserRole.CAS1_EXCLUDED_FROM_PLACEMENT_APPLICATION_ALLOCATION
+  ApprovedPremisesUserRole.appealsManager -> UserRole.CAS1_APPEALS_MANAGER
 }
