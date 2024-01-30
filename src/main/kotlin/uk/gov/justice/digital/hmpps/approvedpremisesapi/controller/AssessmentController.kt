@@ -19,8 +19,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateAssessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatedClarificationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -75,14 +77,14 @@ class AssessmentController(
           PageCriteria(resolvedSortBy, resolvedSortDirection, page, perPage),
         )
         val transformSummaries = when (sortBy) {
-          AssessmentSortField.personName -> transformDomainToApi(user, summaries).sort(resolvedSortDirection, sortBy)
+          AssessmentSortField.personName -> transformDomainToApi(user, summaries, user.hasQualification(UserQualification.LAO)).sort(resolvedSortDirection, sortBy)
           else -> transformDomainToApi(user, summaries)
         }
         Pair(transformSummaries, metadata)
       }
       else -> {
         val (summaries, metadata) = assessmentService.getVisibleAssessmentSummariesForUserCAS1(user, domainSummaryStatuses, PageCriteria(resolvedSortBy, resolvedSortDirection, page, perPage))
-        Pair(transformDomainToApi(user, summaries), metadata)
+        Pair(transformDomainToApi(user, summaries, user.hasQualification(UserQualification.LAO)), metadata)
       }
     }
 
@@ -91,8 +93,8 @@ class AssessmentController(
       .body(summaries)
   }
 
-  private fun transformDomainToApi(user: UserEntity, summaries: List<DomainAssessmentSummary>) = summaries.map {
-    val personInfo = offenderService.getInfoForPerson(it.crn, user.deliusUsername, false)
+  private fun transformDomainToApi(user: UserEntity, summaries: List<DomainAssessmentSummary>, ignoreLao: Boolean = false) = summaries.map {
+    val personInfo = offenderService.getInfoForPerson(it.crn, user.deliusUsername, ignoreLao)
 
     assessmentTransformer.transformDomainToApiSummary(
       it,
@@ -110,7 +112,9 @@ class AssessmentController(
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
     }
 
-    val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, false)
+    val ignoreLao = (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
+
+    val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, ignoreLao)
 
     return ResponseEntity.ok(
       assessmentTransformer.transformJpaToApi(assessment, personInfo),
@@ -137,7 +141,8 @@ class AssessmentController(
       is ValidatableActionResult.Success -> assessmentValidationResult.entity
     }
 
-    val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, false)
+    val ignoreLao = (assessment.application is ApprovedPremisesApplicationEntity) && user.hasQualification(UserQualification.LAO)
+    val personInfo = offenderService.getInfoForPerson(assessment.application.crn, user.deliusUsername, ignoreLao)
 
     return ResponseEntity.ok(
       assessmentTransformer.transformJpaToApi(assessment, personInfo),

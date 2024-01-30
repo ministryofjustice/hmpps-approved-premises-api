@@ -1318,6 +1318,52 @@ class AssessmentTest : IntegrationTestBase() {
       }
     }
 
+    @Test
+    fun `Get all assessments returns full person information for LAO offenders when user has LAO permissions in CAS1`() {
+      `Given a User`(qualifications = listOf(UserQualification.LAO)) { user, jwt ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withCurrentExclusion(true)
+            withCurrentRestriction(true)
+          },
+        ) { offenderDetails, inmateDetails ->
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+            withAddedAt(OffsetDateTime.now())
+          }
+
+          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(user)
+            withApplicationSchema(applicationSchema)
+          }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withAllocatedToUser(user)
+            withApplication(application)
+            withAssessmentSchema(assessmentSchema)
+          }
+
+          assessment.schemaUpToDate = true
+
+          mockOffenderUserAccessCommunityApiCall(user.deliusUsername, offenderDetails.otherIds.crn, true, true)
+
+          assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.approvedPremises,
+            "/assessments",
+            listOf(
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(assessment, status = COMPLETED),
+            ),
+          )
+        }
+      }
+    }
+
     private fun assertUrlReturnsAssessments(
       jwt: String,
       serviceName: ServiceName,
@@ -1555,7 +1601,7 @@ class AssessmentTest : IntegrationTestBase() {
             objectMapper.writeValueAsString(
               assessmentTransformer.transformJpaToApi(
                 assessment,
-                PersonInfoResult.Success.Restricted(offenderDetails.otherIds.crn, offenderDetails.otherIds.nomsNumber),
+                PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
               ),
             ),
           )
