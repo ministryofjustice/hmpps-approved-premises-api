@@ -37,8 +37,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Boo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toBookingsReportDataAndPersonInfo
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class ReportsTest : IntegrationTestBase() {
@@ -135,6 +138,106 @@ class ReportsTest : IntegrationTestBase() {
             withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
             withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
           }.toMutableList()
+        }
+        bookings[3].let {
+          it.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
+            withBooking(it)
+            withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+          }.toMutableList()
+        }
+        bookings[4].let {
+          it.nonArrival = nonArrivalEntityFactory.produceAndPersist {
+            withBooking(it)
+            withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
+          }
+        }
+
+        val caseSummary = CaseSummaryFactory()
+          .fromOffenderDetails(offenderDetails)
+          .withPnc(offenderDetails.otherIds.pncNumber)
+          .produce()
+
+        ApDeliusContext_addResponseToUserAccessCall(
+          CaseAccessFactory()
+            .withCrn(offenderDetails.otherIds.crn)
+            .produce(),
+          userEntity.deliusUsername,
+        )
+
+        val expectedDataFrame = BookingsReportGenerator()
+          .createReport(
+            bookings.toBookingsReportDataAndPersonInfo { crn ->
+              PersonSummaryInfoResult.Success.Full(crn, caseSummary)
+            },
+            BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+          )
+
+        webTestClient.get()
+          .uri("/reports/bookings?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .consumeWith {
+            val actual = DataFrame
+              .readExcel(it.responseBody!!.inputStream())
+              .convertTo<BookingsReportRow>(ExcessiveColumns.Remove)
+              .sortBy(BookingsReportRow::bookingId)
+            Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
+          }
+      }
+    }
+  }
+
+  @Test
+  fun `Get bookings report returns OK with latest departure and arrivals when booking has updated with multiple departures and arrivals`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(userEntity.probationRegion)
+        }
+
+        val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
+          withPremises(premises)
+          withServiceName(ServiceName.temporaryAccommodation)
+          withCrn(offenderDetails.otherIds.crn)
+          withArrivalDate(LocalDate.of(2023, 4, 5))
+          withDepartureDate(LocalDate.of(2023, 4, 7))
+        }
+
+        bookings[1].let { it.arrivals = arrivalEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList() }
+
+        bookings[2].let {
+          val firstArrivalUpdate = arrivalEntityFactory.produceAndPersist {
+            withBooking(it)
+            withArrivalDate(LocalDate.now().randomDateBefore())
+          }
+          val secondArrivalUpdate = arrivalEntityFactory.produceAndPersist {
+            withBooking(it)
+            withArrivalDate(LocalDate.now())
+          }
+
+          it.arrivals = listOf(firstArrivalUpdate, secondArrivalUpdate).toMutableList()
+          it.extensions = extensionEntityFactory.produceAndPersistMultiple(1) { withBooking(it) }.toMutableList()
+
+          val firstDepartureUpdate = departureEntityFactory.produceAndPersist {
+            withDateTime(OffsetDateTime.now().randomDateTimeBefore())
+            withBooking(it)
+            withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
+            withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
+            withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
+          }
+          val secondDepartureUpdate = departureEntityFactory.produceAndPersist {
+            withDateTime(OffsetDateTime.now())
+            withBooking(it)
+            withYieldedDestinationProvider { destinationProviderEntityFactory.produceAndPersist() }
+            withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
+            withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
+          }
+          it.departures = listOf(firstDepartureUpdate, secondDepartureUpdate).toMutableList()
         }
         bookings[3].let {
           it.cancellations = cancellationEntityFactory.produceAndPersistMultiple(1) {
