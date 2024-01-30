@@ -40,7 +40,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -520,7 +519,7 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
-        WithdrawPlacementRequestReason.duplicatePlacementRequest
+        WithdrawPlacementRequestReason.duplicatePlacementRequest,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -555,7 +554,7 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
-        WithdrawPlacementRequestReason.duplicatePlacementRequest
+        WithdrawPlacementRequestReason.duplicatePlacementRequest,
       )
 
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
@@ -574,7 +573,7 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
-        WithdrawPlacementRequestReason.duplicatePlacementRequest
+        WithdrawPlacementRequestReason.duplicatePlacementRequest,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue

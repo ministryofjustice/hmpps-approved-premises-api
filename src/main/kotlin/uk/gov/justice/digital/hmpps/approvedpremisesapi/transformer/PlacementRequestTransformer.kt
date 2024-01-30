@@ -65,9 +65,9 @@ class PlacementRequestTransformer(
 
   fun transformToWithdrawable(jpa: PlacementRequestEntity) = Withdrawable(
     jpa.id,
-      WithdrawableType.placementRequest,
-      listOf(DatePeriod(jpa.expectedArrival, jpa.expectedDeparture()))
-    )
+    WithdrawableType.placementRequest,
+    listOf(DatePeriod(jpa.expectedArrival, jpa.expectedDeparture())),
+  )
 
   private fun characteristicToCriteria(characteristic: CharacteristicEntity): PlacementCriteria? {
     return try {

@@ -439,7 +439,7 @@ class ApplicationsController(
 
   override fun applicationsApplicationIdWithdrawablesGet(
     applicationId: UUID,
-    xServiceName: ServiceName
+    xServiceName: ServiceName,
   ): ResponseEntity<List<Withdrawable>> {
     if (xServiceName != ServiceName.approvedPremises) {
       throw ForbiddenProblem()
@@ -462,10 +462,10 @@ class ApplicationsController(
     val allWithdrawables =
       placementRequestService.getWithdrawablePlacementRequests(application)
         .map { placementRequestTransformer.transformToWithdrawable(it) } +
-      bookingService.getCancelleableBookings(application)
-        .map { bookingTransformer.transformToWithdrawable(it) } +
-      placementApplicationService.getWithdrawablePlacementApplications(application)
-        .map { placementApplicationTransformer.transformToWithdrawable(it) }
+        bookingService.getCancelleableBookings(application)
+          .map { bookingTransformer.transformToWithdrawable(it) } +
+        placementApplicationService.getWithdrawablePlacementApplications(application)
+          .map { placementApplicationTransformer.transformToWithdrawable(it) }
 
     return ResponseEntity.ok(allWithdrawables)
   }

@@ -5,15 +5,11 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -31,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
@@ -212,7 +207,7 @@ class PlacementApplicationService(
 
     placementApplicationEntity.decision = PlacementApplicationDecision.WITHDRAWN_BY_PP
     placementApplicationEntity.decisionMadeAt = OffsetDateTime.now()
-    placementApplicationEntity.withdrawalReason = when(reason) {
+    placementApplicationEntity.withdrawalReason = when (reason) {
       WithdrawPlacementRequestReason.duplicatePlacementRequest -> PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
       WithdrawPlacementRequestReason.alternativeProvisionIdentified -> PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
       null -> null
@@ -372,10 +367,10 @@ class PlacementApplicationService(
   }
 
   private fun sendAcceptedRejectedNotification(
-      placementApplicationEntity: PlacementApplicationEntity,
-      placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope
+    placementApplicationEntity: PlacementApplicationEntity,
+    placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope,
   ) {
-    if(!sendPlacementRequestNotifications) {
+    if (!sendPlacementRequestNotifications) {
       return
     }
 
@@ -478,7 +473,7 @@ class PlacementApplicationService(
   }
 
   private fun sendPlacementRequestCreatedEmail(placementApplication: PlacementApplicationEntity) {
-    if(!sendPlacementRequestNotifications) {
+    if (!sendPlacementRequestNotifications) {
       return
     }
 
@@ -495,7 +490,7 @@ class PlacementApplicationService(
   }
 
   private fun sendPlacementRequestAllocatedEmail(placementApplication: PlacementApplicationEntity) {
-    if(!sendPlacementRequestNotifications) {
+    if (!sendPlacementRequestNotifications) {
       return
     }
 

@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
@@ -19,8 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -313,7 +310,7 @@ class PlacementRequestService(
   fun withdrawPlacementRequest(
     placementRequestId: UUID,
     user: UserEntity,
-    reason: WithdrawPlacementRequestReason?
+    reason: WithdrawPlacementRequestReason?,
   ): AuthorisableActionResult<Unit> {
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
@@ -323,7 +320,7 @@ class PlacementRequestService(
     }
 
     placementRequest.isWithdrawn = true
-    placementRequest.withdrawalReason = when(reason) {
+    placementRequest.withdrawalReason = when (reason) {
       WithdrawPlacementRequestReason.duplicatePlacementRequest -> PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
       WithdrawPlacementRequestReason.alternativeProvisionIdentified -> PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
       null -> null
@@ -335,7 +332,7 @@ class PlacementRequestService(
   }
 
   fun getWithdrawablePlacementRequests(
-    application: ApprovedPremisesApplicationEntity
+    application: ApprovedPremisesApplicationEntity,
   ): List<PlacementRequestEntity> = placementRequestRepository.findByApplication(application).filter { it.canBeWithdrawn() }
 
   private fun saveBookingNotMadeDomainEvent(

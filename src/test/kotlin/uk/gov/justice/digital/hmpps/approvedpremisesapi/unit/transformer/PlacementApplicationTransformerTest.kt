@@ -15,13 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementDateEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -142,18 +137,18 @@ class PlacementApplicationTransformerTest {
 
     jpa.placementDates.add(
       PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2023,12,11))
+        .withExpectedArrival(LocalDate.of(2023, 12, 11))
         .withDuration(30)
         .withPlacementApplication(jpa)
-        .produce()
+        .produce(),
     )
 
     jpa.placementDates.add(
       PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2024,1,31))
+        .withExpectedArrival(LocalDate.of(2024, 1, 31))
         .withDuration(15)
         .withPlacementApplication(jpa)
-        .produce()
+        .produce(),
     )
 
     val result = placementApplicationTransformer.transformToWithdrawable(jpa)
@@ -164,15 +159,15 @@ class PlacementApplicationTransformerTest {
         WithdrawableType.placementApplication,
         listOf(
           DatePeriod(
-            LocalDate.of(2023,12,11),
-            LocalDate.of(2024,1,10)
+            LocalDate.of(2023, 12, 11),
+            LocalDate.of(2024, 1, 10),
           ),
           DatePeriod(
-            LocalDate.of(2024,1,31),
-            LocalDate.of(2024,2,15)
+            LocalDate.of(2024, 1, 31),
+            LocalDate.of(2024, 2, 15),
           ),
-        )
-      )
+        ),
+      ),
     )
   }
 }
