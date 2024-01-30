@@ -19,7 +19,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewExtension
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
@@ -54,17 +57,115 @@ class BookingTest : IntegrationTestBase() {
     inboundMessageListener.clearMessages()
   }
 
-  @Test
-  fun `Get a booking for a premises without JWT returns 401`() {
-    webTestClient.get()
-      .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/27a596af-ce14-4616-b734-420f5c5fc242")
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
+  @Nested
+  inner class GetBooking {
+
+    @Test
+    fun `Get a booking without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/bookings/27a596af-ce14-4616-b734-420f5c5fc242")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Get a non existant booking returns 404`() {
+      webTestClient.get()
+        .uri("/bookings/27a596af-ce14-4616-b734-420f5c5fc242")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
+    @Test
+    fun `Get a booking returns 401 if user doesnt have correct roles`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val premises = approvedPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+          }
+
+          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCreatedByUser(userEntity)
+            withCrn(offenderDetails.otherIds.crn)
+            withProbationRegion(userEntity.probationRegion)
+            withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+          }
+
+          val booking = bookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withCrn(offenderDetails.otherIds.crn)
+            withServiceName(ServiceName.approvedPremises)
+            withApplication(application)
+          }
+
+          webTestClient.get()
+            .uri("/bookings/${booking.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isForbidden
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    fun `Get a booking returns OK with the correct body when user has one of roles MANAGER, MATCHER`(
+      role: UserRole,
+    ) {
+      `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          val premises = approvedPremisesEntityFactory.produceAndPersist {
+            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+            withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+          }
+
+          val keyWorker = ContextStaffMemberFactory().produce()
+          APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
+
+          val booking = bookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withStaffKeyWorkerCode(keyWorker.code)
+            withCrn(offenderDetails.otherIds.crn)
+            withServiceName(ServiceName.approvedPremises)
+          }
+
+          webTestClient.get()
+            .uri("/bookings/${booking.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .json(
+              objectMapper.writeValueAsString(
+                bookingTransformer.transformJpaToApi(
+                  booking,
+                  PersonInfoResult.Success.Full(offenderDetails.otherIds.crn, offenderDetails, inmateDetails),
+                  keyWorker,
+                ),
+              ),
+            )
+        }
+      }
+    }
+
   }
 
   @Nested
   inner class GetBookingForPremises {
+
+    @Test
+    fun `Get a booking for a premises without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/27a596af-ce14-4616-b734-420f5c5fc242")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
 
     @Test
     fun `Get a booking belonging to another premises returns not found`() {
@@ -144,7 +245,7 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Get a booking returns OK with the correct body when person details for a booking could not be found`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { userEntity, jwt ->
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { _, jwt ->
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
           withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
