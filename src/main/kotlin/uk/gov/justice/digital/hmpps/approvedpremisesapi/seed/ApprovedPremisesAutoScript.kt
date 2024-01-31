@@ -93,8 +93,8 @@ class ApprovedPremisesAutoScript(
         nomsNumber = seedConfig.autoScript.noms,
         createdAt = createdAt,
         createdByUser = applicant,
-        data = dataFor(state = state, crn = "X320741"),
-        document = documentFor(state = state, crn = "X320741"),
+        data = applicationDataFor(state = state, crn = "X320741"),
+        document = applicationDocumentFor(state = state, crn = "X320741"),
         submittedAt = null,
         schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java),
         schemaUpToDate = true,
@@ -321,26 +321,26 @@ class ApprovedPremisesAutoScript(
 
   private fun randomInt(min: Int, max: Int) = Random.nextInt(min, max)
 
-  private fun dataFor(state: String, crn: String): String {
+  private fun applicationDataFor(state: String, crn: String): String {
     if (state != "NOT_STARTED") {
-      return dataFixtureFor(crn)
+      return dataFixtureFor(questionnaire = "application", crn = crn)
     }
     return "{}"
   }
 
-  private fun documentFor(state: String, crn: String): String {
+  private fun applicationDocumentFor(state: String, crn: String): String {
     if (listOf("SUBMITTED", "INFO_REQUIRED").contains(state)) {
-      return documentFixtureFor(crn)
+      return documentFixtureFor(questionnaire = "application", crn = crn)
     }
     return "{}"
   }
 
-  private fun dataFixtureFor(crn: String): String {
-    return loadFixtureAsResource("application_data_$crn.json")
+  private fun dataFixtureFor(questionnaire: String, crn: String): String {
+    return loadFixtureAsResource("${questionnaire}_data_$crn.json")
   }
 
-  private fun documentFixtureFor(crn: String): String {
-    return loadFixtureAsResource("application_document_$crn.json")
+  private fun documentFixtureFor(questionnaire: String, crn: String): String {
+    return loadFixtureAsResource("${questionnaire}_document_$crn.json")
   }
 
   private fun loadFixtureAsResource(filename: String): String {
