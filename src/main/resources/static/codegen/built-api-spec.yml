@@ -2095,6 +2095,46 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /applications/{applicationId}/appeals:
+    post:
+      tags:
+        - Application data
+      summary: Add an appeal to an application
+      parameters:
+        - name: applicationId
+          in: path
+          description: ID of the application
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: the appeal to add
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/NewAppeal'
+        required: true
+      responses:
+        201:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Appeal'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid applicationId
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
+      x-codegen-request-body-name: body
   /documents/{crn}/{documentId}:
     get:
       tags:
@@ -8545,3 +8585,67 @@ components:
         - A1
         - A2
         - A3
+    NewAppeal:
+      type: object
+      properties:
+        appealDate:
+          type: string
+          format: date
+        appealDetail:
+          type: string
+        reviewer:
+          type: string
+        decision:
+          $ref: '#/components/schemas/AppealDecision'
+        decisionDetail:
+          type: string
+      required:
+        - appealDate
+        - appealDetail
+        - reviewer
+        - decision
+        - decisionDetail
+    Appeal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        appealDate:
+          type: string
+          format: date
+        appealDetail:
+          type: string
+        reviewer:
+          type: string
+        decision:
+          $ref: '#/components/schemas/AppealDecision'
+        decisionDetail:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        applicationId:
+          type: string
+          format: uuid
+        assessmentId:
+          type: string
+          format: uuid
+        createdByUserId:
+          type: string
+          format: uuid
+      required:
+        - id
+        - appealDate
+        - appealDetail
+        - reviewer
+        - decision
+        - decisionDetail
+        - createdAt
+        - applicationId
+        - createdByUserId
+    AppealDecision:
+      type: string
+      enum:
+        - accepted
+        - rejected
