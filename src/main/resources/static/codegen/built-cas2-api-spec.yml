@@ -2030,6 +2030,8 @@ components:
               format: date-time
             personStatusOnSubmission:
               $ref: '#/components/schemas/PersonStatus'
+            apArea:
+              $ref: '#/components/schemas/ApArea'
           required:
             - createdByUserId
             - schemaVersion
