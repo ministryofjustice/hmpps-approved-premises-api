@@ -93,8 +93,8 @@ class OffenderService(
 
     if (crns.isEmpty()) return emptyList()
 
-    val offenderDetailsList = offenderDetailsDataSource.getOffenderDetailSummaries(crns.toList())
-    val userAccessList = offenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, crns.toList())
+    val offenderDetailsList = offenderDetailsDataSource.getOffenderDetailSummaries(crns.toList()).values
+    val userAccessList = offenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, crns.toList()).values
 
     return crns
       .zip(offenderDetailsList, userAccessList) { crn, offenderResponse, accessResponse ->

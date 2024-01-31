@@ -58,7 +58,7 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
         .produce(),
     )
 
-    val expectedResults = caseSummaries.map { ClientResult.Success(HttpStatus.OK, it.asOffenderDetailSummary(), false) }
+    val expectedResults = caseSummaries.map { it.crn to ClientResult.Success(HttpStatus.OK, it.asOffenderDetailSummary(), false) }.toMap()
 
     every { mockApDeliusContextApiClient.getSummariesForCrns(crns) } returns ClientResult.Success(
       HttpStatus.OK,
@@ -80,9 +80,9 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
 
     val results = apDeliusContextApiOffenderDetailsDataSource.getOffenderDetailSummaries(crns)
     assertThat(results).hasSize(3)
-    assertThat(results[0]).isEqualTo(cacheTimeoutClientResult)
-    assertThat(results[1]).isEqualTo(cacheTimeoutClientResult)
-    assertThat(results[2]).isEqualTo(cacheTimeoutClientResult)
+    assertThat(results["CRN-A"]).isEqualTo(cacheTimeoutClientResult)
+    assertThat(results["CRN-B"]).isEqualTo(cacheTimeoutClientResult)
+    assertThat(results["CRN-C"]).isEqualTo(cacheTimeoutClientResult)
   }
 
   @ParameterizedTest
@@ -112,7 +112,8 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
         .withCrn("CRN-C")
         .produce(),
     )
-    val expectedResults = caseAccesses.map { ClientResult.Success(HttpStatus.OK, it.asUserOffenderAccess(), false) }
+
+    val expectedResults = caseAccesses.map { it.crn to ClientResult.Success(HttpStatus.OK, it.asUserOffenderAccess(), false) }.toMap()
 
     every { mockApDeliusContextApiClient.getUserAccessForCrns("DELIUS-USER", crns) } returns ClientResult.Success(
       HttpStatus.OK,
@@ -134,9 +135,9 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
 
     val results = apDeliusContextApiOffenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", crns)
     assertThat(results).hasSize(3)
-    assertThat(results[0]).isEqualTo(cacheTimeoutClientResult)
-    assertThat(results[1]).isEqualTo(cacheTimeoutClientResult)
-    assertThat(results[2]).isEqualTo(cacheTimeoutClientResult)
+    assertThat(results["CRN-A"]).isEqualTo(cacheTimeoutClientResult)
+    assertThat(results["CRN-B"]).isEqualTo(cacheTimeoutClientResult)
+    assertThat(results["CRN-C"]).isEqualTo(cacheTimeoutClientResult)
   }
 
   private companion object {
@@ -158,11 +159,12 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
 
     @JvmStatic
     fun userOffenderAccessClientResults(): Stream<Arguments> {
-      val successBody = UserOffenderAccess(
-        userRestricted = false,
-        userExcluded = false,
-        restrictionMessage = null,
-      )
+      val successBody =
+        UserOffenderAccess(
+          userRestricted = false,
+          userExcluded = false,
+          restrictionMessage = null,
+        )
 
       return allClientResults(successBody).intoArgumentStream()
     }

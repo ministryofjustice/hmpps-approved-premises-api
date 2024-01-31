@@ -872,44 +872,48 @@ class OffenderServiceTest {
       "NOTFOUND",
     )
 
-    private val offenderDetailsSummaries = listOf(
-      ClientResult.Success(
-        HttpStatus.OK,
-        OffenderDetailsSummaryFactory()
-          .withCrn(crns[0])
-          .withCurrentExclusion(true)
-          .withCurrentRestriction(false)
-          .produce(),
-        false,
-      ),
-      ClientResult.Success(
-        HttpStatus.OK,
-        OffenderDetailsSummaryFactory()
-          .withCrn(crns[1])
-          .withCurrentExclusion(false)
-          .withCurrentRestriction(true)
-          .produce(),
-        false,
-      ),
-      ClientResult.Success(
-        HttpStatus.OK,
-        OffenderDetailsSummaryFactory()
-          .withCrn(crns[2])
-          .withCurrentExclusion(false)
-          .withCurrentRestriction(false)
-          .produce(),
-        false,
-      ),
-      ClientResult.Failure.StatusCode(
-        HttpMethod.GET,
-        "/",
-        HttpStatus.NOT_FOUND,
-        null,
-        false,
-      ),
+    private val offenderDetailsSummaries = mapOf(
+      crns[0] to
+        ClientResult.Success(
+          HttpStatus.OK,
+          OffenderDetailsSummaryFactory()
+            .withCrn(crns[0])
+            .withCurrentExclusion(true)
+            .withCurrentRestriction(false)
+            .produce(),
+          false,
+        ),
+      crns[1] to
+        ClientResult.Success(
+          HttpStatus.OK,
+          OffenderDetailsSummaryFactory()
+            .withCrn(crns[1])
+            .withCurrentExclusion(false)
+            .withCurrentRestriction(true)
+            .produce(),
+          false,
+        ),
+      crns[2] to
+        ClientResult.Success(
+          HttpStatus.OK,
+          OffenderDetailsSummaryFactory()
+            .withCrn(crns[2])
+            .withCurrentExclusion(false)
+            .withCurrentRestriction(false)
+            .produce(),
+          false,
+        ),
+      crns[3] to
+        ClientResult.Failure.StatusCode(
+          HttpMethod.GET,
+          "/",
+          HttpStatus.NOT_FOUND,
+          null,
+          false,
+        ),
     )
 
-    private val caseSummaries = offenderDetailsSummaries.mapNotNull {
+    private val caseSummaries = offenderDetailsSummaries.values.mapNotNull {
       when (it) {
         is ClientResult.Success -> it.body.asCaseSummary()
         else -> null
@@ -1050,7 +1054,9 @@ class OffenderServiceTest {
     fun `it returns full summaries when the user has the correct access (forceApDeliusContextApi = false)`() {
       every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(crns) } returns offenderDetailsSummaries
 
-      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(user.deliusUsername, crns) } returns crns.map {
+      every {
+        mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(user.deliusUsername, crns)
+      } returns crns.associateWith {
         ClientResult.Success(
           HttpStatus.OK,
           UserOffenderAccess(false, false, null),
@@ -1070,29 +1076,35 @@ class OffenderServiceTest {
     fun `it returns full and restricted summaries when the user has the access for some CRNs, but not others (forceApDeliusContextApi = false)`() {
       every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(crns) } returns offenderDetailsSummaries
 
-      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(user.deliusUsername, crns) } returns listOf(
-        ClientResult.Success(
-          HttpStatus.OK,
-          UserOffenderAccess(false, true, null),
-          false,
-        ),
-        ClientResult.Success(
-          HttpStatus.OK,
-          UserOffenderAccess(true, false, null),
-          false,
-        ),
-        ClientResult.Success(
-          HttpStatus.OK,
-          UserOffenderAccess(false, false, null),
-          false,
-        ),
-        ClientResult.Failure.StatusCode(
-          HttpMethod.GET,
-          "/",
-          HttpStatus.NOT_FOUND,
-          null,
-          false,
-        ),
+      every {
+        mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(user.deliusUsername, crns)
+      } returns mapOf(
+        crns[0] to
+          ClientResult.Success(
+            HttpStatus.OK,
+            UserOffenderAccess(false, true, null),
+            false,
+          ),
+        crns[1] to
+          ClientResult.Success(
+            HttpStatus.OK,
+            UserOffenderAccess(true, false, null),
+            false,
+          ),
+        crns[2] to
+          ClientResult.Success(
+            HttpStatus.OK,
+            UserOffenderAccess(false, false, null),
+            false,
+          ),
+        crns[3] to
+          ClientResult.Failure.StatusCode(
+            HttpMethod.GET,
+            "/",
+            HttpStatus.NOT_FOUND,
+            null,
+            false,
+          ),
       )
 
       val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, false, false)
@@ -1107,29 +1119,35 @@ class OffenderServiceTest {
     fun `it ignores LAO when ignoreLao is set to true (forceApDeliusContextApi = false)`() {
       every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(crns) } returns offenderDetailsSummaries
 
-      every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(user.deliusUsername, crns) } returns listOf(
-        ClientResult.Success(
-          HttpStatus.OK,
-          UserOffenderAccess(false, true, null),
-          false,
-        ),
-        ClientResult.Success(
-          HttpStatus.OK,
-          UserOffenderAccess(true, false, null),
-          false,
-        ),
-        ClientResult.Success(
-          HttpStatus.OK,
-          UserOffenderAccess(false, false, null),
-          false,
-        ),
-        ClientResult.Failure.StatusCode(
-          HttpMethod.GET,
-          "/",
-          HttpStatus.NOT_FOUND,
-          null,
-          false,
-        ),
+      every {
+        mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(user.deliusUsername, crns)
+      } returns mapOf(
+        crns[0] to
+          ClientResult.Success(
+            HttpStatus.OK,
+            UserOffenderAccess(false, true, null),
+            false,
+          ),
+        crns[1] to
+          ClientResult.Success(
+            HttpStatus.OK,
+            UserOffenderAccess(true, false, null),
+            false,
+          ),
+        crns[2] to
+          ClientResult.Success(
+            HttpStatus.OK,
+            UserOffenderAccess(false, false, null),
+            false,
+          ),
+        crns[3] to
+          ClientResult.Failure.StatusCode(
+            HttpMethod.GET,
+            "/",
+            HttpStatus.NOT_FOUND,
+            null,
+            false,
+          ),
       )
 
       val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, true, false)
