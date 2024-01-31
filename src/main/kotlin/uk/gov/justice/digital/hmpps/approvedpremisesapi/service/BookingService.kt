@@ -139,7 +139,7 @@ class BookingService(
 
     val user = userService.getUserForRequest()
 
-    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
+    if (!userAccessService.userCanViewBooking(user, booking)) {
       return AuthorisableActionResult.Unauthorised()
     }
 

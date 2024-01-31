@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -64,9 +65,21 @@ class UserAccessService(
   fun currentUserCanManagePremisesBookings(premises: PremisesEntity) =
     userCanManagePremisesBookings(userService.getUserForRequest(), premises)
 
+  fun userCanViewBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
+    is ApprovedPremisesEntity -> userCanManagePremisesBookings(user, booking.premises) || booking.application?.createdByUser == user
+    is TemporaryAccommodationPremisesEntity -> userCanManagePremisesBookings(user, booking.premises)
+    else -> false
+  }
+
   fun userCanManagePremisesBookings(user: UserEntity, premises: PremisesEntity) = when (premises) {
     is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_MATCHER, UserRole.CAS1_WORKFLOW_MANAGER)
     is TemporaryAccommodationPremisesEntity -> userCanAccessRegion(user, premises.probationRegion.id) && user.hasRole(UserRole.CAS3_ASSESSOR)
+    else -> false
+  }
+
+  fun userCanCancelBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
+    is ApprovedPremisesEntity -> userCanManagePremisesBookings(user, booking.premises) || booking.application?.createdByUser == user
+    is TemporaryAccommodationPremisesEntity -> userCanManagePremisesBookings(user, booking.premises)
     else -> false
   }
 

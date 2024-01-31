@@ -77,33 +77,35 @@ class BookingTest : IntegrationTestBase() {
 
     @Test
     fun `Get a booking returns 401 if user doesnt have correct roles`() {
-      `Given a User` { userEntity, jwt ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
-          val premises = approvedPremisesEntityFactory.produceAndPersist {
-            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
-          }
+      `Given a User` { applicant, _ ->
+        `Given a User` { userEntity, jwt ->
+          `Given an Offender` { offenderDetails, inmateDetails ->
+            val premises = approvedPremisesEntityFactory.produceAndPersist {
+              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+              withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+            }
 
-          val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withCreatedByUser(userEntity)
-            withCrn(offenderDetails.otherIds.crn)
-            withProbationRegion(userEntity.probationRegion)
-            withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
-          }
+            val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withCreatedByUser(applicant)
+              withCrn(offenderDetails.otherIds.crn)
+              withProbationRegion(userEntity.probationRegion)
+              withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+            }
 
-          val booking = bookingEntityFactory.produceAndPersist {
-            withPremises(premises)
-            withCrn(offenderDetails.otherIds.crn)
-            withServiceName(ServiceName.approvedPremises)
-            withApplication(application)
-          }
+            val booking = bookingEntityFactory.produceAndPersist {
+              withPremises(premises)
+              withCrn(offenderDetails.otherIds.crn)
+              withServiceName(ServiceName.approvedPremises)
+              withApplication(application)
+            }
 
-          webTestClient.get()
-            .uri("/bookings/${booking.id}")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isForbidden
+            webTestClient.get()
+              .uri("/bookings/${booking.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isForbidden
+          }
         }
       }
     }
