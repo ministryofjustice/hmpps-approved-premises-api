@@ -3000,7 +3000,7 @@ class ApplicationTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
             NewWithdrawal(
-              reason = WithdrawalReason.alternativeIdentifiedPlacementNoLongerRequired,
+              reason = WithdrawalReason.duplicateApplication,
             ),
           )
           .exchange()
