@@ -1399,8 +1399,8 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER", "CAS1_MANAGER"])
-  fun `Get assessment by ID returns 200 with correct body for CAS1_WORKFLOW_MANAGER and CAS1_MANAGER`(role: UserRole) {
+  @EnumSource(value = UserRole::class)
+  fun `Get assessment by ID returns 200 with correct body for all roles`(role: UserRole) {
     `Given a User`(roles = listOf(role)) { _, jwt ->
       `Given a User` { userEntity, _ ->
         `Given an Offender` { offenderDetails, inmateDetails ->

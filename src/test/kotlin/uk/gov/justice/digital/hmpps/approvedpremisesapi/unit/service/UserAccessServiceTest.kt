@@ -1357,9 +1357,11 @@ class UserAccessServiceTest {
     assertThat(userAccessService.userCanViewAssessment(user, assessment)).isTrue
   }
 
-  @Test
-  fun `userCanViewAssessment returns true for an Approved Premises assessment if the assessment is assigned to the user`() {
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class)
+  fun `userCanViewAssessment returns true for an Approved Premises assessment for any role`(role: UserRole) {
     currentRequestIsFor(ServiceName.approvedPremises)
+    user.addRoleForUnitTest(role)
 
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(anotherUserInRegion)
@@ -1371,22 +1373,6 @@ class UserAccessServiceTest {
       .produce()
 
     assertThat(userAccessService.userCanViewAssessment(user, assessment)).isTrue
-  }
-
-  @Test
-  fun `userCanViewAssessment returns false for an Approved Premises assessment if the user does not have the CAS1_WORKFLOW_MANAGER and the assessment is not assigned to the user`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(anotherUserInRegion)
-      .produce()
-
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(application)
-      .withAllocatedToUser(anotherUserInRegion)
-      .produce()
-
-    assertThat(userAccessService.userCanViewAssessment(user, assessment)).isFalse
   }
 
   @Test
@@ -1473,22 +1459,6 @@ class UserAccessServiceTest {
       .produce()
 
     assertThat(userAccessService.currentUserCanViewAssessment(assessment)).isTrue
-  }
-
-  @Test
-  fun `currentUserCanViewAssessment returns false for an Approved Premises assessment if the user does not have the CAS1_WORKFLOW_MANAGER and the assessment is not assigned to the user`() {
-    currentRequestIsFor(ServiceName.approvedPremises)
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(anotherUserInRegion)
-      .produce()
-
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(application)
-      .withAllocatedToUser(anotherUserInRegion)
-      .produce()
-
-    assertThat(userAccessService.currentUserCanViewAssessment(assessment)).isFalse
   }
 
   @Test
