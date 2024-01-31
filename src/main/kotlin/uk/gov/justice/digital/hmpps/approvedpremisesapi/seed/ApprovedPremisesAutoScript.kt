@@ -13,6 +13,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Probati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -22,8 +26,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -61,6 +72,10 @@ class ApprovedPremisesAutoScript(
   private val apAreaRepository: ApAreaRepository,
   private val assessmentRepository: AssessmentRepository,
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
+  private val postcodeDistrictRepository: PostcodeDistrictRepository,
+  private val characteristicRepository: CharacteristicRepository,
+  private val placementRequestRepository: PlacementRequestRepository,
+  private val placementRequirementsRepository: PlacementRequirementsRepository,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
 
@@ -75,8 +90,16 @@ class ApprovedPremisesAutoScript(
       .findAll()
       .filter { listOf("BERNARD.BEAKS", "JIMSNOWLDAP").contains(it.deliusUsername) }
       .forEach { user ->
-        listOf("IN_PROGRESS", "SUBMITTED", "INFO_REQUIRED").forEach { state ->
-          createApplicationFor(applicant = user, state = state)
+        listOf(
+          "IN_PROGRESS",
+          "SUBMITTED",
+          "INFO_REQUIRED",
+          "ACCEPTED",
+        ).forEach { state ->
+          createApplicationFor(
+            applicant = user,
+            state = state,
+          )
         }
       }
   }
@@ -124,16 +147,84 @@ class ApprovedPremisesAutoScript(
       ),
     )
 
-    if (listOf("SUBMITTED", "INFO_REQUIRED").contains(state)) {
+    if (listOf("SUBMITTED", "INFO_REQUIRED", "ACCEPTED").contains(state)) {
       val submittedApplication = submitApplication(application)
       val assessment = createApprovedPremisesAssessment(submittedApplication)
 
       if (state == "INFO_REQUIRED") {
         requireInfo(assessment)
       }
+
+      if (state == "ACCEPTED") {
+        acceptAssessment(assessment)
+      }
     }
   }
 
+  private fun acceptAssessment(assessment: AssessmentEntity) {
+    val application = assessment.application as ApprovedPremisesApplicationEntity
+    seedLogger.info("Auto-scripting AP assessment acceptance and creating placement request for ${application.id}")
+
+    val acceptedAt = assessment.createdAt.plusDays(randomInt(7, 10).toLong())
+
+    val assessment = assessmentRepository.saveAndFlush(
+      assessment.apply {
+        this.decision = AssessmentDecision.ACCEPTED
+        assessment.data = assessmentDataFor(application.crn)
+        assessment.document = assessmentDocumentFor(application.crn)
+        assessment.submittedAt = acceptedAt
+      },
+    )
+
+    val placementDates = PlacementDates(
+      expectedArrival = application.arrivalDate!!.toLocalDate(),
+      duration = 12,
+    )
+
+    val desirableCriteria =
+      characteristicRepository.findAllWherePropertyNameIn(
+        listOf(PlacementCriteria.isWheelchairDesignated).map { it.toString() },
+      )
+    val essentialCriteria =
+      characteristicRepository.findAllWherePropertyNameIn(
+        listOf(PlacementCriteria.isSingle).map { it.toString() },
+      )
+
+    val placementRequirements = placementRequirementsRepository.saveAndFlush(
+      PlacementRequirementsEntity(
+        id = UUID.randomUUID(),
+        apType = ApType.normal,
+        gender = Gender.male,
+        postcodeDistrict = postcodeDistrictRepository.findByOutcode(application.targetLocation!!)!!,
+        radius = 50,
+        desirableCriteria = desirableCriteria,
+        essentialCriteria = essentialCriteria,
+        createdAt = acceptedAt,
+        application = application,
+        assessment = assessment,
+      ),
+    )
+
+    placementRequestRepository.saveAndFlush(
+      PlacementRequestEntity(
+        id = UUID.randomUUID(),
+        duration = placementDates.duration,
+        expectedArrival = placementDates.expectedArrival,
+        placementApplication = null,
+        placementRequirements = placementRequirements,
+        createdAt = acceptedAt,
+        assessment = assessment,
+        application = application,
+        allocatedToUser = application.createdByUser,
+        booking = null,
+        bookingNotMades = mutableListOf(),
+        reallocatedAt = null,
+        notes = "Wheelchair access is important but not essential",
+        isParole = false,
+        isWithdrawn = false,
+      ),
+    )
+  }
   private fun requireInfo(assessment: AssessmentEntity) {
     seedLogger.info("Auto-scripting clarification note for AP assessment ${assessment.id}")
 
@@ -319,6 +410,14 @@ class ApprovedPremisesAutoScript(
   }
 
   private fun randomInt(min: Int, max: Int) = Random.nextInt(min, max)
+
+  private fun assessmentDataFor(crn: String): String {
+    return dataFixtureFor(questionnaire = "assessment", crn = crn)
+  }
+
+  private fun assessmentDocumentFor(crn: String): String {
+    return documentFixtureFor(questionnaire = "assessment", crn = crn)
+  }
 
   private fun applicationDataFor(state: String, crn: String): String {
     if (state != "NOT_STARTED") {
