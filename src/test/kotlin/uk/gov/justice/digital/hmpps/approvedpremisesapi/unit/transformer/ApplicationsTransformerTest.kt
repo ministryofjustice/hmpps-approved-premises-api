@@ -6,11 +6,13 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
@@ -29,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -44,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 class ApplicationsTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val mockRisksTransformer = mockk<RisksTransformer>()
+  private val mockApAreaTransformer = mockk<ApAreaTransformer>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -55,6 +59,7 @@ class ApplicationsTransformerTest {
     objectMapper,
     mockPersonTransformer,
     mockRisksTransformer,
+    mockApAreaTransformer,
   )
 
   private val user = UserEntityFactory()
@@ -105,13 +110,29 @@ class ApplicationsTransformerTest {
   fun `transformJpaToApi transforms an Approved Premises application correctly`(args: Pair<ApiApprovedPremisesApplicationStatus, ApprovedPremisesApplicationStatus>) {
     val (apiStatus, jpaStatus) = args
 
-    val application = approvedPremisesApplicationFactory.withStatus(jpaStatus).produce()
+    val application = approvedPremisesApplicationFactory.withStatus(jpaStatus).withApArea(null).produce()
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
 
     assertThat(result.id).isEqualTo(application.id)
     assertThat(result.createdByUserId).isEqualTo(user.id)
     assertThat(result.status).isEqualTo(apiStatus)
+    assertThat(result.apArea).isNull()
+  }
+
+  @Test
+  fun `transformJpaToApi returns the Ap Area`() {
+    val apArea = ApAreaEntityFactory().produce()
+    val application = approvedPremisesApplicationFactory.withApArea(apArea).produce()
+
+    val mockApArea = mockk<ApArea>()
+
+    every { mockApAreaTransformer.transformJpaToApi(apArea) } returns mockApArea
+
+    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
+
+    assertThat(result.apArea).isEqualTo(mockApArea)
+    verify { mockApAreaTransformer.transformJpaToApi(apArea) }
   }
 
   @Test

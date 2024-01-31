@@ -32,6 +32,7 @@ class ApplicationsTransformer(
   private val objectMapper: ObjectMapper,
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
+  private val apAreaTransformer: ApAreaTransformer,
 ) {
 
   final val applicationStatuses = mapOf(
@@ -89,6 +90,7 @@ class ApplicationsTransformer(
           InOutStatus.entries.firstOrNull { it.name == jpa.inmateInOutStatusOnSubmission },
         ),
         type = "CAS1",
+        apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) },
       )
 
       is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
