@@ -65,8 +65,8 @@ class UserAccessService(
   fun currentUserCanManagePremisesBookings(premises: PremisesEntity) =
     userCanManagePremisesBookings(userService.getUserForRequest(), premises)
 
-  fun userCanViewBooking(user: UserEntity, booking: BookingEntity) = when(booking.premises) {
-    is ApprovedPremisesEntity -> userCanManagePremisesBookings(user, booking.premises)
+  fun userCanViewBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
+    is ApprovedPremisesEntity -> userCanManagePremisesBookings(user, booking.premises) || booking.application?.createdByUser == user
     is TemporaryAccommodationPremisesEntity -> userCanManagePremisesBookings(user, booking.premises)
     else -> false
   }
@@ -77,8 +77,8 @@ class UserAccessService(
     else -> false
   }
 
-  fun userCanCancelBooking(user: UserEntity, booking: BookingEntity) = when(booking.premises) {
-    is ApprovedPremisesEntity -> userCanManagePremisesBookings(user, booking.premises)
+  fun userCanCancelBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
+    is ApprovedPremisesEntity -> userCanManagePremisesBookings(user, booking.premises) || booking.application?.createdByUser == user
     is TemporaryAccommodationPremisesEntity -> userCanManagePremisesBookings(user, booking.premises)
     else -> false
   }

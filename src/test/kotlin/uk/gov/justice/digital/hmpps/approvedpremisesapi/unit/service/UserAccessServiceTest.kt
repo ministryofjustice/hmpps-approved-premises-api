@@ -369,8 +369,8 @@ class UserAccessServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
-    fun `userCanViewBooking returns true if the given premises is an Approved Premises and the user has either the MANAGER or MATCHER user role`(
-      role: UserRole
+    fun `userCanViewBooking returns true if the given premises is a CAS1 premises and the user has either the MANAGER or MATCHER user role`(
+      role: UserRole,
     ) {
       currentRequestIsFor(ServiceName.approvedPremises)
 
@@ -380,23 +380,32 @@ class UserAccessServiceTest {
     }
 
     @Test
-    fun `userCanViewBooking returns false if the given premises is an Approved Premises and the user has no suitable role`() {
+    fun `userCanViewBooking returns true if the given premises is a CAS1 premises and the user created the application`() {
+      currentRequestIsFor(ServiceName.approvedPremises)
+
+      val application = ApprovedPremisesApplicationEntityFactory().withCreatedByUser(user).produce()
+
+      assertThat(userAccessService.userCanViewBooking(user, cas1Booking.copy(application = application))).isTrue
+    }
+
+    @Test
+    fun `userCanViewBooking returns false if the given premises is a CAS1 premises and the user has no suitable role`() {
       currentRequestIsFor(ServiceName.approvedPremises)
 
       assertThat(userAccessService.userCanViewBooking(user, cas1Booking)).isFalse
     }
 
     @Test
-    fun `userCanViewBooking returns true if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
+    fun `userCanViewBooking returns true if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
       currentRequestIsFor(ServiceName.temporaryAccommodation)
 
       user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-      assertThat(userAccessService.userCanViewBooking(user,cas3BookingInUserRegion)).isTrue
+      assertThat(userAccessService.userCanViewBooking(user, cas3BookingInUserRegion)).isTrue
     }
 
     @Test
-    fun `userCanViewBooking returns false if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
+    fun `userCanViewBooking returns false if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
       currentRequestIsFor(ServiceName.temporaryAccommodation)
 
       user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
@@ -404,19 +413,18 @@ class UserAccessServiceTest {
       assertThat(
         userAccessService.userCanViewBooking(
           user,
-          cas3BookingNotInUserRegion
-        )
+          cas3BookingNotInUserRegion,
+        ),
       ).isFalse
     }
 
     @Test
-    fun `userCanViewBooking returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+    fun `userCanViewBooking returns false if the given premises is a CAS3 premises and the user does not have a suitable role`() {
       currentRequestIsFor(ServiceName.temporaryAccommodation)
 
-      assertThat(userAccessService.userCanViewBooking(user,cas3BookingInUserRegion)).isFalse
-      assertThat(userAccessService.userCanViewBooking(user,cas3BookingNotInUserRegion)).isFalse
+      assertThat(userAccessService.userCanViewBooking(user, cas3BookingInUserRegion)).isFalse
+      assertThat(userAccessService.userCanViewBooking(user, cas3BookingNotInUserRegion)).isFalse
     }
-
   }
 
   @Nested
@@ -424,8 +432,8 @@ class UserAccessServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
-    fun `userCanManagePremisesBookings returns true if the given premises is an Approved Premises and the user has either the MANAGER or MATCHER user role`(
-      role: UserRole
+    fun `userCanManagePremisesBookings returns true if the given premises is a CAS1 premises and the user has either the MANAGER or MATCHER user role`(
+      role: UserRole,
     ) {
       currentRequestIsFor(ServiceName.approvedPremises)
 
@@ -435,14 +443,14 @@ class UserAccessServiceTest {
     }
 
     @Test
-    fun `userCanManagePremisesBookings returns false if the given premises is an Approved Premises and the user has no suitable role`() {
+    fun `userCanManagePremisesBookings returns false if the given premises is a CAS1 premises and the user has no suitable role`() {
       currentRequestIsFor(ServiceName.approvedPremises)
 
       assertThat(userAccessService.userCanManagePremisesBookings(user, approvedPremises)).isFalse
     }
 
     @Test
-    fun `userCanManagePremisesBookings returns true if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
+    fun `userCanManagePremisesBookings returns true if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
       currentRequestIsFor(ServiceName.temporaryAccommodation)
 
       user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
@@ -450,13 +458,13 @@ class UserAccessServiceTest {
       assertThat(
         userAccessService.userCanManagePremisesBookings(
           user,
-          temporaryAccommodationPremisesInUserRegion
-        )
+          temporaryAccommodationPremisesInUserRegion,
+        ),
       ).isTrue
     }
 
     @Test
-    fun `userCanManagePremisesBookings returns false if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
+    fun `userCanManagePremisesBookings returns false if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
       currentRequestIsFor(ServiceName.temporaryAccommodation)
 
       user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
@@ -464,29 +472,28 @@ class UserAccessServiceTest {
       assertThat(
         userAccessService.userCanManagePremisesBookings(
           user,
-          temporaryAccommodationPremisesNotInUserRegion
-        )
+          temporaryAccommodationPremisesNotInUserRegion,
+        ),
       ).isFalse
     }
 
     @Test
-    fun `userCanManagePremisesBookings returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+    fun `userCanManagePremisesBookings returns false if the given premises is a CAS3 premises and the user does not have a suitable role`() {
       currentRequestIsFor(ServiceName.temporaryAccommodation)
 
       assertThat(
         userAccessService.userCanManagePremisesBookings(
           user,
-          temporaryAccommodationPremisesInUserRegion
-        )
+          temporaryAccommodationPremisesInUserRegion,
+        ),
       ).isFalse
       assertThat(
         userAccessService.userCanManagePremisesBookings(
           user,
-          temporaryAccommodationPremisesNotInUserRegion
-        )
+          temporaryAccommodationPremisesNotInUserRegion,
+        ),
       ).isFalse
     }
-
   }
 
   @Nested
@@ -509,8 +516,8 @@ class UserAccessServiceTest {
 
       @ParameterizedTest
       @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
-      fun `userCanCancelBooking returns true if the given premises is an Approved Premises and the user has either the MANAGER or MATCHER user role`(
-        role: UserRole
+      fun `userCanCancelBooking returns true if the given premises is a CAS1 premises and the user has either the MANAGER or MATCHER user role`(
+        role: UserRole,
       ) {
         currentRequestIsFor(ServiceName.approvedPremises)
 
@@ -520,40 +527,47 @@ class UserAccessServiceTest {
       }
 
       @Test
-      fun `userCanCancelBooking returns false if the given premises is an Approved Premises and the user has no suitable role`() {
+      fun `userCanCancelBooking returns true if the given premises is a CAS1 premises and the user created the application`() {
+        currentRequestIsFor(ServiceName.approvedPremises)
+
+        val application = ApprovedPremisesApplicationEntityFactory().withCreatedByUser(user).produce()
+
+        assertThat(userAccessService.userCanCancelBooking(user, cas1Booking.copy(application = application))).isTrue
+      }
+
+      @Test
+      fun `userCanCancelBooking returns false if the given premises is a CAS1 premises and the user has no suitable role`() {
         currentRequestIsFor(ServiceName.approvedPremises)
 
         assertThat(userAccessService.userCanCancelBooking(user, cas1Booking)).isFalse
       }
 
       @Test
-      fun `userCanCancelBooking returns true if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
+      fun `userCanCancelBooking returns true if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
         currentRequestIsFor(ServiceName.temporaryAccommodation)
 
         user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-        assertThat(userAccessService.userCanCancelBooking(user,cas3BookingInUserRegion)).isTrue
+        assertThat(userAccessService.userCanCancelBooking(user, cas3BookingInUserRegion)).isTrue
       }
 
       @Test
-      fun `userCanCancelBooking returns false if the given premises is a Temporary Accommodation premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
+      fun `userCanCancelBooking returns false if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
         currentRequestIsFor(ServiceName.temporaryAccommodation)
 
         user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-        assertThat(userAccessService.userCanCancelBooking(user,cas3BookingNotInUserRegion)).isFalse
+        assertThat(userAccessService.userCanCancelBooking(user, cas3BookingNotInUserRegion)).isFalse
       }
 
       @Test
-      fun `userCanCancelBooking returns false if the given premises is a Temporary Accommodation premises and the user does not have a suitable role`() {
+      fun `userCanCancelBooking returns false if the given premises is a CAS3 premises and the user does not have a suitable role`() {
         currentRequestIsFor(ServiceName.temporaryAccommodation)
 
-        assertThat(userAccessService.userCanCancelBooking(user,cas3BookingInUserRegion)).isFalse
-        assertThat(userAccessService.userCanCancelBooking(user,cas3BookingNotInUserRegion)).isFalse
+        assertThat(userAccessService.userCanCancelBooking(user, cas3BookingInUserRegion)).isFalse
+        assertThat(userAccessService.userCanCancelBooking(user, cas3BookingNotInUserRegion)).isFalse
       }
-
     }
-
   }
 
   @ParameterizedTest
