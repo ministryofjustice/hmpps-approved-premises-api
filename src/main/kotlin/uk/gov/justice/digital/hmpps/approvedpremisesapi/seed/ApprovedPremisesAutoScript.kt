@@ -336,15 +336,15 @@ class ApprovedPremisesAutoScript(
   }
 
   private fun dataFixtureFor(crn: String): String {
-    return loadFixtureAsResource("data_$crn.json")
+    return loadFixtureAsResource("application_data_$crn.json")
   }
 
   private fun documentFixtureFor(crn: String): String {
-    return loadFixtureAsResource("document_$crn.json")
+    return loadFixtureAsResource("application_document_$crn.json")
   }
 
   private fun loadFixtureAsResource(filename: String): String {
-    val path = "db/seed/local+dev+test/approved_premises_application_data/$filename"
+    val path = "db/seed/local+dev+test/approved_premises/$filename"
     val loader = DefaultResourceLoader()
     return try {
       val resource = loader.getResource(path)
