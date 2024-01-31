@@ -93,28 +93,30 @@ class OffenderService(
 
     if (crns.isEmpty()) return emptyList()
 
-    val offenderDetailsList = offenderDetailsDataSource.getOffenderDetailSummaries(crns.toList()).values
-    val userAccessList = offenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, crns.toList()).values
+    val offenderDetailsList = offenderDetailsDataSource.getOffenderDetailSummaries(crns.toList())
+    val userAccessList = offenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, crns.toList())
 
-    return crns
-      .zip(offenderDetailsList, userAccessList) { crn, offenderResponse, accessResponse ->
-        val offender = getOffender(
-          ignoreLao,
-          { offenderResponse },
-          { accessResponse },
-        )
+    return crns.map { crn ->
+      val offenderResponse = offenderDetailsList.get(crn)!!
+      val accessResponse = userAccessList.get(crn)!!
 
-        when (offender) {
-          is AuthorisableActionResult.Success -> {
-            PersonSummaryInfoResult.Success.Full(crn, offender.entity.asCaseSummary())
-          }
-          is AuthorisableActionResult.NotFound -> PersonSummaryInfoResult.NotFound(crn)
-          is AuthorisableActionResult.Unauthorised -> {
-            val nomsNumber = (offenderResponse as ClientResult.Success).body.otherIds.nomsNumber
-            PersonSummaryInfoResult.Success.Restricted(crn, nomsNumber)
-          }
+      val offender = getOffender(
+        ignoreLao,
+        { offenderResponse },
+        { accessResponse },
+      )
+
+      when (offender) {
+        is AuthorisableActionResult.Success -> {
+          PersonSummaryInfoResult.Success.Full(crn, offender.entity.asCaseSummary())
+        }
+        is AuthorisableActionResult.NotFound -> PersonSummaryInfoResult.NotFound(crn)
+        is AuthorisableActionResult.Unauthorised -> {
+          val nomsNumber = (offenderResponse as ClientResult.Success).body.otherIds.nomsNumber
+          PersonSummaryInfoResult.Success.Restricted(crn, nomsNumber)
         }
       }
+    }
   }
 
   @Deprecated("This method directly couples to the AP Delius Context API.", replaceWith = ReplaceWith("getOffenderSummariesByCrns(crns, userDistinguishedName, ignoreLao, true)"))
