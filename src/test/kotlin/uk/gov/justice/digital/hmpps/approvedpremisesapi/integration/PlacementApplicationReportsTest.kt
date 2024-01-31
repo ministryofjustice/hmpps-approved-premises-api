@@ -950,7 +950,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       .header("X-Service-Name", ServiceName.approvedPremises.value)
       .bodyValue(
         NewWithdrawal(
-          reason = WithdrawalReason.alternativeIdentifiedPlacementNoLongerRequired,
+          reason = WithdrawalReason.duplicateApplication,
         ),
       )
       .exchange()
