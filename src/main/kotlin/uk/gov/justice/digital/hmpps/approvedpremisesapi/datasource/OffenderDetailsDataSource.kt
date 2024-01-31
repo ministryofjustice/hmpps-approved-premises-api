@@ -96,7 +96,7 @@ class ApDeliusContextApiOffenderDetailsDataSource(
   override fun getOffenderDetailSummaries(crns: List<String>): List<ClientResult<OffenderDetailSummary>> {
     return apDeliusContextApiClient
       .getSummariesForCrns(crns)
-      .flatMap { caseSummaries -> caseSummaries.cases.map { it.asOffenderDetailSummary() } }
+      .flatMap(crns.size) { caseSummaries -> caseSummaries.cases.map { it.asOffenderDetailSummary() } }
   }
 
   override fun getUserAccessForOffenderCrn(
@@ -112,6 +112,6 @@ class ApDeliusContextApiOffenderDetailsDataSource(
   ): List<ClientResult<UserOffenderAccess>> {
     return apDeliusContextApiClient
       .getUserAccessForCrns(deliusUsername, crns)
-      .flatMap { userAccess -> userAccess.access.map { it.asUserOffenderAccess() } }
+      .flatMap(crns.size) { userAccess -> userAccess.access.map { it.asUserOffenderAccess() } }
   }
 }

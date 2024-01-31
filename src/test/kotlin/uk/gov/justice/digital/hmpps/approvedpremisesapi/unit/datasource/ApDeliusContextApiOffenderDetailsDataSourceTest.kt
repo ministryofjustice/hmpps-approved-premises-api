@@ -71,6 +71,20 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
     assertThat(results).isEqualTo(expectedResults)
   }
 
+  @Test
+  fun `getOffenderDetailSummaries returns an entry per CRN for failures`() {
+    val crns = listOf("CRN-A", "CRN-B", "CRN-C")
+
+    val cacheTimeoutClientResult = cacheTimeoutClientResult<CaseSummaries>()
+    every { mockApDeliusContextApiClient.getSummariesForCrns(crns) } returns cacheTimeoutClientResult
+
+    val results = apDeliusContextApiOffenderDetailsDataSource.getOffenderDetailSummaries(crns)
+    assertThat(results).hasSize(3)
+    assertThat(results[0]).isEqualTo(cacheTimeoutClientResult)
+    assertThat(results[1]).isEqualTo(cacheTimeoutClientResult)
+    assertThat(results[2]).isEqualTo(cacheTimeoutClientResult)
+  }
+
   @ParameterizedTest
   @MethodSource("userOffenderAccessClientResults")
   fun `getUserAccessForOffenderCrn returns transformed response from AP Delius Context API call`(
@@ -109,6 +123,20 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
     val results = apDeliusContextApiOffenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", crns)
 
     assertThat(results).isEqualTo(expectedResults)
+  }
+
+  @Test
+  fun `getUserAccessForOffenderCrns returns an entry per CRN for failures`() {
+    val crns = listOf("CRN-A", "CRN-B", "CRN-C")
+
+    val cacheTimeoutClientResult = cacheTimeoutClientResult<UserAccess>()
+    every { mockApDeliusContextApiClient.getUserAccessForCrns("DELIUS-USER", crns) } returns cacheTimeoutClientResult
+
+    val results = apDeliusContextApiOffenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", crns)
+    assertThat(results).hasSize(3)
+    assertThat(results[0]).isEqualTo(cacheTimeoutClientResult)
+    assertThat(results[1]).isEqualTo(cacheTimeoutClientResult)
+    assertThat(results[2]).isEqualTo(cacheTimeoutClientResult)
   }
 
   private companion object {
