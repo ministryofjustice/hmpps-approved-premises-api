@@ -40,7 +40,6 @@ import java.io.IOException
 import java.io.InputStreamReader
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.random.Random
@@ -247,7 +246,7 @@ class ApprovedPremisesAutoScript(
         allocatedToUser = assessor,
         allocatedAt = application.submittedAt,
         reallocatedAt = null,
-        createdAt = application.submittedAt!!.toInstant().atOffset(ZoneOffset.ofHoursMinutes(0, 0)),
+        createdAt = application.submittedAt!!,
         submittedAt = null,
         decision = null,
         schemaUpToDate = true,
