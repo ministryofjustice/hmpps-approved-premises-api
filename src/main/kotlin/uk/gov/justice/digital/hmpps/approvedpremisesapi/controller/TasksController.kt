@@ -436,9 +436,11 @@ class TasksController(
     allocatedFilter: AllocatedFilter?,
     apAreaId: UUID?,
   ): ResponseEntity<List<Task>> = runBlocking {
-    val (allocatedTasks, metadata) = taskService.getAllReallocatable(
-      allocatedFilter,
-      apAreaId,
+    val (allocatedTasks, metadata) = taskService.getAll(
+      TaskService.TaskFilterCriteria(
+        allocatedFilter,
+        apAreaId,
+      ),
       pageCriteria,
     )
 

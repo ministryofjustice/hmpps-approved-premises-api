@@ -299,7 +299,7 @@ class TaskServiceTest {
   }
 
   @Test
-  fun `getAllReallocatable returns all tasks for a particular page`() {
+  fun `getAll returns all tasks for a particular page`() {
     mockkStatic("uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationUtilsKt")
 
     PaginationConfig(defaultPageSize = 10).postInit()
@@ -334,7 +334,7 @@ class TaskServiceTest {
 
     every { getMetadata(page, pageCriteria) } returns metadata
 
-    val result = taskService.getAllReallocatable(AllocatedFilter.allocated, apAreaId, pageCriteria)
+    val result = taskService.getAll(TaskService.TaskFilterCriteria(AllocatedFilter.allocated, apAreaId), pageCriteria)
 
     val expectedTasks = listOf(
       assessments.map { TypedTask.Assessment(it) },

@@ -41,9 +41,14 @@ class TaskService(
   private val placementApplicationRepository: PlacementApplicationRepository,
   private val placementRequestRepository: PlacementRequestRepository,
 ) {
-  fun getAllReallocatable(
-    allocatedFilter: AllocatedFilter?,
-    apAreaId: UUID?,
+
+  data class TaskFilterCriteria(
+    val allocatedFilter: AllocatedFilter?,
+    val apAreaId: UUID?,
+  )
+
+  fun getAll(
+    filterCriteria: TaskFilterCriteria,
     pageCriteria: PageCriteria<TaskSortField>,
   ): Pair<List<TypedTask>, PaginationMetadata?> {
     val pageable = getPageable(
@@ -53,6 +58,9 @@ class TaskService(
         },
       ),
     )
+
+    val allocatedFilter = filterCriteria.allocatedFilter
+    val apAreaId = filterCriteria.apAreaId
 
     val isAllocated = if (allocatedFilter == null) { null } else { allocatedFilter == AllocatedFilter.allocated }
     val tasksResult = taskRepository.getAllReallocatable(isAllocated, apAreaId, pageable)
@@ -69,7 +77,7 @@ class TaskService(
 
     val typedTasks = tasks
       .map { task ->
-        val candidateList = when(task.type) {
+        val candidateList = when (task.type) {
           TaskEntityType.ASSESSMENT -> assessments
           TaskEntityType.PLACEMENT_APPLICATION -> placementApplications
           TaskEntityType.PLACEMENT_REQUEST -> placementRequests
