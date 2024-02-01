@@ -170,36 +170,6 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
     page: Pageable? = null,
   ): Page<DomainAssessmentSummary>
 
-  @Query(
-    """
-      SELECT a FROM ApprovedPremisesAssessmentEntity a 
-      JOIN a.application app
-      LEFT OUTER JOIN app.apArea area
-      WHERE a.reallocatedAt IS NULL AND
-            a.isWithdrawn != true AND 
-            a.submittedAt IS NULL AND 
-            (
-              (:#{#allocationStatus?.toString()} = 'ALLOCATED' AND a.allocatedToUser IS NOT NULL) OR
-              (:#{#allocationStatus?.toString()} = 'UNALLOCATED' AND a.allocatedToUser IS NULL) OR
-              (:#{#allocationStatus?.toString()} = 'EITHER')
-            ) AND (
-              (cast(:apAreaId as org.hibernate.type.UUIDCharType) IS NULL) OR 
-              (area.id = :apAreaId)
-            )
-    """,
-  )
-  fun findByAllocationStatus(
-    allocationStatus: AllocationStatus,
-    apAreaId: UUID?,
-    pageable: Pageable?,
-  ): Page<ApprovedPremisesAssessmentEntity>
-
-  enum class AllocationStatus {
-    ALLOCATED,
-    UNALLOCATED,
-    EITHER,
-  }
-
   fun findByApplication_IdAndReallocatedAtNull(applicationId: UUID): AssessmentEntity?
 
   @Query(

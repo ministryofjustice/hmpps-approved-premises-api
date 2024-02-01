@@ -141,37 +141,6 @@ class AssessmentService(
     }
   }
 
-  fun getAllReallocatable(
-    pageCriteria: PageCriteria<TaskSortField>,
-    allocatedFilter: AllocatedFilter?,
-    apAreaId: UUID?,
-  ): Pair<List<ApprovedPremisesAssessmentEntity>, PaginationMetadata?> {
-    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
-    val pageable = getPageable(
-      pageCriteria.withSortBy(
-        when (pageCriteria.sortBy) {
-          TaskSortField.createdAt -> "createdAt"
-        },
-      ),
-    )
-
-    val assessments = assessmentRepository.findByAllocationStatus(
-      when (allocatedFilter) {
-        AllocatedFilter.allocated -> AssessmentRepository.AllocationStatus.ALLOCATED
-        AllocatedFilter.unallocated -> AssessmentRepository.AllocationStatus.UNALLOCATED
-        null -> AssessmentRepository.AllocationStatus.EITHER
-      },
-      apAreaId,
-      pageable,
-    )
-
-    assessments.forEach {
-      it.schemaUpToDate = it.schemaVersion.id == latestSchema.id
-    }
-
-    return wrapWithMetadata(assessments, pageCriteria)
-  }
-
   fun getAssessmentForUser(user: UserEntity, assessmentId: UUID): AuthorisableActionResult<AssessmentEntity> {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
       ?: return AuthorisableActionResult.NotFound()

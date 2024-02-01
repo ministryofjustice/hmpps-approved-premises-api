@@ -25,6 +25,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         inner join approved_premises_applications application on assessment.application_id = application.id
         left join ap_areas area on area.id = application.ap_area_id
       where
+        'ASSESSMENT' in :taskTypes AND
         assessment.is_withdrawn is not true
         and assessment.reallocated_at is null
         and assessment.submitted_at is null
@@ -48,6 +49,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         inner join approved_premises_applications application on placement_application.application_id = application.id
         left join ap_areas area on area.id = application.ap_area_id
       where
+        'PLACEMENT_APPLICATION' in :taskTypes AND
         placement_application.submitted_at is not null
         and placement_application.reallocated_at is null
         and placement_application.decision is null
@@ -72,6 +74,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         left join booking_not_mades booking_not_made on booking_not_made.placement_request_id = placement_request.id
         left join ap_areas area on area.id = application.ap_area_id
       where
+        'PLACEMENT_REQUEST' in :taskTypes AND
         placement_request.booking_id IS NULL
         AND placement_request.reallocated_at IS NULL
         AND placement_request.is_withdrawn is false
@@ -94,7 +97,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
     countQuery = "SELECT COUNT(1) FROM ($ALLOCATABLE_QUERY) as count",
     nativeQuery = true,
   )
-  fun getAllReallocatable(isAllocated: Boolean?, apAreaId: UUID?, pageable: Pageable?): Page<Task>
+  fun getAllReallocatable(isAllocated: Boolean?, apAreaId: UUID?, taskTypes: List<String>, pageable: Pageable?): Page<Task>
 }
 
 @Entity

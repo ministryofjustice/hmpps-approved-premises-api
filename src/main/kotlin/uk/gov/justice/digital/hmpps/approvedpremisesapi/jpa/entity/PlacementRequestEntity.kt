@@ -48,40 +48,6 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   @Query(
     """
     SELECT
-      placement_request.*
-    FROM
-      placement_requests placement_request
-      LEFT JOIN booking_not_mades booking_not_made ON booking_not_made.placement_request_id = placement_request.id
-      INNER JOIN approved_premises_applications app ON app.id = placement_request.application_id 
-      LEFT OUTER JOIN ap_areas area ON area.id = app.ap_area_id
-    WHERE
-      placement_request.booking_id IS NULL
-      AND placement_request.reallocated_at IS NULL
-      AND placement_request.is_withdrawn IS FALSE
-      AND booking_not_made.id IS NULL
-      AND (
-        (:#{#allocationStatus?.toString()} = 'ALLOCATED' AND placement_request.allocated_to_user_id IS NOT NULL) OR
-        (:#{#allocationStatus?.toString()} = 'UNALLOCATED' AND placement_request.allocated_to_user_id IS NULL) OR
-        (:#{#allocationStatus?.toString()} = 'EITHER')
-      ) AND (
-        (cast(:apAreaId as uuid) IS NULL) OR
-        (area.id = :apAreaId)
-      )
-
-    """,
-    nativeQuery = true,
-  )
-  fun findByAllocationStatus(allocationStatus: AllocationStatus, apAreaId: UUID?, pageable: Pageable?): Page<PlacementRequestEntity>
-
-  enum class AllocationStatus {
-    ALLOCATED,
-    UNALLOCATED,
-    EITHER,
-  }
-
-  @Query(
-    """
-    SELECT
       pq.*,
       application.created_at as application_date,
       CASE

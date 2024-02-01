@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.wrapWithMetadata
 import java.util.UUID
 
 @Service
@@ -45,6 +47,7 @@ class TaskService(
   data class TaskFilterCriteria(
     val allocatedFilter: AllocatedFilter?,
     val apAreaId: UUID?,
+    val types: List<TaskEntityType>,
   )
 
   fun getAll(
@@ -61,19 +64,32 @@ class TaskService(
 
     val allocatedFilter = filterCriteria.allocatedFilter
     val apAreaId = filterCriteria.apAreaId
+    val taskTypes = filterCriteria.types
 
     val isAllocated = if (allocatedFilter == null) { null } else { allocatedFilter == AllocatedFilter.allocated }
-    val tasksResult = taskRepository.getAllReallocatable(isAllocated, apAreaId, pageable)
+    val tasksResult = taskRepository.getAllReallocatable(
+      isAllocated,
+      apAreaId,
+      taskTypes.map { it.name },
+      pageable
+    )
+
     val tasks = tasksResult.content
 
-    val assessmentIds = tasks.filter { it.type == TaskEntityType.ASSESSMENT }.map { it.id }
-    val assessments = assessmentRepository.findAllById(assessmentIds).map { TypedTask.Assessment(it as ApprovedPremisesAssessmentEntity) }
+    val assessments = if (taskTypes.contains(TaskEntityType.ASSESSMENT)) {
+      val assessmentIds = tasks.idsForType(TaskEntityType.ASSESSMENT)
+      assessmentRepository.findAllById(assessmentIds).map { TypedTask.Assessment(it as ApprovedPremisesAssessmentEntity) }
+    } else emptyList()
 
-    val placementApplicationIds = tasks.filter { it.type == TaskEntityType.PLACEMENT_APPLICATION }.map { it.id }
-    val placementApplications = placementApplicationRepository.findAllById(placementApplicationIds).map { TypedTask.PlacementApplication(it) }
+    val placementApplications = if (taskTypes.contains(TaskEntityType.PLACEMENT_APPLICATION)) {
+      val placementApplicationIds = tasks.idsForType(TaskEntityType.PLACEMENT_APPLICATION)
+      placementApplicationRepository.findAllById(placementApplicationIds).map { TypedTask.PlacementApplication(it) }
+    } else emptyList()
 
-    val placementRequestIds = tasks.filter { it.type == TaskEntityType.PLACEMENT_REQUEST }.map { it.id }
-    val placementRequests = placementRequestRepository.findAllById(placementRequestIds).map { TypedTask.PlacementRequest(it) }
+    val placementRequests = if (taskTypes.contains(TaskEntityType.PLACEMENT_REQUEST)) {
+      val placementRequestIds = tasks.idsForType(TaskEntityType.PLACEMENT_REQUEST)
+      placementRequestRepository.findAllById(placementRequestIds).map { TypedTask.PlacementRequest(it) }
+    } else emptyList()
 
     val typedTasks = tasks
       .map { task ->
@@ -89,6 +105,9 @@ class TaskService(
     val metadata = getMetadata(tasksResult, pageCriteria)
     return Pair(typedTasks, metadata)
   }
+
+  private fun List<Task>.idsForType(type: TaskEntityType) = this.filter { it.type == type }.map { it.id }
+
 
   fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, id: UUID): AuthorisableActionResult<ValidatableActionResult<Reallocation>> {
     if (!userAccessService.userCanReallocateTask(requestUser)) {

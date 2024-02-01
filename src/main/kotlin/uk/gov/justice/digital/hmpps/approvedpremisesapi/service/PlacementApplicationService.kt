@@ -402,32 +402,6 @@ class PlacementApplicationService(
     }
   }
 
-  fun getAllReallocatable(
-    pageCriteria: PageCriteria<TaskSortField>,
-    allocatedFilter: AllocatedFilter?,
-    apAreaId: UUID?,
-  ): Pair<List<PlacementApplicationEntity>, PaginationMetadata?> {
-    val pageable = getPageable(
-      pageCriteria.withSortBy(
-        when (pageCriteria.sortBy) {
-          TaskSortField.createdAt -> "createdAt"
-        },
-      ),
-    )
-
-    val allReallocatable = placementApplicationRepository.findByAllocationStatus(
-      when (allocatedFilter) {
-        AllocatedFilter.allocated -> PlacementApplicationRepository.AllocationStatus.ALLOCATED
-        AllocatedFilter.unallocated -> PlacementApplicationRepository.AllocationStatus.UNALLOCATED
-        null -> PlacementApplicationRepository.AllocationStatus.EITHER
-      },
-      apAreaId,
-      pageable,
-    )
-
-    return wrapWithMetadata(allReallocatable, pageCriteria)
-  }
-
   fun getWithdrawablePlacementApplications(application: ApprovedPremisesApplicationEntity) =
     placementApplicationRepository.findByApplication(application).filter { it.canBeWithdrawn() }
 

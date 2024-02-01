@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -84,8 +85,15 @@ class TasksController(
       throw ForbiddenProblem()
     }
 
-    if (type == null) {
-      return reallocatableResponseForAllTypes(user, pageCriteria, allocatedFilter, apAreaId)
+    val taskEntityTypes = determineTaskEntityTypes(type)
+
+    return reallocatableResponseForTypes(taskEntityTypes, user, pageCriteria, allocatedFilter, apAreaId)
+  }
+
+
+  private fun determineTaskEntityTypes(type: String?): List<TaskEntityType> {
+    if(type == null) {
+      return TaskEntityType.entries
     }
 
     val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
@@ -93,10 +101,10 @@ class TasksController(
     ) ?: throw NotFoundProblem(type, "TaskType")
 
     return when (taskType) {
-      TaskType.assessment -> reallocatableResponseForAssessments(user, pageCriteria, allocatedFilter, apAreaId)
-      TaskType.placementRequest -> reallocatableResponseForPlacementRequests(user, pageCriteria, allocatedFilter, apAreaId)
-      TaskType.placementApplication -> reallocatbleResponseForPlacementApplications(user, pageCriteria, allocatedFilter, apAreaId)
-      else -> throw BadRequestProblem()
+      TaskType.assessment -> listOf(TaskEntityType.ASSESSMENT)
+      TaskType.placementRequest -> listOf(TaskEntityType.PLACEMENT_REQUEST)
+      TaskType.placementApplication -> listOf(TaskEntityType.PLACEMENT_APPLICATION)
+      TaskType.bookingAppeal -> throw BadRequestProblem()
     }
   }
 
@@ -402,15 +410,6 @@ class TasksController(
     )
   }
 
-  private suspend fun getAssessmentTasks(
-    assessments: List<AssessmentEntity>,
-    offenderSummaries: List<PersonSummaryInfoResult>,
-  ) = assessments.map {
-    getAssessmentTask(it) { assessment ->
-      getPersonNameFromApplication(assessment.application, offenderSummaries)
-    }
-  }
-
   private suspend fun getPlacementRequestTasks(
     placementRequests: List<PlacementRequestEntity>,
     offenderSummaries: List<PersonSummaryInfoResult>,
@@ -430,7 +429,8 @@ class TasksController(
       }
     }
 
-  private fun reallocatableResponseForAllTypes(
+  private fun reallocatableResponseForTypes(
+    taskEntityTypes: List<TaskEntityType>,
     user: UserEntity,
     pageCriteria: PageCriteria<TaskSortField>,
     allocatedFilter: AllocatedFilter?,
@@ -440,6 +440,7 @@ class TasksController(
       TaskService.TaskFilterCriteria(
         allocatedFilter,
         apAreaId,
+        taskEntityTypes,
       ),
       pageCriteria,
     )
@@ -468,78 +469,6 @@ class TasksController(
       metadata?.toHeaders(),
     ).body(
       tasks,
-    )
-  }
-
-  private fun reallocatableResponseForAssessments(
-    user: UserEntity,
-    pageCriteria: PageCriteria<TaskSortField>,
-    allocatedFilter: AllocatedFilter?,
-    apAreaId: UUID?,
-  ): ResponseEntity<List<Task>> = runBlocking {
-    val (allReallocatable, metaData) =
-      assessmentService.getAllReallocatable(
-        pageCriteria,
-        allocatedFilter,
-        apAreaId,
-      )
-    val offenderSummaries = getOffenderSummariesForCrns(allReallocatable.map { it.application.crn }, user)
-    val assessmentTasks = getAssessmentTasks(allReallocatable, offenderSummaries)
-    return@runBlocking ResponseEntity.ok().headers(
-      metaData?.toHeaders(),
-    ).body(
-      assessmentTasks,
-    )
-  }
-
-  private fun reallocatableResponseForPlacementRequests(
-    user: UserEntity,
-    pageCriteria: PageCriteria<TaskSortField>,
-    allocatedFilter: AllocatedFilter?,
-    apAreaId: UUID?,
-  ): ResponseEntity<List<Task>> = runBlocking {
-    val (allReallocatable, metaData) =
-      placementRequestService.getAllReallocatable(
-        pageCriteria,
-        allocatedFilter,
-        apAreaId,
-      )
-    val offenderSummaries = getOffenderSummariesForCrns(allReallocatable.map { it.application.crn }, user)
-    val placementRequestTasks = getPlacementRequestTasks(
-      allReallocatable,
-      offenderSummaries,
-    )
-    return@runBlocking ResponseEntity.ok().headers(
-      metaData?.toHeaders(),
-    ).body(
-      placementRequestTasks,
-    )
-  }
-
-  private fun reallocatbleResponseForPlacementApplications(
-    user: UserEntity,
-    pageCriteria: PageCriteria<TaskSortField>,
-    allocatedFilter: AllocatedFilter?,
-    apAreaId: UUID?,
-  ): ResponseEntity<List<Task>> = runBlocking {
-    val (allReallocatable, metaData) =
-      placementApplicationService.getAllReallocatable(
-        pageCriteria,
-        allocatedFilter,
-        apAreaId,
-      )
-
-    val offenderSummaries = getOffenderSummariesForCrns(allReallocatable.map { it.application.crn }, user)
-    val placementApplicationTasks =
-      getPlacementApplicationTasks(
-        allReallocatable,
-        offenderSummaries,
-      )
-
-    return@runBlocking ResponseEntity.ok().headers(
-      metaData?.toHeaders(),
-    ).body(
-      placementApplicationTasks,
     )
   }
 
