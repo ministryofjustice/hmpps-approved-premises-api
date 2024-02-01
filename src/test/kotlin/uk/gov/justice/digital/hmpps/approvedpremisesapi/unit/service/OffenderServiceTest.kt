@@ -872,17 +872,7 @@ class OffenderServiceTest {
       "NOTFOUND",
     )
 
-    private val offenderDetailsSummaries = mapOf(
-      crns[0] to
-        ClientResult.Success(
-          HttpStatus.OK,
-          OffenderDetailsSummaryFactory()
-            .withCrn(crns[0])
-            .withCurrentExclusion(true)
-            .withCurrentRestriction(false)
-            .produce(),
-          false,
-        ),
+    private val offenderSummaryResultsByCrn = mapOf(
       crns[1] to
         ClientResult.Success(
           HttpStatus.OK,
@@ -890,6 +880,16 @@ class OffenderServiceTest {
             .withCrn(crns[1])
             .withCurrentExclusion(false)
             .withCurrentRestriction(true)
+            .produce(),
+          false,
+        ),
+      crns[0] to
+        ClientResult.Success(
+          HttpStatus.OK,
+          OffenderDetailsSummaryFactory()
+            .withCrn(crns[0])
+            .withCurrentExclusion(true)
+            .withCurrentRestriction(false)
             .produce(),
           false,
         ),
@@ -913,12 +913,14 @@ class OffenderServiceTest {
         ),
     )
 
-    private val caseSummaries = offenderDetailsSummaries.values.mapNotNull {
-      when (it) {
-        is ClientResult.Success -> it.body.asCaseSummary()
+    private val caseSummariesByCrn = offenderSummaryResultsByCrn.mapNotNull {
+      val key = it.key
+      val value = it.value
+      when (value) {
+        is ClientResult.Success -> key to value.body.asCaseSummary()
         else -> null
       }
-    }
+    }.toMap()
 
     @Test
     fun `it returns an empty list when no CRNs are provided (forceApDeliusContextApi = true)`() {
@@ -940,7 +942,7 @@ class OffenderServiceTest {
       every { mockApDeliusContextApiClient.getSummariesForCrns(crns) } returns ClientResult.Success(
         status = HttpStatus.OK,
         body = CaseSummaries(
-          caseSummaries,
+          caseSummariesByCrn.values.toList(),
         ),
       )
 
@@ -953,9 +955,9 @@ class OffenderServiceTest {
 
       val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, false, true)
 
-      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummaries[0]))
-      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummaries[1]))
-      assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummaries[2]))
+      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummariesByCrn[crns[0]]!!))
+      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummariesByCrn[crns[1]]!!))
+      assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummariesByCrn[crns[2]]!!))
       assertThat(result[3]).isEqualTo(PersonSummaryInfoResult.NotFound(crns[3]))
     }
 
@@ -968,21 +970,21 @@ class OffenderServiceTest {
           .withUserRestricted(false)
           .produce(),
         CaseAccessFactory()
-          .withCrn(crns[1])
-          .withUserExcluded(false)
-          .withUserRestricted(true)
-          .produce(),
-        CaseAccessFactory()
           .withCrn(crns[2])
           .withUserExcluded(false)
           .withUserRestricted(false)
+          .produce(),
+        CaseAccessFactory()
+          .withCrn(crns[1])
+          .withUserExcluded(false)
+          .withUserRestricted(true)
           .produce(),
       )
 
       every { mockApDeliusContextApiClient.getSummariesForCrns(crns) } returns ClientResult.Success(
         status = HttpStatus.OK,
         body = CaseSummaries(
-          caseSummaries,
+          caseSummariesByCrn.values.toList(),
         ),
       )
 
@@ -995,9 +997,9 @@ class OffenderServiceTest {
 
       val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, false, true)
 
-      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Restricted(crns[0], caseSummaries[0].nomsId))
-      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Restricted(crns[1], caseSummaries[1].nomsId))
-      assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummaries[2]))
+      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Restricted(crns[0], caseSummariesByCrn[crns[0]]!!.nomsId))
+      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Restricted(crns[1], caseSummariesByCrn[crns[1]]!!.nomsId))
+      assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummariesByCrn[crns[2]]!!))
       assertThat(result[3]).isEqualTo(PersonSummaryInfoResult.NotFound(crns[3]))
     }
 
@@ -1024,7 +1026,7 @@ class OffenderServiceTest {
       every { mockApDeliusContextApiClient.getSummariesForCrns(crns) } returns ClientResult.Success(
         status = HttpStatus.OK,
         body = CaseSummaries(
-          caseSummaries,
+          caseSummariesByCrn.values.toList(),
         ),
       )
 
@@ -1037,9 +1039,9 @@ class OffenderServiceTest {
 
       val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, true, true)
 
-      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummaries[0]))
-      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummaries[1]))
-      assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummaries[2]))
+      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummariesByCrn[crns[0]]!!))
+      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummariesByCrn[crns[1]]!!))
+      assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummariesByCrn[crns[2]]!!))
       assertThat(result[3]).isEqualTo(PersonSummaryInfoResult.NotFound(crns[3]))
     }
 
@@ -1051,52 +1053,78 @@ class OffenderServiceTest {
     }
 
     @Test
+    fun `it returns not found for CRN if the CRN isn't included in offender details list`() {
+      val requestCrns = setOf(crns[0], crns[1])
+
+      every {
+        mockOffenderDetailsDataSource.getOffenderDetailSummaries(requestCrns.toList())
+      } returns mapOf(
+        crns[0] to offenderSummaryResultsByCrn[crns[0]]!!,
+      )
+
+      every {
+        mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(user.deliusUsername, requestCrns.toList())
+      } returns mapOf(
+        crns[0] to clientResultSuccess(false, false),
+        crns[1] to clientResultSuccess(false, false),
+      )
+
+      val result = offenderService.getOffenderSummariesByCrns(requestCrns, user.deliusUsername, false, false)
+
+      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummariesByCrn[crns[0]]!!))
+      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.NotFound(crns[1]))
+    }
+
+    @Test
+    fun `it returns not found for CRN if the CRN isn't included in user access list`() {
+      val requestCrns = setOf(crns[0], crns[1])
+
+      every {
+        mockOffenderDetailsDataSource.getOffenderDetailSummaries(requestCrns.toList())
+      } returns mapOf(
+        crns[0] to offenderSummaryResultsByCrn[crns[0]]!!,
+        crns[1] to offenderSummaryResultsByCrn[crns[1]]!!,
+      )
+
+      every {
+        mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(user.deliusUsername, requestCrns.toList())
+      } returns mapOf(
+        crns[0] to clientResultSuccess(false, false),
+      )
+
+      val result = offenderService.getOffenderSummariesByCrns(requestCrns, user.deliusUsername, false, false)
+
+      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummariesByCrn[crns[0]]!!))
+      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.NotFound(crns[1]))
+    }
+
+    @Test
     fun `it returns full summaries when the user has the correct access (forceApDeliusContextApi = false)`() {
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(crns) } returns offenderDetailsSummaries
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(crns) } returns offenderSummaryResultsByCrn
 
       every {
         mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(user.deliusUsername, crns)
       } returns crns.associateWith {
-        ClientResult.Success(
-          HttpStatus.OK,
-          UserOffenderAccess(false, false, null),
-          false,
-        )
+        clientResultSuccess(false, false)
       }
 
       val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, false, false)
 
-      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummaries[0]))
-      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummaries[1]))
-      assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummaries[2]))
+      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummariesByCrn[crns[0]]!!))
+      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummariesByCrn[crns[1]]!!))
+      assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummariesByCrn[crns[2]]!!))
       assertThat(result[3]).isEqualTo(PersonSummaryInfoResult.NotFound(crns[3]))
     }
 
     @Test
     fun `it returns full and restricted summaries when the user has the access for some CRNs, but not others (forceApDeliusContextApi = false)`() {
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(crns) } returns offenderDetailsSummaries
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(crns) } returns offenderSummaryResultsByCrn
 
       every {
         mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(user.deliusUsername, crns)
       } returns mapOf(
-        crns[0] to
-          ClientResult.Success(
-            HttpStatus.OK,
-            UserOffenderAccess(false, true, null),
-            false,
-          ),
-        crns[1] to
-          ClientResult.Success(
-            HttpStatus.OK,
-            UserOffenderAccess(true, false, null),
-            false,
-          ),
-        crns[2] to
-          ClientResult.Success(
-            HttpStatus.OK,
-            UserOffenderAccess(false, false, null),
-            false,
-          ),
+        crns[1] to clientResultSuccess(true, false),
+        crns[0] to clientResultSuccess(false, true),
         crns[3] to
           ClientResult.Failure.StatusCode(
             HttpMethod.GET,
@@ -1105,41 +1133,27 @@ class OffenderServiceTest {
             null,
             false,
           ),
+        crns[2] to clientResultSuccess(false, false),
       )
 
       val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, false, false)
 
-      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Restricted(crns[0], caseSummaries[0].nomsId))
-      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Restricted(crns[1], caseSummaries[1].nomsId))
-      assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummaries[2]))
+      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Restricted(crns[0], caseSummariesByCrn[crns[0]]!!.nomsId))
+      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Restricted(crns[1], caseSummariesByCrn[crns[1]]!!.nomsId))
+      assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummariesByCrn[crns[2]]!!))
       assertThat(result[3]).isEqualTo(PersonSummaryInfoResult.NotFound(crns[3]))
     }
 
     @Test
     fun `it ignores LAO when ignoreLao is set to true (forceApDeliusContextApi = false)`() {
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(crns) } returns offenderDetailsSummaries
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(crns) } returns offenderSummaryResultsByCrn
 
       every {
         mockOffenderDetailsDataSource.getUserAccessForOffenderCrns(user.deliusUsername, crns)
       } returns mapOf(
-        crns[0] to
-          ClientResult.Success(
-            HttpStatus.OK,
-            UserOffenderAccess(false, true, null),
-            false,
-          ),
-        crns[1] to
-          ClientResult.Success(
-            HttpStatus.OK,
-            UserOffenderAccess(true, false, null),
-            false,
-          ),
-        crns[2] to
-          ClientResult.Success(
-            HttpStatus.OK,
-            UserOffenderAccess(false, false, null),
-            false,
-          ),
+        crns[0] to clientResultSuccess(false, true),
+        crns[1] to clientResultSuccess(true, false),
+        crns[2] to clientResultSuccess(false, false),
         crns[3] to
           ClientResult.Failure.StatusCode(
             HttpMethod.GET,
@@ -1152,10 +1166,19 @@ class OffenderServiceTest {
 
       val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, true, false)
 
-      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummaries[0]))
-      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummaries[1]))
-      assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummaries[2]))
+      assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummariesByCrn[crns[0]]!!))
+      assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummariesByCrn[crns[1]]!!))
+      assertThat(result[2]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[2], caseSummariesByCrn[crns[2]]!!))
       assertThat(result[3]).isEqualTo(PersonSummaryInfoResult.NotFound(crns[3]))
     }
+
+    private fun clientResultSuccess(
+      userRestricted: Boolean,
+      userExcluded: Boolean,
+    ) = ClientResult.Success(
+      HttpStatus.OK,
+      UserOffenderAccess(userRestricted, userExcluded, restrictionMessage = null),
+      false,
+    )
   }
 }
