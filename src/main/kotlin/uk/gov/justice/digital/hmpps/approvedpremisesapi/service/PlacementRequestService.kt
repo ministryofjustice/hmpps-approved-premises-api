@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -283,7 +282,7 @@ class PlacementRequestService(
   fun withdrawPlacementRequest(
     placementRequestId: UUID,
     user: UserEntity,
-    reason: WithdrawPlacementRequestReason?,
+    reason: PlacementRequestWithdrawalReason?,
   ): AuthorisableActionResult<Unit> {
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
@@ -293,11 +292,7 @@ class PlacementRequestService(
     }
 
     placementRequest.isWithdrawn = true
-    placementRequest.withdrawalReason = when (reason) {
-      WithdrawPlacementRequestReason.duplicatePlacementRequest -> PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
-      WithdrawPlacementRequestReason.alternativeProvisionIdentified -> PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
-      null -> null
-    }
+    placementRequest.withdrawalReason = reason
 
     placementRequestRepository.save(placementRequest)
 
