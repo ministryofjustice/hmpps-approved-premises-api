@@ -517,6 +517,12 @@ components:
         enum:
           - DuplicatePlacementRequest
           - AlternativeProvisionIdentified
+          - ChangeInCircumstances
+          - ChangeInReleaseDecision
+          - NoCapacityDueToLostBed
+          - NoCapacityDueToPlacementPrioritisation
+          - NoCapacity
+          - ErrorInPlacementRequest
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'
