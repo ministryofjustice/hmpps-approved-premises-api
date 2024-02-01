@@ -137,4 +137,5 @@ enum class PlacementApplicationDecision {
 enum class PlacementApplicationWithdrawalReason {
   DUPLICATE_PLACEMENT_REQUEST,
   ALTERNATIVE_PROVISION_IDENTIFIED,
+  WITHDRAWN_BY_PP,
 }
