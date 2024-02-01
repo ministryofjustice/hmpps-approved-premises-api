@@ -101,6 +101,7 @@ class ApplicationService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   private val apAreaRepository: ApAreaRepository,
   private val applicationTimelineTransformer: ApplicationTimelineTransformer,
+  private val withdrawableService: WithdrawableService,
 ) {
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationSummary> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
@@ -595,6 +596,9 @@ class ApplicationService(
         application.assessments.map {
           assessmentService.updateAssessmentWithdrawn(it.id)
         }
+
+        withdrawableService.withdrawAllForApplication(application, user)
+
         return@validated success(Unit)
       },
     )
