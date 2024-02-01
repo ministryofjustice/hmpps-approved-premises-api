@@ -55,10 +55,10 @@ class JwtAuthHelper {
       .also { scope?.let { scope -> it["scope"] = scope } }
       .let {
         Jwts.builder()
-          .setId(jwtId)
-          .setSubject(username ?: "integration-test-client-id")
-          .addClaims(it.toMap())
-          .setExpiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
+          .id(jwtId)
+          .subject(username ?: "integration-test-client-id")
+          .claims(it.toMap())
+          .expiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
           .signWith(SignatureAlgorithm.RS256, keyPair.private)
           .compact()
       }
@@ -105,10 +105,10 @@ class JwtAuthHelper {
       .also { scope?.let { scope -> it["scope"] = scope } }
       .let {
         Jwts.builder()
-          .setId(jwtId)
-          .setSubject(subject)
-          .addClaims(it.toMap())
-          .setExpiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
+          .id(jwtId)
+          .subject(subject)
+          .claims(it.toMap())
+          .expiration(Date(System.currentTimeMillis() + expiryTime.toMillis()))
           .signWith(SignatureAlgorithm.RS256, keyPair.private)
           .compact()
       }
