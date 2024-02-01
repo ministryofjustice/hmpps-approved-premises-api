@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import arrow.core.zip
 import io.sentry.Sentry
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
@@ -96,25 +95,27 @@ class OffenderService(
     val offenderDetailsList = offenderDetailsDataSource.getOffenderDetailSummaries(crns.toList())
     val userAccessList = offenderDetailsDataSource.getUserAccessForOffenderCrns(deliusUsername, crns.toList())
 
-    return crns
-      .zip(offenderDetailsList, userAccessList) { crn, offenderResponse, accessResponse ->
-        val offender = getOffender(
-          ignoreLao,
-          { offenderResponse },
-          { accessResponse },
-        )
+    return crns.map { crn ->
+      val offenderResponse = offenderDetailsList[crn]
+      val accessResponse = userAccessList[crn]
 
-        when (offender) {
-          is AuthorisableActionResult.Success -> {
-            PersonSummaryInfoResult.Success.Full(crn, offender.entity.asCaseSummary())
-          }
-          is AuthorisableActionResult.NotFound -> PersonSummaryInfoResult.NotFound(crn)
-          is AuthorisableActionResult.Unauthorised -> {
-            val nomsNumber = (offenderResponse as ClientResult.Success).body.otherIds.nomsNumber
-            PersonSummaryInfoResult.Success.Restricted(crn, nomsNumber)
-          }
+      val offender = getOffender(
+        ignoreLao,
+        { offenderResponse },
+        { accessResponse },
+      )
+
+      when (offender) {
+        is AuthorisableActionResult.Success -> {
+          PersonSummaryInfoResult.Success.Full(crn, offender.entity.asCaseSummary())
+        }
+        is AuthorisableActionResult.NotFound -> PersonSummaryInfoResult.NotFound(crn)
+        is AuthorisableActionResult.Unauthorised -> {
+          val nomsNumber = (offenderResponse as ClientResult.Success).body.otherIds.nomsNumber
+          PersonSummaryInfoResult.Success.Restricted(crn, nomsNumber)
         }
       }
+    }
   }
 
   @Deprecated("This method directly couples to the AP Delius Context API.", replaceWith = ReplaceWith("getOffenderSummariesByCrns(crns, userDistinguishedName, ignoreLao, true)"))
@@ -166,11 +167,11 @@ class OffenderService(
     )
   }
 
-  @Suppress("detekt:CyclomaticComplexMethod", "detekt:NestedBlockDepth") // Extracted logic from `getOffenderByCrn` to be reusable without significant refactoring
+  @Suppress("detekt:CyclomaticComplexMethod", "detekt:NestedBlockDepth", "detekt:ReturnCount") // Extracted logic from `getOffenderByCrn` to be reusable without significant refactoring
   private fun getOffender(
     ignoreLao: Boolean,
-    offenderProducer: () -> ClientResult<OffenderDetailSummary>,
-    userAccessProducer: () -> ClientResult<UserOffenderAccess>,
+    offenderProducer: () -> ClientResult<OffenderDetailSummary>?,
+    userAccessProducer: () -> ClientResult<UserOffenderAccess>?,
   ): AuthorisableActionResult<OffenderDetailSummary> {
     val offender = when (val offenderResponse = offenderProducer()) {
       is ClientResult.Success -> offenderResponse.body
@@ -179,6 +180,7 @@ class OffenderService(
         else -> offenderResponse.throwException()
       }
       is ClientResult.Failure -> offenderResponse.throwException()
+      null -> return AuthorisableActionResult.NotFound()
     }
 
     if (!ignoreLao) {
@@ -198,6 +200,7 @@ class OffenderService(
             accessResponse.throwException()
           }
           is ClientResult.Failure -> accessResponse.throwException()
+          null -> return AuthorisableActionResult.NotFound()
         }
 
         if (access.userExcluded || access.userRestricted) {

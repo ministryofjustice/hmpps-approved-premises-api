@@ -50,33 +50,26 @@ class CommunityApiOffenderDetailsDataSourceTest {
 
   @Test
   fun `getOffenderDetailSummaries returns cached response or calls Community API for each CRN`() {
-    val crns = listOf(
-      "CRN-CACHE-UNAVAILABLE",
-      "CRN-HTTP-404",
-      "CRN-MISC-ERROR",
-      "CRN-CACHE-TIMEOUT",
-      "CRN-SUCCESS",
-    )
     val successBody = OffenderDetailsSummaryFactory()
       .withCrn("CRN-SUCCESS")
       .produce()
-    val expectedResults = allClientResults(successBody)
+    val expectedResults = allClientResultTypes(successBody)
 
-    crns.zip(expectedResults).forEach { (crn, expected) ->
+    expectedResults.forEach { (crn, expected) ->
       every { mockCommunityApiClient.getOffenderDetailSummaryWithWait(crn) } returns expected
     }
 
     every { mockCommunityApiClient.getOffenderDetailSummaryWithCall("CRN-CACHE-TIMEOUT") } returns
-      expectedResults.first { it is ClientResult.Failure.PreemptiveCacheTimeout }
+      expectedResults.values.first { it is ClientResult.Failure.PreemptiveCacheTimeout }
 
-    val results = communityApiOffenderDetailsDataSource.getOffenderDetailSummaries(crns)
+    val results = communityApiOffenderDetailsDataSource.getOffenderDetailSummaries(expectedResults.keys.toList())
 
     assertThat(results).isEqualTo(expectedResults)
   }
 
   @ParameterizedTest
-  @MethodSource("userOffenderAccessClientResults")
-  fun `getUserAccessForOffenderCrn returns response from Community API call`(
+  @MethodSource("userOffenderAccessFailureResultTypes")
+  fun `getUserAccessForOffenderCrn returns response from Community API call for failure types`(
     expectedResult: ClientResult<UserOffenderAccess>,
   ) {
     every { mockCommunityApiClient.getUserAccessForOffenderCrn("DELIUS-USER", "SOME-CRN") } returns expectedResult
@@ -87,28 +80,49 @@ class CommunityApiOffenderDetailsDataSourceTest {
   }
 
   @Test
-  fun `getUserAccessForOffenderCrns returns response from Community API call for each CRN`() {
-    val crns = listOf(
-      "CRN-CACHE-UNAVAILABLE",
-      "CRN-HTTP-404",
-      "CRN-MISC-ERROR",
-      "CRN-CACHE-TIMEOUT",
-      "CRN-SUCCESS",
-    )
+  fun `getUserAccessForOffenderCrn returns response from Community API call for success type`() {
     val successBody = UserOffenderAccess(
       userRestricted = false,
       userExcluded = false,
       restrictionMessage = null,
     )
-    val expectedResults = allClientResults(successBody)
 
-    crns.zip(expectedResults).forEach { (crn, expected) ->
+    every {
+      mockCommunityApiClient.getUserAccessForOffenderCrn("DELIUS-USER", "SOME-CRN")
+    } returns ClientResult.Success(HttpStatus.OK, successBody, true)
+
+    val result = communityApiOffenderDetailsDataSource.getUserAccessForOffenderCrn("DELIUS-USER", "SOME-CRN")
+
+    assertThat(result).isEqualTo(
+      ClientResult.Success(
+        HttpStatus.OK,
+        successBody,
+        true,
+      ),
+    )
+  }
+
+  @Test
+  fun `getUserAccessForOffenderCrns returns response from Community API call for each CRN`() {
+    val apiSuccess = UserOffenderAccess(
+      userRestricted = false,
+      userExcluded = false,
+      restrictionMessage = null,
+    )
+
+    val apiClientResponse = allClientResultTypes(apiSuccess)
+
+    apiClientResponse.forEach { (crn, expected) ->
       every { mockCommunityApiClient.getUserAccessForOffenderCrn("DELIUS-USER", crn) } returns expected
     }
 
-    val results = communityApiOffenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", crns)
+    val results = communityApiOffenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", apiClientResponse.keys.toList())
 
-    assertThat(results).isEqualTo(expectedResults)
+    val expectedResults = allClientResultTypes(
+      successBody = apiSuccess,
+    )
+
+    assertThat(results.toString()).isEqualTo(expectedResults.toString())
   }
 
   private companion object {
@@ -118,8 +132,8 @@ class CommunityApiOffenderDetailsDataSourceTest {
         .withCrn("SOME-CRN")
         .produce()
 
-      return allClientResults(successBody)
-        .filter { it !is ClientResult.Failure.PreemptiveCacheTimeout }
+      return allClientResultTypes(successBody)
+        .filter { it.value !is ClientResult.Failure.PreemptiveCacheTimeout }
         .intoArgumentStream()
     }
 
@@ -128,34 +142,35 @@ class CommunityApiOffenderDetailsDataSourceTest {
       ClientResult.Failure.PreemptiveCacheTimeout<T>("some-cache", "some-cache-key", 1000)
 
     @JvmStatic
-    fun userOffenderAccessClientResults(): Stream<Arguments> {
-      val successBody = UserOffenderAccess(
-        userRestricted = false,
-        userExcluded = false,
-        restrictionMessage = null,
-      )
+    fun userOffenderAccessFailureResultTypes(): Stream<Arguments> {
+      val values = allClientFailureResultTypes<UserOffenderAccess>()
 
-      return allClientResults(successBody).intoArgumentStream()
+      return values.intoArgumentStream()
     }
 
-    private fun <T> allClientResults(successBody: T): List<ClientResult<T>> = listOf(
-      ClientResult.Failure.CachedValueUnavailable("some-cache-key"),
-      ClientResult.Failure.StatusCode(
+    private fun <T> allClientFailureResultTypes(): Map<String, ClientResult<T>> = mapOf(
+      "CRN-CACHE-UNAVAILABLE" to ClientResult.Failure.CachedValueUnavailable("some-cache-key"),
+      "CRN-HTTP-404" to ClientResult.Failure.StatusCode(
         HttpMethod.GET,
         "/",
         HttpStatus.NOT_FOUND,
         null,
         false,
       ),
-      ClientResult.Failure.Other(
+      "CRN-MISC-ERROR" to ClientResult.Failure.Other(
         HttpMethod.POST,
         "/",
         RuntimeException("Some error"),
       ),
-      cacheTimeoutClientResult(),
-      ClientResult.Success(HttpStatus.OK, successBody, true),
+      "CRN-CACHE-TIMEOUT" to cacheTimeoutClientResult(),
     )
 
-    private fun <T> List<ClientResult<T>>.intoArgumentStream(): Stream<Arguments> = this.stream().map { Arguments.of(it) }
+    private fun <T> allClientResultTypes(successBody: T): Map<String, ClientResult<T>> =
+      allClientFailureResultTypes<T>()
+        .plus(
+          "CRN-SUCCESS" to ClientResult.Success(HttpStatus.OK, successBody, true),
+        )
+
+    private fun <T> Map<String, ClientResult<T>>.intoArgumentStream(): Stream<Arguments> = this.values.stream().map { Arguments.of(it) }
   }
 }

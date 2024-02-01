@@ -16,9 +16,9 @@ interface OffenderDetailsDataSource {
   val name: OffenderDetailsDataSourceName
 
   fun getOffenderDetailSummary(crn: String): ClientResult<OffenderDetailSummary>
-  fun getOffenderDetailSummaries(crns: List<String>): List<ClientResult<OffenderDetailSummary>>
+  fun getOffenderDetailSummaries(crns: List<String>): Map<String, ClientResult<OffenderDetailSummary>>
   fun getUserAccessForOffenderCrn(deliusUsername: String, crn: String): ClientResult<UserOffenderAccess>
-  fun getUserAccessForOffenderCrns(deliusUsername: String, crns: List<String>): List<ClientResult<UserOffenderAccess>>
+  fun getUserAccessForOffenderCrns(deliusUsername: String, crns: List<String>): Map<String, ClientResult<UserOffenderAccess>>
 }
 
 enum class OffenderDetailsDataSourceName {
@@ -69,8 +69,11 @@ class CommunityApiOffenderDetailsDataSource(
     return offenderResponse
   }
 
-  override fun getOffenderDetailSummaries(crns: List<String>): List<ClientResult<OffenderDetailSummary>> =
-    crns.map(this::getOffenderDetailSummary)
+  override fun getOffenderDetailSummaries(crns: List<String>): Map<String, ClientResult<OffenderDetailSummary>> =
+    crns.associateBy(
+      keySelector = { crn -> crn },
+      valueTransform = { crn -> getOffenderDetailSummary(crn) },
+    )
 
   override fun getUserAccessForOffenderCrn(deliusUsername: String, crn: String): ClientResult<UserOffenderAccess> =
     communityApiClient.getUserAccessForOffenderCrn(deliusUsername, crn)
@@ -78,8 +81,11 @@ class CommunityApiOffenderDetailsDataSource(
   override fun getUserAccessForOffenderCrns(
     deliusUsername: String,
     crns: List<String>,
-  ): List<ClientResult<UserOffenderAccess>> =
-    crns.map { getUserAccessForOffenderCrn(deliusUsername, it) }
+  ): Map<String, ClientResult<UserOffenderAccess>> =
+    crns.associateBy(
+      keySelector = { crn -> crn },
+      valueTransform = { crn -> getUserAccessForOffenderCrn(deliusUsername, crn) },
+    )
 }
 
 @Component
@@ -90,28 +96,44 @@ class ApDeliusContextApiOffenderDetailsDataSource(
     get() = OffenderDetailsDataSourceName.AP_DELIUS_CONTEXT_API
 
   override fun getOffenderDetailSummary(crn: String): ClientResult<OffenderDetailSummary> {
-    return getOffenderDetailSummaries(listOf(crn)).first()
+    return getOffenderDetailSummaries(listOf(crn)).values.first()
   }
 
-  override fun getOffenderDetailSummaries(crns: List<String>): List<ClientResult<OffenderDetailSummary>> {
-    return apDeliusContextApiClient
-      .getSummariesForCrns(crns)
-      .flatMap { caseSummaries -> caseSummaries.cases.map { it.asOffenderDetailSummary() } }
+  @Suppress("UNCHECKED_CAST") // Safe as we only do this for non-success types
+  override fun getOffenderDetailSummaries(crns: List<String>): Map<String, ClientResult<OffenderDetailSummary>> {
+    return when (val clientResult = apDeliusContextApiClient.getSummariesForCrns(crns)) {
+      is ClientResult.Success -> {
+        clientResult.body.cases
+          .associateBy(
+            keySelector = { it.crn },
+            valueTransform = { clientResult.copyWithBody(body = it.asOffenderDetailSummary()) },
+          )
+      }
+      else -> return crns.associateWith { clientResult as ClientResult<OffenderDetailSummary> }
+    }
   }
 
   override fun getUserAccessForOffenderCrn(
     deliusUsername: String,
     crn: String,
   ): ClientResult<UserOffenderAccess> {
-    return getUserAccessForOffenderCrns(deliusUsername, listOf(crn)).first()
+    return getUserAccessForOffenderCrns(deliusUsername, listOf(crn)).values.first()
   }
 
+  @Suppress("UNCHECKED_CAST") // Safe as we only do this for non-success types
   override fun getUserAccessForOffenderCrns(
     deliusUsername: String,
     crns: List<String>,
-  ): List<ClientResult<UserOffenderAccess>> {
-    return apDeliusContextApiClient
-      .getUserAccessForCrns(deliusUsername, crns)
-      .flatMap { userAccess -> userAccess.access.map { it.asUserOffenderAccess() } }
+  ): Map<String, ClientResult<UserOffenderAccess>> {
+    return when (val clientResult = apDeliusContextApiClient.getUserAccessForCrns(deliusUsername, crns)) {
+      is ClientResult.Success -> {
+        clientResult.body.access
+          .associateBy(
+            keySelector = { it.crn },
+            valueTransform = { clientResult.copyWithBody(body = it.asUserOffenderAccess()) },
+          )
+      }
+      else -> crns.associateWith { clientResult as ClientResult<UserOffenderAccess> }
+    }
   }
 }

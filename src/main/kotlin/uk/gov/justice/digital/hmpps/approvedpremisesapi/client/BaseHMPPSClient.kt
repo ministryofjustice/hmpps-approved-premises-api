@@ -101,7 +101,6 @@ abstract class BaseHMPPSClient(
 }
 
 sealed interface ClientResult<ResponseType> {
-  fun <TargetType> flatMap(transform: (ResponseType) -> Iterable<TargetType>): List<ClientResult<TargetType>>
   fun <TargetType> map(transform: (ResponseType) -> TargetType): ClientResult<TargetType>
 
   data class Success<ResponseType>(
@@ -109,8 +108,7 @@ sealed interface ClientResult<ResponseType> {
     val body: ResponseType,
     val isPreemptivelyCachedResponse: Boolean = false,
   ) : ClientResult<ResponseType> {
-    override fun <TargetType> flatMap(transform: (ResponseType) -> Iterable<TargetType>): List<ClientResult<TargetType>> =
-      transform(this.body).map { Success(this.status, it, this.isPreemptivelyCachedResponse) }
+    fun <TargetType> copyWithBody(body: TargetType) = Success(this.status, body, this.isPreemptivelyCachedResponse)
 
     override fun <TargetType> map(transform: (ResponseType) -> TargetType): ClientResult<TargetType> =
       Success(this.status, transform(body), this.isPreemptivelyCachedResponse)
@@ -127,9 +125,6 @@ sealed interface ClientResult<ResponseType> {
       val body: String?,
       val isPreemptivelyCachedResponse: Boolean = false,
     ) : Failure<ResponseType> {
-      @Suppress("UNCHECKED_CAST") // Safe as this variant contains nothing of type `ResponseType`.
-      override fun <TargetType> flatMap(transform: (ResponseType) -> Iterable<TargetType>): List<ClientResult<TargetType>> =
-        listOf(this as StatusCode<TargetType>)
 
       @Suppress("UNCHECKED_CAST") // Safe as this variant contains nothing of type `ResponseType`.
       override fun <TargetType> map(transform: (ResponseType) -> TargetType): ClientResult<TargetType> =
@@ -147,9 +142,6 @@ sealed interface ClientResult<ResponseType> {
       val cacheKey: String,
       val timeoutMs: Int,
     ) : Failure<ResponseType> {
-      @Suppress("UNCHECKED_CAST") // Safe as this variant contains nothing of type `ResponseType`.
-      override fun <TargetType> flatMap(transform: (ResponseType) -> Iterable<TargetType>): List<ClientResult<TargetType>> =
-        listOf(this as PreemptiveCacheTimeout<TargetType>)
 
       @Suppress("UNCHECKED_CAST") // Safe as this variant contains nothing of type `ResponseType`.
       override fun <TargetType> map(transform: (ResponseType) -> TargetType): ClientResult<TargetType> =
@@ -159,9 +151,6 @@ sealed interface ClientResult<ResponseType> {
     }
 
     data class CachedValueUnavailable<ResponseType>(val cacheKey: String) : Failure<ResponseType> {
-      @Suppress("UNCHECKED_CAST") // Safe as this variant contains nothing of type `ResponseType`.
-      override fun <TargetType> flatMap(transform: (ResponseType) -> Iterable<TargetType>): List<ClientResult<TargetType>> =
-        listOf(this as CachedValueUnavailable<TargetType>)
 
       @Suppress("UNCHECKED_CAST") // Safe as this variant contains nothing of type `ResponseType`.
       override fun <TargetType> map(transform: (ResponseType) -> TargetType): ClientResult<TargetType> =
@@ -175,9 +164,6 @@ sealed interface ClientResult<ResponseType> {
       val path: String,
       val exception: Exception,
     ) : Failure<ResponseType> {
-      @Suppress("UNCHECKED_CAST") // Safe as this variant contains nothing of type `ResponseType`.
-      override fun <TargetType> flatMap(transform: (ResponseType) -> Iterable<TargetType>): List<ClientResult<TargetType>> =
-        listOf(this as Other<TargetType>)
 
       @Suppress("UNCHECKED_CAST") // Safe as this variant contains nothing of type `ResponseType`.
       override fun <TargetType> map(transform: (ResponseType) -> TargetType): ClientResult<TargetType> =
