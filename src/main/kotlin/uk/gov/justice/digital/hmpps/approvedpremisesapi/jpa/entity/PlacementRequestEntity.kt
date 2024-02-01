@@ -179,4 +179,5 @@ data class PlacementRequestEntity(
 enum class PlacementRequestWithdrawalReason {
   DUPLICATE_PLACEMENT_REQUEST,
   ALTERNATIVE_PROVISION_IDENTIFIED,
+  WITHDRAWN_BY_PP,
 }
