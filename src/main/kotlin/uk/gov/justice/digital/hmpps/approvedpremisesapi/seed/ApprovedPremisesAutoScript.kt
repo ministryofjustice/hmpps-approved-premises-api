@@ -222,6 +222,7 @@ class ApprovedPremisesAutoScript(
         notes = "Wheelchair access is important but not essential",
         isParole = false,
         isWithdrawn = false,
+        withdrawalReason = null,
       ),
     )
   }
