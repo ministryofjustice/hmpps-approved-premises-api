@@ -6,18 +6,24 @@ To process a seed CSV against a non-local environment:
 
 - Ensure nobody is deploying a change (or is going to deploy a change shortly.)
 
-- Run `kubectl get pod` against the namespace for the environment you wish to run the seed job in. 
+- Run against the namespace for the environment you wish to run the seed job in, e.g:
+  ```
+  kubectl get pod -n $namespace
+  ```
 
-- Copy the name of one of the running `hmpps-approved-premises-api` pods.
+- Copy the name of one of the running `hmpps-approved-premises-api` pods or set it as a variable, e.g:
+  ```
+  pod={pod name}
+  ```
 
 - Transfer the CSV to the `/tmp/seed` directory in the container via kubectl, e.g.
   ```
-  kubectl cp /local/path/ap_seed_file.csv {pod name}:/tmp/seed/ap_seed_file.csv
+  kubectl cp /local/path/ap_seed_file.csv $pod:/tmp/seed/ap_seed_file.csv -n $namespace
   ```
 
 - Log in to the same pod in order to run the script, e.g. 
   ```
-  kubectl exec --stdin --tty {pod name} -- /bin/bash
+  kubectl exec --stdin --tty $pod -- /bin/bash -n $namespace
   ```
 
 - Run the helper script from within the container to trigger the seed job:
@@ -25,13 +31,16 @@ To process a seed CSV against a non-local environment:
   /app/run_seed_job {seed type} {file name without extension}
   ```
 
-  Where `seed type` is a value from the `SeedFileType` enum in the OpenAPI spec.  e.g.
+  Where `seed type` is a value from the [`SeedFileType`](https://github.com/ministryofjustice/hmpps-approved-premises-api/blob/d8dc87aefa0294289a7bcb08048fbd8679b9954c/src/main/resources/static/_shared.yml#L3240) enum in the OpenAPI spec.  e.g.
   ```
-  kubectl exec --stdin --tty {pod name} -- /bin/bash
+  kubectl exec --stdin --tty $pod -- /bin/bash -n $namespace
   /app/run_seed_job approved_premises ap_seed_file
   ```
   
-- Check the logs via `kubectl logs {pod name}` to see how processing is progressing.
+- Check the logs in Azure to see how processing is progressing.
+  - [Dev](https://portal.azure.com#@747381f4-e81f-4a43-bf68-ced6a1e14edf/blade/Microsoft_OperationsManagementSuite_Workspace/Logs.ReactView/resourceId/%2Fsubscriptions%2Fc27cfedb-f5e9-45e6-9642-0fad1a5c94e7%2FresourceGroups%2Fnomisapi-t3-rg%2Fproviders%2Fmicrosoft.insights%2Fcomponents%2Fnomisapi-t3/source/LogsBlade.AnalyticsShareLinkToQuery/q/H4sIAAAAAAAAAw3KwQ3CMAwF0DtTRB3AU3BE7GAlX4kB15bttheGh3d%252BFdyRt2%252B7FgKtH1mmd1HsKbYnPWxOxJMVLYuj8pJabTveNO2k179LBw2ZUvyhpe5J7B52YnhAJZHsQgmM7Qf%252BvOMlbQAAAA%253D%253D/timespan/P1D)
+  - [Preprod](https://portal.azure.com#@747381f4-e81f-4a43-bf68-ced6a1e14edf/blade/Microsoft_OperationsManagementSuite_Workspace/Logs.ReactView/resourceId/%2Fsubscriptions%2Fa5ddf257-3b21-4ba9-a28c-ab30f751b383%2FresourceGroups%2Fnomisapi-preprod-rg%2Fproviders%2Fmicrosoft.insights%2Fcomponents%2Fnomisapi-preprod/source/LogsBlade.AnalyticsShareLinkToQuery/q/H4sIAAAAAAAAAw3KwQ3CMAwF0DtTRB3AU3BE7GAlX4kB15bttheGh3d%252BFdyRt2%252B7FgKtH1mmd1HsKbYnPWxOxJMVLYuj8pJabTveNO2k179LBw2ZUvyhpe5J7B52YnhAJZHsQgmM7Qf%252BvOMlbQAAAA%253D%253D/timespan/P1D)
+  - [Prod](https://portal.azure.com#@747381f4-e81f-4a43-bf68-ced6a1e14edf/blade/Microsoft_OperationsManagementSuite_Workspace/Logs.ReactView/resourceId/%2Fsubscriptions%2Fa5ddf257-3b21-4ba9-a28c-ab30f751b383%2FresourceGroups%2Fnomisapi-prod-rg%2Fproviders%2Fmicrosoft.insights%2Fcomponents%2Fnomisapi-prod/source/LogsBlade.AnalyticsShareLinkToQuery/q/H4sIAAAAAAAAAw3KwQ3CMAwF0DtTRB3AU3BE7GAlX4kB15bttheGh3d%252BFdyRt2%252B7FgKtH1mmd1HsKbYnPWxOxJMVLYuj8pJabTveNO2k179LBw2ZUvyhpe5J7B52YnhAJZHsQgmM7Qf%252BvOMlbQAAAA%253D%253D/timespan/P1D)
 
 ## Run book
 
@@ -103,6 +112,7 @@ Required fields:
 - `hasBrailleSignage`
 - `hasHearingLoop`
 - `notes`
+- `emailAddress`
 
 [Example CSV](./example_csvs/approved_premises_seeding_example.csv)
 
