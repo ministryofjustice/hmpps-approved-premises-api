@@ -1,0 +1,29 @@
+{
+  "request-a-placement": {
+    "reason-for-placement": {
+      "reason": "release_following_decision"
+    },
+    "decision-to-release": {
+      "decisionToReleaseDate": "2024-01-26",
+      "decisionToReleaseDate-day": "26",
+      "decisionToReleaseDate-month": "01",
+      "decisionToReleaseDate-year": "2024",
+      "informationFromDirectionToRelease": "Mr Aadland is suitable for standard AP and was residing at Hope House, at the time of his recall in November of last year.  He seemed very settled there for the short time he was released. The request is that Mr Aadland is allowed to return to Hope House due the proximity of his family who are a very supportive factor, his familiarity with the area and his want to settle there when he has to move on from the hostel.  He has also accessed the local treatment provider attached to the AP in the past which he intends to do again.  There are no factors that would affect his release date therefore the request is for the next available bed at Hope House please. "
+    },
+    "additional-documents": {
+      "selectedDocuments": []
+    },
+    "updates-to-application": {
+      "significantEvents": "no",
+      "significantEventsDetail": "",
+      "changedCirumstances": "no",
+      "changedCirumstancesDetail": "",
+      "riskFactors": "no",
+      "riskFactorsDetail": "",
+      "accessOrHealthcareNeeds": "no",
+      "accessOrHealthcareNeedsDetail": "",
+      "locationFactors": "no",
+      "locationFactorsDetail": ""
+    }
+  }
+}

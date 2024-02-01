@@ -24,16 +24,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
@@ -72,6 +76,7 @@ class ApprovedPremisesAutoScript(
   private val apAreaRepository: ApAreaRepository,
   private val assessmentRepository: AssessmentRepository,
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
+  private val placementApplicationRepository: PlacementApplicationRepository,
   private val postcodeDistrictRepository: PostcodeDistrictRepository,
   private val characteristicRepository: CharacteristicRepository,
   private val placementRequestRepository: PlacementRequestRepository,
@@ -95,6 +100,7 @@ class ApprovedPremisesAutoScript(
           "SUBMITTED",
           "INFO_REQUIRED",
           "ACCEPTED",
+          "APPLIED_FOR_PLACEMENT",
         ).forEach { state ->
           createApplicationFor(
             applicant = user,
@@ -147,7 +153,7 @@ class ApprovedPremisesAutoScript(
       ),
     )
 
-    if (listOf("SUBMITTED", "INFO_REQUIRED", "ACCEPTED").contains(state)) {
+    if (listOf("SUBMITTED", "INFO_REQUIRED", "ACCEPTED", "APPLIED_FOR_PLACEMENT").contains(state)) {
       val submittedApplication = submitApplication(application)
       val assessment = createApprovedPremisesAssessment(submittedApplication)
 
@@ -157,6 +163,11 @@ class ApprovedPremisesAutoScript(
 
       if (state == "ACCEPTED") {
         acceptAssessment(assessment)
+      }
+
+      if (state == "APPLIED_FOR_PLACEMENT") {
+        acceptAssessment(assessment)
+        applyForPlacement(assessment)
       }
     }
   }
@@ -222,6 +233,37 @@ class ApprovedPremisesAutoScript(
         notes = "Wheelchair access is important but not essential",
         isParole = false,
         isWithdrawn = false,
+        withdrawalReason = null,
+      ),
+    )
+  }
+
+  private fun applyForPlacement(assessment: AssessmentEntity) {
+    val application = assessment.application as ApprovedPremisesApplicationEntity
+    seedLogger.info("Auto-scripting AP: Placement Application for app ${application.id}")
+
+    val creationDateTime = application.createdAt.plusDays(randomInt(10, 20).toLong())
+    val submissionDateTime = creationDateTime.plusDays(randomInt(1, 2).toLong())
+
+    placementApplicationRepository.save(
+      PlacementApplicationEntity(
+        id = UUID.randomUUID(),
+        application = assessment.application as ApprovedPremisesApplicationEntity,
+        createdByUser = assessment.application.createdByUser,
+        schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java),
+        schemaUpToDate = true,
+        data = placementApplicationDataFor(application.crn),
+        document = placementApplicationDocumentFor(application.crn),
+        createdAt = creationDateTime,
+        submittedAt = submissionDateTime,
+        allocatedToUser = application.createdByUser,
+        allocatedAt = creationDateTime,
+        reallocatedAt = null,
+        decision = null,
+        decisionMadeAt = null,
+        placementType = PlacementType.RELEASE_FOLLOWING_DECISION,
+        placementDates = mutableListOf(),
+        placementRequests = mutableListOf(),
         withdrawalReason = null,
       ),
     )
@@ -411,6 +453,14 @@ class ApprovedPremisesAutoScript(
   }
 
   private fun randomInt(min: Int, max: Int) = Random.nextInt(min, max)
+
+  private fun placementApplicationDataFor(crn: String): String {
+    return dataFixtureFor(questionnaire = "placement_application", crn = crn)
+  }
+
+  private fun placementApplicationDocumentFor(crn: String): String {
+    return documentFixtureFor(questionnaire = "placement_application", crn = crn)
+  }
 
   private fun assessmentDataFor(crn: String): String {
     return dataFixtureFor(questionnaire = "assessment", crn = crn)
