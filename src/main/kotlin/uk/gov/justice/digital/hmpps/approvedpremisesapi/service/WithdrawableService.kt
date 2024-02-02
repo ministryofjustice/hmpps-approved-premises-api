@@ -16,24 +16,25 @@ class WithdrawableService(
   @Lazy private val placementRequestService: PlacementRequestService,
   @Lazy private val bookingService: BookingService,
   @Lazy private val placementApplicationService: PlacementApplicationService,
+  @Lazy private val userAccessService: UserAccessService,
 ) {
   val approvedPremisesWithdrawnByPPBookingWithdrawnReasonId: UUID =
     UUID.fromString("d39572ea-9e42-460c-ae88-b6b30fca0b09")
 
-  fun allWithdrawables(application: ApprovedPremisesApplicationEntity): Withdrawables {
+  fun allWithdrawables(application: ApprovedPremisesApplicationEntity, onlyUserManageableBookings: Boolean = true): Withdrawables {
     val placementRequests = placementRequestService.getWithdrawablePlacementRequests(application)
     val bookings = bookingService.getCancelleableBookings(application)
     val placementApplications = placementApplicationService.getWithdrawablePlacementApplications(application)
 
     return Withdrawables(
       placementRequests = placementRequests,
-      bookings = bookings,
+      bookings = if (onlyUserManageableBookings) { bookings.filter { userAccessService.currentUserCanManagePremisesBookings(it.premises) } } else { bookings },
       placementApplications = placementApplications,
     )
   }
 
   fun withdrawAllForApplication(application: ApprovedPremisesApplicationEntity, user: UserEntity) {
-    val withdrawables = allWithdrawables(application)
+    val withdrawables = allWithdrawables(application, false)
 
     withdrawables.placementApplications.forEach {
       placementApplicationService.withdrawPlacementApplication(it.id, PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP)

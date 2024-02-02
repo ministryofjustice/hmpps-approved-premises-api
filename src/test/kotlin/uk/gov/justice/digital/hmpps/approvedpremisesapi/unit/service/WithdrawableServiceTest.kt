@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
 import java.time.LocalDate
 
@@ -33,11 +34,13 @@ class WithdrawableServiceTest {
   private val mockPlacementRequestService = mockk<PlacementRequestService>()
   private val mockBookingService = mockk<BookingService>()
   private val mockPlacementApplicationService = mockk<PlacementApplicationService>()
+  private val mockUserAccessService = mockk<UserAccessService>()
 
   private val withdrawableService = WithdrawableService(
     mockPlacementRequestService,
     mockBookingService,
     mockPlacementApplicationService,
+    mockUserAccessService,
   )
 
   val probationRegion = ProbationRegionEntityFactory()
@@ -81,7 +84,12 @@ class WithdrawableServiceTest {
     .toList()
 
   val bookings = BookingEntityFactory()
-    .withPremises(premises)
+    .withYieldedPremises {
+      ApprovedPremisesEntityFactory()
+        .withProbationRegion(probationRegion)
+        .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+        .produce()
+    }
     .produceMany()
     .take(3)
     .toList()
@@ -94,16 +102,57 @@ class WithdrawableServiceTest {
   }
 
   @Test
-  fun `it returns all withdrawables as a Withdrawables object`() {
+  fun `allWithdrawables returns all withdrawables as a Withdrawables object`() {
+    every { mockUserAccessService.currentUserCanManagePremisesBookings(any()) } returns true
     val result = withdrawableService.allWithdrawables(application)
 
     assertThat(result.bookings).isEqualTo(bookings)
     assertThat(result.placementRequests).isEqualTo(placementRequests)
     assertThat(result.placementApplications).isEqualTo(placementApplications)
+
+    bookings.forEach {
+      verify(exactly = 1) {
+        mockUserAccessService.currentUserCanManagePremisesBookings(it.premises)
+      }
+    }
+  }
+
+  @Test
+  fun `allWithdrawables filters out bookings that the user cannot manage by default`() {
+    every { mockUserAccessService.currentUserCanManagePremisesBookings(bookings[0].premises) } returns true
+    every { mockUserAccessService.currentUserCanManagePremisesBookings(bookings[1].premises) } returns false
+    every { mockUserAccessService.currentUserCanManagePremisesBookings(bookings[2].premises) } returns false
+
+    val result = withdrawableService.allWithdrawables(application)
+
+    assertThat(result.bookings).isEqualTo(listOf(bookings[0]))
+    assertThat(result.placementRequests).isEqualTo(placementRequests)
+    assertThat(result.placementApplications).isEqualTo(placementApplications)
+
+    bookings.forEach {
+      verify(exactly = 1) {
+        mockUserAccessService.currentUserCanManagePremisesBookings(it.premises)
+      }
+    }
+  }
+
+  @Test
+  fun `allWithdrawables returns all withdrawables without filtering bookings when onlyUserManageableBookings is true`() {
+    val result = withdrawableService.allWithdrawables(application, false)
+
+    assertThat(result.bookings).isEqualTo(bookings)
+    assertThat(result.placementRequests).isEqualTo(placementRequests)
+    assertThat(result.placementApplications).isEqualTo(placementApplications)
+
+    verify(exactly = 0) {
+      mockUserAccessService.currentUserCanManagePremisesBookings(any())
+    }
   }
 
   @Test
   fun `withdrawAllForApplication withdraws all withdrawable entities`() {
+    every { mockUserAccessService.currentUserCanManagePremisesBookings(any()) } returns true
+
     every {
       mockBookingService.createCancellation(
         user,
