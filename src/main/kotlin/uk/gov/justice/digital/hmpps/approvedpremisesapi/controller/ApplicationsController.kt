@@ -42,12 +42,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
@@ -74,10 +73,9 @@ class ApplicationsController(
   private val documentTransformer: DocumentTransformer,
   private val assessmentService: AssessmentService,
   private val userService: UserService,
-  private val bookingService: BookingService,
-  private val placementRequestService: PlacementRequestService,
   private val placementRequestTransformer: PlacementRequestTransformer,
   private val bookingTransformer: BookingTransformer,
+  private val withdrawableService: WithdrawableService,
 ) : ApplicationsApiDelegate {
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
@@ -459,13 +457,12 @@ class ApplicationsController(
       throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
     }
 
+    val withdrawables = withdrawableService.allWithdrawables(application)
+
     val allWithdrawables =
-      placementRequestService.getWithdrawablePlacementRequests(application)
-        .map { placementRequestTransformer.transformToWithdrawable(it) } +
-        bookingService.getCancelleableBookings(application)
-          .map { bookingTransformer.transformToWithdrawable(it) } +
-        placementApplicationService.getWithdrawablePlacementApplications(application)
-          .map { placementApplicationTransformer.transformToWithdrawable(it) }
+      withdrawables.placementApplications.map { placementApplicationTransformer.transformToWithdrawable(it) } +
+        withdrawables.placementRequests.map { placementRequestTransformer.transformToWithdrawable(it) } +
+        withdrawables.bookings.map { bookingTransformer.transformToWithdrawable(it) }
 
     return ResponseEntity.ok(allWithdrawables)
   }
