@@ -1859,6 +1859,12 @@ components:
           type: string
           example: 'moreInfoRequired'
           description: 'The "name" of the new status to be applied'
+        newStatusDetails:
+          type: array
+          items:
+            type: string
+            example: 'changeOfCircumstances'
+            description: 'The "name" of the new detail belonging to the new status'
       required:
         - newStatus
     Cas2SubmittedApplicationSummary:
