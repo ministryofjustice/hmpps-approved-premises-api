@@ -14,81 +14,93 @@ import javax.persistence.Id
 
 @Repository
 interface TaskRepository : JpaRepository<Task, UUID> {
+
   companion object {
-    private const val ALLOCATABLE_QUERY = """
-      SELECT
-        cast(assessment.id as TEXT) as id,
-        assessment.created_at as created_at,
-        'ASSESSMENT' as type
-      from
+    private const val ASSESSMENT_QUERY = """
+       SELECT
+        cast(assessment.id as TEXT) AS id,
+        assessment.created_at AS created_at,
+        'ASSESSMENT' AS type
+      FROM
         assessments assessment
-        inner join approved_premises_applications application on assessment.application_id = application.id
-        left join ap_areas area on area.id = application.ap_area_id
-      where
+        INNER JOIN approved_premises_applications application ON assessment.application_id = application.id
+        LEFT JOIN ap_areas area ON area.id = application.ap_area_id
+      WHERE
         'ASSESSMENT' in :taskTypes AND
-        assessment.is_withdrawn is not true
-        and assessment.reallocated_at is null
-        and assessment.submitted_at is null
-        and (
-          (:isAllocated is null) OR 
+        assessment.is_withdrawn IS NOT TRUE
+        AND assessment.reallocated_at IS NULL
+        AND assessment.submitted_at IS NULL
+        AND (
+          (:isAllocated IS NULL) OR 
           (
-            (:isAllocated = true and assessment.allocated_to_user_id is not null) or
-            (:isAllocated = false and assessment.allocated_to_user_id is null)
+            (:isAllocated = true and assessment.allocated_to_user_id IS NOT NULL) OR
+            (:isAllocated = false and assessment.allocated_to_user_id IS NULL)
           )
-        ) and (
-          (cast(:apAreaId as uuid) is null) OR
+        ) AND (
+          (cast(:apAreaId as uuid) IS NULL) OR
           (area.id = :apAreaId)
         )
-      UNION ALL
-      SELECT
-        cast(placement_application.id as TEXT) as id,
-        placement_application.created_at as created_at,
-        'PLACEMENT_APPLICATION' as type
+    """
+
+    private const val PLACEMENT_APPLICATION_QUERY = """
+       SELECT
+        cast(placement_application.id as TEXT) AS id,
+        placement_application.created_at AS created_at,
+        'PLACEMENT_APPLICATION' AS type
       from
         placement_applications placement_application
-        inner join approved_premises_applications application on placement_application.application_id = application.id
-        left join ap_areas area on area.id = application.ap_area_id
-      where
+        INNER JOIN approved_premises_applications application ON placement_application.application_id = application.id
+        LEFT JOIN ap_areas area ON area.id = application.ap_area_id
+      WHERE
         'PLACEMENT_APPLICATION' in :taskTypes AND
-        placement_application.submitted_at is not null
-        and placement_application.reallocated_at is null
-        and placement_application.decision is null
-        and (
-          (:isAllocated is null) OR 
+        placement_application.submitted_at IS NOT NULL
+        AND placement_application.reallocated_at IS NULL
+        AND placement_application.decision IS NULL
+        AND (
+          (:isAllocated IS NULL) OR 
           (
-              (:isAllocated = true and placement_application.allocated_to_user_id is not null) or
-              (:isAllocated = false and placement_application.allocated_to_user_id is null)
+              (:isAllocated = true AND placement_application.allocated_to_user_id IS NOT NULL) OR
+              (:isAllocated = false AND placement_application.allocated_to_user_id IS NULL)
           )
-        ) and (
-          (cast(:apAreaId as uuid) is null) OR
+        ) AND (
+          (cast(:apAreaId as uuid) IS NULL) OR
           (area.id = :apAreaId)
         )
-      UNION ALL
+    """
+
+    private const val PLACEMENT_REQUEST_QUERY = """
       SELECT
-        cast(placement_request.id as TEXT) as id,
-        placement_request.created_at as created_at,
-        'PLACEMENT_REQUEST' as type
-      from
+        cast(placement_request.id as TEXT) AS id,
+        placement_request.created_at AS created_at,
+        'PLACEMENT_REQUEST' AS type
+      FROM
         placement_requests placement_request
-        inner join approved_premises_applications application on placement_request.application_id = application.id
-        left join booking_not_mades booking_not_made on booking_not_made.placement_request_id = placement_request.id
-        left join ap_areas area on area.id = application.ap_area_id
-      where
-        'PLACEMENT_REQUEST' in :taskTypes AND
+        INNER JOIN approved_premises_applications application ON placement_request.application_id = application.id
+        LEFT JOIN booking_not_mades booking_not_made ON booking_not_made.placement_request_id = placement_request.id
+        LEFT JOIN ap_areas area ON area.id = application.ap_area_id
+      WHERE
+        'PLACEMENT_REQUEST' IN :taskTypes AND
         placement_request.booking_id IS NULL
         AND placement_request.reallocated_at IS NULL
-        AND placement_request.is_withdrawn is false
+        AND placement_request.is_withdrawn IS FALSE
         AND booking_not_made.id IS NULL
         AND (
-          (:isAllocated is null) OR 
+          (:isAllocated IS NULL) OR 
           (
-              (:isAllocated = true and placement_request.allocated_to_user_id is not null) or
-              (:isAllocated = false and placement_request.allocated_to_user_id is null)
+              (:isAllocated = true AND placement_request.allocated_to_user_id IS NOT NULL) OR
+              (:isAllocated = false AND placement_request.allocated_to_user_id IS NULL)
           )
-        ) and (
-          (cast(:apAreaId as uuid) is null) OR
+        ) AND (
+          (cast(:apAreaId as uuid) IS NULL) OR
           (area.id = :apAreaId)
-        )
+        )"""
+
+    private const val ALLOCATABLE_QUERY = """
+      $ASSESSMENT_QUERY
+      UNION ALL
+      $PLACEMENT_APPLICATION_QUERY
+      UNION ALL
+      $PLACEMENT_REQUEST_QUERY
     """
   }
 
