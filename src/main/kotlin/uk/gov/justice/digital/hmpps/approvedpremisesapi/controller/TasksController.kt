@@ -75,19 +75,38 @@ class TasksController(
     apAreaId: UUID?,
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
-    val pageCriteria = PageCriteria(
-      sortBy = sortBy ?: TaskSortField.createdAt,
-      sortDirection = sortDirection ?: SortDirection.asc,
-      page = page,
-    )
 
     if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
       throw ForbiddenProblem()
     }
 
-    val taskEntityTypes = determineTaskEntityTypes(type)
+    val (typedTasks, metadata) = taskService.getAll(
+      TaskService.TaskFilterCriteria(
+        allocatedFilter,
+        apAreaId,
+        determineTaskEntityTypes(type),
+      ),
+      PageCriteria(
+        sortBy = sortBy ?: TaskSortField.createdAt,
+        sortDirection = sortDirection ?: SortDirection.asc,
+        page = page,
+      ),
+    )
 
-    return reallocatableResponseForTypes(taskEntityTypes, user, pageCriteria, allocatedFilter, apAreaId)
+    val offenderSummaries = getOffenderSummariesForCrns(typedTasks.map { it.crn },user)
+    val tasks = typedTasks.map {
+      when (it) {
+        is TypedTask.Assessment -> getAssessmentTask(it.entity, offenderSummaries)
+        is TypedTask.PlacementRequest -> getPlacementRequestTask(it.entity, offenderSummaries)
+        is TypedTask.PlacementApplication -> getPlacementApplicationTask(it.entity, offenderSummaries)
+      }
+    }
+
+    return ResponseEntity.ok().headers(
+      metadata?.toHeaders(),
+    ).body(
+      tasks,
+    )
   }
 
   private fun determineTaskEntityTypes(type: String?): List<TaskEntityType> {
@@ -412,42 +431,6 @@ class TasksController(
     placementApplications: List<PlacementApplicationEntity>,
     offenderSummaries: List<PersonSummaryInfoResult>,
   ) = placementApplications.map { getPlacementApplicationTask(it, offenderSummaries) }
-
-  private fun reallocatableResponseForTypes(
-    taskEntityTypes: List<TaskEntityType>,
-    user: UserEntity,
-    pageCriteria: PageCriteria<TaskSortField>,
-    allocatedFilter: AllocatedFilter?,
-    apAreaId: UUID?,
-  ): ResponseEntity<List<Task>> = runBlocking {
-    val (typedTasks, metadata) = taskService.getAll(
-      TaskService.TaskFilterCriteria(
-        allocatedFilter,
-        apAreaId,
-        taskEntityTypes,
-      ),
-      pageCriteria,
-    )
-
-    val offenderSummaries = getOffenderSummariesForCrns(
-      typedTasks.map { it.crn },
-      user,
-    )
-
-    val tasks = typedTasks.map {
-      when (it) {
-        is TypedTask.Assessment -> getAssessmentTask(it.entity, offenderSummaries)
-        is TypedTask.PlacementRequest -> getPlacementRequestTask(it.entity, offenderSummaries)
-        is TypedTask.PlacementApplication -> getPlacementApplicationTask(it.entity, offenderSummaries)
-      }
-    }
-
-    return@runBlocking ResponseEntity.ok().headers(
-      metadata?.toHeaders(),
-    ).body(
-      tasks,
-    )
-  }
 
   private fun getPersonNameFromApplication(
     application: ApplicationEntity,
