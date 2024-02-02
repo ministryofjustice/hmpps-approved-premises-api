@@ -3070,7 +3070,7 @@ class ApplicationTest : IntegrationTestBase() {
           val updatedBooking = bookingRepository.findByIdOrNull(booking1.id)!!
           val cancellation = updatedBooking.cancellation
           assertThat(cancellation).isNotNull
-          assertThat(cancellation!!.reason.name).isEqualTo("Withdrawn by Probation Practitioner")
+          assertThat(cancellation!!.reason.name).isEqualTo("The probation practitioner requested it")
 
           val updatedBookingWithArrival = bookingRepository.findByIdOrNull(bookingWithArrival.id)!!
           assertThat(updatedBookingWithArrival.cancellation).isNull()
