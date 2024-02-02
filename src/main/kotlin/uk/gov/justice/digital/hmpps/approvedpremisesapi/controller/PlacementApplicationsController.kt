@@ -114,6 +114,12 @@ class PlacementApplicationsController(
     val withdrawalReason = when (withdrawPlacementApplication?.reason) {
       WithdrawPlacementRequestReason.duplicatePlacementRequest -> PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
       WithdrawPlacementRequestReason.alternativeProvisionIdentified -> PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
+      WithdrawPlacementRequestReason.changeInCircumstances -> PlacementApplicationWithdrawalReason.CHANGE_IN_CIRCUMSTANCES
+      WithdrawPlacementRequestReason.changeInReleaseDecision -> PlacementApplicationWithdrawalReason.CHANGE_IN_RELEASE_DECISION
+      WithdrawPlacementRequestReason.noCapacityDueToLostBed -> PlacementApplicationWithdrawalReason.NO_CAPACITY_DUE_TO_LOST_BED
+      WithdrawPlacementRequestReason.noCapacityDueToPlacementPrioritisation -> PlacementApplicationWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION
+      WithdrawPlacementRequestReason.noCapacity -> PlacementApplicationWithdrawalReason.NO_CAPACITY
+      WithdrawPlacementRequestReason.errorInPlacementRequest -> PlacementApplicationWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST
       null -> null
     }
     val result = placementApplicationService.withdrawPlacementApplication(id, withdrawalReason)
