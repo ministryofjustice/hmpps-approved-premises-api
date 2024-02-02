@@ -3258,10 +3258,11 @@ class ApplicationTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Get withdrawables for an application returns withdrawable bookings`() {
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
+    fun `Get withdrawables for an application returns withdrawable bookings when a user can manage bookings`(role: UserRole) {
       `Given a User` { applicant, _ ->
-        `Given a User` { user, jwt ->
+        `Given a User`(roles = listOf(role)) { user, jwt ->
           `Given an Offender` { offenderDetails, _ ->
 
             val (application, _) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
@@ -3329,9 +3330,9 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get withdrawables for all possible types`() {
+    fun `Get withdrawables for all possible types when a user can manage bookings`() {
       `Given a User` { applicant, _ ->
-        `Given a User` { user, jwt ->
+        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
           `Given an Offender` { offenderDetails, _ ->
 
             val (application, _) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
@@ -3360,6 +3361,59 @@ class ApplicationTest : IntegrationTestBase() {
                 WithdrawableType.booking,
                 listOf(DatePeriod(booking1ExpectedArrival, booking1ExpectedDeparture)),
               ),
+              Withdrawable(
+                placementApplication.id,
+                WithdrawableType.placementApplication,
+                listOf(datePeriodForDuration(placementApplicationExpectedArrival, placementApplicationDuration)),
+              ),
+              Withdrawable(
+                placementRequest.id,
+                WithdrawableType.placementRequest,
+                listOf(datePeriodForDuration(placementRequest.expectedArrival, placementRequest.duration)),
+              ),
+            )
+
+            webTestClient.get()
+              .uri("/applications/${application.id}/withdrawables")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(objectMapper.writeValueAsString(expected))
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get withdrawables for all possible types filters out bookings when a user cannot manage bookings`() {
+      `Given a User` { applicant, _ ->
+        `Given a User` { user, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
+
+            val booking1ExpectedArrival = LocalDate.now().plusDays(1)
+            val booking1ExpectedDeparture = LocalDate.now().plusDays(6)
+            produceAndPersistBooking(
+              application,
+              booking1ExpectedArrival,
+              booking1ExpectedDeparture,
+            )
+
+            val placementApplicationExpectedArrival = LocalDate.now().plusDays(1)
+            val placementApplicationDuration = 5
+
+            val placementApplication = produceAndPersistPlacementApplication(
+              application,
+              listOf(placementApplicationExpectedArrival to placementApplicationDuration),
+            )
+
+            val placementRequest = produceAndPersistPlacementRequest(application)
+
+            val expected = listOf(
               Withdrawable(
                 placementApplication.id,
                 WithdrawableType.placementApplication,
