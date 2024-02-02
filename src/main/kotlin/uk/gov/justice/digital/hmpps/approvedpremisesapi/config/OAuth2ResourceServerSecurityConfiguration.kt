@@ -63,6 +63,7 @@ class OAuth2ResourceServerSecurityConfiguration {
         authorize(HttpMethod.POST, "/cas2/submissions/*/status-updates", hasRole("CAS2_ASSESSOR"))
         authorize(HttpMethod.GET, "/cas2/reference-data/**", hasAnyRole("CAS2_ASSESSOR", "POM"))
         authorize(HttpMethod.GET, "/cas2/reports/**", hasRole("CAS2_MI"))
+        authorize(HttpMethod.GET, "/cas3-api.yml", permitAll)
         authorize("/cas2/**", hasAuthority("ROLE_POM"))
         authorize(anyRequest, hasAuthority("ROLE_PROBATION"))
       }
