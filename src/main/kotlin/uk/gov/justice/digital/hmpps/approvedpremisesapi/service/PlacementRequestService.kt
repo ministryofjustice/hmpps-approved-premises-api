@@ -10,13 +10,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -44,7 +42,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.wrapWithMetadata
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -80,30 +77,6 @@ class PlacementRequestService(
       pageable = pageable,
     )
     return Pair(response.content, getMetadata(response, page))
-  }
-
-  fun getAllReallocatable(
-    pageCriteria: PageCriteria<TaskSortField>,
-    allocatedFilter: AllocatedFilter?,
-    apAreaId: UUID?,
-  ): Pair<List<PlacementRequestEntity>, PaginationMetadata?> {
-    val pageable = getPageable(
-      pageCriteria.withSortBy(
-        when (pageCriteria.sortBy) {
-          TaskSortField.createdAt -> "created_at"
-        },
-      ),
-    )
-
-    val allocationStatus = when (allocatedFilter) {
-      AllocatedFilter.allocated -> PlacementRequestRepository.AllocationStatus.ALLOCATED
-      AllocatedFilter.unallocated -> PlacementRequestRepository.AllocationStatus.UNALLOCATED
-      null -> PlacementRequestRepository.AllocationStatus.EITHER
-    }
-
-    val allReallocatable = placementRequestRepository.findByAllocationStatus(allocationStatus, apAreaId, pageable)
-
-    return wrapWithMetadata(allReallocatable, pageCriteria)
   }
 
   fun getAllActive(

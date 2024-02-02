@@ -8,21 +8,24 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.persistence.Entity
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
 import javax.persistence.Id
 
 @Repository
-interface TaskRespository : JpaRepository<Task, UUID> {
+interface TaskRepository : JpaRepository<Task, UUID> {
   companion object {
     private const val ALLOCATABLE_QUERY = """
       SELECT
         cast(assessment.id as TEXT) as id,
         assessment.created_at as created_at,
-        'assessment' as type
+        'ASSESSMENT' as type
       from
         assessments assessment
         inner join approved_premises_applications application on assessment.application_id = application.id
         left join ap_areas area on area.id = application.ap_area_id
       where
+        'ASSESSMENT' in :taskTypes AND
         assessment.is_withdrawn is not true
         and assessment.reallocated_at is null
         and assessment.submitted_at is null
@@ -40,12 +43,13 @@ interface TaskRespository : JpaRepository<Task, UUID> {
       SELECT
         cast(placement_application.id as TEXT) as id,
         placement_application.created_at as created_at,
-        'placement_application' as type
+        'PLACEMENT_APPLICATION' as type
       from
         placement_applications placement_application
         inner join approved_premises_applications application on placement_application.application_id = application.id
         left join ap_areas area on area.id = application.ap_area_id
       where
+        'PLACEMENT_APPLICATION' in :taskTypes AND
         placement_application.submitted_at is not null
         and placement_application.reallocated_at is null
         and placement_application.decision is null
@@ -63,13 +67,14 @@ interface TaskRespository : JpaRepository<Task, UUID> {
       SELECT
         cast(placement_request.id as TEXT) as id,
         placement_request.created_at as created_at,
-        'placement_request' as type
+        'PLACEMENT_REQUEST' as type
       from
         placement_requests placement_request
         inner join approved_premises_applications application on placement_request.application_id = application.id
         left join booking_not_mades booking_not_made on booking_not_made.placement_request_id = placement_request.id
         left join ap_areas area on area.id = application.ap_area_id
       where
+        'PLACEMENT_REQUEST' in :taskTypes AND
         placement_request.booking_id IS NULL
         AND placement_request.reallocated_at IS NULL
         AND placement_request.is_withdrawn is false
@@ -92,7 +97,7 @@ interface TaskRespository : JpaRepository<Task, UUID> {
     countQuery = "SELECT COUNT(1) FROM ($ALLOCATABLE_QUERY) as count",
     nativeQuery = true,
   )
-  fun getAllReallocatable(isAllocated: Boolean?, apAreaId: UUID?, pageable: Pageable?): Page<Task>
+  fun getAllReallocatable(isAllocated: Boolean?, apAreaId: UUID?, taskTypes: List<String>, pageable: Pageable?): Page<Task>
 }
 
 @Entity
@@ -100,5 +105,12 @@ data class Task(
   @Id
   val id: UUID,
   val createdAt: LocalDateTime,
-  val type: String,
+  @Enumerated(EnumType.STRING)
+  val type: TaskEntityType,
 )
+
+enum class TaskEntityType {
+  ASSESSMENT,
+  PLACEMENT_APPLICATION,
+  PLACEMENT_REQUEST,
+}

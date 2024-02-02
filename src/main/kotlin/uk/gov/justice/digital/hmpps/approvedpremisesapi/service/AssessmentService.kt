@@ -13,12 +13,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
@@ -52,10 +50,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.wrapWithMetadata
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -139,37 +135,6 @@ class AssessmentService(
       }
       else -> throw RuntimeException("Only CAS3 assessments are currently supported")
     }
-  }
-
-  fun getAllReallocatable(
-    pageCriteria: PageCriteria<TaskSortField>,
-    allocatedFilter: AllocatedFilter?,
-    apAreaId: UUID?,
-  ): Pair<List<ApprovedPremisesAssessmentEntity>, PaginationMetadata?> {
-    val latestSchema = jsonSchemaService.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java)
-    val pageable = getPageable(
-      pageCriteria.withSortBy(
-        when (pageCriteria.sortBy) {
-          TaskSortField.createdAt -> "createdAt"
-        },
-      ),
-    )
-
-    val assessments = assessmentRepository.findByAllocationStatus(
-      when (allocatedFilter) {
-        AllocatedFilter.allocated -> AssessmentRepository.AllocationStatus.ALLOCATED
-        AllocatedFilter.unallocated -> AssessmentRepository.AllocationStatus.UNALLOCATED
-        null -> AssessmentRepository.AllocationStatus.EITHER
-      },
-      apAreaId,
-      pageable,
-    )
-
-    assessments.forEach {
-      it.schemaUpToDate = it.schemaVersion.id == latestSchema.id
-    }
-
-    return wrapWithMetadata(assessments, pageCriteria)
   }
 
   fun getAssessmentForUser(user: UserEntity, assessmentId: UUID): AuthorisableActionResult<AssessmentEntity> {

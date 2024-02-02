@@ -4,10 +4,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -27,10 +25,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.wrapWithMetadata
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
@@ -400,32 +396,6 @@ class PlacementApplicationService(
       ApiPlacementType.rotl -> PlacementType.ROTL
       ApiPlacementType.releaseFollowingDecision -> PlacementType.RELEASE_FOLLOWING_DECISION
     }
-  }
-
-  fun getAllReallocatable(
-    pageCriteria: PageCriteria<TaskSortField>,
-    allocatedFilter: AllocatedFilter?,
-    apAreaId: UUID?,
-  ): Pair<List<PlacementApplicationEntity>, PaginationMetadata?> {
-    val pageable = getPageable(
-      pageCriteria.withSortBy(
-        when (pageCriteria.sortBy) {
-          TaskSortField.createdAt -> "createdAt"
-        },
-      ),
-    )
-
-    val allReallocatable = placementApplicationRepository.findByAllocationStatus(
-      when (allocatedFilter) {
-        AllocatedFilter.allocated -> PlacementApplicationRepository.AllocationStatus.ALLOCATED
-        AllocatedFilter.unallocated -> PlacementApplicationRepository.AllocationStatus.UNALLOCATED
-        null -> PlacementApplicationRepository.AllocationStatus.EITHER
-      },
-      apAreaId,
-      pageable,
-    )
-
-    return wrapWithMetadata(allReallocatable, pageCriteria)
   }
 
   fun getWithdrawablePlacementApplications(application: ApprovedPremisesApplicationEntity) =
