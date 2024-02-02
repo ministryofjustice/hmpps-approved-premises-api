@@ -47,6 +47,7 @@ class TaskService(
     val allocatedFilter: AllocatedFilter?,
     val apAreaId: UUID?,
     val types: List<TaskEntityType>,
+    val allocatedToUserId: UUID?,
   )
 
   fun getAll(
@@ -62,15 +63,15 @@ class TaskService(
     )
 
     val allocatedFilter = filterCriteria.allocatedFilter
-    val apAreaId = filterCriteria.apAreaId
     val taskTypes = filterCriteria.types
+    val isAllocated = allocatedFilter?.let { allocatedFilter == AllocatedFilter.allocated }
 
-    val isAllocated = if (allocatedFilter == null) { null } else { allocatedFilter == AllocatedFilter.allocated }
     val tasksResult = taskRepository.getAllReallocatable(
-      isAllocated,
-      apAreaId,
-      taskTypes.map { it.name },
-      pageable,
+      isAllocated = isAllocated,
+      apAreaId = filterCriteria.apAreaId,
+      taskTypes = taskTypes.map { it.name },
+      allocatedToUserId = filterCriteria.allocatedToUserId,
+      pageable = pageable,
     )
 
     val tasks = tasksResult.content

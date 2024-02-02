@@ -73,6 +73,7 @@ class TasksController(
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
     apAreaId: UUID?,
+    allocatedToUserId: UUID?
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
@@ -82,9 +83,10 @@ class TasksController(
 
     val (typedTasks, metadata) = taskService.getAll(
       TaskService.TaskFilterCriteria(
-        allocatedFilter,
-        apAreaId,
-        determineTaskEntityTypes(type),
+        allocatedFilter = allocatedFilter,
+        apAreaId = apAreaId,
+        types = determineTaskEntityTypes(type),
+        allocatedToUserId = allocatedToUserId
       ),
       PageCriteria(
         sortBy = sortBy ?: TaskSortField.createdAt,

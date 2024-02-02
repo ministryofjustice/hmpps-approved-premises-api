@@ -39,6 +39,9 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         ) AND (
           (cast(:apAreaId as uuid) IS NULL) OR
           (area.id = :apAreaId)
+        ) AND (
+          (cast(:allocatedToUserId as uuid) IS NULL) OR
+          assessment.allocated_to_user_id = :allocatedToUserId
         )
     """
 
@@ -65,6 +68,9 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         ) AND (
           (cast(:apAreaId as uuid) IS NULL) OR
           (area.id = :apAreaId)
+        ) AND (
+          (cast(:allocatedToUserId as uuid) IS NULL) OR
+          placement_application.allocated_to_user_id = :allocatedToUserId
         )
     """
 
@@ -93,7 +99,11 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         ) AND (
           (cast(:apAreaId as uuid) IS NULL) OR
           (area.id = :apAreaId)
-        )"""
+        ) AND (
+          (cast(:allocatedToUserId as uuid) IS NULL) OR
+          placement_request.allocated_to_user_id = :allocatedToUserId
+        )
+        """
 
     private const val ALLOCATABLE_QUERY = """
       $ASSESSMENT_QUERY
@@ -109,7 +119,11 @@ interface TaskRepository : JpaRepository<Task, UUID> {
     countQuery = "SELECT COUNT(1) FROM ($ALLOCATABLE_QUERY) as count",
     nativeQuery = true,
   )
-  fun getAllReallocatable(isAllocated: Boolean?, apAreaId: UUID?, taskTypes: List<String>, pageable: Pageable?): Page<Task>
+  fun getAllReallocatable(isAllocated: Boolean?,
+                          apAreaId: UUID?,
+                          taskTypes: List<String>,
+                          allocatedToUserId: UUID?,
+                          pageable: Pageable?): Page<Task>
 }
 
 @Entity

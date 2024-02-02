@@ -324,6 +324,7 @@ class TaskServiceTest {
     val page = mockk<Page<Task>>()
     val metadata = mockk<PaginationMetadata>()
     val taskEntityTypes = TaskEntityType.entries
+    val allocatedToUserId = UUID.randomUUID()
 
     every { page.content } returns tasks
     every {
@@ -331,6 +332,7 @@ class TaskServiceTest {
         isAllocated,
         apAreaId,
         taskEntityTypes.map { it.name },
+        allocatedToUserId,
         PageRequest.of(0, 10, Sort.by("created_at").ascending()),
       )
     } returns page
@@ -342,7 +344,7 @@ class TaskServiceTest {
 
     every { getMetadata(page, pageCriteria) } returns metadata
 
-    val result = taskService.getAll(TaskService.TaskFilterCriteria(AllocatedFilter.allocated, apAreaId, taskEntityTypes), pageCriteria)
+    val result = taskService.getAll(TaskService.TaskFilterCriteria(AllocatedFilter.allocated, apAreaId, taskEntityTypes, allocatedToUserId), pageCriteria)
 
     val expectedTasks = listOf(
       assessments.map { TypedTask.Assessment(it) },
