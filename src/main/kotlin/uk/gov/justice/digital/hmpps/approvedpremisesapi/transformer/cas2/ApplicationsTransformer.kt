@@ -15,6 +15,7 @@ class ApplicationsTransformer(
   private val objectMapper: ObjectMapper,
   private val personTransformer: PersonTransformer,
   private val nomisUserTransformer: NomisUserTransformer,
+  private val statusUpdateTransformer: StatusUpdateTransformer,
 ) {
 
   fun transformJpaToApi(jpa: Cas2ApplicationEntity, personInfo: PersonInfoResult):
@@ -32,6 +33,7 @@ class ApplicationsTransformer(
       status = getStatus(jpa),
       type = "CAS2",
       telephoneNumber = jpa.telephoneNumber,
+      statusUpdates = jpa.statusUpdates?.map { statusUpdate -> statusUpdateTransformer.transformJpaToApi(statusUpdate) },
     )
   }
 
