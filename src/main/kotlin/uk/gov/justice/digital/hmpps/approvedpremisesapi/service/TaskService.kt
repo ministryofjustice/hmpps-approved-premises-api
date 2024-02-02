@@ -66,7 +66,7 @@ class TaskService(
     val taskTypes = filterCriteria.types
     val isAllocated = allocatedFilter?.let { allocatedFilter == AllocatedFilter.allocated }
 
-    val tasksResult = taskRepository.getAllReallocatable(
+    val tasksResult = taskRepository.getAll(
       isAllocated = isAllocated,
       apAreaId = filterCriteria.apAreaId,
       taskTypes = taskTypes.map { it.name },

@@ -119,11 +119,13 @@ interface TaskRepository : JpaRepository<Task, UUID> {
     countQuery = "SELECT COUNT(1) FROM ($ALLOCATABLE_QUERY) as count",
     nativeQuery = true,
   )
-  fun getAllReallocatable(isAllocated: Boolean?,
-                          apAreaId: UUID?,
-                          taskTypes: List<String>,
-                          allocatedToUserId: UUID?,
-                          pageable: Pageable?): Page<Task>
+  fun getAll(
+    isAllocated: Boolean?,
+    apAreaId: UUID?,
+    taskTypes: List<String>,
+    allocatedToUserId: UUID?,
+    pageable: Pageable?,
+  ): Page<Task>
 }
 
 @Entity

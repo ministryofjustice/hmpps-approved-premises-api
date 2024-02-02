@@ -756,20 +756,20 @@ class TasksTest : IntegrationTestBase() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
-            val (task1,_) = `Given a Placement Request`(
+            val (task1, _) = `Given a Placement Request`(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
               crn = offenderDetails.otherIds.crn,
             )
 
-            val (task2,_) = `Given an Assessment for Approved Premises`(
+            val (task2, _) = `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
             )
 
-            val (task3,_) = `Given a Placement Request`(
+            val (task3, _) = `Given a Placement Request`(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
@@ -851,7 +851,7 @@ class TasksTest : IntegrationTestBase() {
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
 
-            val (task1,_) = `Given a Placement Request`(
+            val (task1, _) = `Given a Placement Request`(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = callingUser,
               createdByUser = callingUser,
@@ -865,7 +865,7 @@ class TasksTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
             )
 
-            val (task2,_) = `Given an Assessment for Approved Premises`(
+            val (task2, _) = `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = callingUser,
               crn = offenderDetails.otherIds.crn,
@@ -938,7 +938,7 @@ class TasksTest : IntegrationTestBase() {
             val apArea1 = `Given an AP Area`()
             val apArea2 = `Given an AP Area`()
 
-            val (task1,_) = `Given a Placement Request`(
+            val (task1, _) = `Given a Placement Request`(
               placementRequestAllocatedTo = otherUser,
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
@@ -954,7 +954,7 @@ class TasksTest : IntegrationTestBase() {
               apArea = apArea2,
             )
 
-            val (task2,_) = `Given an Assessment for Approved Premises`(
+            val (task2, _) = `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -1510,6 +1510,7 @@ class TasksTest : IntegrationTestBase() {
                 withPermissiveSchema()
               },
               crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
             )
 
             `Given a Placement Request`(
@@ -1534,6 +1535,7 @@ class TasksTest : IntegrationTestBase() {
                 withPermissiveSchema()
               },
               crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
             )
 
             `Given a Placement Application`(
@@ -1544,6 +1546,7 @@ class TasksTest : IntegrationTestBase() {
               },
               crn = offenderDetails.otherIds.crn,
               reallocated = true,
+              submittedAt = OffsetDateTime.now(),
             )
 
             webTestClient.get()
@@ -1597,6 +1600,7 @@ class TasksTest : IntegrationTestBase() {
               },
               crn = offenderDetails.otherIds.crn,
               apArea = apArea2,
+              submittedAt = OffsetDateTime.now(),
             )
 
             `Given a Placement Request`(
@@ -1615,6 +1619,7 @@ class TasksTest : IntegrationTestBase() {
               },
               crn = offenderDetails.otherIds.crn,
               apArea = apArea1,
+              submittedAt = OffsetDateTime.now(),
             )
 
             `Given a Placement Request`(
@@ -1633,6 +1638,7 @@ class TasksTest : IntegrationTestBase() {
               },
               crn = offenderDetails.otherIds.crn,
               apArea = apArea2,
+              submittedAt = OffsetDateTime.now(),
             )
 
             `Given a Placement Application`(
@@ -1643,6 +1649,7 @@ class TasksTest : IntegrationTestBase() {
               },
               crn = offenderDetails.otherIds.crn,
               reallocated = true,
+              submittedAt = OffsetDateTime.now(),
             )
 
             webTestClient.get()

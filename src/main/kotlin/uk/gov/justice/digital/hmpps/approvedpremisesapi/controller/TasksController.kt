@@ -73,7 +73,7 @@ class TasksController(
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
     apAreaId: UUID?,
-    allocatedToUserId: UUID?
+    allocatedToUserId: UUID?,
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
@@ -81,12 +81,34 @@ class TasksController(
       throw ForbiddenProblem()
     }
 
+    return getAll(
+      types = determineTaskEntityTypes(type),
+      page = page,
+      sortBy = sortBy,
+      sortDirection = sortDirection,
+      allocatedFilter = allocatedFilter,
+      apAreaId = apAreaId,
+      allocatedToUserId = allocatedToUserId,
+    )
+  }
+
+  private fun getAll(
+    types: List<TaskEntityType>,
+    page: Int?,
+    sortBy: TaskSortField?,
+    sortDirection: SortDirection?,
+    allocatedFilter: AllocatedFilter?,
+    apAreaId: UUID?,
+    allocatedToUserId: UUID?,
+  ): ResponseEntity<List<Task>> {
+    val user = userService.getUserForRequest()
+
     val (typedTasks, metadata) = taskService.getAll(
       TaskService.TaskFilterCriteria(
         allocatedFilter = allocatedFilter,
         apAreaId = apAreaId,
-        types = determineTaskEntityTypes(type),
-        allocatedToUserId = allocatedToUserId
+        types = types,
+        allocatedToUserId = allocatedToUserId,
       ),
       PageCriteria(
         sortBy = sortBy ?: TaskSortField.createdAt,
@@ -95,7 +117,7 @@ class TasksController(
       ),
     )
 
-    val offenderSummaries = getOffenderSummariesForCrns(typedTasks.map { it.crn },user)
+    val offenderSummaries = getOffenderSummariesForCrns(typedTasks.map { it.crn }, user)
     val tasks = typedTasks.map {
       when (it) {
         is TypedTask.Assessment -> getAssessmentTask(it.entity, offenderSummaries)
@@ -124,43 +146,18 @@ class TasksController(
     }
   }
 
-  override fun tasksGet(apAreaId: UUID?): ResponseEntity<List<Task>> = runBlocking {
+  override fun tasksGet(apAreaId: UUID?): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
-    var tasks = listOf<Task>()
 
-    if (user.hasRole(UserRole.CAS1_MATCHER)) {
-      val placementRequests =
-        placementRequestService.getVisiblePlacementRequestsForUser(
-          user = user,
-          apAreaId = apAreaId,
-        )
-
-      val placementApplications =
-        placementApplicationService.getVisiblePlacementApplicationsForUser(
-          user = user,
-          apAreaId = apAreaId,
-        )
-
-      val crns = listOf(
-        placementRequests.first.map { it.application.crn },
-        placementApplications.first.map { it.application.crn },
-      ).flatten()
-
-      val offenderSummaries = getOffenderSummariesForCrns(crns, user)
-
-      tasks = listOf(
-        getPlacementRequestTasks(
-          placementRequests.first,
-          offenderSummaries,
-        ),
-        getPlacementApplicationTasks(
-          placementApplications.first,
-          offenderSummaries,
-        ),
-      ).flatten()
-    }
-
-    return@runBlocking ResponseEntity.ok(tasks)
+    return getAll(
+      types = listOf(TaskEntityType.PLACEMENT_APPLICATION, TaskEntityType.PLACEMENT_REQUEST),
+      page = null,
+      sortBy = null,
+      sortDirection = null,
+      allocatedFilter = null,
+      apAreaId = apAreaId,
+      allocatedToUserId = user.id,
+    )
   }
 
   override fun tasksTaskTypeGet(
@@ -443,5 +440,4 @@ class TasksController(
   private fun toTaskType(type: String) = enumConverterFactory.getConverter(TaskType::class.java).convert(
     type.kebabCaseToPascalCase(),
   ) ?: throw NotFoundProblem(type, "TaskType")
-
 }

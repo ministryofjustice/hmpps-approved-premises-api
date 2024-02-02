@@ -328,7 +328,7 @@ class TaskServiceTest {
 
     every { page.content } returns tasks
     every {
-      taskRepositoryMock.getAllReallocatable(
+      taskRepositoryMock.getAll(
         isAllocated,
         apAreaId,
         taskEntityTypes.map { it.name },
