@@ -10,6 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ex
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
@@ -26,6 +28,7 @@ import java.util.UUID
 class StatusUpdateService(
   private val applicationRepository: Cas2ApplicationRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
+  private val statusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
   private val domainEventService: DomainEventService,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
@@ -35,6 +38,7 @@ class StatusUpdateService(
     return findActiveStatusByName(statusUpdate.newStatus) != null
   }
 
+  @SuppressWarnings("ReturnCount")
   fun create(
     applicationId: UUID,
     statusUpdate: Cas2ApplicationStatusUpdate,
@@ -47,6 +51,17 @@ class StatusUpdateService(
       ?: return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("The status ${statusUpdate.newStatus} is not valid"),
       )
+
+    val statusDetails = if (statusUpdate.newStatusDetails.isNullOrEmpty()) {
+      emptyList()
+    } else {
+      statusUpdate.newStatusDetails.map { detail ->
+        status.findStatusDetailOnStatus(detail)
+          ?: return AuthorisableActionResult.Success(
+            ValidatableActionResult.GeneralValidationError("The status detail $detail is not valid"),
+          )
+      }
+    }
 
     if (ValidationErrors().any()) {
       return AuthorisableActionResult.Success(
@@ -64,6 +79,17 @@ class StatusUpdateService(
         label = status.label,
       ),
     )
+
+    statusDetails.forEach { detail ->
+      statusUpdateDetailRepository.save(
+        Cas2StatusUpdateDetailEntity(
+          id = UUID.randomUUID(),
+          statusDetailId = detail.id,
+          statusUpdate = createdStatusUpdate,
+          label = detail.label,
+        ),
+      )
+    }
 
     createStatusUpdatedDomainEvent(createdStatusUpdate)
 

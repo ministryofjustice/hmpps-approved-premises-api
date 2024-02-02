@@ -11,6 +11,7 @@ import javax.persistence.Entity
 import javax.persistence.Id
 import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
+import javax.persistence.OneToMany
 import javax.persistence.Table
 
 @Repository
@@ -36,6 +37,9 @@ data class Cas2StatusUpdateEntity(
   @ManyToOne
   @JoinColumn(name = "application_id")
   val application: Cas2ApplicationEntity,
+
+  @OneToMany(mappedBy = "statusUpdate")
+  val statusUpdateDetails: List<Cas2StatusUpdateDetailEntity>? = null,
 
   @CreationTimestamp
   var createdAt: OffsetDateTime? = null,
