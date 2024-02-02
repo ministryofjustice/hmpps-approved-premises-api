@@ -116,11 +116,7 @@ class TasksController(
       return TaskEntityType.entries
     }
 
-    val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
-      type.kebabCaseToPascalCase(),
-    ) ?: throw NotFoundProblem(type, "TaskType")
-
-    return when (taskType) {
+    return when (toTaskType(type)) {
       TaskType.assessment -> listOf(TaskEntityType.ASSESSMENT)
       TaskType.placementRequest -> listOf(TaskEntityType.PLACEMENT_REQUEST)
       TaskType.placementApplication -> listOf(TaskEntityType.PLACEMENT_APPLICATION)
@@ -175,9 +171,7 @@ class TasksController(
   ): ResponseEntity<List<Task>> = runBlocking {
     val user = userService.getUserForRequest()
     val tasks = mutableListOf<Task>()
-    val type = enumConverterFactory.getConverter(TaskType::class.java).convert(
-      taskType.kebabCaseToPascalCase(),
-    ) ?: throw NotFoundProblem(taskType, "TaskType")
+    val type = toTaskType(taskType)
 
     var paginationMetaData: PaginationMetadata? = null
 
@@ -238,9 +232,7 @@ class TasksController(
 
   override fun tasksTaskTypeIdGet(id: UUID, taskType: String): ResponseEntity<TaskWrapper> {
     val user = userService.getUserForRequest()
-    val type = enumConverterFactory.getConverter(TaskType::class.java).convert(
-      taskType.kebabCaseToPascalCase(),
-    ) ?: throw NotFoundProblem(taskType, "TaskType")
+    val type = toTaskType(taskType)
 
     val transformedTask: Task
 
@@ -321,9 +313,7 @@ class TasksController(
   ): ResponseEntity<Reallocation> {
     val user = userService.getUserForRequest()
 
-    val type = enumConverterFactory.getConverter(TaskType::class.java).convert(
-      taskType.kebabCaseToPascalCase(),
-    ) ?: throw NotFoundProblem(taskType, "TaskType")
+    val type = toTaskType(taskType)
 
     val userId = when {
       xServiceName == ServiceName.temporaryAccommodation -> user.id
@@ -364,9 +354,7 @@ class TasksController(
   override fun tasksTaskTypeIdAllocationsDelete(id: UUID, taskType: String): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
-    val type = enumConverterFactory.getConverter(TaskType::class.java).convert(
-      taskType.kebabCaseToPascalCase(),
-    ) ?: throw NotFoundProblem(taskType, "TaskType")
+    val type = toTaskType(taskType)
 
     val validationResult = when (val authorisationResult = taskService.deallocateTask(user, type, id)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType.toString())
@@ -451,4 +439,9 @@ class TasksController(
       false,
     )
   }
+
+  private fun toTaskType(type: String) = enumConverterFactory.getConverter(TaskType::class.java).convert(
+    type.kebabCaseToPascalCase(),
+  ) ?: throw NotFoundProblem(type, "TaskType")
+
 }
