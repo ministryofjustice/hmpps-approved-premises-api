@@ -90,9 +90,8 @@ class TasksController(
     return reallocatableResponseForTypes(taskEntityTypes, user, pageCriteria, allocatedFilter, apAreaId)
   }
 
-
   private fun determineTaskEntityTypes(type: String?): List<TaskEntityType> {
-    if(type == null) {
+    if (type == null) {
       return TaskEntityType.entries
     }
 
@@ -235,9 +234,7 @@ class TasksController(
         )
         val offenderSummaries = getOffenderSummariesForCrns(listOf(assessment.application.crn), user)
 
-        transformedTask = getAssessmentTask(assessment) {
-          getPersonNameFromApplication(it.application, offenderSummaries)
-        }
+        transformedTask = getAssessmentTask(assessment, offenderSummaries)
 
         crn = assessment.application.crn
         requiredQualifications = assessment.application.getRequiredQualifications()
@@ -250,9 +247,7 @@ class TasksController(
         )
         val offenderSummaries = getOffenderSummariesForCrns(listOf(placementRequest.application.crn), user)
 
-        transformedTask = getPlacementRequestTask(placementRequest) {
-          getPersonNameFromApplication(it.application, offenderSummaries)
-        }
+        transformedTask = getPlacementRequestTask(placementRequest, offenderSummaries)
 
         crn = placementRequest.application.crn
         requiredQualifications = emptyList()
@@ -265,9 +260,7 @@ class TasksController(
         )
         val offenderSummaries = getOffenderSummariesForCrns(listOf(placementApplication.application.crn), user)
 
-        transformedTask = getPlacementApplicationTask(placementApplication) {
-          getPersonNameFromApplication(it.application, offenderSummaries)
-        }
+        transformedTask = getPlacementApplicationTask(placementApplication, offenderSummaries)
 
         crn = placementApplication.application.crn
         requiredQualifications = placementApplication.application.getRequiredQualifications()
@@ -382,52 +375,43 @@ class TasksController(
 
   private fun getAssessmentTask(
     assessment: AssessmentEntity,
-    personNameFunc: (AssessmentEntity) -> String,
+    offenderSummaries: List<PersonSummaryInfoResult>,
   ): AssessmentTask {
     return taskTransformer.transformAssessmentToTask(
       assessment = assessment,
-      personName = personNameFunc(assessment),
+      personName = getPersonNameFromApplication(assessment.application, offenderSummaries),
     )
   }
 
   private fun getPlacementRequestTask(
     placementRequest: PlacementRequestEntity,
-    personNameFunc: (PlacementRequestEntity) -> String,
+    offenderSummaries: List<PersonSummaryInfoResult>,
   ): PlacementRequestTask {
     return taskTransformer.transformPlacementRequestToTask(
       placementRequest = placementRequest,
-      personName = personNameFunc(placementRequest),
+      personName = getPersonNameFromApplication(placementRequest.application, offenderSummaries),
     )
   }
 
   private fun getPlacementApplicationTask(
     placementApplication: PlacementApplicationEntity,
-    personNameFunc: (PlacementApplicationEntity) -> String,
+    offenderSummaries: List<PersonSummaryInfoResult>,
   ): PlacementApplicationTask {
     return taskTransformer.transformPlacementApplicationToTask(
       placementApplication = placementApplication,
-      personName = personNameFunc(placementApplication),
+      personName = getPersonNameFromApplication(placementApplication.application, offenderSummaries),
     )
   }
 
   private suspend fun getPlacementRequestTasks(
     placementRequests: List<PlacementRequestEntity>,
     offenderSummaries: List<PersonSummaryInfoResult>,
-  ) = placementRequests.map {
-    getPlacementRequestTask(it) { placementRequest ->
-      getPersonNameFromApplication(placementRequest.application, offenderSummaries)
-    }
-  }
+  ) = placementRequests.map { getPlacementRequestTask(it, offenderSummaries) }
 
   private suspend fun getPlacementApplicationTasks(
     placementApplications: List<PlacementApplicationEntity>,
     offenderSummaries: List<PersonSummaryInfoResult>,
-  ) =
-    placementApplications.map {
-      getPlacementApplicationTask(it) { placementApplication ->
-        getPersonNameFromApplication(placementApplication.application, offenderSummaries)
-      }
-    }
+  ) = placementApplications.map { getPlacementApplicationTask(it, offenderSummaries) }
 
   private fun reallocatableResponseForTypes(
     taskEntityTypes: List<TaskEntityType>,
@@ -436,7 +420,7 @@ class TasksController(
     allocatedFilter: AllocatedFilter?,
     apAreaId: UUID?,
   ): ResponseEntity<List<Task>> = runBlocking {
-    val (allocatedTasks, metadata) = taskService.getAll(
+    val (typedTasks, metadata) = taskService.getAll(
       TaskService.TaskFilterCriteria(
         allocatedFilter,
         apAreaId,
@@ -445,23 +429,16 @@ class TasksController(
       pageCriteria,
     )
 
-    val crns = allocatedTasks.map { it.crn }
+    val offenderSummaries = getOffenderSummariesForCrns(
+      typedTasks.map { it.crn },
+      user,
+    )
 
-    val offenderSummaries = getOffenderSummariesForCrns(crns, user)
-
-    val tasks = allocatedTasks.map {
+    val tasks = typedTasks.map {
       when (it) {
-        is TypedTask.Assessment -> getAssessmentTask(it.entity) { assessment ->
-          getPersonNameFromApplication(assessment.application, offenderSummaries)
-        }
-
-        is TypedTask.PlacementRequest -> getPlacementRequestTask(it.entity) { placementRequest ->
-          getPersonNameFromApplication(placementRequest.application, offenderSummaries)
-        }
-
-        is TypedTask.PlacementApplication -> getPlacementApplicationTask(it.entity) { placementApplication ->
-          getPersonNameFromApplication(placementApplication.application, offenderSummaries)
-        }
+        is TypedTask.Assessment -> getAssessmentTask(it.entity, offenderSummaries)
+        is TypedTask.PlacementRequest -> getPlacementRequestTask(it.entity, offenderSummaries)
+        is TypedTask.PlacementApplication -> getPlacementApplicationTask(it.entity, offenderSummaries)
       }
     }
 

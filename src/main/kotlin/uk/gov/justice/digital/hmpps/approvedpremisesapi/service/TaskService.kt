@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.wrapWithMetadata
 import java.util.UUID
 
 @Service
@@ -71,7 +70,7 @@ class TaskService(
       isAllocated,
       apAreaId,
       taskTypes.map { it.name },
-      pageable
+      pageable,
     )
 
     val tasks = tasksResult.content
@@ -79,17 +78,23 @@ class TaskService(
     val assessments = if (taskTypes.contains(TaskEntityType.ASSESSMENT)) {
       val assessmentIds = tasks.idsForType(TaskEntityType.ASSESSMENT)
       assessmentRepository.findAllById(assessmentIds).map { TypedTask.Assessment(it as ApprovedPremisesAssessmentEntity) }
-    } else emptyList()
+    } else {
+      emptyList()
+    }
 
     val placementApplications = if (taskTypes.contains(TaskEntityType.PLACEMENT_APPLICATION)) {
       val placementApplicationIds = tasks.idsForType(TaskEntityType.PLACEMENT_APPLICATION)
       placementApplicationRepository.findAllById(placementApplicationIds).map { TypedTask.PlacementApplication(it) }
-    } else emptyList()
+    } else {
+      emptyList()
+    }
 
     val placementRequests = if (taskTypes.contains(TaskEntityType.PLACEMENT_REQUEST)) {
       val placementRequestIds = tasks.idsForType(TaskEntityType.PLACEMENT_REQUEST)
       placementRequestRepository.findAllById(placementRequestIds).map { TypedTask.PlacementRequest(it) }
-    } else emptyList()
+    } else {
+      emptyList()
+    }
 
     val typedTasks = tasks
       .map { task ->
@@ -107,7 +112,6 @@ class TaskService(
   }
 
   private fun List<Task>.idsForType(type: TaskEntityType) = this.filter { it.type == type }.map { it.id }
-
 
   fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, id: UUID): AuthorisableActionResult<ValidatableActionResult<Reallocation>> {
     if (!userAccessService.userCanReallocateTask(requestUser)) {

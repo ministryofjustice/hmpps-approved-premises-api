@@ -331,7 +331,7 @@ class TaskServiceTest {
         isAllocated,
         apAreaId,
         taskEntityTypes.map { it.name },
-        PageRequest.of(0, 10, Sort.by("created_at").ascending())
+        PageRequest.of(0, 10, Sort.by("created_at").ascending()),
       )
     } returns page
     every { assessmentRepositoryMock.findAllById(assessments.map { it.id }) } returns assessments
@@ -341,7 +341,6 @@ class TaskServiceTest {
     val pageCriteria = PageCriteria(TaskSortField.createdAt, SortDirection.asc, 1)
 
     every { getMetadata(page, pageCriteria) } returns metadata
-
 
     val result = taskService.getAll(TaskService.TaskFilterCriteria(AllocatedFilter.allocated, apAreaId, taskEntityTypes), pageCriteria)
 
