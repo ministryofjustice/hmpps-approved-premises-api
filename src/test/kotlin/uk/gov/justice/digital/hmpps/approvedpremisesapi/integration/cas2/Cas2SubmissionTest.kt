@@ -30,6 +30,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Ma
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import java.time.LocalDate
@@ -45,6 +47,9 @@ class Cas2SubmissionTest(
   @SpykBean
   lateinit var realStatusUpdateRepository: Cas2StatusUpdateRepository
 
+  @SpykBean
+  lateinit var realStatusUpdateDetailRepository: Cas2StatusUpdateDetailRepository
+
   @Autowired
   lateinit var nomisUserTransformer: NomisUserTransformer
 
@@ -55,6 +60,7 @@ class Cas2SubmissionTest(
     // Manually clearing after each test seems to fix this.
     clearMocks(realApplicationRepository)
     clearMocks(realStatusUpdateRepository)
+    clearMocks(realStatusUpdateDetailRepository)
   }
 
   @Nested
@@ -352,8 +358,16 @@ class Cas2SubmissionTest(
             val update3 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withAssessor(assessor)
+              withStatusId(UUID.fromString("9a381bc6-22d3-41d6-804d-4e49f428c1de"))
               withLabel("3rd update")
             }
+
+            val statusUpdateDetail = Cas2StatusUpdateDetailEntity(
+              id = UUID.fromString("5f89ec4d-1a3e-4ec3-a48b-52959d6fcc6a"),
+              statusUpdate = update3,
+              statusDetailId = UUID.fromString("62645779-242d-4601-a8f8-d2cbf1d41dfa"),
+              label = "Detail on 3rd update",
+            )
 
             update1.apply { this.createdAt = OffsetDateTime.now().minusDays(20) }
             realStatusUpdateRepository.save(update1)
@@ -363,6 +377,9 @@ class Cas2SubmissionTest(
 
             update3.apply { this.createdAt = OffsetDateTime.now().minusDays(1) }
             realStatusUpdateRepository.save(update3)
+
+            statusUpdateDetail.apply { this.createdAt = OffsetDateTime.now().minusDays(1) }
+            realStatusUpdateDetailRepository.save(statusUpdateDetail)
 
             val rawResponseBody = webTestClient.get()
               .uri("/cas2/submissions/${applicationEntity.id}")
@@ -396,6 +413,12 @@ class Cas2SubmissionTest(
 
             Assertions.assertThat(responseBody.statusUpdates!!.map { update -> update.label })
               .isEqualTo(listOf("3rd update", "2nd update", "1st update"))
+
+            Assertions.assertThat(
+              responseBody.statusUpdates!!.first().statusUpdateDetails!!
+                .map { detail -> detail.label },
+            )
+              .isEqualTo(listOf("Detail on 3rd update"))
           }
         }
       }

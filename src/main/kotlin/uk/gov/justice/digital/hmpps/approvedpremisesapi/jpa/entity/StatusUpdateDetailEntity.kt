@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Entity
@@ -33,4 +35,9 @@ data class Cas2StatusUpdateDetailEntity(
   var createdAt: OffsetDateTime? = null,
 ) {
   override fun toString() = "Cas2StatusDetailEntity: $id"
+
+  fun statusDetail(statusId: UUID, detailId: UUID): Cas2PersistedApplicationStatusDetail {
+    return Cas2PersistedApplicationStatusFinder().getById(statusId).statusDetails?.find { detail -> detail.id == detailId }
+      ?: error("Status detail with id $detailId not found")
+  }
 }

@@ -1909,11 +1909,31 @@ components:
         updatedAt:
           type: string
           format: date-time
+        statusUpdateDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2StatusUpdateDetail'
       required:
         - id
         - name
         - label
         - description
+    Cas2StatusUpdateDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+      required:
+        - id
+        - name
+        - label
     ApplicationStatus:
       type: string
       enum:
