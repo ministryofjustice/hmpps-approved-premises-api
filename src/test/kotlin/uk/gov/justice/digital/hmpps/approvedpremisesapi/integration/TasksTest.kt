@@ -4,6 +4,8 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
@@ -57,7 +59,7 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all reallocatable tasks without workflow manager permissions returns 403`() {
+    fun `Get all reallocatable tasks without workflow manager or matcher permissions returns 403`() {
       `Given a User` { _, jwt ->
         webTestClient.get()
           .uri("/tasks/reallocatable")
@@ -65,6 +67,47 @@ class TasksTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isForbidden
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
+    fun `Get all reallocatable tasks returns 200 when have CAS1_WORKFLOW_MANAGER OR CAS1_MATCHER roles`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { callingUser, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val task = `Given a Placement Application`(
+              createdByUser = otherUser,
+              allocatedToUser = otherUser,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+            )
+
+            val expectedTasks = listOf(
+              taskTransformer.transformPlacementApplicationToTask(
+                task,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+            )
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?page=1&sortBy=createdAt&sortDirection=asc&allocatedToUserId=${otherUser.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  expectedTasks,
+                ),
+              )
+          }
+        }
       }
     }
 
@@ -801,7 +844,6 @@ class TasksTest : IntegrationTestBase() {
         }
       }
     }
-
 
     @Test
     fun `Get all reallocatable tasks returns 200 when no type and allocated to user defined`() {

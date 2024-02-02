@@ -77,7 +77,7 @@ class TasksController(
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
-    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
+    if (!user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_MATCHER)) {
       throw ForbiddenProblem()
     }
 
