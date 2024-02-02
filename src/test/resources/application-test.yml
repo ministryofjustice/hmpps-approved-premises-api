@@ -186,5 +186,14 @@ user-allocations:
       allocate-to-user: JIMSNOWLDAP
     emergency-assessments:
       enabled: true
+      allocate-to-users:
+        london: JIMSNOWLDAP
+        north-east: JIMSNOWLDAP
+        north-west: JIMSNOWLDAP
+        midlands: JIMSNOWLDAP
+        south-east-eastern: JIMSNOWLDAP
+        south-west-south central: JIMSNOWLDAP
+        wales: JIMSNOWLDAP
+        nat: JIMSNOWLDAP
     female-assessments:
       enabled: true
