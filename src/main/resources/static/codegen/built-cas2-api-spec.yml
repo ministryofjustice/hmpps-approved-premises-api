@@ -2338,6 +2338,30 @@ components:
         updatedAt:
           type: string
           format: date-time
+        statusUpdateDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2StatusUpdateDetail'
+      required:
+        - id
+        - name
+        - label
+        - description
+    Cas2StatusUpdateDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+        description:
+          type: string
+          example: 'More information about the application has been requested from the POM (Prison Offender Manager).'
       required:
         - id
         - name
