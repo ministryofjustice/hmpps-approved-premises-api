@@ -114,6 +114,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -3014,6 +3015,75 @@ class ApplicationTest : IntegrationTestBase() {
         assertThat(updatedAssessment.isWithdrawn).isTrue
       }
     }
+
+    @Test
+    fun `Withdrawing an application withdraws all related entities`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val (application, assessment) = produceAndPersistApplicationAndAssessment(user, user, offenderDetails)
+
+          val booking1ExpectedArrival = LocalDate.now().plusDays(1)
+          val booking1ExpectedDeparture = LocalDate.now().plusDays(6)
+          val booking1 = produceAndPersistBooking(
+            application,
+            booking1ExpectedArrival,
+            booking1ExpectedDeparture,
+          )
+
+          val bookingWithArrival = produceAndPersistBooking(
+            application,
+            LocalDate.now(),
+            LocalDate.now().plusDays(1),
+          )
+          arrivalEntityFactory.produceAndPersist() {
+            withBooking(bookingWithArrival)
+          }
+
+          val placementApplicationExpectedArrival = LocalDate.now().plusDays(1)
+          val placementApplicationDuration = 5
+
+          val placementApplication = produceAndPersistPlacementApplication(
+            application,
+            listOf(placementApplicationExpectedArrival to placementApplicationDuration),
+          )
+
+          val placementRequest = produceAndPersistPlacementRequest(application)
+
+          webTestClient.post()
+            .uri("/applications/${application.id}/withdrawal")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewWithdrawal(
+                reason = WithdrawalReason.duplicateApplication,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)!!
+          assertThat(updatedApplication.isWithdrawn).isTrue
+
+          val updatedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+          assertThat(updatedAssessment.isWithdrawn).isTrue
+
+          val updatedBooking = bookingRepository.findByIdOrNull(booking1.id)!!
+          val cancellation = updatedBooking.cancellation
+          assertThat(cancellation).isNotNull
+          assertThat(cancellation!!.reason.name).isEqualTo("Withdrawn by Probation Practitioner")
+
+          val updatedBookingWithArrival = bookingRepository.findByIdOrNull(bookingWithArrival.id)!!
+          assertThat(updatedBookingWithArrival.cancellation).isNull()
+
+          val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplication.id)!!
+          assertThat(updatedPlacementApplication.decision).isEqualTo(PlacementApplicationDecision.WITHDRAWN_BY_PP)
+
+          val updatedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
+          assertThat(updatedPlacementRequest.isWithdrawn).isEqualTo(true)
+          assertThat(updatedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
+        }
+      }
+    }
   }
 
   @Nested
@@ -3315,87 +3385,6 @@ class ApplicationTest : IntegrationTestBase() {
         }
       }
     }
-
-    fun datePeriodForDuration(start: LocalDate, duration: Int) = DatePeriod(start, start.plusDays(duration.toLong()))
-
-    private fun produceAndPersistBooking(
-      application: ApprovedPremisesApplicationEntity,
-      startDate: LocalDate,
-      endDate: LocalDate,
-      configuration: (BookingEntityFactory.() -> Unit)? = null,
-    ): BookingEntity {
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
-      }
-
-      return bookingEntityFactory.produceAndPersist {
-        withApplication(application)
-        withPremises(premises)
-        withCrn(application.crn)
-        withServiceName(ServiceName.approvedPremises)
-        withArrivalDate(startDate)
-        withDepartureDate(endDate)
-        configuration?.invoke(this)
-      }
-    }
-
-    private fun produceAndPersistPlacementApplication(
-      application: ApprovedPremisesApplicationEntity,
-      arrivalAndDurations: List<Pair<LocalDate, Int>>,
-      configuration: (PlacementApplicationEntityFactory.() -> Unit)? = null,
-    ): PlacementApplicationEntity {
-      val placementApplication = placementApplicationFactory.produceAndPersist {
-        withCreatedByUser(application.createdByUser)
-        withAllocatedToUser(application.createdByUser)
-        withApplication(application)
-        withSchemaVersion(
-          approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
-        )
-        withSubmittedAt(OffsetDateTime.now())
-        withDecision(null)
-        withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
-        configuration?.invoke(this)
-      }
-
-      arrivalAndDurations.forEach { (start, duration) ->
-        placementDateFactory.produceAndPersist {
-          withPlacementApplication(placementApplication)
-          withExpectedArrival(start)
-          withDuration(duration)
-        }
-      }
-
-      return placementApplication
-    }
-
-    private fun produceAndPersistPlacementRequest(
-      application: ApprovedPremisesApplicationEntity,
-      configuration: (PlacementRequestEntityFactory.() -> Unit)? = null,
-    ) =
-      placementRequestFactory.produceAndPersist {
-        val assessment = application.assessments.get(0)
-
-        val placementRequirements = placementRequirementsFactory.produceAndPersist {
-          withApplication(application)
-          withAssessment(assessment)
-          withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
-          withDesirableCriteria(
-            characteristicEntityFactory.produceAndPersistMultiple(5),
-          )
-          withEssentialCriteria(
-            characteristicEntityFactory.produceAndPersistMultiple(3),
-          )
-        }
-
-        withAllocatedToUser(application.createdByUser)
-        withApplication(application)
-        withAssessment(assessment)
-        withPlacementRequirements(placementRequirements)
-        configuration?.invoke(this)
-      }
   }
 
   @Nested
@@ -4313,6 +4302,7 @@ class ApplicationTest : IntegrationTestBase() {
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(applicant)
       withApplicationSchema(applicationSchema)
+      withSubmittedAt(OffsetDateTime.now())
     }
 
     val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
@@ -4326,6 +4316,87 @@ class ApplicationTest : IntegrationTestBase() {
 
     return Pair(application, assessment)
   }
+
+  fun datePeriodForDuration(start: LocalDate, duration: Int) = DatePeriod(start, start.plusDays(duration.toLong()))
+
+  private fun produceAndPersistBooking(
+    application: ApprovedPremisesApplicationEntity,
+    startDate: LocalDate,
+    endDate: LocalDate,
+    configuration: (BookingEntityFactory.() -> Unit)? = null,
+  ): BookingEntity {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
+      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+      withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
+    }
+
+    return bookingEntityFactory.produceAndPersist {
+      withApplication(application)
+      withPremises(premises)
+      withCrn(application.crn)
+      withServiceName(ServiceName.approvedPremises)
+      withArrivalDate(startDate)
+      withDepartureDate(endDate)
+      configuration?.invoke(this)
+    }
+  }
+
+  private fun produceAndPersistPlacementApplication(
+    application: ApprovedPremisesApplicationEntity,
+    arrivalAndDurations: List<Pair<LocalDate, Int>>,
+    configuration: (PlacementApplicationEntityFactory.() -> Unit)? = null,
+  ): PlacementApplicationEntity {
+    val placementApplication = placementApplicationFactory.produceAndPersist {
+      withCreatedByUser(application.createdByUser)
+      withAllocatedToUser(application.createdByUser)
+      withApplication(application)
+      withSchemaVersion(
+        approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        },
+      )
+      withSubmittedAt(OffsetDateTime.now())
+      withDecision(null)
+      withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
+      configuration?.invoke(this)
+    }
+
+    arrivalAndDurations.forEach { (start, duration) ->
+      placementDateFactory.produceAndPersist {
+        withPlacementApplication(placementApplication)
+        withExpectedArrival(start)
+        withDuration(duration)
+      }
+    }
+
+    return placementApplication
+  }
+
+  private fun produceAndPersistPlacementRequest(
+    application: ApprovedPremisesApplicationEntity,
+    configuration: (PlacementRequestEntityFactory.() -> Unit)? = null,
+  ) =
+    placementRequestFactory.produceAndPersist {
+      val assessment = application.assessments.get(0)
+
+      val placementRequirements = placementRequirementsFactory.produceAndPersist {
+        withApplication(application)
+        withAssessment(assessment)
+        withPostcodeDistrict(postCodeDistrictFactory.produceAndPersist())
+        withDesirableCriteria(
+          characteristicEntityFactory.produceAndPersistMultiple(5),
+        )
+        withEssentialCriteria(
+          characteristicEntityFactory.produceAndPersistMultiple(3),
+        )
+      }
+
+      withAllocatedToUser(application.createdByUser)
+      withApplication(application)
+      withAssessment(assessment)
+      withPlacementRequirements(placementRequirements)
+      configuration?.invoke(this)
+    }
 }
 
 @Service

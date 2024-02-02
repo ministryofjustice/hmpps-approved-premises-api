@@ -86,6 +86,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
@@ -120,6 +121,7 @@ class ApplicationServiceTest {
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockApAreaRepository = mockk<ApAreaRepository>()
   private val applicationTimelineTransformerMock = mockk<ApplicationTimelineTransformer>()
+  private val mockWithdrawableService = mockk<WithdrawableService>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -144,6 +146,7 @@ class ApplicationServiceTest {
     "http://frontend/applications/#id",
     mockApAreaRepository,
     applicationTimelineTransformerMock,
+    mockWithdrawableService,
   )
 
   @Test
@@ -1981,6 +1984,8 @@ class ApplicationServiceTest {
       staffUserDetails,
     )
 
+    every { mockWithdrawableService.withdrawAllForApplication(application, user) } returns Unit
+
     val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(
       application.id,
       user,
@@ -2023,6 +2028,10 @@ class ApplicationServiceTest {
         },
       )
     }
+
+    verify(exactly = 1) {
+      mockWithdrawableService.withdrawAllForApplication(application, user)
+    }
   }
 
   @Test
@@ -2049,6 +2058,8 @@ class ApplicationServiceTest {
       HttpStatus.OK,
       staffUserDetails,
     )
+
+    every { mockWithdrawableService.withdrawAllForApplication(application, user) } returns Unit
 
     val authorisableActionResult =
       applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", "Some other reason")
@@ -2090,6 +2101,10 @@ class ApplicationServiceTest {
         },
       )
     }
+
+    verify(exactly = 1) {
+      mockWithdrawableService.withdrawAllForApplication(application, user)
+    }
   }
 
   @Test
@@ -2116,6 +2131,8 @@ class ApplicationServiceTest {
       HttpStatus.OK,
       staffUserDetails,
     )
+
+    every { mockWithdrawableService.withdrawAllForApplication(application, user) } returns Unit
 
     applicationService.withdrawApprovedPremisesApplication(
       application.id,
@@ -2154,6 +2171,10 @@ class ApplicationServiceTest {
             data.otherWithdrawalReason == null
         },
       )
+    }
+
+    verify(exactly = 1) {
+      mockWithdrawableService.withdrawAllForApplication(application, user)
     }
   }
 

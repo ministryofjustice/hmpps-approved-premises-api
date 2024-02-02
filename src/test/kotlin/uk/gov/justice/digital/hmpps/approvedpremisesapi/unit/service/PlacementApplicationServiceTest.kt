@@ -14,7 +14,6 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -29,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -519,7 +519,7 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
-        WithdrawPlacementRequestReason.duplicatePlacementRequest,
+        PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -554,7 +554,7 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
-        WithdrawPlacementRequestReason.duplicatePlacementRequest,
+        PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
       )
 
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
@@ -573,7 +573,7 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
-        WithdrawPlacementRequestReason.duplicatePlacementRequest,
+        PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
