@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.mockk.Called
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -115,8 +116,9 @@ class AssessmentServiceTest {
     userAllocatorMock,
     objectMapperMock,
     UrlTemplate("http://frontend/applications/#id"),
-    "http://frontend/assessments/#id",
+    UrlTemplate("http://frontend/assessments/#id"),
     sendPlacementRequestNotifications = true,
+    sendNewWithdrawalNotifications = true,
   )
 
   @Test
@@ -2215,8 +2217,9 @@ class AssessmentServiceTest {
       userAllocatorMock,
       objectMapperMock,
       UrlTemplate("http://frontend/applications/#id"),
-      "http://frontend/assessments/#id",
+      UrlTemplate("http://frontend/assessments/#id"),
       sendPlacementRequestNotifications = true,
+      sendNewWithdrawalNotifications = true,
     )
 
     private val user = UserEntityFactory()
@@ -2493,5 +2496,200 @@ class AssessmentServiceTest {
 
       verify { assessmentRepositoryMock.save(match { it.application == application }) }
     }
+  }
+
+  @Test
+  fun `updateCas1AssessmentWithdrawn send email if assessment active and allocated`() {
+    val assessmentId = UUID.randomUUID()
+
+    val allocatedUser = UserEntityFactory()
+      .withDefaultProbationRegion()
+      .withEmail("user@test.com")
+      .produce()
+
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
+          .produce(),
+      )
+      .withAssessmentSchema(schema)
+      .withData("{\"test\": \"data\"}")
+      .withAllocatedToUser(allocatedUser)
+      .withSubmittedAt(null)
+      .withReallocatedAt(null)
+      .withIsWithdrawn(false)
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+    every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
+
+    assessmentService.updateCas1AssessmentWithdrawn(assessmentId)
+
+    verify(exactly = 1) {
+      emailNotificationServiceMock.sendEmail(
+        "user@test.com",
+        "44ade006-7ac6-4769-aa40-542da56f21b5",
+        match {
+          it["crn"] == assessment.application.crn &&
+            it["applicationUrl"] == "http://frontend/applications/${assessment.application.id}"
+        },
+      )
+    }
+  }
+
+  @Test
+  fun `updateCas1AssessmentWithdrawn dont send email if assessment withdrawn`() {
+    val assessmentId = UUID.randomUUID()
+
+    val allocatedUser = UserEntityFactory()
+      .withDefaultProbationRegion()
+      .withEmail("user@test.com")
+      .produce()
+
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
+          .produce(),
+      )
+      .withAssessmentSchema(schema)
+      .withData("{\"test\": \"data\"}")
+      .withAllocatedToUser(allocatedUser)
+      .withSubmittedAt(null)
+      .withReallocatedAt(null)
+      .withIsWithdrawn(true)
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+
+    assessmentService.updateCas1AssessmentWithdrawn(assessmentId)
+
+    verify { emailNotificationServiceMock wasNot Called }
+  }
+
+  @Test
+  fun `updateCas1AssessmentWithdrawn dont send email if assessment submitted`() {
+    val assessmentId = UUID.randomUUID()
+
+    val allocatedUser = UserEntityFactory()
+      .withDefaultProbationRegion()
+      .withEmail("user@test.com")
+      .produce()
+
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
+          .produce(),
+      )
+      .withAssessmentSchema(schema)
+      .withData("{\"test\": \"data\"}")
+      .withAllocatedToUser(allocatedUser)
+      .withSubmittedAt(OffsetDateTime.now())
+      .withReallocatedAt(null)
+      .withIsWithdrawn(false)
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+
+    assessmentService.updateCas1AssessmentWithdrawn(assessmentId)
+
+    verify { emailNotificationServiceMock wasNot Called }
+  }
+
+  @Test
+  fun `updateCas1AssessmentWithdrawn dont send email if assessment reallocated`() {
+    val assessmentId = UUID.randomUUID()
+
+    val allocatedUser = UserEntityFactory()
+      .withDefaultProbationRegion()
+      .withEmail("user@test.com")
+      .produce()
+
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
+          .produce(),
+      )
+      .withAssessmentSchema(schema)
+      .withData("{\"test\": \"data\"}")
+      .withAllocatedToUser(allocatedUser)
+      .withSubmittedAt(null)
+      .withReallocatedAt(OffsetDateTime.now())
+      .withIsWithdrawn(false)
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+
+    assessmentService.updateCas1AssessmentWithdrawn(assessmentId)
+
+    verify { emailNotificationServiceMock wasNot Called }
+  }
+
+  @Test
+  fun `updateCas1AssessmentWithdrawn dont send email if assessment not allocated`() {
+    val assessmentId = UUID.randomUUID()
+
+    val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withId(assessmentId)
+      .withApplication(
+        ApprovedPremisesApplicationEntityFactory()
+          .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
+          .produce(),
+      )
+      .withAssessmentSchema(schema)
+      .withData("{\"test\": \"data\"}")
+      .withAllocatedToUser(null)
+      .withSubmittedAt(null)
+      .withReallocatedAt(null)
+      .withIsWithdrawn(false)
+      .produce()
+
+    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+    every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+
+    assessmentService.updateCas1AssessmentWithdrawn(assessmentId)
+
+    verify { emailNotificationServiceMock wasNot Called }
   }
 }

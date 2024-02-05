@@ -28,6 +28,7 @@ class NotifyTemplates {
   var assessmentDeallocated = "331ce452-ea83-4f0c-aec0-5eafe85094f2"
   var assessmentAccepted = "ddf87b15-8866-4bad-a87b-47eba69eb6db"
   var assessmentRejected = "b3a98c60-8fe0-4450-8fd0-6430198ee43b"
+  var assessmentWithdrawn = "44ade006-7ac6-4769-aa40-542da56f21b5"
   var bookingMade = "1e3d2ee2-250e-4755-af38-80d24cdc3480"
   var bookingMadePremises = "337bb149-6f12-4be2-b5a3-a9a73d73c1e1"
   var placementRequestAllocated = "375d83be-c973-44ed-939f-48ffc00230f3"

@@ -263,3 +263,4 @@ pagination:
 
 notify:
   send-placement-request-notifications: false
+  send-new-withdrawal-notifications: false

@@ -594,7 +594,7 @@ class ApplicationService(
         sendEmailApplicationWithdrawn(user, application, premisesName)
 
         application.assessments.map {
-          assessmentService.updateAssessmentWithdrawn(it.id)
+          assessmentService.updateCas1AssessmentWithdrawn(it.id)
         }
 
         withdrawableService.withdrawAllForApplication(application, user)
