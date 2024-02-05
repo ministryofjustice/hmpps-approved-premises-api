@@ -310,7 +310,7 @@ class TasksController(
     val type = toTaskType(taskType)
 
     val validationResult = when (val authorisationResult = taskService.deallocateTask(user, type, id)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType.toString())
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType)
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> authorisationResult.entity
     }
