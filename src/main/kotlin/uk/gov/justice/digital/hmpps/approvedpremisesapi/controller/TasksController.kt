@@ -73,18 +73,42 @@ class TasksController(
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
     apAreaId: UUID?,
+    allocatedToUserId: UUID?,
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
-    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)) {
+    if (!user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_MATCHER)) {
       throw ForbiddenProblem()
     }
 
+    return getAll(
+      types = determineTaskEntityTypes(type),
+      page = page,
+      sortBy = sortBy,
+      sortDirection = sortDirection,
+      allocatedFilter = allocatedFilter,
+      apAreaId = apAreaId,
+      allocatedToUserId = allocatedToUserId,
+    )
+  }
+
+  private fun getAll(
+    types: List<TaskEntityType>,
+    page: Int?,
+    sortBy: TaskSortField?,
+    sortDirection: SortDirection?,
+    allocatedFilter: AllocatedFilter?,
+    apAreaId: UUID?,
+    allocatedToUserId: UUID?,
+  ): ResponseEntity<List<Task>> {
+    val user = userService.getUserForRequest()
+
     val (typedTasks, metadata) = taskService.getAll(
       TaskService.TaskFilterCriteria(
-        allocatedFilter,
-        apAreaId,
-        determineTaskEntityTypes(type),
+        allocatedFilter = allocatedFilter,
+        apAreaId = apAreaId,
+        types = types,
+        allocatedToUserId = allocatedToUserId,
       ),
       PageCriteria(
         sortBy = sortBy ?: TaskSortField.createdAt,
@@ -93,7 +117,7 @@ class TasksController(
       ),
     )
 
-    val offenderSummaries = getOffenderSummariesForCrns(typedTasks.map { it.crn },user)
+    val offenderSummaries = getOffenderSummariesForCrns(typedTasks.map { it.crn }, user)
     val tasks = typedTasks.map {
       when (it) {
         is TypedTask.Assessment -> getAssessmentTask(it.entity, offenderSummaries)
@@ -114,11 +138,7 @@ class TasksController(
       return TaskEntityType.entries
     }
 
-    val taskType = enumConverterFactory.getConverter(TaskType::class.java).convert(
-      type.kebabCaseToPascalCase(),
-    ) ?: throw NotFoundProblem(type, "TaskType")
-
-    return when (taskType) {
+    return when (toTaskType(type)) {
       TaskType.assessment -> listOf(TaskEntityType.ASSESSMENT)
       TaskType.placementRequest -> listOf(TaskEntityType.PLACEMENT_REQUEST)
       TaskType.placementApplication -> listOf(TaskEntityType.PLACEMENT_APPLICATION)
@@ -126,43 +146,18 @@ class TasksController(
     }
   }
 
-  override fun tasksGet(apAreaId: UUID?): ResponseEntity<List<Task>> = runBlocking {
+  override fun tasksGet(apAreaId: UUID?): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
-    var tasks = listOf<Task>()
 
-    if (user.hasRole(UserRole.CAS1_MATCHER)) {
-      val placementRequests =
-        placementRequestService.getVisiblePlacementRequestsForUser(
-          user = user,
-          apAreaId = apAreaId,
-        )
-
-      val placementApplications =
-        placementApplicationService.getVisiblePlacementApplicationsForUser(
-          user = user,
-          apAreaId = apAreaId,
-        )
-
-      val crns = listOf(
-        placementRequests.first.map { it.application.crn },
-        placementApplications.first.map { it.application.crn },
-      ).flatten()
-
-      val offenderSummaries = getOffenderSummariesForCrns(crns, user)
-
-      tasks = listOf(
-        getPlacementRequestTasks(
-          placementRequests.first,
-          offenderSummaries,
-        ),
-        getPlacementApplicationTasks(
-          placementApplications.first,
-          offenderSummaries,
-        ),
-      ).flatten()
-    }
-
-    return@runBlocking ResponseEntity.ok(tasks)
+    return getAll(
+      types = listOf(TaskEntityType.PLACEMENT_APPLICATION, TaskEntityType.PLACEMENT_REQUEST),
+      page = null,
+      sortBy = null,
+      sortDirection = null,
+      allocatedFilter = null,
+      apAreaId = apAreaId,
+      allocatedToUserId = user.id,
+    )
   }
 
   override fun tasksTaskTypeGet(
@@ -173,9 +168,7 @@ class TasksController(
   ): ResponseEntity<List<Task>> = runBlocking {
     val user = userService.getUserForRequest()
     val tasks = mutableListOf<Task>()
-    val type = enumConverterFactory.getConverter(TaskType::class.java).convert(
-      taskType.kebabCaseToPascalCase(),
-    ) ?: throw NotFoundProblem(taskType, "TaskType")
+    val type = toTaskType(taskType)
 
     var paginationMetaData: PaginationMetadata? = null
 
@@ -236,9 +229,7 @@ class TasksController(
 
   override fun tasksTaskTypeIdGet(id: UUID, taskType: String): ResponseEntity<TaskWrapper> {
     val user = userService.getUserForRequest()
-    val type = enumConverterFactory.getConverter(TaskType::class.java).convert(
-      taskType.kebabCaseToPascalCase(),
-    ) ?: throw NotFoundProblem(taskType, "TaskType")
+    val type = toTaskType(taskType)
 
     val transformedTask: Task
 
@@ -319,9 +310,7 @@ class TasksController(
   ): ResponseEntity<Reallocation> {
     val user = userService.getUserForRequest()
 
-    val type = enumConverterFactory.getConverter(TaskType::class.java).convert(
-      taskType.kebabCaseToPascalCase(),
-    ) ?: throw NotFoundProblem(taskType, "TaskType")
+    val type = toTaskType(taskType)
 
     val userId = when {
       xServiceName == ServiceName.temporaryAccommodation -> user.id
@@ -362,9 +351,7 @@ class TasksController(
   override fun tasksTaskTypeIdAllocationsDelete(id: UUID, taskType: String): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
-    val type = enumConverterFactory.getConverter(TaskType::class.java).convert(
-      taskType.kebabCaseToPascalCase(),
-    ) ?: throw NotFoundProblem(taskType, "TaskType")
+    val type = toTaskType(taskType)
 
     val validationResult = when (val authorisationResult = taskService.deallocateTask(user, type, id)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType.toString())
@@ -449,4 +436,8 @@ class TasksController(
       false,
     )
   }
+
+  private fun toTaskType(type: String) = enumConverterFactory.getConverter(TaskType::class.java).convert(
+    type.kebabCaseToPascalCase(),
+  ) ?: throw NotFoundProblem(type, "TaskType")
 }

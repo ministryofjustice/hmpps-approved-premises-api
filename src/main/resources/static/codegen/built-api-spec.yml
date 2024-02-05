@@ -2802,6 +2802,12 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: allocatedToUserId
+          in: query
+          description: Only show tasks allocated to this user id
+          schema:
+            type: string
+            format: uuid
       responses:
         200:
           description: successfully retrieved tasks
