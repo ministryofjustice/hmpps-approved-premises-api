@@ -3,7 +3,7 @@
 openapi: 3.0.1
 info:
   version: 1.0.0
-  title: 'Transitional Accommodation Services(CAS3)'
+  title: 'Transitional Accommodation Services (CAS3)'
 servers:
   - url: /cas3
 paths:
@@ -565,6 +565,12 @@ components:
         enum:
           - DuplicatePlacementRequest
           - AlternativeProvisionIdentified
+          - ChangeInCircumstances
+          - ChangeInReleaseDecision
+          - NoCapacityDueToLostBed
+          - NoCapacityDueToPlacementPrioritisation
+          - NoCapacity
+          - ErrorInPlacementRequest
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'
@@ -4105,6 +4111,8 @@ components:
         - change_in_circumstances_new_application_to_be_submitted
         - error_in_application
         - duplicate_application
+        - death
+        - other_accommodation_identified
         - other
     PlacementRequestSortField:
       type: string

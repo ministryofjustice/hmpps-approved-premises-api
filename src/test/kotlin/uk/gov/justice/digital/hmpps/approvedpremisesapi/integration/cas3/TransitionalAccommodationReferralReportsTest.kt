@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_ASSESSOR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
@@ -41,11 +42,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisT
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.util.UUID
 
 class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
 
   @Test
-  fun `Get CAS3 referral report returns 403 Forbidden if user does not have all regions access`() {
+  fun `Get CAS3 referral report returns 403 Forbidden if user does not have CAS3 role`() {
     `Given a User` { _, jwt ->
       webTestClient.get()
         .uri("/cas3/reports/referrals?year=2023&month=4")
@@ -58,7 +60,59 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get CAS3 referral report returns 403 Forbidden for Temporary Accommodation if a user does not have the CAS3_ASSESSOR role`() {
+  fun `Get CAS3 referral report returns 403 Forbidden if user role is CAS3_ASSESSOR role and the region is not allowed region`() {
+    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+      webTestClient.get()
+        .uri("/cas3/reports/referrals?year=2023&month=4&probationRegionId=${UUID.randomUUID()}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isForbidden
+    }
+  }
+
+  @Test
+  fun `Get CAS3 referral report OK response if user role is CAS3_ASSESSOR and requested regionId is allowed region`() {
+    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+      webTestClient.get()
+        .uri("/cas3/reports/referrals?year=2023&month=4&probationRegionId=${user.probationRegion.id}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+    }
+  }
+
+  @Test
+  fun `Get CAS3 referral report returns OK response if user is CAS3_REPORTER and allow access to all region when no region is requested `() {
+    `Given a User`(roles = listOf(CAS3_REPORTER)) { _, jwt ->
+      webTestClient.get()
+        .uri("/cas3/reports/referrals?year=2024&month=1")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+    }
+  }
+
+  @Test
+  fun `Get CAS3 referral report returns OK response if user is CAS3_REPORTER the request region not matched to user region`() {
+    `Given a User`(roles = listOf(CAS3_REPORTER)) { user, jwt ->
+      webTestClient.get()
+        .uri("/cas3/reports/referrals?year=2024&month=1&probationRegionId=${UUID.randomUUID()}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+    }
+  }
+
+  @Test
+  fun `Get CAS3 referral report returns 403 Forbidden if a user does not have the CAS3_ASSESSOR role`() {
     `Given a User` { user, jwt ->
       webTestClient.get()
         .uri("/cas3/reports/referrals?year=2023&month=4&probationRegionId=${user.probationRegion.id}")
@@ -175,9 +229,10 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Get CAS3 referral successfully with multiple referrals in the report and filter by start and endDate period`() {
-    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+  @ParameterizedTest
+  @EnumSource(value = UserRole::class, names = ["CAS3_ASSESSOR", "CAS3_REPORTER"])
+  fun `Get CAS3 referral successfully with multiple referrals in the report and filter by start and endDate period`(userRole: UserRole) {
+    `Given a User`(roles = listOf(userRole)) { user, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         val assessmentInReview = createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, cas3InReview, LocalDate.parse("2024-01-01"))
         val assessmentUnAllocated = createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, cas3Unallocated, LocalDate.parse("2024-01-31"))
