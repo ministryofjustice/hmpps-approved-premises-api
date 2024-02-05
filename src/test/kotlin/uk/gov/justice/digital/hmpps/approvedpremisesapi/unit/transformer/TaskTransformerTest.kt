@@ -2,12 +2,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
@@ -37,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
@@ -53,6 +56,7 @@ class TaskTransformerTest {
   private val mockUserTransformer = mockk<UserTransformer>()
   private val mockRisksTransformer = mockk<RisksTransformer>()
   private val mockPlacementRequestTransformer = mockk<PlacementRequestTransformer>()
+  private val mockApAreaTransformer = mockk<ApAreaTransformer>()
 
   private val mockUser = mockk<ApprovedPremisesUser>()
   private val mockOffenderDetailSummary = mockk<OffenderDetailSummary>()
@@ -67,7 +71,7 @@ class TaskTransformerTest {
     }
     .produce()
 
-  private val application = ApprovedPremisesApplicationEntityFactory()
+  private val applicationFactory = ApprovedPremisesApplicationEntityFactory()
     .withCreatedByUser(user)
     .withRiskRatings(
       PersonRisksFactory()
@@ -81,7 +85,8 @@ class TaskTransformerTest {
         )
         .produce(),
     )
-    .produce()
+
+  private val application = applicationFactory.produce()
 
   private val assessmentFactory = ApprovedPremisesAssessmentEntityFactory()
     .withApplication(application)
@@ -104,17 +109,21 @@ class TaskTransformerTest {
     .withAllocatedToUser(user)
     .withCreatedByUser(user)
 
+  private val mockApArea = ApArea(UUID.randomUUID(), "someIdentifier", "someName")
+
   private val taskTransformer = TaskTransformer(
     mockUserTransformer,
     mockRisksTransformer,
     mockPlacementRequestTransformer,
     mockWorkingDayCountService,
+    mockApAreaTransformer,
   )
 
   @BeforeEach
   fun setup() {
     every { mockUserTransformer.transformJpaToApi(user, ServiceName.approvedPremises) } returns mockUser
     every { mockWorkingDayCountService.addWorkingDays(any(), any()) } returns LocalDate.now().plusDays(2)
+    every { mockApAreaTransformer.transformJpaToApi(any()) } returns mockApArea
   }
 
   @Nested
@@ -159,6 +168,23 @@ class TaskTransformerTest {
       var result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.complete)
+    }
+
+    @Test
+    fun `assessment with ApArea is correctly transformed`() {
+      val apArea = ApAreaEntityFactory().produce()
+      val application = applicationFactory.withApArea(apArea).produce()
+      val assessment = assessmentFactory
+        .withApplication(application)
+        .produce()
+
+      val result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
+
+      assertThat(result.apArea).isEqualTo(mockApArea)
+
+      verify {
+        mockApAreaTransformer.transformJpaToApi(apArea)
+      }
     }
   }
 
@@ -249,6 +275,23 @@ class TaskTransformerTest {
 
       assertThat(result.status).isEqualTo(TaskStatus.complete)
     }
+
+    @Test
+    fun `placement application with ApArea is correctly transformed`() {
+      val apArea = ApAreaEntityFactory().produce()
+      val application = applicationFactory.withApArea(apArea).produce()
+      val placementApplication = placementApplicationFactory
+        .withApplication(application)
+        .produce()
+
+      val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, "First Last")
+
+      assertThat(result.apArea).isEqualTo(mockApArea)
+
+      verify {
+        mockApAreaTransformer.transformJpaToApi(apArea)
+      }
+    }
   }
 
   @Nested
@@ -304,6 +347,25 @@ class TaskTransformerTest {
       val result = taskTransformer.transformPlacementRequestToTask(placementRequest, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.complete)
+    }
+
+    @Test
+    fun `placement request with ApArea is correctly transformed`() {
+      val apArea = ApAreaEntityFactory().produce()
+      val application = applicationFactory.withApArea(apArea).produce()
+      val placementRequest = placementRequestFactory
+        .withApplication(application)
+        .produce()
+
+      every { mockPlacementRequestTransformer.getStatus(placementRequest) } returns placementRequestStatus
+
+      val result = taskTransformer.transformPlacementRequestToTask(placementRequest, "First Last")
+
+      assertThat(result.apArea).isEqualTo(mockApArea)
+
+      verify {
+        mockApAreaTransformer.transformJpaToApi(apArea)
+      }
     }
   }
 }
