@@ -24,24 +24,6 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
 
   @Query(
     """
-      SELECT pa FROM PlacementApplicationEntity pa
-      JOIN pa.application a
-      LEFT OUTER JOIN a.apArea apArea
-      WHERE 
-        pa.allocatedToUser.id = :userId AND 
-        ((cast(:apAreaId as org.hibernate.type.UUIDCharType) IS NULL) OR apArea.id = :apAreaId) AND
-        pa.reallocatedAt IS NULL AND 
-        pa.decision IS NULL
-    """,
-  )
-  fun findOpenRequestsAssignedToUser(
-    userId: UUID,
-    apAreaId: UUID?,
-    pageable: Pageable?,
-  ): Page<PlacementApplicationEntity>
-
-  @Query(
-    """
       SELECT a from PlacementApplicationEntity a where a.application.id = :applicationId
       AND a.submittedAt is not null
       AND a.reallocatedAt is null

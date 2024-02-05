@@ -49,23 +49,6 @@ class PlacementApplicationService(
   private val sendPlacementRequestNotifications: Boolean,
 ) {
 
-  fun getVisiblePlacementApplicationsForUser(
-    user: UserEntity,
-    page: Int? = null,
-    sortDirection: SortDirection? = null,
-    apAreaId: UUID?,
-  ): Pair<List<PlacementApplicationEntity>, PaginationMetadata?> {
-    val sortField = "createdAt"
-    val pageable = getPageable(sortField, sortDirection, page)
-    val response =
-      placementApplicationRepository.findOpenRequestsAssignedToUser(
-        user.id,
-        apAreaId,
-        pageable,
-      )
-    return Pair(response.content, getMetadata(response, page))
-  }
-
   fun getAllPlacementApplicationEntitiesForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
     return placementApplicationRepository.findAllSubmittedNonReallocatedAndNonWithdrawnApplicationsForApplicationId(
       applicationId,
