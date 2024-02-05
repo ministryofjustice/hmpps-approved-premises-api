@@ -2206,6 +2206,7 @@ class TasksTest : IntegrationTestBase() {
                 withPermissiveSchema()
               },
               crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
             )
 
             `Given a Placement Application`(
@@ -2216,6 +2217,7 @@ class TasksTest : IntegrationTestBase() {
               },
               crn = offenderDetails.otherIds.crn,
               reallocated = true,
+              submittedAt = OffsetDateTime.now(),
             )
 
             webTestClient.get()
@@ -2262,6 +2264,7 @@ class TasksTest : IntegrationTestBase() {
                 withPermissiveSchema()
               },
               crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
             )
 
             `Given a Placement Application`(
@@ -2272,6 +2275,7 @@ class TasksTest : IntegrationTestBase() {
               },
               crn = offenderDetails.otherIds.crn,
               reallocated = true,
+              submittedAt = OffsetDateTime.now(),
             )
 
             webTestClient.get()
@@ -2359,6 +2363,7 @@ class TasksTest : IntegrationTestBase() {
               },
               crn = offenderDetails.otherIds.crn,
               decision = null,
+              submittedAt = OffsetDateTime.now(),
             )
 
             `Given a Placement Application`(
@@ -2369,6 +2374,7 @@ class TasksTest : IntegrationTestBase() {
               },
               crn = offenderDetails.otherIds.crn,
               decision = PlacementApplicationDecision.ACCEPTED,
+              submittedAt = OffsetDateTime.now(),
             )
 
             `Given a Placement Request`(
@@ -2393,6 +2399,7 @@ class TasksTest : IntegrationTestBase() {
                 withPermissiveSchema()
               },
               crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
             )
 
             `Given a Placement Application`(
@@ -2403,6 +2410,7 @@ class TasksTest : IntegrationTestBase() {
               },
               crn = offenderDetails.otherIds.crn,
               reallocated = true,
+              submittedAt = OffsetDateTime.now(),
             )
 
             webTestClient.get()
@@ -2458,6 +2466,7 @@ class TasksTest : IntegrationTestBase() {
                 allocatedToUser = user,
                 schema = approvedPremisesPlacementApplicationJsonSchema,
                 crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
               )
             }
 
@@ -2494,6 +2503,7 @@ class TasksTest : IntegrationTestBase() {
             crn = offenderDetails.otherIds.crn,
             decision = null,
             apArea = apArea1,
+            submittedAt = OffsetDateTime.now(),
           )
 
           `Given a Placement Application`(
@@ -2505,6 +2515,7 @@ class TasksTest : IntegrationTestBase() {
             crn = offenderDetails.otherIds.crn,
             decision = null,
             apArea = apArea2,
+            submittedAt = OffsetDateTime.now(),
           )
 
           `Given a Placement Application`(
@@ -2516,6 +2527,7 @@ class TasksTest : IntegrationTestBase() {
             crn = offenderDetails.otherIds.crn,
             reallocated = true,
             apArea = apArea1,
+            submittedAt = OffsetDateTime.now(),
           )
 
           webTestClient.get()
