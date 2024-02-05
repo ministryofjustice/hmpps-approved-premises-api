@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
@@ -14,7 +15,7 @@ class EmailNotificationService(
   @Qualifier("normalNotificationClient") private val normalNotificationClient: NotificationClient?,
   @Qualifier("guestListNotificationClient") private val guestListNotificationClient: NotificationClient?,
 ) {
-  private val log = LoggerFactory.getLogger(this::class.java)
+  var log: Logger = LoggerFactory.getLogger(this::class.java)
 
   fun sendEmail(email: String, templateId: String, personalisation: Map<String, *>) {
     try {
@@ -29,7 +30,7 @@ class EmailNotificationService(
         normalNotificationClient!!.sendEmail(templateId, email, personalisation, null)
       }
     } catch (notificationClientException: NotificationClientException) {
-      log.error("Unable to send email", notificationClientException)
+      log.error("Unable to send template $templateId to user $email", notificationClientException)
     }
   }
 }
