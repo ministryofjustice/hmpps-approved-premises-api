@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
@@ -9,6 +10,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -23,6 +26,7 @@ class TaskTransformer(
   private val risksTransformer: RisksTransformer,
   private val placementRequestTransformer: PlacementRequestTransformer,
   private val workingDayCountService: WorkingDayCountService,
+  private val apAreaTransformer: ApAreaTransformer,
 ) {
   fun transformAssessmentToTask(assessment: AssessmentEntity, personName: String) = AssessmentTask(
     id = assessment.id,
@@ -33,6 +37,7 @@ class TaskTransformer(
     allocatedToStaffMember = transformUserOrNull(assessment.allocatedToUser),
     status = getAssessmentStatus(assessment),
     taskType = TaskType.assessment,
+    apArea = getApArea(assessment.application),
   )
 
   fun transformPlacementRequestToTask(placementRequest: PlacementRequestEntity, personName: String) = PlacementRequestTask(
@@ -49,6 +54,7 @@ class TaskTransformer(
     duration = placementRequest.duration,
     placementRequestStatus = placementRequestTransformer.getStatus(placementRequest),
     releaseType = placementRequestTransformer.getReleaseType(placementRequest.application.releaseType),
+    apArea = getApArea(placementRequest.application),
   )
 
   fun transformPlacementApplicationToTask(placementApplication: PlacementApplicationEntity, personName: String) = PlacementApplicationTask(
@@ -69,7 +75,12 @@ class TaskTransformer(
     },
     releaseType = placementRequestTransformer.getReleaseType(placementApplication.application.releaseType),
     placementType = getPlacementType(placementApplication.placementType!!),
+    apArea = getApArea(placementApplication.application),
   )
+
+  private fun getApArea(application: ApplicationEntity): ApArea? {
+    return (application as ApprovedPremisesApplicationEntity).apArea?.let { apAreaTransformer.transformJpaToApi(it) }
+  }
 
   private fun getPlacementType(placementType: JpaPlacementType): ApiPlacementType = when (placementType) {
     JpaPlacementType.ROTL -> ApiPlacementType.rotl

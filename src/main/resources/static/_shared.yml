@@ -265,6 +265,8 @@ components:
           $ref: '#/components/schemas/ApprovedPremisesUser'
         status:
           $ref: '#/components/schemas/TaskStatus'
+        apArea:
+          $ref: '#/components/schemas/ApArea'
       discriminator:
         propertyName: taskType
         mapping:
