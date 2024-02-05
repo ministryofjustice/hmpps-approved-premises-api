@@ -39,10 +39,12 @@ class UserTransformerTest {
 
   private val userTransformer = UserTransformer(probationRegionTransformer, apAreaTransformer)
 
+  private val apArea = ApArea(randomUUID(), "someIdentifier", "someName")
+
   @BeforeEach
   fun setup() {
     every { probationRegionTransformer.transformJpaToApi(any()) } returns ProbationRegion(randomUUID(), "someName")
-    every { apAreaTransformer.transformJpaToApi(any()) } returns ApArea(randomUUID(), "someIdentifier", "someName")
+    every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
   }
 
   @Test
@@ -142,6 +144,26 @@ class UserTransformerTest {
         workflowManager,
       ),
     )
+  }
+
+  @Test
+  fun `transformJpaToAPIUserWithWorkload should return AP area`() {
+    val user = buildUserEntity(UserRole.CAS1_MATCHER)
+
+    val workload = UserWorkload(
+      0,
+      0,
+      0,
+    )
+
+    val result =
+      userTransformer.transformJpaToAPIUserWithWorkload(user, workload) as UserWithWorkload
+
+    assertThat(result.apArea).isEqualTo(apArea)
+
+    verify {
+      apAreaTransformer.transformJpaToApi(user.probationRegion.apArea)
+    }
   }
 
   private fun buildUserEntity(

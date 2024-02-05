@@ -7091,6 +7091,8 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ApprovedPremisesUserRole'
+            apArea:
+              $ref: '#/components/schemas/ApArea'
     ApprovedPremisesUser:
       allOf:
         - $ref: '#/components/schemas/User'

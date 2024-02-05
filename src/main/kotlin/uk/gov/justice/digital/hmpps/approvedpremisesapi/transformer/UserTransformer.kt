@@ -36,6 +36,7 @@ class UserTransformer(
       numTasksCompleted30Days = userWorkload.numTasksCompleted30Days,
       qualifications = jpa.qualifications.distinctBy { it.qualification }.map(::transformQualificationToApi),
       roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToApi),
+      apArea = apAreaTransformer.transformJpaToApi(jpa.probationRegion.apArea),
     )
   }
   fun transformJpaToApi(jpa: UserEntity, serviceName: ServiceName) = when (serviceName) {
