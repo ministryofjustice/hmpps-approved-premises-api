@@ -327,6 +327,52 @@ class TasksTest : IntegrationTestBase() {
       }
     }
 
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 when type assessment and allocated to user defined`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val apArea1 = `Given an AP Area`()
+            val apArea2 = `Given an AP Area`()
+
+            val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = user,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea1,
+            )
+
+            `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea2,
+            )
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=assessment&allocatedToUserId=${user.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    taskTransformer.transformAssessmentToTask(
+                      allocatableAssessment,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
     @Test
     fun `Get all reallocatable tasks returns 200 when type placement request`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
@@ -433,6 +479,59 @@ class TasksTest : IntegrationTestBase() {
 
             webTestClient.get()
               .uri("/tasks/reallocatable?type=PlacementApplication&apAreaId=${apArea1.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    taskTransformer.transformPlacementApplicationToTask(
+                      allocatablePlacementApplication,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 when type placement application and allocated to user defined`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val apArea1 = `Given an AP Area`()
+            val apArea2 = `Given an AP Area`()
+
+            val allocatablePlacementApplication = `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+              apArea = apArea1,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = otherUser,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+              apArea = apArea2,
+            )
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=PlacementApplication&allocatedToUserId=${user.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -645,6 +744,53 @@ class TasksTest : IntegrationTestBase() {
 
             webTestClient.get()
               .uri("/tasks/reallocatable?type=PlacementRequest&apAreaId=${apArea2.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json(
+                objectMapper.writeValueAsString(
+                  listOf(
+                    taskTransformer.transformPlacementRequestToTask(
+                      allocatablePlacementRequest,
+                      "${offenderDetails.firstName} ${offenderDetails.surname}",
+                    ),
+                  ),
+                ),
+              )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all reallocatable tasks returns 200 when type placement requests and allocated to user defined`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val apArea1 = `Given an AP Area`()
+            val apArea2 = `Given an AP Area`()
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea1,
+            )
+
+            val (allocatablePlacementRequest) = `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea2,
+            )
+
+            webTestClient.get()
+              .uri("/tasks/reallocatable?type=PlacementRequest&allocatedToUserId=${user.id}")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
