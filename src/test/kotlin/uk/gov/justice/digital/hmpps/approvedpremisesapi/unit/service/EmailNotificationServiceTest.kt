@@ -4,6 +4,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Test
+import org.slf4j.Logger
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyMode
@@ -12,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NotifyGuestLi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NotifyGuestListUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.service.notify.NotificationClient
+import uk.gov.service.notify.NotificationClientException
 
 class EmailNotificationServiceTest {
   private val mockNormalNotificationClient = mockk<NotificationClient>()
@@ -180,6 +182,47 @@ class EmailNotificationServiceTest {
 
     verify(exactly = 0) { mockGuestListNotificationClient.sendEmail(any(), any(), any(), any()) }
     verify(exactly = 0) { mockNotifyGuestListUserRepository.findByIdOrNull(user.id) }
+  }
+
+  @Test
+  fun `sendEmail logs an error if the notification fails`() {
+    val logger = mockk<Logger>()
+    val exception = mockk<NotificationClientException>()
+    val emailNotificationService = createServiceWithConfig {
+      mode = NotifyMode.ENABLED
+    }
+    emailNotificationService.log = logger
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888"
+    val personalisation = mapOf(
+      "name" to "Jim",
+      "assessmentUrl" to "https://frontend/assessment/73eff3e8-d2f0-434f-a776-4f975b891444",
+    )
+
+    every {
+      mockNormalNotificationClient.sendEmail(
+        "f3d78814-383f-4b5f-a681-9bd3ab912888",
+        user.email,
+        personalisation,
+        null,
+      )
+    } throws exception
+
+    every { logger.error(any<String>(), any()) } returns Unit
+
+    emailNotificationService.sendEmail(
+      email = user.email!!,
+      templateId = templateId,
+      personalisation = personalisation,
+    )
+
+    verify {
+      logger.error("Unable to send template $templateId to user ${user.email}", exception)
+    }
   }
 
   private fun createServiceWithConfig(configBlock: NotifyConfig.() -> Unit) = EmailNotificationService(
