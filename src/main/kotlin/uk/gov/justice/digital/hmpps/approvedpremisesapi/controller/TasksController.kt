@@ -63,6 +63,8 @@ class TasksController(
   private val userTransformer: UserTransformer,
   private val taskService: TaskService,
 ) : TasksApiDelegate {
+
+  @Deprecated("Use tasksGet")
   override fun tasksReallocatableGet(
     type: String?,
     page: Int?,
@@ -130,35 +132,46 @@ class TasksController(
     )
   }
 
-  private fun determineTaskEntityTypes(type: String?): List<TaskEntityType> {
-    return if (type == null) {
-      TaskEntityType.entries
-    } else {
-      listOf(toTaskEntityType(type))
-    }
-  }
-
-  private fun toTaskEntityType(type: String): TaskEntityType = when (toTaskType(type)) {
-    TaskType.assessment -> TaskEntityType.ASSESSMENT
-    TaskType.placementRequest -> TaskEntityType.PLACEMENT_REQUEST
-    TaskType.placementApplication -> TaskEntityType.PLACEMENT_APPLICATION
-    TaskType.bookingAppeal -> throw BadRequestProblem()
-  }
-
-  override fun tasksGet(apAreaId: UUID?): ResponseEntity<List<Task>> {
+  override fun tasksGet(
+    type: TaskType?,
+    page: Int?,
+    sortBy: TaskSortField?,
+    sortDirection: SortDirection?,
+    allocatedFilter: AllocatedFilter?,
+    apAreaId: UUID?,
+    allocatedToUserId: UUID?,
+  ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
+    if (!user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_MATCHER)) {
+      throw ForbiddenProblem()
+    }
+
+    val taskEntityTypes = if (type == null) {
+      TaskEntityType.entries
+    } else {
+      listOf(
+        when (type) {
+          TaskType.assessment -> TaskEntityType.ASSESSMENT
+          TaskType.placementRequest -> TaskEntityType.PLACEMENT_REQUEST
+          TaskType.placementApplication -> TaskEntityType.PLACEMENT_APPLICATION
+          TaskType.bookingAppeal -> throw BadRequestProblem()
+        },
+      )
+    }
+
     return getAll(
-      types = listOf(TaskEntityType.PLACEMENT_APPLICATION, TaskEntityType.PLACEMENT_REQUEST),
-      page = null,
-      sortBy = null,
-      sortDirection = null,
-      allocatedFilter = null,
+      types = taskEntityTypes,
+      page = page,
+      sortBy = sortBy,
+      sortDirection = sortDirection,
+      allocatedFilter = allocatedFilter,
       apAreaId = apAreaId,
-      allocatedToUserId = user.id,
+      allocatedToUserId = allocatedToUserId,
     )
   }
 
+  @Deprecated("Use tasksGet, specifying the allocatedToUserId")
   override fun tasksTaskTypeGet(
     taskType: String,
     page: Int?,
@@ -381,6 +394,21 @@ class TasksController(
       user.hasQualification(UserQualification.LAO),
       false,
     )
+  }
+
+  private fun determineTaskEntityTypes(type: String?): List<TaskEntityType> {
+    return if (type == null) {
+      TaskEntityType.entries
+    } else {
+      listOf(toTaskEntityType(type))
+    }
+  }
+
+  private fun toTaskEntityType(type: String): TaskEntityType = when (toTaskType(type)) {
+    TaskType.assessment -> TaskEntityType.ASSESSMENT
+    TaskType.placementRequest -> TaskEntityType.PLACEMENT_REQUEST
+    TaskType.placementApplication -> TaskEntityType.PLACEMENT_APPLICATION
+    TaskType.bookingAppeal -> throw BadRequestProblem()
   }
 
   private fun toTaskType(type: String) = enumConverterFactory.getConverter(TaskType::class.java).convert(
