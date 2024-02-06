@@ -313,6 +313,8 @@ components:
           $ref: '#/components/schemas/ApprovedPremisesUser'
         status:
           $ref: '#/components/schemas/TaskStatus'
+        apArea:
+          $ref: '#/components/schemas/ApArea'
       discriminator:
         propertyName: taskType
         mapping:
@@ -2718,6 +2720,8 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/ApprovedPremisesUserRole'
+            apArea:
+              $ref: '#/components/schemas/ApArea'
     ApprovedPremisesUser:
       allOf:
         - $ref: '#/components/schemas/User'
@@ -4170,3 +4174,67 @@ components:
         - A1
         - A2
         - A3
+    NewAppeal:
+      type: object
+      properties:
+        appealDate:
+          type: string
+          format: date
+        appealDetail:
+          type: string
+        reviewer:
+          type: string
+        decision:
+          $ref: '#/components/schemas/AppealDecision'
+        decisionDetail:
+          type: string
+      required:
+        - appealDate
+        - appealDetail
+        - reviewer
+        - decision
+        - decisionDetail
+    Appeal:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        appealDate:
+          type: string
+          format: date
+        appealDetail:
+          type: string
+        reviewer:
+          type: string
+        decision:
+          $ref: '#/components/schemas/AppealDecision'
+        decisionDetail:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        applicationId:
+          type: string
+          format: uuid
+        assessmentId:
+          type: string
+          format: uuid
+        createdByUserId:
+          type: string
+          format: uuid
+      required:
+        - id
+        - appealDate
+        - appealDetail
+        - reviewer
+        - decision
+        - decisionDetail
+        - createdAt
+        - applicationId
+        - createdByUserId
+    AppealDecision:
+      type: string
+      enum:
+        - accepted
+        - rejected

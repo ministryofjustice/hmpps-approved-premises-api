@@ -2795,7 +2795,7 @@ paths:
     get:
       tags:
         - Task data
-      summary: List all tasks. This endpoint is deprecated, use /tasks instead, noting that the 'type' parameter values are enumerated and capitalised.
+      summary: List all tasks that are not in a state of 'complete'. This endpoint is deprecated, use /tasks instead specifying the allocatedToUserId, noting that the 'type' parameter values are enumerated and capitalised.
       deprecated: true
       parameters:
         - in: path
