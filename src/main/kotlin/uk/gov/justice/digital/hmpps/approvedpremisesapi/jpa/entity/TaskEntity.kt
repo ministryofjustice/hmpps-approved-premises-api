@@ -105,7 +105,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         )
         """
 
-    private const val ALLOCATABLE_QUERY = """
+    private const val ALL_QUERY = """
       $ASSESSMENT_QUERY
       UNION ALL
       $PLACEMENT_APPLICATION_QUERY
@@ -115,11 +115,50 @@ interface TaskRepository : JpaRepository<Task, UUID> {
   }
 
   @Query(
-    ALLOCATABLE_QUERY,
-    countQuery = "SELECT COUNT(1) FROM ($ALLOCATABLE_QUERY) as count",
+    ALL_QUERY,
+    countQuery = "SELECT COUNT(1) FROM ($ALL_QUERY) as count",
     nativeQuery = true,
   )
   fun getAll(
+    isAllocated: Boolean?,
+    apAreaId: UUID?,
+    taskTypes: List<String>,
+    allocatedToUserId: UUID?,
+    pageable: Pageable?,
+  ): Page<Task>
+
+  @Query(
+    PLACEMENT_REQUEST_QUERY,
+    countQuery = "SELECT COUNT(1) FROM ($PLACEMENT_REQUEST_QUERY) as count",
+    nativeQuery = true,
+  )
+  fun getAllPlacementRequests(
+    isAllocated: Boolean?,
+    apAreaId: UUID?,
+    taskTypes: List<String>,
+    allocatedToUserId: UUID?,
+    pageable: Pageable?,
+  ): Page<Task>
+
+  @Query(
+    PLACEMENT_APPLICATION_QUERY,
+    countQuery = "SELECT COUNT(1) FROM ($PLACEMENT_APPLICATION_QUERY) as count",
+    nativeQuery = true,
+  )
+  fun getAllPlacementApplications(
+    isAllocated: Boolean?,
+    apAreaId: UUID?,
+    taskTypes: List<String>,
+    allocatedToUserId: UUID?,
+    pageable: Pageable?,
+  ): Page<Task>
+
+  @Query(
+    ASSESSMENT_QUERY,
+    countQuery = "SELECT COUNT(1) FROM ($ASSESSMENT_QUERY) as count",
+    nativeQuery = true,
+  )
+  fun getAllAssessments(
     isAllocated: Boolean?,
     apAreaId: UUID?,
     taskTypes: List<String>,

@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.runBlocking
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -27,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TaskEntityTyp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.TypedTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -66,6 +63,8 @@ class TasksController(
   private val userTransformer: UserTransformer,
   private val taskService: TaskService,
 ) : TasksApiDelegate {
+
+  @Deprecated("Use tasksGet")
   override fun tasksReallocatableGet(
     type: String?,
     page: Int?,
@@ -133,97 +132,67 @@ class TasksController(
     )
   }
 
-  private fun determineTaskEntityTypes(type: String?): List<TaskEntityType> {
-    if (type == null) {
-      return TaskEntityType.entries
-    }
-
-    return when (toTaskType(type)) {
-      TaskType.assessment -> listOf(TaskEntityType.ASSESSMENT)
-      TaskType.placementRequest -> listOf(TaskEntityType.PLACEMENT_REQUEST)
-      TaskType.placementApplication -> listOf(TaskEntityType.PLACEMENT_APPLICATION)
-      TaskType.bookingAppeal -> throw BadRequestProblem()
-    }
-  }
-
-  override fun tasksGet(apAreaId: UUID?): ResponseEntity<List<Task>> {
+  override fun tasksGet(
+    type: TaskType?,
+    page: Int?,
+    sortBy: TaskSortField?,
+    sortDirection: SortDirection?,
+    allocatedFilter: AllocatedFilter?,
+    apAreaId: UUID?,
+    allocatedToUserId: UUID?,
+  ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
+    if (!user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_MATCHER)) {
+      throw ForbiddenProblem()
+    }
+
+    val taskEntityTypes = if (type == null) {
+      TaskEntityType.entries
+    } else {
+      listOf(
+        when (type) {
+          TaskType.assessment -> TaskEntityType.ASSESSMENT
+          TaskType.placementRequest -> TaskEntityType.PLACEMENT_REQUEST
+          TaskType.placementApplication -> TaskEntityType.PLACEMENT_APPLICATION
+          TaskType.bookingAppeal -> throw BadRequestProblem()
+        },
+      )
+    }
+
     return getAll(
-      types = listOf(TaskEntityType.PLACEMENT_APPLICATION, TaskEntityType.PLACEMENT_REQUEST),
-      page = null,
-      sortBy = null,
-      sortDirection = null,
-      allocatedFilter = null,
+      types = taskEntityTypes,
+      page = page,
+      sortBy = sortBy,
+      sortDirection = sortDirection,
+      allocatedFilter = allocatedFilter,
       apAreaId = apAreaId,
-      allocatedToUserId = user.id,
+      allocatedToUserId = allocatedToUserId,
     )
   }
 
+  @Deprecated("Use tasksGet, specifying the allocatedToUserId")
   override fun tasksTaskTypeGet(
     taskType: String,
     page: Int?,
     sortDirection: SortDirection?,
     apAreaId: UUID?,
-  ): ResponseEntity<List<Task>> = runBlocking {
+  ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
-    val tasks = mutableListOf<Task>()
-    val type = toTaskType(taskType)
+    val type = toTaskEntityType(taskType)
 
-    var paginationMetaData: PaginationMetadata? = null
-
-    if (user.hasRole(UserRole.CAS1_MATCHER)) {
-      when (type) {
-        TaskType.placementApplication -> {
-          val (placementApplications, metaData) =
-            placementApplicationService.getVisiblePlacementApplicationsForUser(
-              user,
-              page,
-              sortDirection,
-              apAreaId,
-            )
-          val crns = placementApplications.map { it.application.crn }
-          val offenderSummaries = getOffenderSummariesForCrns(crns, user)
-
-          paginationMetaData = metaData
-          async {
-            tasks += getPlacementApplicationTasks(
-              placementApplications,
-              offenderSummaries,
-            )
-          }
-        }
-
-        TaskType.placementRequest -> {
-          val (placementRequests, metaData) =
-            placementRequestService.getVisiblePlacementRequestsForUser(
-              user,
-              page,
-              sortDirection,
-              apAreaId,
-            )
-          val crns = placementRequests.map { it.application.crn }
-          val offenderSummaries = getOffenderSummariesForCrns(crns, user)
-
-          paginationMetaData = metaData
-          async {
-            tasks += getPlacementRequestTasks(
-              placementRequests,
-              offenderSummaries,
-            )
-          }
-        }
-
-        else -> {
-          throw BadRequestProblem()
-        }
-      }
+    if (type != TaskEntityType.PLACEMENT_REQUEST && type != TaskEntityType.PLACEMENT_APPLICATION) {
+      throw BadRequestProblem()
     }
 
-    return@runBlocking ResponseEntity.ok().headers(
-      paginationMetaData?.toHeaders(),
-    ).body(
-      tasks,
+    return getAll(
+      types = listOf(type),
+      page = page,
+      sortBy = null,
+      sortDirection = sortDirection,
+      allocatedFilter = null,
+      apAreaId = apAreaId,
+      allocatedToUserId = user.id,
     )
   }
 
@@ -354,7 +323,7 @@ class TasksController(
     val type = toTaskType(taskType)
 
     val validationResult = when (val authorisationResult = taskService.deallocateTask(user, type, id)) {
-      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType.toString())
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, taskType)
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> authorisationResult.entity
     }
@@ -409,16 +378,6 @@ class TasksController(
     )
   }
 
-  private suspend fun getPlacementRequestTasks(
-    placementRequests: List<PlacementRequestEntity>,
-    offenderSummaries: List<PersonSummaryInfoResult>,
-  ) = placementRequests.map { getPlacementRequestTask(it, offenderSummaries) }
-
-  private suspend fun getPlacementApplicationTasks(
-    placementApplications: List<PlacementApplicationEntity>,
-    offenderSummaries: List<PersonSummaryInfoResult>,
-  ) = placementApplications.map { getPlacementApplicationTask(it, offenderSummaries) }
-
   private fun getPersonNameFromApplication(
     application: ApplicationEntity,
     offenderSummaries: List<PersonSummaryInfoResult>,
@@ -435,6 +394,21 @@ class TasksController(
       user.hasQualification(UserQualification.LAO),
       false,
     )
+  }
+
+  private fun determineTaskEntityTypes(type: String?): List<TaskEntityType> {
+    return if (type == null) {
+      TaskEntityType.entries
+    } else {
+      listOf(toTaskEntityType(type))
+    }
+  }
+
+  private fun toTaskEntityType(type: String): TaskEntityType = when (toTaskType(type)) {
+    TaskType.assessment -> TaskEntityType.ASSESSMENT
+    TaskType.placementRequest -> TaskEntityType.PLACEMENT_REQUEST
+    TaskType.placementApplication -> TaskEntityType.PLACEMENT_APPLICATION
+    TaskType.bookingAppeal -> throw BadRequestProblem()
   }
 
   private fun toTaskType(type: String) = enumConverterFactory.getConverter(TaskType::class.java).convert(

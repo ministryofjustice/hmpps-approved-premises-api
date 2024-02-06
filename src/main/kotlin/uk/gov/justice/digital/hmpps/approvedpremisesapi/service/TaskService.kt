@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.springframework.data.domain.Page
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AllocatedFilter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
@@ -54,26 +55,9 @@ class TaskService(
     filterCriteria: TaskFilterCriteria,
     pageCriteria: PageCriteria<TaskSortField>,
   ): Pair<List<TypedTask>, PaginationMetadata?> {
-    val pageable = getPageable(
-      pageCriteria.withSortBy(
-        when (pageCriteria.sortBy) {
-          TaskSortField.createdAt -> "created_at"
-        },
-      ),
-    )
-
-    val allocatedFilter = filterCriteria.allocatedFilter
     val taskTypes = filterCriteria.types
-    val isAllocated = allocatedFilter?.let { allocatedFilter == AllocatedFilter.allocated }
 
-    val tasksResult = taskRepository.getAll(
-      isAllocated = isAllocated,
-      apAreaId = filterCriteria.apAreaId,
-      taskTypes = taskTypes.map { it.name },
-      allocatedToUserId = filterCriteria.allocatedToUserId,
-      pageable = pageable,
-    )
-
+    val tasksResult = getAllEntities(filterCriteria, pageCriteria, taskTypes)
     val tasks = tasksResult.content
 
     val assessments = if (taskTypes.contains(TaskEntityType.ASSESSMENT)) {
@@ -110,6 +94,42 @@ class TaskService(
 
     val metadata = getMetadata(tasksResult, pageCriteria)
     return Pair(typedTasks, metadata)
+  }
+
+  private fun getAllEntities(
+    filterCriteria: TaskFilterCriteria,
+    pageCriteria: PageCriteria<TaskSortField>,
+    taskTypes: List<TaskEntityType>,
+  ): Page<Task> {
+    val pageable = getPageable(
+      pageCriteria.withSortBy(
+        when (pageCriteria.sortBy) {
+          TaskSortField.createdAt -> "created_at"
+        },
+      ),
+    )
+
+    val allocatedFilter = filterCriteria.allocatedFilter
+
+    val isAllocated = allocatedFilter?.let { allocatedFilter == AllocatedFilter.allocated }
+
+    val repoFunction = if (taskTypes.size == 1) {
+      when (taskTypes[0]) {
+        TaskEntityType.ASSESSMENT -> taskRepository::getAllAssessments
+        TaskEntityType.PLACEMENT_APPLICATION -> taskRepository::getAllPlacementApplications
+        TaskEntityType.PLACEMENT_REQUEST -> taskRepository::getAllPlacementRequests
+      }
+    } else {
+      taskRepository::getAll
+    }
+
+    return repoFunction(
+      isAllocated,
+      filterCriteria.apAreaId,
+      taskTypes.map { it.name },
+      filterCriteria.allocatedToUserId,
+      pageable,
+    )
   }
 
   private fun List<Task>.idsForType(type: TaskEntityType) = this.filter { it.type == type }.map { it.id }

@@ -2727,10 +2727,41 @@ paths:
         - Task data
       summary: List all tasks
       parameters:
+        - in: query
+          name: type
+          required: false
+          description: Returns tasks that match the given type. If no type given return all. BookingAppeal is not supported
+          schema:
+            $ref: '_shared.yml#/components/schemas/TaskType'
+        - name: page
+          in: query
+          description: Page number of results to return.
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          description: Which field to sort the results by. If blank, will sort by createdAt
+          schema:
+            $ref: '_shared.yml#/components/schemas/TaskSortField'
+        - name: sortDirection
+          in: query
+          description: The direction to sort the results by. If blank will sort by descending order
+          schema:
+            $ref: '_shared.yml#/components/schemas/SortDirection'
+        - name: allocatedFilter
+          in: query
+          description: Filter by allocated or not
+          schema:
+            $ref: '_shared.yml#/components/schemas/AllocatedFilter'
         - name: apAreaId
           in: query
-          required: false
-          description: If provided, only tasks for this area will be returned
+          description: Approved Premises Area ID to filter results by
+          schema:
+            type: string
+            format: uuid
+        - name: allocatedToUserId
+          in: query
+          description: Only show tasks allocated to this user id
           schema:
             type: string
             format: uuid
@@ -2743,6 +2774,15 @@ paths:
                 type: array
                 items:
                   $ref: '_shared.yml#/components/schemas/Task'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
@@ -2753,7 +2793,8 @@ paths:
     get:
       tags:
         - Task data
-      summary: List all tasks
+      summary: List all tasks that are not in a state of 'complete'. This endpoint is deprecated, use /tasks instead specifying the allocatedToUserId, noting that the 'type' parameter values are enumerated and capitalised.
+      deprecated: true
       parameters:
         - in: path
           name: taskType
@@ -2806,7 +2847,8 @@ paths:
     get:
       tags:
         - Task data
-      summary: List all reallocatable tasks
+      summary: List all reallocatable tasks. This endpoint is deprecated, use /tasks instead, noting that the 'type' parameter values are enumerated and capitalised.
+      deprecated: true
       parameters:
         - in: query
           name: type
