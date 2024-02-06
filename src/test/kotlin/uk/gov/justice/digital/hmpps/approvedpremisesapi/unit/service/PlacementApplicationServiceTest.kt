@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -65,6 +66,8 @@ class PlacementApplicationServiceTest {
     emailNotificationService,
     notifyConfig,
     sendPlacementRequestNotifications = true,
+    sendNewWithdrawalNotifications = true,
+    UrlTemplate("http://frontend/applications/#id"),
   )
 
   @Nested
@@ -510,10 +513,8 @@ class PlacementApplicationServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      val templateId = UUID.randomUUID().toString()
-
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
+      every { notifyConfig.templates.placementRequestWithdrawn } answers { UUID.randomUUID().toString() }
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
@@ -581,8 +582,115 @@ class PlacementApplicationServiceTest {
 
       assertThat(validationResult is ValidatableActionResult.GeneralValidationError).isTrue()
       (validationResult as ValidatableActionResult.GeneralValidationError).let {
-        assertThat(validationResult.message).isEqualTo("The Placement Application cannot be withdrawn because it has an associated decision")
+        assertThat(validationResult.message)
+          .isEqualTo("The Placement Application cannot be withdrawn because it has an associated decision")
       }
+    }
+
+    @Test
+    fun `it sends a notification to the applicant on withdrawal`() {
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .withDecision(null)
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementRequestWithdrawnTemplateId = UUID.randomUUID().toString()
+      every { notifyConfig.templates.placementRequestWithdrawn } answers { placementRequestWithdrawnTemplateId }
+      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { placementApplicationRepository.save(any()) } answers {
+        it.invocation.args[0] as PlacementApplicationEntity
+      }
+
+      placementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
+      )
+
+      verify(exactly = 1) {
+        emailNotificationService.sendEmail(
+          user.email!!,
+          placementRequestWithdrawnTemplateId,
+          mapOf(
+            "crn" to placementApplication.application.crn,
+            "applicationUrl" to "http://frontend/applications/${placementApplication.application.id}",
+          ),
+        )
+      }
+    }
+
+    @Test
+    fun `it sends a notification to the allocated user on withdrawal, if one is set`() {
+      val allocatedToUser = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .withEmail("allocatedUser@test.com")
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(allocatedToUser)
+        .withDecision(null)
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementRequestWithdrawnTemplateId = UUID.randomUUID().toString()
+      every { notifyConfig.templates.placementRequestWithdrawn } answers { placementRequestWithdrawnTemplateId }
+      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { placementApplicationRepository.save(any()) } answers {
+        it.invocation.args[0] as PlacementApplicationEntity
+      }
+
+      placementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
+      )
+
+      verify(exactly = 1) {
+        emailNotificationService.sendEmail(
+          "allocatedUser@test.com",
+          placementRequestWithdrawnTemplateId,
+          mapOf(
+            "crn" to placementApplication.application.crn,
+            "applicationUrl" to "http://frontend/applications/${placementApplication.application.id}",
+          ),
+        )
+      }
+    }
+
+    @Test
+    fun `it doesnt send a notifications if no allocated user and no user email`() {
+      val creatingUser = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .withEmail(null)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(null)
+        .withDecision(null)
+        .withCreatedByUser(creatingUser)
+        .produce()
+
+      val placementRequestWithdrawnTemplateId = UUID.randomUUID().toString()
+      every { notifyConfig.templates.placementRequestWithdrawn } answers { placementRequestWithdrawnTemplateId }
+      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { placementApplicationRepository.save(any()) } answers {
+        it.invocation.args[0] as PlacementApplicationEntity
+      }
+
+      placementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
+      )
+
+      verify { emailNotificationService wasNot called }
     }
   }
 }

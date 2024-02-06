@@ -296,6 +296,8 @@ class PlacementRequestService(
 
     placementRequestRepository.save(placementRequest)
 
+    // TODO: logic here for applicant and CRU (TBD)
+
     return AuthorisableActionResult.Success(Unit)
   }
 

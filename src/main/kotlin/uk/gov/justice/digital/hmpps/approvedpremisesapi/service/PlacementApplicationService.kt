@@ -5,7 +5,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
@@ -19,13 +18,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
@@ -47,6 +44,9 @@ class PlacementApplicationService(
   private val notifyConfig: NotifyConfig,
   @Value("\${notify.send-placement-request-notifications}")
   private val sendPlacementRequestNotifications: Boolean,
+  @Value("\${notify.send-new-withdrawal-notifications}")
+  private val sendNewWithdrawalNotifications: Boolean,
+  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
 ) {
 
   fun getAllPlacementApplicationEntitiesForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
@@ -188,6 +188,34 @@ class PlacementApplicationService(
     placementApplicationEntity.withdrawalReason = reason
 
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
+
+    if (sendNewWithdrawalNotifications) {
+      val application = placementApplicationEntity.application
+
+      val createdByUserEmail = placementApplicationEntity.createdByUser.email
+      createdByUserEmail?.let { email ->
+        emailNotificationService.sendEmail(
+          email = email,
+          templateId = notifyConfig.templates.placementRequestWithdrawn,
+          personalisation = mapOf(
+            "crn" to application.crn,
+            "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
+          ),
+        )
+      }
+
+      val allocatedToUserEmail = placementApplicationEntity.allocatedToUser?.email
+      allocatedToUserEmail?.let { email ->
+        emailNotificationService.sendEmail(
+          email = email,
+          templateId = notifyConfig.templates.placementRequestWithdrawn,
+          personalisation = mapOf(
+            "crn" to application.crn,
+            "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
+          ),
+        )
+      }
+    }
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedApplication),
