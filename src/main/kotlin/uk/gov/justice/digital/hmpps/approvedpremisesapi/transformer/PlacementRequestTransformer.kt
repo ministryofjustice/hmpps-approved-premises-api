@@ -52,15 +52,15 @@ class PlacementRequestTransformer(
   }
 
   fun getStatus(placementRequest: PlacementRequestEntity): PlacementRequestStatus {
-    if (placementRequest.booking == null || placementRequest.booking?.cancellations?.any() == true) {
-      if (placementRequest.bookingNotMades.any()) {
-        return PlacementRequestStatus.unableToMatch
-      }
-
-      return PlacementRequestStatus.notMatched
+    if (placementRequest.hasActiveBooking()) {
+      return PlacementRequestStatus.matched
     }
 
-    return PlacementRequestStatus.matched
+    if (placementRequest.bookingNotMades.any()) {
+      return PlacementRequestStatus.unableToMatch
+    }
+
+    return PlacementRequestStatus.notMatched
   }
 
   fun transformToWithdrawable(jpa: PlacementRequestEntity) = Withdrawable(

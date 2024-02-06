@@ -171,7 +171,10 @@ data class PlacementRequestEntity(
   @Enumerated(value = EnumType.STRING)
   var withdrawalReason: PlacementRequestWithdrawalReason?,
 ) {
-  fun canBeWithdrawn() = reallocatedAt == null && booking == null && !isWithdrawn
+  fun canBeWithdrawn() =
+    reallocatedAt == null && !hasActiveBooking() && !isWithdrawn
+
+  fun hasActiveBooking() = booking != null && booking?.cancellations.isNullOrEmpty()
 
   fun expectedDeparture() = expectedArrival.plusDays(duration.toLong())
 }
