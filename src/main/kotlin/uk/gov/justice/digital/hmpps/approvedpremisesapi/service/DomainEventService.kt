@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
@@ -44,6 +45,7 @@ class DomainEventService(
   @Value("\${url-templates.api.cas1.booking-cancelled-event-detail}") private val bookingCancelledDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas1.booking-changed-event-detail}") private val bookingChangedDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas1.application-withdrawn-event-detail}") private val applicationWithdrawnDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas1.assessment-appealed-event-detail}") private val assessmentAppealedDetailUrlTemplate: String,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -57,6 +59,7 @@ class DomainEventService(
   fun getBookingCancelledEvent(id: UUID) = get<BookingCancelledEnvelope>(id)
   fun getBookingChangedEvent(id: UUID) = get<BookingChangedEnvelope>(id)
   fun getApplicationWithdrawnEvent(id: UUID) = get<ApplicationWithdrawnEnvelope>(id)
+  fun getAssessmentAppealedEvent(id: UUID) = get<AssessmentAppealedEnvelope>(id)
 
   private inline fun <reified T> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
@@ -182,6 +185,17 @@ class DomainEventService(
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
+  @Transactional
+  fun saveAssessmentAppealedEvent(domainEvent: DomainEvent<AssessmentAppealedEnvelope>) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "approved-premises.assessment.appealed",
+      typeDescription = "An Approved Premises Assessment has been appealed",
+      detailUrl = assessmentAppealedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+    )
+
   fun getAllDomainEventsForApplication(applicationId: UUID) =
     domainEventRepository.findAllTimelineEventsByApplicationId(applicationId)
 
@@ -251,6 +265,7 @@ class DomainEventService(
     BookingCancelledEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED
     BookingChangedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED
     ApplicationWithdrawnEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN
+    AssessmentAppealedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.name}")
   }
 }
