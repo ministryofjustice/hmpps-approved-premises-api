@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.EmptySource
 import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AppealEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -21,6 +22,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.time.LocalDate
+import java.util.Optional
+import java.util.UUID
 
 class AppealServiceTest {
   private val appealRepository = mockk<AppealRepository>()
@@ -41,6 +44,77 @@ class AppealServiceTest {
   private val application = ApprovedPremisesApplicationEntityFactory()
     .withCreatedByUser(createdByUser)
     .produce()
+
+  @Nested
+  inner class GetAppeal {
+    @Test
+    fun `Returns Unauthorised if the user does not have the CAS1_APPEALS_MANAGER role`() {
+      val user = UserEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      val appeal = AppealEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      every { appealRepository.findById(appeal.id) } returns Optional.of(appeal)
+
+      val result = appealService.getAppeal(appeal.id, application, user)
+
+      assertThat(result).isInstanceOf(AuthorisableActionResult.Unauthorised::class.java)
+    }
+
+    @Test
+    fun `Returns NotFound if the appeal does not exist`() {
+      val user = UserEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+        .addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
+
+      every { appealRepository.findById(any()) } returns Optional.empty()
+
+      val result = appealService.getAppeal(UUID.randomUUID(), application, user)
+
+      assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
+    }
+
+    @Test
+    fun `Returns NotFound if the appeal is not for the given application`() {
+      val user = UserEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+        .addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
+
+      val appeal = AppealEntityFactory()
+        .produce()
+
+      every { appealRepository.findById(appeal.id) } returns Optional.of(appeal)
+
+      val result = appealService.getAppeal(appeal.id, application, user)
+
+      assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
+    }
+
+    @Test
+    fun `Returns Success containing expected appeal`() {
+      val user = UserEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+        .addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
+
+      val appeal = AppealEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      every { appealRepository.findById(appeal.id) } returns Optional.of(appeal)
+
+      val result = appealService.getAppeal(appeal.id, application, user)
+
+      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+      result as AuthorisableActionResult.Success
+      assertThat(result.entity).isEqualTo(appeal)
+    }
+  }
 
   @Nested
   inner class CreateAppeal {

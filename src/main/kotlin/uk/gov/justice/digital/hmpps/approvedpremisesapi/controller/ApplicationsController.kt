@@ -405,6 +405,27 @@ class ApplicationsController(
     return ResponseEntity(documentTransformer.transformToApi(documents, convictionId), HttpStatus.OK)
   }
 
+  override fun applicationsApplicationIdAppealsAppealIdGet(
+    applicationId: UUID,
+    appealId: UUID,
+  ): ResponseEntity<Appeal> {
+    val user = userService.getUserForRequest()
+    val applicationResult = applicationService.getApplicationForUsername(applicationId, user.deliusUsername)
+
+    val application = when (applicationResult) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> applicationResult.entity
+    }
+
+    val appeal = when (val getAppealResult = appealService.getAppeal(appealId, application, user)) {
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(appealId, "Appeal")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> getAppealResult.entity
+    }
+    return ResponseEntity.ok(appealTransformer.transformJpaToApi(appeal))
+  }
+
   override fun applicationsApplicationIdAppealsPost(applicationId: UUID, body: NewAppeal): ResponseEntity<Appeal> {
     val user = userService.getUserForRequest()
     val applicationResult = applicationService.getApplicationForUsername(applicationId, user.deliusUsername)

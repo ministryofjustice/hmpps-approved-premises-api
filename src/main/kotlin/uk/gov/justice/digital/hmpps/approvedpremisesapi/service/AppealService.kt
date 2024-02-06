@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
@@ -18,6 +19,17 @@ import java.util.UUID
 class AppealService(
   private val appealRepository: AppealRepository,
 ) {
+  fun getAppeal(appealId: UUID, application: ApplicationEntity, user: UserEntity): AuthorisableActionResult<AppealEntity> {
+    if (!user.hasRole(UserRole.CAS1_APPEALS_MANAGER)) return AuthorisableActionResult.Unauthorised()
+
+    val appeal = appealRepository.findByIdOrNull(appealId)
+      ?: return AuthorisableActionResult.NotFound("Appeal", appealId.toString())
+
+    if (appeal.application.id != application.id) return AuthorisableActionResult.NotFound("Appeal", appealId.toString())
+
+    return AuthorisableActionResult.Success(appeal)
+  }
+
   fun createAppeal(
     appealDate: LocalDate,
     appealDetail: String,
