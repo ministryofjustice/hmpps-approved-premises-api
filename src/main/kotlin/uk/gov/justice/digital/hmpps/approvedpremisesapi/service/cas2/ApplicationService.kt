@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -26,6 +27,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -51,8 +55,14 @@ class ApplicationService(
     return applicationRepository.findAllCas2ApplicationSummariesCreatedByUser(user.id)
   }
 
-  fun getAllSubmittedApplicationsForAssessor(): List<Cas2ApplicationSummary> {
-    return applicationRepository.findAllSubmittedCas2ApplicationSummaries()
+  fun getAllSubmittedApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummary>, PaginationMetadata?> {
+    val pageable = getPageable(pageCriteria)
+
+    val response = applicationRepository.findAllSubmittedCas2ApplicationSummaries(pageable)
+
+    val metadata = getMetadata(response, pageCriteria)
+
+    return Pair(response.content, metadata)
   }
 
   fun getSubmittedApplicationForAssessor(applicationId: UUID):

@@ -172,12 +172,30 @@ class Cas2SubmissionTest(
                 withId(UUID.randomUUID())
               }
 
-            val submittedCas2ApplicationEntity = cas2ApplicationEntityFactory
+            val submittedcas2applicationentitySecond = cas2ApplicationEntityFactory
+              .produceAndPersist {
+                withApplicationSchema(applicationSchema)
+                withCreatedByUser(user)
+                withCrn(offenderDetails.otherIds.crn)
+                withSubmittedAt(OffsetDateTime.parse("2023-01-02T09:00:00+01:00"))
+                withData("{}")
+              }
+
+            val submittedcas2applicationentityFirst = cas2ApplicationEntityFactory
               .produceAndPersist {
                 withApplicationSchema(applicationSchema)
                 withCreatedByUser(user)
                 withCrn(offenderDetails.otherIds.crn)
                 withSubmittedAt(OffsetDateTime.parse("2023-01-01T09:00:00+01:00"))
+                withData("{}")
+              }
+
+            val submittedcas2applicationentityThird = cas2ApplicationEntityFactory
+              .produceAndPersist {
+                withApplicationSchema(applicationSchema)
+                withCreatedByUser(user)
+                withCrn(offenderDetails.otherIds.crn)
+                withSubmittedAt(OffsetDateTime.parse("2023-01-03T09:00:00+01:00"))
                 withData("{}")
               }
 
@@ -191,12 +209,16 @@ class Cas2SubmissionTest(
               }
 
             val rawResponseBody = webTestClient.get()
-              .uri("/cas2/submissions")
+              .uri("/cas2/submissions?page=1")
               .header("Authorization", "Bearer $jwt")
               .header("X-Service-Name", ServiceName.cas2.value)
               .exchange()
               .expectStatus()
               .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 1)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 3)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
               .returnResult<String>()
               .responseBody
               .blockFirst()
@@ -207,12 +229,28 @@ class Cas2SubmissionTest(
                 object : TypeReference<List<Cas2SubmittedApplicationSummary>>() {},
               )
 
-            Assertions.assertThat(responseBody).anyMatch {
-              submittedCas2ApplicationEntity.id == it.id &&
-                submittedCas2ApplicationEntity.crn == it.person.crn &&
-                submittedCas2ApplicationEntity.createdAt.toInstant() == it.createdAt &&
-                submittedCas2ApplicationEntity.createdByUser.id == it.createdByUserId &&
-                submittedCas2ApplicationEntity.submittedAt?.toInstant() == it.submittedAt
+            Assertions.assertThat(responseBody[0]).matches {
+              submittedcas2applicationentityFirst.id == it.id &&
+                submittedcas2applicationentityFirst.crn == it.person.crn &&
+                submittedcas2applicationentityFirst.createdAt.toInstant() == it.createdAt &&
+                submittedcas2applicationentityFirst.createdByUser.id == it.createdByUserId &&
+                submittedcas2applicationentityFirst.submittedAt?.toInstant() == it.submittedAt
+            }
+
+            Assertions.assertThat(responseBody[1]).matches {
+              submittedcas2applicationentitySecond.id == it.id &&
+                submittedcas2applicationentitySecond.crn == it.person.crn &&
+                submittedcas2applicationentitySecond.createdAt.toInstant() == it.createdAt &&
+                submittedcas2applicationentitySecond.createdByUser.id == it.createdByUserId &&
+                submittedcas2applicationentitySecond.submittedAt?.toInstant() == it.submittedAt
+            }
+
+            Assertions.assertThat(responseBody[2]).matches {
+              submittedcas2applicationentityThird.id == it.id &&
+                submittedcas2applicationentityThird.crn == it.person.crn &&
+                submittedcas2applicationentityThird.createdAt.toInstant() == it.createdAt &&
+                submittedcas2applicationentityThird.createdByUser.id == it.createdByUserId &&
+                submittedcas2applicationentityThird.submittedAt?.toInstant() == it.submittedAt
             }
 
             Assertions.assertThat(responseBody).noneMatch {
