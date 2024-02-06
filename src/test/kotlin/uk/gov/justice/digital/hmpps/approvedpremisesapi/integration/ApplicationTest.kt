@@ -3135,6 +3135,28 @@ class ApplicationTest : IntegrationTestBase() {
               )
             }
 
+            val cancelledBooking = bookingEntityFactory.produceAndPersist {
+              withPremises(
+                approvedPremisesEntityFactory.produceAndPersist {
+                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                  withYieldedProbationRegion {
+                    probationRegionEntityFactory.produceAndPersist {
+                      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+                    }
+                  }
+                },
+              )
+              withArrivalDate(LocalDate.parse("2023-03-08"))
+              withDepartureDate(LocalDate.parse("2023-03-10"))
+            }
+            cancellationEntityFactory.produceAndPersist {
+              withBooking(cancelledBooking)
+              withReason(cancellationReasonEntityFactory.produceAndPersist())
+            }
+            val placementRequestWithBookingsAllCancelled = produceAndPersistPlacementRequest(application) {
+              withBooking(cancelledBooking)
+            }
+
             produceAndPersistPlacementRequest(application) {
               withIsWithdrawn(true)
             }
@@ -3149,6 +3171,11 @@ class ApplicationTest : IntegrationTestBase() {
                 placementRequest2.id,
                 WithdrawableType.placementRequest,
                 listOf(datePeriodForDuration(placementRequest2.expectedArrival, placementRequest2.duration)),
+              ),
+              Withdrawable(
+                placementRequestWithBookingsAllCancelled.id,
+                WithdrawableType.placementRequest,
+                listOf(datePeriodForDuration(placementRequestWithBookingsAllCancelled.expectedArrival, placementRequestWithBookingsAllCancelled.duration)),
               ),
             )
 
