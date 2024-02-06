@@ -77,7 +77,7 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     this.decision = { decision }
   }
 
-  fun withAllocatedToUser(allocatedToUser: UserEntity) = apply {
+  fun withAllocatedToUser(allocatedToUser: UserEntity?) = apply {
     this.allocatedToUser = allocatedToUser
   }
 

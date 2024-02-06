@@ -76,9 +76,11 @@ class AssessmentService(
   private val userAllocator: UserAllocator,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: String,
+  @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
   @Value("\${notify.send-placement-request-notifications}")
   private val sendPlacementRequestNotifications: Boolean,
+  @Value("\${notify.send-new-withdrawal-notifications}")
+  private val sendNewWithdrawalNotifications: Boolean,
 ) {
   fun getVisibleAssessmentSummariesForUserCAS1(
     user: UserEntity,
@@ -224,7 +226,7 @@ class AssessmentService(
           templateId = notifyConfig.templates.assessmentAllocated,
           personalisation = mapOf(
             "name" to allocatedUser.name,
-            "assessmentUrl" to assessmentUrlTemplate.replace("#id", assessment.id.toString()),
+            "assessmentUrl" to assessmentUrlTemplate.resolve("id", assessment.id.toString()),
             "crn" to application.crn,
           ),
         )
@@ -772,12 +774,12 @@ class AssessmentService(
           templateId = notifyConfig.templates.assessmentAllocated,
           personalisation = mapOf(
             "name" to assigneeUser.name,
-            "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
+            "assessmentUrl" to assessmentUrlTemplate.resolve("id", newAssessment.id.toString()),
             "crn" to application.crn,
           ),
         )
       }
-      var allocatedToUser = currentAssessment.allocatedToUser
+      val allocatedToUser = currentAssessment.allocatedToUser
       if (allocatedToUser != null) {
         if (allocatedToUser.email != null) {
           emailNotificationService.sendEmail(
@@ -785,7 +787,7 @@ class AssessmentService(
             templateId = notifyConfig.templates.assessmentDeallocated,
             personalisation = mapOf(
               "name" to currentAssessment.allocatedToUser!!.name,
-              "assessmentUrl" to assessmentUrlTemplate.replace("#id", newAssessment.id.toString()),
+              "assessmentUrl" to assessmentUrlTemplate.resolve("id", newAssessment.id.toString()),
               "crn" to application.crn,
             ),
           )
@@ -943,11 +945,28 @@ class AssessmentService(
     return AuthorisableActionResult.Success(referralHistoryNoteEntity)
   }
 
-  fun updateAssessmentWithdrawn(assessmentId: UUID) {
+  fun updateCas1AssessmentWithdrawn(assessmentId: UUID) {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
-    if (assessment != null) {
+    if (assessment is ApprovedPremisesAssessmentEntity) {
+      val isPendingAssessment = assessment.isPendingAssessment()
+
       assessment.isWithdrawn = true
       assessmentRepository.save(assessment)
+
+      val allocatedUserEmail = assessment.allocatedToUser?.email
+      if (sendNewWithdrawalNotifications &&
+        isPendingAssessment &&
+        allocatedUserEmail != null
+      ) {
+        emailNotificationService.sendEmail(
+          email = allocatedUserEmail,
+          templateId = notifyConfig.templates.assessmentWithdrawn,
+          personalisation = mapOf(
+            "applicationUrl" to applicationUrlTemplate.resolve("id", assessment.application.id.toString()),
+            "crn" to assessment.application.crn,
+          ),
+        )
+      }
     }
   }
 

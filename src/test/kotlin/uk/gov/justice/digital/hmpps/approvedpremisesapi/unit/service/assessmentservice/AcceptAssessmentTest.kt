@@ -104,8 +104,9 @@ class AcceptAssessmentTest {
     userAllocator,
     objectMapperMock,
     UrlTemplate("http://frontend/applications/#id"),
-    "http://frontend/assessments/#id",
+    UrlTemplate("http://frontend/assessments/#id"),
     sendPlacementRequestNotifications = true,
+    sendNewWithdrawalNotifications = true,
   )
 
   lateinit var user: UserEntity

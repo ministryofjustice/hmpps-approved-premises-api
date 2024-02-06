@@ -293,7 +293,9 @@ class ApprovedPremisesAssessmentEntity(
   referralHistoryNotes,
   schemaUpToDate,
   isWithdrawn,
-)
+) {
+  fun isPendingAssessment() = this.submittedAt == null && this.reallocatedAt == null && !this.isWithdrawn
+}
 
 @Entity
 @DiscriminatorValue("temporary-accommodation")
