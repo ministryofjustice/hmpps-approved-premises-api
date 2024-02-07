@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.data.Offset
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -30,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
@@ -1513,6 +1515,47 @@ class UserAccessServiceTest {
         .produce()
 
       assertThat(userAccessService.userCanWithdrawApplication(user, application)).isFalse()
+    }
+
+    @Test
+    fun `userCanWithdrawApplication returns true if submitted and has CAS1_WORKFLOW_MANAGER role`() {
+      val workflowManager = UserEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      workflowManager.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(user)
+          .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
+          .produce()
+      )
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      assertThat(userAccessService.userCanWithdrawApplication(workflowManager, application)).isTrue()
+    }
+
+    @Test
+    fun `userCanWithdrawApplication returns false if not submitted and has CAS1_WORKFLOW_MANAGER role`() {
+      val workflowManager = UserEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      workflowManager.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(user)
+          .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
+          .produce()
+      )
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      assertThat(userAccessService.userCanWithdrawApplication(workflowManager, application)).isFalse()
     }
 
     @Test

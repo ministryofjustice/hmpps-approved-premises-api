@@ -193,7 +193,9 @@ class UserAccessService(
   }
 
   fun userCanWithdrawApplication(user: UserEntity, application: ApplicationEntity): Boolean = when (application) {
-    is ApprovedPremisesApplicationEntity -> application.createdByUser == user
+    is ApprovedPremisesApplicationEntity ->
+      application.createdByUser == user || (
+      application.isSubmitted() && user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER))
     else -> false
   }
 }
