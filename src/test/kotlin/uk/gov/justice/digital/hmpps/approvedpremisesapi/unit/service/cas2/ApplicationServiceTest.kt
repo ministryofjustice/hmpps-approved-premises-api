@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
@@ -54,6 +55,7 @@ import java.util.UUID
 class ApplicationServiceTest {
   private val mockUserRepository = mockk<NomisUserRepository>()
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
+  private val mockApplicationNoteRepository = mockk<Cas2ApplicationNoteRepository>()
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockUserService = mockk<NomisUserService>()
@@ -66,6 +68,7 @@ class ApplicationServiceTest {
   private val applicationService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService(
     mockUserRepository,
     mockApplicationRepository,
+    mockApplicationNoteRepository,
     mockJsonSchemaService,
     mockOffenderService,
     mockUserService,

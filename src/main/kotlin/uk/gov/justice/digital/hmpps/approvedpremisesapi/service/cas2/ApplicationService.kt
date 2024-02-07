@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
@@ -42,6 +43,7 @@ import javax.transaction.Transactional
 class ApplicationService(
   private val userRepository: NomisUserRepository,
   private val applicationRepository: Cas2ApplicationRepository,
+  private val applicationNoteRepository: Cas2ApplicationNoteRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
   private val userService: NomisUserService,
@@ -171,14 +173,16 @@ class ApplicationService(
       createdByUser = user,
     )
 
-    application.apply {
-      this.notes?.plusAssign(note)
-    }
+    val savedNote = applicationNoteRepository.save(note)
 
-    val savedApplication = applicationRepository.save(application)
+//    application.apply {
+//      this.notes?.plusAssign(note)
+//    }
+//
+//    val savedApplication = applicationRepository.save(application)
 
     return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(Cas2ApplicationNote(id = note.id, body = note.body)),
+      ValidatableActionResult.Success(Cas2ApplicationNote(id = savedNote.id, body = savedNote.body)),
     )
   }
 
