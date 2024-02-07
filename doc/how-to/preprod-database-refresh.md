@@ -28,9 +28,13 @@ preprod users back to the preprod database.
 If you need to run the database refresh outside the schedule, you can run the follwing
 command:
 
-```
-kubectl create job --from=cronjob/db-refresh-job db-refresh-job-adhoc
+```sh
+kubectl create job --from=cronjob/db-refresh-job db-refresh-job-adhoc --namespace hmpps-community-accommodation-prod
 ```
 
 The job creates a pod that runs to completion. You can review the command output by 
-using `kubectl` to show pod logs.
+using `kubectl` to show pod logs, e.g.
+
+```sh
+kubectl -n hmpps-community-accommodation-prod logs db-refresh-job-adhoc-{id} -f
+```
