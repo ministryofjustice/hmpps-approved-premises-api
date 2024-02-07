@@ -8,6 +8,7 @@ import io.mockk.mockkStatic
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -540,98 +541,107 @@ class PlacementRequestServiceTest {
     assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
   }
 
-  @Test
-  fun `withdrawPlacementRequest returns Not Found if no Placement Request with ID exists`() {
-    val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
+  @Nested
+  inner class WithdrawPlacementRequest {
 
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-      .addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
+    @Test
+    fun `withdrawPlacementRequest returns Not Found if no Placement Request with ID exists`() {
+      val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
 
-    every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns null
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+        .addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
 
-    val result = placementRequestService.withdrawPlacementRequest(
-      placementRequestId,
-      user,
-      PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
-    )
+      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns null
 
-    assertThat(result is AuthorisableActionResult.NotFound).isTrue
-  }
-
-  @ParameterizedTest
-  @EnumSource(PlacementRequestWithdrawalReason::class)
-  @NullSource
-  fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true for cas workflow manager`(reason: PlacementRequestWithdrawalReason?) {
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-      .addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
-      .produce()
-
-    createPlacementRequestTest(application, user, reason)
-  }
-
-  @ParameterizedTest
-  @EnumSource(PlacementRequestWithdrawalReason::class)
-  @NullSource
-  fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true for application creator`(reason: PlacementRequestWithdrawalReason?) {
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .produce()
-
-    createPlacementRequestTest(application, user, reason)
-  }
-
-  private fun createPlacementRequestTest(application: ApprovedPremisesApplicationEntity, user: UserEntity, reason: PlacementRequestWithdrawalReason?) {
-    val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
-
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(application)
-      .withAllocatedToUser(user)
-      .produce()
-
-    val placementRequest = PlacementRequestEntityFactory()
-      .withId(placementRequestId)
-      .withPlacementRequirements(
-        PlacementRequirementsEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .produce(),
+      val result = placementRequestService.withdrawPlacementRequest(
+        placementRequestId,
+        user,
+        PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
       )
-      .withApplication(application)
-      .withAssessment(assessment)
-      .withAllocatedToUser(assigneeUser)
-      .produce()
 
-    every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
-    every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
-
-    val result = placementRequestService.withdrawPlacementRequest(
-      placementRequestId,
-      user,
-      reason,
-    )
-
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-
-    verify {
-      placementRequestRepository.save(
-        match {
-          it.id == placementRequestId &&
-            it.isWithdrawn &&
-            it.withdrawalReason == reason
-        },
-      )
+      assertThat(result is AuthorisableActionResult.NotFound).isTrue
     }
+
+    @ParameterizedTest
+    @EnumSource(PlacementRequestWithdrawalReason::class)
+    @NullSource
+    fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true for cas workflow manager`(
+      reason: PlacementRequestWithdrawalReason?
+    ) {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+        .addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
+        .produce()
+
+      createPlacementRequestTest(application, user, reason)
+    }
+
+    @ParameterizedTest
+    @EnumSource(PlacementRequestWithdrawalReason::class)
+    @NullSource
+    fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true for application creator`(
+      reason: PlacementRequestWithdrawalReason?
+    ) {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      createPlacementRequestTest(application, user, reason)
+    }
+
+    private fun createPlacementRequestTest(application: ApprovedPremisesApplicationEntity, user: UserEntity, reason: PlacementRequestWithdrawalReason?) {
+      val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(user)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withId(placementRequestId)
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withAllocatedToUser(assigneeUser)
+        .produce()
+
+      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
+      every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+
+      val result = placementRequestService.withdrawPlacementRequest(
+        placementRequestId,
+        user,
+        reason,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+
+      verify {
+        placementRequestRepository.save(
+          match {
+            it.id == placementRequestId &&
+              it.isWithdrawn &&
+              it.withdrawalReason == reason
+          },
+        )
+      }
+    }
+
   }
 
   @Test
