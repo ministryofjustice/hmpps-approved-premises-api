@@ -2066,7 +2066,7 @@ class BookingServiceTest {
   }
 
   @Nested
-  inner class CreateCancellation {
+  inner class CreateCas1Cancellation {
     val premises = ApprovedPremisesEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -2510,6 +2510,10 @@ class BookingServiceTest {
         mockBookingRepository.save(bookingEntity)
       }
     }
+  }
+
+  @Nested
+  inner class CreateCas3Cancellation {
 
     @Test
     fun `createCancellation returns Success with correct result and emits a domain event for CAS3`() {
