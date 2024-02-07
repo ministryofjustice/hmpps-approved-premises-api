@@ -236,6 +236,7 @@ url-templates:
       person-departure-updated-event-detail: http://localhost:3000/events/cas3/person-departure-updated/#eventId
   frontend:
     application: http://localhost:3000/applications/#id
+    application-appeal: http://localhost:3000/applications/#applicationId/appeals/#appealId
     assessment: http://localhost:3000/assessments/#id
     booking: http://localhost:3000/premises/#premisesId/bookings/#bookingId
     cas2:

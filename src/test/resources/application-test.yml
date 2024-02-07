@@ -151,6 +151,7 @@ url-templates:
       referral-submitted-event-detail: http://api/events/cas3/referral-submitted/#eventId
   frontend:
     application: http://frontend/applications/#id
+    application-appeal: http://frontend/applications/#applicationId/appeals/#appealId
     assessment: http://frontend/assessments/#id
     booking: http://frontend/premises/#premisesId/bookings/#bookingId
     cas2:
