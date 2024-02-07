@@ -6,9 +6,13 @@ import io.mockk.called
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.slot
 import io.mockk.verify
+import io.sentry.Sentry
+import io.sentry.protocol.SentryId
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -108,10 +112,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -165,6 +171,7 @@ class BookingServiceTest {
   private val mockAssessmentRepository = mockk<AssessmentRepository>()
   private val mockUserService = mockk<UserService>()
   private val mockUserAccessService = mockk<UserAccessService>()
+  private val mockAssessmentService = mockk<AssessmentService>()
 
   fun createBookingService(arrivedAndDepartedDomainEventsDisabled: Boolean): BookingService {
     return BookingService(
@@ -205,6 +212,7 @@ class BookingServiceTest {
       arrivedAndDepartedDomainEventsDisabled = arrivedAndDepartedDomainEventsDisabled,
       userService = mockUserService,
       userAccessService = mockUserAccessService,
+      assessmentService = mockAssessmentService,
     )
   }
 
@@ -4007,6 +4015,10 @@ class BookingServiceTest {
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
 
+      every { mockAssessmentService.closeAssessment(user, application.id) } returns AuthorisableActionResult.Success(ValidatableActionResult.Success(assessment))
+
+      mockkStatic(Sentry::class)
+
       val authorisableResult = bookingService.createTemporaryAccommodationBooking(
         user,
         premises,
@@ -4046,6 +4058,12 @@ class BookingServiceTest {
               it.application == application
           },
         )
+      }
+      verify(exactly = 1) {
+        mockAssessmentService.closeAssessment(user, application.id)
+      }
+      verify(exactly = 0) {
+        Sentry.captureException(any())
       }
     }
 
@@ -4091,6 +4109,8 @@ class BookingServiceTest {
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
 
+      mockkStatic(Sentry::class)
+
       val authorisableResult = bookingService.createTemporaryAccommodationBooking(
         user,
         premises,
@@ -4122,6 +4142,12 @@ class BookingServiceTest {
 
       verify(exactly = 0) {
         mockAssessmentRepository.findByIdOrNull(any())
+      }
+      verify(exactly = 0) {
+        mockAssessmentService.closeAssessment(user, any())
+      }
+      verify(exactly = 0) {
+        Sentry.captureException(any())
       }
     }
 
@@ -4308,6 +4334,486 @@ class BookingServiceTest {
               it.workingDayCount == premises.turnaroundWorkingDayCount
           },
         )
+      }
+    }
+
+    @Test
+    fun `createTemporaryAccommodationBooking saves Booking and creates domain event and log error when closing assessment failed with authentication error`() {
+      val crn = "CRN123"
+      val arrivalDate = LocalDate.parse("2023-02-23")
+      val departureDate = LocalDate.parse("2023-02-24")
+
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val premises = TemporaryAccommodationPremisesEntityFactory()
+        .withUnitTestControlTestProbationAreaAndLocalAuthority()
+        .produce()
+
+      val room = RoomEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      val bed = BedEntityFactory()
+        .withRoom(room)
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withProbationRegion(user.probationRegion)
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every {
+        mockLostBedsRepository.findByBedIdAndOverlappingDate(
+          bed.id,
+          arrivalDate,
+          departureDate,
+          null,
+        )
+      } returns listOf()
+      every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+
+      every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
+
+      every { mockAssessmentService.closeAssessment(user, application.id) } returns AuthorisableActionResult.Unauthorised()
+
+      mockkStatic(Sentry::class)
+      every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
+
+      val authorisableResult = bookingService.createTemporaryAccommodationBooking(
+        user,
+        premises,
+        crn,
+        "NOMS123",
+        arrivalDate,
+        departureDate,
+        bed.id,
+        application.id,
+        false,
+      )
+      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+
+      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+      assertThat(validatableResult is ValidatableActionResult.Success)
+
+      verify(exactly = 1) {
+        mockBookingRepository.save(
+          match {
+            it.crn == crn &&
+              it.premises == premises &&
+              it.arrivalDate == arrivalDate &&
+              it.departureDate == departureDate &&
+              it.application == application &&
+              it.status == BookingStatus.provisional
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(
+          match {
+            it.crn == crn &&
+              it.premises == premises &&
+              it.arrivalDate == arrivalDate &&
+              it.departureDate == departureDate &&
+              it.application == application
+          },
+        )
+      }
+      verify(exactly = 1) {
+        mockAssessmentService.closeAssessment(user, application.id)
+      }
+      verify(exactly = 1) {
+        Sentry.captureException(any())
+      }
+    }
+
+    @Test
+    fun `createTemporaryAccommodationBooking saves Booking and creates domain event and log error when closing assessment failed with field validation error`() {
+      val crn = "CRN123"
+      val arrivalDate = LocalDate.parse("2023-02-23")
+      val departureDate = LocalDate.parse("2023-02-24")
+
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val premises = TemporaryAccommodationPremisesEntityFactory()
+        .withUnitTestControlTestProbationAreaAndLocalAuthority()
+        .produce()
+
+      val room = RoomEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      val bed = BedEntityFactory()
+        .withRoom(room)
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withProbationRegion(user.probationRegion)
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every {
+        mockLostBedsRepository.findByBedIdAndOverlappingDate(
+          bed.id,
+          arrivalDate,
+          departureDate,
+          null,
+        )
+      } returns listOf()
+      every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+
+      every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
+
+      every { mockAssessmentService.closeAssessment(user, application.id) } returns AuthorisableActionResult.Success(
+        ValidatableActionResult.FieldValidationError(ValidationErrors()),
+      )
+
+      mockkStatic(Sentry::class)
+      every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
+
+      val authorisableResult = bookingService.createTemporaryAccommodationBooking(
+        user,
+        premises,
+        crn,
+        "NOMS123",
+        arrivalDate,
+        departureDate,
+        bed.id,
+        application.id,
+        false,
+      )
+      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+
+      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+      assertThat(validatableResult is ValidatableActionResult.Success)
+
+      verify(exactly = 1) {
+        mockBookingRepository.save(
+          match {
+            it.crn == crn &&
+              it.premises == premises &&
+              it.arrivalDate == arrivalDate &&
+              it.departureDate == departureDate &&
+              it.application == application &&
+              it.status == BookingStatus.provisional
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(
+          match {
+            it.crn == crn &&
+              it.premises == premises &&
+              it.arrivalDate == arrivalDate &&
+              it.departureDate == departureDate &&
+              it.application == application
+          },
+        )
+      }
+      verify(exactly = 1) {
+        mockAssessmentService.closeAssessment(user, application.id)
+      }
+      verify(exactly = 1) {
+        Sentry.captureException(any())
+      }
+    }
+
+    @Test
+    fun `createTemporaryAccommodationBooking saves Booking and creates domain event and log error when closing assessment failed with runtime exception`() {
+      val crn = "CRN123"
+      val arrivalDate = LocalDate.parse("2023-02-23")
+      val departureDate = LocalDate.parse("2023-02-24")
+
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val premises = TemporaryAccommodationPremisesEntityFactory()
+        .withUnitTestControlTestProbationAreaAndLocalAuthority()
+        .produce()
+
+      val room = RoomEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      val bed = BedEntityFactory()
+        .withRoom(room)
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withProbationRegion(user.probationRegion)
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every {
+        mockLostBedsRepository.findByBedIdAndOverlappingDate(
+          bed.id,
+          arrivalDate,
+          departureDate,
+          null,
+        )
+      } returns listOf()
+      every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+
+      every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
+
+      every { mockAssessmentService.closeAssessment(user, application.id) } throws RuntimeException("A database exception")
+
+      mockkStatic(Sentry::class)
+      every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
+
+      val authorisableResult = bookingService.createTemporaryAccommodationBooking(
+        user,
+        premises,
+        crn,
+        "NOMS123",
+        arrivalDate,
+        departureDate,
+        bed.id,
+        application.id,
+        false,
+      )
+      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+
+      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+      assertThat(validatableResult is ValidatableActionResult.Success)
+
+      verify(exactly = 1) {
+        mockBookingRepository.save(
+          match {
+            it.crn == crn &&
+              it.premises == premises &&
+              it.arrivalDate == arrivalDate &&
+              it.departureDate == departureDate &&
+              it.application == application &&
+              it.status == BookingStatus.provisional
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(
+          match {
+            it.crn == crn &&
+              it.premises == premises &&
+              it.arrivalDate == arrivalDate &&
+              it.departureDate == departureDate &&
+              it.application == application
+          },
+        )
+      }
+      verify(exactly = 1) {
+        mockAssessmentService.closeAssessment(user, application.id)
+      }
+    }
+
+    @Test
+    fun `createTemporaryAccommodationBooking not closing assessments and returns FieldValidationError if Application is provided and does not exist`() {
+      val crn = "CRN123"
+      val arrivalDate = LocalDate.parse("2023-02-23")
+      val departureDate = LocalDate.parse("2023-02-24")
+      val assessmentId = UUID.randomUUID()
+
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val premises = TemporaryAccommodationPremisesEntityFactory()
+        .withUnitTestControlTestProbationAreaAndLocalAuthority()
+        .produce()
+
+      val room = RoomEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      val bed = BedEntityFactory()
+        .withRoom(room)
+        .produce()
+
+      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every {
+        mockLostBedsRepository.findByBedIdAndOverlappingDate(
+          bed.id,
+          arrivalDate,
+          departureDate,
+          null,
+        )
+      } returns listOf()
+      every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
+      every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+      val authorisableResult = bookingService.createTemporaryAccommodationBooking(
+        user,
+        premises,
+        crn,
+        "NOMS123",
+        arrivalDate,
+        departureDate,
+        bed.id,
+        assessmentId,
+        false,
+      )
+      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+
+      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
+      assertThat(validatableResult is ValidatableActionResult.FieldValidationError)
+
+      assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+        entry("$.assessmentId", "doesNotExist"),
+      )
+
+      verify(exactly = 0) {
+        mockAssessmentService.closeAssessment(user, assessmentId)
+      }
+    }
+
+    @Test
+    fun `createTemporaryAccommodationBooking fail to save booking and not closing assessment when saving booking triggered Database exception`() {
+      val crn = "CRN123"
+      val arrivalDate = LocalDate.parse("2023-02-23")
+      val departureDate = LocalDate.parse("2023-02-24")
+
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val premises = TemporaryAccommodationPremisesEntityFactory()
+        .withUnitTestControlTestProbationAreaAndLocalAuthority()
+        .produce()
+
+      val room = RoomEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      val bed = BedEntityFactory()
+        .withRoom(room)
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withProbationRegion(user.probationRegion)
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+
+      every { mockBookingRepository.save(any()) } throws RuntimeException("DB exception")
+
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every {
+        mockLostBedsRepository.findByBedIdAndOverlappingDate(
+          bed.id,
+          arrivalDate,
+          departureDate,
+          null,
+        )
+      } returns listOf()
+      every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+
+      every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
+
+      every { mockAssessmentService.closeAssessment(user, application.id) } returns AuthorisableActionResult.Success(ValidatableActionResult.Success(assessment))
+
+      mockkStatic(Sentry::class)
+
+      assertThatExceptionOfType(RuntimeException::class.java)
+        .isThrownBy {
+          bookingService.createTemporaryAccommodationBooking(
+            user,
+            premises,
+            crn,
+            "NOMS123",
+            arrivalDate,
+            departureDate,
+            bed.id,
+            application.id,
+            false,
+          )
+        }
+
+      verify(exactly = 1) {
+        mockBookingRepository.save(
+          match {
+            it.crn == crn &&
+              it.premises == premises &&
+              it.arrivalDate == arrivalDate &&
+              it.departureDate == departureDate &&
+              it.application == application &&
+              it.status == BookingStatus.provisional
+          },
+        )
+      }
+
+      verify(exactly = 0) {
+        mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(
+          match {
+            it.crn == crn &&
+              it.premises == premises &&
+              it.arrivalDate == arrivalDate &&
+              it.departureDate == departureDate &&
+              it.application == application
+          },
+        )
+      }
+      verify(exactly = 0) {
+        mockAssessmentService.closeAssessment(user, application.id)
       }
     }
   }
