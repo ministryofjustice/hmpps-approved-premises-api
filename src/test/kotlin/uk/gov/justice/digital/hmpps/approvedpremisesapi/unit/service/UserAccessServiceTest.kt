@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -1491,5 +1492,43 @@ class UserAccessServiceTest {
     user.addRoleForUnitTest(CAS3_REFERRER)
 
     assertThat(userAccessService.userHasAllRegionsAccess(user)).isFalse()
+  }
+
+  @Nested
+  inner class UserCanWithdrawApplication {
+
+    @Test
+    fun `userCanWithdrawApplication returns true if application was created by user`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      assertThat(userAccessService.userCanWithdrawApplication(user, application)).isTrue
+    }
+
+    @Test
+    fun `userCanWithdrawApplication returns false if application was not created by user`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(anotherUserInRegion)
+        .produce()
+
+      assertThat(userAccessService.userCanWithdrawApplication(user, application)).isFalse()
+    }
+
+    @Test
+    fun `userCanWithdrawApplication returns false if not CAS1`() {
+      val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
+        .withSchema("{}")
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(anotherUserInRegion)
+        .withApplicationSchema(newestJsonSchema)
+        .withProbationRegion(probationRegion)
+        .withSubmittedAt(null)
+        .produce()
+
+      assertThat(userAccessService.userCanWithdrawApplication(user, application)).isFalse
+    }
   }
 }

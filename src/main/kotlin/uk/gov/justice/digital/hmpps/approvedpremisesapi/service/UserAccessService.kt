@@ -191,6 +191,11 @@ class UserAccessService(
 
     else -> false
   }
+
+  fun userCanWithdrawApplication(user: UserEntity, application: ApplicationEntity): Boolean = when (application) {
+    is ApprovedPremisesApplicationEntity -> application.createdByUser == user
+    else -> false
+  }
 }
 
 enum class ApprovedPremisesApplicationAccessLevel {
