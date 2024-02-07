@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 
 data class Withdrawables(
+  val application: Boolean,
   val placementRequests: List<PlacementRequestEntity>,
   val placementApplications: List<PlacementApplicationEntity>,
   val bookings: List<BookingEntity>,

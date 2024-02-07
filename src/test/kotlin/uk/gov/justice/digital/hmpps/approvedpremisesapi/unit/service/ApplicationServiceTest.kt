@@ -2178,6 +2178,9 @@ class ApplicationServiceTest {
     }
   }
 
+  @Nested
+  inner class IsWithdrawable
+
   private fun userWithUsername(username: String) = UserEntityFactory()
     .withDeliusUsername(username)
     .withProbationRegion(

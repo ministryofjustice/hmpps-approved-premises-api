@@ -2276,7 +2276,7 @@ paths:
     get:
       tags:
         - Operations on applications
-      summary: Get withdrawable items associated with this application
+      summary: Returns a list of withdrawable items associated with this application, including the application itself, if withdrawable
       parameters:
         - name: applicationId
           in: path

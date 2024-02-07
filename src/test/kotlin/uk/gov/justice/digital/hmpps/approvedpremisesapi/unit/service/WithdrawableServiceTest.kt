@@ -6,6 +6,8 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -23,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
@@ -35,12 +38,14 @@ class WithdrawableServiceTest {
   private val mockBookingService = mockk<BookingService>()
   private val mockPlacementApplicationService = mockk<PlacementApplicationService>()
   private val mockUserAccessService = mockk<UserAccessService>()
+  private val mockApplicationService = mockk<ApplicationService>()
 
   private val withdrawableService = WithdrawableService(
     mockPlacementRequestService,
     mockBookingService,
     mockPlacementApplicationService,
     mockUserAccessService,
+    mockApplicationService,
   )
 
   val probationRegion = ProbationRegionEntityFactory()
@@ -96,16 +101,24 @@ class WithdrawableServiceTest {
 
   @BeforeEach
   fun setup() {
-    every { mockPlacementRequestService.getWithdrawablePlacementRequests(application) } returns placementRequests
-    every { mockPlacementApplicationService.getWithdrawablePlacementApplications(application) } returns placementApplications
-    every { mockBookingService.getCancelleableBookings(application) } returns bookings
+    every {
+      mockPlacementRequestService.getWithdrawablePlacementRequests(application)
+    } returns placementRequests
+    every {
+      mockPlacementApplicationService.getWithdrawablePlacementApplications(application)
+    } returns placementApplications
+    every {
+      mockBookingService.getCancelleableBookings(application)
+    } returns bookings
   }
 
   @Test
-  fun `allWithdrawables returns all withdrawables as a Withdrawables object`() {
+  fun `allWithdrawables returns all withdrawable information`() {
+    every { mockApplicationService.isWithdrawable(application, user) } returns true
     every { mockUserAccessService.currentUserCanManagePremisesBookings(any()) } returns true
-    val result = withdrawableService.allWithdrawables(application)
+    val result = withdrawableService.allWithdrawables(application, user)
 
+    assertThat(result.application).isEqualTo(true)
     assertThat(result.bookings).isEqualTo(bookings)
     assertThat(result.placementRequests).isEqualTo(placementRequests)
     assertThat(result.placementApplications).isEqualTo(placementApplications)
@@ -117,13 +130,24 @@ class WithdrawableServiceTest {
     }
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `allWithdrawables returns if application can't be withdrawn`(canBeWithdrawn: Boolean) {
+    every { mockApplicationService.isWithdrawable(application, user) } returns canBeWithdrawn
+    every { mockUserAccessService.currentUserCanManagePremisesBookings(any()) } returns true
+    val result = withdrawableService.allWithdrawables(application, user)
+
+    assertThat(result.application).isEqualTo(canBeWithdrawn)
+  }
+
   @Test
   fun `allWithdrawables filters out bookings that the user cannot manage by default`() {
+    every { mockApplicationService.isWithdrawable(application, user) } returns true
     every { mockUserAccessService.currentUserCanManagePremisesBookings(bookings[0].premises) } returns true
     every { mockUserAccessService.currentUserCanManagePremisesBookings(bookings[1].premises) } returns false
     every { mockUserAccessService.currentUserCanManagePremisesBookings(bookings[2].premises) } returns false
 
-    val result = withdrawableService.allWithdrawables(application)
+    val result = withdrawableService.allWithdrawables(application, user)
 
     assertThat(result.bookings).isEqualTo(listOf(bookings[0]))
     assertThat(result.placementRequests).isEqualTo(placementRequests)
@@ -137,8 +161,9 @@ class WithdrawableServiceTest {
   }
 
   @Test
-  fun `allWithdrawables returns all withdrawables without filtering bookings when onlyUserManageableBookings is true`() {
-    val result = withdrawableService.allWithdrawables(application, false)
+  fun `allWithdrawables doesnt filter out bookings when onlyUserManageableBookings is false`() {
+    every { mockApplicationService.isWithdrawable(application, user) } returns true
+    val result = withdrawableService.allWithdrawables(application, user, false)
 
     assertThat(result.bookings).isEqualTo(bookings)
     assertThat(result.placementRequests).isEqualTo(placementRequests)
@@ -151,6 +176,7 @@ class WithdrawableServiceTest {
 
   @Test
   fun `withdrawAllForApplication withdraws all withdrawable entities`() {
+    every { mockApplicationService.isWithdrawable(application, user) } returns true
     every { mockUserAccessService.currentUserCanManagePremisesBookings(any()) } returns true
 
     every {

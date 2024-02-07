@@ -136,6 +136,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.jsonForObject
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.Instant
@@ -2674,7 +2675,7 @@ class ApplicationTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .json(objectMapper.writeValueAsString(expected))
+          .jsonForObject(expected)
       }
     }
 
@@ -3090,30 +3091,60 @@ class ApplicationTest : IntegrationTestBase() {
   inner class GetWithdrawables {
 
     @Test
-    fun `Get withdrawables for an application returns nothing if no associated withdrawables`() {
-      `Given a User` { user, jwt ->
+    fun `Get withdrawables for an application returns empty list if no associated withdrawables`() {
+      `Given a User` { applicationCreator, _ ->
+        `Given a User` { _, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+            val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, applicationCreator, "TEAM")
 
-        val application = produceAndPersistBasicApplication("ABC123", user, "TEAM")
+            webTestClient.get()
+              .uri("/applications/${application.id}/withdrawables")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .json("[]")
+          }
+        }
+      }
+    }
 
-        webTestClient.get()
-          .uri("/applications/${application.id}/withdrawables")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json("[]")
+    @Test
+    fun `Get withdrawables for an application returns the application if user is application creator`() {
+      `Given a User` { applicationCreator, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, applicationCreator, "TEAM")
+
+          val expected = listOf(
+            Withdrawable(
+              application.id,
+              WithdrawableType.application,
+              emptyList(),
+            ),
+          )
+
+          webTestClient.get()
+            .uri("/applications/${application.id}/withdrawables")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonForObject(expected)
+        }
       }
     }
 
     @Test
     fun `Get withdrawables for an application returns withdrawable placement requests`() {
       `Given a User` { applicant, _ ->
-        `Given a User` { user, jwt ->
+        `Given a User` { allocatedTo, jwt ->
           `Given an Offender` { offenderDetails, _ ->
 
-            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
+            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
 
             val placementRequest1 = produceAndPersistPlacementRequest(application)
             val placementRequest2 = produceAndPersistPlacementRequest(application)
@@ -3187,7 +3218,7 @@ class ApplicationTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
               .expectBody()
-              .json(objectMapper.writeValueAsString(expected))
+              .jsonForObject(expected)
           }
         }
       }
@@ -3196,10 +3227,10 @@ class ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Get withdrawables for an application returns withdrawable placement applications`() {
       `Given a User` { applicant, _ ->
-        `Given a User` { user, jwt ->
+        `Given a User` { allocatedTo, jwt ->
           `Given an Offender` { offenderDetails, _ ->
 
-            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
+            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
 
             val submittedApplication1ExpectedArrival1 = LocalDate.now().plusDays(1)
             val submittedApplication1Duration1 = 5
@@ -3279,7 +3310,7 @@ class ApplicationTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
               .expectBody()
-              .json(objectMapper.writeValueAsString(expected))
+              .jsonForObject(expected)
           }
         }
       }
@@ -3289,10 +3320,10 @@ class ApplicationTest : IntegrationTestBase() {
     @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
     fun `Get withdrawables for an application returns withdrawable bookings when a user can manage bookings`(role: UserRole) {
       `Given a User` { applicant, _ ->
-        `Given a User`(roles = listOf(role)) { user, jwt ->
+        `Given a User`(roles = listOf(role)) { allocatedTo, jwt ->
           `Given an Offender` { offenderDetails, _ ->
 
-            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
+            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
 
             val booking1expectedArrival = LocalDate.now().plusDays(1)
             val booking1expectedDeparture = LocalDate.now().plusDays(6)
@@ -3350,7 +3381,7 @@ class ApplicationTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
               .expectBody()
-              .json(objectMapper.writeValueAsString(expected))
+              .jsonForObject(expected)
           }
         }
       }
@@ -3359,10 +3390,10 @@ class ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Get withdrawables for all possible types when a user can manage bookings`() {
       `Given a User` { applicant, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { allocatedTo, jwt ->
           `Given an Offender` { offenderDetails, _ ->
 
-            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
+            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
 
             val booking1ExpectedArrival = LocalDate.now().plusDays(1)
             val booking1ExpectedDeparture = LocalDate.now().plusDays(6)
@@ -3408,7 +3439,7 @@ class ApplicationTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
               .expectBody()
-              .json(objectMapper.writeValueAsString(expected))
+              .jsonForObject(expected)
           }
         }
       }
@@ -3416,53 +3447,56 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get withdrawables for all possible types filters out bookings when a user cannot manage bookings`() {
-      `Given a User` { applicant, _ ->
-        `Given a User` { user, jwt ->
-          `Given an Offender` { offenderDetails, _ ->
+      `Given a User` { applicant, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
 
-            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, user, offenderDetails)
+          val (application, _) = produceAndPersistApplicationAndAssessment(applicant, applicant, offenderDetails)
 
-            val booking1ExpectedArrival = LocalDate.now().plusDays(1)
-            val booking1ExpectedDeparture = LocalDate.now().plusDays(6)
-            produceAndPersistBooking(
-              application,
-              booking1ExpectedArrival,
-              booking1ExpectedDeparture,
-            )
+          val booking1ExpectedArrival = LocalDate.now().plusDays(1)
+          val booking1ExpectedDeparture = LocalDate.now().plusDays(6)
+          produceAndPersistBooking(
+            application,
+            booking1ExpectedArrival,
+            booking1ExpectedDeparture,
+          )
 
-            val placementApplicationExpectedArrival = LocalDate.now().plusDays(1)
-            val placementApplicationDuration = 5
+          val placementApplicationExpectedArrival = LocalDate.now().plusDays(1)
+          val placementApplicationDuration = 5
 
-            val placementApplication = produceAndPersistPlacementApplication(
-              application,
-              listOf(placementApplicationExpectedArrival to placementApplicationDuration),
-            )
+          val placementApplication = produceAndPersistPlacementApplication(
+            application,
+            listOf(placementApplicationExpectedArrival to placementApplicationDuration),
+          )
 
-            val placementRequest = produceAndPersistPlacementRequest(application)
+          val placementRequest = produceAndPersistPlacementRequest(application)
 
-            val expected = listOf(
-              Withdrawable(
-                placementApplication.id,
-                WithdrawableType.placementApplication,
-                listOf(datePeriodForDuration(placementApplicationExpectedArrival, placementApplicationDuration)),
-              ),
-              Withdrawable(
-                placementRequest.id,
-                WithdrawableType.placementRequest,
-                listOf(datePeriodForDuration(placementRequest.expectedArrival, placementRequest.duration)),
-              ),
-            )
+          val expected = listOf(
+            Withdrawable(
+              application.id,
+              WithdrawableType.application,
+              emptyList(),
+            ),
+            Withdrawable(
+              placementApplication.id,
+              WithdrawableType.placementApplication,
+              listOf(datePeriodForDuration(placementApplicationExpectedArrival, placementApplicationDuration)),
+            ),
+            Withdrawable(
+              placementRequest.id,
+              WithdrawableType.placementRequest,
+              listOf(datePeriodForDuration(placementRequest.expectedArrival, placementRequest.duration)),
+            ),
+          )
 
-            webTestClient.get()
-              .uri("/applications/${application.id}/withdrawables")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.approvedPremises.value)
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(objectMapper.writeValueAsString(expected))
-          }
+          webTestClient.get()
+            .uri("/applications/${application.id}/withdrawables")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonForObject(expected)
         }
       }
     }
