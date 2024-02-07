@@ -1640,6 +1640,10 @@ components:
               format: date-time
             telephoneNumber:
               type: string
+            statusUpdates:
+              type: array
+              items:
+                $ref: '_shared.yml#/components/schemas/Cas2StatusUpdate'
           required:
             - createdBy
             - schemaVersion

@@ -2083,6 +2083,10 @@ components:
               format: date-time
             telephoneNumber:
               type: string
+            statusUpdates:
+              type: array
+              items:
+                $ref: '#/components/schemas/Cas2StatusUpdate'
           required:
             - createdBy
             - schemaVersion
