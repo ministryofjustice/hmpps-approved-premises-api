@@ -231,7 +231,7 @@ jobs:
           path: build/reports/tests
   cas1_e2e_tests:
     docker:
-      - image: mcr.microsoft.com/playwright:v1.39.0-focal
+      - image: mcr.microsoft.com/playwright:v1.41.2-focal
     circleci_ip_ranges: true # opt-in to jobs running on a restricted set of IPs
     steps:
       - run:
