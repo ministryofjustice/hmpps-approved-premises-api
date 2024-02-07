@@ -287,6 +287,10 @@ class PlacementRequestService(
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
 
+    if(placementRequest.isWithdrawn) {
+      return AuthorisableActionResult.Success(Unit)
+    }
+
     if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && placementRequest.application.createdByUser != user) {
       return AuthorisableActionResult.Unauthorised()
     }

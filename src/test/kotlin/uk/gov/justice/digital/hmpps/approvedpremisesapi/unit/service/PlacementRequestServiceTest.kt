@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.Runs
+import io.mockk.called
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -579,7 +580,7 @@ class PlacementRequestServiceTest {
         .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
         .produce()
 
-      createPlacementRequestTest(application, user, reason)
+      ensurePlacementRequestWithdrawn(application, user, reason)
     }
 
     @ParameterizedTest
@@ -596,10 +597,54 @@ class PlacementRequestServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      createPlacementRequestTest(application, user, reason)
+      ensurePlacementRequestWithdrawn(application, user, reason)
     }
 
-    private fun createPlacementRequestTest(application: ApprovedPremisesApplicationEntity, user: UserEntity, reason: PlacementRequestWithdrawalReason?) {
+    @Test
+    fun `withdrawPlacementRequest is idempotent if placement request already withdrawn`() {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+      val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(user)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withId(placementRequestId)
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withAllocatedToUser(assigneeUser)
+        .withIsWithdrawn(true)
+        .produce()
+
+      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
+      every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+
+      val result = placementRequestService.withdrawPlacementRequest(
+        placementRequestId,
+        user,
+        PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+
+      verify { placementRequestRepository.save(any()) wasNot called }
+    }
+
+    private fun ensurePlacementRequestWithdrawn(application: ApprovedPremisesApplicationEntity, user: UserEntity, reason: PlacementRequestWithdrawalReason?) {
       val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
