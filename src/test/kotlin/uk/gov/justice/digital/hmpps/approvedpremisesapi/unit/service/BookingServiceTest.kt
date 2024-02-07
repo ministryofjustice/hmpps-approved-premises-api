@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.Called
 import io.mockk.Runs
+import io.mockk.called
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -2077,7 +2078,7 @@ class BookingServiceTest {
       .produce()
 
     @Test
-    fun `createCancellation returns GeneralValidationError with correct message when Booking already has a Cancellation`() {
+    fun `createCancellation is idempotent if the booking is already cancelled`() {
       val bookingEntity = BookingEntityFactory()
         .withPremises(premises)
         .produce()
@@ -2097,8 +2098,11 @@ class BookingServiceTest {
         user = user,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
-      assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("This Booking already has a Cancellation set")
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+
+      assertThat(result.entity).isEqualTo(cancellationEntity)
+      verify { mockBookingRepository.save(any()) wasNot called }
     }
 
     @Test

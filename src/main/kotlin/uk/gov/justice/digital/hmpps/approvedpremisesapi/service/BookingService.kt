@@ -1194,8 +1194,9 @@ class BookingService(
     reasonId: UUID,
     notes: String?,
   ) = validated<CancellationEntity> {
-    if (booking.premises is ApprovedPremisesEntity && booking.cancellation != null) {
-      return generalError("This Booking already has a Cancellation set")
+    val existingCancellation = booking.cancellation
+    if (booking.premises is ApprovedPremisesEntity && existingCancellation != null) {
+      return success(existingCancellation)
     }
 
     val reason = cancellationReasonRepository.findByIdOrNull(reasonId)

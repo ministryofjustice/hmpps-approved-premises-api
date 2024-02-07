@@ -2712,49 +2712,6 @@ class BookingTest : IntegrationTestBase() {
     }
   }
 
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `Create Cancellation on Approved Premises Booking when a cancellation already exists returns 400 Bad Request`(role: UserRole) {
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
-      val booking = bookingEntityFactory.produceAndPersist {
-        withYieldedPremises {
-          approvedPremisesEntityFactory.produceAndPersist {
-            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-            }
-          }
-        }
-      }
-
-      val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
-        withServiceScope("*")
-      }
-
-      val cancellation = cancellationEntityFactory.produceAndPersist {
-        withBooking(booking)
-        withReason(cancellationReason)
-      }
-      booking.cancellations = mutableListOf(cancellation)
-
-      webTestClient.post()
-        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewCancellation(
-            date = LocalDate.parse("2022-08-18"),
-            reason = cancellationReason.id,
-            notes = "Corrected date",
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isBadRequest
-        .expectBody()
-        .jsonPath(".detail").isEqualTo("This Booking already has a Cancellation set")
-    }
-  }
-
   @Test
   fun `Create Cancellation on Temporary Accommodation Booking on a premises that's not in the user's region returns 403 Forbidden`() {
     `Given a User` { userEntity, jwt ->
