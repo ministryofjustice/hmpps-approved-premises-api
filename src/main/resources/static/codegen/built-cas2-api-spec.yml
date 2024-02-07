@@ -2304,8 +2304,8 @@ components:
           type: string
           format: uuid
         createdByUser:
-          $ref: '#/components/schemas/User'
-        note:
+          $ref: '#/components/schemas/NomisUser'
+        body:
           type: string
         createdAt:
           type: string

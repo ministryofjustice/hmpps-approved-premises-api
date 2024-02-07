@@ -6,7 +6,9 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.ApplicationsCas2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
@@ -64,6 +66,14 @@ class ApplicationsController(
     if (application != null) {
       return ResponseEntity.ok(getPersonDetailAndTransform(application, user))
     }
+    throw NotFoundProblem(applicationId, "Application")
+  }
+
+  override fun applicationsApplicationIdNotesPost(applicationId: UUID, body: NewCas2ApplicationNote): ResponseEntity<Cas2ApplicationNote> {
+    val user = userService.getUserForRequest()
+
+    val note = applicationService.createApplicationNote(applicationId, user, body)
+
     throw NotFoundProblem(applicationId, "Application")
   }
 

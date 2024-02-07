@@ -10,10 +10,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
@@ -130,6 +133,54 @@ class ApplicationService(
 
       return success(createdApplication.apply { schemaUpToDate = true })
     }
+
+  fun createApplicationNote(applicationId: UUID, user: NomisUserEntity, body: NewCas2ApplicationNote):
+    AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationNote>> {
+    val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
+      ?: return AuthorisableActionResult.NotFound()
+
+    if (application !is Cas2ApplicationEntity) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("onlyCas2Supported"),
+      )
+    }
+
+    val user = userService.getUserForRequest()
+
+    if (application.createdByUser != user) {
+      return AuthorisableActionResult.Unauthorised()
+    }
+
+    if (!application.schemaUpToDate) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The schema version is outdated"),
+      )
+    }
+
+    if (application.submittedAt == null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has not been submitted"),
+      )
+    }
+
+    val note = Cas2ApplicationNoteEntity(
+      id = UUID.randomUUID(),
+      application = application,
+      body = body.note,
+      createdAt = OffsetDateTime.now(),
+      createdByUser = user,
+    )
+
+    application.apply {
+      this.notes?.plusAssign(note)
+    }
+
+    val savedApplication = applicationRepository.save(application)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(Cas2ApplicationNote(id = note.id, body = note.body)),
+    )
+  }
 
   fun updateApplication(applicationId: UUID, data: String?, username: String?):
     AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
