@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
@@ -1237,75 +1238,85 @@ class BookingService(
     }
 
     if (shouldCreateDomainEventForBooking(booking, user)) {
-      val dateTime = OffsetDateTime.now()
-
-      val domainEventId = UUID.randomUUID()
-
-      val offenderDetails = when (
-        val offenderDetailsResult = offenderService.getOffenderByCrn(
-          booking.crn,
-          user!!.deliusUsername,
-          user.hasQualification(UserQualification.LAO),
-        )
-      ) {
-        is AuthorisableActionResult.Success -> offenderDetailsResult.entity
-        is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Unauthorised")
-        is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Not Found")
-      }
-
-      val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
-      val staffDetails = when (staffDetailsResult) {
-        is ClientResult.Success -> staffDetailsResult.body
-        is ClientResult.Failure -> staffDetailsResult.throwException()
-      }
-
-      val (applicationId, eventNumber) = getApplicationDetailsForBooking(booking)
-
-      val approvedPremises = booking.premises as ApprovedPremisesEntity
-
-      domainEventService.saveBookingCancelledEvent(
-        DomainEvent(
-          id = domainEventId,
-          applicationId = applicationId,
-          crn = booking.crn,
-          occurredAt = dateTime.toInstant(),
-          bookingId = booking.id,
-          data = BookingCancelledEnvelope(
-            id = domainEventId,
-            timestamp = dateTime.toInstant(),
-            eventType = "approved-premises.booking.cancelled",
-            eventDetails = BookingCancelled(
-              applicationId = applicationId,
-              applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
-              bookingId = booking.id,
-              personReference = PersonReference(
-                crn = booking.crn,
-                noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
-              ),
-              deliusEventNumber = eventNumber,
-              premises = Premises(
-                id = approvedPremises.id,
-                name = approvedPremises.name,
-                apCode = approvedPremises.apCode,
-                legacyApCode = approvedPremises.qCode,
-                localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
-              ),
-              cancelledBy = StaffMember(
-                staffCode = staffDetails.staffCode,
-                staffIdentifier = staffDetails.staffIdentifier,
-                forenames = staffDetails.staff.forenames,
-                surname = staffDetails.staff.surname,
-                username = staffDetails.username,
-              ),
-              cancelledAt = cancelledAt.atTime(0, 0).toInstant(ZoneOffset.UTC),
-              cancellationReason = reason.name,
-            ),
-          ),
-        ),
-      )
+      createCas1CancellationDomainEvent(booking, user, cancelledAt, reason)
     }
 
     return success(cancellationEntity)
+  }
+
+  @SuppressWarnings("LongMethod")
+  private fun createCas1CancellationDomainEvent(
+    booking: BookingEntity,
+    user: UserEntity?,
+    cancelledAt: LocalDate,
+    reason: CancellationReasonEntity,
+  ) {
+    val dateTime = OffsetDateTime.now()
+
+    val domainEventId = UUID.randomUUID()
+
+    val offenderDetails = when (
+      val offenderDetailsResult = offenderService.getOffenderByCrn(
+        booking.crn,
+        user!!.deliusUsername,
+        user.hasQualification(UserQualification.LAO),
+      )
+    ) {
+      is AuthorisableActionResult.Success -> offenderDetailsResult.entity
+      is AuthorisableActionResult.Unauthorised -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Unauthorised")
+      is AuthorisableActionResult.NotFound -> throw RuntimeException("Unable to get Offender Details when creating Booking Cancelled Domain Event: Not Found")
+    }
+
+    val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
+    val staffDetails = when (staffDetailsResult) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
+    val (applicationId, eventNumber) = getApplicationDetailsForBooking(booking)
+
+    val approvedPremises = booking.premises as ApprovedPremisesEntity
+
+    domainEventService.saveBookingCancelledEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = applicationId,
+        crn = booking.crn,
+        occurredAt = dateTime.toInstant(),
+        bookingId = booking.id,
+        data = BookingCancelledEnvelope(
+          id = domainEventId,
+          timestamp = dateTime.toInstant(),
+          eventType = "approved-premises.booking.cancelled",
+          eventDetails = BookingCancelled(
+            applicationId = applicationId,
+            applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
+            bookingId = booking.id,
+            personReference = PersonReference(
+              crn = booking.crn,
+              noms = offenderDetails.otherIds.nomsNumber ?: "Unknown NOMS Number",
+            ),
+            deliusEventNumber = eventNumber,
+            premises = Premises(
+              id = approvedPremises.id,
+              name = approvedPremises.name,
+              apCode = approvedPremises.apCode,
+              legacyApCode = approvedPremises.qCode,
+              localAuthorityAreaName = approvedPremises.localAuthorityArea!!.name,
+            ),
+            cancelledBy = StaffMember(
+              staffCode = staffDetails.staffCode,
+              staffIdentifier = staffDetails.staffIdentifier,
+              forenames = staffDetails.staff.forenames,
+              surname = staffDetails.staff.surname,
+              username = staffDetails.username,
+            ),
+            cancelledAt = cancelledAt.atTime(0, 0).toInstant(ZoneOffset.UTC),
+            cancellationReason = reason.name,
+          ),
+        ),
+      ),
+    )
   }
 
   private fun createCas3Cancellation(
