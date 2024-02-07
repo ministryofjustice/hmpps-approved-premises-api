@@ -189,7 +189,7 @@ class TaskTransformerTest {
   }
 
   @Nested
-  inner class TransformPlacementApplicationsTest {
+  inner class TransformPlacementApplicationToTaskTest {
     private val placementApplication = placementApplicationFactory
       .withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
       .withData(null)
@@ -295,7 +295,7 @@ class TaskTransformerTest {
   }
 
   @Nested
-  inner class TransformPlacementRequestsTest {
+  inner class TransformPlacementRequestToTaskTest {
 
     val placementRequest = placementRequestFactory.produce()
     val application = placementRequest.application

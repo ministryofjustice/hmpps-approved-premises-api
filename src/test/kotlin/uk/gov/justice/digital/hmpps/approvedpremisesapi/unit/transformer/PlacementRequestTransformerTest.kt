@@ -5,6 +5,8 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.BookingSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
@@ -322,4 +324,41 @@ class PlacementRequestTransformerTest {
       ),
     )
   }
+
+  @ParameterizedTest
+  @EnumSource(value = ReleaseTypeOption::class)
+  fun `Release types are transformed correctly`(releaseTypeOption: ReleaseTypeOption) {
+    val placementRequirementsEntity = placementRequirementsFactory
+      .withEssentialCriteria(
+        listOf(
+          CharacteristicEntityFactory().withPropertyName("isSemiSpecialistMentalHealth").produce(),
+          CharacteristicEntityFactory().withPropertyName("isRecoveryFocussed").produce(),
+          CharacteristicEntityFactory().withPropertyName("someOtherPropertyName").produce(),
+        ),
+      )
+      .withDesirableCriteria(
+        listOf(
+          CharacteristicEntityFactory().withPropertyName("isWheelchairDesignated").produce(),
+          CharacteristicEntityFactory().withPropertyName("isSingle").produce(),
+          CharacteristicEntityFactory().withPropertyName("hasEnSuite").produce(),
+          CharacteristicEntityFactory().withPropertyName("somethingElse").produce(),
+        ),
+      )
+      .produce()
+
+    val placementRequestEntity = placementRequestFactory
+      .withPlacementRequirements(placementRequirementsEntity)
+      .withNotes("Some notes")
+      .produce()
+
+    application.releaseType = releaseTypeOption.name
+
+    val result = placementRequestTransformer.transformJpaToApi(
+      placementRequestEntity,
+      PersonInfoResult.Success.Full(offenderDetailSummary.otherIds.crn, offenderDetailSummary, inmateDetail),
+    )
+
+    assertThat(result.releaseType).isEqualTo(releaseTypeOption)
+  }
+
 }
