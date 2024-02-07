@@ -2278,7 +2278,7 @@ paths:
     get:
       tags:
         - Operations on applications
-      summary: Get withdrawable items associated with this application
+      summary: Returns a list of withdrawable items associated with this application, including the application itself, if withdrawable
       parameters:
         - name: applicationId
           in: path
@@ -8581,6 +8581,7 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DatePeriod'
+          description: 0, 1 or more dates can be specified depending upon the WithdrawableType
       required:
         - id
         - type
@@ -8600,9 +8601,10 @@ components:
     WithdrawableType:
       type: string
       enum:
-        - placement_request
-        - placement_application
+        - application
         - booking
+        - placement_application
+        - placement_request
     WithdrawalReason:
       type: string
       enum:
