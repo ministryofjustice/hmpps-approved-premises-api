@@ -84,6 +84,8 @@ class PlacementRequestTransformer(
     "pss" -> ReleaseTypeOption.pss
     "inCommunity" -> ReleaseTypeOption.inCommunity
     "notApplicable" -> ReleaseTypeOption.notApplicable
+    "extendedDeterminateLicence" -> ReleaseTypeOption.extendedDeterminateLicence
+    "paroleDirectedLicence" -> ReleaseTypeOption.paroleDirectedLicence
     else -> throw RuntimeException("Unrecognised releaseType: $releaseType")
   }
 }
