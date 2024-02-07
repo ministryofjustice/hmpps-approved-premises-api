@@ -2675,7 +2675,7 @@ class ApplicationTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .json(objectMapper.writeValueAsString(expected))
+          .jsonForObject(expected)
       }
     }
 
@@ -3133,7 +3133,7 @@ class ApplicationTest : IntegrationTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .json(objectMapper.writeValueAsString(expected))
+            .jsonForObject(expected)
         }
       }
     }
@@ -3218,7 +3218,7 @@ class ApplicationTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
               .expectBody()
-              .json(objectMapper.writeValueAsString(expected))
+              .jsonForObject(expected)
           }
         }
       }
@@ -3310,7 +3310,7 @@ class ApplicationTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
               .expectBody()
-              .json(objectMapper.writeValueAsString(expected))
+              .jsonForObject(expected)
           }
         }
       }
@@ -3381,7 +3381,7 @@ class ApplicationTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
               .expectBody()
-              .json(objectMapper.writeValueAsString(expected))
+              .jsonForObject(expected)
           }
         }
       }
@@ -3439,7 +3439,7 @@ class ApplicationTest : IntegrationTestBase() {
               .expectStatus()
               .isOk
               .expectBody()
-              .json(objectMapper.writeValueAsString(expected))
+              .jsonForObject(expected)
           }
         }
       }
@@ -3496,7 +3496,7 @@ class ApplicationTest : IntegrationTestBase() {
             .expectStatus()
             .isOk
             .expectBody()
-            .json(objectMapper.writeValueAsString(expected))
+            .jsonForObject(expected)
         }
       }
     }
