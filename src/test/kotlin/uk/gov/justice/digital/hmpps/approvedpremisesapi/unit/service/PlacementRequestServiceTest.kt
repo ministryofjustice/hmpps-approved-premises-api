@@ -597,7 +597,7 @@ class PlacementRequestServiceTest {
     }
 
     @Test
-    fun `getWithdrawablePlacementRequests doesn't return placement requests with bookings`() {
+    fun `getWithdrawablePlacementRequests returns placement requests with bookings`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
         .produce()
@@ -606,16 +606,16 @@ class PlacementRequestServiceTest {
         .withUnitTestControlProbationRegion()
         .produce()
 
-      val placementRequestWithdrawable = createValidPlacementRequest(application, user)
+      val placementRequestWithoutBooking = createValidPlacementRequest(application, user)
 
       val placementRequestWithBooking = createValidPlacementRequest(application, user)
       placementRequestWithBooking.booking = BookingEntityFactory().withDefaultPremises().produce()
 
-      every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithdrawable, placementRequestWithBooking)
+      every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithoutBooking, placementRequestWithBooking)
 
       val result = placementRequestService.getWithdrawablePlacementRequests(application)
 
-      assertThat(result).isEqualTo(listOf(placementRequestWithdrawable))
+      assertThat(result).isEqualTo(listOf(placementRequestWithoutBooking, placementRequestWithBooking))
     }
   }
 
