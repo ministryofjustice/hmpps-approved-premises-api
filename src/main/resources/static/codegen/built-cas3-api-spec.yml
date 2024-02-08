@@ -3406,6 +3406,8 @@ components:
               $ref: '#/components/schemas/AnyValue'
             canBeWithdrawn:
               type: boolean
+            isWithdrawn:
+              type: boolean
           required:
             - id
             - createdByUserId
@@ -3415,6 +3417,8 @@ components:
             - assessmentId
             - assessmentCompletedAt
             - applicationCompletedAt
+            - canBeWithdrawn
+            - isWithdrawn
     NewPlacementApplication:
       type: object
       properties:

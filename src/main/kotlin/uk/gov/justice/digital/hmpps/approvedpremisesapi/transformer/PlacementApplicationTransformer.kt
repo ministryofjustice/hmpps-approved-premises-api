@@ -29,6 +29,7 @@ class PlacementApplicationTransformer(
       outdatedSchema = !jpa.schemaUpToDate,
       submittedAt = jpa.submittedAt?.toInstant(),
       canBeWithdrawn = jpa.canBeWithdrawn(),
+      isWithdrawn = jpa.isWithdrawn(),
     )
   }
 
