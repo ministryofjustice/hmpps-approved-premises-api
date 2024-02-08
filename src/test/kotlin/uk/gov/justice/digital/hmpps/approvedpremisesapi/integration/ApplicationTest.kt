@@ -3360,7 +3360,12 @@ class ApplicationTest : IntegrationTestBase() {
               withBooking(bookingWithArrival)
             }
 
-            val expected = listOf(
+            val expected = listOfNotNull(
+              if (role == UserRole.CAS1_WORKFLOW_MANAGER) Withdrawable(
+                application.id,
+                WithdrawableType.application,
+                emptyList(),
+              ) else null,
               Withdrawable(
                 booking1.id,
                 WithdrawableType.booking,
@@ -3414,6 +3419,11 @@ class ApplicationTest : IntegrationTestBase() {
             val placementRequest = produceAndPersistPlacementRequest(application)
 
             val expected = listOf(
+              Withdrawable(
+                application.id,
+                WithdrawableType.application,
+                emptyList(),
+              ),
               Withdrawable(
                 booking1.id,
                 WithdrawableType.booking,

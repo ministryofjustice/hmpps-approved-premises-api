@@ -1876,7 +1876,7 @@ class ApplicationServiceTest {
   }
 
   @Test
-  fun `withdrawApprovedPremisesApplication returns Unauthorised if Application not created by user`() {
+  fun `withdrawApprovedPremisesApplication returns Unauthorised if user access service denies withdrawal`() {
     val user = UserEntityFactory()
       .withUnitTestControlProbationRegion()
       .produce()
@@ -1890,6 +1890,7 @@ class ApplicationServiceTest {
       .produce()
 
     every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
+    every { mockUserAccessService.userCanWithdrawApplication(user, application) } returns false
 
     val result = applicationService.withdrawApprovedPremisesApplication(
       application.id,
@@ -1913,6 +1914,7 @@ class ApplicationServiceTest {
       .produce()
 
     every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
+    every { mockUserAccessService.userCanWithdrawApplication(user, application) } returns true
 
     val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(
       application.id,
@@ -1943,6 +1945,7 @@ class ApplicationServiceTest {
       .produce()
 
     every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
+    every { mockUserAccessService.userCanWithdrawApplication(user, application) } returns true
 
     val authorisableActionResult =
       applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", null)
@@ -1970,6 +1973,7 @@ class ApplicationServiceTest {
       .produce()
 
     every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
+    every { mockUserAccessService.userCanWithdrawApplication(user, application) } returns true
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
@@ -2045,6 +2049,7 @@ class ApplicationServiceTest {
       .produce()
 
     every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
+    every { mockUserAccessService.userCanWithdrawApplication(user, application) } returns true
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
@@ -2118,6 +2123,7 @@ class ApplicationServiceTest {
       .produce()
 
     every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
+    every { mockUserAccessService.userCanWithdrawApplication(user, application) } returns true
     every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
     every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs

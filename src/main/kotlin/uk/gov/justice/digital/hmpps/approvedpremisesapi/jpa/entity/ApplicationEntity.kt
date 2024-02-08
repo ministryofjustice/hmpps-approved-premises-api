@@ -350,6 +350,7 @@ class ApprovedPremisesApplicationEntity(
 
   fun getLatestPlacementRequest(): PlacementRequestEntity? = this.placementRequests.maxByOrNull { it.createdAt }
   fun getLatestBooking(): BookingEntity? = getLatestPlacementRequest()?.booking
+  fun isSubmitted() = submittedAt != null
 }
 
 @Repository
