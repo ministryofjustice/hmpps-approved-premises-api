@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
+import io.mockk.Called
 import io.mockk.Runs
 import io.mockk.called
 import io.mockk.every
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
+import org.slf4j.Logger
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -44,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -572,7 +575,7 @@ class PlacementRequestServiceTest {
     @EnumSource(PlacementRequestWithdrawalReason::class)
     @NullSource
     fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true for cas workflow manager`(
-      reason: PlacementRequestWithdrawalReason?
+      reason: PlacementRequestWithdrawalReason?,
     ) {
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
@@ -606,13 +609,15 @@ class PlacementRequestServiceTest {
           },
         )
       }
+
+      verify { bookingService wasNot Called }
     }
 
     @ParameterizedTest
     @EnumSource(PlacementRequestWithdrawalReason::class)
     @NullSource
     fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true for application creator`(
-      reason: PlacementRequestWithdrawalReason?
+      reason: PlacementRequestWithdrawalReason?,
     ) {
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
@@ -645,6 +650,8 @@ class PlacementRequestServiceTest {
           },
         )
       }
+
+      verify { bookingService wasNot Called }
     }
 
     @Test
@@ -673,10 +680,119 @@ class PlacementRequestServiceTest {
       assertThat(result is AuthorisableActionResult.Success).isTrue
 
       verify { placementRequestRepository.save(any()) wasNot called }
+      verify { bookingService wasNot Called }
     }
 
-    private fun createValidPlacementRequest(application: ApprovedPremisesApplicationEntity,
-                                            user: UserEntity): PlacementRequestEntity {
+    @Test
+    fun `withdrawPlacementRequest cascades to booking if defined`() {
+      val reason = PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementRequest = createValidPlacementRequest(application, user)
+      val placementRequestId = placementRequest.id
+
+      val booking = BookingEntityFactory().withDefaultPremises().produce()
+      placementRequest.booking = booking
+
+      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
+      every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+      every {
+        bookingService.createCancellation(any(), any(), any(), any(), any())
+      } returns mockk<ValidatableActionResult.Success<CancellationEntity>>()
+
+      val result = placementRequestService.withdrawPlacementRequest(
+        placementRequestId,
+        user,
+        reason,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+
+      verify {
+        placementRequestRepository.save(
+          match {
+            it.id == placementRequestId &&
+              it.isWithdrawn &&
+              it.withdrawalReason == reason
+          },
+        )
+      }
+
+      verify {
+        bookingService.createCancellation(
+          user,
+          booking,
+          LocalDate.now(),
+          CancellationReasonRepository.CAS1_WITHDRAWN_BY_PP_ID,
+          "Automatically withdrawn as placement request was withdrawn",
+        )
+      }
+    }
+
+    @Test
+    fun `withdrawPlacementRequest cascades to booking if defined and logs error if fails`() {
+      val logger = mockk<Logger>()
+      placementRequestService.log = logger
+
+      val reason = PlacementRequestWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementRequest = createValidPlacementRequest(application, user)
+      val placementRequestId = placementRequest.id
+
+      val booking = BookingEntityFactory().withDefaultPremises().produce()
+      placementRequest.booking = booking
+
+      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
+      every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+      every {
+        bookingService.createCancellation(any(), any(), any(), any(), any())
+      } returns ValidatableActionResult.GeneralValidationError("booking cancellation didn't work!")
+      every { logger.error(any<String>()) } returns Unit
+
+      val result = placementRequestService.withdrawPlacementRequest(
+        placementRequestId,
+        user,
+        reason,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+
+      verify {
+        placementRequestRepository.save(
+          match {
+            it.id == placementRequestId &&
+              it.isWithdrawn &&
+              it.withdrawalReason == reason
+          },
+        )
+      }
+
+      verify {
+        logger.error(
+          "Failed to automatically withdraw booking ${booking.id} when " +
+            "withdrawing placement request $placementRequestId with message " +
+            "booking cancellation didn't work!",
+        )
+      }
+    }
+
+    private fun createValidPlacementRequest(
+      application: ApprovedPremisesApplicationEntity,
+      user: UserEntity,
+    ): PlacementRequestEntity {
       val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -699,7 +815,6 @@ class PlacementRequestServiceTest {
 
       return placementRequest
     }
-
   }
 
   @Test

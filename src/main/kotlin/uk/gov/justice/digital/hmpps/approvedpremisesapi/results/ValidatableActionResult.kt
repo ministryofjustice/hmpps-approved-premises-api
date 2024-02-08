@@ -17,3 +17,10 @@ sealed interface ValidatableActionResult<EntityType> {
   data class GeneralValidationError<EntityType>(val message: String) : ValidatableActionResult<EntityType>
   data class ConflictError<EntityType>(val conflictingEntityId: UUID, val message: String) : ValidatableActionResult<EntityType>
 }
+
+fun extractMessage(validatableActionResult: ValidatableActionResult<*>): String? = when (validatableActionResult) {
+  is ValidatableActionResult.Success -> null
+  is ValidatableActionResult.FieldValidationError -> validatableActionResult.validationMessages.toString()
+  is ValidatableActionResult.GeneralValidationError -> validatableActionResult.message
+  is ValidatableActionResult.ConflictError -> validatableActionResult.message
+}
