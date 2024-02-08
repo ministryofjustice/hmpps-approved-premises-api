@@ -7900,6 +7900,8 @@ components:
               $ref: '#/components/schemas/AnyValue'
             canBeWithdrawn:
               type: boolean
+            isWithdrawn:
+              type: boolean
           required:
             - id
             - createdByUserId
@@ -7909,6 +7911,8 @@ components:
             - assessmentId
             - assessmentCompletedAt
             - applicationCompletedAt
+            - canBeWithdrawn
+            - isWithdrawn
     NewPlacementApplication:
       type: object
       properties:
@@ -8015,6 +8019,8 @@ components:
               $ref: '#/components/schemas/BookingSummary'
             requestType:
               $ref: '#/components/schemas/PlacementRequestRequestType'
+            isWithdrawn:
+              type: boolean
           required:
             - person
             - risks
@@ -8028,6 +8034,7 @@ components:
             - applicationDate
             - assessor
             - isParole
+            - isWithdrawn
     PlacementRequestRequestType:
       type: string
       enum:

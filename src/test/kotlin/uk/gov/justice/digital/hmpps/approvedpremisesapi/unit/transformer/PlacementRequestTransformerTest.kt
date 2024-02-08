@@ -180,6 +180,7 @@ class PlacementRequestTransformerTest {
         isParole = placementRequestEntity.isParole,
         requestType = PlacementRequestRequestType.standardRelease,
         booking = null,
+        isWithdrawn = false,
       ),
     )
   }
@@ -361,4 +362,15 @@ class PlacementRequestTransformerTest {
     assertThat(result.releaseType).isEqualTo(releaseTypeOption)
   }
 
+  @Test
+  fun `transformJpaToApi returns a withdrawn status of true when a placement request is withdrawn`() {
+    val placementRequestEntity = placementRequestFactory
+      .withPlacementRequirements(placementRequirementsFactory.produce())
+      .withIsWithdrawn(true)
+      .produce()
+
+    val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
+
+    assertThat(result.isWithdrawn).isEqualTo(true)
+  }
 }

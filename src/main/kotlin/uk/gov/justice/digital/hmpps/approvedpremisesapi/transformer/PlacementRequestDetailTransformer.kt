@@ -39,6 +39,7 @@ class PlacementRequestDetailTransformer(
       notes = placementRequest.notes,
       cancellations = cancellations.mapNotNull { cancellationTransformer.transformJpaToApi(it) },
       booking = jpa.booking?.let { bookingSummaryTransformer.transformJpaToApi(jpa.booking!!) },
+      isWithdrawn = jpa.isWithdrawn,
       isParole = jpa.isParole,
       application = applicationTransformer.transformJpaToApi(jpa.application, personInfo),
     )
