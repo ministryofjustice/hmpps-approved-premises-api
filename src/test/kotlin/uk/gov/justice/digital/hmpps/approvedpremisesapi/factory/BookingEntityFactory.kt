@@ -141,6 +141,13 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.premises = { premises }
   }
 
+  fun withDefaultPremises() = withPremises(
+    ApprovedPremisesEntityFactory()
+      .withDefaultProbationRegion()
+      .withDefaultLocalAuthorityArea()
+      .produce(),
+  )
+
   fun withServiceName(serviceName: ServiceName) = apply {
     this.serviceName = { serviceName }
   }

@@ -1,6 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Lazy
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
@@ -21,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_WITHDRAWN_BY_PP_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
@@ -38,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.extractMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
@@ -59,8 +64,11 @@ class PlacementRequestService(
   private val placementDateRepository: PlacementDateRepository,
   private val cancellationRepository: CancellationRepository,
   private val userAllocator: UserAllocator,
+  @Lazy private val bookingService: BookingService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
+
+  var log: Logger = LoggerFactory.getLogger(this::class.java)
 
   fun getVisiblePlacementRequestsForUser(
     user: UserEntity,
@@ -287,6 +295,10 @@ class PlacementRequestService(
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
 
+    if (placementRequest.isWithdrawn) {
+      return AuthorisableActionResult.Success(Unit)
+    }
+
     if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && placementRequest.application.createdByUser != user) {
       return AuthorisableActionResult.Unauthorised()
     }
@@ -295,6 +307,25 @@ class PlacementRequestService(
     placementRequest.withdrawalReason = reason
 
     placementRequestRepository.save(placementRequest)
+
+    placementRequest.booking?.let { booking ->
+      val bookingCancellationResult = bookingService.createCancellation(
+        user,
+        booking,
+        LocalDate.now(),
+        CAS1_WITHDRAWN_BY_PP_ID,
+        "Automatically withdrawn as placement request was withdrawn",
+      )
+
+      when (bookingCancellationResult) {
+        is ValidatableActionResult.Success -> Unit
+        else -> log.error(
+          "Failed to automatically withdraw booking ${booking.id} " +
+            "when withdrawing placement request ${placementRequest.id} " +
+            "with message ${extractMessage(bookingCancellationResult)}",
+        )
+      }
+    }
 
     return AuthorisableActionResult.Success(Unit)
   }

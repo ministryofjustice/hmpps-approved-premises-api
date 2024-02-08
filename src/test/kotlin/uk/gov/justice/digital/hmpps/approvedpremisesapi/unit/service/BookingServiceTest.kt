@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.Called
 import io.mockk.Runs
+import io.mockk.called
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -2066,7 +2067,7 @@ class BookingServiceTest {
   }
 
   @Nested
-  inner class CreateCancellation {
+  inner class CreateCas1Cancellation {
     val premises = ApprovedPremisesEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -2077,7 +2078,7 @@ class BookingServiceTest {
       .produce()
 
     @Test
-    fun `createCancellation returns GeneralValidationError with correct message when Booking already has a Cancellation`() {
+    fun `createCancellation is idempotent if the booking is already cancelled`() {
       val bookingEntity = BookingEntityFactory()
         .withPremises(premises)
         .produce()
@@ -2097,8 +2098,11 @@ class BookingServiceTest {
         user = user,
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
-      assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("This Booking already has a Cancellation set")
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+
+      assertThat(result.entity).isEqualTo(cancellationEntity)
+      verify { mockBookingRepository.save(any()) wasNot called }
     }
 
     @Test
@@ -2510,6 +2514,10 @@ class BookingServiceTest {
         mockBookingRepository.save(bookingEntity)
       }
     }
+  }
+
+  @Nested
+  inner class CreateCas3Cancellation {
 
     @Test
     fun `createCancellation returns Success with correct result and emits a domain event for CAS3`() {

@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -184,7 +185,7 @@ class WithdrawableServiceTest {
         user,
         any(),
         any(),
-        withdrawableService.approvedPremisesWithdrawnByPPBookingWithdrawnReasonId,
+        CancellationReasonRepository.CAS1_WITHDRAWN_BY_PP_ID,
         "Automatically withdrawn as application was withdrawn",
       )
     } returns mockk<ValidatableActionResult<CancellationEntity>>()
@@ -205,7 +206,7 @@ class WithdrawableServiceTest {
           user,
           it,
           LocalDate.now(),
-          withdrawableService.approvedPremisesWithdrawnByPPBookingWithdrawnReasonId,
+          CancellationReasonRepository.CAS1_WITHDRAWN_BY_PP_ID,
           "Automatically withdrawn as application was withdrawn",
         )
       }

@@ -4,12 +4,12 @@ import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_WITHDRAWN_BY_PP_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Withdrawables
 import java.time.LocalDate
-import java.util.UUID
 
 @Service
 class WithdrawableService(
@@ -20,8 +20,6 @@ class WithdrawableService(
   @Lazy private val userAccessService: UserAccessService,
   @Lazy private val applicationService: ApplicationService,
 ) {
-  val approvedPremisesWithdrawnByPPBookingWithdrawnReasonId: UUID =
-    UUID.fromString("d39572ea-9e42-460c-ae88-b6b30fca0b09")
 
   fun allWithdrawables(
     application: ApprovedPremisesApplicationEntity,
@@ -71,7 +69,7 @@ class WithdrawableService(
         user,
         it,
         now,
-        approvedPremisesWithdrawnByPPBookingWithdrawnReasonId,
+        CAS1_WITHDRAWN_BY_PP_ID,
         "Automatically withdrawn as application was withdrawn",
       )
     }

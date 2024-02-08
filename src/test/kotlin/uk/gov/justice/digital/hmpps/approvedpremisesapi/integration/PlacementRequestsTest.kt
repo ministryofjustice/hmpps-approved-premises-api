@@ -1637,5 +1637,64 @@ class PlacementRequestsTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `Withdraw Placement Request with booking returns 200, also cancels booking`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          `Given an Application`(createdByUser = user) {
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = user,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            ) { placementRequest, _ ->
+
+              val premises = approvedPremisesEntityFactory.produceAndPersist {
+                withProbationRegion(
+                  probationRegionEntityFactory.produceAndPersist {
+                    withApArea(apAreaEntityFactory.produceAndPersist())
+                  },
+                )
+                withLocalAuthorityArea(
+                  localAuthorityEntityFactory.produceAndPersist(),
+                )
+              }
+
+              val room = roomEntityFactory.produceAndPersist {
+                withPremises(premises)
+              }
+
+              val bed = bedEntityFactory.produceAndPersist {
+                withRoom(room)
+              }
+
+              placementRequest.booking = bookingEntityFactory.produceAndPersist {
+                withPremises(premises)
+                withBed(bed)
+              }
+
+              placementRequestRepository.save(placementRequest)
+
+              webTestClient.post()
+                .uri("/placement-requests/${placementRequest.id}/withdrawal")
+                .bodyValue(
+                  WithdrawPlacementRequest(
+                    reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
+                  ),
+                )
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+
+              val booking = bookingRepository.findByIdOrNull(placementRequest.booking!!.id)!!
+              assertThat(booking.isCancelled).isTrue
+            }
+          }
+        }
+      }
+    }
+
   }
 }

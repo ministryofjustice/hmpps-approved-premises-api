@@ -10,6 +10,10 @@ import javax.persistence.Table
 
 @Repository
 interface CancellationReasonRepository : JpaRepository<CancellationReasonEntity, UUID> {
+  companion object Constants {
+    val CAS1_WITHDRAWN_BY_PP_ID: UUID = UUID.fromString("d39572ea-9e42-460c-ae88-b6b30fca0b09")
+  }
+
   @Query("SELECT c FROM CancellationReasonEntity c WHERE c.serviceScope = :serviceName OR c.serviceScope = '*'")
   fun findAllByServiceScope(serviceName: String): List<CancellationReasonEntity>
 
