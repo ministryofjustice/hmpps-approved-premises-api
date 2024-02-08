@@ -85,26 +85,24 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.probationRegion = { probationRegion }
   }
 
+  fun withDefaultProbationRegion() = withProbationRegion(
+    ProbationRegionEntityFactory()
+      .withDefaultApArea()
+      .produce(),
+  )
+
   fun withYieldedProbationRegion(probationRegion: Yielded<ProbationRegionEntity>) = apply {
     this.probationRegion = probationRegion
-  }
-
-  fun withDefaultProbationRegion() = withYieldedProbationRegion {
-    ProbationRegionEntityFactory()
-      .withYieldedApArea { ApAreaEntityFactory().produce() }
-      .produce()
   }
 
   fun withLocalAuthorityArea(localAuthorityAreaEntity: LocalAuthorityAreaEntity) = apply {
     this.localAuthorityArea = { localAuthorityAreaEntity }
   }
 
+  fun withDefaultLocalAuthorityArea() = withLocalAuthorityArea(LocalAuthorityEntityFactory().produce())
+
   fun withYieldedLocalAuthorityArea(localAuthorityAreaEntity: Yielded<LocalAuthorityAreaEntity>) = apply {
     this.localAuthorityArea = localAuthorityAreaEntity
-  }
-
-  fun withDefaultLocalAuthorityArea() = withYieldedLocalAuthorityArea {
-    LocalAuthorityEntityFactory().produce()
   }
 
   fun withQCode(qCode: String) = apply {

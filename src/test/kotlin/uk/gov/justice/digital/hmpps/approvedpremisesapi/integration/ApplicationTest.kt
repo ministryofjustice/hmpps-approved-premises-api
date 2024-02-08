@@ -3321,7 +3321,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_WORKFLOW_MANAGER"])
     fun `Get withdrawables for an application returns withdrawable bookings when a user can manage bookings`(role: UserRole) {
       `Given a User` { applicant, _ ->
         `Given a User`(roles = listOf(role)) { allocatedTo, jwt ->

@@ -1192,8 +1192,10 @@ class BookingService(
     else -> throw RuntimeException("Unknown premises type ${booking.premises::class.qualifiedName}")
   }
 
-  fun getCancelleableBookings(application: ApprovedPremisesApplicationEntity): List<BookingEntity> =
-    bookingRepository.findAllByApplication(application).filter { isCancellableCas1(it) }
+  fun getCancelleableCas1Bookings(user: UserEntity, application: ApprovedPremisesApplicationEntity): List<BookingEntity> =
+    bookingRepository.findAllByApplication(application).filter { booking ->
+      isCancellableCas1(booking) && userAccessService.userCanCancelBooking(user, booking)
+    }
 
   private fun isCancellableCas1(booking: BookingEntity) = (booking.cancellation == null) && (booking.arrivals.isEmpty())
 

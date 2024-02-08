@@ -512,15 +512,17 @@ class UserAccessServiceTest {
       .produce()
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
-    fun `userCanCancelBooking returns true if the given premises is a CAS1 premises and the user has either the MANAGER or MATCHER user role`(
+    @EnumSource(value = UserRole::class)
+    fun `userCanCancelBooking returns true if the given premises is a CAS1 premises and the user has either the MANAGER or CAS1_WORKFLOW_MANAGER user role`(
       role: UserRole,
     ) {
       currentRequestIsFor(ServiceName.approvedPremises)
 
       user.addRoleForUnitTest(role)
 
-      assertThat(userAccessService.userCanCancelBooking(user, cas1Booking)).isTrue
+      val canCancelBooking = listOf(UserRole.CAS1_MANAGER,UserRole.CAS1_WORKFLOW_MANAGER).contains(role)
+
+      assertThat(userAccessService.userCanCancelBooking(user, cas1Booking)).isEqualTo(canCancelBooking)
     }
 
     @Test
