@@ -81,6 +81,7 @@ class PlacementRequestDetailTransformerTest {
     every { mockPlacementRequestEntity.booking } returns null
     every { mockPlacementRequestEntity.isParole } returns false
     every { mockPlacementRequestEntity.application } returns mockApplicationEntity
+    every { mockPlacementRequestEntity.isWithdrawn } returns true
 
     every { mockCancellationTransformer.transformJpaToApi(any<CancellationEntity>()) } returns mockCancellation
     every { mockPlacementRequestTransformer.transformJpaToApi(mockPlacementRequestEntity, mockPersonInfoResult) } returns transformedPlacementRequest
@@ -110,6 +111,7 @@ class PlacementRequestDetailTransformerTest {
     assertThat(result.notes).isEqualTo(transformedPlacementRequest.notes)
     assertThat(result.cancellations).isEqualTo(listOf(mockCancellation, mockCancellation))
     assertThat(result.booking).isNull()
+    assertThat(result.isWithdrawn).isEqualTo(true)
     assertThat(result.isParole).isEqualTo(false)
     assertThat(result.application).isEqualTo(mockApplication)
 
@@ -144,6 +146,7 @@ class PlacementRequestDetailTransformerTest {
 
     every { mockPlacementRequestEntity.booking } returns booking
     every { mockPlacementRequestEntity.isParole } returns false
+    every { mockPlacementRequestEntity.isWithdrawn } returns false
     every { mockPlacementRequestEntity.application } returns mockApplicationEntity
 
     every { mockCancellationTransformer.transformJpaToApi(any<CancellationEntity>()) } returns mockCancellation

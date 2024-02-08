@@ -3916,6 +3916,8 @@ components:
               $ref: '#/components/schemas/BookingSummary'
             requestType:
               $ref: '#/components/schemas/PlacementRequestRequestType'
+            isWithdrawn:
+              type: boolean
           required:
             - person
             - risks
@@ -3929,6 +3931,7 @@ components:
             - applicationDate
             - assessor
             - isParole
+            - isWithdrawn
     PlacementRequestRequestType:
       type: string
       enum:

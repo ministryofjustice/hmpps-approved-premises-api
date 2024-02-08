@@ -48,6 +48,7 @@ class PlacementRequestTransformer(
       isParole = jpa.isParole,
       booking = jpa.booking?.let { bookingSummaryTransformer.transformJpaToApi(jpa.booking!!) },
       requestType = if (jpa.isParole) PlacementRequestRequestType.parole else PlacementRequestRequestType.standardRelease,
+      isWithdrawn = jpa.isWithdrawn,
     )
   }
 
