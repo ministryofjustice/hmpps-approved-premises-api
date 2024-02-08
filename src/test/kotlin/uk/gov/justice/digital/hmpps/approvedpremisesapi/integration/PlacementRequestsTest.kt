@@ -1695,6 +1695,5 @@ class PlacementRequestsTest : IntegrationTestBase() {
         }
       }
     }
-
   }
 }

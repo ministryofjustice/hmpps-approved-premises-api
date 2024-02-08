@@ -3361,11 +3361,15 @@ class ApplicationTest : IntegrationTestBase() {
             }
 
             val expected = listOfNotNull(
-              if (role == UserRole.CAS1_WORKFLOW_MANAGER) Withdrawable(
-                application.id,
-                WithdrawableType.application,
-                emptyList(),
-              ) else null,
+              if (role == UserRole.CAS1_WORKFLOW_MANAGER) {
+                Withdrawable(
+                  application.id,
+                  WithdrawableType.application,
+                  emptyList(),
+                )
+              } else {
+                null
+              },
               Withdrawable(
                 booking1.id,
                 WithdrawableType.booking,
