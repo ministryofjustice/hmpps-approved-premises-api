@@ -287,6 +287,11 @@ class PlacementRequestService(
     )
   }
 
+  fun getWithdrawablePlacementRequests(
+    application: ApprovedPremisesApplicationEntity,
+  ): List<PlacementRequestEntity> =
+    placementRequestRepository.findByApplication(application).filter { it.isInWithdrawableState() }
+
   fun withdrawPlacementRequest(
     placementRequestId: UUID,
     user: UserEntity,
@@ -329,11 +334,6 @@ class PlacementRequestService(
 
     return AuthorisableActionResult.Success(Unit)
   }
-
-  fun getWithdrawablePlacementRequests(
-    application: ApprovedPremisesApplicationEntity,
-  ): List<PlacementRequestEntity> =
-    placementRequestRepository.findByApplication(application).filter { it.canBeWithdrawn() }
 
   private fun saveBookingNotMadeDomainEvent(
     user: UserEntity,
