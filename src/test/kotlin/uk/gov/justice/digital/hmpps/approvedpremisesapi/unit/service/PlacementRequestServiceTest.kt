@@ -68,6 +68,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class PlacementRequestServiceTest {
@@ -549,6 +550,76 @@ class PlacementRequestServiceTest {
   }
 
   @Nested
+  inner class GetWithdrawablePlacementRequests {
+
+    @Test
+    fun `getWithdrawablePlacementRequests doesn't return reallocated placement requests`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
+        .produce()
+
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val placementRequestWithdrawable = createValidPlacementRequest(application, user)
+
+      val placementRequestReallocated = createValidPlacementRequest(application, user)
+      placementRequestReallocated.reallocatedAt = OffsetDateTime.now()
+
+      every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithdrawable, placementRequestReallocated)
+
+      val result = placementRequestService.getWithdrawablePlacementRequests(application)
+
+      assertThat(result).isEqualTo(listOf(placementRequestWithdrawable))
+    }
+
+    @Test
+    fun `getWithdrawablePlacementRequests doesn't return withdrawn placement requests`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
+        .produce()
+
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val placementRequestWithdrawable = createValidPlacementRequest(application, user)
+
+      val placementRequestWithdrawn = createValidPlacementRequest(application, user)
+      placementRequestWithdrawn.isWithdrawn = true
+
+      every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithdrawable, placementRequestWithdrawn)
+
+      val result = placementRequestService.getWithdrawablePlacementRequests(application)
+
+      assertThat(result).isEqualTo(listOf(placementRequestWithdrawable))
+    }
+
+    @Test
+    fun `getWithdrawablePlacementRequests returns placement requests with bookings`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
+        .produce()
+
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val placementRequestWithoutBooking = createValidPlacementRequest(application, user)
+
+      val placementRequestWithBooking = createValidPlacementRequest(application, user)
+      placementRequestWithBooking.booking = BookingEntityFactory().withDefaultPremises().produce()
+
+      every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithoutBooking, placementRequestWithBooking)
+
+      val result = placementRequestService.getWithdrawablePlacementRequests(application)
+
+      assertThat(result).isEqualTo(listOf(placementRequestWithoutBooking, placementRequestWithBooking))
+    }
+  }
+
+  @Nested
   inner class WithdrawPlacementRequest {
 
     @Test
@@ -787,33 +858,6 @@ class PlacementRequestServiceTest {
             "booking cancellation didn't work!",
         )
       }
-    }
-
-    private fun createValidPlacementRequest(
-      application: ApprovedPremisesApplicationEntity,
-      user: UserEntity,
-    ): PlacementRequestEntity {
-      val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(user)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withId(placementRequestId)
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withAllocatedToUser(assigneeUser)
-        .produce()
-
-      return placementRequest
     }
   }
 
@@ -1073,5 +1117,32 @@ class PlacementRequestServiceTest {
         }
         .produce()
     }
+  }
+
+  private fun createValidPlacementRequest(
+    application: ApprovedPremisesApplicationEntity,
+    user: UserEntity,
+  ): PlacementRequestEntity {
+    val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(user)
+      .produce()
+
+    val placementRequest = PlacementRequestEntityFactory()
+      .withId(placementRequestId)
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
+          .withApplication(application)
+          .withAssessment(assessment)
+          .produce(),
+      )
+      .withApplication(application)
+      .withAssessment(assessment)
+      .withAllocatedToUser(assigneeUser)
+      .produce()
+
+    return placementRequest
   }
 }

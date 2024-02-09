@@ -604,8 +604,8 @@ class ApplicationService(
     )
   }
 
-  fun isWithdrawable(application: ApplicationEntity, user: UserEntity)
-    = userAccessService.userCanWithdrawApplication(user, application)
+  fun isWithdrawable(application: ApplicationEntity, user: UserEntity) =
+    userAccessService.userCanWithdrawApplication(user, application)
 
   fun sendEmailApplicationWithdrawn(user: UserEntity, application: ApplicationEntity, premisesName: String?) {
     if (user.email != null) {

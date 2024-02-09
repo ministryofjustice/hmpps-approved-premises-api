@@ -3,13 +3,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.data.Offset
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
-import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -1527,7 +1525,7 @@ class UserAccessServiceTest {
         UserRoleAssignmentEntityFactory()
           .withUser(user)
           .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
-          .produce()
+          .produce(),
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1548,7 +1546,7 @@ class UserAccessServiceTest {
         UserRoleAssignmentEntityFactory()
           .withUser(user)
           .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
-          .produce()
+          .produce(),
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()

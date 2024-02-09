@@ -172,7 +172,7 @@ data class PlacementRequestEntity(
   var withdrawalReason: PlacementRequestWithdrawalReason?,
 ) {
   fun canBeWithdrawn() =
-    reallocatedAt == null && !hasActiveBooking() && !isWithdrawn
+    reallocatedAt == null && !isWithdrawn
 
   fun hasActiveBooking() = booking != null && booking?.cancellations.isNullOrEmpty()
 
