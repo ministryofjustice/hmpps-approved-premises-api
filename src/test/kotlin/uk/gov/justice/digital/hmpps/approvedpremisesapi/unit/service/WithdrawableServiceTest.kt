@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.slf4j.Logger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -131,18 +132,11 @@ class WithdrawableServiceTest {
   }
 
   @Test
-  fun `withdrawAllForApplication withdraws all withdrawable entities`() {
-    every { mockApplicationService.isWithdrawableForUser(user, application) } returns true
-
+  fun `withdrawAllForApplication cascades to placement requests and placement applications`() {
+    application.placementRequests.addAll(placementRequests)
     every {
-      mockBookingService.createCancellation(
-        user,
-        any(),
-        any(),
-        CancellationReasonRepository.CAS1_WITHDRAWN_BY_PP_ID,
-        "Automatically withdrawn as application was withdrawn",
-      )
-    } returns mockk<ValidatableActionResult<CancellationEntity>>()
+      mockPlacementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(application.id)
+    } returns placementApplications
 
     every {
       mockPlacementRequestService.withdrawPlacementRequest(any(), user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
@@ -153,18 +147,6 @@ class WithdrawableServiceTest {
     } returns mockk<AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>>>()
 
     withdrawableService.withdrawAllForApplication(application, user)
-
-    bookings.forEach {
-      verify {
-        mockBookingService.createCancellation(
-          user,
-          it,
-          LocalDate.now(),
-          CancellationReasonRepository.CAS1_WITHDRAWN_BY_PP_ID,
-          "Automatically withdrawn as application was withdrawn",
-        )
-      }
-    }
 
     placementRequests.forEach {
       verify {
@@ -177,5 +159,48 @@ class WithdrawableServiceTest {
         mockPlacementApplicationService.withdrawPlacementApplication(it.id, user, PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
       }
     }
+  }
+
+  @Test
+  fun `withdrawAllForApplication reports errors if can't withdrawh children`() {
+    val logger = mockk<Logger>()
+    withdrawableService.log = logger
+
+    val placementRequest = placementRequests[0]
+    application.placementRequests.add(placementRequest)
+
+    val placementApplication = placementApplications[0]
+    every {
+      mockPlacementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(application.id)
+    } returns listOf(placementApplication)
+
+    every {
+      mockPlacementRequestService.withdrawPlacementRequest(any(), user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
+    } returns AuthorisableActionResult.Unauthorised()
+
+    every {
+      mockPlacementApplicationService.withdrawPlacementApplication(any(), user, PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
+    } returns AuthorisableActionResult.Unauthorised()
+
+    every { logger.error(any<String>()) } returns Unit
+
+    withdrawableService.withdrawAllForApplication(application, user)
+
+    verify {
+      logger.error(
+        "Failed to automatically withdraw placement request ${placementRequest.id} " +
+          "when withdrawing application ${application.id} " +
+          "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult\$Unauthorised",
+      )
+    }
+
+    verify {
+      logger.error(
+        "Failed to automatically withdraw placement application ${placementApplication.id} " +
+          "when withdrawing application ${application.id} " +
+          "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult\$Unauthorised",
+      )
+    }
+
   }
 }

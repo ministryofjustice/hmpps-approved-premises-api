@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -8,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Withdrawables
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.time.LocalDate
 
 @Service
@@ -18,6 +21,7 @@ class WithdrawableService(
   @Lazy private val placementApplicationService: PlacementApplicationService,
   @Lazy private val applicationService: ApplicationService,
 ) {
+  var log: Logger = LoggerFactory.getLogger(this::class.java)
 
   fun allWithdrawables(
     application: ApprovedPremisesApplicationEntity,
@@ -39,38 +43,48 @@ class WithdrawableService(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
   ) {
-    val withdrawables = allWithdrawables(
-      application,
-      user,
+    val placementRequests = application.placementRequests
+    placementRequests.forEach { placementRequest ->
+      if(placementRequest.isInWithdrawableState()) {
+        val result = placementRequestService.withdrawPlacementRequest(
+          placementRequest.id,
+          user,
+          PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
+          checkUserPermissions = false,
+        )
+
+        when (result) {
+          is AuthorisableActionResult.Success -> Unit
+          else -> log.error(
+            "Failed to automatically withdraw placement request ${placementRequest.id} " +
+              "when withdrawing application ${application.id} " +
+              "with error type ${result::class}",
+          )
+        }
+      }
+    }
+
+    val placementApplications = placementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(
+      application.id
     )
+    placementApplications.forEach { placementApplication ->
+      if(placementApplication.isInWithdrawableState()) {
+        val result = placementApplicationService.withdrawPlacementApplication(
+          placementApplication.id,
+          user,
+          PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP,
+          checkUserPermissions = false,
+        )
 
-    withdrawables.placementApplications.forEach {
-      placementApplicationService.withdrawPlacementApplication(
-        it.id,
-        user,
-        PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP,
-        checkUserPermissions = false,
-      )
-    }
-
-    withdrawables.placementRequests.forEach {
-      placementRequestService.withdrawPlacementRequest(
-        it.id,
-        user,
-        PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
-        checkUserPermissions = false,
-      )
-    }
-
-    val now = LocalDate.now()
-    withdrawables.bookings.forEach {
-      bookingService.createCancellation(
-        user,
-        it,
-        now,
-        CAS1_WITHDRAWN_BY_PP_ID,
-        "Automatically withdrawn as application was withdrawn",
-      )
+        when (result) {
+          is AuthorisableActionResult.Success -> Unit
+          else -> log.error(
+            "Failed to automatically withdraw placement application ${placementApplication.id} " +
+              "when withdrawing application ${application.id} " +
+              "with error type ${result::class}",
+          )
+        }
+      }
     }
   }
 }
