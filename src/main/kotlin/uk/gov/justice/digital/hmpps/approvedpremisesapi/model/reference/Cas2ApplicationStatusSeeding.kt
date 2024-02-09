@@ -4,6 +4,7 @@ import java.util.UUID
 
 object Cas2ApplicationStatusSeeding {
 
+  @SuppressWarnings("LongMethod")
   fun statusList(): List<Cas2PersistedApplicationStatus> {
     return listOf(
       Cas2PersistedApplicationStatus(
@@ -11,6 +12,53 @@ object Cas2ApplicationStatusSeeding {
         name = "moreInfoRequested",
         label = "More information requested",
         description = "The prison offender manager (POM) must provide information requested for the application to progress.",
+        statusDetails = listOf(
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("fabbb8c0-344e-4a9d-a964-7987b22d09c6"),
+            name = "personalInformation",
+            label = "Personal information",
+          ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("05669c8a-d65c-48d2-a5e4-0c3f6fc8977b"),
+            name = "exclusionZonesAndAreas",
+            label = "Exclusion zones and preferred areas",
+          ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("831c241d-63f3-4d17-b969-b8154d7e4902"),
+            name = "healthNeeds",
+            label = "Health needs",
+          ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("7ba5cd7d-8ae3-4fe5-bb27-9367197ea160"),
+            name = "riskToSelf",
+            label = "Risk to self",
+          ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("8641d719-7356-42d3-8363-e323bf76caec"),
+            name = "riskOfSeriousHarm",
+            label = "Risk of serious harm",
+          ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("90f075ae-0b9f-445b-a9b5-1095abca87dc"),
+            name = "currentOffences",
+            label = "Current offences",
+          ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("8ce77ea1-324e-4ac8-be8c-33d6d4d927f8"),
+            name = "offendingHistory",
+            label = "Offending history",
+          ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("d2c44705-2795-4610-9879-dcf26940e121"),
+            name = "hdcAndCpp",
+            label = "HDC licence and CPP details",
+          ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("94631a70-6c51-43d6-9112-2b6d042b5aa0"),
+            name = "other",
+            label = "Other",
+          ),
+        ),
       ),
       Cas2PersistedApplicationStatus(
         id = UUID.fromString("ba4d8432-250b-4ab9-81ec-7eb4b16e5dd1"),
