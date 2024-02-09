@@ -109,7 +109,7 @@ class WithdrawableServiceTest {
       mockPlacementApplicationService.getWithdrawablePlacementApplications(application)
     } returns placementApplications
     every {
-      mockBookingService.getCancelleableCas1Bookings(user, application)
+      mockBookingService.getCancelleableCas1BookingsForUser(user, application)
     } returns bookings
   }
 

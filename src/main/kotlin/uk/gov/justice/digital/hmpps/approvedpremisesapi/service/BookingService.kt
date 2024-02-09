@@ -1192,12 +1192,13 @@ class BookingService(
     else -> throw RuntimeException("Unknown premises type ${booking.premises::class.qualifiedName}")
   }
 
-  fun getCancelleableCas1Bookings(user: UserEntity, application: ApprovedPremisesApplicationEntity): List<BookingEntity> =
+  fun getCancelleableCas1BookingsForUser(user: UserEntity, application: ApprovedPremisesApplicationEntity): List<BookingEntity> =
     bookingRepository.findAllByApplication(application).filter { booking ->
-      isCancellableCas1(booking) && userAccessService.userCanCancelBooking(user, booking)
+      isInCancellableStateCas1(booking) && userAccessService.userCanCancelBooking(user, booking)
     }
 
-  private fun isCancellableCas1(booking: BookingEntity) = (booking.cancellation == null) && (booking.arrivals.isEmpty())
+  private fun isInCancellableStateCas1(booking: BookingEntity)
+    = (booking.cancellation == null) && (booking.arrivals.isEmpty())
 
   private fun createCas1Cancellation(
     user: UserEntity?,
@@ -1209,6 +1210,10 @@ class BookingService(
     val existingCancellation = booking.cancellation
     if (booking.premises is ApprovedPremisesEntity && existingCancellation != null) {
       return success(existingCancellation)
+    }
+
+    if(!isInCancellableStateCas1(booking)) {
+      return generalError("The Booking is not in a state that can be cancelled")
     }
 
     val reason = cancellationReasonRepository.findByIdOrNull(reasonId)
