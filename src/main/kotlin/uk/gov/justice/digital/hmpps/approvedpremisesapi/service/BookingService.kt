@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import arrow.core.Either
+import io.sentry.Sentry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
@@ -74,7 +75,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
@@ -126,6 +131,7 @@ class BookingService(
   @Value("\${arrived-departed-domain-events-disabled}") private val arrivedAndDepartedDomainEventsDisabled: Boolean,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
+  private val assessmentService: AssessmentService,
 ) {
   val approvedPremisesBookingAppealedCancellationReasonId: UUID =
     UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
@@ -801,6 +807,10 @@ class BookingService(
       booking.turnarounds += turnaround
 
       cas3DomainEventService.saveBookingProvisionallyMadeEvent(booking)
+
+      if (assessmentId != null) {
+        closeTransitionalAccommodationAssessment(assessmentId, user, booking)
+      }
 
       success(booking)
     }
@@ -1805,6 +1815,31 @@ class BookingService(
     val submittedAt = application?.submittedAt ?: offlineApplication?.createdAt as OffsetDateTime
 
     return Triple(applicationId, eventNumber, submittedAt)
+  }
+
+  @SuppressWarnings("ThrowsCount", "TooGenericExceptionCaught")
+  private fun closeTransitionalAccommodationAssessment(
+    assessmentId: UUID,
+    user: UserEntity,
+    booking: BookingEntity,
+  ) {
+    try {
+      val assessmentValidationResult = when (val assessmentAuthResult = assessmentService.closeAssessment(user, assessmentId)) {
+        is AuthorisableActionResult.Success -> assessmentAuthResult.entity
+        is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
+        is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      }
+
+      when (assessmentValidationResult) {
+        is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
+        is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
+        is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
+        is ValidatableActionResult.Success -> Unit
+      }
+    } catch (exception: Exception) {
+      log.error("Unable to close CAS3 assessment $assessmentId for booking ${booking.id} ", exception)
+      Sentry.captureException(RuntimeException("Unable to close CAS3 assessment $assessmentId for booking ${booking.id} ", exception))
+    }
   }
 }
 
