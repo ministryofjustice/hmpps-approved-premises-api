@@ -102,6 +102,10 @@ data class Cas2ApplicationEntity(
   @OrderBy(clause = "createdAt DESC")
   var statusUpdates: MutableList<Cas2StatusUpdateEntity>? = null,
 
+  @OneToMany(mappedBy = "application")
+  @OrderBy(clause = "createdAt DESC")
+  var notes: MutableList<Cas2ApplicationNoteEntity>? = null,
+
   @Transient
   var schemaUpToDate: Boolean,
 
