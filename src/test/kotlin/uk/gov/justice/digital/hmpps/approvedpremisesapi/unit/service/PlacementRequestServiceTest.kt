@@ -515,10 +515,10 @@ class PlacementRequestServiceTest {
 
 
   @Nested
-  inner class GetWithdrawablePlacementRequests {
+  inner class GetWithdrawablePlacementRequestsForUser {
 
     @Test
-    fun `getWithdrawablePlacementRequests doesn't return reallocated placement requests`() {
+    fun `getWithdrawablePlacementRequestsForUser doesn't return reallocated placement requests`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
         .produce()
@@ -533,14 +533,15 @@ class PlacementRequestServiceTest {
       placementRequestReallocated.reallocatedAt = OffsetDateTime.now()
 
       every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithdrawable, placementRequestReallocated)
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequestWithdrawable) } returns true
 
-      val result = placementRequestService.getWithdrawablePlacementRequests(application)
+      val result = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
 
       assertThat(result).isEqualTo(listOf(placementRequestWithdrawable))
     }
 
     @Test
-    fun `getWithdrawablePlacementRequests doesn't return withdrawn placement requests`() {
+    fun `getWithdrawablePlacementRequestsForUser doesn't return withdrawn placement requests`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
         .produce()
@@ -555,14 +556,15 @@ class PlacementRequestServiceTest {
       placementRequestWithdrawn.isWithdrawn = true
 
       every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithdrawable, placementRequestWithdrawn)
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequestWithdrawable) } returns true
 
-      val result = placementRequestService.getWithdrawablePlacementRequests(application)
+      val result = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
 
       assertThat(result).isEqualTo(listOf(placementRequestWithdrawable))
     }
 
     @Test
-    fun `getWithdrawablePlacementRequests returns placement requests with bookings`() {
+    fun `getWithdrawablePlacementRequestsForUser returns placement requests with bookings`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
         .produce()
@@ -577,8 +579,10 @@ class PlacementRequestServiceTest {
       placementRequestWithBooking.booking = BookingEntityFactory().withDefaultPremises().produce()
 
       every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithoutBooking, placementRequestWithBooking)
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequestWithoutBooking) } returns true
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequestWithBooking) } returns true
 
-      val result = placementRequestService.getWithdrawablePlacementRequests(application)
+      val result = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
 
       assertThat(result).isEqualTo(listOf(placementRequestWithoutBooking, placementRequestWithBooking))
     }

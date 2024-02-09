@@ -100,7 +100,7 @@ class WithdrawableServiceTest {
   @BeforeEach
   fun setup() {
     every {
-      mockPlacementRequestService.getWithdrawablePlacementRequests(application)
+      mockPlacementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
     } returns placementRequests
     every {
       mockPlacementApplicationService.getWithdrawablePlacementApplications(application)

@@ -288,10 +288,13 @@ class PlacementRequestService(
     )
   }
 
-  fun getWithdrawablePlacementRequests(
+  fun getWithdrawablePlacementRequestsForUser(
+    user: UserEntity,
     application: ApprovedPremisesApplicationEntity,
   ): List<PlacementRequestEntity> =
-    placementRequestRepository.findByApplication(application).filter { it.isInWithdrawableState() }
+    placementRequestRepository
+      .findByApplication(application)
+      .filter { it.isInWithdrawableState() && userAccessService.userCanWithdrawPlacementRequest(user, it) }
 
   fun withdrawPlacementRequest(
     placementRequestId: UUID,

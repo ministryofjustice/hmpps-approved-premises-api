@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_WITHDRAWN_BY_PP_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -24,7 +23,7 @@ class WithdrawableService(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
   ): Withdrawables {
-    val placementRequests = placementRequestService.getWithdrawablePlacementRequests(application)
+    val placementRequests = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
     val bookings = bookingService.getCancelleableCas1BookingsForUser(user, application)
     val placementApplications = placementApplicationService.getWithdrawablePlacementApplications(application)
 
