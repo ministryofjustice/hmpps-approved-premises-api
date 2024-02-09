@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.slf4j.Logger
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
@@ -19,6 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
@@ -31,6 +34,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -537,7 +542,128 @@ class PlacementApplicationServiceTest {
 
       assertThat(entity.decision).isEqualTo(PlacementApplicationDecision.WITHDRAWN_BY_PP)
     }
-    
+
+    @Test
+    fun `it cascades to withdrawable placement requests`() {
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .withDecision(null)
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementRequest1 = createValidPlacementRequest(application,user)
+      placementApplication.placementRequests.add(placementRequest1)
+
+      val placementRequest2 = createValidPlacementRequest(application,user)
+      placementApplication.placementRequests.add(placementRequest2)
+
+      val templateId = UUID.randomUUID().toString()
+
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
+      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+      every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
+      every {
+        placementRequestService.withdrawPlacementRequest(any(), any(), any(), any())
+      }  returns AuthorisableActionResult.Success(Unit)
+
+      val result = placementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        user,
+        PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
+        checkUserPermissions = false,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+
+      verify {
+        placementRequestService.withdrawPlacementRequest(
+          placementRequest1.id,
+          user,
+          PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
+          checkUserPermissions = false)
+      }
+
+      verify {
+        placementRequestService.withdrawPlacementRequest(
+          placementRequest2.id,
+          user,
+          PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
+          checkUserPermissions = false)
+      }
+    }
+
+    @Test
+    fun `it cascades to withdrawable placement requests and logs error if fails`() {
+      val logger = mockk<Logger>()
+      placementApplicationService.log = logger
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .withDecision(null)
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementRequest1 = createValidPlacementRequest(application,user)
+      placementApplication.placementRequests.add(placementRequest1)
+
+      val templateId = UUID.randomUUID().toString()
+
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
+      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+      every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
+      every {
+        placementRequestService.withdrawPlacementRequest(any(), any(), any(), any())
+      }  returns AuthorisableActionResult.Unauthorised()
+      every { logger.error(any<String>()) } returns Unit
+
+      val result = placementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        user,
+        PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
+        checkUserPermissions = false,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+
+      verify {
+        logger.error(
+          "Failed to automatically withdraw placement request ${placementRequest1.id} " +
+            "when withdrawing placement application ${placementApplication.id} " +
+            "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult\$Unauthorised",
+        )
+      }
+    }
+
+    private fun createValidPlacementRequest(
+      application: ApprovedPremisesApplicationEntity,
+      user: UserEntity,
+    ): PlacementRequestEntity {
+      val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(user)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withId(placementRequestId)
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withAllocatedToUser(user)
+        .produce()
+
+      return placementRequest
+    }
     @Test
     fun `it is idempotent, returning success if application already withdrawn`() {
       val placementApplication = PlacementApplicationEntityFactory()
@@ -641,5 +767,7 @@ class PlacementApplicationServiceTest {
         assertThat(validationResult.message).isEqualTo("The Placement Application cannot be withdrawn because it has an associated decision")
       }
     }
+
+
   }
 }
