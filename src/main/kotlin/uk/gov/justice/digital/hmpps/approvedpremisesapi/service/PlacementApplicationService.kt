@@ -199,7 +199,7 @@ class PlacementApplicationService(
 
     if (!placementApplication.isInWithdrawableState()) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The Placement Application cannot be withdrawn because it has an associated decision"),
+        ValidatableActionResult.GeneralValidationError("The Placement Application cannot be withdrawn as it's not in a withdrawable state"),
       )
     }
 

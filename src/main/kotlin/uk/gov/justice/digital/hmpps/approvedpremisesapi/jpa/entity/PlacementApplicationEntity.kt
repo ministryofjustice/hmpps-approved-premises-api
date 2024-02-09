@@ -94,9 +94,7 @@ data class PlacementApplicationEntity(
 ) {
   fun isReallocated() = reallocatedAt != null
 
-  fun hasADecision() = decision != null
-
-  fun isInWithdrawableState() = !isReallocated() && !hasADecision()
+  fun isInWithdrawableState() = !isReallocated() && !isWithdrawn()
 
   fun isSubmitted() = submittedAt != null
 

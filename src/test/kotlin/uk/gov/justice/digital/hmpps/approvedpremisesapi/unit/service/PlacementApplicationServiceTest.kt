@@ -740,34 +740,5 @@ class PlacementApplicationServiceTest {
 
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
     }
-
-    @Test
-    fun `it does not allow placement applications to be withdrawn if a decision has been made`() {
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
-        .withDecision(PlacementApplicationDecision.ACCEPTED)
-        .withCreatedByUser(user)
-        .produce()
-
-      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-
-      val result = placementApplicationService.withdrawPlacementApplication(
-        placementApplication.id,
-        user,
-        PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
-        checkUserPermissions = false,
-      )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(validationResult is ValidatableActionResult.GeneralValidationError).isTrue()
-      (validationResult as ValidatableActionResult.GeneralValidationError).let {
-        assertThat(validationResult.message).isEqualTo("The Placement Application cannot be withdrawn because it has an associated decision")
-      }
-    }
-
-
   }
 }
