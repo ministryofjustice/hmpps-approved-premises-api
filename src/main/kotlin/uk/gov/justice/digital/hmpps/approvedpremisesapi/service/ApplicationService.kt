@@ -536,7 +536,7 @@ class ApplicationService(
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
-    if (!isWithdrawable(application, user)) {
+    if (!isWithdrawableForUser(user, application)) {
       return AuthorisableActionResult.Unauthorised()
     }
 
@@ -604,7 +604,7 @@ class ApplicationService(
     )
   }
 
-  fun isWithdrawable(application: ApplicationEntity, user: UserEntity) =
+  fun isWithdrawableForUser(user: UserEntity, application: ApplicationEntity) =
     userAccessService.userCanWithdrawApplication(user, application)
 
   fun sendEmailApplicationWithdrawn(user: UserEntity, application: ApplicationEntity, premisesName: String?) {

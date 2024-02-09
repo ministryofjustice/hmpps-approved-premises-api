@@ -112,7 +112,7 @@ class WithdrawableServiceTest {
 
   @Test
   fun `allWithdrawables returns all withdrawable information`() {
-    every { mockApplicationService.isWithdrawable(application, user) } returns true
+    every { mockApplicationService.isWithdrawableForUser(user, application) } returns true
     val result = withdrawableService.allWithdrawables(application, user)
 
     assertThat(result.application).isEqualTo(true)
@@ -124,7 +124,7 @@ class WithdrawableServiceTest {
   @ParameterizedTest
   @ValueSource(booleans = [true, false])
   fun `allWithdrawables returns if application can't be withdrawn`(canBeWithdrawn: Boolean) {
-    every { mockApplicationService.isWithdrawable(application, user) } returns canBeWithdrawn
+    every { mockApplicationService.isWithdrawableForUser(user, application) } returns canBeWithdrawn
     val result = withdrawableService.allWithdrawables(application, user)
 
     assertThat(result.application).isEqualTo(canBeWithdrawn)
@@ -132,7 +132,7 @@ class WithdrawableServiceTest {
 
   @Test
   fun `withdrawAllForApplication withdraws all withdrawable entities`() {
-    every { mockApplicationService.isWithdrawable(application, user) } returns true
+    every { mockApplicationService.isWithdrawableForUser(user, application) } returns true
 
     every {
       mockBookingService.createCancellation(
