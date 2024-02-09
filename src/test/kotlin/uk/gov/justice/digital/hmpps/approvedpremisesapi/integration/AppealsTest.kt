@@ -2,12 +2,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Appeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
@@ -40,7 +42,7 @@ class AppealsTest : IntegrationTestBase() {
   @Test
   fun `Get appeal returns 403 when application is not accessible to user`() {
     `Given a User` { createdByUser, _ ->
-      `Given an Application`(createdByUser) { application ->
+      `Given an Assessment for Approved Premises`(createdByUser, createdByUser) { _, application ->
         `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
           webTestClient.get()
             .uri("/applications/${application.id}/appeals/${UUID.randomUUID()}")
@@ -56,9 +58,10 @@ class AppealsTest : IntegrationTestBase() {
   @Test
   fun `Get appeal returns 403 when user does not have CAS1_APPEALS_MANAGER role`() {
     `Given a User` { userEntity, jwt ->
-      `Given an Application`(userEntity) { application ->
+      `Given an Assessment for Approved Premises`(userEntity, userEntity) { assessment, application ->
         val appeal = appealEntityFactory.produceAndPersist {
-          withApplication(application as ApprovedPremisesApplicationEntity)
+          withApplication(application)
+          withAssessment(assessment as ApprovedPremisesAssessmentEntity)
           withCreatedBy(userEntity)
         }
 
@@ -89,9 +92,10 @@ class AppealsTest : IntegrationTestBase() {
   @Test
   fun `Get appeal returns 200 with correct body`() {
     `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
-      `Given an Application`(userEntity) { application ->
+      `Given an Assessment for Approved Premises`(userEntity, userEntity) { assessment, application ->
         val appeal = appealEntityFactory.produceAndPersist {
-          withApplication(application as ApprovedPremisesApplicationEntity)
+          withApplication(application)
+          withAssessment(assessment as ApprovedPremisesAssessmentEntity)
           withCreatedBy(userEntity)
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
         }
@@ -113,7 +117,7 @@ class AppealsTest : IntegrationTestBase() {
             it.createdByUserId == userEntity.id &&
             it.decision.value == appeal.decision &&
             it.decisionDetail == appeal.decisionDetail &&
-            it.assessmentId == null
+            it.assessmentId == assessment.id
         }
       }
     }
@@ -161,7 +165,7 @@ class AppealsTest : IntegrationTestBase() {
   @Test
   fun `Create new appeal returns 403 when application is not accessible to user`() {
     `Given a User` { createdByUser, _ ->
-      `Given an Application`(createdByUser) { application ->
+      `Given an Assessment for Approved Premises`(createdByUser, createdByUser) { _, application ->
         `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { _, jwt ->
           webTestClient.post()
             .uri("/applications/${application.id}/appeals")
@@ -186,7 +190,7 @@ class AppealsTest : IntegrationTestBase() {
   @Test
   fun `Create new appeal returns 403 when user does not have CAS1_APPEALS_MANAGER role`() {
     `Given a User` { userEntity, jwt ->
-      `Given an Application`(userEntity) { application ->
+      `Given an Assessment for Approved Premises`(userEntity, userEntity) { _, application ->
         webTestClient.post()
           .uri("/applications/${application.id}/appeals")
           .bodyValue(
@@ -209,7 +213,7 @@ class AppealsTest : IntegrationTestBase() {
   @Test
   fun `Create new appeal returns 400 when invalid data is provided`() {
     `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
-      `Given an Application`(userEntity) { application ->
+      `Given an Assessment for Approved Premises`(userEntity, userEntity) { _, application ->
         webTestClient.post()
           .uri("/applications/${application.id}/appeals")
           .bodyValue(
@@ -230,9 +234,34 @@ class AppealsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create new appeal returns 201 with correct body and Location header`() {
+  fun `Create new appeal returns 409 when no assessment exists on the application`() {
     `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
       `Given an Application`(userEntity) { application ->
+        webTestClient.post()
+          .uri("/applications/${application.id}/appeals")
+          .bodyValue(
+            NewAppeal(
+              appealDate = LocalDate.parse("2024-01-01"),
+              appealDetail = "Some details about the appeal.",
+              reviewer = "Someone Else",
+              decision = AppealDecision.accepted,
+              decisionDetail = "Some details about the decision.",
+            ),
+          )
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isEqualTo(HttpStatus.CONFLICT)
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("An appeal cannot be created when the application does not have an assessment: ${application.id}")
+      }
+    }
+  }
+
+  @Test
+  fun `Create new appeal returns 201 with correct body and Location header`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
+      `Given an Assessment for Approved Premises`(userEntity, userEntity) { assessment, application ->
         val result = webTestClient.post()
           .uri("/applications/${application.id}/appeals")
           .bodyValue(
@@ -263,7 +292,7 @@ class AppealsTest : IntegrationTestBase() {
             it.createdByUserId == userEntity.id &&
             it.decision == AppealDecision.accepted &&
             it.decisionDetail == "Some details about the decision." &&
-            it.assessmentId == null
+            it.assessmentId == assessment.id
         }
       }
     }
