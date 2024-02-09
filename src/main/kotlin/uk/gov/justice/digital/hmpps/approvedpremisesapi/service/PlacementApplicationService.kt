@@ -159,7 +159,7 @@ class PlacementApplicationService(
   }
 
   fun getWithdrawablePlacementApplications(application: ApprovedPremisesApplicationEntity) =
-    placementApplicationRepository.findByApplication(application).filter { it.canBeWithdrawn() }
+    placementApplicationRepository.findByApplication(application).filter { it.isInWithdrawableState() }
 
   @Transactional
   fun withdrawPlacementApplication(
@@ -176,7 +176,7 @@ class PlacementApplicationService(
 
     val placementApplicationEntity = placementApplicationAuthorisationResult.entity
 
-    if (!placementApplicationEntity.canBeWithdrawn()) {
+    if (!placementApplicationEntity.isInWithdrawableState()) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("The Placement Application cannot be withdrawn because it has an associated decision"),
       )
