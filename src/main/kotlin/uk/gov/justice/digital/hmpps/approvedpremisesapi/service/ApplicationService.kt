@@ -547,7 +547,7 @@ class ApplicationService(
         }
 
         if (application.isWithdrawn) {
-          return@validated generalError("applicationAlreadyWithdrawn")
+          return@validated success(Unit)
         }
 
         if (withdrawalReason == WithdrawalReason.other.value && otherReason == null) {

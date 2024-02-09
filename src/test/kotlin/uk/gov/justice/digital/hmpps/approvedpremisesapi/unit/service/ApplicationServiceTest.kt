@@ -1938,6 +1938,30 @@ class ApplicationServiceTest {
     }
 
     @Test
+    fun `withdrawApprovedPremisesApplication is idempotent and returns success if already withdrawn`() {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withIsWithdrawn(true)
+        .produce()
+
+      every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
+      every { mockUserAccessService.userCanWithdrawApplication(user, application) } returns true
+
+      val authorisableActionResult =
+        applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", null)
+
+      assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
+
+      val validatableActionResult = (authorisableActionResult as AuthorisableActionResult.Success).entity
+
+      assertThat(validatableActionResult is ValidatableActionResult.Success).isTrue
+    }
+
+    @Test
     fun `withdrawApprovedPremisesApplication returns FieldValidationError if the reason is null and the otherReason has not been set`() {
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
