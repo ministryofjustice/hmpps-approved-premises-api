@@ -78,7 +78,7 @@ class UserAccessService(
   }
 
   fun userCanCancelBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
-    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_WORKFLOW_MANAGER) || booking.application?.createdByUser == user
+    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_WORKFLOW_MANAGER)
     is TemporaryAccommodationPremisesEntity -> userCanManagePremisesBookings(user, booking.premises)
     else -> false
   }

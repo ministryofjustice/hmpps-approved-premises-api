@@ -526,15 +526,6 @@ class UserAccessServiceTest {
     }
 
     @Test
-    fun `userCanCancelBooking returns true if the given premises is a CAS1 premises and the user created the application`() {
-      currentRequestIsFor(ServiceName.approvedPremises)
-
-      val application = ApprovedPremisesApplicationEntityFactory().withCreatedByUser(user).produce()
-
-      assertThat(userAccessService.userCanCancelBooking(user, cas1Booking.copy(application = application))).isTrue
-    }
-
-    @Test
     fun `userCanCancelBooking returns false if the given premises is a CAS1 premises and the user has no suitable role`() {
       currentRequestIsFor(ServiceName.approvedPremises)
 
