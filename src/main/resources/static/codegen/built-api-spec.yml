@@ -6352,6 +6352,38 @@ components:
           required:
             - createdByUserId
             - status
+    NewCas2ApplicationNote:
+      type: object
+      properties:
+        note:
+          type: string
+      required:
+        - note
+      description: A note to add to an application
+    Cas2ApplicationNote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          example: 'roger@example.com'
+        name:
+          type: string
+          example: 'Roger Smith'
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - username
+        - email
+        - name
+        - body
+        - createdAt
+      description: Notes added to an application
     Cas2ApplicationStatus:
       type: object
       properties:
