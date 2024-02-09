@@ -537,6 +537,27 @@ class PlacementApplicationServiceTest {
 
       assertThat(entity.decision).isEqualTo(PlacementApplicationDecision.WITHDRAWN_BY_PP)
     }
+    
+    @Test
+    fun `it is idempotent, returning success if application already withdrawn`() {
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .withDecision(PlacementApplicationDecision.WITHDRAW)
+        .withCreatedByUser(user)
+        .produce()
+
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+
+      val result = placementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        user,
+        PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
+        checkUserPermissions = false,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+    }
 
     @Test
     fun `it returns unauthorised if a user did not create the placement application`() {

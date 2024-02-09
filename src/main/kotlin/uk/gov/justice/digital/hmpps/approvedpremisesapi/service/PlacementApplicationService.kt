@@ -181,6 +181,12 @@ class PlacementApplicationService(
 
     val placementApplicationEntity = placementApplicationAuthorisationResult.entity
 
+    if(placementApplicationEntity.isWithdrawn()) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.Success(placementApplicationEntity),
+      )
+    }
+
     if(checkUserPermissions && !userAccessService.userCanWithdrawPlacemenApplication(user, placementApplicationEntity)) {
       return AuthorisableActionResult.Unauthorised()
     }
