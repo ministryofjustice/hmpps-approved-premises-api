@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
@@ -54,6 +55,7 @@ class PlacementApplicationServiceTest {
   private val emailNotificationService = mockk<EmailNotificationService>()
   private val userAllocator = mockk<UserAllocator>()
   private val notifyConfig = mockk<NotifyConfig>()
+  private val userAccessService = mockk<UserAccessService>()
 
   private val placementApplicationService = PlacementApplicationService(
     placementApplicationRepository,
@@ -64,6 +66,7 @@ class PlacementApplicationServiceTest {
     userAllocator,
     emailNotificationService,
     notifyConfig,
+    userAccessService,
     sendPlacementRequestNotifications = true,
   )
 

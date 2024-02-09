@@ -3243,8 +3243,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get withdrawables for an application returns withdrawable placement applications`() {
-      `Given a User` { applicant, _ ->
-        `Given a User` { allocatedTo, jwt ->
+      `Given a User` { applicant, jwt ->
+        `Given a User` { allocatedTo, _ ->
           `Given an Offender` { offenderDetails, _ ->
 
             val (application, _) = produceAndPersistApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
@@ -3299,6 +3299,11 @@ class ApplicationTest : IntegrationTestBase() {
             }
 
             val expected = listOf(
+              Withdrawable(
+                application.id,
+                WithdrawableType.application,
+                emptyList(),
+              ),
               Withdrawable(
                 submittedPlacementApplication1.id,
                 WithdrawableType.placementApplication,

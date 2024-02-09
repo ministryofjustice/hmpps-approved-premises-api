@@ -41,6 +41,7 @@ class PlacementApplicationService(
   private val userAllocator: UserAllocator,
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
+  private val userAccessService: UserAccessService,
   @Value("\${notify.send-placement-request-notifications}")
   private val sendPlacementRequestNotifications: Boolean,
 ) {
@@ -158,8 +159,10 @@ class PlacementApplicationService(
     )
   }
 
-  fun getWithdrawablePlacementApplications(application: ApprovedPremisesApplicationEntity) =
-    placementApplicationRepository.findByApplication(application).filter { it.isInWithdrawableState() }
+  fun getWithdrawablePlacementApplicationsForUser(user: UserEntity, application: ApprovedPremisesApplicationEntity) =
+    placementApplicationRepository
+      .findByApplication(application)
+      .filter { it.isInWithdrawableState() && userAccessService.userCanWithdrawPlacemenApplication(user, it)}
 
   @Transactional
   fun withdrawPlacementApplication(

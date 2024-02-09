@@ -25,7 +25,7 @@ class WithdrawableService(
   ): Withdrawables {
     val placementRequests = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
     val bookings = bookingService.getCancelleableCas1BookingsForUser(user, application)
-    val placementApplications = placementApplicationService.getWithdrawablePlacementApplications(application)
+    val placementApplications = placementApplicationService.getWithdrawablePlacementApplicationsForUser(user, application)
 
     return Withdrawables(
       applicationService.isWithdrawable(application, user),

@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
@@ -1646,4 +1647,90 @@ class UserAccessServiceTest {
       assertThat(userAccessService.userCanWithdrawPlacementRequest(workflowManager, placementRequest)).isTrue
     }
   }
+
+  @Nested
+  inner class UserCanWithdrawPlacementApplication {
+
+    @Test
+    fun `userCanWithdrawPlacementApplication returns true if application was created by user`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(user)
+        .produce()
+
+      assertThat(userAccessService.userCanWithdrawPlacemenApplication(user, placementApplication)).isTrue
+    }
+
+    @Test
+    fun `userCanWithdrawPlacementApplication returns false if application was not created by user`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(anotherUserInRegion)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(anotherUserInRegion)
+        .produce()
+
+      assertThat(userAccessService.userCanWithdrawPlacemenApplication(user, placementApplication)).isFalse
+    }
+
+    @Test
+    fun `userCanWithdrawPlacementApplication returns true if submitted and has CAS1_WORKFLOW_MANAGER role`() {
+      val workflowManager = UserEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      workflowManager.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(user)
+          .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
+          .produce(),
+      )
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(user)
+        .produce()
+
+      assertThat(userAccessService.userCanWithdrawPlacemenApplication(user, placementApplication)).isTrue
+    }
+
+    @Test
+    fun `userCanWithdrawPlacementApplication returns false if not submitted and has CAS1_WORKFLOW_MANAGER role`() {
+      val workflowManager = UserEntityFactory()
+        .withProbationRegion(probationRegion)
+        .produce()
+
+      workflowManager.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(user)
+          .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
+          .produce(),
+      )
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(anotherUserInRegion)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(anotherUserInRegion)
+        .withSubmittedAt(null)
+        .produce()
+
+      assertThat(userAccessService.userCanWithdrawPlacemenApplication(user, placementApplication)).isFalse
+    }
+
+  }
+
 }
