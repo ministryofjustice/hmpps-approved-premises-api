@@ -158,6 +158,9 @@ class PlacementApplicationService(
     )
   }
 
+  fun getWithdrawablePlacementApplications(application: ApprovedPremisesApplicationEntity) =
+    placementApplicationRepository.findByApplication(application).filter { it.canBeWithdrawn() }
+
   @Transactional
   fun withdrawPlacementApplication(
     id: UUID,
@@ -371,9 +374,6 @@ class PlacementApplicationService(
       ApiPlacementType.releaseFollowingDecision -> PlacementType.RELEASE_FOLLOWING_DECISION
     }
   }
-
-  fun getWithdrawablePlacementApplications(application: ApprovedPremisesApplicationEntity) =
-    placementApplicationRepository.findByApplication(application).filter { it.canBeWithdrawn() }
 
   private fun setSchemaUpToDate(placementApplicationEntity: PlacementApplicationEntity): PlacementApplicationEntity {
     val latestSchema = jsonSchemaService.getNewestSchema(
