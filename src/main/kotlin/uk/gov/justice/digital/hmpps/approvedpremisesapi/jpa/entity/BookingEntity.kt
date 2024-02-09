@@ -247,6 +247,8 @@ data class BookingEntity(
   val arrival: ArrivalEntity?
     get() = arrivals.maxByOrNull { it.createdAt }
 
+  fun isInCancellableStateCas1() = (cancellation == null) && (arrivals.isEmpty())
+
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other !is BookingEntity) return false

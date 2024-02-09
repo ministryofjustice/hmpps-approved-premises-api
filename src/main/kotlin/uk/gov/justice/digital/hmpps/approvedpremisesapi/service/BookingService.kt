@@ -1194,11 +1194,8 @@ class BookingService(
 
   fun getCancelleableCas1BookingsForUser(user: UserEntity, application: ApprovedPremisesApplicationEntity): List<BookingEntity> =
     bookingRepository.findAllByApplication(application).filter { booking ->
-      isInCancellableStateCas1(booking) && userAccessService.userCanCancelBooking(user, booking)
+      booking.isInCancellableStateCas1() && userAccessService.userCanCancelBooking(user, booking)
     }
-
-  private fun isInCancellableStateCas1(booking: BookingEntity)
-    = (booking.cancellation == null) && (booking.arrivals.isEmpty())
 
   private fun createCas1Cancellation(
     user: UserEntity?,
@@ -1212,7 +1209,7 @@ class BookingService(
       return success(existingCancellation)
     }
 
-    if(!isInCancellableStateCas1(booking)) {
+    if(!booking.isInCancellableStateCas1()) {
       return generalError("The Booking is not in a state that can be cancelled")
     }
 
