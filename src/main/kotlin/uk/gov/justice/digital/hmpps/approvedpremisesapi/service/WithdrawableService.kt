@@ -56,6 +56,7 @@ class WithdrawableService(
         it.id,
         user,
         PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
+        checkUserPermissions = false,
       )
     }
 

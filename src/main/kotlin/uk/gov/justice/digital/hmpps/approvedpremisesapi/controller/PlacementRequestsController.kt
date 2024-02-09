@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMadeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NewPlacementRequestBookingConfirmationTransformer
@@ -179,6 +180,7 @@ class PlacementRequestsController(
 
   override fun placementRequestsIdWithdrawalPost(id: UUID, body: WithdrawPlacementRequest?): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
+
     val reason = when (body?.reason) {
       WithdrawPlacementRequestReason.duplicatePlacementRequest -> PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
       WithdrawPlacementRequestReason.alternativeProvisionIdentified -> PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED
@@ -192,7 +194,11 @@ class PlacementRequestsController(
     }
 
     val result = extractEntityFromAuthorisableActionResult(
-      placementRequestService.withdrawPlacementRequest(id, user, reason),
+      placementRequestService.withdrawPlacementRequest(
+        id,
+        user,
+        reason,
+        checkUserPermissions = true),
     )
 
     return ResponseEntity.ok(result)

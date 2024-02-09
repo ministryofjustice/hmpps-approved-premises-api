@@ -300,6 +300,7 @@ class PlacementRequestService(
     placementRequestId: UUID,
     user: UserEntity,
     reason: PlacementRequestWithdrawalReason?,
+    checkUserPermissions: Boolean,
   ): AuthorisableActionResult<Unit> {
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
@@ -308,7 +309,7 @@ class PlacementRequestService(
       return AuthorisableActionResult.Success(Unit)
     }
 
-    if(!userAccessService.userCanWithdrawPlacementRequest(user, placementRequest)) {
+    if(checkUserPermissions && !userAccessService.userCanWithdrawPlacementRequest(user, placementRequest)) {
       return AuthorisableActionResult.Unauthorised()
     }
 

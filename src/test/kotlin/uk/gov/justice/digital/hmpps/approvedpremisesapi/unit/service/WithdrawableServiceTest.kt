@@ -145,7 +145,7 @@ class WithdrawableServiceTest {
     } returns mockk<ValidatableActionResult<CancellationEntity>>()
 
     every {
-      mockPlacementRequestService.withdrawPlacementRequest(any(), user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
+      mockPlacementRequestService.withdrawPlacementRequest(any(), user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
     } returns mockk<AuthorisableActionResult<Unit>>()
 
     every {
@@ -168,7 +168,7 @@ class WithdrawableServiceTest {
 
     placementRequests.forEach {
       verify {
-        mockPlacementRequestService.withdrawPlacementRequest(it.id, user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
+        mockPlacementRequestService.withdrawPlacementRequest(it.id, user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
       }
     }
 

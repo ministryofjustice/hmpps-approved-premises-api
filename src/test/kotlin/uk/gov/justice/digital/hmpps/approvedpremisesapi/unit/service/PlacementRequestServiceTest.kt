@@ -606,6 +606,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         user,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
+        checkUserPermissions = true,
       )
 
       assertThat(result is AuthorisableActionResult.NotFound).isTrue
@@ -636,6 +637,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         user,
         reason,
+        checkUserPermissions = true,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -674,6 +676,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         user,
         PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
+        checkUserPermissions = true,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -710,6 +713,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         user,
         reason,
+        checkUserPermissions = true,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -767,6 +771,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         user,
         reason,
+        checkUserPermissions = true,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -791,7 +796,7 @@ class PlacementRequestServiceTest {
     }
 
     @Test
-    fun `withdrawPlacementRequest returns Unauthorised if User does not have permission`() {
+    fun `withdrawPlacementRequest returns Unauthorised if checkUserPermissions is true and user does not have permission`() {
       val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
 
       val user = UserEntityFactory()
@@ -825,9 +830,49 @@ class PlacementRequestServiceTest {
         placementRequestId,
         user,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
+        checkUserPermissions = true,
       )
 
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    }
+
+    @Test
+    fun `withdrawPlacementRequest returns authorised if checkUserPermissions is false and user does not have permission`() {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
+        .produce()
+
+      val placementRequest = createValidPlacementRequest(application, user)
+      val placementRequestId = placementRequest.id
+
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequest) } returns true
+      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
+      every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+
+      val result = placementRequestService.withdrawPlacementRequest(
+        placementRequestId,
+        user,
+        PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
+        checkUserPermissions = true,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+
+      verify {
+        placementRequestRepository.save(
+          match {
+            it.id == placementRequestId &&
+              it.isWithdrawn &&
+              it.withdrawalReason == PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
+          },
+        )
+      }
+
+      verify { bookingService wasNot Called }
     }
   }
 
