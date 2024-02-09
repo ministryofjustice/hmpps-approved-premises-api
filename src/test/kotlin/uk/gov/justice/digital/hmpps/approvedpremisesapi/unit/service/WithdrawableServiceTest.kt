@@ -149,7 +149,7 @@ class WithdrawableServiceTest {
     } returns mockk<AuthorisableActionResult<Unit>>()
 
     every {
-      mockPlacementApplicationService.withdrawPlacementApplication(any(), PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP)
+      mockPlacementApplicationService.withdrawPlacementApplication(any(), user, PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
     } returns mockk<AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>>>()
 
     withdrawableService.withdrawAllForApplication(application, user)
@@ -174,7 +174,7 @@ class WithdrawableServiceTest {
 
     placementApplications.forEach {
       verify {
-        mockPlacementApplicationService.withdrawPlacementApplication(it.id, PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP)
+        mockPlacementApplicationService.withdrawPlacementApplication(it.id, user, PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
       }
     }
   }

@@ -167,7 +167,9 @@ class PlacementApplicationService(
   @Transactional
   fun withdrawPlacementApplication(
     id: UUID,
+    user: UserEntity,
     reason: PlacementApplicationWithdrawalReason?,
+    checkUserPermissions: Boolean,
   ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
 
@@ -178,6 +180,10 @@ class PlacementApplicationService(
     }
 
     val placementApplicationEntity = placementApplicationAuthorisationResult.entity
+
+    if(checkUserPermissions && !userAccessService.userCanWithdrawPlacemenApplication(user, placementApplicationEntity)) {
+      return AuthorisableActionResult.Unauthorised()
+    }
 
     if (!placementApplicationEntity.isInWithdrawableState()) {
       return AuthorisableActionResult.Success(

@@ -522,7 +522,9 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
+        user,
         PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
+        checkUserPermissions = false,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -557,7 +559,36 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
+        user,
         PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
+        checkUserPermissions = false,
+      )
+
+      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    }
+
+    @Test
+    fun `it returns unauthorised if checkUserPermissions is true and user doesn't have permissions`() {
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .withDecision(null)
+        .withCreatedByUser(user)
+        .produce()
+
+      val templateId = UUID.randomUUID().toString()
+
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { userAccessService.userCanWithdrawPlacemenApplication(user, placementApplication) } returns false
+      every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
+      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+      every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
+
+      val result = placementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        user,
+        PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
+        checkUserPermissions = true,
       )
 
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
@@ -576,7 +607,9 @@ class PlacementApplicationServiceTest {
 
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
+        user,
         PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
+        checkUserPermissions = false,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue

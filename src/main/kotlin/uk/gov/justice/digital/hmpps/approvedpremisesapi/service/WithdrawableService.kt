@@ -47,7 +47,9 @@ class WithdrawableService(
     withdrawables.placementApplications.forEach {
       placementApplicationService.withdrawPlacementApplication(
         it.id,
+        user,
         PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP,
+        checkUserPermissions = false,
       )
     }
 

@@ -122,7 +122,13 @@ class PlacementApplicationsController(
       WithdrawPlacementRequestReason.errorInPlacementRequest -> PlacementApplicationWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST
       null -> null
     }
-    val result = placementApplicationService.withdrawPlacementApplication(id, withdrawalReason)
+
+    val result = placementApplicationService.withdrawPlacementApplication(
+      id,
+      userService.getUserForRequest(),
+      withdrawalReason,
+      checkUserPermissions = true,
+    )
 
     val validationResult = extractEntityFromAuthorisableActionResult(result)
     val placementApplication = extractEntityFromValidatableActionResult(validationResult)
