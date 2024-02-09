@@ -65,6 +65,7 @@ class PlacementRequestService(
   private val cancellationRepository: CancellationRepository,
   private val userAllocator: UserAllocator,
   @Lazy private val bookingService: BookingService,
+  private val userAccessService: UserAccessService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
 
@@ -304,7 +305,7 @@ class PlacementRequestService(
       return AuthorisableActionResult.Success(Unit)
     }
 
-    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && placementRequest.application.createdByUser != user) {
+    if(!userAccessService.userCanWithdrawPlacementRequest(user, placementRequest)) {
       return AuthorisableActionResult.Unauthorised()
     }
 
