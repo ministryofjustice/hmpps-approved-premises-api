@@ -31,7 +31,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import java.time.LocalDate
 
 class WithdrawableServiceTest {
@@ -139,24 +141,55 @@ class WithdrawableServiceTest {
     } returns placementApplications
 
     every {
-      mockPlacementRequestService.withdrawPlacementRequest(any(), user, PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN, checkUserPermissions = false)
+      mockPlacementRequestService.withdrawPlacementRequest(
+        any(),
+        PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
+        checkUserPermissions = false,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.Application,
+        ),
+      )
     } returns mockk<AuthorisableActionResult<Unit>>()
 
     every {
-      mockPlacementApplicationService.withdrawPlacementApplication(any(), user, PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN, checkUserPermissions = false)
+      mockPlacementApplicationService.withdrawPlacementApplication(
+        any(),
+        PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
+        checkUserPermissions = false,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.Application,
+        ),
+      )
     } returns mockk<AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>>>()
 
     withdrawableService.withdrawAllForApplication(application, user)
 
     placementRequests.forEach {
       verify {
-        mockPlacementRequestService.withdrawPlacementRequest(it.id, user, PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN, checkUserPermissions = false)
+        mockPlacementRequestService.withdrawPlacementRequest(
+          it.id,
+          PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
+          checkUserPermissions = false,
+          WithdrawalContext(
+            user,
+            WithdrawableEntityType.Application,
+          ),
+        )
       }
     }
 
     placementApplications.forEach {
       verify {
-        mockPlacementApplicationService.withdrawPlacementApplication(it.id, user, PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN, checkUserPermissions = false)
+        mockPlacementApplicationService.withdrawPlacementApplication(
+          it.id,
+          PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
+          checkUserPermissions = false,
+          WithdrawalContext(
+            user,
+            WithdrawableEntityType.Application,
+          ),)
       }
     }
   }
@@ -175,11 +208,26 @@ class WithdrawableServiceTest {
     } returns listOf(placementApplication)
 
     every {
-      mockPlacementRequestService.withdrawPlacementRequest(any(), user, PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN, checkUserPermissions = false)
+      mockPlacementRequestService.withdrawPlacementRequest(
+        any(),
+        PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
+        checkUserPermissions = false,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.PlacementRequest,
+        ),
+      )
     } returns AuthorisableActionResult.Unauthorised()
 
     every {
-      mockPlacementApplicationService.withdrawPlacementApplication(any(), user, PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN, checkUserPermissions = false)
+      mockPlacementApplicationService.withdrawPlacementApplication(
+        any(),
+        PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
+        checkUserPermissions = false,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.Application,
+        ),)
     } returns AuthorisableActionResult.Unauthorised()
 
     every { logger.error(any<String>()) } returns Unit

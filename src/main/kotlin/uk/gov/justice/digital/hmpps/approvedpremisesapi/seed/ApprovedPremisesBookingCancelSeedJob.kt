@@ -6,6 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import java.time.LocalDate
 import java.util.UUID
 
@@ -41,6 +43,10 @@ class ApprovedPremisesBookingCancelSeedJob(
       cancelledAt = LocalDate.now(),
       reasonId = errorInBookingDetailsCancellationReason,
       notes = null,
+      withdrawalContext = WithdrawalContext(
+        triggeringUser = null,
+        triggeringEntityType = WithdrawableEntityType.Booking,
+      ),
     )
 
     when (validationResult) {

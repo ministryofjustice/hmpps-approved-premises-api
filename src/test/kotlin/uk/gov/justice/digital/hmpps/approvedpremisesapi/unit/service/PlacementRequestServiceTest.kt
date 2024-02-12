@@ -65,6 +65,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
@@ -604,9 +606,12 @@ class PlacementRequestServiceTest {
 
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
-        user,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
         checkUserPermissions = true,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.PlacementRequest,
+        ),
       )
 
       assertThat(result is AuthorisableActionResult.NotFound).isTrue
@@ -635,9 +640,12 @@ class PlacementRequestServiceTest {
 
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
-        user,
         reason,
         checkUserPermissions = true,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.PlacementRequest,
+        ),
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -674,9 +682,12 @@ class PlacementRequestServiceTest {
 
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
-        user,
         PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
         checkUserPermissions = true,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.PlacementRequest,
+        ),
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -706,14 +717,17 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every {
-        bookingService.createCancellation(any(), any(), any(), any(), any())
+        bookingService.createCancellation(any(), any(), any(), any(), any(), any())
       } returns mockk<ValidatableActionResult.Success<CancellationEntity>>()
 
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
-        user,
         reason,
         checkUserPermissions = true,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.PlacementRequest,
+        ),
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -735,6 +749,10 @@ class PlacementRequestServiceTest {
           LocalDate.now(),
           CancellationReasonRepository.CAS1_WITHDRAWN_BY_PP_ID,
           "Automatically withdrawn as placement request was withdrawn",
+          withdrawalContext = WithdrawalContext(
+            user,
+            WithdrawableEntityType.PlacementRequest,
+          ),
         )
       }
     }
@@ -763,15 +781,18 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every {
-        bookingService.createCancellation(any(), any(), any(), any(), any())
+        bookingService.createCancellation(any(), any(), any(), any(), any(), any())
       } returns ValidatableActionResult.GeneralValidationError("booking cancellation didn't work!")
       every { logger.error(any<String>()) } returns Unit
 
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
-        user,
         reason,
         checkUserPermissions = true,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.PlacementRequest,
+        ),
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -828,9 +849,12 @@ class PlacementRequestServiceTest {
 
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
-        user,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
         checkUserPermissions = true,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.PlacementRequest,
+        ),
       )
 
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
@@ -855,9 +879,12 @@ class PlacementRequestServiceTest {
 
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
-        user,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
         checkUserPermissions = true,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.PlacementRequest,
+        ),
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue

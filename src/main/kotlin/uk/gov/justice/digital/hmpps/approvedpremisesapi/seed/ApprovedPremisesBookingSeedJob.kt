@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractResultFromClientResultOrThrow
@@ -241,6 +243,10 @@ class ApprovedPremisesBookingSeedJob(
           cancelledAt = row.cancellationDate,
           reasonId = cancellationReason.id,
           notes = row.cancellationNotes,
+          withdrawalContext = WithdrawalContext(
+            triggeringUser = null,
+            triggeringEntityType = WithdrawableEntityType.Booking,
+          )
         ),
       )
 

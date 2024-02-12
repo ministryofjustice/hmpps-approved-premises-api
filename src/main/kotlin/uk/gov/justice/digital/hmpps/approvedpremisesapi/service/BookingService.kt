@@ -1186,8 +1186,9 @@ class BookingService(
     cancelledAt: LocalDate,
     reasonId: UUID,
     notes: String?,
+    withdrawalContext: WithdrawalContext? = null,
   ) = when (booking.premises) {
-    is ApprovedPremisesEntity -> createCas1Cancellation(user, booking, cancelledAt, reasonId, notes)
+    is ApprovedPremisesEntity -> createCas1Cancellation(booking, cancelledAt, reasonId, notes, withdrawalContext)
     is TemporaryAccommodationPremisesEntity -> createCas3Cancellation(booking, cancelledAt, reasonId, notes)
     else -> throw RuntimeException("Unknown premises type ${booking.premises::class.qualifiedName}")
   }
@@ -1198,12 +1199,16 @@ class BookingService(
     }
 
   private fun createCas1Cancellation(
-    user: UserEntity?,
     booking: BookingEntity,
     cancelledAt: LocalDate,
     reasonId: UUID,
     notes: String?,
+    withdrawalContext: WithdrawalContext? = null,
   ) = validated<CancellationEntity> {
+    if(withdrawalContext == null) {
+      return generalError("Withdrawal Context is required")
+    }
+
     val existingCancellation = booking.cancellation
     if (booking.premises is ApprovedPremisesEntity && existingCancellation != null) {
       return success(existingCancellation)
@@ -1252,6 +1257,7 @@ class BookingService(
       )
     }
 
+    val user = withdrawalContext.triggeringUser
     if (shouldCreateDomainEventForBooking(booking, user)) {
       createCas1CancellationDomainEvent(booking, user, cancelledAt, reason)
     }

@@ -74,6 +74,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedSummaryTransformer
@@ -534,6 +536,10 @@ class PremisesController(
       cancelledAt = body.date,
       reasonId = body.reason,
       notes = body.notes,
+      withdrawalContext = WithdrawalContext(
+        triggeringUser = user,
+        triggeringEntityType = WithdrawableEntityType.Booking,
+      )
     )
 
     val cancellation = extractResultEntityOrThrow(result)

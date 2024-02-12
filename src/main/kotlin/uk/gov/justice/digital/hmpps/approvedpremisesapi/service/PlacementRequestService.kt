@@ -298,10 +298,12 @@ class PlacementRequestService(
 
   fun withdrawPlacementRequest(
     placementRequestId: UUID,
-    user: UserEntity,
     reason: PlacementRequestWithdrawalReason?,
     checkUserPermissions: Boolean,
+    withdrawalContext: WithdrawalContext,
   ): AuthorisableActionResult<Unit> {
+    val user = requireNotNull(withdrawalContext.triggeringUser)
+
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
 
@@ -325,6 +327,7 @@ class PlacementRequestService(
         LocalDate.now(),
         CAS1_WITHDRAWN_BY_PP_ID,
         "Automatically withdrawn as placement request was withdrawn",
+        withdrawalContext,
       )
 
       when (bookingCancellationResult) {

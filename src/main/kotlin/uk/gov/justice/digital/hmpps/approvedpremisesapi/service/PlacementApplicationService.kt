@@ -173,11 +173,12 @@ class PlacementApplicationService(
   @Transactional
   fun withdrawPlacementApplication(
     id: UUID,
-    user: UserEntity,
     reason: PlacementApplicationWithdrawalReason?,
     checkUserPermissions: Boolean,
+    withdrawalContext: WithdrawalContext,
   ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
+    val user = requireNotNull(withdrawalContext.triggeringUser)
 
     when (placementApplicationAuthorisationResult) {
       is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
@@ -213,9 +214,12 @@ class PlacementApplicationService(
       if(placementRequest.isInWithdrawableState()) {
         val placementRequestWithdrawalResult = placementRequestService.withdrawPlacementRequest(
           placementRequest.id,
-          user,
           PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
           checkUserPermissions = false,
+          WithdrawalContext(
+            user,
+            WithdrawableEntityType.PlacementApplication,
+          ),
         )
 
         when (placementRequestWithdrawalResult) {

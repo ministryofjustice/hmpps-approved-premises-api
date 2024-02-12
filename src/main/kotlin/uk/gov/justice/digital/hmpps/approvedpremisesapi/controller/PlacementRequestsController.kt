@@ -35,6 +35,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMadeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NewPlacementRequestBookingConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
@@ -196,9 +198,13 @@ class PlacementRequestsController(
     val result = extractEntityFromAuthorisableActionResult(
       placementRequestService.withdrawPlacementRequest(
         id,
-        user,
         reason,
-        checkUserPermissions = true),
+        checkUserPermissions = true,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.PlacementRequest,
+        )
+      ),
     )
 
     return ResponseEntity.ok(result)

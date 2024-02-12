@@ -129,6 +129,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.time.Instant
@@ -2104,6 +2106,10 @@ class BookingServiceTest {
         reasonId = UUID.randomUUID(),
         notes = "notes",
         user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        )
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2137,6 +2143,10 @@ class BookingServiceTest {
         reasonId = reasonId,
         notes = "notes",
         user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
@@ -2160,6 +2170,10 @@ class BookingServiceTest {
         reasonId = reasonId,
         notes = "notes",
         user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -2190,6 +2204,10 @@ class BookingServiceTest {
         reasonId = reasonId,
         notes = "notes",
         user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -2218,6 +2236,10 @@ class BookingServiceTest {
         reasonId = reasonId,
         notes = "notes",
         user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2276,6 +2298,10 @@ class BookingServiceTest {
         reasonId = reasonId,
         notes = notes,
         user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2359,6 +2385,10 @@ class BookingServiceTest {
         reasonId = reasonId,
         notes = notes,
         user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2441,6 +2471,10 @@ class BookingServiceTest {
         reasonId = reasonId,
         notes = notes,
         user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2527,6 +2561,10 @@ class BookingServiceTest {
         reasonId = reasonId,
         notes = "notes",
         user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -3119,7 +3157,7 @@ class BookingServiceTest {
       .produce()
 
     @BeforeEach
-    private fun setup() {
+    public fun setup() {
       every { mockPlacementRequestRepository.save(any()) } answers { callOriginal() }
       every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
       every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(application)
