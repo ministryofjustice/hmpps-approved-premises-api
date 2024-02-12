@@ -581,7 +581,7 @@ class PlacementApplicationServiceTest {
         placementRequestService.withdrawPlacementRequest(
           placementRequest1.id,
           user,
-          PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
+          PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
           checkUserPermissions = false)
       }
 
@@ -589,7 +589,7 @@ class PlacementApplicationServiceTest {
         placementRequestService.withdrawPlacementRequest(
           placementRequest2.id,
           user,
-          PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
+          PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
           checkUserPermissions = false)
       }
     }

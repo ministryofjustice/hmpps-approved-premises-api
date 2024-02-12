@@ -49,7 +49,7 @@ class WithdrawableService(
         val result = placementRequestService.withdrawPlacementRequest(
           placementRequest.id,
           user,
-          PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
+          PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
           checkUserPermissions = false,
         )
 

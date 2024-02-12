@@ -139,7 +139,7 @@ class WithdrawableServiceTest {
     } returns placementApplications
 
     every {
-      mockPlacementRequestService.withdrawPlacementRequest(any(), user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
+      mockPlacementRequestService.withdrawPlacementRequest(any(), user, PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN, checkUserPermissions = false)
     } returns mockk<AuthorisableActionResult<Unit>>()
 
     every {
@@ -150,7 +150,7 @@ class WithdrawableServiceTest {
 
     placementRequests.forEach {
       verify {
-        mockPlacementRequestService.withdrawPlacementRequest(it.id, user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
+        mockPlacementRequestService.withdrawPlacementRequest(it.id, user, PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN, checkUserPermissions = false)
       }
     }
 
@@ -162,7 +162,7 @@ class WithdrawableServiceTest {
   }
 
   @Test
-  fun `withdrawAllForApplication reports errors if can't withdrawh children`() {
+  fun `withdrawAllForApplication reports errors if can't withdraw children`() {
     val logger = mockk<Logger>()
     withdrawableService.log = logger
 
@@ -175,7 +175,7 @@ class WithdrawableServiceTest {
     } returns listOf(placementApplication)
 
     every {
-      mockPlacementRequestService.withdrawPlacementRequest(any(), user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
+      mockPlacementRequestService.withdrawPlacementRequest(any(), user, PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN, checkUserPermissions = false)
     } returns AuthorisableActionResult.Unauthorised()
 
     every {
