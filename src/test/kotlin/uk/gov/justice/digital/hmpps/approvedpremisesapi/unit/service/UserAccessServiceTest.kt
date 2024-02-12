@@ -499,75 +499,63 @@ class UserAccessServiceTest {
 
   @Nested
   inner class UserCanCancelBooking {
+    private val cas1Booking = BookingEntityFactory()
+      .withPremises(approvedPremises)
+      .produce()
 
-    @Nested
-    inner class UserCanViewBooking {
+    private val cas3BookingNotInUserRegion = BookingEntityFactory()
+      .withPremises(temporaryAccommodationPremisesNotInUserRegion)
+      .produce()
 
-      private val cas1Booking = BookingEntityFactory()
-        .withPremises(approvedPremises)
-        .produce()
+    private val cas3BookingInUserRegion = BookingEntityFactory()
+      .withPremises(temporaryAccommodationPremisesInUserRegion)
+      .produce()
 
-      private val cas3BookingNotInUserRegion = BookingEntityFactory()
-        .withPremises(temporaryAccommodationPremisesNotInUserRegion)
-        .produce()
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class)
+    fun `userCanCancelBooking returns true if the given premises is a CAS1 premises and the user has either the MANAGER or CAS1_WORKFLOW_MANAGER user role`(
+      role: UserRole,
+    ) {
+      currentRequestIsFor(ServiceName.approvedPremises)
 
-      private val cas3BookingInUserRegion = BookingEntityFactory()
-        .withPremises(temporaryAccommodationPremisesInUserRegion)
-        .produce()
+      user.addRoleForUnitTest(role)
 
-      @ParameterizedTest
-      @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
-      fun `userCanCancelBooking returns true if the given premises is a CAS1 premises and the user has either the MANAGER or MATCHER user role`(
-        role: UserRole,
-      ) {
-        currentRequestIsFor(ServiceName.approvedPremises)
+      val canCancelBooking = listOf(UserRole.CAS1_MANAGER,UserRole.CAS1_WORKFLOW_MANAGER).contains(role)
 
-        user.addRoleForUnitTest(role)
+      assertThat(userAccessService.userCanCancelBooking(user, cas1Booking)).isEqualTo(canCancelBooking)
+    }
 
-        assertThat(userAccessService.userCanCancelBooking(user, cas1Booking)).isTrue
-      }
+    @Test
+    fun `userCanCancelBooking returns false if the given premises is a CAS1 premises and the user has no suitable role`() {
+      currentRequestIsFor(ServiceName.approvedPremises)
 
-      @Test
-      fun `userCanCancelBooking returns true if the given premises is a CAS1 premises and the user created the application`() {
-        currentRequestIsFor(ServiceName.approvedPremises)
+      assertThat(userAccessService.userCanCancelBooking(user, cas1Booking)).isFalse
+    }
 
-        val application = ApprovedPremisesApplicationEntityFactory().withCreatedByUser(user).produce()
+    @Test
+    fun `userCanCancelBooking returns true if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
+      currentRequestIsFor(ServiceName.temporaryAccommodation)
 
-        assertThat(userAccessService.userCanCancelBooking(user, cas1Booking.copy(application = application))).isTrue
-      }
+      user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-      @Test
-      fun `userCanCancelBooking returns false if the given premises is a CAS1 premises and the user has no suitable role`() {
-        currentRequestIsFor(ServiceName.approvedPremises)
+      assertThat(userAccessService.userCanCancelBooking(user, cas3BookingInUserRegion)).isTrue
+    }
 
-        assertThat(userAccessService.userCanCancelBooking(user, cas1Booking)).isFalse
-      }
+    @Test
+    fun `userCanCancelBooking returns false if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
+      currentRequestIsFor(ServiceName.temporaryAccommodation)
 
-      @Test
-      fun `userCanCancelBooking returns true if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
-        currentRequestIsFor(ServiceName.temporaryAccommodation)
+      user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-        user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
+      assertThat(userAccessService.userCanCancelBooking(user, cas3BookingNotInUserRegion)).isFalse
+    }
 
-        assertThat(userAccessService.userCanCancelBooking(user, cas3BookingInUserRegion)).isTrue
-      }
+    @Test
+    fun `userCanCancelBooking returns false if the given premises is a CAS3 premises and the user does not have a suitable role`() {
+      currentRequestIsFor(ServiceName.temporaryAccommodation)
 
-      @Test
-      fun `userCanCancelBooking returns false if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
-        currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-        user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
-
-        assertThat(userAccessService.userCanCancelBooking(user, cas3BookingNotInUserRegion)).isFalse
-      }
-
-      @Test
-      fun `userCanCancelBooking returns false if the given premises is a CAS3 premises and the user does not have a suitable role`() {
-        currentRequestIsFor(ServiceName.temporaryAccommodation)
-
-        assertThat(userAccessService.userCanCancelBooking(user, cas3BookingInUserRegion)).isFalse
-        assertThat(userAccessService.userCanCancelBooking(user, cas3BookingNotInUserRegion)).isFalse
-      }
+      assertThat(userAccessService.userCanCancelBooking(user, cas3BookingInUserRegion)).isFalse
+      assertThat(userAccessService.userCanCancelBooking(user, cas3BookingNotInUserRegion)).isFalse
     }
   }
 

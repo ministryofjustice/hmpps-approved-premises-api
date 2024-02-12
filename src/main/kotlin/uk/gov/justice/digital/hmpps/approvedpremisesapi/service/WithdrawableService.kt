@@ -17,23 +17,21 @@ class WithdrawableService(
   @Lazy private val placementRequestService: PlacementRequestService,
   @Lazy private val bookingService: BookingService,
   @Lazy private val placementApplicationService: PlacementApplicationService,
-  @Lazy private val userAccessService: UserAccessService,
   @Lazy private val applicationService: ApplicationService,
 ) {
 
   fun allWithdrawables(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
-    onlyUserManageableBookings: Boolean = true,
   ): Withdrawables {
     val placementRequests = placementRequestService.getWithdrawablePlacementRequests(application)
-    val bookings = bookingService.getCancelleableBookings(application)
+    val bookings = bookingService.getCancelleableCas1BookingsForUser(user, application)
     val placementApplications = placementApplicationService.getWithdrawablePlacementApplications(application)
 
     return Withdrawables(
       applicationService.isWithdrawable(application, user),
       placementRequests = placementRequests,
-      bookings = if (onlyUserManageableBookings) { onlyUserManageable(bookings) } else { bookings },
+      bookings = bookings,
       placementApplications = placementApplications,
     )
   }
@@ -45,7 +43,6 @@ class WithdrawableService(
     val withdrawables = allWithdrawables(
       application,
       user,
-      onlyUserManageableBookings = false,
     )
 
     withdrawables.placementApplications.forEach {
@@ -74,7 +71,4 @@ class WithdrawableService(
       )
     }
   }
-
-  private fun onlyUserManageable(bookings: List<BookingEntity>) =
-    bookings.filter { userAccessService.currentUserCanManagePremisesBookings(it.premises) }
 }

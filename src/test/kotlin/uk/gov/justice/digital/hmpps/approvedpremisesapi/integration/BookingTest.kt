@@ -2765,9 +2765,9 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `Create Cancellation on Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(role: UserRole) {
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_WORKFLOW_MANAGER"])
+  fun `Create Cancellation on Booking returns OK with correct body when user has one of roles MANAGER, WORKFLOW_MANAGER`(role: UserRole) {
+    `Given a User`(roles = listOf(role)) { _, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
           approvedPremisesEntityFactory.produceAndPersist {

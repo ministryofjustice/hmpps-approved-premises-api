@@ -29,6 +29,10 @@ class ProbationRegionEntityFactory : Factory<ProbationRegionEntity> {
     this.apArea = { apArea }
   }
 
+  fun withDefaultApArea() = withApArea(
+    ApAreaEntityFactory().produce(),
+  )
+
   fun withDeliusCode(deliusCode: String) = apply {
     this.deliusCode = { deliusCode }
   }

@@ -2113,6 +2113,36 @@ class BookingServiceTest {
       verify { mockBookingRepository.save(any()) wasNot called }
     }
 
+
+    @Test
+    fun `createCancellation returns GeneralError if booking is not in a cancellable state`() {
+      val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+
+      val bookingEntity = BookingEntityFactory()
+        .withPremises(premises)
+        .withArrivals(mutableListOf())
+        .produce()
+
+      bookingEntity.arrivals.add(ArrivalEntityFactory().withBooking(bookingEntity).produce())
+
+      val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
+
+      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+      val result = bookingService.createCancellation(
+        booking = bookingEntity,
+        cancelledAt = LocalDate.parse("2022-08-25"),
+        reasonId = reasonId,
+        notes = "notes",
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
+      assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("The Booking is not in a state that can be cancelled")
+    }
+
     @Test
     fun `createCancellation returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
       val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
@@ -5748,6 +5778,94 @@ class BookingServiceTest {
     result as ValidatableActionResult.Success
     assertThat(result.entity.booking).isEqualTo(booking)
     assertThat(result.entity.workingDayCount).isEqualTo(2)
+  }
+
+  @Nested
+  inner class GetCancellableCas1Bookings {
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withDefaultProbationRegion()
+      .withDefaultLocalAuthorityArea()
+      .produce()
+
+    val cancellableBooking = BookingEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    @Test
+    fun `getCancellableCas1Bookings returns cancellable bookings`() {
+      every { mockUserAccessService.userCanCancelBooking(user, any()) } returns true
+      every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking)
+
+      val result = bookingService.getCancelleableCas1BookingsForUser(user, application)
+
+      assertThat(result).isEqualTo(listOf(cancellableBooking))
+    }
+
+    @Test
+    fun `getCancellableCas1Bookings doesn't return cancelled bookings`() {
+      val cancelledBooking = BookingEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      cancelledBooking.cancellations.add(
+        CancellationEntityFactory()
+          .withBooking(cancelledBooking)
+          .withDefaultReason()
+          .produce(),
+      )
+
+      every { mockUserAccessService.userCanCancelBooking(user, any()) } returns true
+      every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking, cancelledBooking)
+
+      val result = bookingService.getCancelleableCas1BookingsForUser(user, application)
+
+      assertThat(result).isEqualTo(listOf(cancellableBooking))
+    }
+
+    @Test
+    fun `getCancellableCas1Bookings doesn't return bookings with arrivals`() {
+      val bookingWithArrival = BookingEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      bookingWithArrival.arrivals.add(
+        ArrivalEntityFactory()
+          .withBooking(bookingWithArrival)
+          .produce(),
+      )
+
+      every { mockUserAccessService.userCanCancelBooking(user, any()) } returns true
+      every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking, bookingWithArrival)
+
+      val result = bookingService.getCancelleableCas1BookingsForUser(user, application)
+
+      assertThat(result).isEqualTo(listOf(cancellableBooking))
+    }
+
+    @Test
+    fun `getCancellableCas1Bookings doesn't return bookings if user can't cancel them`() {
+      val bookingUserCantCancel = BookingEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      every { mockUserAccessService.userCanCancelBooking(user, cancellableBooking) } returns true
+      every { mockUserAccessService.userCanCancelBooking(user, bookingUserCantCancel) } returns false
+      every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking, bookingUserCantCancel)
+
+      val result = bookingService.getCancelleableCas1BookingsForUser(user, application)
+
+      assertThat(result).isEqualTo(listOf(cancellableBooking))
+    }
   }
 
   @Nested

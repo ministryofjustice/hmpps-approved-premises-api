@@ -36,6 +36,8 @@ class CancellationEntityFactory : Factory<CancellationEntity> {
     this.reason = { reason }
   }
 
+  fun withDefaultReason() = withReason(CancellationReasonEntityFactory().produce())
+
   fun withNotes(notes: String) = apply {
     this.notes = { notes }
   }

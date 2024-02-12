@@ -3049,23 +3049,6 @@ class ApplicationTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, _ ->
           val (application, assessment) = produceAndPersistApplicationAndAssessment(user, user, offenderDetails)
 
-          val booking1ExpectedArrival = LocalDate.now().plusDays(1)
-          val booking1ExpectedDeparture = LocalDate.now().plusDays(6)
-          val booking1 = produceAndPersistBooking(
-            application,
-            booking1ExpectedArrival,
-            booking1ExpectedDeparture,
-          )
-
-          val bookingWithArrival = produceAndPersistBooking(
-            application,
-            LocalDate.now(),
-            LocalDate.now().plusDays(1),
-          )
-          arrivalEntityFactory.produceAndPersist() {
-            withBooking(bookingWithArrival)
-          }
-
           val placementApplicationExpectedArrival = LocalDate.now().plusDays(1)
           val placementApplicationDuration = 5
 
@@ -3074,7 +3057,29 @@ class ApplicationTest : IntegrationTestBase() {
             listOf(placementApplicationExpectedArrival to placementApplicationDuration),
           )
 
-          val placementRequest = produceAndPersistPlacementRequest(application)
+          val placementRequest1 = produceAndPersistPlacementRequest(application)
+
+          val booking1NoArrival = produceAndPersistBooking(
+            application,
+            startDate = LocalDate.now().plusDays(1),
+            endDate = LocalDate.now().plusDays(6),
+          )
+
+          placementRequest1.booking = booking1NoArrival
+          placementRequestRepository.save(placementRequest1)
+
+          val placementRequest2 = produceAndPersistPlacementRequest(application)
+          val booking2HasArrival = produceAndPersistBooking(
+            application,
+            LocalDate.now(),
+            LocalDate.now().plusDays(1),
+          )
+          arrivalEntityFactory.produceAndPersist {
+            withBooking(booking2HasArrival)
+          }
+
+          placementRequest2.booking = booking2HasArrival
+          placementRequestRepository.save(placementRequest2)
 
           webTestClient.post()
             .uri("/applications/${application.id}/withdrawal")
@@ -3094,20 +3099,23 @@ class ApplicationTest : IntegrationTestBase() {
           val updatedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
           assertThat(updatedAssessment.isWithdrawn).isTrue
 
-          val updatedBooking = bookingRepository.findByIdOrNull(booking1.id)!!
-          val cancellation = updatedBooking.cancellation
-          assertThat(cancellation).isNotNull
-          assertThat(cancellation!!.reason.name).isEqualTo("The probation practitioner requested it")
-
-          val updatedBookingWithArrival = bookingRepository.findByIdOrNull(bookingWithArrival.id)!!
-          assertThat(updatedBookingWithArrival.cancellation).isNull()
-
           val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplication.id)!!
           assertThat(updatedPlacementApplication.decision).isEqualTo(PlacementApplicationDecision.WITHDRAWN_BY_PP)
 
-          val updatedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
-          assertThat(updatedPlacementRequest.isWithdrawn).isEqualTo(true)
-          assertThat(updatedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
+          val updatedPlacementRequest1 = placementRequestRepository.findByIdOrNull(placementRequest1.id)!!
+          assertThat(updatedPlacementRequest1.isWithdrawn).isEqualTo(true)
+          assertThat(updatedPlacementRequest1.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
+
+          val updatedPlacementRequest2 = placementRequestRepository.findByIdOrNull(placementRequest2.id)!!
+          assertThat(updatedPlacementRequest2.isWithdrawn).isEqualTo(true)
+          assertThat(updatedPlacementRequest2.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
+
+          val updatedBooking1 = bookingRepository.findByIdOrNull(booking1NoArrival.id)!!
+          assertThat(updatedBooking1.isCancelled).isTrue()
+          assertThat(updatedBooking1.cancellation!!.reason.name).isEqualTo("The probation practitioner requested it")
+
+          val updatedBooking2WithArrival = bookingRepository.findByIdOrNull(booking2HasArrival.id)!!
+          assertThat(updatedBooking2WithArrival.isCancelled).isFalse()
         }
       }
     }
@@ -3321,7 +3329,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_WORKFLOW_MANAGER"])
     fun `Get withdrawables for an application returns withdrawable bookings when a user can manage bookings`(role: UserRole) {
       `Given a User` { applicant, _ ->
         `Given a User`(roles = listOf(role)) { allocatedTo, jwt ->
