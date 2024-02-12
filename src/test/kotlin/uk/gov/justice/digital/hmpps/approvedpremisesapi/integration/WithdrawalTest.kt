@@ -499,8 +499,21 @@ class WithdrawalTest : IntegrationTestBase() {
   @Nested
   inner class WithdrawalCascading {
 
+    /**
+     * ```
+     * elements                         withdrawn
+     * ------------------------------------------
+     * application                      YES
+     *  - assessment                    YES
+     *    - placement request 1         YES
+     *      - booking 1 no arrival      YES
+     *    - placement request 1         YES
+     *      - booking 2 has arrival     NO
+     *    - placement application       YES
+     * ```
+     */
     @Test
-    fun `Withdrawing an application withdraws all related entities`() {
+    fun `Withdrawing an application cascades to all possible entities`() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           val (application, assessment) = produceAndPersistApplicationAndAssessment(user, user, offenderDetails)
