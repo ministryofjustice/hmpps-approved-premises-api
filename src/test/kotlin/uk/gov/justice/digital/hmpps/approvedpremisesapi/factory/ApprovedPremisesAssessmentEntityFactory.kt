@@ -53,6 +53,10 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     this.application = { application }
   }
 
+  fun withYieldedApplication(application: Yielded<ApplicationEntity>) = apply {
+    this.application = application
+  }
+
   fun withAssessmentSchema(assessmentSchema: JsonSchemaEntity) = apply {
     this.assessmentSchema = { assessmentSchema }
   }

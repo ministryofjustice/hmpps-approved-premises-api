@@ -436,6 +436,12 @@ class ApplicationsController(
       is AuthorisableActionResult.Success -> applicationResult.entity
     }
 
+    val assessment = application.getLatestAssessment()
+      ?: throw ConflictProblem(
+        applicationId,
+        "An appeal cannot be created when the application does not have an assessment",
+      )
+
     val createAppealResult = appealService.createAppeal(
       appealDate = body.appealDate,
       appealDetail = body.appealDetail,
@@ -443,6 +449,7 @@ class ApplicationsController(
       decision = body.decision,
       decisionDetail = body.decisionDetail,
       application = application,
+      assessment = assessment,
       createdBy = user,
     )
 

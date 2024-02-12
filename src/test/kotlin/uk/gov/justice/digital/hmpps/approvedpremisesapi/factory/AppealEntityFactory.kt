@@ -28,7 +28,11 @@ class AppealEntityFactory : Factory<AppealEntity> {
       .withYieldedCreatedByUser(createdBy)
       .produce()
   }
-  private var assessment: Yielded<ApprovedPremisesAssessmentEntity?> = { null }
+  private var assessment: Yielded<ApprovedPremisesAssessmentEntity> = {
+    ApprovedPremisesAssessmentEntityFactory()
+      .withYieldedApplication(application)
+      .produce()
+  }
   private var createdBy: Yielded<UserEntity> = {
     UserEntityFactory()
       .withProbationRegion(
@@ -81,7 +85,7 @@ class AppealEntityFactory : Factory<AppealEntity> {
     this.assessment = { ApprovedPremisesAssessmentEntityFactory().apply(configuration).produce() }
   }
 
-  fun withAssessment(assessment: ApprovedPremisesAssessmentEntity?) = apply {
+  fun withAssessment(assessment: ApprovedPremisesAssessmentEntity) = apply {
     this.assessment = { assessment }
   }
 

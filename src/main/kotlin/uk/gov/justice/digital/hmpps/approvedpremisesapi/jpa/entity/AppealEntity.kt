@@ -30,7 +30,7 @@ data class AppealEntity(
   val application: ApplicationEntity,
   @ManyToOne
   @JoinColumn(name = "assessment_id")
-  var assessment: AssessmentEntity?,
+  var assessment: AssessmentEntity,
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")
   val createdBy: UserEntity,

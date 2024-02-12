@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -37,6 +38,7 @@ class AppealService(
     decision: AppealDecision,
     decisionDetail: String,
     application: ApplicationEntity,
+    assessment: AssessmentEntity,
     createdBy: UserEntity,
   ): AuthorisableActionResult<ValidatableActionResult<AppealEntity>> {
     if (!createdBy.hasRole(UserRole.CAS1_APPEALS_MANAGER)) return AuthorisableActionResult.Unauthorised()
@@ -73,7 +75,7 @@ class AppealService(
             decisionDetail = decisionDetail,
             createdAt = OffsetDateTime.now(),
             application = application,
-            assessment = null,
+            assessment = assessment,
             createdBy = createdBy,
           ),
         )

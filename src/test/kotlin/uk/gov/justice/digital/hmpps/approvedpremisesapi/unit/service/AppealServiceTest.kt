@@ -13,8 +13,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AppealEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -43,6 +45,10 @@ class AppealServiceTest {
 
   private val application = ApprovedPremisesApplicationEntityFactory()
     .withCreatedByUser(createdByUser)
+    .produce()
+
+  private val assessment = ApprovedPremisesAssessmentEntityFactory()
+    .withApplication(application)
     .produce()
 
   @Nested
@@ -104,6 +110,7 @@ class AppealServiceTest {
 
       val appeal = AppealEntityFactory()
         .withApplication(application)
+        .withAssessment(assessment)
         .produce()
 
       every { appealRepository.findById(appeal.id) } returns Optional.of(appeal)
@@ -127,6 +134,7 @@ class AppealServiceTest {
         AppealDecision.accepted,
         "Some information about the decision made",
         application,
+        assessment,
         createdByUser,
       )
 
@@ -144,6 +152,7 @@ class AppealServiceTest {
         AppealDecision.accepted,
         "Some information about the decision made",
         application,
+        assessment,
         createdByUser,
       )
 
@@ -167,6 +176,7 @@ class AppealServiceTest {
         AppealDecision.accepted,
         "Some information about the decision made",
         application,
+        assessment,
         createdByUser,
       )
 
@@ -190,6 +200,7 @@ class AppealServiceTest {
         AppealDecision.accepted,
         "Some information about the decision made",
         application,
+        assessment,
         createdByUser,
       )
 
@@ -213,6 +224,7 @@ class AppealServiceTest {
         AppealDecision.accepted,
         decisionDetail,
         application,
+        assessment,
         createdByUser,
       )
 
@@ -238,6 +250,7 @@ class AppealServiceTest {
         AppealDecision.accepted,
         "Some information about the decision made",
         application,
+        assessment,
         createdByUser,
       )
 
@@ -246,27 +259,25 @@ class AppealServiceTest {
       assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
       val resultEntity = result.entity as ValidatableActionResult.Success
       assertThat(resultEntity.entity).matches {
-        it.appealDate == now &&
-          it.appealDetail == "Some information about why the appeal is being made" &&
-          it.reviewer == "ReviewBot 9000" &&
-          it.decision == AppealDecision.accepted.value &&
-          it.decisionDetail == "Some information about the decision made" &&
-          it.application == application &&
-          it.createdBy == createdByUser
+        it.matches(now)
       }
       verify(exactly = 1) {
         appealRepository.save(
           match {
-            it.appealDate == now &&
-              it.appealDetail == "Some information about why the appeal is being made" &&
-              it.reviewer == "ReviewBot 9000" &&
-              it.decision == AppealDecision.accepted.value &&
-              it.decisionDetail == "Some information about the decision made" &&
-              it.application == application &&
-              it.createdBy == createdByUser
+            it.matches(now)
           },
         )
       }
     }
+
+    private fun AppealEntity.matches(now: LocalDate) =
+      this.appealDate == now &&
+        this.appealDetail == "Some information about why the appeal is being made" &&
+        this.reviewer == "ReviewBot 9000" &&
+        this.decision == AppealDecision.accepted.value &&
+        this.decisionDetail == "Some information about the decision made" &&
+        this.application == application &&
+        this.assessment == assessment &&
+        this.createdBy == createdByUser
   }
 }

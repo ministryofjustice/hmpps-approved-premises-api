@@ -17,6 +17,6 @@ class AppealTransformer {
     createdByUserId = jpa.createdBy.id,
     decision = AppealDecision.entries.first { it.value == jpa.decision },
     decisionDetail = jpa.decisionDetail,
-    assessmentId = jpa.assessment?.id,
+    assessmentId = jpa.assessment.id,
   )
 }
