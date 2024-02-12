@@ -508,11 +508,12 @@ class WithdrawalTest : IntegrationTestBase() {
      * ------------------------------------------
      * application                      YES
      *  - assessment                    YES
-     *    - placement request 1         YES
-     *      - booking 1 no arrival      YES
-     *    - placement request 1         YES
-     *      - booking 2 has arrival     NO
      *    - placement application       YES
+     *      - placement request 1       YES
+     *        - booking 1 no arrival    YES
+     *      - placement request 2       YES
+     *    - placement request 3         YES
+     *      - booking 2 has arrival     NO
      * ```
      */
     @Test
@@ -528,7 +529,9 @@ class WithdrawalTest : IntegrationTestBase() {
             listOf(placementApplicationExpectedArrival to placementApplicationDuration),
           )
 
-          val placementRequest1 = produceAndPersistPlacementRequest(application)
+          val placementRequest1 = produceAndPersistPlacementRequest(application) {
+            withPlacementApplication(placementApplication)
+          }
           val booking1NoArrival = produceAndPersistBooking(
             application,
             startDate = LocalDate.now().plusDays(1),
@@ -537,7 +540,11 @@ class WithdrawalTest : IntegrationTestBase() {
           placementRequest1.booking = booking1NoArrival
           placementRequestRepository.save(placementRequest1)
 
-          val placementRequest2 = produceAndPersistPlacementRequest(application)
+          val placementRequest2 = produceAndPersistPlacementRequest(application) {
+            withPlacementApplication(placementApplication)
+          }
+
+          val placementRequest3 = produceAndPersistPlacementRequest(application)
           val booking2HasArrival = produceAndPersistBooking(
             application,
             LocalDate.now(),
@@ -546,8 +553,8 @@ class WithdrawalTest : IntegrationTestBase() {
           arrivalEntityFactory.produceAndPersist {
             withBooking(booking2HasArrival)
           }
-          placementRequest2.booking = booking2HasArrival
-          placementRequestRepository.save(placementRequest2)
+          placementRequest3.booking = booking2HasArrival
+          placementRequestRepository.save(placementRequest3)
 
           withdrawApplication(application, jwt)
 
@@ -555,11 +562,11 @@ class WithdrawalTest : IntegrationTestBase() {
           assertAssessmentWithdrawn(assessment)
 
           assertPlacementApplicationWithdrawn(placementApplication, PlacementApplicationDecision.WITHDRAWN_BY_PP)
-
           assertPlacementRequestWithdrawn(placementRequest1, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
           assertBookingWithdrawn(booking1NoArrival, "The probation practitioner requested it")
-
           assertPlacementRequestWithdrawn(placementRequest2, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
+
+          assertPlacementRequestWithdrawn(placementRequest3, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
           assertBookingNotWithdrawn(booking2HasArrival)
         }
       }
