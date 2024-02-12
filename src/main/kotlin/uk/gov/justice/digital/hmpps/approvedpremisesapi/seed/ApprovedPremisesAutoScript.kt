@@ -14,9 +14,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -50,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import java.io.IOException
 import java.io.InputStreamReader
@@ -73,6 +77,7 @@ class ApprovedPremisesAutoScript(
   private val applicationRepository: ApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val domainEventService: DomainEventService,
+  private val userService: UserService,
   private val apAreaRepository: ApAreaRepository,
   private val assessmentRepository: AssessmentRepository,
   private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
@@ -86,28 +91,67 @@ class ApprovedPremisesAutoScript(
 
   fun script() {
     seedLogger.info("Auto-Scripting for Approved Premises")
+    addRolesAndQualificationsToUsers()
     scriptApplications()
+  }
+
+  private fun users(): List<UserEntity> {
+    return userRepository
+      .findAll()
+      .filter { listOf("BERNARD.BEAKS", "JIMSNOWLDAP").contains(it.deliusUsername) }
+  }
+
+  private fun addRolesAndQualificationsToUsers() {
+    val userRolesAndQualifications = UserRolesAndQualifications(
+      roles = roles(),
+      qualifications = qualifications(),
+    )
+    users().forEach { user ->
+      seedLogger.info("Auto-Scripting AP Roles for ${user.name}: ${roles()}")
+      seedLogger.info("   and AP Qualifications for ${user.name}: ${qualifications()}")
+      userService.updateUser(user.id, userRolesAndQualifications)
+    }
+  }
+
+  private fun roles(): List<ApprovedPremisesUserRole> {
+    return listOf(
+      ApprovedPremisesUserRole.roleAdmin,
+      ApprovedPremisesUserRole.applicant,
+      ApprovedPremisesUserRole.assessor,
+      ApprovedPremisesUserRole.manager,
+      ApprovedPremisesUserRole.matcher,
+      ApprovedPremisesUserRole.workflowManager,
+      ApprovedPremisesUserRole.reportViewer,
+      ApprovedPremisesUserRole.appealsManager,
+    )
+  }
+
+  private fun qualifications(): List<UserQualification> {
+    return listOf(
+      UserQualification.womens,
+      UserQualification.pipe,
+      UserQualification.lao,
+      UserQualification.emergency,
+      UserQualification.esap,
+    )
   }
 
   private fun scriptApplications() {
     seedLogger.info("Auto-Scripting Approved Premises applications")
-    userRepository
-      .findAll()
-      .filter { listOf("BERNARD.BEAKS", "JIMSNOWLDAP").contains(it.deliusUsername) }
-      .forEach { user ->
-        listOf(
-          "IN_PROGRESS",
-          "SUBMITTED",
-          "INFO_REQUIRED",
-          "ACCEPTED",
-          "APPLIED_FOR_PLACEMENT",
-        ).forEach { state ->
-          createApplicationFor(
-            applicant = user,
-            state = state,
-          )
-        }
+    users().forEach { user ->
+      listOf(
+        "IN_PROGRESS",
+        "SUBMITTED",
+        "INFO_REQUIRED",
+        "ACCEPTED",
+        "APPLIED_FOR_PLACEMENT",
+      ).forEach { state ->
+        createApplicationFor(
+          applicant = user,
+          state = state,
+        )
       }
+    }
   }
 
   private fun createApplicationFor(applicant: UserEntity, state: String) {
@@ -244,6 +288,16 @@ class ApprovedPremisesAutoScript(
 
     val creationDateTime = application.createdAt.plusDays(randomInt(10, 20).toLong())
     val submissionDateTime = creationDateTime.plusDays(randomInt(1, 2).toLong())
+
+    // val placementDates = apiPlacementDates.map {
+    //      PlacementDateEntity(
+    //        id = UUID.randomUUID(),
+    //        expectedArrival = it.expectedArrival,
+    //        duration = it.duration,
+    //        placementApplication = placementApplicationEntity,
+    //        createdAt = OffsetDateTime.now(),
+    //      )
+    //    }.toMutableList()
 
     placementApplicationRepository.save(
       PlacementApplicationEntity(
