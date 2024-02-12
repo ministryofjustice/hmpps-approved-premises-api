@@ -203,7 +203,7 @@ class PlacementApplicationService(
       )
     }
 
-    placementApplication.decision = PlacementApplicationDecision.WITHDRAWN_BY_PP
+    placementApplication.decision = PlacementApplicationDecision.WITHDRAW
     placementApplication.decisionMadeAt = OffsetDateTime.now()
     placementApplication.withdrawalReason = reason
 

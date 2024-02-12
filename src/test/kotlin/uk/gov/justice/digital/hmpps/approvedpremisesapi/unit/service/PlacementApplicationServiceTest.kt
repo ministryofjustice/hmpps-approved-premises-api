@@ -510,7 +510,7 @@ class PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `it withdraws an application`() {
+    fun `it withdraws a placement application`() {
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
@@ -540,7 +540,7 @@ class PlacementApplicationServiceTest {
 
       val entity = validationResult.entity
 
-      assertThat(entity.decision).isEqualTo(PlacementApplicationDecision.WITHDRAWN_BY_PP)
+      assertThat(entity.decision).isEqualTo(PlacementApplicationDecision.WITHDRAW)
     }
 
     @Test

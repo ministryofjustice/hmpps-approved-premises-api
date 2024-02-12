@@ -557,8 +557,8 @@ class WithdrawalTest : IntegrationTestBase() {
 
           assertPlacementApplicationWithdrawn(
             placementApplication,
-            PlacementApplicationDecision.WITHDRAWN_BY_PP,
-            PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP,
+            PlacementApplicationDecision.WITHDRAW,
+            PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
           )
           assertPlacementRequestWithdrawn(placementRequest1, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
           assertBookingWithdrawn(booking1NoArrival, "The probation practitioner requested it")
@@ -623,7 +623,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
           assertPlacementApplicationWithdrawn(
             placementApplication,
-            PlacementApplicationDecision.WITHDRAWN_BY_PP,
+            PlacementApplicationDecision.WITHDRAW,
             PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
           )
 
