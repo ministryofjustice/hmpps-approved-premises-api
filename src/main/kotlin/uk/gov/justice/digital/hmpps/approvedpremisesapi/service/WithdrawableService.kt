@@ -48,9 +48,12 @@ class WithdrawableService(
       if(placementRequest.isInWithdrawableState()) {
         val result = placementRequestService.withdrawPlacementRequest(
           placementRequest.id,
-          user,
           PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
           checkUserPermissions = false,
+          WithdrawalContext(
+            user,
+            WithdrawableEntityType.Application,
+          ),
         )
 
         when (result) {
@@ -71,9 +74,12 @@ class WithdrawableService(
       if(placementApplication.isInWithdrawableState()) {
         val result = placementApplicationService.withdrawPlacementApplication(
           placementApplication.id,
-          user,
           PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
           checkUserPermissions = false,
+          withdrawalContext = WithdrawalContext(
+            user,
+            WithdrawableEntityType.Application
+          ),
         )
 
         when (result) {
@@ -87,4 +93,16 @@ class WithdrawableService(
       }
     }
   }
+}
+
+data class WithdrawalContext(
+  val triggeringUser: UserEntity?,
+  val triggeringEntityType: WithdrawableEntityType,
+)
+
+enum class WithdrawableEntityType {
+  Application,
+  PlacementRequest,
+  PlacementApplication,
+  Booking,
 }
