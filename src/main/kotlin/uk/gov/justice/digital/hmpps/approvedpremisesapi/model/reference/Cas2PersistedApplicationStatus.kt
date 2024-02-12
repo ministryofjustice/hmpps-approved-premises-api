@@ -7,5 +7,9 @@ data class Cas2PersistedApplicationStatus(
   val name: String,
   val label: String,
   val description: String,
+  val statusDetails: List<Cas2PersistedApplicationStatusDetail>? = emptyList(),
   val isActive: Boolean = true,
-)
+) {
+  fun findStatusDetailOnStatus(detailName: String) =
+    statusDetails?.find { detail -> detail.name == detailName }
+}

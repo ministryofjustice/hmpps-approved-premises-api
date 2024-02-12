@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ExternalUserTransformer
 
@@ -21,6 +23,16 @@ class StatusUpdateTransformer(
       description = jpa.description,
       updatedBy = externalUserTransformer.transformJpaToApi(jpa.assessor),
       updatedAt = jpa.createdAt?.toInstant(),
+      statusUpdateDetails = jpa.statusUpdateDetails?.map { detail -> transformStatusUpdateDetailsJpaToApi(detail) },
+    )
+  }
+
+  fun transformStatusUpdateDetailsJpaToApi(jpa: Cas2StatusUpdateDetailEntity):
+    Cas2StatusUpdateDetail {
+    return Cas2StatusUpdateDetail(
+      id = jpa.id,
+      name = jpa.statusDetail(jpa.statusUpdate.statusId, jpa.statusDetailId).name,
+      label = jpa.label,
     )
   }
 }

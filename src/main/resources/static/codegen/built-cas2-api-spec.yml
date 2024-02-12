@@ -2268,11 +2268,32 @@ components:
         description:
           type: string
           example: 'More information about the application has been requested from the POM (Prison Offender Manager).'
+        statusDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2ApplicationStatusDetail'
       required:
         - id
         - name
         - label
         - description
+        - statusDetails
+    Cas2ApplicationStatusDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'changeOfCircumstances'
+        label:
+          type: string
+          example: 'Change of Circumstances'
+      required:
+        - id
+        - name
+        - label
     Cas2ApplicationStatusUpdate:
       type: object
       properties:
@@ -2280,6 +2301,12 @@ components:
           type: string
           example: 'moreInfoRequired'
           description: 'The "name" of the new status to be applied'
+        newStatusDetails:
+          type: array
+          items:
+            type: string
+            example: 'changeOfCircumstances'
+            description: 'The "name" of the new detail belonging to the new status'
       required:
         - newStatus
     Cas2SubmittedApplicationSummary:
@@ -2325,11 +2352,31 @@ components:
         updatedAt:
           type: string
           format: date-time
+        statusUpdateDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2StatusUpdateDetail'
       required:
         - id
         - name
         - label
         - description
+    Cas2StatusUpdateDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: 'moreInfoRequested'
+        label:
+          type: string
+          example: 'More information requested'
+      required:
+        - id
+        - name
+        - label
     ApplicationStatus:
       type: string
       enum:

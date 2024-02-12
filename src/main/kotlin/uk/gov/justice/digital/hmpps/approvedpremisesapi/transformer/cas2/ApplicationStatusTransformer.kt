@@ -2,7 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusDetail
 
 @Component("Cas2ApplicationStatusTransformer")
 class ApplicationStatusTransformer {
@@ -12,6 +14,16 @@ class ApplicationStatusTransformer {
       name = status.name,
       label = status.label,
       description = status.description,
+      statusDetails = status.statusDetails?.map { statusDetail -> transformStatusDetailModelToApi(statusDetail) }
+        ?: emptyList(),
+    )
+  }
+
+  fun transformStatusDetailModelToApi(statusDetail: Cas2PersistedApplicationStatusDetail): Cas2ApplicationStatusDetail {
+    return Cas2ApplicationStatusDetail(
+      id = statusDetail.id,
+      name = statusDetail.name,
+      label = statusDetail.label,
     )
   }
 }
