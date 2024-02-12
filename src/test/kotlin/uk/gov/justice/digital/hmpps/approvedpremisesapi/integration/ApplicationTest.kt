@@ -3018,6 +3018,32 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Withdrawing an application sends a withdrawal email`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val (application, _) = produceAndPersistApplicationAndAssessment(user, user, offenderDetails)
+
+          webTestClient.post()
+            .uri("/applications/${application.id}/withdrawal")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewWithdrawal(
+                reason = WithdrawalReason.duplicateApplication,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          emailNotificationAsserter.assertEmailRequested(
+            user.email!!,
+            notifyConfig.templates.applicationWithdrawn,
+          )
+        }
+      }
+    }
+
+    @Test
     fun `Withdrawing an application withdraws all related entities`() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->

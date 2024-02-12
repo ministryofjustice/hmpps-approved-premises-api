@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyMode
@@ -14,10 +15,13 @@ class EmailNotificationService(
   private val notifyConfig: NotifyConfig,
   @Qualifier("normalNotificationClient") private val normalNotificationClient: NotificationClient?,
   @Qualifier("guestListNotificationClient") private val guestListNotificationClient: NotificationClient?,
+  private val applicationEventPublisher: ApplicationEventPublisher,
 ) {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
   fun sendEmail(email: String, templateId: String, personalisation: Map<String, *>) {
+    applicationEventPublisher.publishEvent(SendEmailRequestedEvent(EmailRequest(email, templateId, personalisation)))
+
     try {
       if (notifyConfig.mode == NotifyMode.DISABLED) {
         log.info("Email sending is disabled - would have sent template $templateId to user $email")
@@ -34,3 +38,7 @@ class EmailNotificationService(
     }
   }
 }
+
+data class EmailRequest(val email: String, val templateId: String, val personalisation: Map<String, *>)
+
+data class SendEmailRequestedEvent(val request: EmailRequest)
