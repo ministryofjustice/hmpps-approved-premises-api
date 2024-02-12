@@ -1,18 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
@@ -28,8 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -122,16 +116,16 @@ class WithdrawalTest : IntegrationTestBase() {
         `Given a User` { allocatedTo, _ ->
           `Given an Offender` { offenderDetails, _ ->
 
-            val (application, _) = createApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
+            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
 
-            val placementRequest1 = createPlacementRequest(application)
-            val placementRequest2 = createPlacementRequest(application)
+            val placementRequest1 = produceAndPersistPlacementRequest(application)
+            val placementRequest2 = produceAndPersistPlacementRequest(application)
 
-            createPlacementRequest(application) {
+            produceAndPersistPlacementRequest(application) {
               withReallocatedAt(OffsetDateTime.now())
             }
 
-            val placementRequestWithBooking = createPlacementRequest(application) {
+            val placementRequestWithBooking = produceAndPersistPlacementRequest(application) {
               val premises = approvedPremisesEntityFactory.produceAndPersist {
                 withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
                 withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
@@ -144,7 +138,7 @@ class WithdrawalTest : IntegrationTestBase() {
               )
             }
 
-            createPlacementRequest(application) {
+            produceAndPersistPlacementRequest(application) {
               withIsWithdrawn(true)
             }
 
@@ -191,14 +185,14 @@ class WithdrawalTest : IntegrationTestBase() {
         `Given a User` { allocatedTo, _ ->
           `Given an Offender` { offenderDetails, _ ->
 
-            val (application, _) = createApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
+            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
 
             val submittedApplication1ExpectedArrival1 = LocalDate.now().plusDays(1)
             val submittedApplication1Duration1 = 5
             val submittedApplication1ExpectedArrival2 = LocalDate.now().plusDays(10)
             val submittedApplication1Duration2 = 10
 
-            val submittedPlacementApplication1 = createPlacementApplication(
+            val submittedPlacementApplication1 = produceAndPersistPlacementApplication(
               application,
               listOf(
                 submittedApplication1ExpectedArrival1 to submittedApplication1Duration1,
@@ -208,44 +202,44 @@ class WithdrawalTest : IntegrationTestBase() {
 
             val submittedApplication2ExpectedArrival = LocalDate.now().plusDays(50)
             val submittedApplication2Duration = 6
-            val submittedPlacementApplication2 = createPlacementApplication(
+            val submittedPlacementApplication2 = produceAndPersistPlacementApplication(
               application,
               listOf(submittedApplication2ExpectedArrival to submittedApplication2Duration),
             )
 
             val unsubmittedApplicationExpectedArrival = LocalDate.now().plusDays(50)
             val unsubmittedApplicationDuration = 6
-            val unsubmittedPlacementApplication = createPlacementApplication(
+            val unsubmittedPlacementApplication = produceAndPersistPlacementApplication(
               application,
               listOf(unsubmittedApplicationExpectedArrival to unsubmittedApplicationDuration),
             ) {
               withSubmittedAt(null)
             }
 
-            createPlacementApplication(application, listOf(LocalDate.now() to 2)) {
+            produceAndPersistPlacementApplication(application, listOf(LocalDate.now() to 2)) {
               withReallocatedAt(OffsetDateTime.now())
             }
 
             val applicationWithAcceptedDecisionExpectedArrival = LocalDate.now().plusDays(50)
             val applicationWithAcceptedDecisionDuration = 6
-            val applicationWithAcceptedDecision = createPlacementApplication(
+            val applicationWithAcceptedDecision = produceAndPersistPlacementApplication(
               application,
               listOf(applicationWithAcceptedDecisionExpectedArrival to applicationWithAcceptedDecisionDuration),
             ) {
               withDecision(PlacementApplicationDecision.ACCEPTED)
             }
 
-            createPlacementApplication(application, listOf(LocalDate.now() to 2)) {
+            produceAndPersistPlacementApplication(application, listOf(LocalDate.now() to 2)) {
               withDecision(PlacementApplicationDecision.WITHDRAW)
             }
 
-            createPlacementApplication(application, listOf(LocalDate.now() to 2)) {
+            produceAndPersistPlacementApplication(application, listOf(LocalDate.now() to 2)) {
               withDecision(PlacementApplicationDecision.WITHDRAWN_BY_PP)
             }
 
             val applicationWithRejectedDecisionExpectedArrival = LocalDate.now().plusDays(50)
             val applicationWithRejectedDecisionDuration = 6
-            val applicationWithRejectedDecision = createPlacementApplication(
+            val applicationWithRejectedDecision = produceAndPersistPlacementApplication(
               application,
               listOf(applicationWithRejectedDecisionExpectedArrival to applicationWithRejectedDecisionDuration),
             ) {
@@ -309,11 +303,11 @@ class WithdrawalTest : IntegrationTestBase() {
         `Given a User`(roles = listOf(role)) { allocatedTo, jwt ->
           `Given an Offender` { offenderDetails, _ ->
 
-            val (application, _) = createApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
+            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
 
             val booking1expectedArrival = LocalDate.now().plusDays(1)
             val booking1expectedDeparture = LocalDate.now().plusDays(6)
-            val booking1 = createBooking(
+            val booking1 = produceAndPersistBooking(
               application,
               booking1expectedArrival,
               booking1expectedDeparture,
@@ -321,13 +315,13 @@ class WithdrawalTest : IntegrationTestBase() {
 
             val booking2expectedArrival = LocalDate.now().plusDays(1)
             val booking2expectedDeparture = LocalDate.now().plusDays(6)
-            val booking2 = createBooking(
+            val booking2 = produceAndPersistBooking(
               application,
               booking2expectedArrival,
               booking2expectedDeparture,
             )
 
-            val cancelledBooking = createBooking(
+            val cancelledBooking = produceAndPersistBooking(
               application,
               LocalDate.now(),
               LocalDate.now().plusDays(1),
@@ -337,7 +331,7 @@ class WithdrawalTest : IntegrationTestBase() {
               withReason(cancellationReasonEntityFactory.produceAndPersist())
             }
 
-            val bookingWithArrival = createBooking(
+            val bookingWithArrival = produceAndPersistBooking(
               application,
               LocalDate.now(),
               LocalDate.now().plusDays(1),
@@ -388,11 +382,11 @@ class WithdrawalTest : IntegrationTestBase() {
         `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { allocatedTo, jwt ->
           `Given an Offender` { offenderDetails, _ ->
 
-            val (application, _) = createApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
+            val (application, _) = produceAndPersistApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
 
             val booking1ExpectedArrival = LocalDate.now().plusDays(1)
             val booking1ExpectedDeparture = LocalDate.now().plusDays(6)
-            val booking1 = createBooking(
+            val booking1 = produceAndPersistBooking(
               application,
               booking1ExpectedArrival,
               booking1ExpectedDeparture,
@@ -401,12 +395,12 @@ class WithdrawalTest : IntegrationTestBase() {
             val placementApplicationExpectedArrival = LocalDate.now().plusDays(1)
             val placementApplicationDuration = 5
 
-            val placementApplication = createPlacementApplication(
+            val placementApplication = produceAndPersistPlacementApplication(
               application,
               listOf(placementApplicationExpectedArrival to placementApplicationDuration),
             )
 
-            val placementRequest = createPlacementRequest(application)
+            val placementRequest = produceAndPersistPlacementRequest(application)
 
             val expected = listOf(
               Withdrawable(
@@ -450,11 +444,11 @@ class WithdrawalTest : IntegrationTestBase() {
       `Given a User` { applicant, jwt ->
         `Given an Offender` { offenderDetails, _ ->
 
-          val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
+          val (application, _) = produceAndPersistApplicationAndAssessment(applicant, applicant, offenderDetails)
 
           val booking1ExpectedArrival = LocalDate.now().plusDays(1)
           val booking1ExpectedDeparture = LocalDate.now().plusDays(6)
-          createBooking(
+          produceAndPersistBooking(
             application,
             booking1ExpectedArrival,
             booking1ExpectedDeparture,
@@ -463,12 +457,12 @@ class WithdrawalTest : IntegrationTestBase() {
           val placementApplicationExpectedArrival = LocalDate.now().plusDays(1)
           val placementApplicationDuration = 5
 
-          val placementApplication = createPlacementApplication(
+          val placementApplication = produceAndPersistPlacementApplication(
             application,
             listOf(placementApplicationExpectedArrival to placementApplicationDuration),
           )
 
-          val placementRequest = createPlacementRequest(application)
+          val placementRequest = produceAndPersistPlacementRequest(application)
 
           val expected = listOf(
             Withdrawable(
@@ -505,309 +499,89 @@ class WithdrawalTest : IntegrationTestBase() {
   @Nested
   inner class WithdrawalCascading {
 
-    /**
-     * ```
-     * elements                         withdrawn
-     * ------------------------------------------
-     * application                      YES
-     *  - assessment                    YES
-     *    - placement application       YES
-     *      - placement request 1       YES
-     *        - booking 1 no arrival    YES
-     *      - placement request 2       YES
-     *    - placement request 3         YES
-     *      - booking 2 has arrival     NO
-     * ```
-     */
     @Test
-    fun `Withdrawing an application cascades to all possible entities`() {
+    fun `Withdrawing an application withdraws all related entities`() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          val (application, assessment) = createApplicationAndAssessment(user, user, offenderDetails)
+          val (application, assessment) = produceAndPersistApplicationAndAssessment(user, user, offenderDetails)
 
-          val placementApplication = createPlacementApplication(application)
-          val placementRequest1 = createPlacementRequest(application) {
-            withPlacementApplication(placementApplication)
-          }
-          val booking1NoArrival = createBooking(
-            application = application,
-            hasArrival = false,
+          val placementApplicationExpectedArrival = LocalDate.now().plusDays(1)
+          val placementApplicationDuration = 5
+
+          val placementApplication = produceAndPersistPlacementApplication(
+            application,
+            listOf(placementApplicationExpectedArrival to placementApplicationDuration),
+          )
+
+          val placementRequest1 = produceAndPersistPlacementRequest(application)
+
+          val booking1NoArrival = produceAndPersistBooking(
+            application,
             startDate = LocalDate.now().plusDays(1),
             endDate = LocalDate.now().plusDays(6),
           )
-          addBookingToPlacementRequest(placementRequest1, booking1NoArrival)
 
-          val placementRequest2 = createPlacementRequest(application) {
-            withPlacementApplication(placementApplication)
+          placementRequest1.booking = booking1NoArrival
+          placementRequestRepository.save(placementRequest1)
+
+          val placementRequest2 = produceAndPersistPlacementRequest(application)
+          val booking2HasArrival = produceAndPersistBooking(
+            application,
+            LocalDate.now(),
+            LocalDate.now().plusDays(1),
+          )
+          arrivalEntityFactory.produceAndPersist {
+            withBooking(booking2HasArrival)
           }
 
-          val placementRequest3 = createPlacementRequest(application)
-          val booking2HasArrival = createBooking(
-            application = application,
-            hasArrival = true,
-            startDate = LocalDate.now(),
-            endDate = LocalDate.now().plusDays(1),
-          )
-          addBookingToPlacementRequest(placementRequest3, booking2HasArrival)
+          placementRequest2.booking = booking2HasArrival
+          placementRequestRepository.save(placementRequest2)
 
-          withdrawApplication(application, jwt)
+          webTestClient.post()
+            .uri("/applications/${application.id}/withdrawal")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewWithdrawal(
+                reason = WithdrawalReason.duplicateApplication,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
 
-          assertApplicationWithdrawn(application)
-          assertAssessmentWithdrawn(assessment)
+          val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)!!
+          Assertions.assertThat(updatedApplication.isWithdrawn).isTrue
 
-          assertPlacementApplicationWithdrawn(
-            placementApplication,
-            PlacementApplicationDecision.WITHDRAWN_BY_PP,
-            PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP,
-          )
-          assertPlacementRequestWithdrawn(placementRequest1, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
-          assertBookingWithdrawn(booking1NoArrival, "The probation practitioner requested it")
-          assertPlacementRequestWithdrawn(placementRequest2, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
+          val updatedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
+          Assertions.assertThat(updatedAssessment.isWithdrawn).isTrue
 
-          assertPlacementRequestWithdrawn(placementRequest3, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
-          assertBookingNotWithdrawn(booking2HasArrival)
+          val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplication.id)!!
+          Assertions.assertThat(updatedPlacementApplication.decision)
+            .isEqualTo(PlacementApplicationDecision.WITHDRAWN_BY_PP)
+
+          val updatedPlacementRequest1 = placementRequestRepository.findByIdOrNull(placementRequest1.id)!!
+          Assertions.assertThat(updatedPlacementRequest1.isWithdrawn).isEqualTo(true)
+          Assertions.assertThat(updatedPlacementRequest1.withdrawalReason)
+            .isEqualTo(PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
+
+          val updatedPlacementRequest2 = placementRequestRepository.findByIdOrNull(placementRequest2.id)!!
+          Assertions.assertThat(updatedPlacementRequest2.isWithdrawn).isEqualTo(true)
+          Assertions.assertThat(updatedPlacementRequest2.withdrawalReason)
+            .isEqualTo(PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
+
+          val updatedBooking1 = bookingRepository.findByIdOrNull(booking1NoArrival.id)!!
+          Assertions.assertThat(updatedBooking1.isCancelled).isTrue()
+          Assertions.assertThat(updatedBooking1.cancellation!!.reason.name)
+            .isEqualTo("The probation practitioner requested it")
+
+          val updatedBooking2WithArrival = bookingRepository.findByIdOrNull(booking2HasArrival.id)!!
+          Assertions.assertThat(updatedBooking2WithArrival.isCancelled).isFalse()
         }
       }
     }
-
-    /**
-     * ```
-     * elements                         withdrawn
-     * ------------------------------------------
-     * application                      NO
-     *  - assessment                    NO
-     *    - placement application       YES
-     *      - placement request 1       YES
-     *        - booking 1 no arrival    YES
-     *      - placement request 2       YES
-     *        - booking 2 has arrival   NO
-     * ```
-     */
-    @Test
-    fun `Withdrawing a placement application cascades to applicable placement requests and bookings entities`() {
-      `Given a User` { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          val (application, assessment) = createApplicationAndAssessment(user, user, offenderDetails)
-
-          val placementApplication = createPlacementApplication(application)
-          val placementRequest1 = createPlacementRequest(application) {
-            withPlacementApplication(placementApplication)
-          }
-          val booking1NoArrival = createBooking(
-            application = application,
-            hasArrival = false,
-            startDate = LocalDate.now().plusDays(1),
-            endDate = LocalDate.now().plusDays(6),
-          )
-          addBookingToPlacementRequest(placementRequest1, booking1NoArrival)
-
-          val placementRequest2 = createPlacementRequest(application) {
-            withPlacementApplication(placementApplication)
-          }
-          val booking2HasArrival = createBooking(
-            application = application,
-            hasArrival = true,
-            startDate = LocalDate.now(),
-            endDate = LocalDate.now().plusDays(1),
-          )
-          addBookingToPlacementRequest(placementRequest2, booking2HasArrival)
-
-          withdrawPlacementApplication(
-            placementApplication,
-            WithdrawPlacementRequestReason.duplicatePlacementRequest,
-            jwt
-          )
-
-          assertApplicationNotWithdrawn(application)
-          assertAssessmentNotWithdrawn(assessment)
-
-          assertPlacementApplicationWithdrawn(
-            placementApplication,
-            PlacementApplicationDecision.WITHDRAWN_BY_PP,
-            PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
-          )
-
-          assertPlacementRequestWithdrawn(placementRequest1, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
-          assertBookingWithdrawn(booking1NoArrival, "The probation practitioner requested it")
-
-          assertPlacementRequestWithdrawn(placementRequest2, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
-          assertBookingNotWithdrawn(booking2HasArrival)
-        }
-      }
-    }
-
-    /**
-     * ```
-     * elements                         withdrawn
-     * ------------------------------------------
-     * application                      NO
-     *  - assessment                    NO
-     *    - placement request 1         YES
-     *      - booking 1 no arrival      YES
-     * ```
-     */
-    @Test
-    fun `Withdrawing a placement request cascades to booking with arrival`() {
-      `Given a User` { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          val (application, assessment) = createApplicationAndAssessment(user, user, offenderDetails)
-
-          val placementRequest = createPlacementRequest(application)
-          val bookingNoArrival = createBooking(
-            application = application,
-            hasArrival = false,
-            startDate = LocalDate.now().plusDays(1),
-            endDate = LocalDate.now().plusDays(6),
-          )
-          addBookingToPlacementRequest(placementRequest, bookingNoArrival)
-
-          withdrawPlacementRequest(
-            placementRequest,
-            WithdrawPlacementRequestReason.duplicatePlacementRequest,
-            jwt
-          )
-
-          assertApplicationNotWithdrawn(application)
-          assertAssessmentNotWithdrawn(assessment)
-
-          assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
-          assertBookingWithdrawn(bookingNoArrival, "The probation practitioner requested it")
-        }
-      }
-    }
-
-    /**
-     * ```
-     * elements                         withdrawn
-     * ------------------------------------------
-     * application                      NO
-     *  - assessment                    NO
-     *    - placement request 1         YES
-     *      - booking 1 with arrival    NO
-     * ```
-     */
-    @Test
-    fun `Withdrawing a placement request doesn't cascade to booking with arrival`() {
-      `Given a User` { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          val (application, assessment) = createApplicationAndAssessment(user, user, offenderDetails)
-
-          val placementRequest = createPlacementRequest(application)
-          val bookingNoArrival = createBooking(
-            application = application,
-            hasArrival = true,
-            startDate = LocalDate.now().plusDays(1),
-            endDate = LocalDate.now().plusDays(6),
-          )
-          addBookingToPlacementRequest(placementRequest, bookingNoArrival)
-
-          withdrawPlacementRequest(
-            placementRequest,
-            WithdrawPlacementRequestReason.duplicatePlacementRequest,
-            jwt
-          )
-
-          assertApplicationNotWithdrawn(application)
-          assertAssessmentNotWithdrawn(assessment)
-
-          assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
-          assertBookingNotWithdrawn(bookingNoArrival)
-        }
-      }
-    }
-
   }
 
-  private fun addBookingToPlacementRequest(placementRequest: PlacementRequestEntity, booking: BookingEntity) {
-    placementRequest.booking = booking
-    placementRequestRepository.save(placementRequest)
-  }
-
-  private fun withdrawApplication(application: ApprovedPremisesApplicationEntity, jwt: String) {
-    webTestClient.post()
-      .uri("/applications/${application.id}/withdrawal")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewWithdrawal(
-          reason = WithdrawalReason.duplicateApplication,
-        ),
-      )
-      .exchange()
-      .expectStatus()
-      .isOk
-  }
-
-  private fun withdrawPlacementApplication(placementApplication: PlacementApplicationEntity,
-                                           reason: WithdrawPlacementRequestReason,
-                                           jwt: String) {
-    webTestClient.post()
-      .uri("/placement-applications/${placementApplication.id}/withdraw")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(WithdrawPlacementApplication(reason))
-      .exchange()
-      .expectStatus()
-      .isOk
-  }
-
-  private fun withdrawPlacementRequest(placementRequest: PlacementRequestEntity,
-                                       reason: WithdrawPlacementRequestReason,
-                                       jwt: String) {
-    webTestClient.post()
-      .uri("/placement-requests/${placementRequest.id}/withdrawal")
-      .bodyValue(WithdrawPlacementRequest(reason))
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-  }
-
-  private fun assertAssessmentNotWithdrawn(assessment: AssessmentEntity) {
-    val updatedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
-    assertThat(updatedAssessment.isWithdrawn).isFalse
-  }
-
-  private fun assertAssessmentWithdrawn(assessment: AssessmentEntity) {
-    val updatedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
-    assertThat(updatedAssessment.isWithdrawn).isTrue
-  }
-
-  private fun assertPlacementApplicationWithdrawn(placementApplication: PlacementApplicationEntity,
-                                                  decision: PlacementApplicationDecision,
-                                                  reason: PlacementApplicationWithdrawalReason) {
-    val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplication.id)!!
-    assertThat(updatedPlacementApplication.decision).isEqualTo(decision)
-    assertThat(updatedPlacementApplication.withdrawalReason).isEqualTo(reason)
-  }
-
-
-  private fun assertApplicationNotWithdrawn(application: ApprovedPremisesApplicationEntity) {
-    val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)!!
-    assertThat(updatedApplication.isWithdrawn).isFalse
-  }
-
-  private fun assertApplicationWithdrawn(application: ApprovedPremisesApplicationEntity) {
-    val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)!!
-    assertThat(updatedApplication.isWithdrawn).isTrue
-  }
-
-  private fun assertPlacementRequestWithdrawn(placementRequest: PlacementRequestEntity, reason: PlacementRequestWithdrawalReason) {
-    val updatedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
-    assertThat(updatedPlacementRequest.isWithdrawn).isEqualTo(true)
-    assertThat(updatedPlacementRequest.withdrawalReason).isEqualTo(reason)
-  }
-
-  private fun assertBookingWithdrawn(booking: BookingEntity, cancellationReason: String) {
-    val updatedBooking = bookingRepository.findByIdOrNull(booking.id)!!
-    assertThat(updatedBooking.isCancelled).isTrue()
-    assertThat(updatedBooking.cancellation!!.reason.name).isEqualTo(cancellationReason)
-  }
-
-  private fun assertBookingNotWithdrawn(booking: BookingEntity) {
-    val updatedBooking2WithArrival = bookingRepository.findByIdOrNull(booking.id)!!
-    assertThat(updatedBooking2WithArrival.isCancelled).isFalse()
-  }
-
-  private fun createApplicationAndAssessment(
+  private fun produceAndPersistApplicationAndAssessment(
     applicant: UserEntity,
     assignee: UserEntity,
     offenderDetails: OffenderDetailSummary,
@@ -832,7 +606,6 @@ class WithdrawalTest : IntegrationTestBase() {
       withAllocatedToUser(assignee)
       withApplication(application)
       withAssessmentSchema(assessmentSchema)
-      withSubmittedAt(OffsetDateTime.now())
     }
 
     assessment.schemaUpToDate = true
@@ -893,9 +666,9 @@ class WithdrawalTest : IntegrationTestBase() {
     return application
   }
 
-  private fun createPlacementApplication(
+  private fun produceAndPersistPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
-    arrivalsToDuration: List<Pair<LocalDate, Int>> = emptyList(),
+    arrivalAndDurations: List<Pair<LocalDate, Int>>,
     configuration: (PlacementApplicationEntityFactory.() -> Unit)? = null,
   ): PlacementApplicationEntity {
     val placementApplication = placementApplicationFactory.produceAndPersist {
@@ -913,7 +686,7 @@ class WithdrawalTest : IntegrationTestBase() {
       configuration?.invoke(this)
     }
 
-    arrivalsToDuration.forEach { (start, duration) ->
+    arrivalAndDurations.forEach { (start, duration) ->
       placementDateFactory.produceAndPersist {
         withPlacementApplication(placementApplication)
         withExpectedArrival(start)
@@ -924,7 +697,7 @@ class WithdrawalTest : IntegrationTestBase() {
     return placementApplication
   }
 
-  private fun createPlacementRequest(
+  private fun produceAndPersistPlacementRequest(
     application: ApprovedPremisesApplicationEntity,
     configuration: (PlacementRequestEntityFactory.() -> Unit)? = null,
   ) =
@@ -950,11 +723,10 @@ class WithdrawalTest : IntegrationTestBase() {
       configuration?.invoke(this)
     }
 
-  private fun createBooking(
+  private fun produceAndPersistBooking(
     application: ApprovedPremisesApplicationEntity,
     startDate: LocalDate,
     endDate: LocalDate,
-    hasArrival: Boolean = false,
     configuration: (BookingEntityFactory.() -> Unit)? = null,
   ): BookingEntity {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -962,7 +734,7 @@ class WithdrawalTest : IntegrationTestBase() {
       withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
     }
 
-    val booking = bookingEntityFactory.produceAndPersist {
+    return bookingEntityFactory.produceAndPersist {
       withApplication(application)
       withPremises(premises)
       withCrn(application.crn)
@@ -971,14 +743,6 @@ class WithdrawalTest : IntegrationTestBase() {
       withDepartureDate(endDate)
       configuration?.invoke(this)
     }
-
-    if(hasArrival) {
-      arrivalEntityFactory.produceAndPersist {
-        withBooking(booking)
-      }
-    }
-
-    return booking
   }
 
   private fun datePeriodForDuration(start: LocalDate, duration: Int) = DatePeriod(start, start.plusDays(duration.toLong()))
