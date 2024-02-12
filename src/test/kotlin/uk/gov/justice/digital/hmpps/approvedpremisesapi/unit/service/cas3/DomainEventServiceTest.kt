@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3.CAS3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3.CAS3PersonArrivedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3.CAS3PersonDepartedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3.CAS3ReferralSubmittedEventDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
@@ -61,6 +62,14 @@ class DomainEventServiceTest {
     registerModule(JavaTimeModule())
     registerKotlinModule()
   }
+
+  private val user = UserEntityFactory()
+    .withYieldedProbationRegion {
+      ProbationRegionEntityFactory()
+        .withYieldedApArea { ApAreaEntityFactory().produce() }
+        .produce()
+    }
+    .produce()
 
   private val domainEventService = DomainEventService(
     objectMapper = objectMapper,
@@ -569,6 +578,43 @@ class DomainEventServiceTest {
   }
 
   @Test
+  fun `getBookingProvisionallyMadeEvent returns event with additional staff details`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    val data = CAS3BookingProvisionallyMadeEvent(
+      id = id,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.bookingProvisionallyMade,
+      eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory()
+        .withBookedBy { StaffMemberFactory().produce() }
+        .produce(),
+    )
+
+    every { domainEventRepositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
+      .withId(id)
+      .withApplicationId(applicationId)
+      .withCrn(crn)
+      .withType(DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE)
+      .withData(objectMapper.writeValueAsString(data))
+      .withOccurredAt(occurredAt)
+      .produce()
+
+    val event = domainEventService.getBookingProvisionallyMadeEvent(id)
+    assertThat(event).isEqualTo(
+      DomainEvent(
+        id = id,
+        applicationId = applicationId,
+        crn = "CRN",
+        occurredAt = occurredAt.toInstant(),
+        data = data,
+      ),
+    )
+  }
+
+  @Test
   fun `saveBookingProvisionallyMadeEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
@@ -590,18 +636,20 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = EventType.bookingProvisionallyMade,
-        eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory().produce(),
+        eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory()
+          .withBookedBy { StaffMemberFactory().produce() }
+          .produce(),
       ),
     )
 
-    every { domainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
-    domainEventService.saveBookingProvisionallyMadeEvent(bookingEntity)
+    domainEventService.saveBookingProvisionallyMadeEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -655,18 +703,20 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = EventType.bookingProvisionallyMade,
-        eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory().produce(),
+        eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory()
+          .withBookedBy { StaffMemberFactory().produce() }
+          .produce(),
       ),
     )
 
-    every { domainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
-    domainEventServiceEmittingDisabled.saveBookingProvisionallyMadeEvent(bookingEntity)
+    domainEventServiceEmittingDisabled.saveBookingProvisionallyMadeEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -707,11 +757,13 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = EventType.bookingProvisionallyMade,
-        eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory().produce(),
+        eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory()
+          .withBookedBy { StaffMemberFactory().produce() }
+          .produce(),
       ),
     )
 
-    every { domainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.getBookingProvisionallyMadeDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
@@ -719,7 +771,7 @@ class DomainEventServiceTest {
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     assertThatExceptionOfType(RuntimeException::class.java)
-      .isThrownBy { domainEventService.saveBookingProvisionallyMadeEvent(bookingEntity) }
+      .isThrownBy { domainEventService.saveBookingProvisionallyMadeEvent(bookingEntity, user) }
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(

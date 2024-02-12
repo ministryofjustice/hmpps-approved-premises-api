@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
@@ -127,8 +128,8 @@ class DomainEventService(
   }
 
   @Transactional
-  fun saveBookingProvisionallyMadeEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking)
+  fun saveBookingProvisionallyMadeEvent(booking: BookingEntity, user: UserEntity) {
+    val domainEvent = domainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,

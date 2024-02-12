@@ -4667,7 +4667,7 @@ class BookingServiceTest {
 
       every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       every { mockAssessmentService.closeAssessment(user, application.id) } returns AuthorisableActionResult.Success(ValidatableActionResult.Success(assessment))
 
@@ -4711,6 +4711,7 @@ class BookingServiceTest {
               it.departureDate == departureDate &&
               it.application == application
           },
+          user,
         )
       }
       verify(exactly = 1) {
@@ -4761,7 +4762,7 @@ class BookingServiceTest {
 
       every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       mockkStatic(Sentry::class)
 
@@ -4857,7 +4858,7 @@ class BookingServiceTest {
 
       every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       val authorisableResult = bookingService.createTemporaryAccommodationBooking(
         user,
@@ -4950,7 +4951,7 @@ class BookingServiceTest {
 
       every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       val authorisableResult = bookingService.createTemporaryAccommodationBooking(
         user,
@@ -5041,7 +5042,7 @@ class BookingServiceTest {
 
       every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       every { mockAssessmentService.closeAssessment(user, application.id) } returns AuthorisableActionResult.Unauthorised()
 
@@ -5086,6 +5087,7 @@ class BookingServiceTest {
               it.departureDate == departureDate &&
               it.application == application
           },
+          user,
         )
       }
       verify(exactly = 1) {
@@ -5146,7 +5148,7 @@ class BookingServiceTest {
 
       every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       every { mockAssessmentService.closeAssessment(user, application.id) } returns AuthorisableActionResult.Success(
         ValidatableActionResult.FieldValidationError(ValidationErrors()),
@@ -5193,6 +5195,7 @@ class BookingServiceTest {
               it.departureDate == departureDate &&
               it.application == application
           },
+          user,
         )
       }
       verify(exactly = 1) {
@@ -5253,7 +5256,7 @@ class BookingServiceTest {
 
       every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       every { mockAssessmentService.closeAssessment(user, application.id) } throws RuntimeException("A database exception")
 
@@ -5298,6 +5301,7 @@ class BookingServiceTest {
               it.departureDate == departureDate &&
               it.application == application
           },
+          user,
         )
       }
       verify(exactly = 1) {
@@ -5421,7 +5425,7 @@ class BookingServiceTest {
 
       every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
-      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any()) } just Runs
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
       every { mockAssessmentService.closeAssessment(user, application.id) } returns AuthorisableActionResult.Success(ValidatableActionResult.Success(assessment))
 
@@ -5464,6 +5468,7 @@ class BookingServiceTest {
               it.departureDate == departureDate &&
               it.application == application
           },
+          user,
         )
       }
       verify(exactly = 0) {

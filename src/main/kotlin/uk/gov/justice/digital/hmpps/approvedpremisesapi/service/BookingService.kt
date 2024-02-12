@@ -809,7 +809,7 @@ class BookingService(
 
       booking.turnarounds += turnaround
 
-      cas3DomainEventService.saveBookingProvisionallyMadeEvent(booking)
+      cas3DomainEventService.saveBookingProvisionallyMadeEvent(booking, user)
 
       if (assessmentId != null) {
         closeTransitionalAccommodationAssessment(assessmentId, user, booking)

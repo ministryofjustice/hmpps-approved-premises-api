@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3.CAS3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3.CAS3PersonArrivedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3.CAS3PersonDepartedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3.CAS3ReferralSubmittedEventDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import java.time.Instant
@@ -175,6 +176,42 @@ class DomainEventTest : IntegrationTestBase() {
       timestamp = Instant.now(),
       eventType = EventType.bookingProvisionallyMade,
       eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory().produce(),
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventId)
+      withType(DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE)
+      withData(objectMapper.writeValueAsString(envelopedData))
+    }
+
+    val response = webTestClient.get()
+      .uri("/events/cas3/booking-provisionally-made/${event.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(CAS3BookingProvisionallyMadeEvent::class.java)
+      .returnResult()
+
+    assertThat(response.responseBody).isEqualTo(envelopedData)
+  }
+
+  @Test
+  fun `Get 'booking provisionally made' event returns 200 with correct body including staff detail`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
+    )
+
+    val eventId = UUID.randomUUID()
+
+    val envelopedData = CAS3BookingProvisionallyMadeEvent(
+      id = eventId,
+      timestamp = Instant.now(),
+      eventType = EventType.bookingProvisionallyMade,
+      eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory()
+        .withBookedBy { StaffMemberFactory().produce() }
+        .produce(),
     )
 
     val event = domainEventFactory.produceAndPersist {

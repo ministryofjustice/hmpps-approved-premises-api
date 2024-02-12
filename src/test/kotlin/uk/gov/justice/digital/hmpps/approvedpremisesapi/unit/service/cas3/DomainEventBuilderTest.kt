@@ -179,7 +179,7 @@ class DomainEventBuilderTest {
       .withArrivalDate(expectedArrivalDateTime.atZone(ZoneOffset.UTC).toLocalDate())
       .produce()
 
-    val event = domainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking)
+    val event = domainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking, user)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
@@ -194,7 +194,10 @@ class DomainEventBuilderTest {
         data.expectedArrivedAt == expectedArrivalDateTime &&
         data.notes == "" &&
         data.applicationId == application.id &&
-        data.applicationUrl.toString() == "http://api/applications/${application.id}"
+        data.applicationUrl.toString() == "http://api/applications/${application.id}" &&
+        data.bookedBy?.staffCode == user.deliusStaffCode &&
+        data.bookedBy?.username == user.deliusUsername &&
+        data.bookedBy?.probationRegionCode == user.probationRegion.deliusCode
     }
   }
 

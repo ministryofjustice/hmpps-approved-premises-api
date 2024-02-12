@@ -21,11 +21,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import java.net.URI
 import java.time.Instant
@@ -95,6 +97,7 @@ class DomainEventBuilder(
 
   fun getBookingProvisionallyMadeDomainEvent(
     booking: BookingEntity,
+    user: UserEntity,
   ): DomainEvent<CAS3BookingProvisionallyMadeEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -121,6 +124,11 @@ class DomainEventBuilder(
           ),
           expectedArrivedAt = booking.arrivalDate.atStartOfDay().toInstant(ZoneOffset.UTC),
           notes = "",
+          bookedBy = StaffMember(
+            user.deliusStaffCode,
+            user.deliusUsername,
+            user.probationRegion.deliusCode,
+          ),
         ),
       ),
     )
