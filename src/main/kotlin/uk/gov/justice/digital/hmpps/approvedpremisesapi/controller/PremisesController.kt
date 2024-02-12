@@ -547,6 +547,7 @@ class PremisesController(
         cancelledAt = body.date,
         reasonId = body.reason,
         notes = body.notes,
+        user = user,
       )
 
       else -> throw NotImplementedProblem("Unsupported premises type ${booking.premises::class.qualifiedName}")
