@@ -7,6 +7,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
@@ -206,7 +207,10 @@ class PlacementApplicationService(
 
     placementApplication.decision = PlacementApplicationDecision.WITHDRAW
     placementApplication.decisionMadeAt = OffsetDateTime.now()
-    placementApplication.withdrawalReason = reason
+    placementApplication.withdrawalReason = when(withdrawalContext.triggeringEntityType) {
+      WithdrawableEntityType.Application -> PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
+      else -> reason
+    }
 
     val savedApplication = placementApplicationRepository.save(placementApplication)
 

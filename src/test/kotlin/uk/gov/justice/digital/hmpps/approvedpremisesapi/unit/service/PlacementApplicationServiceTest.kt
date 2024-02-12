@@ -549,6 +549,43 @@ class PlacementApplicationServiceTest {
     }
 
     @Test
+    fun `if withdraw was triggered by application, set correct withdrawal reason`() {
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .withDecision(null)
+        .withCreatedByUser(user)
+        .produce()
+
+      val templateId = UUID.randomUUID().toString()
+
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
+      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+      every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
+
+      val result = placementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
+        checkUserPermissions = false,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Application
+        ),
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      val validationResult = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(validationResult is ValidatableActionResult.Success).isTrue
+      validationResult as ValidatableActionResult.Success
+
+      val entity = validationResult.entity
+
+      assertThat(entity.withdrawalReason).isEqualTo(PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN)
+    }
+
+    @Test
     fun `it cascades to withdrawable placement requests`() {
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)

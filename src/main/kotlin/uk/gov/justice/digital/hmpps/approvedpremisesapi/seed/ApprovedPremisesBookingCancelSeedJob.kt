@@ -38,7 +38,6 @@ class ApprovedPremisesBookingCancelSeedJob(
     }
 
     val validationResult = bookingService.createCancellation(
-      user = null,
       booking = booking,
       cancelledAt = LocalDate.now(),
       reasonId = errorInBookingDetailsCancellationReason,

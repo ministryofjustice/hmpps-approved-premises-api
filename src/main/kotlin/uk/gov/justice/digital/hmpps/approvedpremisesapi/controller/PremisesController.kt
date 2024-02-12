@@ -531,7 +531,6 @@ class PremisesController(
     }
 
     val result = bookingService.createCancellation(
-      user = user,
       booking = booking,
       cancelledAt = body.date,
       reasonId = body.reason,

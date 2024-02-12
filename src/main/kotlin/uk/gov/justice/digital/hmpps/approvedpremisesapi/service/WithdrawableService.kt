@@ -48,7 +48,7 @@ class WithdrawableService(
       if(placementRequest.isInWithdrawableState()) {
         val result = placementRequestService.withdrawPlacementRequest(
           placementRequest.id,
-          PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
+          reason = null,
           checkUserPermissions = false,
           WithdrawalContext(
             user,
@@ -73,8 +73,8 @@ class WithdrawableService(
     placementApplications.forEach { placementApplication ->
       if(placementApplication.isInWithdrawableState()) {
         val result = placementApplicationService.withdrawPlacementApplication(
-          placementApplication.id,
-          PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
+          id = placementApplication.id,
+          reason = null,
           checkUserPermissions = false,
           withdrawalContext = WithdrawalContext(
             user,
