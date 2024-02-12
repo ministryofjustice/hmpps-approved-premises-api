@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_WITHDRAWN_BY_PP_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
@@ -316,13 +317,16 @@ class PlacementRequestService(
     }
 
     placementRequest.isWithdrawn = true
-    placementRequest.withdrawalReason = reason
+    placementRequest.withdrawalReason = when(withdrawalContext.triggeringEntityType) {
+      WithdrawableEntityType.Application -> PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
+      WithdrawableEntityType.PlacementApplication -> PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN
+      else -> reason
+    }
 
     placementRequestRepository.save(placementRequest)
 
     placementRequest.booking?.let { booking ->
       val bookingCancellationResult = bookingService.createCancellation(
-        user,
         booking,
         LocalDate.now(),
         CAS1_WITHDRAWN_BY_PP_ID,

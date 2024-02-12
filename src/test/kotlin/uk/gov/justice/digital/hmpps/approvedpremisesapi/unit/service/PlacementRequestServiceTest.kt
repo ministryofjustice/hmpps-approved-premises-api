@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -663,6 +664,55 @@ class PlacementRequestServiceTest {
       verify { bookingService wasNot Called }
     }
 
+    @ParameterizedTest
+    @EnumSource(WithdrawableEntityType::class)
+    fun `withdrawPlacementRequest sets correct reason if withdrawal triggered by other entity`(triggeringEntity: WithdrawableEntityType) {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementRequest = createValidPlacementRequest(application, user)
+      val placementRequestId = placementRequest.id
+
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequest) } returns true
+      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
+      every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+
+      val providedReason = PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
+      val result = placementRequestService.withdrawPlacementRequest(
+        placementRequestId,
+        providedReason,
+        checkUserPermissions = true,
+        WithdrawalContext(
+          user,
+          triggeringEntity,
+        ),
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+
+      val expectedWithdrawalReason = when(triggeringEntity) {
+        WithdrawableEntityType.Application -> PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
+        WithdrawableEntityType.PlacementApplication -> PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN
+        WithdrawableEntityType.Booking -> providedReason
+        WithdrawableEntityType.PlacementRequest -> providedReason
+      }
+
+      verify {
+        placementRequestRepository.save(
+          match {
+            it.id == placementRequestId &&
+              it.isWithdrawn &&
+              it.withdrawalReason == expectedWithdrawalReason
+          },
+        )
+      }
+    }
+
     @Test
     fun `withdrawPlacementRequest is idempotent if placement request already withdrawn`() {
       val user = UserEntityFactory()
@@ -717,7 +767,7 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every {
-        bookingService.createCancellation(any(), any(), any(), any(), any(), any())
+        bookingService.createCancellation(any(), any(), any(), any(), any())
       } returns mockk<ValidatableActionResult.Success<CancellationEntity>>()
 
       val result = placementRequestService.withdrawPlacementRequest(
@@ -744,7 +794,6 @@ class PlacementRequestServiceTest {
 
       verify {
         bookingService.createCancellation(
-          user,
           booking,
           LocalDate.now(),
           CancellationReasonRepository.CAS1_WITHDRAWN_BY_PP_ID,
@@ -781,7 +830,7 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every {
-        bookingService.createCancellation(any(), any(), any(), any(), any(), any())
+        bookingService.createCancellation(any(), any(), any(), any(), any())
       } returns ValidatableActionResult.GeneralValidationError("booking cancellation didn't work!")
       every { logger.error(any<String>()) } returns Unit
 

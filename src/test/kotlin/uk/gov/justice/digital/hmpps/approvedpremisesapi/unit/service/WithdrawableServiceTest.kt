@@ -143,7 +143,7 @@ class WithdrawableServiceTest {
     every {
       mockPlacementRequestService.withdrawPlacementRequest(
         any(),
-        PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
+        reason = null,
         checkUserPermissions = false,
         WithdrawalContext(
           user,
@@ -155,7 +155,7 @@ class WithdrawableServiceTest {
     every {
       mockPlacementApplicationService.withdrawPlacementApplication(
         any(),
-        PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
+        reason = null,
         checkUserPermissions = false,
         WithdrawalContext(
           user,
@@ -170,7 +170,7 @@ class WithdrawableServiceTest {
       verify {
         mockPlacementRequestService.withdrawPlacementRequest(
           it.id,
-          PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
+          reason = null,
           checkUserPermissions = false,
           WithdrawalContext(
             user,
@@ -184,7 +184,7 @@ class WithdrawableServiceTest {
       verify {
         mockPlacementApplicationService.withdrawPlacementApplication(
           it.id,
-          PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
+          reason = null,
           checkUserPermissions = false,
           WithdrawalContext(
             user,
@@ -210,11 +210,11 @@ class WithdrawableServiceTest {
     every {
       mockPlacementRequestService.withdrawPlacementRequest(
         any(),
-        PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
+        reason = null,
         checkUserPermissions = false,
         WithdrawalContext(
           user,
-          WithdrawableEntityType.PlacementRequest,
+          WithdrawableEntityType.Application,
         ),
       )
     } returns AuthorisableActionResult.Unauthorised()
@@ -222,7 +222,7 @@ class WithdrawableServiceTest {
     every {
       mockPlacementApplicationService.withdrawPlacementApplication(
         any(),
-        PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
+        reason = null,
         checkUserPermissions = false,
         WithdrawalContext(
           user,

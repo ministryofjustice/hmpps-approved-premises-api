@@ -1181,7 +1181,6 @@ class BookingService(
 
   @Transactional
   fun createCancellation(
-    user: UserEntity?,
     booking: BookingEntity,
     cancelledAt: LocalDate,
     reasonId: UUID,

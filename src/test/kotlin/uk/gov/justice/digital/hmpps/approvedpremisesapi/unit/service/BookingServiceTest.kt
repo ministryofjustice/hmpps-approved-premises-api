@@ -2105,7 +2105,6 @@ class BookingServiceTest {
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = UUID.randomUUID(),
         notes = "notes",
-        user = user,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
@@ -2142,7 +2141,6 @@ class BookingServiceTest {
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
         notes = "notes",
-        user = user,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
@@ -2169,7 +2167,6 @@ class BookingServiceTest {
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
         notes = "notes",
-        user = user,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
@@ -2203,7 +2200,6 @@ class BookingServiceTest {
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
         notes = "notes",
-        user = user,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
@@ -2235,7 +2231,6 @@ class BookingServiceTest {
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
         notes = "notes",
-        user = user,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
@@ -2297,7 +2292,6 @@ class BookingServiceTest {
         cancelledAt = cancelledAt,
         reasonId = reasonId,
         notes = notes,
-        user = user,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
@@ -2384,7 +2378,6 @@ class BookingServiceTest {
         cancelledAt = cancelledAt,
         reasonId = reasonId,
         notes = notes,
-        user = user,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
@@ -2470,7 +2463,6 @@ class BookingServiceTest {
         cancelledAt = cancelledAt,
         reasonId = reasonId,
         notes = notes,
-        user = user,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
@@ -2560,7 +2552,6 @@ class BookingServiceTest {
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
         notes = "notes",
-        user = user,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
@@ -2613,7 +2604,6 @@ class BookingServiceTest {
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
         notes = "notes",
-        user = user,
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2652,7 +2642,6 @@ class BookingServiceTest {
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
         notes = "notes",
-        user = user,
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)

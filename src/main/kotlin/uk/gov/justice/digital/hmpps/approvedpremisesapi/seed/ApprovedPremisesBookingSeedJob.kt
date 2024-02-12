@@ -238,7 +238,6 @@ class ApprovedPremisesBookingSeedJob(
 
       val createdCancellation = extractEntityFromValidatableActionResult(
         bookingService.createCancellation(
-          user = null,
           booking = createdBooking,
           cancelledAt = row.cancellationDate,
           reasonId = cancellationReason.id,
