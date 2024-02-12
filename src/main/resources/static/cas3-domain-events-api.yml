@@ -325,6 +325,8 @@ components:
           format: date
         notes:
           type: string
+        cancelledBy:
+          $ref: '#/components/schemas/StaffMember'
       required:
         - personReference
         - bookingId
@@ -361,6 +363,8 @@ components:
           format: date-time
         notes:
           type: string
+        confirmedBy:
+          $ref: '#/components/schemas/StaffMember'
       required:
         - personReference
         - bookingId
@@ -398,6 +402,8 @@ components:
           format: date-time
         notes:
           type: string
+        bookedBy:
+          $ref: '#/components/schemas/StaffMember'
       required:
         - personReference
         - bookingId
@@ -451,6 +457,8 @@ components:
           format: date
         notes:
           type: string
+        recordedBy:
+          $ref: '#/components/schemas/StaffMember'
       required:
         - personReference
         - deliusEventNumber
@@ -510,6 +518,8 @@ components:
           type: string
         moveOnCategory:
           $ref: '#/components/schemas/MoveOnCategory'
+        recordedBy:
+          $ref: '#/components/schemas/StaffMember'
       required:
         - personReference
         - deliusEventNumber
@@ -632,3 +642,20 @@ components:
         instance:
           type: string
           example: f7493e12-546d-42c3-b838-06c12671ab5b
+    StaffMember:
+      description: A member of probation or HPT staff detail
+      type: object
+      properties:
+        staffCode:
+          type: string
+          example: N54A999
+        username:
+          type: string
+          example: JohnSmithNPS
+        probationRegionCode:
+          type: string
+          example: N53
+      required:
+        - staffCode
+        - username
+        - probationRegionCode
