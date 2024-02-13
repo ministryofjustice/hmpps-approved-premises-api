@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
@@ -29,6 +30,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var eventNumber: Yielded<String> = { randomInt(1, 9).toString() }
   private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
   private var telephoneNumber: Yielded<String?> = { randomNumberChars(12) }
+  private var notes: Yielded<MutableList<Cas2ApplicationNoteEntity>> = { mutableListOf() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -78,6 +80,10 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.statusUpdates = { statusUpdates }
   }
 
+  fun withNotes(notes: MutableList<Cas2ApplicationNoteEntity>) = apply {
+    this.notes = { notes }
+  }
+
   fun withEventNumber(eventNumber: String) = apply {
     this.eventNumber = { eventNumber }
   }
@@ -95,5 +101,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     schemaUpToDate = false,
     nomsNumber = this.nomsNumber(),
     telephoneNumber = this.telephoneNumber(),
+    notes = this.notes(),
   )
 }
