@@ -22,6 +22,7 @@ generic-service:
     SERVICES_PROBATION-OFFENDER-SEARCH-API_BASE-URL: https://probation-offender-search-preprod.hmpps.service.justice.gov.uk
     SERVICES_CASE-NOTES_BASE-URL: https://preprod.offender-case-notes.service.justice.gov.uk
     SERVICES_AP-OASYS-CONTEXT-API_BASE-URL: https://approved-premises-and-oasys-preprod.hmpps.service.justice.gov.uk
+    SERVICES_MANAGE-ADJUDICATIONS-API_BASE-URL: https://manage-adjudications-api-preprod.hmpps.service.justice.gov.uk
     SERVICES_GOV-UK-BANK-HOLIDAYS-API_BASE-URL: https://www.gov.uk
     SPRING_FLYWAY_LOCATIONS: classpath:db/migration/all,classpath:db/migration/all-except-integration
     LOG-CLIENT-CREDENTIALS-JWT-INFO: true
