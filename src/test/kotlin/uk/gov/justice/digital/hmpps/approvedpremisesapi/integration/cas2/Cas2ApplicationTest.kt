@@ -13,6 +13,7 @@ import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
@@ -270,7 +271,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   @Nested
   inner class GetToShow {
     @Test
-    fun `Get single application returns 200 with correct body`() {
+    fun `Get single in progress application returns 200 with correct body`() {
       `Given a CAS2 User` { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
           cas2ApplicationJsonSchemaRepository.deleteAll()
@@ -381,6 +382,65 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             person.nomsNumber == null &&
             person.status == PersonStatus.unknown &&
             person.prisonName == null
+        }
+      }
+    }
+
+    @Test
+    fun `Get single submitted application returns 200 with timeline events`() {
+      `Given a CAS2 User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+          cas2ApplicationJsonSchemaRepository.deleteAll()
+
+          val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
+            .produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withSchema(
+                """
+        {
+          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+          "${"\$id"}": "https://example.com/product.schema.json",
+          "title": "Thing",
+          "description": "A thing",
+          "type": "object",
+          "properties": {
+            "thingId": {
+              "description": "The unique identifier for a thing",
+              "type": "integer"
+            }
+          },
+          "required": [ "thingId" ]
+        }
+        """,
+              )
+            }
+
+          val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(newestJsonSchema)
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withSubmittedAt(OffsetDateTime.now().minusDays(1))
+          }
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/cas2/applications/${applicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody = objectMapper.readValue(
+            rawResponseBody,
+            Cas2Application::class.java,
+          )
+
+          Assertions.assertThat(responseBody.statusUpdates).isEqualTo(emptyList<Cas2StatusUpdate>())
+
+          Assertions.assertThat(responseBody.timelineEvents!!.map { event -> event.label })
+            .isEqualTo(listOf("Application submitted"))
         }
       }
     }

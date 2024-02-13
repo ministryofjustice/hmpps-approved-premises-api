@@ -1648,6 +1648,10 @@ components:
               type: array
               items:
                 $ref: '_shared.yml#/components/schemas/Cas2StatusUpdate'
+            timelineEvents:
+              type: array
+              items:
+                $ref: '_shared.yml#/components/schemas/Cas2TimelineEvent'
           required:
             - createdBy
             - schemaVersion

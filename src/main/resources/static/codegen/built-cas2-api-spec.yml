@@ -2131,6 +2131,10 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Cas2StatusUpdate'
+            timelineEvents:
+              type: array
+              items:
+                $ref: '#/components/schemas/Cas2TimelineEvent'
           required:
             - createdBy
             - schemaVersion
