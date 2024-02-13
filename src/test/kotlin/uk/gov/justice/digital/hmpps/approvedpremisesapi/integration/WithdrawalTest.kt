@@ -561,7 +561,7 @@ class WithdrawalTest : IntegrationTestBase() {
             PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
           )
           assertPlacementRequestWithdrawn(placementRequest1, PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN)
-          assertBookingWithdrawn(booking1NoArrival, "The probation practitioner requested it")
+          assertBookingWithdrawn(booking1NoArrival, "Related application withdrawn")
           assertPlacementRequestWithdrawn(placementRequest2, PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN)
 
           assertPlacementRequestWithdrawn(placementRequest3, PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN)
@@ -628,7 +628,7 @@ class WithdrawalTest : IntegrationTestBase() {
           )
 
           assertPlacementRequestWithdrawn(placementRequest1, PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN)
-          assertBookingWithdrawn(booking1NoArrival, "The probation practitioner requested it")
+          assertBookingWithdrawn(booking1NoArrival, "Related request for placement withdrawn")
 
           assertPlacementRequestWithdrawn(placementRequest2, PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN)
           assertBookingNotWithdrawn(booking2HasArrival)
@@ -671,7 +671,7 @@ class WithdrawalTest : IntegrationTestBase() {
           assertAssessmentNotWithdrawn(assessment)
 
           assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
-          assertBookingWithdrawn(bookingNoArrival, "The probation practitioner requested it")
+          assertBookingWithdrawn(bookingNoArrival, "Related placement request withdrawn")
         }
       }
     }

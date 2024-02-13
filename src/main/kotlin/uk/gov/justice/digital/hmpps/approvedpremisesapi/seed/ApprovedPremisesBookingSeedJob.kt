@@ -240,7 +240,7 @@ class ApprovedPremisesBookingSeedJob(
         bookingService.createCas1Cancellation(
           booking = createdBooking,
           cancelledAt = row.cancellationDate,
-          reasonId = cancellationReason.id,
+          userProvidedReason = cancellationReason.id,
           notes = row.cancellationNotes,
           withdrawalContext = WithdrawalContext(
             triggeringUser = null,

@@ -46,6 +46,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_APP_WITHDRAWN_ID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationRepository
@@ -1188,7 +1191,7 @@ class BookingService(
   fun createCas1Cancellation(
     booking: BookingEntity,
     cancelledAt: LocalDate,
-    reasonId: UUID,
+    userProvidedReason: UUID?,
     notes: String?,
     withdrawalContext: WithdrawalContext,
   ) = validated<CancellationEntity> {
@@ -1201,7 +1204,14 @@ class BookingService(
       return generalError("The Booking is not in a state that can be cancelled")
     }
 
-    val reason = cancellationReasonRepository.findByIdOrNull(reasonId)
+    val resolvedReasonId = when(withdrawalContext.triggeringEntityType) {
+      WithdrawableEntityType.Application -> CAS1_RELATED_APP_WITHDRAWN_ID
+      WithdrawableEntityType.PlacementApplication -> CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
+      WithdrawableEntityType.PlacementRequest -> CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
+      WithdrawableEntityType.Booking -> userProvidedReason
+    }
+
+    val reason = cancellationReasonRepository.findByIdOrNull(resolvedReasonId)
     if (reason == null) {
       "$.reason" hasValidationError "doesNotExist"
     } else if (!serviceScopeMatches(reason.serviceScope, booking)) {

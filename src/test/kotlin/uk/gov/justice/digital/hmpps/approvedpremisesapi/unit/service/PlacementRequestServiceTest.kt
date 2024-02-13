@@ -794,10 +794,10 @@ class PlacementRequestServiceTest {
 
       verify {
         bookingService.createCas1Cancellation(
-          booking,
-          LocalDate.now(),
-          CancellationReasonRepository.CAS1_WITHDRAWN_BY_PP_ID,
-          "Automatically withdrawn as placement request was withdrawn",
+          booking = booking,
+          cancelledAt = LocalDate.now(),
+          userProvidedReason = null,
+          notes = "Automatically withdrawn as placement request was withdrawn",
           withdrawalContext = WithdrawalContext(
             user,
             WithdrawableEntityType.PlacementRequest,

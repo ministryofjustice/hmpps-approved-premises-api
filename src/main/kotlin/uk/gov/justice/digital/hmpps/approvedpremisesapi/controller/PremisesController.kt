@@ -534,7 +534,7 @@ class PremisesController(
       is ApprovedPremisesEntity -> bookingService.createCas1Cancellation(
         booking = booking,
         cancelledAt = body.date,
-        reasonId = body.reason,
+        userProvidedReason = body.reason,
         notes = body.notes,
         withdrawalContext = WithdrawalContext(
           triggeringUser = user,
