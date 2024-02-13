@@ -83,11 +83,6 @@ spring:
             client-id: approved-premises-api
             client-secret: clientsecret
             authorization-grant-type: client_credentials
-          manage-adjudications-api:
-            provider: hmpps-auth
-            client-id: approved-premises-api
-            client-secret: clientsecret
-            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${hmpps.auth.url}/oauth/token
@@ -156,8 +151,6 @@ services:
   ap-delius-context-api:
     base-url: http://localhost:9004
   ap-oasys-context-api:
-    base-url: http://localhost:9004
-  manage-adjudications-api:
     base-url: http://localhost:9004
   gov-uk-bank-holidays-api:
     base-url: https://www.gov.uk

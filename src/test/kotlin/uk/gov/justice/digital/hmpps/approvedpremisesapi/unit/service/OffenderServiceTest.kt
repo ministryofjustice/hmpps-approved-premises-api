@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.AdjudicationsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CaseNotesClient
@@ -54,7 +53,6 @@ class OffenderServiceTest {
   private val mockPrisonsApiClient = mockk<PrisonsApiClient>()
   private val mockCaseNotesClient = mockk<CaseNotesClient>()
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
-  private val mockAdjudicationsApiClient = mockk<AdjudicationsApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
   private val mockOffenderRisksDataSource = mockk<OffenderRisksDataSource>()
@@ -88,7 +86,6 @@ class OffenderServiceTest {
     mockPrisonsApiClient,
     mockCaseNotesClient,
     mockApOASysContextApiClient,
-    mockAdjudicationsApiClient,
     mockApDeliusContextApiClient,
     mockOffenderDetailsDataSource,
     mockOffenderRisksDataSource,
@@ -473,17 +470,12 @@ class OffenderServiceTest {
     val nomsNumber = "NOMS456"
 
     every {
-      mockAdjudicationsApiClient.getAdjudicationsPage(
+      mockPrisonsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
-        page = 0,
         pageSize = 2,
+        offset = 0,
       )
-    } returns ClientResult.Failure.StatusCode(
-      HttpMethod.GET,
-      "/adjudications/$nomsNumber/adjudications",
-      HttpStatus.NOT_FOUND,
-      null,
-    )
+    } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.NOT_FOUND, null)
 
     assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.NotFound).isTrue
   }
@@ -493,17 +485,12 @@ class OffenderServiceTest {
     val nomsNumber = "NOMS456"
 
     every {
-      mockAdjudicationsApiClient.getAdjudicationsPage(
+      mockPrisonsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
-        page = 0,
         pageSize = 2,
+        offset = 0,
       )
-    } returns ClientResult.Failure.StatusCode(
-      HttpMethod.GET,
-      "/adjudications/$nomsNumber/adjudications",
-      HttpStatus.FORBIDDEN,
-      null,
-    )
+    } returns StatusCode(HttpMethod.GET, "/api/offenders/$nomsNumber/adjudications", HttpStatus.FORBIDDEN, null)
 
     assertThat(offenderService.getAdjudicationsByNomsNumber(nomsNumber) is AuthorisableActionResult.Unauthorised).isTrue
   }
@@ -541,10 +528,10 @@ class OffenderServiceTest {
       .produce()
 
     every {
-      mockAdjudicationsApiClient.getAdjudicationsPage(
+      mockPrisonsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
-        page = 0,
         pageSize = 2,
+        offset = 0,
       )
     } returns ClientResult.Success(
       HttpStatus.OK,
@@ -552,10 +539,10 @@ class OffenderServiceTest {
     )
 
     every {
-      mockAdjudicationsApiClient.getAdjudicationsPage(
+      mockPrisonsApiClient.getAdjudicationsPage(
         nomsNumber = nomsNumber,
-        page = 1,
         pageSize = 2,
+        offset = 2,
       )
     } returns ClientResult.Success(
       HttpStatus.OK,
@@ -566,8 +553,8 @@ class OffenderServiceTest {
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
     result as AuthorisableActionResult.Success
-    assertThat(result.entity.results.content).containsAll(
-      adjudicationsPageOne.results.content.plus(adjudicationsPageTwo.results.content),
+    assertThat(result.entity.results).containsAll(
+      adjudicationsPageOne.results.plus(adjudicationsPageTwo.results),
     )
     assertThat(result.entity.agencies).containsExactlyInAnyOrder(
       *adjudicationsPageOne.agencies.union(adjudicationsPageTwo.agencies).toTypedArray(),
