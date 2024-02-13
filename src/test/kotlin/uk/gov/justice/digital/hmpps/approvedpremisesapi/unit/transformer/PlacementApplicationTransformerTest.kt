@@ -111,7 +111,7 @@ class PlacementApplicationTransformerTest {
   }
 
   @Test
-  fun `transformJpaToApi returns canBeWithdrawn false if a decision has been made`() {
+  fun `transformJpaToApi returns canBeWithdrawn false if already withdrawn`() {
     val data = "{\"data\": \"something\"}"
     val document = "{\"document\": \"something\"}"
     val placementApplication = PlacementApplicationEntityFactory()
@@ -119,7 +119,7 @@ class PlacementApplicationTransformerTest {
       .withApplication(applicationMock)
       .withData(data)
       .withDocument(document)
-      .withDecision(PlacementApplicationDecision.ACCEPTED)
+      .withDecision(PlacementApplicationDecision.WITHDRAW)
       .produce()
 
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)

@@ -1041,7 +1041,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `withdrawing an in-progress placement request application returns successfully and updates decision field`() {
+    fun `withdrawing an in-progress placement application returns successfully and updates decision field`() {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { _, _ ->
         `Given a User` { user, jwt ->
           `Given a Placement Application`(
@@ -1091,7 +1091,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `withdrawing a submitted placement request application returns successfully`() {
+    fun `withdrawing a submitted placement application returns successfully`() {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { _, _ ->
         `Given a User` { user, jwt ->
           `Given a Placement Application`(

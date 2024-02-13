@@ -39,6 +39,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -536,7 +538,7 @@ class ApplicationService(
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
-    if (!isWithdrawable(application, user)) {
+    if (!isWithdrawableForUser(user, application)) {
       return AuthorisableActionResult.Unauthorised()
     }
 
@@ -547,7 +549,7 @@ class ApplicationService(
         }
 
         if (application.isWithdrawn) {
-          return@validated generalError("applicationAlreadyWithdrawn")
+          return@validated success(Unit)
         }
 
         if (withdrawalReason == WithdrawalReason.other.value && otherReason == null) {
@@ -604,7 +606,7 @@ class ApplicationService(
     )
   }
 
-  fun isWithdrawable(application: ApplicationEntity, user: UserEntity) =
+  fun isWithdrawableForUser(user: UserEntity, application: ApplicationEntity) =
     userAccessService.userCanWithdrawApplication(user, application)
 
   fun sendEmailApplicationWithdrawn(user: UserEntity, application: ApplicationEntity, premisesName: String?) {

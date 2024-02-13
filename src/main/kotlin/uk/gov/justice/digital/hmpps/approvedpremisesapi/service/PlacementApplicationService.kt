@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -15,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -22,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.extractMessage
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
@@ -41,9 +45,12 @@ class PlacementApplicationService(
   private val userAllocator: UserAllocator,
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
+  private val userAccessService: UserAccessService,
   @Value("\${notify.send-placement-request-notifications}")
   private val sendPlacementRequestNotifications: Boolean,
 ) {
+
+  var log: Logger = LoggerFactory.getLogger(this::class.java)
 
   fun getAllPlacementApplicationEntitiesForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
     return placementApplicationRepository.findAllSubmittedNonReallocatedAndNonWithdrawnApplicationsForApplicationId(
@@ -158,10 +165,17 @@ class PlacementApplicationService(
     )
   }
 
+  fun getWithdrawablePlacementApplicationsForUser(user: UserEntity, application: ApprovedPremisesApplicationEntity) =
+    placementApplicationRepository
+      .findByApplication(application)
+      .filter { it.isInWithdrawableState() && userAccessService.userCanWithdrawPlacemenApplication(user, it)}
+
   @Transactional
   fun withdrawPlacementApplication(
     id: UUID,
+    user: UserEntity,
     reason: PlacementApplicationWithdrawalReason?,
+    checkUserPermissions: Boolean,
   ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
 
@@ -171,19 +185,49 @@ class PlacementApplicationService(
       is AuthorisableActionResult.Success -> Unit
     }
 
-    val placementApplicationEntity = placementApplicationAuthorisationResult.entity
+    val placementApplication = placementApplicationAuthorisationResult.entity
 
-    if (!placementApplicationEntity.canBeWithdrawn()) {
+    if(placementApplication.isWithdrawn()) {
       return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The Placement Application cannot be withdrawn because it has an associated decision"),
+        ValidatableActionResult.Success(placementApplication),
       )
     }
 
-    placementApplicationEntity.decision = PlacementApplicationDecision.WITHDRAWN_BY_PP
-    placementApplicationEntity.decisionMadeAt = OffsetDateTime.now()
-    placementApplicationEntity.withdrawalReason = reason
+    if(checkUserPermissions && !userAccessService.userCanWithdrawPlacemenApplication(user, placementApplication)) {
+      return AuthorisableActionResult.Unauthorised()
+    }
 
-    val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
+    if (!placementApplication.isInWithdrawableState()) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("The Placement Application cannot be withdrawn as it's not in a withdrawable state"),
+      )
+    }
+
+    placementApplication.decision = PlacementApplicationDecision.WITHDRAWN_BY_PP
+    placementApplication.decisionMadeAt = OffsetDateTime.now()
+    placementApplication.withdrawalReason = reason
+
+    val savedApplication = placementApplicationRepository.save(placementApplication)
+
+    placementApplication.placementRequests.forEach { placementRequest ->
+      if(placementRequest.isInWithdrawableState()) {
+        val placementRequestWithdrawalResult = placementRequestService.withdrawPlacementRequest(
+          placementRequest.id,
+          user,
+          PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
+          checkUserPermissions = false,
+        )
+
+        when (placementRequestWithdrawalResult) {
+          is AuthorisableActionResult.Success -> Unit
+          else -> log.error(
+            "Failed to automatically withdraw placement request ${placementRequest.id} " +
+              "when withdrawing placement application ${placementApplication.id} " +
+              "with error type ${placementRequestWithdrawalResult::class}",
+          )
+        }
+      }
+    }
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedApplication),
@@ -371,9 +415,6 @@ class PlacementApplicationService(
       ApiPlacementType.releaseFollowingDecision -> PlacementType.RELEASE_FOLLOWING_DECISION
     }
   }
-
-  fun getWithdrawablePlacementApplications(application: ApprovedPremisesApplicationEntity) =
-    placementApplicationRepository.findByApplication(application).filter { it.canBeWithdrawn() }
 
   private fun setSchemaUpToDate(placementApplicationEntity: PlacementApplicationEntity): PlacementApplicationEntity {
     val latestSchema = jsonSchemaService.getNewestSchema(

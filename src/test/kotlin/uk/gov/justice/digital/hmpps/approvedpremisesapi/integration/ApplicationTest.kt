@@ -3173,9 +3173,9 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get withdrawables for an application returns withdrawable placement requests`() {
-      `Given a User` { applicant, _ ->
-        `Given a User` { allocatedTo, jwt ->
+    fun `Get withdrawables for an application returns withdrawable placement requests for application creator`() {
+      `Given a User` { applicant, jwt ->
+        `Given a User` { allocatedTo, _ ->
           `Given an Offender` { offenderDetails, _ ->
 
             val (application, _) = produceAndPersistApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
@@ -3205,6 +3205,11 @@ class ApplicationTest : IntegrationTestBase() {
             }
 
             val expected = listOf(
+              Withdrawable(
+                application.id,
+                WithdrawableType.application,
+                emptyList(),
+              ),
               Withdrawable(
                 placementRequest1.id,
                 WithdrawableType.placementRequest,
@@ -3238,8 +3243,8 @@ class ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get withdrawables for an application returns withdrawable placement applications`() {
-      `Given a User` { applicant, _ ->
-        `Given a User` { allocatedTo, jwt ->
+      `Given a User` { applicant, jwt ->
+        `Given a User` { allocatedTo, _ ->
           `Given an Offender` { offenderDetails, _ ->
 
             val (application, _) = produceAndPersistApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
@@ -3257,18 +3262,18 @@ class ApplicationTest : IntegrationTestBase() {
               ),
             )
 
-            val submittedApplication2ExpectedArrival1 = LocalDate.now().plusDays(50)
-            val submittedApplication2Duration1 = 6
+            val submittedApplication2ExpectedArrival = LocalDate.now().plusDays(50)
+            val submittedApplication2Duration = 6
             val submittedPlacementApplication2 = produceAndPersistPlacementApplication(
               application,
-              listOf(submittedApplication2ExpectedArrival1 to submittedApplication2Duration1),
+              listOf(submittedApplication2ExpectedArrival to submittedApplication2Duration),
             )
 
-            val unsubmittedApplicationExpectedArrival1 = LocalDate.now().plusDays(50)
-            val unsubmittedApplicationDuration1 = 6
+            val unsubmittedApplicationExpectedArrival = LocalDate.now().plusDays(50)
+            val unsubmittedApplicationDuration = 6
             val unsubmittedPlacementApplication = produceAndPersistPlacementApplication(
               application,
-              listOf(unsubmittedApplicationExpectedArrival1 to unsubmittedApplicationDuration1),
+              listOf(unsubmittedApplicationExpectedArrival to unsubmittedApplicationDuration),
             ) {
               withSubmittedAt(null)
             }
@@ -3277,7 +3282,11 @@ class ApplicationTest : IntegrationTestBase() {
               withReallocatedAt(OffsetDateTime.now())
             }
 
-            produceAndPersistPlacementApplication(application, listOf(LocalDate.now() to 2)) {
+            val applicationWithAcceptedDecisionExpectedArrival = LocalDate.now().plusDays(50)
+            val applicationWithAcceptedDecisionDuration = 6
+            val applicationWithAcceptedDecision = produceAndPersistPlacementApplication(
+              application,
+              listOf(applicationWithAcceptedDecisionExpectedArrival to applicationWithAcceptedDecisionDuration)) {
               withDecision(PlacementApplicationDecision.ACCEPTED)
             }
 
@@ -3289,11 +3298,20 @@ class ApplicationTest : IntegrationTestBase() {
               withDecision(PlacementApplicationDecision.WITHDRAWN_BY_PP)
             }
 
-            produceAndPersistPlacementApplication(application, listOf(LocalDate.now() to 2)) {
+            val applicationWithRejectedDecisionExpectedArrival = LocalDate.now().plusDays(50)
+            val applicationWithRejectedDecisionDuration = 6
+            val applicationWithRejectedDecision = produceAndPersistPlacementApplication(
+              application,
+              listOf(applicationWithRejectedDecisionExpectedArrival to applicationWithRejectedDecisionDuration)) {
               withDecision(PlacementApplicationDecision.REJECTED)
             }
 
             val expected = listOf(
+              Withdrawable(
+                application.id,
+                WithdrawableType.application,
+                emptyList(),
+              ),
               Withdrawable(
                 submittedPlacementApplication1.id,
                 WithdrawableType.placementApplication,
@@ -3305,12 +3323,22 @@ class ApplicationTest : IntegrationTestBase() {
               Withdrawable(
                 submittedPlacementApplication2.id,
                 WithdrawableType.placementApplication,
-                listOf(datePeriodForDuration(submittedApplication2ExpectedArrival1, submittedApplication2Duration1)),
+                listOf(datePeriodForDuration(submittedApplication2ExpectedArrival, submittedApplication2Duration)),
               ),
               Withdrawable(
                 unsubmittedPlacementApplication.id,
                 WithdrawableType.placementApplication,
-                listOf(datePeriodForDuration(unsubmittedApplicationExpectedArrival1, unsubmittedApplicationDuration1)),
+                listOf(datePeriodForDuration(unsubmittedApplicationExpectedArrival, unsubmittedApplicationDuration)),
+              ),
+              Withdrawable(
+                applicationWithAcceptedDecision.id,
+                WithdrawableType.placementApplication,
+                listOf(datePeriodForDuration(applicationWithAcceptedDecisionExpectedArrival, applicationWithAcceptedDecisionDuration)),
+              ),
+              Withdrawable(
+                applicationWithRejectedDecision.id,
+                WithdrawableType.placementApplication,
+                listOf(datePeriodForDuration(applicationWithRejectedDecisionExpectedArrival, applicationWithRejectedDecisionDuration)),
               ),
             )
 

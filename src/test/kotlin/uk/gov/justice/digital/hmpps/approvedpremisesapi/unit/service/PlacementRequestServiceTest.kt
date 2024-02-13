@@ -64,6 +64,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
@@ -83,6 +84,7 @@ class PlacementRequestServiceTest {
   private val cancellationRepository = mockk<CancellationRepository>()
   private val userAllocator = mockk<UserAllocator>()
   private val bookingService = mockk<BookingService>()
+  private val userAccessService = mockk<UserAccessService>()
 
   private val placementRequestService = PlacementRequestService(
     placementRequestRepository,
@@ -96,6 +98,7 @@ class PlacementRequestServiceTest {
     cancellationRepository,
     userAllocator,
     bookingService,
+    userAccessService,
     "http://frontend/applications/#id",
   )
 
@@ -510,50 +513,12 @@ class PlacementRequestServiceTest {
     }
   }
 
-  @Test
-  fun `withdrawPlacementRequest returns Unauthorised if User is not application creator or WORKFLOW_MANAGER`() {
-    val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
-
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
-      .produce()
-
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(application)
-      .produce()
-
-    val placementRequest = PlacementRequestEntityFactory()
-      .withId(placementRequestId)
-      .withApplication(application)
-      .withPlacementRequirements(
-        PlacementRequirementsEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .produce(),
-      )
-      .withAssessment(assessment)
-      .produce()
-
-    every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
-
-    val result = placementRequestService.withdrawPlacementRequest(
-      placementRequestId,
-      user,
-      PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
-    )
-
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
-  }
 
   @Nested
-  inner class GetWithdrawablePlacementRequests {
+  inner class GetWithdrawablePlacementRequestsForUser {
 
     @Test
-    fun `getWithdrawablePlacementRequests doesn't return reallocated placement requests`() {
+    fun `getWithdrawablePlacementRequestsForUser doesn't return reallocated placement requests`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
         .produce()
@@ -568,14 +533,15 @@ class PlacementRequestServiceTest {
       placementRequestReallocated.reallocatedAt = OffsetDateTime.now()
 
       every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithdrawable, placementRequestReallocated)
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequestWithdrawable) } returns true
 
-      val result = placementRequestService.getWithdrawablePlacementRequests(application)
+      val result = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
 
       assertThat(result).isEqualTo(listOf(placementRequestWithdrawable))
     }
 
     @Test
-    fun `getWithdrawablePlacementRequests doesn't return withdrawn placement requests`() {
+    fun `getWithdrawablePlacementRequestsForUser doesn't return withdrawn placement requests`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
         .produce()
@@ -590,14 +556,15 @@ class PlacementRequestServiceTest {
       placementRequestWithdrawn.isWithdrawn = true
 
       every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithdrawable, placementRequestWithdrawn)
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequestWithdrawable) } returns true
 
-      val result = placementRequestService.getWithdrawablePlacementRequests(application)
+      val result = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
 
       assertThat(result).isEqualTo(listOf(placementRequestWithdrawable))
     }
 
     @Test
-    fun `getWithdrawablePlacementRequests returns placement requests with bookings`() {
+    fun `getWithdrawablePlacementRequestsForUser returns placement requests with bookings`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
         .produce()
@@ -612,8 +579,10 @@ class PlacementRequestServiceTest {
       placementRequestWithBooking.booking = BookingEntityFactory().withDefaultPremises().produce()
 
       every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithoutBooking, placementRequestWithBooking)
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequestWithoutBooking) } returns true
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequestWithBooking) } returns true
 
-      val result = placementRequestService.getWithdrawablePlacementRequests(application)
+      val result = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
 
       assertThat(result).isEqualTo(listOf(placementRequestWithoutBooking, placementRequestWithBooking))
     }
@@ -637,6 +606,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         user,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
+        checkUserPermissions = true,
       )
 
       assertThat(result is AuthorisableActionResult.NotFound).isTrue
@@ -645,49 +615,7 @@ class PlacementRequestServiceTest {
     @ParameterizedTest
     @EnumSource(PlacementRequestWithdrawalReason::class)
     @NullSource
-    fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true for cas workflow manager`(
-      reason: PlacementRequestWithdrawalReason?,
-    ) {
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-        .addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
-        .produce()
-
-      val placementRequest = createValidPlacementRequest(application, user)
-      val placementRequestId = placementRequest.id
-
-      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
-      every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
-
-      val result = placementRequestService.withdrawPlacementRequest(
-        placementRequestId,
-        user,
-        reason,
-      )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-
-      verify {
-        placementRequestRepository.save(
-          match {
-            it.id == placementRequestId &&
-              it.isWithdrawn &&
-              it.withdrawalReason == reason
-          },
-        )
-      }
-
-      verify { bookingService wasNot Called }
-    }
-
-    @ParameterizedTest
-    @EnumSource(PlacementRequestWithdrawalReason::class)
-    @NullSource
-    fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true for application creator`(
+    fun `withdrawPlacementRequest returns Success, saves PlacementRequest with isWithdrawn set to true`(
       reason: PlacementRequestWithdrawalReason?,
     ) {
       val user = UserEntityFactory()
@@ -701,6 +629,7 @@ class PlacementRequestServiceTest {
       val placementRequest = createValidPlacementRequest(application, user)
       val placementRequestId = placementRequest.id
 
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
 
@@ -708,6 +637,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         user,
         reason,
+        checkUserPermissions = true,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -746,6 +676,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         user,
         PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
+        checkUserPermissions = true,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -771,6 +702,7 @@ class PlacementRequestServiceTest {
       val booking = BookingEntityFactory().withDefaultPremises().produce()
       placementRequest.booking = booking
 
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every {
@@ -781,6 +713,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         user,
         reason,
+        checkUserPermissions = true,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -826,6 +759,7 @@ class PlacementRequestServiceTest {
       val booking = BookingEntityFactory().withDefaultPremises().produce()
       placementRequest.booking = booking
 
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every {
@@ -837,6 +771,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         user,
         reason,
+        checkUserPermissions = true,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -858,6 +793,86 @@ class PlacementRequestServiceTest {
             "booking cancellation didn't work!",
         )
       }
+    }
+
+    @Test
+    fun `withdrawPlacementRequest returns Unauthorised if checkUserPermissions is true and user does not have permission`() {
+      val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
+
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withId(placementRequestId)
+        .withApplication(application)
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
+        .withAssessment(assessment)
+        .produce()
+
+      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequest) } returns false
+
+      val result = placementRequestService.withdrawPlacementRequest(
+        placementRequestId,
+        user,
+        PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
+        checkUserPermissions = true,
+      )
+
+      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+    }
+
+    @Test
+    fun `withdrawPlacementRequest returns authorised if checkUserPermissions is false and user does not have permission`() {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
+        .produce()
+
+      val placementRequest = createValidPlacementRequest(application, user)
+      val placementRequestId = placementRequest.id
+
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequest) } returns true
+      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
+      every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+
+      val result = placementRequestService.withdrawPlacementRequest(
+        placementRequestId,
+        user,
+        PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
+        checkUserPermissions = true,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+
+      verify {
+        placementRequestRepository.save(
+          match {
+            it.id == placementRequestId &&
+              it.isWithdrawn &&
+              it.withdrawalReason == PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
+          },
+        )
+      }
+
+      verify { bookingService wasNot Called }
     }
   }
 

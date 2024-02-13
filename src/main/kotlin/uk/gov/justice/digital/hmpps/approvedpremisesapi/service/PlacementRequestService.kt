@@ -65,6 +65,7 @@ class PlacementRequestService(
   private val cancellationRepository: CancellationRepository,
   private val userAllocator: UserAllocator,
   @Lazy private val bookingService: BookingService,
+  private val userAccessService: UserAccessService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
 
@@ -287,10 +288,19 @@ class PlacementRequestService(
     )
   }
 
+  fun getWithdrawablePlacementRequestsForUser(
+    user: UserEntity,
+    application: ApprovedPremisesApplicationEntity,
+  ): List<PlacementRequestEntity> =
+    placementRequestRepository
+      .findByApplication(application)
+      .filter { it.isInWithdrawableState() && userAccessService.userCanWithdrawPlacementRequest(user, it) }
+
   fun withdrawPlacementRequest(
     placementRequestId: UUID,
     user: UserEntity,
     reason: PlacementRequestWithdrawalReason?,
+    checkUserPermissions: Boolean,
   ): AuthorisableActionResult<Unit> {
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
@@ -299,7 +309,7 @@ class PlacementRequestService(
       return AuthorisableActionResult.Success(Unit)
     }
 
-    if (!user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER) && placementRequest.application.createdByUser != user) {
+    if(checkUserPermissions && !userAccessService.userCanWithdrawPlacementRequest(user, placementRequest)) {
       return AuthorisableActionResult.Unauthorised()
     }
 
@@ -329,11 +339,6 @@ class PlacementRequestService(
 
     return AuthorisableActionResult.Success(Unit)
   }
-
-  fun getWithdrawablePlacementRequests(
-    application: ApprovedPremisesApplicationEntity,
-  ): List<PlacementRequestEntity> =
-    placementRequestRepository.findByApplication(application).filter { it.canBeWithdrawn() }
 
   private fun saveBookingNotMadeDomainEvent(
     user: UserEntity,

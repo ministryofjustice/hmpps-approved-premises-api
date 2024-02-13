@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -192,6 +194,11 @@ class UserAccessService(
     else -> false
   }
 
+  /**
+   * This function only checks if the user has the correct permissions to withdraw the given application.
+   *
+   * It doesn't consider if the application is in a withdrawable state
+   */
   fun userCanWithdrawApplication(user: UserEntity, application: ApplicationEntity): Boolean = when (application) {
     is ApprovedPremisesApplicationEntity ->
       application.createdByUser == user || (
@@ -199,6 +206,25 @@ class UserAccessService(
         )
     else -> false
   }
+
+  /**
+   * This function only checks if the user has the correct permissions to withdraw the given placement request.
+   *
+   * It doesn't consider if the placement request is in a withdrawable state
+   */
+  fun userCanWithdrawPlacementRequest(user: UserEntity, placementRequest: PlacementRequestEntity)
+    = placementRequest.application.createdByUser == user ||
+      user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)
+
+  /**
+   * This function only checks if the user has the correct permissions to withdraw the given placement application.
+   *
+   * It doesn't consider if the placement request is in a withdrawable state
+   */
+  fun userCanWithdrawPlacemenApplication(user: UserEntity, placementApplication: PlacementApplicationEntity)
+    = placementApplication.createdByUser == user ||
+      (placementApplication.isSubmitted() && user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER))
+
 }
 
 enum class ApprovedPremisesApplicationAccessLevel {

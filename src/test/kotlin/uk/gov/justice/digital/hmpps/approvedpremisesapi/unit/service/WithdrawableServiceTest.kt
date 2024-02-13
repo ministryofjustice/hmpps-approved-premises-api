@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import org.slf4j.Logger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -100,10 +101,10 @@ class WithdrawableServiceTest {
   @BeforeEach
   fun setup() {
     every {
-      mockPlacementRequestService.getWithdrawablePlacementRequests(application)
+      mockPlacementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
     } returns placementRequests
     every {
-      mockPlacementApplicationService.getWithdrawablePlacementApplications(application)
+      mockPlacementApplicationService.getWithdrawablePlacementApplicationsForUser(user, application)
     } returns placementApplications
     every {
       mockBookingService.getCancelleableCas1BookingsForUser(user, application)
@@ -112,7 +113,7 @@ class WithdrawableServiceTest {
 
   @Test
   fun `allWithdrawables returns all withdrawable information`() {
-    every { mockApplicationService.isWithdrawable(application, user) } returns true
+    every { mockApplicationService.isWithdrawableForUser(user, application) } returns true
     val result = withdrawableService.allWithdrawables(application, user)
 
     assertThat(result.application).isEqualTo(true)
@@ -124,58 +125,82 @@ class WithdrawableServiceTest {
   @ParameterizedTest
   @ValueSource(booleans = [true, false])
   fun `allWithdrawables returns if application can't be withdrawn`(canBeWithdrawn: Boolean) {
-    every { mockApplicationService.isWithdrawable(application, user) } returns canBeWithdrawn
+    every { mockApplicationService.isWithdrawableForUser(user, application) } returns canBeWithdrawn
     val result = withdrawableService.allWithdrawables(application, user)
 
     assertThat(result.application).isEqualTo(canBeWithdrawn)
   }
 
   @Test
-  fun `withdrawAllForApplication withdraws all withdrawable entities`() {
-    every { mockApplicationService.isWithdrawable(application, user) } returns true
+  fun `withdrawAllForApplication cascades to placement requests and placement applications`() {
+    application.placementRequests.addAll(placementRequests)
+    every {
+      mockPlacementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(application.id)
+    } returns placementApplications
 
     every {
-      mockBookingService.createCancellation(
-        user,
-        any(),
-        any(),
-        CancellationReasonRepository.CAS1_WITHDRAWN_BY_PP_ID,
-        "Automatically withdrawn as application was withdrawn",
-      )
-    } returns mockk<ValidatableActionResult<CancellationEntity>>()
-
-    every {
-      mockPlacementRequestService.withdrawPlacementRequest(any(), user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
+      mockPlacementRequestService.withdrawPlacementRequest(any(), user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
     } returns mockk<AuthorisableActionResult<Unit>>()
 
     every {
-      mockPlacementApplicationService.withdrawPlacementApplication(any(), PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP)
+      mockPlacementApplicationService.withdrawPlacementApplication(any(), user, PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
     } returns mockk<AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>>>()
 
     withdrawableService.withdrawAllForApplication(application, user)
 
-    bookings.forEach {
-      verify {
-        mockBookingService.createCancellation(
-          user,
-          it,
-          LocalDate.now(),
-          CancellationReasonRepository.CAS1_WITHDRAWN_BY_PP_ID,
-          "Automatically withdrawn as application was withdrawn",
-        )
-      }
-    }
-
     placementRequests.forEach {
       verify {
-        mockPlacementRequestService.withdrawPlacementRequest(it.id, user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP)
+        mockPlacementRequestService.withdrawPlacementRequest(it.id, user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
       }
     }
 
     placementApplications.forEach {
       verify {
-        mockPlacementApplicationService.withdrawPlacementApplication(it.id, PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP)
+        mockPlacementApplicationService.withdrawPlacementApplication(it.id, user, PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
       }
     }
+  }
+
+  @Test
+  fun `withdrawAllForApplication reports errors if can't withdrawh children`() {
+    val logger = mockk<Logger>()
+    withdrawableService.log = logger
+
+    val placementRequest = placementRequests[0]
+    application.placementRequests.add(placementRequest)
+
+    val placementApplication = placementApplications[0]
+    every {
+      mockPlacementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(application.id)
+    } returns listOf(placementApplication)
+
+    every {
+      mockPlacementRequestService.withdrawPlacementRequest(any(), user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
+    } returns AuthorisableActionResult.Unauthorised()
+
+    every {
+      mockPlacementApplicationService.withdrawPlacementApplication(any(), user, PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
+    } returns AuthorisableActionResult.Unauthorised()
+
+    every { logger.error(any<String>()) } returns Unit
+
+    withdrawableService.withdrawAllForApplication(application, user)
+
+    verify {
+      logger.error(
+        "Failed to automatically withdraw placement request ${placementRequest.id} " +
+          "when withdrawing application ${application.id} " +
+          "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult\$Unauthorised",
+      )
+    }
+
+    verify {
+      logger.error(
+        "Failed to automatically withdraw placement application ${placementApplication.id} " +
+          "when withdrawing application ${application.id} " +
+          "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult\$Unauthorised",
+      )
+    }
+
   }
 }
