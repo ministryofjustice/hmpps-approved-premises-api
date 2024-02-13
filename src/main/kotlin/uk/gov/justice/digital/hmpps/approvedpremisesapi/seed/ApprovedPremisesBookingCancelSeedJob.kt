@@ -40,7 +40,7 @@ class ApprovedPremisesBookingCancelSeedJob(
     val validationResult = bookingService.createCas1Cancellation(
       booking = booking,
       cancelledAt = LocalDate.now(),
-      reasonId = errorInBookingDetailsCancellationReason,
+      userProvidedReason = errorInBookingDetailsCancellationReason,
       notes = null,
       withdrawalContext = WithdrawalContext(
         triggeringUser = null,

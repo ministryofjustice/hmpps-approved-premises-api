@@ -2103,7 +2103,7 @@ class BookingServiceTest {
       val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
-        reasonId = UUID.randomUUID(),
+        userProvidedReason = UUID.randomUUID(),
         notes = "notes",
         withdrawalContext = WithdrawalContext(
           user,
@@ -2139,7 +2139,7 @@ class BookingServiceTest {
       val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = "notes",
         withdrawalContext = WithdrawalContext(
           user,
@@ -2165,7 +2165,7 @@ class BookingServiceTest {
       val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = "notes",
         withdrawalContext = WithdrawalContext(
           user,
@@ -2198,7 +2198,7 @@ class BookingServiceTest {
       val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = "notes",
         withdrawalContext = WithdrawalContext(
           user,
@@ -2229,7 +2229,7 @@ class BookingServiceTest {
       val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = "notes",
         withdrawalContext = WithdrawalContext(
           user,
@@ -2290,7 +2290,7 @@ class BookingServiceTest {
       val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = cancelledAt,
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = notes,
         withdrawalContext = WithdrawalContext(
           user,
@@ -2376,7 +2376,7 @@ class BookingServiceTest {
       val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = cancelledAt,
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = notes,
         withdrawalContext = WithdrawalContext(
           user,
@@ -2461,7 +2461,7 @@ class BookingServiceTest {
       val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = cancelledAt,
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = notes,
         withdrawalContext = WithdrawalContext(
           user,
@@ -2550,7 +2550,7 @@ class BookingServiceTest {
       val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = "notes",
         withdrawalContext = WithdrawalContext(
           user,
@@ -2577,6 +2577,49 @@ class BookingServiceTest {
           null,
         )
       }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
+    }
+
+
+    @ParameterizedTest
+    @EnumSource(WithdrawableEntityType::class)
+    fun `createCancellation sets correct reason if withdrawal triggered by other entity`(triggeringEntity: WithdrawableEntityType) {
+      val providedReasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+
+      val bookingEntity = BookingEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
+
+      val expectedReasonId = when(triggeringEntity) {
+        WithdrawableEntityType.Application -> CancellationReasonRepository.CAS1_RELATED_APP_WITHDRAWN_ID
+        WithdrawableEntityType.PlacementApplication -> CancellationReasonRepository.CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
+        WithdrawableEntityType.PlacementRequest -> CancellationReasonRepository.CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
+        WithdrawableEntityType.Booking -> providedReasonId
+      }
+
+      every { mockCancellationReasonRepository.findByIdOrNull(expectedReasonId) } returns reasonEntity
+      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+      val result = bookingService.createCas1Cancellation(
+        booking = bookingEntity,
+        cancelledAt = LocalDate.parse("2022-08-25"),
+        userProvidedReason = providedReasonId,
+        notes = "notes",
+        withdrawalContext = WithdrawalContext(
+          user,
+          triggeringEntity,
+        ),
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+
       verify(exactly = 1) {
         mockBookingRepository.save(bookingEntity)
       }
