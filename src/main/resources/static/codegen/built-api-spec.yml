@@ -6239,6 +6239,10 @@ components:
             $ref: '#/components/schemas/Cas2StatusUpdate'
         telephoneNumber:
           type: string
+        timelineEvents:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2TimelineEvent'
       required:
         - id
         - person
@@ -6247,6 +6251,7 @@ components:
         - schemaVersion
         - outdatedSchema
         - status
+        - timelineEvents
     TemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/Application'

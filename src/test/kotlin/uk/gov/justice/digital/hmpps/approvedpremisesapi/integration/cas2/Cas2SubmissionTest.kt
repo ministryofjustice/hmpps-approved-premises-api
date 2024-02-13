@@ -419,6 +419,9 @@ class Cas2SubmissionTest(
                 .map { detail -> detail.label },
             )
               .isEqualTo(listOf("Detail on 3rd update"))
+
+            Assertions.assertThat(responseBody.timelineEvents.map { event -> event.label })
+              .isEqualTo(listOf("3rd update", "2nd update", "1st update", "Application submitted"))
           }
         }
       }
@@ -585,6 +588,9 @@ class Cas2SubmissionTest(
 
                 Assertions.assertThat(responseBody.statusUpdates!!.map { update -> update.label })
                   .isEqualTo(listOf("3rd update", "2nd update", "1st update"))
+
+                Assertions.assertThat(responseBody.timelineEvents.map { event -> event.label })
+                  .isEqualTo(listOf("3rd update", "2nd update", "1st update", "Application submitted"))
               }
             }
           }

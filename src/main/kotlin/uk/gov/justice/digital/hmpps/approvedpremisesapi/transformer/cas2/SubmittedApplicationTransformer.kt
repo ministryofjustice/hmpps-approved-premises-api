@@ -18,6 +18,7 @@ class SubmittedApplicationTransformer(
   private val personTransformer: PersonTransformer,
   private val nomisUserTransformer: NomisUserTransformer,
   private val statusUpdateTransformer: StatusUpdateTransformer,
+  private val timelineEventsTransformer: TimelineEventsTransformer,
 ) {
 
   fun transformJpaToApiRepresentation(
@@ -38,6 +39,7 @@ class SubmittedApplicationTransformer(
       submittedAt = jpa.submittedAt?.toInstant(),
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
       telephoneNumber = jpa.telephoneNumber,
+      timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
     )
   }
 
