@@ -47,6 +47,7 @@ class StatusUpdateTransformerTest {
       description = jpaEntity.description,
       updatedBy = mockExternalUserApi,
       updatedAt = jpaEntity.createdAt?.toInstant(),
+      statusUpdateDetails = null,
     )
 
     val transformation = statusUpdateTransformer.transformJpaToApi(jpaEntity)
