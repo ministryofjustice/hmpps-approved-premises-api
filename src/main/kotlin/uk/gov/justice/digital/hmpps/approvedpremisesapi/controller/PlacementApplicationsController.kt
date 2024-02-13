@@ -128,7 +128,6 @@ class PlacementApplicationsController(
     val result = placementApplicationService.withdrawPlacementApplication(
       id,
       withdrawalReason,
-      checkUserPermissions = true,
       withdrawalContext = WithdrawalContext(
         userService.getUserForRequest(),
         WithdrawableEntityType.PlacementApplication

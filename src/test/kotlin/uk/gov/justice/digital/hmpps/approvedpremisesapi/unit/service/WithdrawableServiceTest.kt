@@ -150,7 +150,6 @@ class WithdrawableServiceTest {
       mockPlacementApplicationService.withdrawPlacementApplication(
         any(),
         userProvidedReason = null,
-        checkUserPermissions = false,
         WithdrawalContext(
           user,
           WithdrawableEntityType.Application,
@@ -178,7 +177,6 @@ class WithdrawableServiceTest {
         mockPlacementApplicationService.withdrawPlacementApplication(
           it.id,
           userProvidedReason = null,
-          checkUserPermissions = false,
           WithdrawalContext(
             user,
             WithdrawableEntityType.Application,
@@ -215,7 +213,6 @@ class WithdrawableServiceTest {
       mockPlacementApplicationService.withdrawPlacementApplication(
         any(),
         userProvidedReason = null,
-        checkUserPermissions = false,
         WithdrawalContext(
           user,
           WithdrawableEntityType.Application,

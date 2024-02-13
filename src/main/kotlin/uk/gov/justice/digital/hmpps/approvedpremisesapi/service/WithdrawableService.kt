@@ -70,7 +70,6 @@ class WithdrawableService(
         val result = placementApplicationService.withdrawPlacementApplication(
           id = placementApplication.id,
           userProvidedReason = null,
-          checkUserPermissions = false,
           withdrawalContext = WithdrawalContext(
             user,
             WithdrawableEntityType.Application
