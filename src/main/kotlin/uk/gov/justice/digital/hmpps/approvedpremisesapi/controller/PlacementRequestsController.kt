@@ -199,7 +199,6 @@ class PlacementRequestsController(
       placementRequestService.withdrawPlacementRequest(
         id,
         reason,
-        checkUserPermissions = true,
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,

@@ -638,7 +638,7 @@ class PlacementApplicationServiceTest {
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every {
-        placementRequestService.withdrawPlacementRequest(any(), any(), any(), any())
+        placementRequestService.withdrawPlacementRequest(any(), any(), any())
       }  returns AuthorisableActionResult.Success(Unit)
 
       val result = placementApplicationService.withdrawPlacementApplication(
@@ -657,7 +657,6 @@ class PlacementApplicationServiceTest {
         placementRequestService.withdrawPlacementRequest(
           placementRequest1.id,
           PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
-          checkUserPermissions = false,
           WithdrawalContext(
             user,
             WithdrawableEntityType.PlacementApplication,
@@ -669,7 +668,6 @@ class PlacementApplicationServiceTest {
         placementRequestService.withdrawPlacementRequest(
           placementRequest2.id,
           PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
-          checkUserPermissions = false,
           WithdrawalContext(
             user,
             WithdrawableEntityType.PlacementApplication,
@@ -700,7 +698,7 @@ class PlacementApplicationServiceTest {
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every {
-        placementRequestService.withdrawPlacementRequest(any(), any(), any(), any())
+        placementRequestService.withdrawPlacementRequest(any(), any(), any())
       }  returns AuthorisableActionResult.Unauthorised()
       every { logger.error(any<String>()) } returns Unit
 

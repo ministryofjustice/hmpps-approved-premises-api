@@ -231,7 +231,6 @@ class PlacementApplicationService(
         val placementRequestWithdrawalResult = placementRequestService.withdrawPlacementRequest(
           placementRequest.id,
           PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
-          checkUserPermissions = false,
           withdrawalContext,
         )
 

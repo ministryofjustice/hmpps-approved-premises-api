@@ -607,7 +607,6 @@ class PlacementRequestServiceTest {
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
-        checkUserPermissions = true,
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
@@ -641,7 +640,6 @@ class PlacementRequestServiceTest {
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
         reason,
-        checkUserPermissions = true,
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
@@ -664,8 +662,8 @@ class PlacementRequestServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = WithdrawableEntityType::class, names = ["Booking"], mode = EnumSource.Mode.EXCLUDE)
-    fun `withdrawPlacementRequest sets correct reason if withdrawal triggered by other entity`(triggeringEntity: WithdrawableEntityType) {
+    @EnumSource(value = WithdrawableEntityType::class, names = ["Booking","PlacementRequest"], mode = EnumSource.Mode.EXCLUDE)
+    fun `withdrawPlacementRequest sets correct reason if withdrawal triggered by other entity and user permissions not checked`(triggeringEntity: WithdrawableEntityType) {
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
@@ -677,7 +675,6 @@ class PlacementRequestServiceTest {
       val placementRequest = createValidPlacementRequest(application, user)
       val placementRequestId = placementRequest.id
 
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
 
@@ -685,7 +682,6 @@ class PlacementRequestServiceTest {
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
         providedReason,
-        checkUserPermissions = true,
         WithdrawalContext(
           user,
           triggeringEntity,
@@ -700,6 +696,8 @@ class PlacementRequestServiceTest {
         WithdrawableEntityType.Booking -> providedReason
         WithdrawableEntityType.PlacementRequest -> providedReason
       }
+
+      verify { userAccessService wasNot Called }
 
       verify {
         placementRequestRepository.save(
@@ -726,7 +724,6 @@ class PlacementRequestServiceTest {
       val placementRequest = createValidPlacementRequest(application, user)
       val placementRequestId = placementRequest.id
 
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
 
@@ -736,7 +733,6 @@ class PlacementRequestServiceTest {
         placementRequestService.withdrawPlacementRequest(
           placementRequestId,
           providedReason,
-          checkUserPermissions = true,
           WithdrawalContext(
             user,
             triggeringEntity,
@@ -765,7 +761,6 @@ class PlacementRequestServiceTest {
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
         PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
-        checkUserPermissions = true,
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
@@ -805,7 +800,6 @@ class PlacementRequestServiceTest {
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
         reason,
-        checkUserPermissions = true,
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
@@ -869,7 +863,6 @@ class PlacementRequestServiceTest {
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
         reason,
-        checkUserPermissions = true,
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
@@ -898,7 +891,7 @@ class PlacementRequestServiceTest {
     }
 
     @Test
-    fun `withdrawPlacementRequest returns Unauthorised if checkUserPermissions is true and user does not have permission`() {
+    fun `withdrawPlacementRequest returns Unauthorised if user directly requested withdrawal and user does not have permission`() {
       val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
 
       val user = UserEntityFactory()
@@ -931,7 +924,6 @@ class PlacementRequestServiceTest {
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
-        checkUserPermissions = true,
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
@@ -942,7 +934,7 @@ class PlacementRequestServiceTest {
     }
 
     @Test
-    fun `withdrawPlacementRequest returns authorised if checkUserPermissions is false and user does not have permission`() {
+    fun `withdrawPlacementRequest returns Authorised if user directly requested withdrawal and user does not have permission`() {
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
@@ -961,7 +953,6 @@ class PlacementRequestServiceTest {
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
-        checkUserPermissions = true,
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
