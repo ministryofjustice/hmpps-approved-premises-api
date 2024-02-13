@@ -1184,7 +1184,7 @@ class BookingService(
 
   fun getCancelleableCas1BookingsForUser(user: UserEntity, application: ApprovedPremisesApplicationEntity): List<BookingEntity> =
     bookingRepository.findAllByApplication(application).filter { booking ->
-      booking.isInCancellableStateCas1() && userAccessService.userCanCancelBooking(user, booking)
+      booking.isInCancellableStateCas1() && userAccessService.userMayCancelBooking(user, booking)
     }
 
   @Transactional

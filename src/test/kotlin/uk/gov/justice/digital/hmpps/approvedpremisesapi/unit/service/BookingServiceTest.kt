@@ -5873,7 +5873,7 @@ class BookingServiceTest {
 
     @Test
     fun `getCancellableCas1Bookings returns cancellable bookings`() {
-      every { mockUserAccessService.userCanCancelBooking(user, any()) } returns true
+      every { mockUserAccessService.userMayCancelBooking(user, any()) } returns true
       every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking)
 
       val result = bookingService.getCancelleableCas1BookingsForUser(user, application)
@@ -5894,7 +5894,7 @@ class BookingServiceTest {
           .produce(),
       )
 
-      every { mockUserAccessService.userCanCancelBooking(user, any()) } returns true
+      every { mockUserAccessService.userMayCancelBooking(user, any()) } returns true
       every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking, cancelledBooking)
 
       val result = bookingService.getCancelleableCas1BookingsForUser(user, application)
@@ -5914,7 +5914,7 @@ class BookingServiceTest {
           .produce(),
       )
 
-      every { mockUserAccessService.userCanCancelBooking(user, any()) } returns true
+      every { mockUserAccessService.userMayCancelBooking(user, any()) } returns true
       every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking, bookingWithArrival)
 
       val result = bookingService.getCancelleableCas1BookingsForUser(user, application)
@@ -5928,8 +5928,8 @@ class BookingServiceTest {
         .withPremises(premises)
         .produce()
 
-      every { mockUserAccessService.userCanCancelBooking(user, cancellableBooking) } returns true
-      every { mockUserAccessService.userCanCancelBooking(user, bookingUserCantCancel) } returns false
+      every { mockUserAccessService.userMayCancelBooking(user, cancellableBooking) } returns true
+      every { mockUserAccessService.userMayCancelBooking(user, bookingUserCantCancel) } returns false
       every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking, bookingUserCantCancel)
 
       val result = bookingService.getCancelleableCas1BookingsForUser(user, application)

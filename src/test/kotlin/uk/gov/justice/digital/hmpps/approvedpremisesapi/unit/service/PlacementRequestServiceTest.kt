@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -48,7 +47,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -537,7 +535,7 @@ class PlacementRequestServiceTest {
       placementRequestReallocated.reallocatedAt = OffsetDateTime.now()
 
       every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithdrawable, placementRequestReallocated)
-      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequestWithdrawable) } returns true
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequestWithdrawable) } returns true
 
       val result = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
 
@@ -560,7 +558,7 @@ class PlacementRequestServiceTest {
       placementRequestWithdrawn.isWithdrawn = true
 
       every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithdrawable, placementRequestWithdrawn)
-      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequestWithdrawable) } returns true
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequestWithdrawable) } returns true
 
       val result = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
 
@@ -583,8 +581,8 @@ class PlacementRequestServiceTest {
       placementRequestWithBooking.booking = BookingEntityFactory().withDefaultPremises().produce()
 
       every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithoutBooking, placementRequestWithBooking)
-      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequestWithoutBooking) } returns true
-      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequestWithBooking) } returns true
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequestWithoutBooking) } returns true
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequestWithBooking) } returns true
 
       val result = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
 
@@ -636,7 +634,7 @@ class PlacementRequestServiceTest {
       val placementRequest = createValidPlacementRequest(application, user)
       val placementRequestId = placementRequest.id
 
-      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequest) } returns true
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
 
@@ -679,7 +677,7 @@ class PlacementRequestServiceTest {
       val placementRequest = createValidPlacementRequest(application, user)
       val placementRequestId = placementRequest.id
 
-      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequest) } returns true
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
 
@@ -728,7 +726,7 @@ class PlacementRequestServiceTest {
       val placementRequest = createValidPlacementRequest(application, user)
       val placementRequestId = placementRequest.id
 
-      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequest) } returns true
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
 
@@ -797,7 +795,7 @@ class PlacementRequestServiceTest {
       val booking = BookingEntityFactory().withDefaultPremises().produce()
       placementRequest.booking = booking
 
-      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequest) } returns true
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every {
@@ -860,7 +858,7 @@ class PlacementRequestServiceTest {
       val booking = BookingEntityFactory().withDefaultPremises().produce()
       placementRequest.booking = booking
 
-      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequest) } returns true
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every {
@@ -928,7 +926,7 @@ class PlacementRequestServiceTest {
         .produce()
 
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
-      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequest) } returns false
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns false
 
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
@@ -956,7 +954,7 @@ class PlacementRequestServiceTest {
       val placementRequest = createValidPlacementRequest(application, user)
       val placementRequestId = placementRequest.id
 
-      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequest) } returns true
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
 

@@ -526,7 +526,7 @@ class PremisesController(
 
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (!userAccessService.userCanCancelBooking(user, booking)) {
+    if (!userAccessService.userMayCancelBooking(user, booking)) {
       throw ForbiddenProblem()
     }
 

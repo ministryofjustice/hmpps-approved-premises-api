@@ -525,14 +525,14 @@ class UserAccessServiceTest {
 
       val canCancelBooking = listOf(UserRole.CAS1_MANAGER,UserRole.CAS1_WORKFLOW_MANAGER).contains(role)
 
-      assertThat(userAccessService.userCanCancelBooking(user, cas1Booking)).isEqualTo(canCancelBooking)
+      assertThat(userAccessService.userMayCancelBooking(user, cas1Booking)).isEqualTo(canCancelBooking)
     }
 
     @Test
     fun `userCanCancelBooking returns false if the given premises is a CAS1 premises and the user has no suitable role`() {
       currentRequestIsFor(ServiceName.approvedPremises)
 
-      assertThat(userAccessService.userCanCancelBooking(user, cas1Booking)).isFalse
+      assertThat(userAccessService.userMayCancelBooking(user, cas1Booking)).isFalse
     }
 
     @Test
@@ -541,7 +541,7 @@ class UserAccessServiceTest {
 
       user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-      assertThat(userAccessService.userCanCancelBooking(user, cas3BookingInUserRegion)).isTrue
+      assertThat(userAccessService.userMayCancelBooking(user, cas3BookingInUserRegion)).isTrue
     }
 
     @Test
@@ -550,15 +550,15 @@ class UserAccessServiceTest {
 
       user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
 
-      assertThat(userAccessService.userCanCancelBooking(user, cas3BookingNotInUserRegion)).isFalse
+      assertThat(userAccessService.userMayCancelBooking(user, cas3BookingNotInUserRegion)).isFalse
     }
 
     @Test
     fun `userCanCancelBooking returns false if the given premises is a CAS3 premises and the user does not have a suitable role`() {
       currentRequestIsFor(ServiceName.temporaryAccommodation)
 
-      assertThat(userAccessService.userCanCancelBooking(user, cas3BookingInUserRegion)).isFalse
-      assertThat(userAccessService.userCanCancelBooking(user, cas3BookingNotInUserRegion)).isFalse
+      assertThat(userAccessService.userMayCancelBooking(user, cas3BookingInUserRegion)).isFalse
+      assertThat(userAccessService.userMayCancelBooking(user, cas3BookingNotInUserRegion)).isFalse
     }
   }
 
@@ -1494,7 +1494,7 @@ class UserAccessServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      assertThat(userAccessService.userCanWithdrawApplication(user, application)).isTrue
+      assertThat(userAccessService.userMayWithdrawApplication(user, application)).isTrue
     }
 
     @Test
@@ -1503,7 +1503,7 @@ class UserAccessServiceTest {
         .withCreatedByUser(anotherUserInRegion)
         .produce()
 
-      assertThat(userAccessService.userCanWithdrawApplication(user, application)).isFalse()
+      assertThat(userAccessService.userMayWithdrawApplication(user, application)).isFalse()
     }
 
     @Test
@@ -1524,7 +1524,7 @@ class UserAccessServiceTest {
         .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
-      assertThat(userAccessService.userCanWithdrawApplication(workflowManager, application)).isTrue()
+      assertThat(userAccessService.userMayWithdrawApplication(workflowManager, application)).isTrue()
     }
 
     @Test
@@ -1544,7 +1544,7 @@ class UserAccessServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      assertThat(userAccessService.userCanWithdrawApplication(workflowManager, application)).isFalse()
+      assertThat(userAccessService.userMayWithdrawApplication(workflowManager, application)).isFalse()
     }
 
     @Test
@@ -1560,7 +1560,7 @@ class UserAccessServiceTest {
         .withSubmittedAt(null)
         .produce()
 
-      assertThat(userAccessService.userCanWithdrawApplication(user, application)).isFalse
+      assertThat(userAccessService.userMayWithdrawApplication(user, application)).isFalse
     }
   }
 
@@ -1587,7 +1587,7 @@ class UserAccessServiceTest {
           .produce())
         .produce()
 
-      assertThat(userAccessService.userCanWithdrawPlacementRequest(user, placementRequest)).isTrue
+      assertThat(userAccessService.userMayWithdrawPlacementRequest(user, placementRequest)).isTrue
     }
 
     @Test
@@ -1610,7 +1610,7 @@ class UserAccessServiceTest {
           .produce())
         .produce()
 
-      assertThat(userAccessService.userCanWithdrawPlacementRequest(user, placementRequest)).isFalse
+      assertThat(userAccessService.userMayWithdrawPlacementRequest(user, placementRequest)).isFalse
     }
 
     @Test
@@ -1644,7 +1644,7 @@ class UserAccessServiceTest {
           .produce())
         .produce()
 
-      assertThat(userAccessService.userCanWithdrawPlacementRequest(workflowManager, placementRequest)).isTrue
+      assertThat(userAccessService.userMayWithdrawPlacementRequest(workflowManager, placementRequest)).isTrue
     }
   }
 
@@ -1662,7 +1662,7 @@ class UserAccessServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      assertThat(userAccessService.userCanWithdrawPlacemenApplication(user, placementApplication)).isTrue
+      assertThat(userAccessService.userMayWithdrawPlacemenApplication(user, placementApplication)).isTrue
     }
 
     @Test
@@ -1676,7 +1676,7 @@ class UserAccessServiceTest {
         .withCreatedByUser(anotherUserInRegion)
         .produce()
 
-      assertThat(userAccessService.userCanWithdrawPlacemenApplication(user, placementApplication)).isFalse
+      assertThat(userAccessService.userMayWithdrawPlacemenApplication(user, placementApplication)).isFalse
     }
 
     @Test
@@ -1702,7 +1702,7 @@ class UserAccessServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      assertThat(userAccessService.userCanWithdrawPlacemenApplication(user, placementApplication)).isTrue
+      assertThat(userAccessService.userMayWithdrawPlacemenApplication(user, placementApplication)).isTrue
     }
 
     @Test
@@ -1728,7 +1728,7 @@ class UserAccessServiceTest {
         .withSubmittedAt(null)
         .produce()
 
-      assertThat(userAccessService.userCanWithdrawPlacemenApplication(user, placementApplication)).isFalse
+      assertThat(userAccessService.userMayWithdrawPlacemenApplication(user, placementApplication)).isFalse
     }
 
   }

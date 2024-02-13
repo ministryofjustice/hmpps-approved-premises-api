@@ -79,7 +79,7 @@ class UserAccessService(
     else -> false
   }
 
-  fun userCanCancelBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
+  fun userMayCancelBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
     is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_WORKFLOW_MANAGER)
     is TemporaryAccommodationPremisesEntity -> userCanManagePremisesBookings(user, booking.premises)
     else -> false
@@ -199,7 +199,7 @@ class UserAccessService(
    *
    * It doesn't consider if the application is in a withdrawable state
    */
-  fun userCanWithdrawApplication(user: UserEntity, application: ApplicationEntity): Boolean = when (application) {
+  fun userMayWithdrawApplication(user: UserEntity, application: ApplicationEntity): Boolean = when (application) {
     is ApprovedPremisesApplicationEntity ->
       application.createdByUser == user || (
         application.isSubmitted() && user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)
@@ -212,7 +212,7 @@ class UserAccessService(
    *
    * It doesn't consider if the placement request is in a withdrawable state
    */
-  fun userCanWithdrawPlacementRequest(user: UserEntity, placementRequest: PlacementRequestEntity)
+  fun userMayWithdrawPlacementRequest(user: UserEntity, placementRequest: PlacementRequestEntity)
     = placementRequest.application.createdByUser == user ||
       user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)
 
@@ -221,7 +221,7 @@ class UserAccessService(
    *
    * It doesn't consider if the placement request is in a withdrawable state
    */
-  fun userCanWithdrawPlacemenApplication(user: UserEntity, placementApplication: PlacementApplicationEntity)
+  fun userMayWithdrawPlacemenApplication(user: UserEntity, placementApplication: PlacementApplicationEntity)
     = placementApplication.createdByUser == user ||
       (placementApplication.isSubmitted() && user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER))
 
