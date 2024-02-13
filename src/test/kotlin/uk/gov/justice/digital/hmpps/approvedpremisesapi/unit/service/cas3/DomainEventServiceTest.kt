@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartureUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
@@ -150,6 +151,43 @@ class DomainEventServiceTest {
   }
 
   @Test
+  fun `getBookingCancelledEvent returns event without additional staff detail`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    val data = CAS3BookingCancelledEvent(
+      id = id,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.bookingCancelled,
+      eventDetails = CAS3BookingCancelledEventDetailsFactory()
+        .withCancelledBy(null)
+        .produce(),
+    )
+
+    every { domainEventRepositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
+      .withId(id)
+      .withApplicationId(applicationId)
+      .withCrn(crn)
+      .withType(DomainEventType.CAS3_BOOKING_CANCELLED)
+      .withData(objectMapper.writeValueAsString(data))
+      .withOccurredAt(occurredAt)
+      .produce()
+
+    val event = domainEventService.getBookingCancelledEvent(id)
+    assertThat(event).isEqualTo(
+      DomainEvent(
+        id = id,
+        applicationId = applicationId,
+        crn = "CRN",
+        occurredAt = occurredAt.toInstant(),
+        data = data,
+      ),
+    )
+  }
+
+  @Test
   fun `saveBookingCancelledEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
@@ -175,14 +213,14 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { domainEventBuilderMock.getBookingCancelledDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.getBookingCancelledDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
-    domainEventService.saveBookingCancelledEvent(bookingEntity)
+    domainEventService.saveBookingCancelledEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -240,14 +278,14 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { domainEventBuilderMock.getBookingCancelledDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.getBookingCancelledDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
-    domainEventServiceEmittingDisabled.saveBookingCancelledEvent(bookingEntity)
+    domainEventServiceEmittingDisabled.saveBookingCancelledEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -292,7 +330,7 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { domainEventBuilderMock.getBookingCancelledDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.getBookingCancelledDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
@@ -300,7 +338,7 @@ class DomainEventServiceTest {
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     assertThatExceptionOfType(RuntimeException::class.java)
-      .isThrownBy { domainEventService.saveBookingCancelledEvent(bookingEntity) }
+      .isThrownBy { domainEventService.saveBookingCancelledEvent(bookingEntity, user) }
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -1674,17 +1712,65 @@ class DomainEventServiceTest {
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
     val crn = "CRN"
-    val domainEventToSave = createCancelledUpdatedEventEntity(id, applicationId, crn, occurredAt)
+    val domainEventToSave = createCancelledUpdatedEventEntity(id, applicationId, crn, occurredAt, StaffMemberFactory().produce())
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     val mockHmppsTopic = mockk<HmppsTopic>()
     every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
-    every { domainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(), user) } returns domainEventToSave
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
-    domainEventService.saveBookingCancelledUpdatedEvent(bookingEntity)
+    domainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, user)
+
+    verify(exactly = 1) {
+      domainEventRepositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 1) {
+      mockHmppsTopic.snsClient.publish(
+        match {
+          val deserializedMessage = objectMapper.readValue(it.message, SnsEvent::class.java)
+
+          deserializedMessage.eventType == "accommodation.cas3.booking.cancelled.updated" &&
+            deserializedMessage.version == 1 &&
+            deserializedMessage.description == "A cancelled booking for a Transitional Accommodation premises has been updated" &&
+            deserializedMessage.detailUrl == "http://api/events/cas3/booking-cancelled-updated/$id" &&
+            deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            deserializedMessage.additionalInformation.applicationId == applicationId &&
+            deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+        },
+      )
+    }
+  }
+
+  @Test
+  fun `saveBookingCancelledUpdatedEvent persists event without user entity, emits event to SNS`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+    val domainEventToSave = createCancelledUpdatedEventEntity(id, applicationId, crn, occurredAt, null)
+    val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
+
+    val mockHmppsTopic = mockk<HmppsTopic>()
+    every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+    every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
+    every { domainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(), null) } returns domainEventToSave
+    every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
+    every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
+
+    domainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, null)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -1722,15 +1808,15 @@ class DomainEventServiceTest {
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
     val crn = "CRN"
-    val domainEventToSave = createCancelledUpdatedEventEntity(id, applicationId, crn, occurredAt)
+    val domainEventToSave = createCancelledUpdatedEventEntity(id, applicationId, crn, occurredAt, StaffMemberFactory().produce())
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     val mockHmppsTopic = mockk<HmppsTopic>()
     every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
-    every { domainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(), user) } returns domainEventToSave
 
-    domainEventServiceEmittingDisabled.saveBookingCancelledUpdatedEvent(bookingEntity)
+    domainEventServiceEmittingDisabled.saveBookingCancelledUpdatedEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -1755,16 +1841,16 @@ class DomainEventServiceTest {
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
     val crn = "CRN"
-    val domainEventToSave = createCancelledUpdatedEventEntity(id, applicationId, crn, occurredAt)
+    val domainEventToSave = createCancelledUpdatedEventEntity(id, applicationId, crn, occurredAt, StaffMemberFactory().produce())
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     val mockHmppsTopic = mockk<HmppsTopic>()
     every { domainEventRepositoryMock.save(any()) } throws RuntimeException("A database exception")
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
-    every { domainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.getBookingCancelledUpdatedDomainEvent(any(), user) } returns domainEventToSave
 
     assertThatExceptionOfType(RuntimeException::class.java)
-      .isThrownBy { domainEventService.saveBookingCancelledUpdatedEvent(bookingEntity) }
+      .isThrownBy { domainEventService.saveBookingCancelledUpdatedEvent(bookingEntity, user) }
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -2050,6 +2136,7 @@ class DomainEventServiceTest {
     applicationId: UUID?,
     crn: String,
     occurredAt: OffsetDateTime,
+    staffMember: StaffMember?,
   ): DomainEvent<CAS3BookingCancelledUpdatedEvent> {
     return DomainEvent(
       id = id,
@@ -2060,7 +2147,9 @@ class DomainEventServiceTest {
         id = id,
         timestamp = occurredAt.toInstant(),
         eventType = EventType.bookingCancelledUpdated,
-        eventDetails = CAS3BookingCancelledEventDetailsFactory().produce(),
+        eventDetails = CAS3BookingCancelledEventDetailsFactory()
+          .withCancelledBy(staffMember)
+          .produce(),
       ),
     )
   }

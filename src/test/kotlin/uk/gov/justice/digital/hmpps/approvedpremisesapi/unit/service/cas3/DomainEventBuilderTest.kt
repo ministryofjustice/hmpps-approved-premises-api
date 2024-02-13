@@ -76,7 +76,7 @@ class DomainEventBuilderTest {
       .withNotes(cancellationNotes)
       .produce()
 
-    val event = domainEventBuilder.getBookingCancelledDomainEvent(booking)
+    val event = domainEventBuilder.getBookingCancelledDomainEvent(booking, user)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
@@ -488,7 +488,7 @@ class DomainEventBuilderTest {
       .withNotes(cancellationNotes)
       .produce()
 
-    val event = domainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking)
+    val event = domainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking, user)
 
     assertThat(event).matches {
       val data = it.data.eventDetails

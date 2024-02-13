@@ -41,6 +41,7 @@ class DomainEventBuilder(
 ) {
   fun getBookingCancelledDomainEvent(
     booking: BookingEntity,
+    user: UserEntity?,
   ): DomainEvent<CAS3BookingCancelledEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -57,7 +58,7 @@ class DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.bookingCancelled,
-        eventDetails = buildCAS3BookingCancelledEventDetails(application, booking, cancellation),
+        eventDetails = buildCAS3BookingCancelledEventDetails(application, booking, cancellation, user),
       ),
     )
   }
@@ -230,7 +231,7 @@ class DomainEventBuilder(
     )
   }
 
-  fun getBookingCancelledUpdatedDomainEvent(booking: BookingEntity): DomainEvent<CAS3BookingCancelledUpdatedEvent> {
+  fun getBookingCancelledUpdatedDomainEvent(booking: BookingEntity, user: UserEntity?): DomainEvent<CAS3BookingCancelledUpdatedEvent> {
     val domainEventId = UUID.randomUUID()
     val cancellation = booking.cancellation!!
     val application = booking.application as? TemporaryAccommodationApplicationEntity
@@ -245,7 +246,7 @@ class DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.bookingCancelledUpdated,
-        eventDetails = buildCAS3BookingCancelledEventDetails(application, booking, cancellation),
+        eventDetails = buildCAS3BookingCancelledEventDetails(application, booking, cancellation, user),
       ),
     )
   }
@@ -307,6 +308,7 @@ class DomainEventBuilder(
     application: TemporaryAccommodationApplicationEntity?,
     booking: BookingEntity,
     cancellation: CancellationEntity,
+    user: UserEntity?,
   ) = CAS3BookingCancelledEventDetails(
     applicationId = application?.id,
     applicationUrl = application.toUrl(),
@@ -319,6 +321,13 @@ class DomainEventBuilder(
     cancellationReason = cancellation.reason.name,
     notes = cancellation.notes,
     cancelledAt = cancellation.date,
+    cancelledBy = user?.let {
+      StaffMember(
+        staffCode = it.deliusStaffCode,
+        username = user.deliusUsername,
+        probationRegionCode = user.probationRegion.deliusCode,
+      )
+    },
   )
 
   private fun createCas3PersonArrivedEventDetails(

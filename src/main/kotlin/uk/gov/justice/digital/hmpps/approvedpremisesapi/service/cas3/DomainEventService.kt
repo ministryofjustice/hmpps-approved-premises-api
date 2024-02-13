@@ -100,8 +100,8 @@ class DomainEventService(
   }
 
   @Transactional
-  fun saveBookingCancelledEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.getBookingCancelledDomainEvent(booking)
+  fun saveBookingCancelledEvent(booking: BookingEntity, user: UserEntity?) {
+    val domainEvent = domainEventBuilder.getBookingCancelledDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -284,8 +284,8 @@ class DomainEventService(
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
   }
 
-  fun saveBookingCancelledUpdatedEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking)
+  fun saveBookingCancelledUpdatedEvent(booking: BookingEntity, user: UserEntity?) {
+    val domainEvent = domainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,

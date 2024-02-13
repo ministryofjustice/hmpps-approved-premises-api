@@ -1398,8 +1398,8 @@ class BookingService(
     booking.cancellations += cancellationEntity
 
     when (isFirstCancellations) {
-      true -> cas3DomainEventService.saveBookingCancelledEvent(booking)
-      else -> cas3DomainEventService.saveBookingCancelledUpdatedEvent(booking)
+      true -> cas3DomainEventService.saveBookingCancelledEvent(booking, user)
+      else -> cas3DomainEventService.saveBookingCancelledUpdatedEvent(booking, user)
     }
 
     booking.application?.getLatestAssessment()?.let { applicationEntity ->

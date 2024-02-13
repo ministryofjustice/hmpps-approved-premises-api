@@ -99,7 +99,7 @@ data class PlacementApplicationEntity(
   fun isSubmitted() = submittedAt != null
 
   override fun toString() = "PlacementApplicationEntity: $id"
-  fun isWithdrawn(): Boolean = decision?.let { listOf(PlacementApplicationDecision.WITHDRAWN_BY_PP,PlacementApplicationDecision.WITHDRAW).contains(it) } ?: false
+  fun isWithdrawn(): Boolean = decision?.let { listOf(PlacementApplicationDecision.WITHDRAWN_BY_PP, PlacementApplicationDecision.WITHDRAW).contains(it) } ?: false
 }
 
 enum class PlacementType {

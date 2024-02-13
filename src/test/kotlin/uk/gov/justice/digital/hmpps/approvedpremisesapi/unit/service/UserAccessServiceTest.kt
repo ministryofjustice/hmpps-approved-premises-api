@@ -523,7 +523,7 @@ class UserAccessServiceTest {
 
       user.addRoleForUnitTest(role)
 
-      val canCancelBooking = listOf(UserRole.CAS1_MANAGER,UserRole.CAS1_WORKFLOW_MANAGER).contains(role)
+      val canCancelBooking = listOf(UserRole.CAS1_MANAGER, UserRole.CAS1_WORKFLOW_MANAGER).contains(role)
 
       assertThat(userAccessService.userMayCancelBooking(user, cas1Booking)).isEqualTo(canCancelBooking)
     }

@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -195,7 +194,7 @@ class PlacementApplicationTransformerTest {
 
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
 
-    when(decision) {
+    when (decision) {
       PlacementApplicationDecision.ACCEPTED -> assertThat(result.isWithdrawn).isEqualTo(false)
       PlacementApplicationDecision.REJECTED -> assertThat(result.isWithdrawn).isEqualTo(false)
       PlacementApplicationDecision.WITHDRAW -> assertThat(result.isWithdrawn).isEqualTo(true)
@@ -206,5 +205,4 @@ class PlacementApplicationTransformerTest {
     assertThat(result.withdrawalReason).isEqualTo(WithdrawPlacementRequestReason.errorInPlacementRequest)
 
   }
-
 }
