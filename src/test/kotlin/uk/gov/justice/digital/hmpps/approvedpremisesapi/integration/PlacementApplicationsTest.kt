@@ -983,6 +983,9 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
   }
 
+  /**
+   * Note - Withdrawal cascading is tested in [WithdrawalTest]
+   */
   @Nested
   inner class WithdrawPlacementApplicationTest {
 
