@@ -6,11 +6,10 @@ import org.junit.jupiter.api.assertThrows
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationChargeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AdjudicationsPageFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Adjudication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.AdjudicationCharge
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.AdjudicationsPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Agency
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Results
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Adjudication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationCharge
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import java.time.Instant
 import java.time.LocalDateTime
@@ -38,23 +37,21 @@ class AdjudicationTransformerTest {
   }
 
   @Test
-  fun `transformToApi transforms charge with held hearing correctly`() {
+  fun `transformToApi transforms chage with held hearing correctly`() {
     val adjudicationsPage = AdjudicationsPage(
-      Results(
-        content = listOf(
-          Adjudication(
-            adjudicationNumber = 12345,
-            reportTime = LocalDateTime.parse("2022-10-28T15:15:15"),
-            agencyIncidentId = 78910,
-            agencyId = "PLACE",
-            partySeq = 1,
-            adjudicationCharges = listOf(
-              AdjudicationCharge(
-                oicChargeId = "CHARGE",
-                offenceCode = "OFFENCE",
-                offenceDescription = "Something, something",
-                findingCode = "QUASHED",
-              ),
+      results = listOf(
+        Adjudication(
+          adjudicationNumber = 12345,
+          reportTime = LocalDateTime.parse("2022-10-28T15:15:15"),
+          agencyIncidentId = 78910,
+          agencyId = "PLACE",
+          partySeq = 1,
+          adjudicationCharges = listOf(
+            AdjudicationCharge(
+              oicChargeId = "CHARGE",
+              offenceCode = "OFFENCE",
+              offenceDescription = "Something, something",
+              findingCode = "QUASHED",
             ),
           ),
         ),
@@ -63,6 +60,7 @@ class AdjudicationTransformerTest {
         Agency(
           agencyId = "PLACE",
           description = "THE PLACE",
+          agencyType = "INST",
         ),
       ),
     )
@@ -83,23 +81,21 @@ class AdjudicationTransformerTest {
   }
 
   @Test
-  fun `transformToApi transforms charge without held hearing correctly`() {
+  fun `transformToApi transforms chage without held hearing correctly`() {
     val adjudicationsPage = AdjudicationsPage(
-      Results(
-        content = listOf(
-          Adjudication(
-            adjudicationNumber = 12345,
-            reportTime = LocalDateTime.parse("2022-10-28T15:15:15"),
-            agencyIncidentId = 78910,
-            agencyId = "PLACE",
-            partySeq = 1,
-            adjudicationCharges = listOf(
-              AdjudicationCharge(
-                oicChargeId = "CHARGE",
-                offenceCode = "OFFENCE",
-                offenceDescription = "Something, something",
-                findingCode = null,
-              ),
+      results = listOf(
+        Adjudication(
+          adjudicationNumber = 12345,
+          reportTime = LocalDateTime.parse("2022-10-28T15:15:15"),
+          agencyIncidentId = 78910,
+          agencyId = "PLACE",
+          partySeq = 1,
+          adjudicationCharges = listOf(
+            AdjudicationCharge(
+              oicChargeId = "CHARGE",
+              offenceCode = "OFFENCE",
+              offenceDescription = "Something, something",
+              findingCode = null,
             ),
           ),
         ),
@@ -108,6 +104,7 @@ class AdjudicationTransformerTest {
         Agency(
           agencyId = "PLACE",
           description = "THE PLACE",
+          agencyType = "INST",
         ),
       ),
     )

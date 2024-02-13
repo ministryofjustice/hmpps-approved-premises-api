@@ -514,7 +514,7 @@
     <ID>TooGenericExceptionThrown:NonArrivalEntityFactory.kt$NonArrivalEntityFactory$throw RuntimeException("Reason must be provided")</ID>
     <ID>TooGenericExceptionThrown:OAuth2ResourceServerSecurityConfiguration.kt$AuthAwareTokenConverter$throw RuntimeException("Unable to find a claim to identify Subject by")</ID>
     <ID>TooGenericExceptionThrown:OffenderService.kt$OffenderService$throw RuntimeException("No category provided for prison-case-notes.excluded-categories at index $index")</ID>
-    <ID>TooGenericExceptionThrown:OffenderService.kt$OffenderService$throw RuntimeException("No prison-adjudications.adjudications-api-page-size configuration provided")</ID>
+    <ID>TooGenericExceptionThrown:OffenderService.kt$OffenderService$throw RuntimeException("No prison-adjudications.prison-api-page-size configuration provided")</ID>
     <ID>TooGenericExceptionThrown:OffenderService.kt$OffenderService$throw RuntimeException("No prison-api-page-size configuration provided")</ID>
     <ID>TooGenericExceptionThrown:OffenderService.kt$OffenderService$throw RuntimeException("No prison-case-notes.excluded-categories provided")</ID>
     <ID>TooGenericExceptionThrown:OffenderService.kt$OffenderService$throw RuntimeException("No prison-case-notes.lookback-days configuration provided")</ID>

@@ -10,5 +10,5 @@ class PrisonAdjudicationsConfigBindingModel {
 }
 
 data class PrisonAdjudicationsConfig(
-  val adjudicationsApiPageSize: Int,
+  val prisonApiPageSize: Int,
 )
