@@ -215,16 +215,24 @@ class PlacementApplicationService(
 
     val savedApplication = placementApplicationRepository.save(placementApplication)
 
+    withdrawPlacementRequests(placementApplication, withdrawalContext)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedApplication),
+    )
+  }
+
+  private fun withdrawPlacementRequests(
+    placementApplication: PlacementApplicationEntity,
+    withdrawalContext: WithdrawalContext,
+  ) {
     placementApplication.placementRequests.forEach { placementRequest ->
-      if(placementRequest.isInWithdrawableState()) {
+      if (placementRequest.isInWithdrawableState()) {
         val placementRequestWithdrawalResult = placementRequestService.withdrawPlacementRequest(
           placementRequest.id,
           PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
           checkUserPermissions = false,
-          WithdrawalContext(
-            user,
-            WithdrawableEntityType.PlacementApplication,
-          ),
+          withdrawalContext,
         )
 
         when (placementRequestWithdrawalResult) {
@@ -236,11 +244,7 @@ class PlacementApplicationService(
           )
         }
       }
-    }
-
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedApplication),
-    )
+      }
   }
 
   fun updateApplication(
