@@ -20,11 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
@@ -34,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
-import java.time.LocalDate
 
 class WithdrawableServiceTest {
   private val mockPlacementRequestService = mockk<PlacementRequestService>()
@@ -143,7 +138,7 @@ class WithdrawableServiceTest {
     every {
       mockPlacementRequestService.withdrawPlacementRequest(
         any(),
-        reason = null,
+        userProvidedReason = null,
         checkUserPermissions = false,
         WithdrawalContext(
           user,
@@ -155,7 +150,7 @@ class WithdrawableServiceTest {
     every {
       mockPlacementApplicationService.withdrawPlacementApplication(
         any(),
-        reason = null,
+        userProvidedReason = null,
         checkUserPermissions = false,
         WithdrawalContext(
           user,
@@ -170,7 +165,7 @@ class WithdrawableServiceTest {
       verify {
         mockPlacementRequestService.withdrawPlacementRequest(
           it.id,
-          reason = null,
+          userProvidedReason = null,
           checkUserPermissions = false,
           WithdrawalContext(
             user,
@@ -184,7 +179,7 @@ class WithdrawableServiceTest {
       verify {
         mockPlacementApplicationService.withdrawPlacementApplication(
           it.id,
-          reason = null,
+          userProvidedReason = null,
           checkUserPermissions = false,
           WithdrawalContext(
             user,
@@ -210,7 +205,7 @@ class WithdrawableServiceTest {
     every {
       mockPlacementRequestService.withdrawPlacementRequest(
         any(),
-        reason = null,
+        userProvidedReason = null,
         checkUserPermissions = false,
         WithdrawalContext(
           user,
@@ -222,7 +217,7 @@ class WithdrawableServiceTest {
     every {
       mockPlacementApplicationService.withdrawPlacementApplication(
         any(),
-        reason = null,
+        userProvidedReason = null,
         checkUserPermissions = false,
         WithdrawalContext(
           user,
