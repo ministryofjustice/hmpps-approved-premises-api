@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingConfirmedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import java.net.URI
 import java.time.Instant
@@ -16,6 +17,7 @@ class CAS3BookingConfirmedEventDetailsFactory : Factory<CAS3BookingConfirmedEven
   private var expectedArrivedAt: Yielded<Instant> = { Instant.now() }
   private var notes: Yielded<String> = { randomStringLowerCase(20) }
   private var applicationId: Yielded<UUID?> = { null }
+  private var confirmedBy: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
 
   fun withPersonReference(configuration: PersonReferenceFactory.() -> Unit) = apply {
     this.personReference = { PersonReferenceFactory().apply(configuration).produce() }
@@ -41,6 +43,10 @@ class CAS3BookingConfirmedEventDetailsFactory : Factory<CAS3BookingConfirmedEven
     this.applicationId = { applicationId }
   }
 
+  fun withConfirmedBy(staffMember: StaffMember?) = apply {
+    this.confirmedBy = { staffMember }
+  }
+
   override fun produce(): CAS3BookingConfirmedEventDetails {
     val bookingId = this.bookingId()
     val applicationId = this.applicationId()
@@ -53,6 +59,7 @@ class CAS3BookingConfirmedEventDetailsFactory : Factory<CAS3BookingConfirmedEven
       notes = this.notes(),
       applicationId = applicationId,
       applicationUrl = applicationId?.let { URI("http://api/applications/$it") },
+      confirmedBy = this.confirmedBy(),
     )
   }
 }

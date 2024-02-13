@@ -1413,6 +1413,7 @@ class BookingService(
     booking: BookingEntity,
     dateTime: OffsetDateTime,
     notes: String?,
+    user: UserEntity,
   ) = validated<ConfirmationEntity> {
     if (booking.confirmation != null) {
       return generalError("This Booking already has a Confirmation set")
@@ -1432,7 +1433,7 @@ class BookingService(
     booking.confirmation = confirmationEntity
 
     if (booking.premises is TemporaryAccommodationPremisesEntity) {
-      cas3DomainEventService.saveBookingConfirmedEvent(booking)
+      cas3DomainEventService.saveBookingConfirmedEvent(booking, user)
     }
 
     return success(confirmationEntity)

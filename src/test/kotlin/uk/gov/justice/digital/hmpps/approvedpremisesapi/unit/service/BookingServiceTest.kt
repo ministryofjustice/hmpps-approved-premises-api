@@ -3687,6 +3687,7 @@ class BookingServiceTest {
       booking = bookingEntity,
       dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
       notes = "notes",
+      user = user,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
@@ -3712,12 +3713,13 @@ class BookingServiceTest {
     every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-    every { mockCas3DomainEventService.saveBookingConfirmedEvent(any()) } just Runs
+    every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
 
     val result = bookingService.createConfirmation(
       booking = bookingEntity,
       dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
       notes = "notes",
+      user = user,
     )
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -3728,7 +3730,7 @@ class BookingServiceTest {
     assertThat(result.entity.booking.status).isEqualTo(BookingStatus.confirmed)
 
     verify(exactly = 1) {
-      mockCas3DomainEventService.saveBookingConfirmedEvent(bookingEntity)
+      mockCas3DomainEventService.saveBookingConfirmedEvent(bookingEntity, user)
     }
     verify(exactly = 1) {
       mockBookingRepository.save(bookingEntity)

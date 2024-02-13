@@ -114,8 +114,8 @@ class DomainEventService(
   }
 
   @Transactional
-  fun saveBookingConfirmedEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.getBookingConfirmedDomainEvent(booking)
+  fun saveBookingConfirmedEvent(booking: BookingEntity, user: UserEntity) {
+    val domainEvent = domainEventBuilder.getBookingConfirmedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,

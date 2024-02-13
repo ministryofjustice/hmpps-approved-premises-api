@@ -402,6 +402,43 @@ class DomainEventServiceTest {
   }
 
   @Test
+  fun `getBookingConfirmedEvent returns event without optional staff detail`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    val data = CAS3BookingConfirmedEvent(
+      id = id,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.bookingConfirmed,
+      eventDetails = CAS3BookingConfirmedEventDetailsFactory()
+        .withConfirmedBy(null)
+        .produce(),
+    )
+
+    every { domainEventRepositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
+      .withId(id)
+      .withApplicationId(applicationId)
+      .withCrn(crn)
+      .withType(DomainEventType.CAS3_BOOKING_CONFIRMED)
+      .withData(objectMapper.writeValueAsString(data))
+      .withOccurredAt(occurredAt)
+      .produce()
+
+    val event = domainEventService.getBookingConfirmedEvent(id)
+    assertThat(event).isEqualTo(
+      DomainEvent(
+        id = id,
+        applicationId = applicationId,
+        crn = "CRN",
+        occurredAt = occurredAt.toInstant(),
+        data = data,
+      ),
+    )
+  }
+
+  @Test
   fun `saveBookingConfirmedEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
@@ -427,14 +464,14 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { domainEventBuilderMock.getBookingConfirmedDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.getBookingConfirmedDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
-    domainEventService.saveBookingConfirmedEvent(bookingEntity)
+    domainEventService.saveBookingConfirmedEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -492,14 +529,14 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { domainEventBuilderMock.getBookingConfirmedDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.getBookingConfirmedDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
-    domainEventServiceEmittingDisabled.saveBookingConfirmedEvent(bookingEntity)
+    domainEventServiceEmittingDisabled.saveBookingConfirmedEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -544,7 +581,7 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { domainEventBuilderMock.getBookingConfirmedDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.getBookingConfirmedDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
@@ -552,7 +589,7 @@ class DomainEventServiceTest {
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     assertThatExceptionOfType(RuntimeException::class.java)
-      .isThrownBy { domainEventService.saveBookingConfirmedEvent(bookingEntity) }
+      .isThrownBy { domainEventService.saveBookingConfirmedEvent(bookingEntity, user) }
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(

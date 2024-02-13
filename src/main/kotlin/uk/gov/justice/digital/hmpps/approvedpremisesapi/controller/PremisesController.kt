@@ -563,9 +563,10 @@ class PremisesController(
     bookingId: UUID,
     body: NewConfirmation,
   ): ResponseEntity<Confirmation> {
+    val user = usersService.getUserForRequest()
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (!userAccessService.currentUserCanManagePremisesBookings(booking.premises)) {
+    if (!userAccessService.userCanManagePremisesBookings(user, booking.premises)) {
       throw ForbiddenProblem()
     }
 
@@ -573,6 +574,7 @@ class PremisesController(
       booking = booking,
       dateTime = OffsetDateTime.now(),
       notes = body.notes,
+      user,
     )
 
     val confirmation = extractResultEntityOrThrow(result)

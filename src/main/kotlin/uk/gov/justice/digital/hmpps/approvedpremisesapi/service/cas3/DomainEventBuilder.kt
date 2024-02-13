@@ -65,6 +65,7 @@ class DomainEventBuilder(
 
   fun getBookingConfirmedDomainEvent(
     booking: BookingEntity,
+    user: UserEntity,
   ): DomainEvent<CAS3BookingConfirmedEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -91,6 +92,11 @@ class DomainEventBuilder(
           ),
           expectedArrivedAt = booking.arrivalDate.atStartOfDay().toInstant(ZoneOffset.UTC),
           notes = "",
+          confirmedBy = StaffMember(
+            staffCode = user.deliusStaffCode,
+            username = user.deliusUsername,
+            probationRegionCode = user.probationRegion.deliusCode,
+          ),
         ),
       ),
     )
