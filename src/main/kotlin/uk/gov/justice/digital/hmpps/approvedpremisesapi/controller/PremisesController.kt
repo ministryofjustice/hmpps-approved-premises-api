@@ -530,16 +530,27 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val result = bookingService.createCancellation(
-      booking = booking,
-      cancelledAt = body.date,
-      reasonId = body.reason,
-      notes = body.notes,
-      withdrawalContext = WithdrawalContext(
-        triggeringUser = user,
-        triggeringEntityType = WithdrawableEntityType.Booking,
+    val result = when (booking.premises) {
+      is ApprovedPremisesEntity -> bookingService.createCas1Cancellation(
+        booking = booking,
+        cancelledAt = body.date,
+        reasonId = body.reason,
+        notes = body.notes,
+        withdrawalContext = WithdrawalContext(
+          triggeringUser = user,
+          triggeringEntityType = WithdrawableEntityType.Booking,
+        ),
       )
-    )
+
+      is TemporaryAccommodationPremisesEntity -> bookingService.createCas3Cancellation(
+        booking = booking,
+        cancelledAt = body.date,
+        reasonId = body.reason,
+        notes = body.notes,
+      )
+
+      else -> throw NotImplementedProblem("Unsupported premises type ${booking.premises::class.qualifiedName}")
+    }
 
     val cancellation = extractResultEntityOrThrow(result)
 

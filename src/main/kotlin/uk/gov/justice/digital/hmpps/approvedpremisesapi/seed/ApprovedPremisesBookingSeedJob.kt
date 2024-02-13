@@ -237,7 +237,7 @@ class ApprovedPremisesBookingSeedJob(
       if (cancellationReason == null) throw RuntimeException("If cancellationDate is provided, cancellationReason must also be provided")
 
       val createdCancellation = extractEntityFromValidatableActionResult(
-        bookingService.createCancellation(
+        bookingService.createCas1Cancellation(
           booking = createdBooking,
           cancelledAt = row.cancellationDate,
           reasonId = cancellationReason.id,

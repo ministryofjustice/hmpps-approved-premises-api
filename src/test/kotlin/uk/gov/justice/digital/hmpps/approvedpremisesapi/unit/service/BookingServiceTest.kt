@@ -2100,7 +2100,7 @@ class BookingServiceTest {
 
       bookingEntity.cancellations = mutableListOf(cancellationEntity)
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = UUID.randomUUID(),
@@ -2136,7 +2136,7 @@ class BookingServiceTest {
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
@@ -2162,7 +2162,7 @@ class BookingServiceTest {
 
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns null
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
@@ -2195,7 +2195,7 @@ class BookingServiceTest {
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
@@ -2226,7 +2226,7 @@ class BookingServiceTest {
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
@@ -2287,7 +2287,7 @@ class BookingServiceTest {
       val cancelledAt = LocalDate.parse("2022-08-25")
       val notes = "notes"
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = cancelledAt,
         reasonId = reasonId,
@@ -2373,7 +2373,7 @@ class BookingServiceTest {
       val cancelledAt = LocalDate.parse("2022-08-25")
       val notes = "notes"
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = cancelledAt,
         reasonId = reasonId,
@@ -2458,7 +2458,7 @@ class BookingServiceTest {
       val cancelledAt = LocalDate.parse("2022-08-25")
       val notes = "notes"
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = cancelledAt,
         reasonId = reasonId,
@@ -2547,7 +2547,7 @@ class BookingServiceTest {
           .produce()
       }
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
@@ -2599,7 +2599,7 @@ class BookingServiceTest {
       every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas3Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
@@ -2637,7 +2637,7 @@ class BookingServiceTest {
       every { mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas3Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,

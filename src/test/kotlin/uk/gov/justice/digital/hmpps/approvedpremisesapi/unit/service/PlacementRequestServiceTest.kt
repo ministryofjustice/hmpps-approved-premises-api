@@ -767,7 +767,7 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every {
-        bookingService.createCancellation(any(), any(), any(), any(), any())
+        bookingService.createCas1Cancellation(any(), any(), any(), any(), any())
       } returns mockk<ValidatableActionResult.Success<CancellationEntity>>()
 
       val result = placementRequestService.withdrawPlacementRequest(
@@ -793,7 +793,7 @@ class PlacementRequestServiceTest {
       }
 
       verify {
-        bookingService.createCancellation(
+        bookingService.createCas1Cancellation(
           booking,
           LocalDate.now(),
           CancellationReasonRepository.CAS1_WITHDRAWN_BY_PP_ID,
@@ -830,7 +830,7 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every {
-        bookingService.createCancellation(any(), any(), any(), any(), any())
+        bookingService.createCas1Cancellation(any(), any(), any(), any(), any())
       } returns ValidatableActionResult.GeneralValidationError("booking cancellation didn't work!")
       every { logger.error(any<String>()) } returns Unit
 
