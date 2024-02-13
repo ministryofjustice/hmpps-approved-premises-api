@@ -9,6 +9,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -665,7 +666,7 @@ class PlacementRequestServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(WithdrawableEntityType::class)
+    @EnumSource(value = WithdrawableEntityType::class, names = ["Booking"], mode = EnumSource.Mode.EXCLUDE)
     fun `withdrawPlacementRequest sets correct reason if withdrawal triggered by other entity`(triggeringEntity: WithdrawableEntityType) {
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
@@ -711,6 +712,39 @@ class PlacementRequestServiceTest {
           },
         )
       }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = WithdrawableEntityType::class, names = ["Booking"], mode = EnumSource.Mode.INCLUDE)
+    fun `withdrawPlacementRequest throws exception if withdrawal triggered by invalid entity`(triggeringEntity: WithdrawableEntityType) {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementRequest = createValidPlacementRequest(application, user)
+      val placementRequestId = placementRequest.id
+
+      every { userAccessService.userCanWithdrawPlacementRequest(user, placementRequest) } returns true
+      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
+      every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+
+      val providedReason = PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
+
+      assertThatThrownBy {
+        placementRequestService.withdrawPlacementRequest(
+          placementRequestId,
+          providedReason,
+          checkUserPermissions = true,
+          WithdrawalContext(
+            user,
+            triggeringEntity,
+          ),
+        )
+      }.hasMessage("Internal Server Error: Withdrawing a ${triggeringEntity.name} should not cascade to PlacementRequests")
     }
 
     @Test

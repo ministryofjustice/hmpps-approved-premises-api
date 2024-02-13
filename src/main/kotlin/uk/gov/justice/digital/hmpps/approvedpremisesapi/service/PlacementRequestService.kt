@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.extractMessage
@@ -297,7 +298,7 @@ class PlacementRequestService(
 
   fun withdrawPlacementRequest(
     placementRequestId: UUID,
-    reason: PlacementRequestWithdrawalReason?,
+    userProvidedReason: PlacementRequestWithdrawalReason?,
     checkUserPermissions: Boolean,
     withdrawalContext: WithdrawalContext,
   ): AuthorisableActionResult<Unit> {
@@ -318,7 +319,8 @@ class PlacementRequestService(
     placementRequest.withdrawalReason = when(withdrawalContext.triggeringEntityType) {
       WithdrawableEntityType.Application -> PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
       WithdrawableEntityType.PlacementApplication -> PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN
-      else -> reason
+      WithdrawableEntityType.PlacementRequest -> userProvidedReason
+      WithdrawableEntityType.Booking -> throw InternalServerErrorProblem("Withdrawing a Booking should not cascade to PlacementRequests")
     }
 
     placementRequestRepository.save(placementRequest)
