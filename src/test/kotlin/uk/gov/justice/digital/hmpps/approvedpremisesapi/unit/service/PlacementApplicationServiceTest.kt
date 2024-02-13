@@ -524,6 +524,7 @@ class PlacementApplicationServiceTest {
       val templateId = UUID.randomUUID().toString()
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { userAccessService.userMayWithdrawPlacemenApplication(any(),any()) } returns true
       every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -531,7 +532,6 @@ class PlacementApplicationServiceTest {
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
         PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
-        checkUserPermissions = false,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementApplication
@@ -550,7 +550,7 @@ class PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `if withdraw was triggered by application, set correct withdrawal reason`() {
+    fun `if withdraw was triggered by application, set correct withdrawal reason and user permissions not checked`() {
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
@@ -568,7 +568,6 @@ class PlacementApplicationServiceTest {
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
         PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
-        checkUserPermissions = false,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Application,
@@ -584,6 +583,8 @@ class PlacementApplicationServiceTest {
       val entity = validationResult.entity
 
       assertThat(entity.withdrawalReason).isEqualTo(PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN)
+
+      verify { userAccessService wasNot Called }
     }
 
     @ParameterizedTest
@@ -607,7 +608,6 @@ class PlacementApplicationServiceTest {
         placementApplicationService.withdrawPlacementApplication(
           placementApplication.id,
           PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
-          checkUserPermissions = false,
           withdrawalContext = WithdrawalContext(
             user,
             triggeringEntity,
@@ -634,6 +634,7 @@ class PlacementApplicationServiceTest {
       val templateId = UUID.randomUUID().toString()
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { userAccessService.userMayWithdrawPlacemenApplication(any(),any()) } returns true
       every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -644,7 +645,6 @@ class PlacementApplicationServiceTest {
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
         PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
-        checkUserPermissions = false,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementApplication
@@ -694,6 +694,7 @@ class PlacementApplicationServiceTest {
       val templateId = UUID.randomUUID().toString()
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { userAccessService.userMayWithdrawPlacemenApplication(any(),any()) } returns true
       every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -705,7 +706,6 @@ class PlacementApplicationServiceTest {
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
         PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
-        checkUserPermissions = false,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementApplication
@@ -763,7 +763,6 @@ class PlacementApplicationServiceTest {
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
         PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
-        checkUserPermissions = false,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementApplication
@@ -795,7 +794,6 @@ class PlacementApplicationServiceTest {
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
         PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
-        checkUserPermissions = false,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementApplication
@@ -806,7 +804,7 @@ class PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `it returns unauthorised if checkUserPermissions is true and user doesn't have permissions`() {
+    fun `it returns unauthorised if user directly requested withdrawal and user does not have permission`() {
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
@@ -825,7 +823,6 @@ class PlacementApplicationServiceTest {
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
         PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
-        checkUserPermissions = true,
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementApplication
