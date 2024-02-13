@@ -1,10 +1,14 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications
 
 import java.time.LocalDateTime
 
 data class AdjudicationsPage(
-  val results: List<Adjudication>,
+  val results: Results,
   val agencies: List<Agency>,
+)
+
+data class Results(
+  val content: List<Adjudication>,
 )
 
 data class Adjudication(
@@ -26,5 +30,4 @@ data class AdjudicationCharge(
 data class Agency(
   val agencyId: String,
   val description: String,
-  val agencyType: String,
 )
