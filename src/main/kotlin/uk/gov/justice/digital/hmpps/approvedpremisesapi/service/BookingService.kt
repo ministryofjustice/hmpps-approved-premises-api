@@ -1236,6 +1236,20 @@ class BookingService(
     updateBooking(booking)
     booking.cancellations += cancellationEntity
 
+    createPlacementRequestIfBookingAppealed(reason, booking)
+
+    val user = withdrawalContext.triggeringUser
+    if (shouldCreateDomainEventForBooking(booking, user)) {
+      createCas1CancellationDomainEvent(booking, user, cancelledAt, reason)
+    }
+
+    return success(cancellationEntity)
+  }
+
+  private fun createPlacementRequestIfBookingAppealed(
+    reason: CancellationReasonEntity,
+    booking: BookingEntity,
+  ) {
     if (reason.id == approvedPremisesBookingAppealedCancellationReasonId && booking.placementRequest != null) {
       val placementRequest = booking.placementRequest!!
       placementRequestService.createPlacementRequest(
@@ -1248,14 +1262,7 @@ class BookingService(
         isParole = false,
         null,
       )
-    }
-
-    val user = withdrawalContext.triggeringUser
-    if (shouldCreateDomainEventForBooking(booking, user)) {
-      createCas1CancellationDomainEvent(booking, user, cancelledAt, reason)
-    }
-
-    return success(cancellationEntity)
+      }
   }
 
   @SuppressWarnings("LongMethod")
