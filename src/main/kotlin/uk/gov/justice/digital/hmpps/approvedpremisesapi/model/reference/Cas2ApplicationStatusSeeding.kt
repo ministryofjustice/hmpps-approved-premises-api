@@ -181,17 +181,17 @@ object Cas2ApplicationStatusSeeding {
         description = "The application has been cancelled.",
         statusDetails = listOf(
           Cas2PersistedApplicationStatusDetail(
-            id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
+            id = UUID.fromString("ba46bbe0-8fb6-4539-895d-5586e6bfe8b6"),
             name = "assessedAsHighRisk",
             label = "Assessed as High Risk",
           ),
           Cas2PersistedApplicationStatusDetail(
-            id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
+            id = UUID.fromString("522bb736-aeb6-480f-a51a-2bf3dcfcd482"),
             name = "notEligible",
             label = "Not Eligible",
           ),
           Cas2PersistedApplicationStatusDetail(
-            id = UUID.fromString("f13bbdd6-44f1-4362-b9d3-e6f1298b1bf9"),
+            id = UUID.fromString("ccf43af1-359b-4a14-8941-85eefa88f016"),
             name = "noRecourseToPublicFunds",
             label = "No Recourse to Public Funds",
           ),
