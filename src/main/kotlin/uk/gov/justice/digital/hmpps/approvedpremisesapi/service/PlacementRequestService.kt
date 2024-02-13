@@ -326,7 +326,7 @@ class PlacementRequestService(
     placementRequestRepository.save(placementRequest)
 
     placementRequest.booking?.let { booking ->
-      val bookingCancellationResult = bookingService.createCancellation(
+      val bookingCancellationResult = bookingService.createCas1Cancellation(
         booking,
         LocalDate.now(),
         CAS1_WITHDRAWN_BY_PP_ID,

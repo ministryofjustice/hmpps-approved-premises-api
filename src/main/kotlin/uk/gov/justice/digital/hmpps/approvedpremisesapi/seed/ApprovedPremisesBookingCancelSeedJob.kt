@@ -37,7 +37,7 @@ class ApprovedPremisesBookingCancelSeedJob(
       throw RuntimeException("Booking ${row.id} is not an Approved Premises Booking")
     }
 
-    val validationResult = bookingService.createCancellation(
+    val validationResult = bookingService.createCas1Cancellation(
       booking = booking,
       cancelledAt = LocalDate.now(),
       reasonId = errorInBookingDetailsCancellationReason,

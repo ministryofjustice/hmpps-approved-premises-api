@@ -1179,35 +1179,19 @@ class BookingService(
     return success(nonArrivalEntity)
   }
 
-  @Transactional
-  fun createCancellation(
-    booking: BookingEntity,
-    cancelledAt: LocalDate,
-    reasonId: UUID,
-    notes: String?,
-    withdrawalContext: WithdrawalContext? = null,
-  ) = when (booking.premises) {
-    is ApprovedPremisesEntity -> createCas1Cancellation(booking, cancelledAt, reasonId, notes, withdrawalContext)
-    is TemporaryAccommodationPremisesEntity -> createCas3Cancellation(booking, cancelledAt, reasonId, notes)
-    else -> throw RuntimeException("Unknown premises type ${booking.premises::class.qualifiedName}")
-  }
-
   fun getCancelleableCas1BookingsForUser(user: UserEntity, application: ApprovedPremisesApplicationEntity): List<BookingEntity> =
     bookingRepository.findAllByApplication(application).filter { booking ->
       booking.isInCancellableStateCas1() && userAccessService.userCanCancelBooking(user, booking)
     }
 
-  private fun createCas1Cancellation(
+  @Transactional
+  fun createCas1Cancellation(
     booking: BookingEntity,
     cancelledAt: LocalDate,
     reasonId: UUID,
     notes: String?,
-    withdrawalContext: WithdrawalContext? = null,
+    withdrawalContext: WithdrawalContext,
   ) = validated<CancellationEntity> {
-    if(withdrawalContext == null) {
-      return generalError("Withdrawal Context is required")
-    }
-
     val existingCancellation = booking.cancellation
     if (booking.premises is ApprovedPremisesEntity && existingCancellation != null) {
       return success(existingCancellation)
@@ -1339,7 +1323,8 @@ class BookingService(
     )
   }
 
-  private fun createCas3Cancellation(
+  @Transactional
+  fun createCas3Cancellation(
     booking: BookingEntity,
     cancelledAt: LocalDate,
     reasonId: UUID,
