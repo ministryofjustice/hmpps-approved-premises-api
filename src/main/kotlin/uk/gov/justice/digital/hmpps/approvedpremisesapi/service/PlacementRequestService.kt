@@ -294,7 +294,7 @@ class PlacementRequestService(
   ): List<PlacementRequestEntity> =
     placementRequestRepository
       .findByApplication(application)
-      .filter { it.isInWithdrawableState() && userAccessService.userCanWithdrawPlacementRequest(user, it) }
+      .filter { it.isInWithdrawableState() && userAccessService.userMayWithdrawPlacementRequest(user, it) }
 
   fun withdrawPlacementRequest(
     placementRequestId: UUID,
@@ -311,7 +311,7 @@ class PlacementRequestService(
       return AuthorisableActionResult.Success(Unit)
     }
 
-    if(checkUserPermissions && !userAccessService.userCanWithdrawPlacementRequest(user, placementRequest)) {
+    if(checkUserPermissions && !userAccessService.userMayWithdrawPlacementRequest(user, placementRequest)) {
       return AuthorisableActionResult.Unauthorised()
     }
 

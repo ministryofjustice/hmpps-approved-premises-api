@@ -168,7 +168,7 @@ class PlacementApplicationService(
   fun getWithdrawablePlacementApplicationsForUser(user: UserEntity, application: ApprovedPremisesApplicationEntity) =
     placementApplicationRepository
       .findByApplication(application)
-      .filter { it.isInWithdrawableState() && userAccessService.userCanWithdrawPlacemenApplication(user, it)}
+      .filter { it.isInWithdrawableState() && userAccessService.userMayWithdrawPlacemenApplication(user, it)}
 
   @Transactional
   fun withdrawPlacementApplication(
@@ -194,7 +194,7 @@ class PlacementApplicationService(
       )
     }
 
-    if(checkUserPermissions && !userAccessService.userCanWithdrawPlacemenApplication(user, placementApplication)) {
+    if(checkUserPermissions && !userAccessService.userMayWithdrawPlacemenApplication(user, placementApplication)) {
       return AuthorisableActionResult.Unauthorised()
     }
 

@@ -84,8 +84,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
@@ -1895,7 +1893,7 @@ class ApplicationServiceTest {
         .produce()
 
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { mockUserAccessService.userCanWithdrawApplication(user, application) } returns false
+      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns false
 
       val result = applicationService.withdrawApprovedPremisesApplication(
         application.id,
@@ -1919,7 +1917,7 @@ class ApplicationServiceTest {
         .produce()
 
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { mockUserAccessService.userCanWithdrawApplication(user, application) } returns true
+      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
 
       val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(
         application.id,
@@ -1951,7 +1949,7 @@ class ApplicationServiceTest {
         .produce()
 
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { mockUserAccessService.userCanWithdrawApplication(user, application) } returns true
+      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
 
       val authorisableActionResult =
         applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", null)
@@ -1974,7 +1972,7 @@ class ApplicationServiceTest {
         .produce()
 
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { mockUserAccessService.userCanWithdrawApplication(user, application) } returns true
+      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
 
       val authorisableActionResult =
         applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", null)
@@ -2002,7 +2000,7 @@ class ApplicationServiceTest {
         .produce()
 
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { mockUserAccessService.userCanWithdrawApplication(user, application) } returns true
+      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
       every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
@@ -2078,7 +2076,7 @@ class ApplicationServiceTest {
         .produce()
 
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { mockUserAccessService.userCanWithdrawApplication(user, application) } returns true
+      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
       every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
@@ -2152,7 +2150,7 @@ class ApplicationServiceTest {
         .produce()
 
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { mockUserAccessService.userCanWithdrawApplication(user, application) } returns true
+      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
       every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
