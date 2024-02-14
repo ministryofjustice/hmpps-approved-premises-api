@@ -589,7 +589,7 @@ class PlacementApplicationServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = WithdrawableEntityType::class, names = ["Application","PlacementApplication"], mode = EnumSource.Mode.EXCLUDE)
-    fun `if withdraw was triggered by invalid entity throws exception`(triggeringEntity: WithdrawableEntityType) {
+    fun `if withdraw is triggered by an entity that shouldn't cascade to placement applications, throws exception`(triggeringEntity: WithdrawableEntityType) {
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())

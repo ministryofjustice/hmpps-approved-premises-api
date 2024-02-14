@@ -712,7 +712,7 @@ class PlacementRequestServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = WithdrawableEntityType::class, names = ["Booking"], mode = EnumSource.Mode.INCLUDE)
-    fun `withdrawPlacementRequest throws exception if withdrawal triggered by invalid entity`(triggeringEntity: WithdrawableEntityType) {
+    fun `withdrawPlacementRequest is triggered by an entity that shouldn't cascade to placement requests, throws exception`(triggeringEntity: WithdrawableEntityType) {
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
