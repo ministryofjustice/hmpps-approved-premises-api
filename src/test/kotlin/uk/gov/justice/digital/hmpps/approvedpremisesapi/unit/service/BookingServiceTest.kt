@@ -1107,7 +1107,7 @@ class BookingServiceTest {
 
       every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-      every { mockCas3DomainEventService.savePersonArrivedEvent(any()) } just Runs
+      every { mockCas3DomainEventService.savePersonArrivedEvent(any(), user) } just Runs
 
       val result = bookingService.createArrival(
         booking = bookingEntity,
@@ -1124,7 +1124,7 @@ class BookingServiceTest {
       assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("CAS3 booking arrival not supported here, preferred method is createCas3Arrival")
       verify(exactly = 0) { mockStaffMemberService.getStaffMemberByCode(any(), any()) }
       verify(exactly = 0) {
-        mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity)
+        mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity, user)
       }
     }
   }
@@ -1537,7 +1537,7 @@ class BookingServiceTest {
     fun setup() {
       every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-      every { mockCas3DomainEventService.savePersonArrivedEvent(any()) } just Runs
+      every { mockCas3DomainEventService.savePersonArrivedEvent(any(), any(UserEntity::class)) } just Runs
     }
 
     @Test
@@ -1560,7 +1560,7 @@ class BookingServiceTest {
       assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("CAS3 Arrivals cannot be set on non-CAS3 premise")
       verify(exactly = 0) { mockArrivalRepository.save(any()) }
       verify(exactly = 0) { mockBookingRepository.save(any()) }
-      verify(exactly = 0) { mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity) }
+      verify(exactly = 0) { mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity, user) }
     }
 
     @Test
@@ -1582,16 +1582,20 @@ class BookingServiceTest {
       )
       verify(exactly = 0) { mockArrivalRepository.save(any()) }
       verify(exactly = 0) { mockBookingRepository.save(any()) }
-      verify(exactly = 0) { mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity) }
+      verify(exactly = 0) { mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity, user) }
     }
 
     @Test
     fun `createArrival should return success response when arrival exists for a Booking and save and emit the event`() {
+      val userEntity = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
       val arrivalEntity = ArrivalEntityFactory()
         .withBooking(bookingEntity)
         .produce()
       bookingEntity.arrivals += arrivalEntity
-      every { mockCas3DomainEventService.savePersonArrivedUpdatedEvent(any()) } just Runs
+
+      every { mockCas3DomainEventService.savePersonArrivedUpdatedEvent(any(), any(UserEntity::class)) } just Runs
 
       val result = bookingService.createCas3Arrival(
         booking = bookingEntity,
@@ -1599,9 +1603,7 @@ class BookingServiceTest {
         expectedDepartureDate = LocalDate.parse("2022-08-26"),
         notes = "notes",
         keyWorkerStaffCode = null,
-        user = UserEntityFactory()
-          .withUnitTestControlProbationRegion()
-          .produce(),
+        user = userEntity,
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -1615,24 +1617,25 @@ class BookingServiceTest {
       verify(exactly = 1) { mockArrivalRepository.save(any()) }
       verify(exactly = 1) { mockBookingRepository.save(any()) }
       verify(exactly = 1) {
-        mockCas3DomainEventService.savePersonArrivedUpdatedEvent(bookingEntity)
+        mockCas3DomainEventService.savePersonArrivedUpdatedEvent(bookingEntity, userEntity)
       }
       verify(exactly = 0) {
-        mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity)
+        mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity, userEntity)
       }
     }
 
     @Test
     fun `createArrival returns Success with correct result for CAS3 when validation passed and saves domain event`() {
+      val userEntity = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
       val result = bookingService.createCas3Arrival(
         booking = bookingEntity,
         arrivalDate = LocalDate.parse("2022-08-27"),
         expectedDepartureDate = LocalDate.parse("2022-08-29"),
         notes = "notes",
         keyWorkerStaffCode = null,
-        user = UserEntityFactory()
-          .withUnitTestControlProbationRegion()
-          .produce(),
+        user = userEntity,
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -1645,7 +1648,33 @@ class BookingServiceTest {
 
       verify(exactly = 1) { mockArrivalRepository.save(any()) }
       verify(exactly = 1) { mockBookingRepository.save(any()) }
-      verify(exactly = 1) { mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity) }
+      verify(exactly = 1) { mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity, userEntity) }
+    }
+
+    @Test
+    fun `createArrival returns Success with correct result for CAS3 when validation passed and saves domain event without staff detail`() {
+      every { mockCas3DomainEventService.savePersonArrivedEvent(any(), null) } just Runs
+
+      val result = bookingService.createCas3Arrival(
+        booking = bookingEntity,
+        arrivalDate = LocalDate.parse("2022-08-27"),
+        expectedDepartureDate = LocalDate.parse("2022-08-29"),
+        notes = "notes",
+        keyWorkerStaffCode = null,
+        user = null,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.arrivalDate).isEqualTo(LocalDate.parse("2022-08-27"))
+      assertThat(result.entity.arrivalDateTime).isEqualTo(Instant.parse("2022-08-27T00:00:00Z"))
+      assertThat(result.entity.expectedDepartureDate).isEqualTo(LocalDate.parse("2022-08-29"))
+      assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.arrived)
+
+      verify(exactly = 1) { mockArrivalRepository.save(any()) }
+      verify(exactly = 1) { mockBookingRepository.save(any()) }
+      verify(exactly = 1) { mockCas3DomainEventService.savePersonArrivedEvent(bookingEntity, null) }
     }
 
     private fun createTemporaryAccommodationBooking() = BookingEntityFactory()

@@ -43,8 +43,8 @@ class CAS3BookingProvisionallyMadeEventDetailsFactory : Factory<CAS3BookingProvi
     this.applicationId = { applicationId }
   }
 
-  fun withBookedBy(configuration: StaffMemberFactory.() -> Unit) = apply {
-    this.bookedBy = { StaffMemberFactory().apply(configuration).produce() }
+  fun withBookedBy(staffMember: StaffMember?) = apply {
+    this.bookedBy = { staffMember }
   }
 
   override fun produce(): CAS3BookingProvisionallyMadeEventDetails {

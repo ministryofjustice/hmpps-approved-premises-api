@@ -664,7 +664,7 @@ class DomainEventServiceTest {
       timestamp = occurredAt.toInstant(),
       eventType = EventType.bookingProvisionallyMade,
       eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory()
-        .withBookedBy { StaffMemberFactory().produce() }
+        .withBookedBy(StaffMemberFactory().produce())
         .produce(),
     )
 
@@ -712,7 +712,7 @@ class DomainEventServiceTest {
         timestamp = occurredAt.toInstant(),
         eventType = EventType.bookingProvisionallyMade,
         eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory()
-          .withBookedBy { StaffMemberFactory().produce() }
+          .withBookedBy(StaffMemberFactory().produce())
           .produce(),
       ),
     )
@@ -779,7 +779,7 @@ class DomainEventServiceTest {
         timestamp = occurredAt.toInstant(),
         eventType = EventType.bookingProvisionallyMade,
         eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory()
-          .withBookedBy { StaffMemberFactory().produce() }
+          .withBookedBy(StaffMemberFactory().produce())
           .produce(),
       ),
     )
@@ -833,7 +833,7 @@ class DomainEventServiceTest {
         timestamp = occurredAt.toInstant(),
         eventType = EventType.bookingProvisionallyMade,
         eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory()
-          .withBookedBy { StaffMemberFactory().produce() }
+          .withBookedBy(StaffMemberFactory().produce())
           .produce(),
       ),
     )
@@ -910,6 +910,43 @@ class DomainEventServiceTest {
   }
 
   @Test
+  fun `getPersonArrivedEvent returns event without staff detail`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    val data = CAS3PersonArrivedEvent(
+      id = id,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.personArrived,
+      eventDetails = CAS3PersonArrivedEventDetailsFactory()
+        .withRecordedBy(null)
+        .produce(),
+    )
+
+    every { domainEventRepositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
+      .withId(id)
+      .withApplicationId(applicationId)
+      .withCrn(crn)
+      .withType(DomainEventType.CAS3_PERSON_ARRIVED)
+      .withData(objectMapper.writeValueAsString(data))
+      .withOccurredAt(occurredAt)
+      .produce()
+
+    val event = domainEventService.getPersonArrivedEvent(id)
+    assertThat(event).isEqualTo(
+      DomainEvent(
+        id = id,
+        applicationId = applicationId,
+        crn = "CRN",
+        occurredAt = occurredAt.toInstant(),
+        data = data,
+      ),
+    )
+  }
+
+  @Test
   fun `savePersonArrivedEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
@@ -935,14 +972,14 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { domainEventBuilderMock.getPersonArrivedDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.getPersonArrivedDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
-    domainEventService.savePersonArrivedEvent(bookingEntity)
+    domainEventService.savePersonArrivedEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -1000,14 +1037,14 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { domainEventBuilderMock.getPersonArrivedDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.getPersonArrivedDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
-    domainEventServiceEmittingDisabled.savePersonArrivedEvent(bookingEntity)
+    domainEventServiceEmittingDisabled.savePersonArrivedEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -1052,7 +1089,7 @@ class DomainEventServiceTest {
       ),
     )
 
-    every { domainEventBuilderMock.getPersonArrivedDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.getPersonArrivedDomainEvent(any(), user) } returns domainEventToSave
 
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
@@ -1060,7 +1097,7 @@ class DomainEventServiceTest {
     val bookingEntity = createTemporaryAccommodationPremisesBookingEntity()
 
     assertThatExceptionOfType(RuntimeException::class.java)
-      .isThrownBy { domainEventService.savePersonArrivedEvent(bookingEntity) }
+      .isThrownBy { domainEventService.savePersonArrivedEvent(bookingEntity, user) }
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -1962,11 +1999,11 @@ class DomainEventServiceTest {
 
     every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
-    every { domainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any(), user) } returns domainEventToSave
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
-    domainEventService.savePersonArrivedUpdatedEvent(bookingEntity)
+    domainEventService.savePersonArrivedUpdatedEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -2010,11 +2047,11 @@ class DomainEventServiceTest {
 
     every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
-    every { domainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any(), user) } returns domainEventToSave
     every { mockHmppsTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
     every { mockHmppsTopic.snsClient.publish(any()) } returns PublishResult()
 
-    domainEventServiceEmittingDisabled.savePersonArrivedUpdatedEvent(bookingEntity)
+    domainEventServiceEmittingDisabled.savePersonArrivedUpdatedEvent(bookingEntity, user)
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -2042,10 +2079,10 @@ class DomainEventServiceTest {
 
     every { domainEventRepositoryMock.save(any()) } throws RuntimeException("A database exception")
     every { hmppsQueueServiceMock.findByTopicId("domainevents") } returns mockHmppsTopic
-    every { domainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any()) } returns domainEventToSave
+    every { domainEventBuilderMock.buildPersonArrivedUpdatedDomainEvent(any(), user) } returns domainEventToSave
 
     assertThatExceptionOfType(RuntimeException::class.java)
-      .isThrownBy { domainEventService.savePersonArrivedUpdatedEvent(bookingEntity) }
+      .isThrownBy { domainEventService.savePersonArrivedUpdatedEvent(bookingEntity, user) }
 
     verify(exactly = 1) {
       domainEventRepositoryMock.save(
@@ -2082,6 +2119,43 @@ class DomainEventServiceTest {
       timestamp = occurredAt.toInstant(),
       eventType = EventType.personArrivedUpdated,
       eventDetails = CAS3PersonArrivedEventDetailsFactory().produce(),
+    )
+
+    every { domainEventRepositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
+      .withId(id)
+      .withApplicationId(applicationId)
+      .withCrn(crn)
+      .withType(DomainEventType.CAS3_PERSON_ARRIVED_UPDATED)
+      .withData(objectMapper.writeValueAsString(data))
+      .withOccurredAt(occurredAt)
+      .produce()
+
+    val event = domainEventService.getPersonArrivedUpdatedEvent(id)
+    assertThat(event).isEqualTo(
+      DomainEvent(
+        id = id,
+        applicationId = applicationId,
+        crn = "CRN",
+        occurredAt = occurredAt.toInstant(),
+        data = data,
+      ),
+    )
+  }
+
+  @Test
+  fun `getPersonArrivedUpdatedEvent returns event without staff detail`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    val data = CAS3PersonArrivedUpdatedEvent(
+      id = id,
+      timestamp = occurredAt.toInstant(),
+      eventType = EventType.personArrivedUpdated,
+      eventDetails = CAS3PersonArrivedEventDetailsFactory()
+        .withRecordedBy(null)
+        .produce(),
     )
 
     every { domainEventRepositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()

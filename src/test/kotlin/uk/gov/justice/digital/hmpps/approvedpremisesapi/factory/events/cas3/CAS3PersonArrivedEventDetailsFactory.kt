@@ -5,6 +5,7 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -23,6 +24,7 @@ class CAS3PersonArrivedEventDetailsFactory : Factory<CAS3PersonArrivedEventDetai
   private var expectedDepartureOn: Yielded<LocalDate> = { LocalDate.now().randomDateAfter() }
   private var notes: Yielded<String> = { randomStringLowerCase(20) }
   private var applicationId: Yielded<UUID?> = { null }
+  private var recordedBy: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
 
   fun withPersonReference(configuration: PersonReferenceFactory.() -> Unit) = apply {
     this.personReference = { PersonReferenceFactory().apply(configuration).produce() }
@@ -60,6 +62,10 @@ class CAS3PersonArrivedEventDetailsFactory : Factory<CAS3PersonArrivedEventDetai
     this.applicationId = { applicationId }
   }
 
+  fun withRecordedBy(staffMember: StaffMember?) = apply {
+    this.recordedBy = { staffMember }
+  }
+
   override fun produce(): CAS3PersonArrivedEventDetails {
     val bookingId = this.bookingId()
     val applicationId = this.applicationId()
@@ -75,6 +81,7 @@ class CAS3PersonArrivedEventDetailsFactory : Factory<CAS3PersonArrivedEventDetai
       notes = this.notes(),
       applicationId = applicationId,
       applicationUrl = applicationId?.let { URI("http://api/applications/$it") },
+      recordedBy = this.recordedBy(),
     )
   }
 }

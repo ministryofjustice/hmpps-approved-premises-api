@@ -83,6 +83,42 @@ class DomainEventTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get 'booking cancelled' event returns 200 with correct body and empty staff detail`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
+    )
+
+    val eventId = UUID.randomUUID()
+
+    val envelopedData = CAS3BookingCancelledEvent(
+      id = eventId,
+      timestamp = Instant.now(),
+      eventType = EventType.bookingCancelled,
+      eventDetails = CAS3BookingCancelledEventDetailsFactory()
+        .withCancelledBy(null)
+        .produce(),
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventId)
+      withType(DomainEventType.CAS3_BOOKING_CANCELLED)
+      withData(objectMapper.writeValueAsString(envelopedData))
+    }
+
+    val response = webTestClient.get()
+      .uri("/events/cas3/booking-cancelled/${event.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(CAS3BookingCancelledEvent::class.java)
+      .returnResult()
+
+    assertThat(response.responseBody).isEqualTo(envelopedData)
+  }
+
+  @Test
   fun `Get 'booking confirmed' event without JWT returns 401`() {
     webTestClient.get()
       .uri("/events/cas3/booking-confirmed/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
@@ -119,6 +155,42 @@ class DomainEventTest : IntegrationTestBase() {
       timestamp = Instant.now(),
       eventType = EventType.bookingConfirmed,
       eventDetails = CAS3BookingConfirmedEventDetailsFactory().produce(),
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventId)
+      withType(DomainEventType.CAS3_BOOKING_CONFIRMED)
+      withData(objectMapper.writeValueAsString(envelopedData))
+    }
+
+    val response = webTestClient.get()
+      .uri("/events/cas3/booking-confirmed/${event.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(CAS3BookingConfirmedEvent::class.java)
+      .returnResult()
+
+    assertThat(response.responseBody).isEqualTo(envelopedData)
+  }
+
+  @Test
+  fun `Get 'booking confirmed' event returns 200 with correct body and empty staff detail`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
+    )
+
+    val eventId = UUID.randomUUID()
+
+    val envelopedData = CAS3BookingConfirmedEvent(
+      id = eventId,
+      timestamp = Instant.now(),
+      eventType = EventType.bookingConfirmed,
+      eventDetails = CAS3BookingConfirmedEventDetailsFactory()
+        .withConfirmedBy(null)
+        .produce(),
     )
 
     val event = domainEventFactory.produceAndPersist {
@@ -197,6 +269,42 @@ class DomainEventTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get 'booking provisionally made' event returns 200 with correct body and empty staff detail`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
+    )
+
+    val eventId = UUID.randomUUID()
+
+    val envelopedData = CAS3BookingProvisionallyMadeEvent(
+      id = eventId,
+      timestamp = Instant.now(),
+      eventType = EventType.bookingProvisionallyMade,
+      eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory()
+        .withBookedBy(null)
+        .produce(),
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventId)
+      withType(DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE)
+      withData(objectMapper.writeValueAsString(envelopedData))
+    }
+
+    val response = webTestClient.get()
+      .uri("/events/cas3/booking-provisionally-made/${event.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(CAS3BookingProvisionallyMadeEvent::class.java)
+      .returnResult()
+
+    assertThat(response.responseBody).isEqualTo(envelopedData)
+  }
+
+  @Test
   fun `Get 'booking provisionally made' event returns 200 with correct body including staff detail`() {
     val jwt = jwtAuthHelper.createClientCredentialsJwt(
       username = "username",
@@ -210,7 +318,7 @@ class DomainEventTest : IntegrationTestBase() {
       timestamp = Instant.now(),
       eventType = EventType.bookingProvisionallyMade,
       eventDetails = CAS3BookingProvisionallyMadeEventDetailsFactory()
-        .withBookedBy { StaffMemberFactory().produce() }
+        .withBookedBy(StaffMemberFactory().produce())
         .produce(),
     )
 
@@ -269,6 +377,42 @@ class DomainEventTest : IntegrationTestBase() {
       timestamp = Instant.now(),
       eventType = EventType.personArrived,
       eventDetails = CAS3PersonArrivedEventDetailsFactory().produce(),
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventId)
+      withType(DomainEventType.CAS3_PERSON_ARRIVED)
+      withData(objectMapper.writeValueAsString(envelopedData))
+    }
+
+    val response = webTestClient.get()
+      .uri("/events/cas3/person-arrived/${event.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(CAS3PersonArrivedEvent::class.java)
+      .returnResult()
+
+    assertThat(response.responseBody).isEqualTo(envelopedData)
+  }
+
+  @Test
+  fun `Get 'person arrived' event returns 200 with correct body and empty staff detail`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
+    )
+
+    val eventId = UUID.randomUUID()
+
+    val envelopedData = CAS3PersonArrivedEvent(
+      id = eventId,
+      timestamp = Instant.now(),
+      eventType = EventType.personArrived,
+      eventDetails = CAS3PersonArrivedEventDetailsFactory()
+        .withRecordedBy(null)
+        .produce(),
     )
 
     val event = domainEventFactory.produceAndPersist {
