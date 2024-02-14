@@ -7,6 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -34,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.jsonForObject
 import java.time.LocalDate
@@ -647,7 +649,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * ```
      */
     @Test
-    fun `Withdrawing a placement request cascades to booking with arrival`() {
+    fun `Withdrawing a placement request cascades to booking with arrival and updates the application status`() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           val (application, assessment) = createApplicationAndAssessment(user, user, offenderDetails)
@@ -661,11 +663,15 @@ class WithdrawalTest : IntegrationTestBase() {
           )
           addBookingToPlacementRequest(placementRequest, bookingNoArrival)
 
+          assertThat(application.status).isEqualTo(ApprovedPremisesApplicationStatus.STARTED)
+
           withdrawPlacementRequest(
             placementRequest,
             WithdrawPlacementRequestReason.duplicatePlacementRequest,
             jwt
           )
+
+          assertApplicationStatus(application,ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
 
           assertApplicationNotWithdrawn(application)
           assertAssessmentNotWithdrawn(assessment)
@@ -779,6 +785,10 @@ class WithdrawalTest : IntegrationTestBase() {
     assertThat(updatedPlacementApplication.withdrawalReason).isEqualTo(reason)
   }
 
+  private fun assertApplicationStatus(application: ApprovedPremisesApplicationEntity, expectedStatus: ApprovedPremisesApplicationStatus) {
+    val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)!!
+    assertThat(updatedApplication.status).isEqualTo(expectedStatus)
+  }
 
   private fun assertApplicationNotWithdrawn(application: ApprovedPremisesApplicationEntity) {
     val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(application.id)!!

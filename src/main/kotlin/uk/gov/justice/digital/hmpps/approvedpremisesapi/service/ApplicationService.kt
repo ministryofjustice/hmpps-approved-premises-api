@@ -526,6 +526,10 @@ class ApplicationService(
     )
   }
 
+  fun updateApprovedPremisesApplicationStatus(applicationId: UUID, status: ApprovedPremisesApplicationStatus) {
+    applicationRepository.updateStatus(applicationId,status)
+  }
+
   @Transactional
   fun withdrawApprovedPremisesApplication(
     applicationId: UUID,
