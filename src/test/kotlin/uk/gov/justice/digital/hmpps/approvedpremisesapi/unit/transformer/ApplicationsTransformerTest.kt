@@ -295,6 +295,7 @@ class ApplicationsTransformerTest {
       override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
       override fun getTier(): String? = null
       override fun getStatus(): String = jpaStatus.toString()
+      override fun getIsWithdrawn(): Boolean = true
     }
     every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson
 
@@ -314,6 +315,7 @@ class ApplicationsTransformerTest {
     assertThat(result.status).isEqualTo(apiStatus)
     assertThat(result.type).isEqualTo("CAS1")
     assertThat(result.tier).isEqualTo(application.getTier())
+    assertThat(result.isWithdrawn).isEqualTo(true)
   }
 
   @Test

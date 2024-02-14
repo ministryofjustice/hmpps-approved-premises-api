@@ -53,7 +53,8 @@ SELECT
     apa.arrival_date as arrivalDate,
     CAST(apa.risk_ratings AS TEXT) as riskRatings,
     apa.status as status,
-    apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier
+    apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
+    apa.is_withdrawn as isWithdrawn
 FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
 WHERE apa.is_inapplicable IS NOT TRUE 
@@ -157,7 +158,8 @@ SELECT
     apa.is_pipe_application as isPipeApplication,
     apa.arrival_date as arrivalDate,
     apa.status as status,
-    CAST(apa.risk_ratings AS TEXT) as riskRatings
+    CAST(apa.risk_ratings AS TEXT) as riskRatings,
+    apa.is_withdrawn as isWithdrawn
 FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
 WHERE a.created_by_user_id = :userId 
@@ -434,6 +436,7 @@ interface ApprovedPremisesApplicationSummary : ApplicationSummary {
   fun getArrivalDate(): Timestamp?
   fun getTier(): String?
   fun getStatus(): String
+  fun getIsWithdrawn(): Boolean
 }
 
 interface TemporaryAccommodationApplicationSummary : ApplicationSummary {

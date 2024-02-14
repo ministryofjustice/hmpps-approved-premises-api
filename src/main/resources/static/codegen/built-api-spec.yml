@@ -6329,9 +6329,12 @@ components:
               $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
             tier:
               type: string
+            isWithdrawn:
+              type: boolean
           required:
             - createdByUserId
             - status
+            - isWithdrawn
     TemporaryAccommodationApplicationSummary:
       allOf:
         - $ref: '#/components/schemas/ApplicationSummary'
