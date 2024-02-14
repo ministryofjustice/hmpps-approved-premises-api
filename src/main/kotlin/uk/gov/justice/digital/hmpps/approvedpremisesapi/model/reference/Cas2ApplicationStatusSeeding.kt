@@ -150,22 +150,22 @@ object Cas2ApplicationStatusSeeding {
           Cas2PersistedApplicationStatusDetail(
             id = UUID.fromString("e4a2391e-e847-427a-a913-51e0b0ad9f52"),
             name = "hdcNoLongerEligible",
-            label = "HDC - No longer eligible",
+            label = "HDC - no longer eligible",
           ),
           Cas2PersistedApplicationStatusDetail(
             id = UUID.fromString("c5dce0d2-fc05-4a07-8157-25b8821cdb06"),
             name = "governorDecidedUnsuitable",
-            label = "Governor - Decided unsuitable",
+            label = "Governor - decided unsuitable",
           ),
           Cas2PersistedApplicationStatusDetail(
             id = UUID.fromString("3fb37f85-be88-4eee-812d-af122e268eef"),
             name = "governorChosenAlternative",
-            label = "Governor - Chosen alternative accommodation",
+            label = "Governor - chosen alternative accommodation",
           ),
           Cas2PersistedApplicationStatusDetail(
             id = UUID.fromString("8a857a7d-94f9-43ec-963c-2a2528e88a6e"),
             name = "governorOther",
-            label = "Governor - Other",
+            label = "Governor - other",
           ),
           Cas2PersistedApplicationStatusDetail(
             id = UUID.fromString("d3c789b8-947d-4e24-9cef-335545d85abe"),
@@ -183,17 +183,17 @@ object Cas2ApplicationStatusSeeding {
           Cas2PersistedApplicationStatusDetail(
             id = UUID.fromString("ba46bbe0-8fb6-4539-895d-5586e6bfe8b6"),
             name = "assessedAsHighRisk",
-            label = "Assessed as High Risk",
+            label = "Assessed as high risk",
           ),
           Cas2PersistedApplicationStatusDetail(
             id = UUID.fromString("522bb736-aeb6-480f-a51a-2bf3dcfcd482"),
             name = "notEligible",
-            label = "Not Eligible",
+            label = "Not eligible",
           ),
           Cas2PersistedApplicationStatusDetail(
             id = UUID.fromString("ccf43af1-359b-4a14-8941-85eefa88f016"),
             name = "noRecourseToPublicFunds",
-            label = "No Recourse to Public Funds",
+            label = "No recourse to public funds",
           ),
         ),
       ),
