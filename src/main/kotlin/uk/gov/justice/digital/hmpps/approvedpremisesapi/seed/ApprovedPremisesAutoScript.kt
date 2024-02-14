@@ -14,12 +14,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -44,6 +41,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PostcodeDistrictRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -86,12 +86,13 @@ class ApprovedPremisesAutoScript(
   private val characteristicRepository: CharacteristicRepository,
   private val placementRequestRepository: PlacementRequestRepository,
   private val placementRequirementsRepository: PlacementRequirementsRepository,
+  private val userRoleAssignmentRepository: UserRoleAssignmentRepository,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
 
   fun script() {
     seedLogger.info("Auto-Scripting for Approved Premises")
-    addRolesAndQualificationsToUsers()
+    addRolesToUsers()
     scriptApplications()
   }
 
@@ -101,38 +102,39 @@ class ApprovedPremisesAutoScript(
       .filter { listOf("BERNARD.BEAKS", "JIMSNOWLDAP").contains(it.deliusUsername) }
   }
 
-  private fun addRolesAndQualificationsToUsers() {
-    val userRolesAndQualifications = UserRolesAndQualifications(
-      roles = roles(),
-      qualifications = qualifications(),
-    )
+  private fun addRolesToUsers() {
     users().forEach { user ->
-      seedLogger.info("Auto-Scripting AP Roles for ${user.name}: ${roles()}")
-      seedLogger.info("   and AP Qualifications for ${user.name}: ${qualifications()}")
-      userService.updateUser(user.id, userRolesAndQualifications)
+      seedLogger.info("Auto-Scripting AP Roles for ${user.name}: ${userRoles()}")
+      user.roles = mutableListOf()
+      user.qualifications = mutableListOf()
+      seedLogger.info("  existing roles: ${user.roles.size}")
+      updateUserRoles(user, userRoles())
     }
   }
 
-  private fun roles(): List<ApprovedPremisesUserRole> {
-    return listOf(
-      ApprovedPremisesUserRole.roleAdmin,
-      ApprovedPremisesUserRole.applicant,
-      ApprovedPremisesUserRole.assessor,
-      ApprovedPremisesUserRole.manager,
-      ApprovedPremisesUserRole.matcher,
-      ApprovedPremisesUserRole.workflowManager,
-      ApprovedPremisesUserRole.reportViewer,
-      ApprovedPremisesUserRole.appealsManager,
-    )
+  private fun updateUserRoles(user: UserEntity, userRoles: List<UserRole>) {
+    userRoles.forEach { userRole ->
+      // bail if the role assignment exists already
+      userRoleAssignmentRepository.save(
+        UserRoleAssignmentEntity(
+          id = UUID.randomUUID(),
+          user = user,
+          role = userRole,
+        ),
+      )
+    }
   }
 
-  private fun qualifications(): List<UserQualification> {
+  private fun userRoles(): List<UserRole> {
     return listOf(
-      UserQualification.womens,
-      UserQualification.pipe,
-      UserQualification.lao,
-      UserQualification.emergency,
-      UserQualification.esap,
+      UserRole.CAS1_ASSESSOR,
+      UserRole.CAS1_MATCHER,
+      UserRole.CAS1_MANAGER,
+      UserRole.CAS1_WORKFLOW_MANAGER,
+      UserRole.CAS1_APPLICANT,
+      UserRole.CAS1_ADMIN,
+      UserRole.CAS1_REPORT_VIEWER,
+      UserRole.CAS1_APPEALS_MANAGER,
     )
   }
 

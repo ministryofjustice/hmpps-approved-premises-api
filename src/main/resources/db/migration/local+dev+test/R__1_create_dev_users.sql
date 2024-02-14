@@ -101,21 +101,6 @@ ON CONFLICT (id)
 DO
   NOTHING;
 
--- Copy all roles from JIMSNOWLDAP to BERNARD.BEAKS
-INSERT INTO
-  "user_role_assignments" ("id", "role", "user_id")
-SELECT
-  gen_random_uuid() AS id,
-  role AS role,
-  (SELECT id FROM users where delius_username='BERNARD.BEAKS') AS user_id
-FROM
-  "user_role_assignments"
-WHERE
-  "user_id" = (SELECT id FROM users where delius_username='JIMSNOWLDAP')
-ON CONFLICT (id)
-DO
-  NOTHING;
-
 
 -- Copy all roles from JIMSNOWLDAP to CAS-LOAD-TESTER
 INSERT INTO
