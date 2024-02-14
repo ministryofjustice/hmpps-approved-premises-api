@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonArrivedUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartureUpdatedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ArrivalEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
@@ -452,7 +453,7 @@ class DomainEventBuilderTest {
       .withNotes(notes)
       .produce()
 
-    val event = domainEventBuilder.getPersonDepartedDomainEvent(booking)
+    val event = domainEventBuilder.getPersonDepartedDomainEvent(booking, user)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
@@ -478,6 +479,81 @@ class DomainEventBuilderTest {
         data.applicationId == application.id &&
         data.applicationUrl.toString() == "http://api/applications/${application.id}"
     }
+    assertStaffDetails(event.data.eventDetails.recordedBy, user)
+  }
+
+  @Test
+  fun `getPersonDepartedDomainEvent transforms the booking and departure information correctly without staff detail`() {
+    val departureDateTime = OffsetDateTime.parse("2023-07-15T00:00:00Z")
+    val reasonName = "Returned to custody"
+    val notes = "Some notes about the departure"
+    val moveOnCategoryDescription = "Returned to custody"
+    val moveOnCategoryLabel = "RTC"
+
+    val probationRegion = ProbationRegionEntityFactory()
+      .withApArea(
+        ApAreaEntityFactory().produce(),
+      )
+      .produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withProbationRegion(probationRegion)
+      .withLocalAuthorityArea(
+        LocalAuthorityEntityFactory().produce(),
+      )
+      .produce()
+
+    val user = UserEntityFactory()
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withProbationRegion(probationRegion)
+      .produce()
+
+    val booking = BookingEntityFactory()
+      .withPremises(premises)
+      .withApplication(application)
+      .produce()
+
+    val reason = DepartureReasonEntityFactory()
+      .withName(reasonName)
+      .produce()
+
+    val moveOnCategory = MoveOnCategoryEntityFactory()
+      .withName(moveOnCategoryDescription)
+      .withLegacyDeliusCategoryCode(moveOnCategoryLabel)
+      .produce()
+
+    booking.departures += DepartureEntityFactory()
+      .withBooking(booking)
+      .withDateTime(departureDateTime)
+      .withReason(reason)
+      .withMoveOnCategory(moveOnCategory)
+      .withNotes(notes)
+      .produce()
+
+    val event = domainEventBuilder.getPersonDepartedDomainEvent(booking, null)
+
+    assertThat(event).matches {
+      val data = it.data.eventDetails
+
+      it.applicationId == application.id &&
+        it.bookingId == booking.id &&
+        it.crn == booking.crn &&
+        data.personReference.crn == booking.crn &&
+        data.personReference.noms == booking.nomsNumber &&
+        data.deliusEventNumber == application.eventNumber &&
+        data.bookingId == booking.id &&
+        data.bookingUrl.toString() == "http://api/premises/${premises.id}/bookings/${booking.id}" &&
+        data.departedAt == departureDateTime.toInstant() &&
+        data.moveOnCategory.description == moveOnCategoryDescription &&
+        data.moveOnCategory.label == moveOnCategoryLabel &&
+        data.applicationId == application.id &&
+        data.applicationUrl.toString() == "http://api/applications/${application.id}"
+    }
+    assertThat(event.data.eventDetails.recordedBy).isNull()
   }
 
   @Test
@@ -564,7 +640,7 @@ class DomainEventBuilderTest {
       .withNotes(notes)
       .produce()
 
-    val event = domainEventBuilder.buildDepartureUpdatedDomainEvent(booking)
+    val event = domainEventBuilder.buildDepartureUpdatedDomainEvent(booking, user)
 
     assertThat(event).matches {
       val data = it.data.eventDetails
@@ -700,7 +776,7 @@ class DomainEventBuilderTest {
         data.expectedDepartureOn == expectedDepartureDate &&
         data.notes == notes
     }
-    assertStaffDetails(event, user)
+    assertStaffDetails(event.data.eventDetails.recordedBy, user)
   }
 
   @Test
@@ -776,11 +852,10 @@ class DomainEventBuilderTest {
       data.premises.region == premises.probationRegion.name
   }
 
-  private fun assertStaffDetails(eventData: DomainEvent<CAS3PersonArrivedUpdatedEvent>, user: UserEntity?): Boolean {
-    val data = eventData.data.eventDetails
-    return data.recordedBy!!.staffCode == user!!.deliusStaffCode &&
-      data.recordedBy!!.username == user.deliusUsername &&
-      data.recordedBy!!.probationRegionCode == user.probationRegion.deliusCode
+  private fun assertStaffDetails(staffMember: StaffMember?, user: UserEntity?): Boolean {
+    return staffMember!!.staffCode == user!!.deliusStaffCode &&
+      staffMember!!.username == user.deliusUsername &&
+      staffMember!!.probationRegionCode == user.probationRegion.deliusCode
   }
 
   private fun assertBookingEventData(

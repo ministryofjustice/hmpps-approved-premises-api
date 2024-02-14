@@ -170,8 +170,8 @@ class DomainEventService(
   }
 
   @Transactional
-  fun savePersonDepartedEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.getPersonDepartedDomainEvent(booking)
+  fun savePersonDepartedEvent(booking: BookingEntity, user: UserEntity?) {
+    val domainEvent = domainEventBuilder.getPersonDepartedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -198,8 +198,8 @@ class DomainEventService(
   }
 
   @Transactional
-  fun savePersonDepartureUpdatedEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.buildDepartureUpdatedDomainEvent(booking)
+  fun savePersonDepartureUpdatedEvent(booking: BookingEntity, user: UserEntity?) {
+    val domainEvent = domainEventBuilder.buildDepartureUpdatedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,

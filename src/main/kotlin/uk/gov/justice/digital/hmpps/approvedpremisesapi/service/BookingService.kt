@@ -1452,7 +1452,7 @@ class BookingService(
       createCas1Departure(user, booking, dateTime, reasonId, moveOnCategoryId, destinationProviderId, notes)
 
     is TemporaryAccommodationPremisesEntity ->
-      createCas3Departure(booking, dateTime, reasonId, moveOnCategoryId, notes)
+      createCas3Departure(booking, dateTime, reasonId, moveOnCategoryId, notes, user)
 
     else ->
       throw RuntimeException("Unknown premises type ${booking.premises::class.qualifiedName}")
@@ -1622,6 +1622,7 @@ class BookingService(
     reasonId: UUID,
     moveOnCategoryId: UUID,
     notes: String?,
+    user: UserEntity?,
   ) = validated<DepartureEntity> {
     if (booking.premises !is TemporaryAccommodationPremisesEntity) {
       throw RuntimeException("Only CAS3 bookings are supported")
@@ -1669,8 +1670,8 @@ class BookingService(
     booking.departures += departureEntity
 
     when (isFirstDeparture) {
-      true -> cas3DomainEventService.savePersonDepartedEvent(booking)
-      else -> cas3DomainEventService.savePersonDepartureUpdatedEvent(booking)
+      true -> cas3DomainEventService.savePersonDepartedEvent(booking, user)
+      else -> cas3DomainEventService.savePersonDepartureUpdatedEvent(booking, user)
     }
 
     return success(departureEntity)

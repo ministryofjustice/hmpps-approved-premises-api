@@ -882,7 +882,7 @@ class BookingServiceTest {
 
       every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
 
-      every { mockCas3DomainEventService.savePersonDepartedEvent(any()) } just Runs
+      every { mockCas3DomainEventService.savePersonDepartedEvent(any(), user) } just Runs
 
       val result = bookingService.createDeparture(
         booking = bookingEntity,
@@ -906,13 +906,13 @@ class BookingServiceTest {
       assertThat(result.entity.booking.status).isEqualTo(BookingStatus.departed)
 
       verify(exactly = 1) {
-        mockCas3DomainEventService.savePersonDepartedEvent(bookingEntity)
+        mockCas3DomainEventService.savePersonDepartedEvent(bookingEntity, user)
       }
       verify(exactly = 1) {
-        mockCas3DomainEventService.savePersonDepartedEvent(any())
+        mockCas3DomainEventService.savePersonDepartedEvent(any(), user)
       }
       verify(exactly = 0) {
-        mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any())
+        mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any(), user)
       }
     }
 
@@ -958,7 +958,7 @@ class BookingServiceTest {
       every { mockArrivalRepository.save(any()) } answers { it.invocation.args[0] as ArrivalEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
-      every { mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any()) } just Runs
+      every { mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any(), user) } just Runs
 
       val result = bookingService.createDeparture(
         booking = bookingEntity,
@@ -982,10 +982,10 @@ class BookingServiceTest {
       assertThat(result.entity.booking.status).isEqualTo(BookingStatus.departed)
 
       verify(exactly = 1) {
-        mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any())
+        mockCas3DomainEventService.savePersonDepartureUpdatedEvent(any(), user)
       }
       verify(exactly = 0) {
-        mockCas3DomainEventService.savePersonDepartedEvent(any())
+        mockCas3DomainEventService.savePersonDepartedEvent(any(), user)
       }
     }
   }

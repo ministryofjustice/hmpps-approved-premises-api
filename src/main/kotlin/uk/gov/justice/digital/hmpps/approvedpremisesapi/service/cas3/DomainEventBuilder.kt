@@ -159,6 +159,7 @@ class DomainEventBuilder(
 
   fun getPersonDepartedDomainEvent(
     booking: BookingEntity,
+    user: UserEntity?,
   ): DomainEvent<CAS3PersonDepartedEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -175,7 +176,7 @@ class DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.personDeparted,
-        eventDetails = buildCAS3PersonDepartedEventDetail(booking, application, departure),
+        eventDetails = buildCAS3PersonDepartedEventDetail(booking, application, departure, user),
       ),
     )
   }
@@ -209,6 +210,7 @@ class DomainEventBuilder(
 
   fun buildDepartureUpdatedDomainEvent(
     booking: BookingEntity,
+    user: UserEntity?,
   ): DomainEvent<CAS3PersonDepartureUpdatedEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -225,7 +227,7 @@ class DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.personDeparted,
-        eventDetails = buildCAS3PersonDepartedEventDetail(booking, application, departure),
+        eventDetails = buildCAS3PersonDepartedEventDetail(booking, application, departure, user),
       ),
     )
   }
@@ -277,6 +279,7 @@ class DomainEventBuilder(
     booking: BookingEntity,
     application: TemporaryAccommodationApplicationEntity?,
     departure: DepartureEntity,
+    user: UserEntity?,
   ) = CAS3PersonDepartedEventDetails(
     personReference = PersonReference(
       crn = booking.crn,
@@ -302,6 +305,7 @@ class DomainEventBuilder(
     applicationId = application?.id,
     applicationUrl = application.toUrl(),
     reasonDetail = null,
+    recordedBy = user?.let { populateStaffMember(it) },
   )
 
   private fun buildCAS3BookingCancelledEventDetails(

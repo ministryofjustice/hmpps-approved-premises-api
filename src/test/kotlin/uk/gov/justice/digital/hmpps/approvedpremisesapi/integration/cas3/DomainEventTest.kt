@@ -491,6 +491,42 @@ class DomainEventTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get 'person departed' event returns 200 with correct body without staff detail`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
+    )
+
+    val eventId = UUID.randomUUID()
+
+    val envelopedData = CAS3PersonDepartedEvent(
+      id = eventId,
+      timestamp = Instant.now(),
+      eventType = EventType.personDeparted,
+      eventDetails = CAS3PersonDepartedEventDetailsFactory()
+        .withRecordedBy(null)
+        .produce(),
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventId)
+      withType(DomainEventType.CAS3_PERSON_DEPARTED)
+      withData(objectMapper.writeValueAsString(envelopedData))
+    }
+
+    val response = webTestClient.get()
+      .uri("/events/cas3/person-departed/${event.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(CAS3PersonDepartedEvent::class.java)
+      .returnResult()
+
+    assertThat(response.responseBody).isEqualTo(envelopedData)
+  }
+
+  @Test
   fun `Get 'referral submitted' event without JWT returns 401`() {
     webTestClient.get()
       .uri("/events/cas3/referral-submitted/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
@@ -605,6 +641,42 @@ class DomainEventTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get 'person departure updated' event returns 200 with correct body without staff detail`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
+    )
+
+    val eventId = UUID.randomUUID()
+
+    val envelopedData = CAS3PersonDepartureUpdatedEvent(
+      id = eventId,
+      timestamp = Instant.now(),
+      eventType = EventType.personDepartureUpdated,
+      eventDetails = CAS3PersonDepartedEventDetailsFactory()
+        .withRecordedBy(null)
+        .produce(),
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventId)
+      withType(DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED)
+      withData(objectMapper.writeValueAsString(envelopedData))
+    }
+
+    val response = webTestClient.get()
+      .uri("/events/cas3/person-departure-updated/${event.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(CAS3PersonDepartureUpdatedEvent::class.java)
+      .returnResult()
+
+    assertThat(response.responseBody).isEqualTo(envelopedData)
+  }
+
+  @Test
   fun `Get 'booking cancelled updated' event without JWT returns 401`() {
     webTestClient.get()
       .uri("/events/cas3/booking-cancelled-updated/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
@@ -662,6 +734,42 @@ class DomainEventTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get 'booking cancelled updated' event returns 200 with correct body without staff detail`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
+    )
+
+    val eventId = UUID.randomUUID()
+
+    val envelopedData = CAS3BookingCancelledUpdatedEvent(
+      id = eventId,
+      timestamp = Instant.now(),
+      eventType = EventType.bookingCancelledUpdated,
+      eventDetails = CAS3BookingCancelledEventDetailsFactory()
+        .withCancelledBy(null)
+        .produce(),
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventId)
+      withType(DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED)
+      withData(objectMapper.writeValueAsString(envelopedData))
+    }
+
+    val response = webTestClient.get()
+      .uri("/events/cas3/booking-cancelled-updated/${event.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(CAS3BookingCancelledUpdatedEvent::class.java)
+      .returnResult()
+
+    assertThat(response.responseBody).isEqualTo(envelopedData)
+  }
+
+  @Test
   fun `Get 'person arrived updated' event without JWT returns 401`() {
     webTestClient.get()
       .uri("/events/cas3/person-arrived-updated/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
@@ -698,6 +806,42 @@ class DomainEventTest : IntegrationTestBase() {
       timestamp = Instant.now(),
       eventType = EventType.personArrivedUpdated,
       eventDetails = CAS3PersonArrivedEventDetailsFactory().produce(),
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventId)
+      withType(DomainEventType.CAS3_PERSON_ARRIVED_UPDATED)
+      withData(objectMapper.writeValueAsString(envelopedData))
+    }
+
+    val response = webTestClient.get()
+      .uri("/events/cas3/person-arrived-updated/${event.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(CAS3PersonArrivedUpdatedEvent::class.java)
+      .returnResult()
+
+    assertThat(response.responseBody).isEqualTo(envelopedData)
+  }
+
+  @Test
+  fun `Get 'person arrived updated' event returns 200 with correct body without staff detail`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
+    )
+
+    val eventId = UUID.randomUUID()
+
+    val envelopedData = CAS3PersonArrivedUpdatedEvent(
+      id = eventId,
+      timestamp = Instant.now(),
+      eventType = EventType.personArrivedUpdated,
+      eventDetails = CAS3PersonArrivedEventDetailsFactory()
+        .withRecordedBy(null)
+        .produce(),
     )
 
     val event = domainEventFactory.produceAndPersist {
