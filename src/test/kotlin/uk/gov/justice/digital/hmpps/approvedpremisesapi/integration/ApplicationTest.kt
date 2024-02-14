@@ -3010,6 +3010,7 @@ class ApplicationTest : IntegrationTestBase() {
         val updatedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
         assertThat(updatedAssessment.isWithdrawn).isTrue
 
+        emailNotificationAsserter.assertEmailsRequestedCount(1)
         emailNotificationAsserter.assertEmailRequested(
           user.email!!,
           notifyConfig.templates.applicationWithdrawn,
