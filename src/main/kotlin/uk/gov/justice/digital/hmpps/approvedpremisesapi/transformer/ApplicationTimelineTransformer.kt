@@ -75,6 +75,7 @@ class ApplicationTimelineTransformer(
       DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> TimelineEventType.approvedPremisesBookingCancelled
       DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> TimelineEventType.approvedPremisesBookingChanged
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> TimelineEventType.approvedPremisesApplicationWithdrawn
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> TimelineEventType.approvedPremisesAssessmentAppealed
       else -> throw IllegalArgumentException("Only CAS1 is currently supported")
     }
   }
