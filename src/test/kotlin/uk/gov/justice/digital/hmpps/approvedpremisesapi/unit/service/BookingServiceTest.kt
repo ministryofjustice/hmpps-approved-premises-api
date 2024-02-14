@@ -2918,52 +2918,6 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createCancellation returns Success with correct result and emits a domain event for CAS3 without staff detail`() {
-      val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
-
-      val bookingEntity = createTemporaryAccommodationBookingEntity()
-
-      val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
-
-      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
-      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockCas3DomainEventService.saveBookingCancelledEvent(any(), null) } just Runs
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
-      val result = bookingService.createCas3Cancellation(
-        booking = bookingEntity,
-        cancelledAt = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
-        notes = "notes",
-        user = null,
-      )
-
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.reason).isEqualTo(reasonEntity)
-      assertThat(result.entity.notes).isEqualTo("notes")
-      assertThat(bookingEntity.cancellations).contains(result.entity)
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
-
-      verify(exactly = 1) {
-        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity, null)
-      }
-      verify(exactly = 0) {
-        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any(), null)
-      }
-      verify(exactly = 1) {
-        mockCancellationRepository.save(any())
-      }
-      verify(exactly = 1) {
-        mockBookingRepository.save(bookingEntity)
-      }
-      verify(exactly = 0) {
-        mockAssessmentService.acceptAssessment(any(), any(), any(), any(), any(), any())
-      }
-    }
-
-    @Test
     fun `createCancellation returns Success and move the assessment to read-to-place state`() {
       val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
       val bookingEntity = createTemporaryAccommodationBookingWithAssessment()
@@ -2972,7 +2926,7 @@ class BookingServiceTest {
 
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { mockCas3DomainEventService.saveBookingCancelledEvent(any(), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any()) } returns AuthorisableActionResult.Success(ValidatableActionResult.Success(assessmentEntity!!))
       mockkStatic(Sentry::class)
@@ -2994,10 +2948,10 @@ class BookingServiceTest {
       assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 1) {
-        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
+        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user)
       }
       verify(exactly = 0) {
-        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any(), user)
       }
       verify(exactly = 1) {
         mockCancellationRepository.save(any())
@@ -3022,7 +2976,7 @@ class BookingServiceTest {
 
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { mockCas3DomainEventService.saveBookingCancelledEvent(any(), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any()) } returns AuthorisableActionResult.Unauthorised()
       mockkStatic(Sentry::class)
@@ -3045,10 +2999,10 @@ class BookingServiceTest {
       assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 1) {
-        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
+        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user)
       }
       verify(exactly = 0) {
-        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any(), user)
       }
       verify(exactly = 1) {
         mockCancellationRepository.save(any())
@@ -3073,7 +3027,7 @@ class BookingServiceTest {
 
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { mockCas3DomainEventService.saveBookingCancelledEvent(any(), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any()) } throws RuntimeException("some-exception")
       mockkStatic(Sentry::class)
@@ -3095,10 +3049,10 @@ class BookingServiceTest {
       assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 1) {
-        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
+        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user)
       }
       verify(exactly = 0) {
-        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any(), user)
       }
       verify(exactly = 1) {
         mockCancellationRepository.save(any())
@@ -3123,7 +3077,7 @@ class BookingServiceTest {
 
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { mockCas3DomainEventService.saveBookingCancelledEvent(any(), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any()) } throws Throwable("some-exception")
       mockkStatic(Sentry::class)
@@ -3140,10 +3094,10 @@ class BookingServiceTest {
         }
 
       verify(exactly = 1) {
-        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
+        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user)
       }
       verify(exactly = 0) {
-        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any(), user)
       }
       verify(exactly = 1) {
         mockCancellationRepository.save(any())
@@ -3182,10 +3136,10 @@ class BookingServiceTest {
         }
 
       verify(exactly = 0) {
-        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
+        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user)
       }
       verify(exactly = 0) {
-        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any(), user)
       }
       verify(exactly = 1) {
         mockCancellationRepository.save(any())
@@ -3210,7 +3164,7 @@ class BookingServiceTest {
 
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { mockCas3DomainEventService.saveBookingCancelledEvent(any(), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any()) } returns AuthorisableActionResult.Success(ValidatableActionResult.GeneralValidationError("Error"))
       mockkStatic(Sentry::class)
@@ -3233,10 +3187,10 @@ class BookingServiceTest {
       assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 1) {
-        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
+        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user)
       }
       verify(exactly = 0) {
-        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any(), user)
       }
       verify(exactly = 1) {
         mockBookingRepository.save(bookingEntity)
@@ -3257,7 +3211,7 @@ class BookingServiceTest {
 
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { mockCas3DomainEventService.saveBookingCancelledEvent(any(), any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
       val result = bookingService.createCas3Cancellation(
@@ -3277,10 +3231,10 @@ class BookingServiceTest {
       assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 1) {
-        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
+        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity, user)
       }
       verify(exactly = 0) {
-        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any(), user)
       }
       verify(exactly = 1) {
         mockBookingRepository.save(bookingEntity)
