@@ -129,6 +129,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.time.Instant
@@ -2098,12 +2100,15 @@ class BookingServiceTest {
 
       bookingEntity.cancellations = mutableListOf(cancellationEntity)
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
-        reasonId = UUID.randomUUID(),
+        userProvidedReason = UUID.randomUUID(),
         notes = "notes",
-        user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        )
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2131,12 +2136,15 @@ class BookingServiceTest {
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = "notes",
-        user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
@@ -2154,12 +2162,15 @@ class BookingServiceTest {
 
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns null
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = "notes",
-        user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -2184,12 +2195,15 @@ class BookingServiceTest {
       every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = "notes",
-        user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
@@ -2212,12 +2226,15 @@ class BookingServiceTest {
       every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = "notes",
-        user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2270,12 +2287,15 @@ class BookingServiceTest {
       val cancelledAt = LocalDate.parse("2022-08-25")
       val notes = "notes"
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = cancelledAt,
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = notes,
-        user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2353,12 +2373,15 @@ class BookingServiceTest {
       val cancelledAt = LocalDate.parse("2022-08-25")
       val notes = "notes"
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = cancelledAt,
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = notes,
-        user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2435,12 +2458,15 @@ class BookingServiceTest {
       val cancelledAt = LocalDate.parse("2022-08-25")
       val notes = "notes"
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = cancelledAt,
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = notes,
-        user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2521,12 +2547,15 @@ class BookingServiceTest {
           .produce()
       }
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas1Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
-        reasonId = reasonId,
+        userProvidedReason = reasonId,
         notes = "notes",
-        user = user,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2552,6 +2581,49 @@ class BookingServiceTest {
         mockBookingRepository.save(bookingEntity)
       }
     }
+
+
+    @ParameterizedTest
+    @EnumSource(WithdrawableEntityType::class)
+    fun `createCancellation sets correct reason if withdrawal triggered by other entity`(triggeringEntity: WithdrawableEntityType) {
+      val providedReasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+
+      val bookingEntity = BookingEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
+
+      val expectedReasonId = when(triggeringEntity) {
+        WithdrawableEntityType.Application -> CancellationReasonRepository.CAS1_RELATED_APP_WITHDRAWN_ID
+        WithdrawableEntityType.PlacementApplication -> CancellationReasonRepository.CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
+        WithdrawableEntityType.PlacementRequest -> CancellationReasonRepository.CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
+        WithdrawableEntityType.Booking -> providedReasonId
+      }
+
+      every { mockCancellationReasonRepository.findByIdOrNull(expectedReasonId) } returns reasonEntity
+      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+      val result = bookingService.createCas1Cancellation(
+        booking = bookingEntity,
+        cancelledAt = LocalDate.parse("2022-08-25"),
+        userProvidedReason = providedReasonId,
+        notes = "notes",
+        withdrawalContext = WithdrawalContext(
+          user,
+          triggeringEntity,
+        ),
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
+    }
   }
 
   @Nested
@@ -2570,12 +2642,11 @@ class BookingServiceTest {
       every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas3Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
         notes = "notes",
-        user = user,
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2609,12 +2680,11 @@ class BookingServiceTest {
       every { mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any()) } just Runs
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
-      val result = bookingService.createCancellation(
+      val result = bookingService.createCas3Cancellation(
         booking = bookingEntity,
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
         notes = "notes",
-        user = user,
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -3119,7 +3189,7 @@ class BookingServiceTest {
       .produce()
 
     @BeforeEach
-    private fun setup() {
+    public fun setup() {
       every { mockPlacementRequestRepository.save(any()) } answers { callOriginal() }
       every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
       every { mockApplicationService.getApplicationsForCrn(crn, ServiceName.approvedPremises) } returns listOf(application)
@@ -5803,7 +5873,7 @@ class BookingServiceTest {
 
     @Test
     fun `getCancellableCas1Bookings returns cancellable bookings`() {
-      every { mockUserAccessService.userCanCancelBooking(user, any()) } returns true
+      every { mockUserAccessService.userMayCancelBooking(user, any()) } returns true
       every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking)
 
       val result = bookingService.getCancelleableCas1BookingsForUser(user, application)
@@ -5824,7 +5894,7 @@ class BookingServiceTest {
           .produce(),
       )
 
-      every { mockUserAccessService.userCanCancelBooking(user, any()) } returns true
+      every { mockUserAccessService.userMayCancelBooking(user, any()) } returns true
       every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking, cancelledBooking)
 
       val result = bookingService.getCancelleableCas1BookingsForUser(user, application)
@@ -5844,7 +5914,7 @@ class BookingServiceTest {
           .produce(),
       )
 
-      every { mockUserAccessService.userCanCancelBooking(user, any()) } returns true
+      every { mockUserAccessService.userMayCancelBooking(user, any()) } returns true
       every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking, bookingWithArrival)
 
       val result = bookingService.getCancelleableCas1BookingsForUser(user, application)
@@ -5858,8 +5928,8 @@ class BookingServiceTest {
         .withPremises(premises)
         .produce()
 
-      every { mockUserAccessService.userCanCancelBooking(user, cancellableBooking) } returns true
-      every { mockUserAccessService.userCanCancelBooking(user, bookingUserCantCancel) } returns false
+      every { mockUserAccessService.userMayCancelBooking(user, cancellableBooking) } returns true
+      every { mockUserAccessService.userMayCancelBooking(user, bookingUserCantCancel) } returns false
       every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking, bookingUserCantCancel)
 
       val result = bookingService.getCancelleableCas1BookingsForUser(user, application)

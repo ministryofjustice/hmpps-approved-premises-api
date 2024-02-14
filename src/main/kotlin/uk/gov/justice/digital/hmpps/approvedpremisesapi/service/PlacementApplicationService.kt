@@ -23,9 +23,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.extractMessage
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
@@ -168,16 +168,16 @@ class PlacementApplicationService(
   fun getWithdrawablePlacementApplicationsForUser(user: UserEntity, application: ApprovedPremisesApplicationEntity) =
     placementApplicationRepository
       .findByApplication(application)
-      .filter { it.isInWithdrawableState() && userAccessService.userCanWithdrawPlacemenApplication(user, it)}
+      .filter { it.isInWithdrawableState() && userAccessService.userMayWithdrawPlacemenApplication(user, it)}
 
   @Transactional
   fun withdrawPlacementApplication(
     id: UUID,
-    user: UserEntity,
-    reason: PlacementApplicationWithdrawalReason?,
-    checkUserPermissions: Boolean,
+    userProvidedReason: PlacementApplicationWithdrawalReason?,
+    withdrawalContext: WithdrawalContext,
   ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
+    val user = requireNotNull(withdrawalContext.triggeringUser)
 
     when (placementApplicationAuthorisationResult) {
       is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
@@ -193,7 +193,8 @@ class PlacementApplicationService(
       )
     }
 
-    if(checkUserPermissions && !userAccessService.userCanWithdrawPlacemenApplication(user, placementApplication)) {
+    val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementApplication
+    if(isUserRequestedWithdrawal && !userAccessService.userMayWithdrawPlacemenApplication(user, placementApplication)) {
       return AuthorisableActionResult.Unauthorised()
     }
 
@@ -203,19 +204,34 @@ class PlacementApplicationService(
       )
     }
 
-    placementApplication.decision = PlacementApplicationDecision.WITHDRAWN_BY_PP
+    placementApplication.decision = PlacementApplicationDecision.WITHDRAW
     placementApplication.decisionMadeAt = OffsetDateTime.now()
-    placementApplication.withdrawalReason = reason
+    placementApplication.withdrawalReason = when(withdrawalContext.triggeringEntityType) {
+      WithdrawableEntityType.Application -> PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
+      WithdrawableEntityType.PlacementApplication -> userProvidedReason
+      WithdrawableEntityType.PlacementRequest -> throw InternalServerErrorProblem("Withdrawing a PlacementRequest should not cascade to PlacementApplications")
+      WithdrawableEntityType.Booking -> throw InternalServerErrorProblem("Withdrawing a Booking should not cascade to PlacementApplications")
+    }
 
     val savedApplication = placementApplicationRepository.save(placementApplication)
 
+    withdrawPlacementRequests(placementApplication, withdrawalContext)
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(savedApplication),
+    )
+  }
+
+  private fun withdrawPlacementRequests(
+    placementApplication: PlacementApplicationEntity,
+    withdrawalContext: WithdrawalContext,
+  ) {
     placementApplication.placementRequests.forEach { placementRequest ->
-      if(placementRequest.isInWithdrawableState()) {
+      if (placementRequest.isInWithdrawableState()) {
         val placementRequestWithdrawalResult = placementRequestService.withdrawPlacementRequest(
           placementRequest.id,
-          user,
-          PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
-          checkUserPermissions = false,
+          PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
+          withdrawalContext,
         )
 
         when (placementRequestWithdrawalResult) {
@@ -227,11 +243,7 @@ class PlacementApplicationService(
           )
         }
       }
-    }
-
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedApplication),
-    )
+      }
   }
 
   fun updateApplication(

@@ -11,7 +11,9 @@ import javax.persistence.Table
 @Repository
 interface CancellationReasonRepository : JpaRepository<CancellationReasonEntity, UUID> {
   companion object Constants {
-    val CAS1_WITHDRAWN_BY_PP_ID: UUID = UUID.fromString("d39572ea-9e42-460c-ae88-b6b30fca0b09")
+    val CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID: UUID = UUID.fromString("0e068767-c62e-43b5-866d-f0fb1d02ad83")
+    val CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID: UUID = UUID.fromString("0a115fa4-6fd0-4b23-8e31-e6d1769c3985")
+    val CAS1_RELATED_APP_WITHDRAWN_ID: UUID = UUID.fromString("bcb90030-b2d3-47d1-b289-a8b8c8898576")
   }
 
   @Query("SELECT c FROM CancellationReasonEntity c WHERE c.serviceScope = :serviceName OR c.serviceScope = '*'")

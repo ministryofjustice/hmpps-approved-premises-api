@@ -20,19 +20,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
-import java.time.LocalDate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 
 class WithdrawableServiceTest {
   private val mockPlacementRequestService = mockk<PlacementRequestService>()
@@ -139,30 +136,57 @@ class WithdrawableServiceTest {
     } returns placementApplications
 
     every {
-      mockPlacementRequestService.withdrawPlacementRequest(any(), user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
+      mockPlacementRequestService.withdrawPlacementRequest(
+        any(),
+        userProvidedReason = null,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.Application,
+        ),
+      )
     } returns mockk<AuthorisableActionResult<Unit>>()
 
     every {
-      mockPlacementApplicationService.withdrawPlacementApplication(any(), user, PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
+      mockPlacementApplicationService.withdrawPlacementApplication(
+        any(),
+        userProvidedReason = null,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.Application,
+        ),
+      )
     } returns mockk<AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>>>()
 
     withdrawableService.withdrawAllForApplication(application, user)
 
     placementRequests.forEach {
       verify {
-        mockPlacementRequestService.withdrawPlacementRequest(it.id, user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
+        mockPlacementRequestService.withdrawPlacementRequest(
+          it.id,
+          userProvidedReason = null,
+          WithdrawalContext(
+            user,
+            WithdrawableEntityType.Application,
+          ),
+        )
       }
     }
 
     placementApplications.forEach {
       verify {
-        mockPlacementApplicationService.withdrawPlacementApplication(it.id, user, PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
+        mockPlacementApplicationService.withdrawPlacementApplication(
+          it.id,
+          userProvidedReason = null,
+          WithdrawalContext(
+            user,
+            WithdrawableEntityType.Application,
+          ),)
       }
     }
   }
 
   @Test
-  fun `withdrawAllForApplication reports errors if can't withdrawh children`() {
+  fun `withdrawAllForApplication reports errors if can't withdraw children`() {
     val logger = mockk<Logger>()
     withdrawableService.log = logger
 
@@ -175,11 +199,24 @@ class WithdrawableServiceTest {
     } returns listOf(placementApplication)
 
     every {
-      mockPlacementRequestService.withdrawPlacementRequest(any(), user, PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
+      mockPlacementRequestService.withdrawPlacementRequest(
+        any(),
+        userProvidedReason = null,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.Application,
+        ),
+      )
     } returns AuthorisableActionResult.Unauthorised()
 
     every {
-      mockPlacementApplicationService.withdrawPlacementApplication(any(), user, PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP, checkUserPermissions = false)
+      mockPlacementApplicationService.withdrawPlacementApplication(
+        any(),
+        userProvidedReason = null,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.Application,
+        ),)
     } returns AuthorisableActionResult.Unauthorised()
 
     every { logger.error(any<String>()) } returns Unit

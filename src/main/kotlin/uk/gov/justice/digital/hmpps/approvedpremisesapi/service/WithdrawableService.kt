@@ -5,13 +5,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_WITHDRAWN_BY_PP_ID
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
-import java.time.LocalDate
 
 @Service
 class WithdrawableService(
@@ -48,9 +44,11 @@ class WithdrawableService(
       if(placementRequest.isInWithdrawableState()) {
         val result = placementRequestService.withdrawPlacementRequest(
           placementRequest.id,
-          user,
-          PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
-          checkUserPermissions = false,
+          userProvidedReason = null,
+          WithdrawalContext(
+            user,
+            WithdrawableEntityType.Application,
+          ),
         )
 
         when (result) {
@@ -70,10 +68,12 @@ class WithdrawableService(
     placementApplications.forEach { placementApplication ->
       if(placementApplication.isInWithdrawableState()) {
         val result = placementApplicationService.withdrawPlacementApplication(
-          placementApplication.id,
-          user,
-          PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP,
-          checkUserPermissions = false,
+          id = placementApplication.id,
+          userProvidedReason = null,
+          withdrawalContext = WithdrawalContext(
+            user,
+            WithdrawableEntityType.Application
+          ),
         )
 
         when (result) {
@@ -87,4 +87,16 @@ class WithdrawableService(
       }
     }
   }
+}
+
+data class WithdrawalContext(
+  val triggeringUser: UserEntity?,
+  val triggeringEntityType: WithdrawableEntityType,
+)
+
+enum class WithdrawableEntityType {
+  Application,
+  PlacementRequest,
+  PlacementApplication,
+  Booking,
 }

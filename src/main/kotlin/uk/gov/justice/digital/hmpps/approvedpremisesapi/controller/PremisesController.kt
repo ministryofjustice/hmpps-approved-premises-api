@@ -74,6 +74,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedSummaryTransformer
@@ -524,17 +526,31 @@ class PremisesController(
 
     val booking = getBookingForPremisesOrThrow(premisesId, bookingId)
 
-    if (!userAccessService.userCanCancelBooking(user, booking)) {
+    if (!userAccessService.userMayCancelBooking(user, booking)) {
       throw ForbiddenProblem()
     }
 
-    val result = bookingService.createCancellation(
-      user = user,
-      booking = booking,
-      cancelledAt = body.date,
-      reasonId = body.reason,
-      notes = body.notes,
-    )
+    val result = when (booking.premises) {
+      is ApprovedPremisesEntity -> bookingService.createCas1Cancellation(
+        booking = booking,
+        cancelledAt = body.date,
+        userProvidedReason = body.reason,
+        notes = body.notes,
+        withdrawalContext = WithdrawalContext(
+          triggeringUser = user,
+          triggeringEntityType = WithdrawableEntityType.Booking,
+        ),
+      )
+
+      is TemporaryAccommodationPremisesEntity -> bookingService.createCas3Cancellation(
+        booking = booking,
+        cancelledAt = body.date,
+        reasonId = body.reason,
+        notes = body.notes,
+      )
+
+      else -> throw NotImplementedProblem("Unsupported premises type ${booking.premises::class.qualifiedName}")
+    }
 
     val cancellation = extractResultEntityOrThrow(result)
 

@@ -6,6 +6,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import java.time.LocalDate
 import java.util.UUID
 
@@ -35,12 +37,15 @@ class ApprovedPremisesBookingCancelSeedJob(
       throw RuntimeException("Booking ${row.id} is not an Approved Premises Booking")
     }
 
-    val validationResult = bookingService.createCancellation(
-      user = null,
+    val validationResult = bookingService.createCas1Cancellation(
       booking = booking,
       cancelledAt = LocalDate.now(),
-      reasonId = errorInBookingDetailsCancellationReason,
+      userProvidedReason = errorInBookingDetailsCancellationReason,
       notes = null,
+      withdrawalContext = WithdrawalContext(
+        triggeringUser = null,
+        triggeringEntityType = WithdrawableEntityType.Booking,
+      ),
     )
 
     when (validationResult) {

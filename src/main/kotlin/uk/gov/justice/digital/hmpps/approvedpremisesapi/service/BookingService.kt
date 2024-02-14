@@ -46,6 +46,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_APP_WITHDRAWN_ID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ConfirmationRepository
@@ -1179,30 +1182,18 @@ class BookingService(
     return success(nonArrivalEntity)
   }
 
-  @Transactional
-  fun createCancellation(
-    user: UserEntity?,
-    booking: BookingEntity,
-    cancelledAt: LocalDate,
-    reasonId: UUID,
-    notes: String?,
-  ) = when (booking.premises) {
-    is ApprovedPremisesEntity -> createCas1Cancellation(user, booking, cancelledAt, reasonId, notes)
-    is TemporaryAccommodationPremisesEntity -> createCas3Cancellation(booking, cancelledAt, reasonId, notes)
-    else -> throw RuntimeException("Unknown premises type ${booking.premises::class.qualifiedName}")
-  }
-
   fun getCancelleableCas1BookingsForUser(user: UserEntity, application: ApprovedPremisesApplicationEntity): List<BookingEntity> =
     bookingRepository.findAllByApplication(application).filter { booking ->
-      booking.isInCancellableStateCas1() && userAccessService.userCanCancelBooking(user, booking)
+      booking.isInCancellableStateCas1() && userAccessService.userMayCancelBooking(user, booking)
     }
 
-  private fun createCas1Cancellation(
-    user: UserEntity?,
+  @Transactional
+  fun createCas1Cancellation(
     booking: BookingEntity,
     cancelledAt: LocalDate,
-    reasonId: UUID,
+    userProvidedReason: UUID?,
     notes: String?,
+    withdrawalContext: WithdrawalContext,
   ) = validated<CancellationEntity> {
     val existingCancellation = booking.cancellation
     if (booking.premises is ApprovedPremisesEntity && existingCancellation != null) {
@@ -1213,7 +1204,14 @@ class BookingService(
       return generalError("The Booking is not in a state that can be cancelled")
     }
 
-    val reason = cancellationReasonRepository.findByIdOrNull(reasonId)
+    val resolvedReasonId = when(withdrawalContext.triggeringEntityType) {
+      WithdrawableEntityType.Application -> CAS1_RELATED_APP_WITHDRAWN_ID
+      WithdrawableEntityType.PlacementApplication -> CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
+      WithdrawableEntityType.PlacementRequest -> CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
+      WithdrawableEntityType.Booking -> userProvidedReason
+    }
+
+    val reason = cancellationReasonRepository.findByIdOrNull(resolvedReasonId)
     if (reason == null) {
       "$.reason" hasValidationError "doesNotExist"
     } else if (!serviceScopeMatches(reason.serviceScope, booking)) {
@@ -1252,6 +1250,7 @@ class BookingService(
       )
     }
 
+    val user = withdrawalContext.triggeringUser
     if (shouldCreateDomainEventForBooking(booking, user)) {
       createCas1CancellationDomainEvent(booking, user, cancelledAt, reason)
     }
@@ -1334,7 +1333,8 @@ class BookingService(
     )
   }
 
-  private fun createCas3Cancellation(
+  @Transactional
+  fun createCas3Cancellation(
     booking: BookingEntity,
     cancelledAt: LocalDate,
     reasonId: UUID,

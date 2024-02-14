@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository.Constants.CAS1_WITHDRAWN_BY_PP_ID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
@@ -40,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.extractMessage
@@ -294,14 +294,15 @@ class PlacementRequestService(
   ): List<PlacementRequestEntity> =
     placementRequestRepository
       .findByApplication(application)
-      .filter { it.isInWithdrawableState() && userAccessService.userCanWithdrawPlacementRequest(user, it) }
+      .filter { it.isInWithdrawableState() && userAccessService.userMayWithdrawPlacementRequest(user, it) }
 
   fun withdrawPlacementRequest(
     placementRequestId: UUID,
-    user: UserEntity,
-    reason: PlacementRequestWithdrawalReason?,
-    checkUserPermissions: Boolean,
+    userProvidedReason: PlacementRequestWithdrawalReason?,
+    withdrawalContext: WithdrawalContext,
   ): AuthorisableActionResult<Unit> {
+    val user = requireNotNull(withdrawalContext.triggeringUser)
+
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
 
@@ -309,22 +310,28 @@ class PlacementRequestService(
       return AuthorisableActionResult.Success(Unit)
     }
 
-    if(checkUserPermissions && !userAccessService.userCanWithdrawPlacementRequest(user, placementRequest)) {
+    val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementRequest
+    if (isUserRequestedWithdrawal && !userAccessService.userMayWithdrawPlacementRequest(user, placementRequest)) {
       return AuthorisableActionResult.Unauthorised()
     }
 
     placementRequest.isWithdrawn = true
-    placementRequest.withdrawalReason = reason
+    placementRequest.withdrawalReason = when(withdrawalContext.triggeringEntityType) {
+      WithdrawableEntityType.Application -> PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
+      WithdrawableEntityType.PlacementApplication -> PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN
+      WithdrawableEntityType.PlacementRequest -> userProvidedReason
+      WithdrawableEntityType.Booking -> throw InternalServerErrorProblem("Withdrawing a Booking should not cascade to PlacementRequests")
+    }
 
     placementRequestRepository.save(placementRequest)
 
     placementRequest.booking?.let { booking ->
-      val bookingCancellationResult = bookingService.createCancellation(
-        user,
-        booking,
-        LocalDate.now(),
-        CAS1_WITHDRAWN_BY_PP_ID,
-        "Automatically withdrawn as placement request was withdrawn",
+      val bookingCancellationResult = bookingService.createCas1Cancellation(
+        booking = booking,
+        cancelledAt = LocalDate.now(),
+        userProvidedReason = null,
+        notes = "Automatically withdrawn as placement request was withdrawn",
+        withdrawalContext = withdrawalContext,
       )
 
       when (bookingCancellationResult) {
