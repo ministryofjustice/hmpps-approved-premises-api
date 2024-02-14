@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Appeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
@@ -13,13 +15,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 
 class AppealsTest : IntegrationTestBase() {
   @Test
@@ -265,38 +270,142 @@ class AppealsTest : IntegrationTestBase() {
   @Test
   fun `Create new appeal returns 201 with correct body and Location header`() {
     `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
-      `Given an Assessment for Approved Premises`(userEntity, userEntity) { assessment, application ->
-        val result = webTestClient.post()
-          .uri("/applications/${application.id}/appeals")
-          .bodyValue(
-            NewAppeal(
-              appealDate = LocalDate.parse("2024-01-01"),
-              appealDetail = "Some details about the appeal.",
-              reviewer = "Someone Else",
-              decision = AppealDecision.accepted,
-              decisionDetail = "Some details about the decision.",
-            ),
-          )
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isCreated
-          .returnResult(Appeal::class.java)
+      `Given an Offender` { offenderDetails, _ ->
+        `Given an Assessment for Approved Premises`(
+          allocatedToUser = userEntity,
+          createdByUser = userEntity,
+          crn = offenderDetails.otherIds.crn,
+          decision = AssessmentDecision.REJECTED,
+          submittedAt = OffsetDateTime.now(),
+        ) { assessment, application ->
+          val result = webTestClient.post()
+            .uri("/applications/${application.id}/appeals")
+            .bodyValue(
+              NewAppeal(
+                appealDate = LocalDate.parse("2024-01-01"),
+                appealDetail = "Some details about the appeal.",
+                reviewer = "Someone Else",
+                decision = AppealDecision.rejected,
+                decisionDetail = "Some details about the decision.",
+              ),
+            )
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(Appeal::class.java)
 
-        assertThat(result.responseHeaders["Location"]).anyMatch {
-          it.matches(Regex("/applications/${application.id}/appeals/[0-9a-f-]+"))
+          assertThat(result.responseHeaders["Location"]).anyMatch {
+            it.matches(Regex("/applications/${application.id}/appeals/[0-9a-f-]+"))
+          }
+
+          assertThat(result.responseBody.blockFirst()).matches {
+            it.appealDate == LocalDate.parse("2024-01-01") &&
+              it.appealDetail == "Some details about the appeal." &&
+              it.reviewer == "Someone Else" &&
+              withinSeconds(5L).matches(it.createdAt.toString()) &&
+              it.applicationId == application.id &&
+              it.createdByUserId == userEntity.id &&
+              it.decision == AppealDecision.rejected &&
+              it.decisionDetail == "Some details about the decision." &&
+              it.assessmentId == assessment.id
+          }
         }
+      }
+    }
+  }
 
-        assertThat(result.responseBody.blockFirst()).matches {
-          it.appealDate == LocalDate.parse("2024-01-01") &&
-            it.appealDetail == "Some details about the appeal." &&
-            it.reviewer == "Someone Else" &&
-            withinSeconds(5L).matches(it.createdAt.toString()) &&
-            it.applicationId == application.id &&
-            it.createdByUserId == userEntity.id &&
-            it.decision == AppealDecision.accepted &&
-            it.decisionDetail == "Some details about the decision." &&
-            it.assessmentId == assessment.id
+  @Test
+  fun `Create new appeal does not create a new assessment if the appeal was rejected`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        `Given an Assessment for Approved Premises`(
+          allocatedToUser = userEntity,
+          createdByUser = userEntity,
+          crn = offenderDetails.otherIds.crn,
+          decision = AssessmentDecision.REJECTED,
+          submittedAt = OffsetDateTime.now(),
+        ) { assessment, application ->
+          webTestClient.post()
+            .uri("/applications/${application.id}/appeals")
+            .bodyValue(
+              NewAppeal(
+                appealDate = LocalDate.parse("2024-01-01"),
+                appealDetail = "Some details about the appeal.",
+                reviewer = "Someone Else",
+                decision = AppealDecision.rejected,
+                decisionDetail = "Some details about the decision.",
+              ),
+            )
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(Appeal::class.java)
+
+          val applicationResult = webTestClient.get()
+            .uri("/applications/${application.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult(ApprovedPremisesApplication::class.java)
+
+          val applicationBody = applicationResult.responseBody.blockFirst()!!
+
+          assertThat(applicationBody.status).isEqualTo(ApprovedPremisesApplicationStatus.rejected)
+
+          assertThat(applicationBody.assessmentId).isEqualTo(assessment.id)
+          assertThat(applicationBody.assessmentDecision).isEqualTo(ApiAssessmentDecision.rejected)
+          assertThat(applicationBody.assessmentDecisionDate).isEqualTo(assessment.submittedAt!!.toLocalDate())
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Create new appeal creates a new assessment and updates the application status if the appeal was accepted`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        `Given an Assessment for Approved Premises`(
+          allocatedToUser = userEntity,
+          createdByUser = userEntity,
+          crn = offenderDetails.otherIds.crn,
+          decision = AssessmentDecision.REJECTED,
+          submittedAt = OffsetDateTime.now(),
+        ) { assessment, application ->
+          webTestClient.post()
+            .uri("/applications/${application.id}/appeals")
+            .bodyValue(
+              NewAppeal(
+                appealDate = LocalDate.parse("2024-01-01"),
+                appealDetail = "Some details about the appeal.",
+                reviewer = "Someone Else",
+                decision = AppealDecision.accepted,
+                decisionDetail = "Some details about the decision.",
+              ),
+            )
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(Appeal::class.java)
+
+          val applicationResult = webTestClient.get()
+            .uri("/applications/${application.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult(ApprovedPremisesApplication::class.java)
+
+          val applicationBody = applicationResult.responseBody.blockFirst()!!
+
+          assertThat(applicationBody.status).isEqualTo(ApprovedPremisesApplicationStatus.unallocatedAssesment)
+
+          assertThat(applicationBody.assessmentId).isNotEqualTo(assessment.id)
+          assertThat(applicationBody.assessmentDecision).isNull()
+          assertThat(applicationBody.assessmentDecisionDate).isNull()
         }
       }
     }
@@ -305,37 +414,45 @@ class AppealsTest : IntegrationTestBase() {
   @Test
   fun `Create new appeal adds an event to the application timeline`() {
     `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
-      `Given an Assessment for Approved Premises`(userEntity, userEntity) { assessment, application ->
-        val result = webTestClient.post()
-          .uri("/applications/${application.id}/appeals")
-          .bodyValue(
-            NewAppeal(
-              appealDate = LocalDate.parse("2024-01-01"),
-              appealDetail = "Some details about the appeal.",
-              reviewer = "Someone Else",
-              decision = AppealDecision.accepted,
-              decisionDetail = "Some details about the decision.",
-            ),
-          )
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isCreated
-          .returnResult(Appeal::class.java)
+      `Given an Offender` { offenderDetails, _ ->
+        `Given an Assessment for Approved Premises`(
+          allocatedToUser = userEntity,
+          createdByUser = userEntity,
+          crn = offenderDetails.otherIds.crn,
+          decision = AssessmentDecision.REJECTED,
+          submittedAt = OffsetDateTime.now(),
+        ) { assessment, application ->
+          val result = webTestClient.post()
+            .uri("/applications/${application.id}/appeals")
+            .bodyValue(
+              NewAppeal(
+                appealDate = LocalDate.parse("2024-01-01"),
+                appealDetail = "Some details about the appeal.",
+                reviewer = "Someone Else",
+                decision = AppealDecision.accepted,
+                decisionDetail = "Some details about the decision.",
+              ),
+            )
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(Appeal::class.java)
 
-        val timelineResult = webTestClient.get()
-          .uri("/applications/${application.id}/timeline")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult(String::class.java)
+          val timelineResult = webTestClient.get()
+            .uri("/applications/${application.id}/timeline")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult(String::class.java)
 
-        val timeline = objectMapper.readValue<List<TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
+          val timeline = objectMapper.readValue<List<TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
 
-        assertThat(timeline).anyMatch {
-          it.type == TimelineEventType.approvedPremisesAssessmentAppealed
+          assertThat(timeline).anyMatch {
+            it.type == TimelineEventType.approvedPremisesAssessmentAppealed
+          }
         }
       }
     }
