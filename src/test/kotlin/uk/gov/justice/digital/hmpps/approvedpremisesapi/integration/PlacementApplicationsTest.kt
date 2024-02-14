@@ -1135,6 +1135,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 placementApplicationEntity.createdAt.toInstant() == it.createdAt &&
                 serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
             }
+
+            emailNotificationAsserter.assertNoEmailsRequested()
           }
         }
       }

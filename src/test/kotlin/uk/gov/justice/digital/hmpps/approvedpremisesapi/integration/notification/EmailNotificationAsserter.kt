@@ -23,6 +23,10 @@ class EmailNotificationAsserter {
     requestedEmails.clear()
   }
 
+  fun assertNoEmailsRequested() {
+    assertEmailsRequestedCount(0)
+  }
+
   fun assertEmailRequested(toEmailAddress: String, templateId: String) {
     val anyMatch = requestedEmails.any { toEmailAddress == it.email && templateId == it.templateId }
 

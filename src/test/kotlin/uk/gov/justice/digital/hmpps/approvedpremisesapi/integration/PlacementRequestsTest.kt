@@ -1635,6 +1635,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
               val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
               assertThat(persistedPlacementRequest.isWithdrawn).isTrue
               assertThat(persistedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+
+              emailNotificationAsserter.assertNoEmailsRequested()
             }
           }
         }

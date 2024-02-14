@@ -523,9 +523,9 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Withdrawing an application cascades to all possible entities`() {
-      `Given a User` { user, jwt ->
+      `Given a User` { applicant, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          val (application, assessment) = createApplicationAndAssessment(user, user, offenderDetails)
+          val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
           val placementApplication = createPlacementApplication(application)
           val placementRequest1 = createPlacementRequest(application) {
@@ -568,6 +568,12 @@ class WithdrawalTest : IntegrationTestBase() {
 
           assertPlacementRequestWithdrawn(placementRequest3, PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN)
           assertBookingNotWithdrawn(booking2HasArrival)
+
+          emailNotificationAsserter.assertEmailsRequestedCount(1)
+          emailNotificationAsserter.assertEmailRequested(
+            applicant.email!!,
+            notifyConfig.templates.applicationWithdrawn,
+          )
         }
       }
     }
@@ -634,6 +640,8 @@ class WithdrawalTest : IntegrationTestBase() {
 
           assertPlacementRequestWithdrawn(placementRequest2, PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN)
           assertBookingNotWithdrawn(booking2HasArrival)
+
+          emailNotificationAsserter.assertNoEmailsRequested()
         }
       }
     }
@@ -678,6 +686,8 @@ class WithdrawalTest : IntegrationTestBase() {
 
           assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
           assertBookingWithdrawn(bookingNoArrival, "Related placement request withdrawn")
+
+          emailNotificationAsserter.assertNoEmailsRequested()
         }
       }
     }
@@ -718,10 +728,11 @@ class WithdrawalTest : IntegrationTestBase() {
 
           assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
           assertBookingNotWithdrawn(bookingNoArrival)
+
+          emailNotificationAsserter.assertNoEmailsRequested()
         }
       }
     }
-
   }
 
   private fun addBookingToPlacementRequest(placementRequest: PlacementRequestEntity, booking: BookingEntity) {
