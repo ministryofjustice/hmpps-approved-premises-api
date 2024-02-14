@@ -6,7 +6,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
@@ -15,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAppealedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCancelledFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
@@ -209,6 +212,28 @@ class DomainEventDescriberTest {
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
     assertThat(result).isEqualTo("The application was withdrawn")
+  }
+
+  @ParameterizedTest
+  @CsvSource(value = ["accepted,Reason A", "rejected,Reason B"])
+  fun `Returns expected description for assessment appealed event`(decision: String, reason: String) {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED)
+
+    every { mockDomainEventService.getAssessmentAppealedEvent(any()) } returns buildDomainEvent {
+      AssessmentAppealedEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = "approved-premises.assessment.appealed",
+        eventDetails = AssessmentAppealedFactory()
+          .withDecision(AppealDecision.valueOf(decision))
+          .withDecisionDetail(reason)
+          .produce(),
+      )
+    }
+
+    val result = domainEventDescriber.getDescription(domainEventSummary)
+
+    assertThat(result).isEqualTo("The assessment was appealed and $decision. The reason was: $reason")
   }
 
   private fun <T> buildDomainEvent(builder: (UUID) -> T): DomainEvent<T> {
