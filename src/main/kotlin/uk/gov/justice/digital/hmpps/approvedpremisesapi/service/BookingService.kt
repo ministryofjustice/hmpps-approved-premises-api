@@ -66,6 +66,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -75,6 +76,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -1243,7 +1245,31 @@ class BookingService(
       createCas1CancellationDomainEvent(booking, user, cancelledAt, reason)
     }
 
+    updateApplicationStatusOnCancellation(
+      booking = booking,
+      isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.Booking
+    )
+
     return success(cancellationEntity)
+  }
+
+  private fun updateApplicationStatusOnCancellation(
+    booking: BookingEntity,
+    isUserRequestedWithdrawal: Boolean
+  ) {
+    if(!isUserRequestedWithdrawal || booking.application == null) {
+      return
+    }
+
+    val application = booking.application!!
+    val bookings = bookingRepository.findAllByApplication(application)
+    val anyActiveBookings = bookings.any { it.isActive() }
+    if(!anyActiveBookings) {
+      applicationService.updateApprovedPremisesApplicationStatus(
+        application.id,
+        ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT
+      )
+    }
   }
 
   private fun createPlacementRequestIfBookingAppealed(

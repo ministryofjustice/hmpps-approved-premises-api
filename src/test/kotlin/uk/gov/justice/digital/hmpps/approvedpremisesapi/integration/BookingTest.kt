@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
@@ -2766,49 +2767,62 @@ class BookingTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_WORKFLOW_MANAGER"])
-  fun `Create Cancellation on Booking returns OK with correct body when user has one of roles MANAGER, WORKFLOW_MANAGER`(role: UserRole) {
-    `Given a User`(roles = listOf(role)) { _, jwt ->
-      val booking = bookingEntityFactory.produceAndPersist {
-        withYieldedPremises {
-          approvedPremisesEntityFactory.produceAndPersist {
-            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+  fun `Create Cancellation on CAS1 Booking returns OK with correct body when user has one of roles MANAGER, WORKFLOW_MANAGER`(role: UserRole) {
+    `Given a User`(roles = listOf(role)) { user, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          withCrn(offenderDetails.otherIds.crn)
+          withCreatedByUser(user)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+          withSubmittedAt(OffsetDateTime.now())
+        }
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withYieldedPremises {
+            approvedPremisesEntityFactory.produceAndPersist {
+              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+              withYieldedProbationRegion {
+                probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+              }
             }
           }
+          withApplication(application)
         }
-      }
 
-      val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
-        withServiceScope("*")
-      }
+        val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+          withServiceScope("*")
+        }
 
-      webTestClient.post()
-        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewCancellation(
-            date = LocalDate.parse("2022-08-17"),
-            reason = cancellationReason.id,
-            notes = null,
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .jsonPath(".bookingId").isEqualTo(booking.id.toString())
-        .jsonPath(".date").isEqualTo("2022-08-17")
-        .jsonPath(".notes").isEqualTo(null)
-        .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
-        .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
-        .jsonPath(".reason.isActive").isEqualTo(true)
-        .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+        webTestClient.post()
+          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewCancellation(
+              date = LocalDate.parse("2022-08-17"),
+              reason = cancellationReason.id,
+              notes = null,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+          .jsonPath(".date").isEqualTo("2022-08-17")
+          .jsonPath(".notes").isEqualTo(null)
+          .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
+          .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
+          .jsonPath(".reason.isActive").isEqualTo(true)
+          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+
+        val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(booking.application!!.id)!!
+        assertThat(updatedApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+      }
     }
   }
 
   @Test
-  fun `Create Cancellation on Temporary Accommodation Booking on a premises that's not in the user's region returns 403 Forbidden`() {
+  fun `Create Cancellation on CAS3 Booking on a premises that's not in the user's region returns 403 Forbidden`() {
     `Given a User` { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
@@ -2846,7 +2860,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Cancellation on Temporary Accommodation Booking when a cancellation already exists returns OK with correct body and send cancelled-updated event`() {
+  fun `Create Cancellation on CAS3 Booking when a cancellation already exists returns OK with correct body and send cancelled-updated event`() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
@@ -2900,7 +2914,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Cancellation on Temporary Accommodation Booking when a no cancellation exists returns OK with correct body and send cancelled event`() {
+  fun `Create Cancellation on CAS3 Booking when a no cancellation exists returns OK with correct body and send cancelled event`() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       val booking = bookingEntityFactory.produceAndPersist {
         withYieldedPremises {
