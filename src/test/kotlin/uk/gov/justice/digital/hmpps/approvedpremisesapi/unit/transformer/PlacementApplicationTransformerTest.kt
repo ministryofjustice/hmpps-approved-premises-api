@@ -13,6 +13,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -90,6 +91,8 @@ class PlacementApplicationTransformerTest {
     assertThat(result.outdatedSchema).isEqualTo(true)
     assertThat(result.submittedAt).isNull()
     assertThat(result.canBeWithdrawn).isEqualTo(true)
+    assertThat(result.isWithdrawn).isEqualTo(false)
+    assertThat(result.withdrawalReason).isNull()
   }
 
   @Test
@@ -187,6 +190,7 @@ class PlacementApplicationTransformerTest {
       .withData(data)
       .withDocument(document)
       .withDecision(decision)
+      .withWithdrawalReason(PlacementApplicationWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST)
       .produce()
 
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
@@ -198,6 +202,8 @@ class PlacementApplicationTransformerTest {
       PlacementApplicationDecision.WITHDRAWN_BY_PP -> assertThat(result.isWithdrawn).isEqualTo(true)
       null -> assertThat(result.isWithdrawn).isEqualTo(false)
     }
+
+    assertThat(result.withdrawalReason).isEqualTo(WithdrawPlacementRequestReason.errorInPlacementRequest)
 
   }
 

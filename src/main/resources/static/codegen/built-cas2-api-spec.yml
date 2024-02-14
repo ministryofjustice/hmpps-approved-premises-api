@@ -1008,6 +1008,10 @@ components:
           - NoCapacityDueToPlacementPrioritisation
           - NoCapacity
           - ErrorInPlacementRequest
+          - WithdrawnByPP
+          - RelatedApplicationWithdrawn
+          - RelatedPlacementRequestWithdrawn
+          - RelatedPlacementApplicationWithdrawn
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'
@@ -3922,6 +3926,8 @@ components:
               type: boolean
             isWithdrawn:
               type: boolean
+            withdrawalReason:
+              $ref: '#/components/schemas/WithdrawPlacementRequestReason'
           required:
             - id
             - createdByUserId
@@ -4041,6 +4047,8 @@ components:
               $ref: '#/components/schemas/PlacementRequestRequestType'
             isWithdrawn:
               type: boolean
+            withdrawalReason:
+              $ref: '#/components/schemas/WithdrawPlacementRequestReason'
           required:
             - person
             - risks
