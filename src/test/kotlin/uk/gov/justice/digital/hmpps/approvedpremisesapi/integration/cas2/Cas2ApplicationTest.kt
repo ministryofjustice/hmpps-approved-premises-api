@@ -37,6 +37,29 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   @SpykBean
   lateinit var realApplicationRepository: ApplicationRepository
 
+  val schema = """
+        {
+          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+          "${"\$id"}": "https://example.com/product.schema.json",
+          "title": "Thing",
+          "description": "A thing",
+          "type": "object",
+          "properties": {
+            "thingId": {
+              "description": "The unique identifier for a thing",
+              "type": "integer"
+            }
+          },
+          "required": [ "thingId" ]
+        }
+        """
+
+  val data = """
+          {
+             "thingId": 123
+          }
+          """
+
   @AfterEach
   fun afterEach() {
     // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository, causing mocked behaviour
@@ -270,6 +293,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
   @Nested
   inner class GetToShow {
+
     @Test
     fun `Get single in progress application returns 200 with correct body`() {
       `Given a CAS2 User` { userEntity, jwt ->
@@ -280,22 +304,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             .produceAndPersist {
               withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
               withSchema(
-                """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": {
-            "thingId": {
-              "description": "The unique identifier for a thing",
-              "type": "integer"
-            }
-          },
-          "required": [ "thingId" ]
-        }
-        """,
+                schema,
               )
             }
 
@@ -304,11 +313,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(userEntity)
             withData(
-              """
-          {
-             "thingId": 123
-          }
-          """,
+              data,
             )
           }
 
@@ -396,22 +401,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             .produceAndPersist {
               withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
               withSchema(
-                """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": {
-            "thingId": {
-              "description": "The unique identifier for a thing",
-              "type": "integer"
-            }
-          },
-          "required": [ "thingId" ]
-        }
-        """,
+                schema,
               )
             }
 
@@ -527,22 +517,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withAddedAt(OffsetDateTime.now())
               withId(UUID.randomUUID())
               withSchema(
-                """
-                {
-                  "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                  "${"\$id"}": "https://example.com/product.schema.json",
-                  "title": "Thing",
-                  "description": "A thing",
-                  "type": "object",
-                  "properties": {
-                    "thingId": {
-                      "description": "The unique identifier for a thing",
-                      "type": "integer"
-                    }
-                  },
-                  "required": [ "thingId" ]
-                }
-              """,
+                schema,
               )
             }
 
@@ -591,22 +566,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     val jsonSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
       withSchema(
-        """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": {
-            "thingId": {
-              "description": "The unique identifier for a thing",
-              "type": "integer"
-            }
-          },
-          "required": [ "thingId" ]
-        }
-        """,
+        schema,
       )
     }
 
@@ -615,11 +575,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       withCrn(crn)
       withCreatedByUser(userEntity)
       withData(
-        """
-          {
-             "thingId": 123
-          }
-          """,
+        data,
       )
     }
 

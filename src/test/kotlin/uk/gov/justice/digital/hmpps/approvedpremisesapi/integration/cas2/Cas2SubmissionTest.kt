@@ -53,6 +53,23 @@ class Cas2SubmissionTest(
   @Autowired
   lateinit var nomisUserTransformer: NomisUserTransformer
 
+  val schema = """
+       {
+         "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+         "${"\$id"}": "https://example.com/product.schema.json",
+         "title": "Thing",
+         "description": "A thing",
+         "type": "object",
+         "properties": {
+            "thingId": {
+                "description": "The unique identifier for a thing",
+                "type": "integer"
+            }
+         },
+         "required": [ "thingId" ]
+       }
+  """
+
   @AfterEach
   fun afterEach() {
     // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository, causing mocked behaviour
@@ -310,22 +327,7 @@ class Cas2SubmissionTest(
               .produceAndPersist {
                 withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
                 withSchema(
-                  """
-          {
-            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-            "${"\$id"}": "https://example.com/product.schema.json",
-            "title": "Thing",
-            "description": "A thing",
-            "type": "object",
-            "properties": {
-              "thingId": {
-                "description": "The unique identifier for a thing",
-                "type": "integer"
-              }
-            },
-            "required": [ "thingId" ]
-          }
-          """,
+                  schema,
                 )
               }
 
@@ -438,22 +440,7 @@ class Cas2SubmissionTest(
               .produceAndPersist {
                 withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
                 withSchema(
-                  """
-          {
-            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-            "${"\$id"}": "https://example.com/product.schema.json",
-            "title": "Thing",
-            "description": "A thing",
-            "type": "object",
-            "properties": {
-              "thingId": {
-                "description": "The unique identifier for a thing",
-                "type": "integer"
-              }
-            },
-            "required": [ "thingId" ]
-          }
-          """,
+                  schema,
                 )
               }
 
@@ -496,22 +483,7 @@ class Cas2SubmissionTest(
                   .produceAndPersist {
                     withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
                     withSchema(
-                      """
-                        {
-                          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                          "${"\$id"}": "https://example.com/product.schema.json",
-                          "title": "Thing",
-                          "description": "A thing",
-                          "type": "object",
-                          "properties": {
-                            "thingId": {
-                              "description": "The unique identifier for a thing",
-                              "type": "integer"
-                            }
-                          },
-                          "required": [ "thingId" ]
-                        }
-                        """,
+                      schema,
                     )
                   }
 
@@ -608,22 +580,7 @@ class Cas2SubmissionTest(
                 .produceAndPersist {
                   withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
                   withSchema(
-                    """
-          {
-            "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-            "${"\$id"}": "https://example.com/product.schema.json",
-            "title": "Thing",
-            "description": "A thing",
-            "type": "object",
-            "properties": {
-              "thingId": {
-                "description": "The unique identifier for a thing",
-                "type": "integer"
-              }
-            },
-            "required": [ "thingId" ]
-          }
-          """,
+                    schema,
                   )
                 }
 
@@ -669,17 +626,7 @@ class Cas2SubmissionTest(
                 withAddedAt(OffsetDateTime.now())
                 withId(UUID.randomUUID())
                 withSchema(
-                  """
-                {
-                  "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                  "${"\$id"}": "https://example.com/product.schema.json",
-                  "title": "Thing",
-                  "description": "A thing",
-                  "type": "object",
-                  "properties": {},
-                  "required": []
-                }
-              """,
+                  schema,
                 )
               }
 
@@ -691,8 +638,10 @@ class Cas2SubmissionTest(
               withCreatedByUser(submittingUser)
               withData(
                 """
-                {}
-              """,
+                        {
+                           "thingId": 123
+                        }
+               """,
               )
 
               val inmateDetail = InmateDetailFactory()
@@ -744,18 +693,7 @@ class Cas2SubmissionTest(
               withAddedAt(OffsetDateTime.now())
               withId(UUID.randomUUID())
               withSchema(
-                """
-            {
-              "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-              "${"\$id"}": "https://example.com/product.schema.json",
-              "title": "Thing",
-              "description": "A thing",
-              "type": "object",
-              "properties": {}
-              },
-              "required": [  ]
-            }
-          """,
+                schema,
               )
             }
 
@@ -767,8 +705,10 @@ class Cas2SubmissionTest(
             withCreatedByUser(submittingUser)
             withData(
               """
-                {}
-              """,
+            {
+               "thingId": 123
+            }
+            """,
             )
           }
 
