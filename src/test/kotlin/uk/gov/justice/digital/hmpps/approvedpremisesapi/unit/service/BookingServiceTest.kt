@@ -2647,6 +2647,7 @@ class BookingServiceTest {
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
         notes = "notes",
+        user = user,
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2662,6 +2663,9 @@ class BookingServiceTest {
       }
       verify(exactly = 0) {
         mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+      }
+      verify(exactly = 1) {
+        mockCancellationRepository.save(any())
       }
       verify(exactly = 1) {
         mockBookingRepository.save(bookingEntity)
@@ -2685,6 +2689,7 @@ class BookingServiceTest {
         cancelledAt = LocalDate.parse("2022-08-25"),
         reasonId = reasonId,
         notes = "notes",
+        user = user,
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2702,7 +2707,343 @@ class BookingServiceTest {
         mockCas3DomainEventService.saveBookingCancelledEvent(any())
       }
       verify(exactly = 1) {
+        mockCancellationRepository.save(any())
+      }
+      verify(exactly = 1) {
         mockBookingRepository.save(bookingEntity)
+      }
+      verify(exactly = 0) {
+        mockAssessmentService.acceptAssessment(any(), any(), any(), any(), any(), any())
+      }
+    }
+
+    @Test
+    fun `createCancellation returns Success and move the assessment to read-to-place state`() {
+      val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+      val bookingEntity = createTemporaryAccommodationBookingWithAssessment()
+      val assessmentEntity = bookingEntity.application?.getLatestAssessment()
+      val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
+
+      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+      every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any()) } returns AuthorisableActionResult.Success(ValidatableActionResult.Success(assessmentEntity!!))
+      mockkStatic(Sentry::class)
+
+      val result = bookingService.createCas3Cancellation(
+        booking = bookingEntity,
+        cancelledAt = LocalDate.parse("2022-08-25"),
+        reasonId = reasonId,
+        notes = "notes",
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(bookingEntity.cancellations).contains(result.entity)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
+      }
+      verify(exactly = 0) {
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+      }
+      verify(exactly = 1) {
+        mockCancellationRepository.save(any())
+      }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
+      verify(exactly = 1) {
+        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, any())
+      }
+      verify(exactly = 0) {
+        Sentry.captureException(any())
+      }
+    }
+
+    @Test
+    fun `createCancellation returns Success and not throwing error when acceptAssessment is failed with forbidden error`() {
+      val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+      val bookingEntity = createTemporaryAccommodationBookingWithAssessment()
+      val assessmentEntity = bookingEntity.application?.getLatestAssessment()!!
+      val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
+
+      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+      every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any()) } returns AuthorisableActionResult.Unauthorised()
+      mockkStatic(Sentry::class)
+      every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
+
+      val result = bookingService.createCas3Cancellation(
+        booking = bookingEntity,
+        cancelledAt = LocalDate.parse("2022-08-25"),
+        reasonId = reasonId,
+        notes = "notes",
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(bookingEntity.cancellations).contains(result.entity)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
+      }
+      verify(exactly = 0) {
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+      }
+      verify(exactly = 1) {
+        mockCancellationRepository.save(any())
+      }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
+      verify(exactly = 1) {
+        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, any())
+      }
+      verify(exactly = 1) {
+        Sentry.captureException(any())
+      }
+    }
+
+    @Test
+    fun `createCancellation returns Success and not throwing error when acceptAssessment is failed with runtime exception`() {
+      val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+      val bookingEntity = createTemporaryAccommodationBookingWithAssessment()
+      val assessmentEntity = bookingEntity.application?.getLatestAssessment()!!
+      val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
+
+      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+      every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any()) } throws RuntimeException("some-exception")
+      mockkStatic(Sentry::class)
+
+      val result = bookingService.createCas3Cancellation(
+        booking = bookingEntity,
+        cancelledAt = LocalDate.parse("2022-08-25"),
+        reasonId = reasonId,
+        notes = "notes",
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(bookingEntity.cancellations).contains(result.entity)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
+      }
+      verify(exactly = 0) {
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+      }
+      verify(exactly = 1) {
+        mockCancellationRepository.save(any())
+      }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
+      verify(exactly = 1) {
+        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, any())
+      }
+      verify(exactly = 1) {
+        Sentry.captureException(any())
+      }
+    }
+
+    @Test
+    fun `createCancellation returns exception when acceptAssessment is failed with unexpected exception`() {
+      val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+      val bookingEntity = createTemporaryAccommodationBookingWithAssessment()
+      val assessmentEntity = bookingEntity.application?.getLatestAssessment()!!
+      val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
+
+      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+      every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any()) } throws Throwable("some-exception")
+      mockkStatic(Sentry::class)
+
+      assertThatExceptionOfType(Throwable::class.java)
+        .isThrownBy {
+          bookingService.createCas3Cancellation(
+            booking = bookingEntity,
+            cancelledAt = LocalDate.parse("2022-08-25"),
+            reasonId = reasonId,
+            notes = "notes",
+            user = user,
+          )
+        }
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
+      }
+      verify(exactly = 0) {
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+      }
+      verify(exactly = 1) {
+        mockCancellationRepository.save(any())
+      }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
+      verify(exactly = 1) {
+        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, any())
+      }
+      verify(exactly = 0) {
+        Sentry.captureException(any())
+      }
+    }
+
+    @Test
+    fun `createCancellation returns exception when unexpected exception occurred and acceptAssessment is not invoked`() {
+      val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+      val bookingEntity = createTemporaryAccommodationBookingWithAssessment()
+      val assessmentEntity = bookingEntity.application?.getLatestAssessment()!!
+      val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
+
+      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+      every { mockCancellationRepository.save(any()) } throws RuntimeException("som-exception")
+      mockkStatic(Sentry::class)
+
+      assertThatExceptionOfType(RuntimeException::class.java)
+        .isThrownBy {
+          bookingService.createCas3Cancellation(
+            booking = bookingEntity,
+            cancelledAt = LocalDate.parse("2022-08-25"),
+            reasonId = reasonId,
+            notes = "notes",
+            user = user,
+          )
+        }
+
+      verify(exactly = 0) {
+        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
+      }
+      verify(exactly = 0) {
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+      }
+      verify(exactly = 1) {
+        mockCancellationRepository.save(any())
+      }
+      verify(exactly = 0) {
+        mockBookingRepository.save(bookingEntity)
+      }
+      verify(exactly = 0) {
+        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, any())
+      }
+      verify(exactly = 0) {
+        Sentry.captureException(any())
+      }
+    }
+
+    @Test
+    fun `createCancellation returns Success and not throwing error when accept assessment is failed with bad request error`() {
+      val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+      val bookingEntity = createTemporaryAccommodationBookingWithAssessment()
+      val assessmentEntity = bookingEntity.application?.getLatestAssessment()!!
+      val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
+
+      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+      every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+      every { mockAssessmentService.acceptAssessment(user, any(), any(), any(), any(), any()) } returns AuthorisableActionResult.Success(ValidatableActionResult.GeneralValidationError("Error"))
+      mockkStatic(Sentry::class)
+      every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
+
+      val result = bookingService.createCas3Cancellation(
+        booking = bookingEntity,
+        cancelledAt = LocalDate.parse("2022-08-25"),
+        reasonId = reasonId,
+        notes = "notes",
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(bookingEntity.cancellations).contains(result.entity)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
+      }
+      verify(exactly = 0) {
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+      }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
+      verify(exactly = 1) {
+        mockAssessmentService.acceptAssessment(user, assessmentEntity.id, assessmentEntity.document, null, null, any())
+      }
+      verify(exactly = 1) {
+        Sentry.captureException(any())
+      }
+    }
+
+    @Test
+    fun `createCancellation returns Success and not invoke acceptAssessment when assessment is empty`() {
+      val reasonId = UUID.fromString("9ce3cd23-8e2b-457a-94d9-477d9ec63629")
+      val bookingEntity = createTemporaryAccommodationBookingWithAssessment(false)
+      val reasonEntity = CancellationReasonEntityFactory().withServiceScope("*").produce()
+
+      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reasonEntity
+      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+      every { mockCas3DomainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+      val result = bookingService.createCas3Cancellation(
+        booking = bookingEntity,
+        cancelledAt = LocalDate.parse("2022-08-25"),
+        reasonId = reasonId,
+        notes = "notes",
+        user = user,
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      result as ValidatableActionResult.Success
+      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.entity.reason).isEqualTo(reasonEntity)
+      assertThat(result.entity.notes).isEqualTo("notes")
+      assertThat(bookingEntity.cancellations).contains(result.entity)
+      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+
+      verify(exactly = 1) {
+        mockCas3DomainEventService.saveBookingCancelledEvent(bookingEntity)
+      }
+      verify(exactly = 0) {
+        mockCas3DomainEventService.saveBookingCancelledUpdatedEvent(any())
+      }
+      verify(exactly = 1) {
+        mockBookingRepository.save(bookingEntity)
+      }
+      verify(exactly = 0) {
+        mockAssessmentService.acceptAssessment(user, any(), any(), null, null, any())
+      }
+      verify(exactly = 0) {
+        Sentry.captureException(any())
       }
     }
 
@@ -2720,6 +3061,42 @@ class BookingServiceTest {
         }
         .withServiceName(ServiceName.temporaryAccommodation)
         .produce()
+      return bookingEntity
+    }
+
+    private fun createTemporaryAccommodationBookingWithAssessment(withAssessment: Boolean = true): BookingEntity {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .produce()
+
+      val assessmentEntity = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      if (withAssessment) {
+        application.assessments += assessmentEntity
+      }
+
+      val bookingEntity = BookingEntityFactory()
+        .withYieldedPremises {
+          TemporaryAccommodationPremisesEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+            .produce()
+        }
+        .withServiceName(ServiceName.temporaryAccommodation)
+        .withApplication(application)
+        .produce()
+
       return bookingEntity
     }
   }

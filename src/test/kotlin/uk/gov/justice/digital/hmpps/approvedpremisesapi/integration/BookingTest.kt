@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
@@ -2948,6 +2949,159 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create Cancellation on Temporary Accommodation Booking when a cancellation already exists returns OK with correct body and move assessment to ready-to-place state`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withProbationRegion(userEntity.probationRegion)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+          withCrn(offenderDetails.otherIds.crn)
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withCompletedAt(OffsetDateTime.now())
+        }
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withYieldedPremises {
+            temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+              withProbationRegion(userEntity.probationRegion)
+            }
+          }
+          withApplication(application)
+        }
+
+        val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+          withServiceScope("*")
+        }
+
+        val cancellation = cancellationEntityFactory.produceAndPersist {
+          withBooking(booking)
+          withReason(cancellationReason)
+        }
+        booking.cancellations = mutableListOf(cancellation)
+
+        webTestClient.post()
+          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewCancellation(
+              date = LocalDate.parse("2022-08-18"),
+              reason = cancellationReason.id,
+              notes = "Corrected date",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+          .jsonPath(".date").isEqualTo("2022-08-18")
+          .jsonPath(".notes").isEqualTo("Corrected date")
+          .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
+          .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
+          .jsonPath(".reason.isActive").isEqualTo(true)
+          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+
+        assertPublishedSNSEvent(
+          booking,
+          "accommodation.cas3.booking.cancelled.updated",
+          "A cancelled booking for a Transitional Accommodation premises has been updated",
+          "http://api/events/cas3/booking-cancelled-updated",
+        )
+
+        assertCAS3AssessmentIsReadyToPlace(assessment)
+      }
+    }
+  }
+
+  @Test
+  fun `Create Cancellation on Temporary Accommodation Booking returns OK and make move assessment to ready-to-place state when accept assessment fail with forbidden exception`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withProbationRegion(userEntity.probationRegion)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+          withCrn(offenderDetails.otherIds.crn)
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+          withCompletedAt(OffsetDateTime.now())
+        }
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withYieldedPremises {
+            temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+              withProbationRegion(userEntity.probationRegion)
+            }
+          }
+          withApplication(application)
+        }
+
+        val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+          withServiceScope("*")
+        }
+
+        val cancellation = cancellationEntityFactory.produceAndPersist {
+          withBooking(booking)
+          withReason(cancellationReason)
+        }
+        booking.cancellations = mutableListOf(cancellation)
+
+        webTestClient.post()
+          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewCancellation(
+              date = LocalDate.parse("2022-08-18"),
+              reason = cancellationReason.id,
+              notes = "Corrected date",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+          .jsonPath(".date").isEqualTo("2022-08-18")
+          .jsonPath(".notes").isEqualTo("Corrected date")
+          .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
+          .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
+          .jsonPath(".reason.isActive").isEqualTo(true)
+          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+
+        assertPublishedSNSEvent(
+          booking,
+          "accommodation.cas3.booking.cancelled.updated",
+          "A cancelled booking for a Transitional Accommodation premises has been updated",
+          "http://api/events/cas3/booking-cancelled-updated",
+        )
+
+        assertCAS3AssessmentIsClosed(assessment)
+      }
+    }
+  }
+
+  @Test
   fun `Create Extension without JWT returns 401`() {
     webTestClient.post()
       .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/extensions")
@@ -3906,6 +4060,22 @@ class BookingTest : IntegrationTestBase() {
   }
 
   private fun assertClosedCAS3Assessment(assessment: TemporaryAccommodationAssessmentEntity) {
+    val temporaryAccommodationAssessmentEntity =
+      temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)
+
+    assertThat(temporaryAccommodationAssessmentEntity!!.completedAt).isNotNull()
+  }
+
+  private fun assertCAS3AssessmentIsReadyToPlace(assessment: TemporaryAccommodationAssessmentEntity) {
+    val temporaryAccommodationAssessmentEntity =
+      temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)
+
+    assertThat(temporaryAccommodationAssessmentEntity!!.completedAt).isNull()
+    assertThat(temporaryAccommodationAssessmentEntity!!.decision).isEqualTo(AssessmentDecision.ACCEPTED)
+    assertThat(temporaryAccommodationAssessmentEntity!!.submittedAt).isNotNull()
+  }
+
+  private fun assertCAS3AssessmentIsClosed(assessment: TemporaryAccommodationAssessmentEntity) {
     val temporaryAccommodationAssessmentEntity =
       temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)
 

@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedMoveEntity
@@ -78,13 +79,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.Instant
@@ -1339,6 +1337,7 @@ class BookingService(
     cancelledAt: LocalDate,
     reasonId: UUID,
     notes: String?,
+    user: UserEntity,
   ) = validated<CancellationEntity> {
     val reason = cancellationReasonRepository.findByIdOrNull(reasonId)
     if (reason == null) {
@@ -1368,6 +1367,10 @@ class BookingService(
     when (isFirstCancellations) {
       true -> cas3DomainEventService.saveBookingCancelledEvent(booking)
       else -> cas3DomainEventService.saveBookingCancelledUpdatedEvent(booking)
+    }
+
+    booking.application?.getLatestAssessment()?.let { applicationEntity ->
+      moveTransitionalAccommodationAssessmentToReadyToPlace(user, applicationEntity, booking.id)
     }
 
     return success(cancellationEntity)
@@ -1821,25 +1824,42 @@ class BookingService(
     return Triple(applicationId, eventNumber, submittedAt)
   }
 
-  @SuppressWarnings("ThrowsCount", "TooGenericExceptionCaught")
+  @SuppressWarnings("TooGenericExceptionCaught")
+  private fun moveTransitionalAccommodationAssessmentToReadyToPlace(
+    user: UserEntity,
+    applicationEntity: AssessmentEntity,
+    bookingId: UUID,
+  ) {
+    try {
+      extractEntityFromNestedAuthorisableValidatableActionResult(
+        assessmentService.acceptAssessment(
+          user,
+          applicationEntity.id,
+          applicationEntity.document,
+          null,
+          null,
+          "Automatically moved to ready-to-place after booking is cancelled",
+        ),
+      )
+    } catch (exception: Exception) {
+      log.error("Unable to move CAS3 assessment ${applicationEntity.id} to ready-to-place queue for $bookingId ")
+      Sentry.captureException(
+        RuntimeException(
+          "Unable to move CAS3 assessment ${applicationEntity.id} for ready-to-place queue for $bookingId ",
+          exception,
+        ),
+      )
+    }
+  }
+
+  @SuppressWarnings("TooGenericExceptionCaught")
   private fun closeTransitionalAccommodationAssessment(
     assessmentId: UUID,
     user: UserEntity,
     booking: BookingEntity,
   ) {
     try {
-      val assessmentValidationResult = when (val assessmentAuthResult = assessmentService.closeAssessment(user, assessmentId)) {
-        is AuthorisableActionResult.Success -> assessmentAuthResult.entity
-        is AuthorisableActionResult.NotFound -> throw NotFoundProblem(assessmentId, "Assessment")
-        is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
-      }
-
-      when (assessmentValidationResult) {
-        is ValidatableActionResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = assessmentValidationResult.message)
-        is ValidatableActionResult.FieldValidationError -> throw BadRequestProblem(invalidParams = assessmentValidationResult.validationMessages)
-        is ValidatableActionResult.ConflictError -> throw ConflictProblem(id = assessmentValidationResult.conflictingEntityId, conflictReason = assessmentValidationResult.message)
-        is ValidatableActionResult.Success -> Unit
-      }
+      extractEntityFromNestedAuthorisableValidatableActionResult(assessmentService.closeAssessment(user, assessmentId))
     } catch (exception: Exception) {
       log.error("Unable to close CAS3 assessment $assessmentId for booking ${booking.id} ", exception)
       Sentry.captureException(RuntimeException("Unable to close CAS3 assessment $assessmentId for booking ${booking.id} ", exception))
