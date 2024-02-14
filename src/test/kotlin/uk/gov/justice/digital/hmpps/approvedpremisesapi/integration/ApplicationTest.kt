@@ -2978,7 +2978,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Withdraw Application 200`() {
+    fun `Withdraw Application 200 withdraws application and sends an email to application creator`() {
       `Given a User` { user, jwt ->
         val application = produceAndPersistBasicApplication("ABC123", user, "TEAM")
 
@@ -3009,34 +3009,14 @@ class ApplicationTest : IntegrationTestBase() {
 
         val updatedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
         assertThat(updatedAssessment.isWithdrawn).isTrue
+
+        emailNotificationAsserter.assertEmailRequested(
+          user.email!!,
+          notifyConfig.templates.applicationWithdrawn,
+        )
       }
     }
 
-    @Test
-    fun `Withdrawing an application sends a withdrawal email`() {
-      `Given a User` { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          val (application, _) = produceAndPersistApplicationAndAssessment(user, user, offenderDetails)
-
-          webTestClient.post()
-            .uri("/applications/${application.id}/withdrawal")
-            .header("Authorization", "Bearer $jwt")
-            .bodyValue(
-              NewWithdrawal(
-                reason = WithdrawalReason.duplicateApplication,
-              ),
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
-
-          emailNotificationAsserter.assertEmailRequested(
-            user.email!!,
-            notifyConfig.templates.applicationWithdrawn,
-          )
-        }
-      }
-    }
   }
 
   @Nested

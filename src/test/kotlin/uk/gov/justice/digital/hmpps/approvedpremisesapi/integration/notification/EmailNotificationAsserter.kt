@@ -12,7 +12,7 @@ class EmailNotificationAsserter {
   private val requestedEmails = mutableListOf<EmailRequest>()
 
   @EventListener
-  fun emailRequested(emailRequested: SendEmailRequestedEvent) {
+  fun consumeEmailRequestedEvent(emailRequested: SendEmailRequestedEvent) {
     requestedEmails.add(emailRequested.request)
   }
 

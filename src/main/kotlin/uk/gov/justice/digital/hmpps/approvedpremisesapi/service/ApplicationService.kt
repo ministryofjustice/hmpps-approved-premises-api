@@ -612,9 +612,9 @@ class ApplicationService(
     userAccessService.userMayWithdrawApplication(user, application)
 
   fun sendEmailApplicationWithdrawn(user: UserEntity, application: ApplicationEntity, premisesName: String?) {
-    if (user.email != null) {
+    user.email?.let { email ->
       emailNotificationService.sendEmail(
-        email = user.email!!,
+        email = email,
         templateId = notifyConfig.templates.applicationWithdrawn,
         personalisation = mapOf(
           "name" to user.name,
