@@ -1,11 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Appeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
@@ -293,6 +297,45 @@ class AppealsTest : IntegrationTestBase() {
             it.decision == AppealDecision.accepted &&
             it.decisionDetail == "Some details about the decision." &&
             it.assessmentId == assessment.id
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `Create new appeal adds an event to the application timeline`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
+      `Given an Assessment for Approved Premises`(userEntity, userEntity) { assessment, application ->
+        val result = webTestClient.post()
+          .uri("/applications/${application.id}/appeals")
+          .bodyValue(
+            NewAppeal(
+              appealDate = LocalDate.parse("2024-01-01"),
+              appealDetail = "Some details about the appeal.",
+              reviewer = "Someone Else",
+              decision = AppealDecision.accepted,
+              decisionDetail = "Some details about the decision.",
+            ),
+          )
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .returnResult(Appeal::class.java)
+
+        val timelineResult = webTestClient.get()
+          .uri("/applications/${application.id}/timeline")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.approvedPremises.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult(String::class.java)
+
+        val timeline = objectMapper.readValue<List<TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
+
+        assertThat(timeline).anyMatch {
+          it.type == TimelineEventType.approvedPremisesAssessmentAppealed
         }
       }
     }

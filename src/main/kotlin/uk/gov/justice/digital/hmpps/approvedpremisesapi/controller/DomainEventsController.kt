@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.EventsApiDelegate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
@@ -86,6 +87,13 @@ class DomainEventsController(
 
   override fun eventsApplicationWithdrawnEventIdGet(eventId: UUID): ResponseEntity<ApplicationWithdrawnEnvelope> {
     val event = domainEventService.getApplicationWithdrawnEvent(eventId)
+      ?: throw NotFoundProblem(eventId, "DomainEvent")
+
+    return ResponseEntity.ok(event.data)
+  }
+
+  override fun eventsAssessmentAppealedEventIdGet(eventId: UUID): ResponseEntity<AssessmentAppealedEnvelope> {
+    val event = domainEventService.getAssessmentAppealedEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
     return ResponseEntity.ok(event.data)

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
@@ -12,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAppealedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationSubmittedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationWithdrawnFactory
@@ -607,6 +609,63 @@ class DomainEventTest : IntegrationTestBase() {
       .expectStatus()
       .isOk
       .expectBody(ApplicationWithdrawnEnvelope::class.java)
+      .returnResult()
+
+    assertThat(response.responseBody).isEqualTo(envelopedData)
+  }
+
+  @Test
+  fun `Get Assessment Appealed Event without JWT returns 401`() {
+    webTestClient.get()
+      .uri("/events/assessment-appealed/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
+      .exchange()
+      .expectStatus()
+      .isUnauthorized
+  }
+
+  @Test
+  fun `Get Assessment Appealed Event without ROLE_APPROVED_PREMISES_EVENTS returns 403`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+    )
+
+    webTestClient.get()
+      .uri("/events/assessment-appealed/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
+  fun `Get Assessment Appealed Event returns 200 with correct body`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
+    )
+
+    val eventId = UUID.randomUUID()
+
+    val envelopedData = AssessmentAppealedEnvelope(
+      id = eventId,
+      timestamp = Instant.now(),
+      eventType = "approved-premises.assessment.appealed",
+      eventDetails = AssessmentAppealedFactory().produce(),
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventId)
+      withType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED)
+      withData(objectMapper.writeValueAsString(envelopedData))
+    }
+
+    val response = webTestClient.get()
+      .uri("/events/assessment-appealed/${event.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(AssessmentAppealedEnvelope::class.java)
       .returnResult()
 
     assertThat(response.responseBody).isEqualTo(envelopedData)

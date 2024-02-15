@@ -218,6 +218,7 @@ url-templates:
       booking-cancelled-event-detail: http://localhost:3000/events/booking-cancelled/#eventId
       booking-changed-event-detail: http://localhost:3000/events/booking-changed/#eventId
       application-withdrawn-event-detail: http://localhost:3000/events/application-withdrawn/#eventId
+      assessment-appealed-event-detail: http://localhost:3000/events/assessment-appealed/#eventId
     cas2:
       application-submitted-event-detail: http://localhost:3000/events/cas2/application-submitted/#eventId
       application-status-updated-event-detail: http://localhost:3000/events/cas2/application-status-updated/#eventId
@@ -235,6 +236,7 @@ url-templates:
       person-departure-updated-event-detail: http://localhost:3000/events/cas3/person-departure-updated/#eventId
   frontend:
     application: http://localhost:3000/applications/#id
+    application-appeal: http://localhost:3000/applications/#applicationId/appeals/#appealId
     assessment: http://localhost:3000/assessments/#id
     booking: http://localhost:3000/premises/#premisesId/bookings/#bookingId
     cas2:

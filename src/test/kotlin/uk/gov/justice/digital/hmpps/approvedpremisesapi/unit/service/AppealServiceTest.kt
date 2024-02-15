@@ -1,7 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
@@ -9,28 +12,49 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EmptySource
 import org.junit.jupiter.params.provider.ValueSource
+import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AppealEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
 import java.util.Optional
 import java.util.UUID
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AppealDecision as DomainEventApiAppealDecision
 
 class AppealServiceTest {
   private val appealRepository = mockk<AppealRepository>()
+  private val domainEventService = mockk<DomainEventService>()
+  private val communityApiClient = mockk<CommunityApiClient>()
+  private val applicationUrlTemplate = mockk<UrlTemplate>()
+  private val applicationAppealUrlTemplate = mockk<UrlTemplate>()
 
-  private val appealService = AppealService(appealRepository)
+  private val appealService = AppealService(
+    appealRepository,
+    domainEventService,
+    communityApiClient,
+    applicationUrlTemplate,
+    applicationAppealUrlTemplate,
+  )
 
   private val probationRegion = ProbationRegionEntityFactory()
     .withApArea(
@@ -43,6 +67,10 @@ class AppealServiceTest {
     .withProbationRegion(probationRegion)
     .produce()
 
+  private val staffUserDetails = StaffUserDetailsFactory()
+    .withUsername(createdByUser.deliusUsername)
+    .produce()
+
   private val application = ApprovedPremisesApplicationEntityFactory()
     .withCreatedByUser(createdByUser)
     .produce()
@@ -50,6 +78,8 @@ class AppealServiceTest {
   private val assessment = ApprovedPremisesAssessmentEntityFactory()
     .withApplication(application)
     .produce()
+
+  private val appealId = UUID.randomUUID()
 
   @Nested
   inner class GetAppeal {
@@ -242,36 +272,85 @@ class AppealServiceTest {
       val now = LocalDate.now()
 
       every { appealRepository.save(any()) } returnsArgument 0
+      every { domainEventService.saveAssessmentAppealedEvent(any()) } just Runs
+      every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+      every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
+      every { applicationAppealUrlTemplate.resolve(any()) } returns "http://frontend/applications/${application.id}/appeals/$appealId"
 
-      val result = appealService.createAppeal(
-        now,
-        "Some information about why the appeal is being made",
-        "ReviewBot 9000",
-        AppealDecision.accepted,
-        "Some information about the decision made",
-        application,
-        assessment,
-        createdByUser,
-      )
+      mockkStatic(UUID::class) {
+        every { UUID.randomUUID() } returns appealId
 
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      result as AuthorisableActionResult.Success
-      assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
-      val resultEntity = result.entity as ValidatableActionResult.Success
-      assertThat(resultEntity.entity).matches {
-        it.matches(now)
-      }
-      verify(exactly = 1) {
-        appealRepository.save(
-          match {
-            it.matches(now)
-          },
+        val result = appealService.createAppeal(
+          now,
+          "Some information about why the appeal is being made",
+          "ReviewBot 9000",
+          AppealDecision.accepted,
+          "Some information about the decision made",
+          application,
+          assessment,
+          createdByUser,
         )
+
+        assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+        result as AuthorisableActionResult.Success
+        assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
+        val resultEntity = result.entity as ValidatableActionResult.Success
+        assertThat(resultEntity.entity).matches {
+          it.matches(now)
+        }
+        verify(exactly = 1) {
+          appealRepository.save(
+            match {
+              it.matches(now)
+            },
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Creates a domain event`() {
+      createdByUser.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
+
+      val now = LocalDate.now()
+
+      every { appealRepository.save(any()) } returnsArgument 0
+      every { domainEventService.saveAssessmentAppealedEvent(any()) } just Runs
+      every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+      every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
+      every { applicationAppealUrlTemplate.resolve(any()) } returns "http://frontend/applications/${application.id}/appeals/$appealId"
+
+      mockkStatic(UUID::class) {
+        every { UUID.randomUUID() } returns appealId
+
+        val result = appealService.createAppeal(
+          now,
+          "Some information about why the appeal is being made",
+          "ReviewBot 9000",
+          AppealDecision.accepted,
+          "Some information about the decision made",
+          application,
+          assessment,
+          createdByUser,
+        )
+
+        assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+        result as AuthorisableActionResult.Success
+        assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
+
+        verify(exactly = 1) {
+          domainEventService.saveAssessmentAppealedEvent(
+            match {
+              it.matches()
+            },
+          )
+        }
       }
     }
 
     private fun AppealEntity.matches(now: LocalDate) =
-      this.appealDate == now &&
+      this.id == appealId &&
+        this.appealDate == now &&
         this.appealDetail == "Some information about why the appeal is being made" &&
         this.reviewer == "ReviewBot 9000" &&
         this.decision == AppealDecision.accepted.value &&
@@ -279,5 +358,35 @@ class AppealServiceTest {
         this.application == application &&
         this.assessment == assessment &&
         this.createdBy == createdByUser
+
+    private fun DomainEvent<AssessmentAppealedEnvelope>.matches() =
+      this.applicationId == application.id &&
+        this.assessmentId == null &&
+        this.bookingId == null &&
+        this.crn == application.crn &&
+        withinSeconds(10).matches(this.occurredAt.toString()) &&
+        this.data.matches()
+
+    private fun AssessmentAppealedEnvelope.matches() =
+      this.eventDetails.applicationId == application.id &&
+        this.eventDetails.applicationUrl == "http://frontend/applications/${application.id}" &&
+        this.eventDetails.appealId == appealId &&
+        this.eventDetails.appealUrl == "http://frontend/applications/${application.id}/appeals/$appealId" &&
+        this.eventDetails.personReference.crn == application.crn &&
+        this.eventDetails.personReference.noms == application.nomsNumber &&
+        this.eventDetails.deliusEventNumber == application.eventNumber &&
+        withinSeconds(10).matches(this.eventDetails.createdAt.toString()) &&
+        this.eventDetails.createdBy.matches() &&
+        this.eventDetails.reviewer == "ReviewBot 9000" &&
+        this.eventDetails.appealDetail == "Some information about why the appeal is being made" &&
+        this.eventDetails.decision == DomainEventApiAppealDecision.accepted &&
+        this.eventDetails.decisionDetail == "Some information about the decision made"
+
+    private fun StaffMember.matches() =
+      this.staffCode == staffUserDetails.staffCode &&
+        this.staffIdentifier == staffUserDetails.staffIdentifier &&
+        this.forenames == staffUserDetails.staff.forenames &&
+        this.surname == staffUserDetails.staff.surname &&
+        this.username == staffUserDetails.username
   }
 }

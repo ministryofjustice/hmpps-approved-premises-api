@@ -209,6 +209,7 @@ class ApplicationTimelineTransformerTest {
       DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED to TimelineEventType.approvedPremisesBookingCancelled,
       DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED to TimelineEventType.approvedPremisesBookingChanged,
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN to TimelineEventType.approvedPremisesApplicationWithdrawn,
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED to TimelineEventType.approvedPremisesAssessmentAppealed,
     )
   }
 }

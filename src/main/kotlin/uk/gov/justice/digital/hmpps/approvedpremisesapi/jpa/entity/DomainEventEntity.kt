@@ -5,6 +5,7 @@ import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
@@ -94,6 +95,8 @@ data class DomainEventEntity(
         objectMapper.readValue(this.data, T::class.java)
       T::class == ApplicationWithdrawnEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN ->
         objectMapper.readValue(this.data, T::class.java)
+      T::class == AssessmentAppealedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED ->
+        objectMapper.readValue(this.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${this.type.name}")
     }
 
@@ -120,6 +123,7 @@ enum class DomainEventType {
   APPROVED_PREMISES_BOOKING_CANCELLED,
   APPROVED_PREMISES_BOOKING_CHANGED,
   APPROVED_PREMISES_APPLICATION_WITHDRAWN,
+  APPROVED_PREMISES_ASSESSMENT_APPEALED,
   CAS2_APPLICATION_SUBMITTED,
   CAS2_APPLICATION_STATUS_UPDATED,
   CAS3_BOOKING_CANCELLED,

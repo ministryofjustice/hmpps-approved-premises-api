@@ -11,6 +11,7 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAppealedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationSubmittedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationWithdrawnFactory
@@ -66,6 +68,7 @@ class DomainEventServiceTest {
     bookingCancelledDetailUrlTemplate = "http://api/events/booking-cancelled/#eventId",
     bookingChangedDetailUrlTemplate = "http://api/events/booking-changed/#eventId",
     applicationWithdrawnDetailUrlTemplate = "http://api/events/application-withdrawn/#eventId",
+    assessmentAppealedDetailUrlTemplate = "http://api/events/assessment-appealed/#eventId",
   )
 
   @Test
@@ -1608,6 +1611,149 @@ class DomainEventServiceTest {
         match {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 0) {
+      domainEventWorkerMock.emitEvent(any(), any())
+    }
+  }
+
+  @Test
+  fun `getAssessmentAppealedEvent returns null when event does not exist`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+
+    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
+
+    assertThat(domainEventService.getAssessmentAppealedEvent(id)).isNull()
+  }
+
+  @Test
+  fun `getAssessmentAppealedEvent returns event`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    val data = AssessmentAppealedEnvelope(
+      id = id,
+      timestamp = occurredAt.toInstant(),
+      eventType = "approved-premises.assessment.appealed",
+      eventDetails = AssessmentAppealedFactory().produce(),
+    )
+
+    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
+      .withId(id)
+      .withApplicationId(applicationId)
+      .withCrn(crn)
+      .withType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED)
+      .withData(objectMapper.writeValueAsString(data))
+      .withOccurredAt(occurredAt)
+      .produce()
+
+    val event = domainEventService.getAssessmentAppealedEvent(id)
+    assertThat(event).isEqualTo(
+      DomainEvent(
+        id = id,
+        applicationId = applicationId,
+        crn = "CRN",
+        occurredAt = occurredAt.toInstant(),
+        data = data,
+      ),
+    )
+  }
+
+  @Test
+  fun `saveAssessmentAppealedEvent persists event, emits event to SNS`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = AssessmentAppealedEnvelope(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = "approved-premises.assessment.appealed",
+        eventDetails = AssessmentAppealedFactory().produce(),
+      ),
+    )
+
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
+
+    domainEventService.saveAssessmentAppealedEvent(domainEventToSave)
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 1) {
+      domainEventWorkerMock.emitEvent(
+        match {
+          it.eventType == "approved-premises.assessment.appealed" &&
+            it.version == 1 &&
+            it.description == "An Approved Premises Assessment has been appealed" &&
+            it.detailUrl == "http://api/events/assessment-appealed/$id" &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.additionalInformation.applicationId == applicationId &&
+            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
+        },
+        domainEventToSave.id,
+      )
+    }
+  }
+
+  @Test
+  fun `saveAssessmentAppealedEvent does not emit event to SNS if event fails to persist to database`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = AssessmentAppealedEnvelope(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = "approved-premises.assessment.appealed",
+        eventDetails = AssessmentAppealedFactory().produce(),
+      ),
+    )
+
+    try {
+      domainEventService.saveAssessmentAppealedEvent(domainEventToSave)
+    } catch (_: Exception) {
+    }
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)

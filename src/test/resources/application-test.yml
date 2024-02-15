@@ -134,6 +134,7 @@ url-templates:
       booking-cancelled-event-detail: http://api/events/booking-cancelled/#eventId
       booking-changed-event-detail: http://api/events/booking-changed/#eventId
       application-withdrawn-event-detail: http://api/events/application-withdrawn/#eventId
+      assessment-appealed-event-detail: http://api/events/assessment-appealed/#eventId
     cas2:
       application-submitted-event-detail: http://api/events/cas2/application-submitted/#eventId
     cas3:
@@ -150,6 +151,7 @@ url-templates:
       referral-submitted-event-detail: http://api/events/cas3/referral-submitted/#eventId
   frontend:
     application: http://frontend/applications/#id
+    application-appeal: http://frontend/applications/#applicationId/appeals/#appealId
     assessment: http://frontend/assessments/#id
     booking: http://frontend/premises/#premisesId/bookings/#bookingId
     cas2:

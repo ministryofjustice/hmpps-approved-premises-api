@@ -25,6 +25,7 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> buildBookingCancelledDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> "The booking had its arrival or departure date changed"
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> "The application was withdrawn"
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> buildAssessmentAppealedDescription(domainEventSummary)
       else -> throw IllegalArgumentException("Only CAS1 is currently supported")
     }
   }
@@ -62,6 +63,11 @@ class DomainEventDescriber(
   private fun buildBookingCancelledDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getBookingCancelledEvent(domainEventSummary.id())
     return event.describe { "The booking was cancelled. The reason was: ${it.eventDetails.cancellationReason}" }
+  }
+
+  private fun buildAssessmentAppealedDescription(domainEventSummary: DomainEventSummary): String? {
+    val event = domainEventService.getAssessmentAppealedEvent(domainEventSummary.id())
+    return event.describe { "The assessment was appealed and ${it.eventDetails.decision.value}. The reason was: ${it.eventDetails.decisionDetail}" }
   }
 
   private fun DomainEventSummary.id(): UUID = UUID.fromString(this.id)
