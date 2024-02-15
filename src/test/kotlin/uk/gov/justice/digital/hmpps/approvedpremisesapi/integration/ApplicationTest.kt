@@ -2990,6 +2990,7 @@ class ApplicationTest : IntegrationTestBase() {
           withApplication(application)
           withAllocatedToUser(user)
           withAssessmentSchema(assessmentSchema)
+          withSubmittedAt(OffsetDateTime.now())
         }
 
         webTestClient.post()
@@ -3015,6 +3016,48 @@ class ApplicationTest : IntegrationTestBase() {
           user.email!!,
           notifyConfig.templates.applicationWithdrawn,
         )
+      }
+    }
+
+    @Test
+    fun `Withdraw Application 200 withdraws application and sends an email to assessor if assessment is pending`() {
+      `Given a User` { applicant, jwt ->
+        `Given a User` { assessor, _ ->
+          val application = produceAndPersistBasicApplication("ABC123", applicant, "TEAM")
+
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withAllocatedToUser(assessor)
+            withAssessmentSchema(assessmentSchema)
+            withSubmittedAt(null)
+          }
+
+          webTestClient.post()
+            .uri("/applications/${application.id}/withdrawal")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewWithdrawal(
+                reason = WithdrawalReason.duplicateApplication,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          emailNotificationAsserter.assertEmailsRequestedCount(2)
+          emailNotificationAsserter.assertEmailRequested(
+            applicant.email!!,
+            notifyConfig.templates.applicationWithdrawn,
+          )
+          emailNotificationAsserter.assertEmailRequested(
+            assessor.email!!,
+            notifyConfig.templates.assessmentWithdrawn,
+          )
+        }
       }
     }
 
