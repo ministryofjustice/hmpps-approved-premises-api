@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -66,6 +67,7 @@ class PlacementRequestService(
   private val userAllocator: UserAllocator,
   @Lazy private val bookingService: BookingService,
   private val userAccessService: UserAccessService,
+  @Lazy private val applicationService: ApplicationService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
 
@@ -296,6 +298,7 @@ class PlacementRequestService(
       .findByApplication(application)
       .filter { it.isInWithdrawableState() && userAccessService.userMayWithdrawPlacementRequest(user, it) }
 
+  @Transactional
   fun withdrawPlacementRequest(
     placementRequestId: UUID,
     userProvidedReason: PlacementRequestWithdrawalReason?,
@@ -325,6 +328,8 @@ class PlacementRequestService(
 
     placementRequestRepository.save(placementRequest)
 
+    updateApplicationStatusOnWithdrawal(placementRequest, isUserRequestedWithdrawal)
+
     placementRequest.booking?.let { booking ->
       val bookingCancellationResult = bookingService.createCas1Cancellation(
         booking = booking,
@@ -345,6 +350,23 @@ class PlacementRequestService(
     }
 
     return AuthorisableActionResult.Success(Unit)
+  }
+
+  private fun updateApplicationStatusOnWithdrawal(placementRequest: PlacementRequestEntity,
+                                                  isUserRequestedWithdrawal: Boolean) {
+    if(!isUserRequestedWithdrawal) {
+      return
+    }
+
+    val application = placementRequest.application
+    val placementRequests = placementRequestRepository.findByApplication(application)
+    val anyActivePlacementRequests = placementRequests.any { it.isActive() }
+    if(!anyActivePlacementRequests) {
+      applicationService.updateApprovedPremisesApplicationStatus(
+        application.id,
+        ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST
+      )
+    }
   }
 
   private fun saveBookingNotMadeDomainEvent(
