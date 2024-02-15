@@ -144,6 +144,7 @@ class ApplicationsTransformer(
         status = getStatusFromSummary(domain),
         type = "CAS1",
         tier = domain.getTier(),
+        isWithdrawn = domain.getIsWithdrawn(),
       )
     }
 

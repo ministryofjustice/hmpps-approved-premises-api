@@ -191,6 +191,7 @@ class ApplicationServiceTest {
         override fun getSubmittedAt(): Timestamp? = null
         override fun getTier(): String? = null
         override fun getStatus(): String = ApprovedPremisesApplicationStatus.started.toString()
+        override fun getIsWithdrawn(): Boolean = false
       },
     )
 

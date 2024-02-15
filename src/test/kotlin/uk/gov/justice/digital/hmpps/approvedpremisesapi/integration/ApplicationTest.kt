@@ -516,6 +516,7 @@ class ApplicationTest : IntegrationTestBase() {
                   mappa = MappaEnvelope(RiskEnvelopeStatus.notFound),
                 ),
                 submittedAt = null,
+                isWithdrawn = false,
               ),
             ),
           ),

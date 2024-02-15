@@ -93,6 +93,10 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.placementApplication = { placementApplication }
   }
 
+  fun withWithdrawalReason(withdrawalReason: PlacementRequestWithdrawalReason) = apply {
+    this.withdrawalReason = { withdrawalReason }
+  }
+
   override fun produce(): PlacementRequestEntity = PlacementRequestEntity(
     id = this.id(),
     expectedArrival = this.expectedArrival(),

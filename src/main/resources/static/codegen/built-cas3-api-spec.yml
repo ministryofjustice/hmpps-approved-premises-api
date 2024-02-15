@@ -573,6 +573,10 @@ components:
           - NoCapacityDueToPlacementPrioritisation
           - NoCapacity
           - ErrorInPlacementRequest
+          - WithdrawnByPP
+          - RelatedApplicationWithdrawn
+          - RelatedPlacementRequestWithdrawn
+          - RelatedPlacementApplicationWithdrawn
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'
@@ -1825,9 +1829,12 @@ components:
               $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
             tier:
               type: string
+            isWithdrawn:
+              type: boolean
           required:
             - createdByUserId
             - status
+            - isWithdrawn
     TemporaryAccommodationApplicationSummary:
       allOf:
         - $ref: '#/components/schemas/ApplicationSummary'
@@ -3487,6 +3494,8 @@ components:
               type: boolean
             isWithdrawn:
               type: boolean
+            withdrawalReason:
+              $ref: '#/components/schemas/WithdrawPlacementRequestReason'
           required:
             - id
             - createdByUserId
@@ -3606,6 +3615,8 @@ components:
               $ref: '#/components/schemas/PlacementRequestRequestType'
             isWithdrawn:
               type: boolean
+            withdrawalReason:
+              $ref: '#/components/schemas/WithdrawPlacementRequestReason'
           required:
             - person
             - risks

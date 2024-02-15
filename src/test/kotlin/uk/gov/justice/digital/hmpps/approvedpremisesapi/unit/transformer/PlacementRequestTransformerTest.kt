@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -36,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingSummaryTransformer
@@ -181,6 +183,7 @@ class PlacementRequestTransformerTest {
         requestType = PlacementRequestRequestType.standardRelease,
         booking = null,
         isWithdrawn = false,
+        withdrawalReason = null,
       ),
     )
   }
@@ -367,10 +370,12 @@ class PlacementRequestTransformerTest {
     val placementRequestEntity = placementRequestFactory
       .withPlacementRequirements(placementRequirementsFactory.produce())
       .withIsWithdrawn(true)
+      .withWithdrawalReason(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
       .produce()
 
     val result = placementRequestTransformer.transformJpaToApi(placementRequestEntity, personInfo)
 
     assertThat(result.isWithdrawn).isEqualTo(true)
+    assertThat(result.withdrawalReason).isEqualTo(WithdrawPlacementRequestReason.duplicatePlacementRequest)
   }
 }

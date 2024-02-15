@@ -84,6 +84,10 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.placementType = { placementType }
   }
 
+  fun withWithdrawalReason(withdrawalReason: PlacementApplicationWithdrawalReason) = apply {
+    this.withdrawalReason = { withdrawalReason }
+  }
+
   override fun produce(): PlacementApplicationEntity = PlacementApplicationEntity(
     id = this.id(),
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
