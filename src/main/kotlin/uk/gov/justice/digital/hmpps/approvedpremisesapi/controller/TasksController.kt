@@ -134,12 +134,13 @@ class TasksController(
 
   override fun tasksGet(
     type: TaskType?,
+    types: List<TaskType>?,
     page: Int?,
     sortBy: TaskSortField?,
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
     apAreaId: UUID?,
-    allocatedToUserId: UUID?,
+    allocatedToUserId: UUID?
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
@@ -147,17 +148,12 @@ class TasksController(
       throw ForbiddenProblem()
     }
 
-    val taskEntityTypes = if (type == null) {
-      TaskEntityType.entries
+    val taskEntityTypes = if (types != null) {
+      types.map { toTaskEntityType(it) }
+    } else if (type != null) {
+      listOf(toTaskEntityType(type))
     } else {
-      listOf(
-        when (type) {
-          TaskType.assessment -> TaskEntityType.ASSESSMENT
-          TaskType.placementRequest -> TaskEntityType.PLACEMENT_REQUEST
-          TaskType.placementApplication -> TaskEntityType.PLACEMENT_APPLICATION
-          TaskType.bookingAppeal -> throw BadRequestProblem()
-        },
-      )
+      TaskEntityType.entries
     }
 
     return getAll(
@@ -169,6 +165,13 @@ class TasksController(
       apAreaId = apAreaId,
       allocatedToUserId = allocatedToUserId,
     )
+  }
+
+  private fun toTaskEntityType(taskType: TaskType) =  when (taskType) {
+    TaskType.assessment -> TaskEntityType.ASSESSMENT
+    TaskType.placementRequest -> TaskEntityType.PLACEMENT_REQUEST
+    TaskType.placementApplication -> TaskEntityType.PLACEMENT_APPLICATION
+    TaskType.bookingAppeal -> throw BadRequestProblem()
   }
 
   @Deprecated("Use tasksGet, specifying the allocatedToUserId")

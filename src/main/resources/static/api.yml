@@ -2769,9 +2769,18 @@ paths:
         - name: type
           in: query
           required: false
-          description: Returns tasks that match the given type. BookingAppeal is not supported
+          description: Returns tasks that match the given type. BookingAppeal is not supported. Deprecated - use 'types'
+          deprecated: true
           schema:
             $ref: '_shared.yml#/components/schemas/TaskType'
+        - name: types
+          in: query
+          required: false
+          description: Returns tasks that match the given types. BookingAppeal is not supported
+          schema:
+            type: array
+            items:
+              $ref: '_shared.yml#/components/schemas/TaskType'
         - name: page
           in: query
           required: false
