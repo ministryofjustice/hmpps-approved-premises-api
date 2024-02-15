@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteRepository
 import java.time.OffsetDateTime
@@ -45,7 +46,7 @@ class Cas2ApplicationNotesTest : IntegrationTestBase() {
   @Nested
   inner class ControlsOnExternalUsers {
     @Test
-    fun `creating a note is forbidden to external users based on role`() {
+    fun `creating a note is forbidden to external users who are not Assessors`() {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "auth",
@@ -82,17 +83,7 @@ class Cas2ApplicationNotesTest : IntegrationTestBase() {
 
   @Nested
   inner class PostToCreate {
-    @Test
-    fun `referrer create note returns 201`() {
-      val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
-
-      `Given a CAS2 User` { referrer, jwt ->
-        val applicationSchema =
-          cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-            withSchema(
-              """
+    val schema = """
                 {
                   "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
                   "${"\$id"}": "https://example.com/product.schema.json",
@@ -102,7 +93,18 @@ class Cas2ApplicationNotesTest : IntegrationTestBase() {
                   "properties": {},
                   "required": []
                 }
-              """,
+              """
+
+    @Test
+    fun `referrer create note returns 201`() {
+      val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+      `Given a CAS2 User` { referrer, jwt ->
+        val applicationSchema =
+          cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+            withSchema(
+              schema,
             )
           }
 
@@ -149,17 +151,7 @@ class Cas2ApplicationNotesTest : IntegrationTestBase() {
               withAddedAt(OffsetDateTime.now())
               withId(UUID.randomUUID())
               withSchema(
-                """
-                {
-                  "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                  "${"\$id"}": "https://example.com/product.schema.json",
-                  "title": "Thing",
-                  "description": "A thing",
-                  "type": "object",
-                  "properties": {},
-                  "required": []
-                }
-              """,
+                schema,
               )
             }
 
@@ -184,6 +176,54 @@ class Cas2ApplicationNotesTest : IntegrationTestBase() {
             .isForbidden
 
           Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
+        }
+      }
+    }
+
+    @Test
+    fun `assessors create note returns 201`() {
+      val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+      `Given a CAS2 User` { referrer, _ ->
+        `Given a CAS2 Assessor` { assessor, jwt ->
+          val applicationSchema =
+            cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(
+                schema,
+              )
+            }
+
+          cas2ApplicationEntityFactory.produceAndPersist {
+            withId(applicationId)
+            withCreatedByUser(referrer)
+            withApplicationSchema(applicationSchema)
+            withSubmittedAt(OffsetDateTime.now())
+          }
+
+          Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
+
+          val rawResponseBody = webTestClient.post()
+            .uri("/cas2/submissions/$applicationId/notes")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.cas2.value)
+            .bodyValue(
+              NewCas2ApplicationNote(note = "New note content"),
+            )
+            .exchange()
+            .expectStatus()
+            .isCreated()
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
+
+          val responseBody =
+            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+
+          Assertions.assertThat(responseBody.body).isEqualTo("New note content")
         }
       }
     }

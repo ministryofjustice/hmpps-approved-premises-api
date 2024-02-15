@@ -19,9 +19,8 @@ data class Cas2ApplicationNoteEntity(
   @Id
   val id: UUID,
 
-  @ManyToOne
-  @JoinColumn(name = "created_by_nomis_user_id")
-  val createdByNomisUser: NomisUserEntity,
+  @Transient
+  final val createdByUser: Cas2User,
 
   @ManyToOne
   @JoinColumn(name = "application_id")
@@ -31,5 +30,29 @@ data class Cas2ApplicationNoteEntity(
 
   var body: String,
 ) {
+
+  @ManyToOne
+  @JoinColumn(name = "created_by_nomis_user_id")
+  var createdByNomisUser: NomisUserEntity? = null
+
+  @ManyToOne
+  @JoinColumn(name = "created_by_external_user_id")
+  var createdByExternalUser: ExternalUserEntity? = null
+
+  init {
+    when (this.createdByUser) {
+      is NomisUserEntity -> this.createdByNomisUser = this.createdByUser
+      is ExternalUserEntity -> this.createdByExternalUser = this.createdByUser
+    }
+  }
+
+  fun getUser(): Cas2User {
+    return if (this.createdByNomisUser != null) {
+      this.createdByNomisUser!!
+    } else {
+      this.createdByExternalUser!!
+    }
+  }
+
   override fun toString() = "Cas2ApplicationNoteEntity: $id"
 }
