@@ -75,7 +75,7 @@ class ApplicationTimelineTransformerTest {
     val exception = assertThrows<RuntimeException> {
       applicationTimelineTransformer.transformDomainEventTypeToTimelineEventType(cas2DomainEventType)
     }
-    Assertions.assertThat(exception.message).isEqualTo("Only CAS1 is currently supported")
+    Assertions.assertThat(exception.message).isEqualTo("Cannot map CAS2_APPLICATION_SUBMITTED, only CAS1 is currently supported")
   }
 
   @Test

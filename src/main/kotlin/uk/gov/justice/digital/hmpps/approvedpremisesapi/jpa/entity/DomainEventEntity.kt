@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import java.time.OffsetDateTime
@@ -97,6 +98,8 @@ data class DomainEventEntity(
         objectMapper.readValue(this.data, T::class.java)
       T::class == AssessmentAppealedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED ->
         objectMapper.readValue(this.data, T::class.java)
+      T::class == PlacementApplicationWithdrawnEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN ->
+        objectMapper.readValue(this.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${this.type.name}")
     }
 
@@ -124,6 +127,7 @@ enum class DomainEventType {
   APPROVED_PREMISES_BOOKING_CHANGED,
   APPROVED_PREMISES_APPLICATION_WITHDRAWN,
   APPROVED_PREMISES_ASSESSMENT_APPEALED,
+  APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
   CAS2_APPLICATION_SUBMITTED,
   CAS2_APPLICATION_STATUS_UPDATED,
   CAS3_BOOKING_CANCELLED,

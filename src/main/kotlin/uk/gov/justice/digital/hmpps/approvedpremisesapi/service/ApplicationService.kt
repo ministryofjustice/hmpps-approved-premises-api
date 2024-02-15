@@ -9,13 +9,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnWithdrawnBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.WithdrawnBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -640,16 +640,16 @@ class ApplicationService(
       ),
       deliusEventNumber = application.eventNumber,
       withdrawnAt = eventOccurredAt,
-      withdrawnBy = getApplicationWithdrawnWithdrawnBy(staffDetails),
+      withdrawnBy = getWithdrawnBy(staffDetails),
       withdrawalReason = application.withdrawalReason!!,
       otherWithdrawalReason = application.otherWithdrawalReason,
     )
   }
 
-  private fun getApplicationWithdrawnWithdrawnBy(staffDetails: StaffUserDetails): ApplicationWithdrawnWithdrawnBy {
+  private fun getWithdrawnBy(staffDetails: StaffUserDetails): WithdrawnBy {
     val staffMember = getStaffMemberFromStaffUserDetail(staffDetails)
     val probationArea = getProbationAreaFromStaffUserDetails(staffDetails)
-    return ApplicationWithdrawnWithdrawnBy(staffMember, probationArea)
+    return WithdrawnBy(staffMember, probationArea)
   }
 
   private fun getProbationAreaFromStaffUserDetails(staffDetails: StaffUserDetails): ProbationArea {

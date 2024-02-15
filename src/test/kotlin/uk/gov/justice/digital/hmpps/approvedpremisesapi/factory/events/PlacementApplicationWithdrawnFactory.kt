@@ -2,8 +2,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.WithdrawnBy
@@ -12,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCa
 import java.time.Instant
 import java.util.UUID
 
-class ApplicationWithdrawnFactory : Factory<ApplicationWithdrawn> {
+class PlacementApplicationWithdrawnFactory : Factory<PlacementApplicationWithdrawn> {
   private var applicationId: Yielded<UUID> = { UUID.randomUUID() }
   private var applicationUrl: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var personReference: Yielded<PersonReference> = { PersonReferenceFactory().produce() }
@@ -59,7 +60,7 @@ class ApplicationWithdrawnFactory : Factory<ApplicationWithdrawn> {
     this.withdrawalReason = { withdrawalReason }
   }
 
-  override fun produce() = ApplicationWithdrawn(
+  override fun produce() = PlacementApplicationWithdrawn(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
     personReference = this.personReference(),
