@@ -2,17 +2,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Adjudication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.AdjudicationsPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Agency
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.adjudications.Results
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Adjudication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AdjudicationsPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Agency
 
 class AdjudicationsPageFactory : Factory<AdjudicationsPage> {
-  private var results: Yielded<Results> = {
-    Results(
-      content = listOf(
-        AdjudicationFactory().produce(),
-      ),
+  private var results: Yielded<List<Adjudication>> = {
+    listOf(
+      AdjudicationFactory().produce(),
     )
   }
 
@@ -22,12 +19,8 @@ class AdjudicationsPageFactory : Factory<AdjudicationsPage> {
     )
   }
 
-  fun withResults(content: List<Adjudication>) = apply {
-    this.results = {
-      Results(
-        content = content,
-      )
-    }
+  fun withResults(results: List<Adjudication>) = apply {
+    this.results = { results }
   }
 
   fun withAgencies(agencies: List<Agency>) = apply {
