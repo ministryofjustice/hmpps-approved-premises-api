@@ -5,7 +5,6 @@ import java.time.LocalDate
 data class TransitionalAccommodationReferralReportRow(
   val referralId: String?,
   val referralDate: LocalDate?,
-  val deliusNumber: String?,
   val personName: String?,
   val pncNumber: String?,
   val crn: String,
@@ -27,5 +26,6 @@ data class TransitionalAccommodationReferralReportRow(
   val sourceOfReferral: String?,
   val prisonName: String?,
   val prisonReleaseDate: LocalDate?,
+  val accommodationRequiredDate: LocalDate?,
   val bookingOffered: Boolean?,
 )
