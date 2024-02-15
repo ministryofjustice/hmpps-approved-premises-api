@@ -16,6 +16,7 @@ import java.util.UUID
 class PlacementApplicationWithdrawnFactory : Factory<PlacementApplicationWithdrawn> {
   private var applicationId: Yielded<UUID> = { UUID.randomUUID() }
   private var applicationUrl: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
+  private var placementApplicationId: Yielded<UUID> = { UUID.randomUUID() }
   private var personReference: Yielded<PersonReference> = { PersonReferenceFactory().produce() }
   private var deliusEventNumber: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var submittedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(7) }
@@ -63,6 +64,7 @@ class PlacementApplicationWithdrawnFactory : Factory<PlacementApplicationWithdra
   override fun produce() = PlacementApplicationWithdrawn(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
+    placementApplicationId = this.placementApplicationId(),
     personReference = this.personReference(),
     deliusEventNumber = this.deliusEventNumber(),
     withdrawnBy = WithdrawnBy(

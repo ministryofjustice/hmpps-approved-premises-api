@@ -4,8 +4,6 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.WithdrawnBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -18,8 +16,7 @@ class ApplicationWithdrawnFactory : Factory<ApplicationWithdrawn> {
   private var personReference: Yielded<PersonReference> = { PersonReferenceFactory().produce() }
   private var deliusEventNumber: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var submittedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(7) }
-  private var withdrawnByStaffMember: Yielded<StaffMember> = { StaffMemberFactory().produce() }
-  private var withdrawnByProbationArea: Yielded<ProbationArea> = { ProbationAreaFactory().produce() }
+  private var withdrawnBy: Yielded<WithdrawnBy> = { WithdrawnByFactory().produce() }
   private var withdrawnAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(5) }
   private var withdrawalReason: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
 
@@ -43,13 +40,6 @@ class ApplicationWithdrawnFactory : Factory<ApplicationWithdrawn> {
     this.submittedAt = { submittedAt }
   }
 
-  fun withWithdrawnByStaffMember(staffMember: StaffMember) = apply {
-    this.withdrawnByStaffMember = { staffMember }
-  }
-
-  fun withWithdrawnByProbationArea(probationArea: ProbationArea) = apply {
-    this.withdrawnByProbationArea = { probationArea }
-  }
 
   fun withWithdrawnAt(withdrawnAt: Instant) = apply {
     this.withdrawnAt = { withdrawnAt }
@@ -64,10 +54,7 @@ class ApplicationWithdrawnFactory : Factory<ApplicationWithdrawn> {
     applicationUrl = this.applicationUrl(),
     personReference = this.personReference(),
     deliusEventNumber = this.deliusEventNumber(),
-    withdrawnBy = WithdrawnBy(
-      staffMember = this.withdrawnByStaffMember(),
-      probationArea = this.withdrawnByProbationArea(),
-    ),
+    withdrawnBy = this.withdrawnBy(),
     withdrawnAt = this.withdrawnAt(),
     withdrawalReason = this.withdrawalReason(),
   )

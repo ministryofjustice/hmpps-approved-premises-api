@@ -746,14 +746,16 @@ components:
           $ref: '#/components/schemas/WithdrawnBy'
         withdrawalReason:
           type: string
+          example: 'RELATED_APPLICATION_WITHDRAWN'
       required:
         - applicationId
         - applicationUrl
+        - placementApplicationId
         - personReference
         - deliusEventNumber
-        - assessedAt
-        - assessedBy
-        - decision
+        - withdrawnAt
+        - withdrawnBy
+        - withdrawalReason
     BookingMadeEnvelope:
       type: object
       properties:

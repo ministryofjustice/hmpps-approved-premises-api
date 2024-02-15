@@ -22,9 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -55,6 +53,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ProbationAreaFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -81,6 +82,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -122,6 +124,7 @@ class ApplicationServiceTest {
   private val mockApAreaRepository = mockk<ApAreaRepository>()
   private val applicationTimelineTransformerMock = mockk<ApplicationTimelineTransformer>()
   private val mockWithdrawableService = mockk<WithdrawableService>()
+  private val mockDomainEventTransformer = mockk<DomainEventTransformer>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -147,6 +150,7 @@ class ApplicationServiceTest {
     mockApAreaRepository,
     applicationTimelineTransformerMock,
     mockWithdrawableService,
+    mockDomainEventTransformer,
   )
 
   @Test
@@ -1293,6 +1297,13 @@ class ApplicationServiceTest {
         status = HttpStatus.OK,
         body = caseDetails,
       )
+
+      val domainEventStaffMember = StaffMemberFactory().produce()
+      every { mockDomainEventTransformer.toStaffMember(staffUserDetails) } returns domainEventStaffMember
+
+      val domainEventProbationArea = ProbationAreaFactory().produce()
+      every { mockDomainEventTransformer.toProbationArea(staffUserDetails) } returns domainEventProbationArea
+
       every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
       every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
@@ -1343,17 +1354,8 @@ class ApplicationServiceTest {
               data.age == Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years &&
               data.gender == ApplicationSubmitted.Gender.male &&
               data.submittedBy == ApplicationSubmittedSubmittedBy(
-              staffMember = StaffMember(
-                staffCode = staffUserDetails.staffCode,
-                staffIdentifier = staffUserDetails.staffIdentifier,
-                forenames = staffUserDetails.staff.forenames,
-                surname = staffUserDetails.staff.surname,
-                username = staffUserDetails.username,
-              ),
-              probationArea = ProbationArea(
-                code = staffUserDetails.probationArea.code,
-                name = staffUserDetails.probationArea.description,
-              ),
+              staffMember = domainEventStaffMember,
+              probationArea = domainEventProbationArea,
               team = Team(
                 code = caseDetails.case.manager.team.code,
                 name = caseDetails.case.manager.team.name,
@@ -1859,7 +1861,7 @@ class ApplicationServiceTest {
   @Nested
   inner class WithdrawApprovedPremisesApplication {
 
-      @Test
+    @Test
     fun `withdrawApprovedPremisesApplication returns NotFound if Application does not exist`() {
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
@@ -2004,17 +2006,10 @@ class ApplicationServiceTest {
       every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
+      val domainEventWithdrawnBy = WithdrawnByFactory().produce()
+      every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
       every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
       every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
-
-      val staffUserDetails = StaffUserDetailsFactory()
-        .withUsername(user.deliusUsername)
-        .produce()
-
-      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
-        HttpStatus.OK,
-        staffUserDetails,
-      )
 
       every { mockWithdrawableService.withdrawAllForApplication(application, user) } returns Unit
 
@@ -2080,17 +2075,10 @@ class ApplicationServiceTest {
       every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
+      val domainEventWithdrawnBy = WithdrawnByFactory().produce()
+      every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
       every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
       every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
-
-      val staffUserDetails = StaffUserDetailsFactory()
-        .withUsername(user.deliusUsername)
-        .produce()
-
-      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
-        HttpStatus.OK,
-        staffUserDetails,
-      )
 
       every { mockWithdrawableService.withdrawAllForApplication(application, user) } returns Unit
 
@@ -2154,18 +2142,11 @@ class ApplicationServiceTest {
       every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
 
-      every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
       every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
-      val staffUserDetails = StaffUserDetailsFactory()
-        .withUsername(user.deliusUsername)
-        .produce()
-
-      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
-        HttpStatus.OK,
-        staffUserDetails,
-      )
-
+      val domainEventWithdrawnBy = WithdrawnByFactory().produce()
+      every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
+      every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
       every { mockWithdrawableService.withdrawAllForApplication(application, user) } returns Unit
 
       applicationService.withdrawApprovedPremisesApplication(
@@ -2202,7 +2183,8 @@ class ApplicationServiceTest {
             ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.withdrawalReason == "alternative_identified_placement_no_longer_required" &&
-              data.otherWithdrawalReason == null
+              data.otherWithdrawalReason == null &&
+              data.withdrawnBy == domainEventWithdrawnBy
           },
         )
       }
