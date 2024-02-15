@@ -2978,7 +2978,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Withdraw Application 200`() {
+    fun `Withdraw Application 200 withdraws application and sends an email to application creator`() {
       `Given a User` { user, jwt ->
         val application = produceAndPersistBasicApplication("ABC123", user, "TEAM")
 
@@ -2990,6 +2990,7 @@ class ApplicationTest : IntegrationTestBase() {
           withApplication(application)
           withAllocatedToUser(user)
           withAssessmentSchema(assessmentSchema)
+          withSubmittedAt(OffsetDateTime.now())
         }
 
         webTestClient.post()
@@ -3009,14 +3010,31 @@ class ApplicationTest : IntegrationTestBase() {
 
         val updatedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
         assertThat(updatedAssessment.isWithdrawn).isTrue
+
+        emailNotificationAsserter.assertEmailsRequestedCount(1)
+        emailNotificationAsserter.assertEmailRequested(
+          user.email!!,
+          notifyConfig.templates.applicationWithdrawn,
+        )
       }
     }
 
     @Test
-    fun `Withdrawing an application sends a withdrawal email`() {
-      `Given a User` { user, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          val (application, _) = produceAndPersistApplicationAndAssessment(user, user, offenderDetails)
+    fun `Withdraw Application 200 withdraws application and sends an email to assessor if assessment is pending`() {
+      `Given a User` { applicant, jwt ->
+        `Given a User` { assessor, _ ->
+          val application = produceAndPersistBasicApplication("ABC123", applicant, "TEAM")
+
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withAllocatedToUser(assessor)
+            withAssessmentSchema(assessmentSchema)
+            withSubmittedAt(null)
+          }
 
           webTestClient.post()
             .uri("/applications/${application.id}/withdrawal")
@@ -3030,13 +3048,19 @@ class ApplicationTest : IntegrationTestBase() {
             .expectStatus()
             .isOk
 
+          emailNotificationAsserter.assertEmailsRequestedCount(2)
           emailNotificationAsserter.assertEmailRequested(
-            user.email!!,
+            applicant.email!!,
             notifyConfig.templates.applicationWithdrawn,
+          )
+          emailNotificationAsserter.assertEmailRequested(
+            assessor.email!!,
+            notifyConfig.templates.assessmentWithdrawn,
           )
         }
       }
     }
+
   }
 
   @Nested

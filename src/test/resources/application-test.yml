@@ -199,3 +199,7 @@ user-allocations:
         nat: JIMSNOWLDAP
     female-assessments:
       enabled: true
+
+notify:
+  send-placement-request-notifications: false
+  send-new-withdrawal-notifications: true

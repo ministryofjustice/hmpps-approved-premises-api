@@ -3,8 +3,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.notificatio
 import org.assertj.core.api.Assertions.assertThat
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
+import org.springframework.test.context.event.annotation.BeforeTestMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SendEmailRequestedEvent
+import kotlin.math.exp
 
 @Component
 class EmailNotificationAsserter {
@@ -12,8 +14,17 @@ class EmailNotificationAsserter {
   private val requestedEmails = mutableListOf<EmailRequest>()
 
   @EventListener
-  fun emailRequested(emailRequested: SendEmailRequestedEvent) {
+  fun consumeEmailRequestedEvent(emailRequested: SendEmailRequestedEvent) {
     requestedEmails.add(emailRequested.request)
+  }
+
+  @BeforeTestMethod
+  fun resetEmailList() {
+    requestedEmails.clear()
+  }
+
+  fun assertNoEmailsRequested() {
+    assertEmailsRequestedCount(0)
   }
 
   fun assertEmailRequested(toEmailAddress: String, templateId: String) {
@@ -23,5 +34,9 @@ class EmailNotificationAsserter {
       .withFailMessage {
         "Could not find email request. Provided email requests are $requestedEmails"
       }.isTrue
+  }
+
+  fun assertEmailsRequestedCount(expectedCount: Int) {
+    assertThat(requestedEmails.size).isEqualTo(expectedCount)
   }
 }
