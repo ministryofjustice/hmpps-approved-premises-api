@@ -42,7 +42,7 @@ data class Cas2StatusUpdateEntity(
   val statusUpdateDetails: List<Cas2StatusUpdateDetailEntity>? = null,
 
   @CreationTimestamp
-  var createdAt: OffsetDateTime? = null,
+  var createdAt: OffsetDateTime,
 ) {
   override fun toString() = "Cas2StatusEntity: $id"
 

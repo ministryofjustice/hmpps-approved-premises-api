@@ -77,6 +77,7 @@ class StatusUpdateService(
         statusId = status.id,
         description = status.description,
         label = status.label,
+        createdAt = OffsetDateTime.now(),
       ),
     )
 
