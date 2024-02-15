@@ -21,11 +21,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import java.net.URI
 import java.time.Instant
@@ -39,6 +41,7 @@ class DomainEventBuilder(
 ) {
   fun getBookingCancelledDomainEvent(
     booking: BookingEntity,
+    user: UserEntity?,
   ): DomainEvent<CAS3BookingCancelledEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -55,13 +58,14 @@ class DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.bookingCancelled,
-        eventDetails = buildCAS3BookingCancelledEventDetails(application, booking, cancellation),
+        eventDetails = buildCAS3BookingCancelledEventDetails(application, booking, cancellation, user),
       ),
     )
   }
 
   fun getBookingConfirmedDomainEvent(
     booking: BookingEntity,
+    user: UserEntity,
   ): DomainEvent<CAS3BookingConfirmedEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -88,6 +92,7 @@ class DomainEventBuilder(
           ),
           expectedArrivedAt = booking.arrivalDate.atStartOfDay().toInstant(ZoneOffset.UTC),
           notes = "",
+          confirmedBy = populateStaffMember(user),
         ),
       ),
     )
@@ -95,6 +100,7 @@ class DomainEventBuilder(
 
   fun getBookingProvisionallyMadeDomainEvent(
     booking: BookingEntity,
+    user: UserEntity,
   ): DomainEvent<CAS3BookingProvisionallyMadeEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -121,6 +127,7 @@ class DomainEventBuilder(
           ),
           expectedArrivedAt = booking.arrivalDate.atStartOfDay().toInstant(ZoneOffset.UTC),
           notes = "",
+          bookedBy = populateStaffMember(user),
         ),
       ),
     )
@@ -128,6 +135,7 @@ class DomainEventBuilder(
 
   fun getPersonArrivedDomainEvent(
     booking: BookingEntity,
+    user: UserEntity?,
   ): DomainEvent<CAS3PersonArrivedEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -144,13 +152,14 @@ class DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.personArrived,
-        eventDetails = createCas3PersonArrivedEventDetails(application, booking, arrival),
+        eventDetails = createCas3PersonArrivedEventDetails(application, booking, arrival, user),
       ),
     )
   }
 
   fun getPersonDepartedDomainEvent(
     booking: BookingEntity,
+    user: UserEntity?,
   ): DomainEvent<CAS3PersonDepartedEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -167,7 +176,7 @@ class DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.personDeparted,
-        eventDetails = buildCAS3PersonDepartedEventDetail(booking, application, departure),
+        eventDetails = buildCAS3PersonDepartedEventDetail(booking, application, departure, user),
       ),
     )
   }
@@ -201,6 +210,7 @@ class DomainEventBuilder(
 
   fun buildDepartureUpdatedDomainEvent(
     booking: BookingEntity,
+    user: UserEntity?,
   ): DomainEvent<CAS3PersonDepartureUpdatedEvent> {
     val domainEventId = UUID.randomUUID()
 
@@ -217,12 +227,12 @@ class DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.personDeparted,
-        eventDetails = buildCAS3PersonDepartedEventDetail(booking, application, departure),
+        eventDetails = buildCAS3PersonDepartedEventDetail(booking, application, departure, user),
       ),
     )
   }
 
-  fun getBookingCancelledUpdatedDomainEvent(booking: BookingEntity): DomainEvent<CAS3BookingCancelledUpdatedEvent> {
+  fun getBookingCancelledUpdatedDomainEvent(booking: BookingEntity, user: UserEntity?): DomainEvent<CAS3BookingCancelledUpdatedEvent> {
     val domainEventId = UUID.randomUUID()
     val cancellation = booking.cancellation!!
     val application = booking.application as? TemporaryAccommodationApplicationEntity
@@ -237,13 +247,14 @@ class DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.bookingCancelledUpdated,
-        eventDetails = buildCAS3BookingCancelledEventDetails(application, booking, cancellation),
+        eventDetails = buildCAS3BookingCancelledEventDetails(application, booking, cancellation, user),
       ),
     )
   }
 
   fun buildPersonArrivedUpdatedDomainEvent(
     booking: BookingEntity,
+    user: UserEntity?,
   ): DomainEvent<CAS3PersonArrivedUpdatedEvent> {
     val domainEventId = UUID.randomUUID()
     val arrival = booking.arrival!!
@@ -259,7 +270,7 @@ class DomainEventBuilder(
         id = domainEventId,
         timestamp = Instant.now(),
         eventType = EventType.personArrivedUpdated,
-        eventDetails = createCas3PersonArrivedEventDetails(application, booking, arrival),
+        eventDetails = createCas3PersonArrivedEventDetails(application, booking, arrival, user),
       ),
     )
   }
@@ -268,6 +279,7 @@ class DomainEventBuilder(
     booking: BookingEntity,
     application: TemporaryAccommodationApplicationEntity?,
     departure: DepartureEntity,
+    user: UserEntity?,
   ) = CAS3PersonDepartedEventDetails(
     personReference = PersonReference(
       crn = booking.crn,
@@ -293,12 +305,14 @@ class DomainEventBuilder(
     applicationId = application?.id,
     applicationUrl = application.toUrl(),
     reasonDetail = null,
+    recordedBy = user?.let { populateStaffMember(it) },
   )
 
   private fun buildCAS3BookingCancelledEventDetails(
     application: TemporaryAccommodationApplicationEntity?,
     booking: BookingEntity,
     cancellation: CancellationEntity,
+    user: UserEntity?,
   ) = CAS3BookingCancelledEventDetails(
     applicationId = application?.id,
     applicationUrl = application.toUrl(),
@@ -311,12 +325,14 @@ class DomainEventBuilder(
     cancellationReason = cancellation.reason.name,
     notes = cancellation.notes,
     cancelledAt = cancellation.date,
+    cancelledBy = user?.let { populateStaffMember(it) },
   )
 
   private fun createCas3PersonArrivedEventDetails(
     application: TemporaryAccommodationApplicationEntity?,
     booking: BookingEntity,
     arrival: ArrivalEntity,
+    user: UserEntity?,
   ) = CAS3PersonArrivedEventDetails(
     applicationId = application?.id,
     applicationUrl = application.toUrl(),
@@ -337,6 +353,7 @@ class DomainEventBuilder(
     arrivedAt = arrival.arrivalDateTime,
     expectedDepartureOn = arrival.expectedDepartureDate,
     notes = arrival.notes ?: "",
+    recordedBy = user?.let { populateStaffMember(it) },
   )
 
   private fun TemporaryAccommodationApplicationEntity?.toUrl(): URI? =
@@ -344,4 +361,10 @@ class DomainEventBuilder(
 
   private fun BookingEntity.toUrl(): URI =
     URI(bookingUrlTemplate.replace("#premisesId", this.premises.id.toString()).replace("#bookingId", this.id.toString()))
+
+  private fun populateStaffMember(it: UserEntity) = StaffMember(
+    staffCode = it.deliusStaffCode,
+    username = it.deliusUsername,
+    probationRegionCode = it.probationRegion.deliusCode,
+  )
 }

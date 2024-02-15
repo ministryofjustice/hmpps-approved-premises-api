@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.net.URI
@@ -18,6 +19,7 @@ class CAS3BookingCancelledEventDetailsFactory : Factory<CAS3BookingCancelledEven
   private var notes: Yielded<String?> = { randomStringMultiCaseWithNumbers(12) }
   private var applicationId: Yielded<UUID?> = { null }
   private var cancelledAt: Yielded<LocalDate?> = { LocalDate.now().randomDateBefore() }
+  private var cancelledBy: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
 
   fun withPersonReference(configuration: PersonReferenceFactory.() -> Unit) = apply {
     this.personReference = { PersonReferenceFactory().apply(configuration).produce() }
@@ -47,6 +49,10 @@ class CAS3BookingCancelledEventDetailsFactory : Factory<CAS3BookingCancelledEven
     this.cancelledAt = { date }
   }
 
+  fun withCancelledBy(staffMember: StaffMember?) = apply {
+    this.cancelledBy = { staffMember }
+  }
+
   override fun produce(): CAS3BookingCancelledEventDetails {
     val bookingId = this.bookingId()
     val applicationId = this.applicationId()
@@ -60,6 +66,7 @@ class CAS3BookingCancelledEventDetailsFactory : Factory<CAS3BookingCancelledEven
       applicationId = applicationId,
       applicationUrl = applicationId?.let { URI("http://api/applications/$it") },
       cancelledAt = this.cancelledAt(),
+      cancelledBy = this.cancelledBy(),
     )
   }
 }

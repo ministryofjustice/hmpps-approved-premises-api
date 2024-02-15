@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Premises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.net.URI
@@ -24,6 +25,7 @@ class CAS3PersonDepartedEventDetailsFactory : Factory<CAS3PersonDepartedEventDet
   private var moveOnCategory: Yielded<MoveOnCategory> = { MoveOnCategoryFactory().produce() }
   private var applicationId: Yielded<UUID?> = { null }
   private var reasonDetail: Yielded<String?> = { null }
+  private var recordedBy: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
 
   fun withPersonReference(configuration: PersonReferenceFactory.() -> Unit) = apply {
     this.personReference = { PersonReferenceFactory().apply(configuration).produce() }
@@ -69,6 +71,10 @@ class CAS3PersonDepartedEventDetailsFactory : Factory<CAS3PersonDepartedEventDet
     this.reasonDetail = { reasonDetail }
   }
 
+  fun withRecordedBy(staffMember: StaffMember?) = apply {
+    this.recordedBy = { staffMember }
+  }
+
   override fun produce(): CAS3PersonDepartedEventDetails {
     val bookingId = this.bookingId()
     val applicationId = this.applicationId()
@@ -86,6 +92,7 @@ class CAS3PersonDepartedEventDetailsFactory : Factory<CAS3PersonDepartedEventDet
       applicationId = applicationId,
       reasonDetail = this.reasonDetail(),
       applicationUrl = applicationId?.let { URI("http://api/applications/$it") },
+      recordedBy = this.recordedBy(),
     )
   }
 }

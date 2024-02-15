@@ -809,7 +809,7 @@ class BookingService(
 
       booking.turnarounds += turnaround
 
-      cas3DomainEventService.saveBookingProvisionallyMadeEvent(booking)
+      cas3DomainEventService.saveBookingProvisionallyMadeEvent(booking, user)
 
       if (assessmentId != null) {
         closeTransitionalAccommodationAssessment(assessmentId, user, booking)
@@ -1022,7 +1022,7 @@ class BookingService(
     booking.arrivals += arrivalEntity
 
     if (booking.premises is TemporaryAccommodationPremisesEntity) {
-      cas3DomainEventService.savePersonArrivedEvent(booking)
+      cas3DomainEventService.savePersonArrivedEvent(booking, user)
     }
 
     return success(arrivalEntity)
@@ -1065,8 +1065,8 @@ class BookingService(
     booking.arrivals += arrivalEntity
 
     when (isFirstArrival) {
-      true -> cas3DomainEventService.savePersonArrivedEvent(booking)
-      else -> cas3DomainEventService.savePersonArrivedUpdatedEvent(booking)
+      true -> cas3DomainEventService.savePersonArrivedEvent(booking, user)
+      else -> cas3DomainEventService.savePersonArrivedUpdatedEvent(booking, user)
     }
 
     return success(arrivalEntity)
@@ -1398,8 +1398,8 @@ class BookingService(
     booking.cancellations += cancellationEntity
 
     when (isFirstCancellations) {
-      true -> cas3DomainEventService.saveBookingCancelledEvent(booking)
-      else -> cas3DomainEventService.saveBookingCancelledUpdatedEvent(booking)
+      true -> cas3DomainEventService.saveBookingCancelledEvent(booking, user)
+      else -> cas3DomainEventService.saveBookingCancelledUpdatedEvent(booking, user)
     }
 
     booking.application?.getLatestAssessment()?.let { applicationEntity ->
@@ -1413,6 +1413,7 @@ class BookingService(
     booking: BookingEntity,
     dateTime: OffsetDateTime,
     notes: String?,
+    user: UserEntity,
   ) = validated<ConfirmationEntity> {
     if (booking.confirmation != null) {
       return generalError("This Booking already has a Confirmation set")
@@ -1432,7 +1433,7 @@ class BookingService(
     booking.confirmation = confirmationEntity
 
     if (booking.premises is TemporaryAccommodationPremisesEntity) {
-      cas3DomainEventService.saveBookingConfirmedEvent(booking)
+      cas3DomainEventService.saveBookingConfirmedEvent(booking, user)
     }
 
     return success(confirmationEntity)
@@ -1451,7 +1452,7 @@ class BookingService(
       createCas1Departure(user, booking, dateTime, reasonId, moveOnCategoryId, destinationProviderId, notes)
 
     is TemporaryAccommodationPremisesEntity ->
-      createCas3Departure(booking, dateTime, reasonId, moveOnCategoryId, notes)
+      createCas3Departure(booking, dateTime, reasonId, moveOnCategoryId, notes, user)
 
     else ->
       throw RuntimeException("Unknown premises type ${booking.premises::class.qualifiedName}")
@@ -1621,6 +1622,7 @@ class BookingService(
     reasonId: UUID,
     moveOnCategoryId: UUID,
     notes: String?,
+    user: UserEntity?,
   ) = validated<DepartureEntity> {
     if (booking.premises !is TemporaryAccommodationPremisesEntity) {
       throw RuntimeException("Only CAS3 bookings are supported")
@@ -1668,8 +1670,8 @@ class BookingService(
     booking.departures += departureEntity
 
     when (isFirstDeparture) {
-      true -> cas3DomainEventService.savePersonDepartedEvent(booking)
-      else -> cas3DomainEventService.savePersonDepartureUpdatedEvent(booking)
+      true -> cas3DomainEventService.savePersonDepartedEvent(booking, user)
+      else -> cas3DomainEventService.savePersonDepartureUpdatedEvent(booking, user)
     }
 
     return success(departureEntity)

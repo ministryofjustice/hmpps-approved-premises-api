@@ -195,7 +195,7 @@ class PlacementApplicationTransformerTest {
 
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
 
-    when(decision) {
+    when (decision) {
       PlacementApplicationDecision.ACCEPTED -> assertThat(result.isWithdrawn).isEqualTo(false)
       PlacementApplicationDecision.REJECTED -> assertThat(result.isWithdrawn).isEqualTo(false)
       PlacementApplicationDecision.WITHDRAW -> assertThat(result.isWithdrawn).isEqualTo(true)
@@ -206,5 +206,4 @@ class PlacementApplicationTransformerTest {
     assertThat(result.withdrawalReason).isEqualTo(WithdrawPlacementRequestReason.errorInPlacementRequest)
 
   }
-
 }

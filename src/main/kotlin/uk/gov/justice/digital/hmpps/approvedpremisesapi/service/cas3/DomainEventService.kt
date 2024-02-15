@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
@@ -99,8 +100,8 @@ class DomainEventService(
   }
 
   @Transactional
-  fun saveBookingCancelledEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.getBookingCancelledDomainEvent(booking)
+  fun saveBookingCancelledEvent(booking: BookingEntity, user: UserEntity?) {
+    val domainEvent = domainEventBuilder.getBookingCancelledDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -113,8 +114,8 @@ class DomainEventService(
   }
 
   @Transactional
-  fun saveBookingConfirmedEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.getBookingConfirmedDomainEvent(booking)
+  fun saveBookingConfirmedEvent(booking: BookingEntity, user: UserEntity) {
+    val domainEvent = domainEventBuilder.getBookingConfirmedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -127,8 +128,8 @@ class DomainEventService(
   }
 
   @Transactional
-  fun saveBookingProvisionallyMadeEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking)
+  fun saveBookingProvisionallyMadeEvent(booking: BookingEntity, user: UserEntity) {
+    val domainEvent = domainEventBuilder.getBookingProvisionallyMadeDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -141,8 +142,8 @@ class DomainEventService(
   }
 
   @Transactional
-  fun savePersonArrivedEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.getPersonArrivedDomainEvent(booking)
+  fun savePersonArrivedEvent(booking: BookingEntity, user: UserEntity?) {
+    val domainEvent = domainEventBuilder.getPersonArrivedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -155,8 +156,8 @@ class DomainEventService(
   }
 
   @Transactional
-  fun savePersonArrivedUpdatedEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.buildPersonArrivedUpdatedDomainEvent(booking)
+  fun savePersonArrivedUpdatedEvent(booking: BookingEntity, user: UserEntity?) {
+    val domainEvent = domainEventBuilder.buildPersonArrivedUpdatedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -169,8 +170,8 @@ class DomainEventService(
   }
 
   @Transactional
-  fun savePersonDepartedEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.getPersonDepartedDomainEvent(booking)
+  fun savePersonDepartedEvent(booking: BookingEntity, user: UserEntity?) {
+    val domainEvent = domainEventBuilder.getPersonDepartedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -197,8 +198,8 @@ class DomainEventService(
   }
 
   @Transactional
-  fun savePersonDepartureUpdatedEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.buildDepartureUpdatedDomainEvent(booking)
+  fun savePersonDepartureUpdatedEvent(booking: BookingEntity, user: UserEntity?) {
+    val domainEvent = domainEventBuilder.buildDepartureUpdatedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
@@ -283,8 +284,8 @@ class DomainEventService(
     else -> throw RuntimeException("Unrecognised domain event type: ${type.qualifiedName}")
   }
 
-  fun saveBookingCancelledUpdatedEvent(booking: BookingEntity) {
-    val domainEvent = domainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking)
+  fun saveBookingCancelledUpdatedEvent(booking: BookingEntity, user: UserEntity?) {
+    val domainEvent = domainEventBuilder.getBookingCancelledUpdatedDomainEvent(booking, user)
 
     saveAndEmit(
       domainEvent = domainEvent,
