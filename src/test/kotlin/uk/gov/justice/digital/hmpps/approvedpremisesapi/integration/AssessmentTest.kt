@@ -81,15 +81,7 @@ import java.util.UUID
 
 class AssessmentTest : IntegrationTestBase() {
   @Autowired
-  lateinit var inboundMessageListener: InboundMessageListener
-
-  @Autowired
   lateinit var assessmentTransformer: AssessmentTransformer
-
-  @BeforeEach
-  fun clearMessages() {
-    inboundMessageListener.clearMessages()
-  }
 
   @SuppressWarnings("LargeClass")
   @Nested
@@ -1835,7 +1827,7 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
             assertThat(persistedAssessment.submittedAt).isNotNull
 
-            val emittedMessage = inboundMessageListener.blockForMessage()
+            val emittedMessage = snsDomainEventListener.blockForMessage()
 
             assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
             assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
@@ -1927,7 +1919,7 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
             assertThat(persistedAssessment.submittedAt).isNotNull
 
-            val emittedMessage = inboundMessageListener.blockForMessage()
+            val emittedMessage = snsDomainEventListener.blockForMessage()
 
             assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
             assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
@@ -2072,7 +2064,7 @@ class AssessmentTest : IntegrationTestBase() {
         assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
         assertThat(persistedAssessment.submittedAt).isNotNull
 
-        val emittedMessage = inboundMessageListener.blockForMessage()
+        val emittedMessage = snsDomainEventListener.blockForMessage()
 
         assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
         assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")

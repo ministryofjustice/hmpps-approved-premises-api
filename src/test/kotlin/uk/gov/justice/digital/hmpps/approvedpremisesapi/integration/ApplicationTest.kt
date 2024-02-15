@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
@@ -16,12 +15,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
-import org.springframework.jms.annotation.JmsListener
-import org.springframework.stereotype.Service
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
@@ -121,7 +117,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
@@ -137,9 +132,6 @@ import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 
 class ApplicationTest : IntegrationTestBase() {
-  @Autowired
-  lateinit var inboundMessageListener: InboundMessageListener
-
   @Autowired
   lateinit var assessmentTransformer: AssessmentTransformer
 
@@ -1915,7 +1907,7 @@ class ApplicationTest : IntegrationTestBase() {
           assertThat(persistedDomainEvent!!.crn).isEqualTo(offenderDetails.otherIds.crn)
           assertThat(persistedDomainEvent.type).isEqualTo(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
 
-          val emittedMessage = inboundMessageListener.blockForMessage()
+          val emittedMessage = snsDomainEventListener.blockForMessage()
 
           assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.submitted")
           val emittedMessageDescription = "An application has been submitted for an Approved Premises placement"
@@ -3993,49 +3985,3 @@ class ApplicationTest : IntegrationTestBase() {
     return Pair(application, assessment)
   }
 }
-
-@Service
-class InboundMessageListener(private val objectMapper: ObjectMapper) {
-  private val log = LoggerFactory.getLogger(this::class.java)
-  private val messages = mutableListOf<SnsEvent>()
-
-  @JmsListener(destination = "domaineventsqueue", containerFactory = "hmppsQueueContainerFactoryProxy")
-  fun processMessage(rawMessage: String?) {
-    val (Message) = objectMapper.readValue(rawMessage, Message::class.java)
-    val event = objectMapper.readValue(Message, SnsEvent::class.java)
-
-    log.info("Received Domain Event: ", event)
-    synchronized(messages) {
-      messages.add(event)
-    }
-  }
-
-  fun clearMessages() = messages.clear()
-  fun blockForMessage(): SnsEvent {
-    var waitedCount = 0
-    while (isEmpty()) {
-      if (waitedCount == 300) throw RuntimeException("Never received SQS message from SNS topic after 30s")
-
-      Thread.sleep(100)
-      waitedCount += 1
-    }
-
-    synchronized(messages) {
-      return messages.first()
-    }
-  }
-
-  fun isEmpty(): Boolean {
-    synchronized(messages) {
-      return messages.isEmpty()
-    }
-  }
-}
-
-data class EventType(val Value: String, val Type: String)
-data class MessageAttributes(val eventType: EventType)
-data class Message(
-  val Message: String,
-  val MessageId: String,
-  val MessageAttributes: MessageAttributes,
-)

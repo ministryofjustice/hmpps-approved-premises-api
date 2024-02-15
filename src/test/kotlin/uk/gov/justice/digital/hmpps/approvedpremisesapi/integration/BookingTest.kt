@@ -47,15 +47,7 @@ import java.util.UUID
 
 class BookingTest : IntegrationTestBase() {
   @Autowired
-  lateinit var inboundMessageListener: InboundMessageListener
-
-  @Autowired
   lateinit var bookingTransformer: BookingTransformer
-
-  @BeforeEach
-  fun clearMessages() {
-    inboundMessageListener.clearMessages()
-  }
 
   @Nested
   inner class GetBooking {
@@ -762,7 +754,7 @@ class BookingTest : IntegrationTestBase() {
               .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
               .jsonPath("$.bed.name").isEqualTo(bed.name)
 
-            val emittedMessage = inboundMessageListener.blockForMessage()
+        val emittedMessage = snsDomainEventListener.blockForMessage()
 
             assertThat(emittedMessage.eventType).isEqualTo("approved-premises.booking.made")
             assertThat(emittedMessage.description).isEqualTo("An Approved Premises booking has been made")
@@ -4057,7 +4049,7 @@ class BookingTest : IntegrationTestBase() {
     eventDescription: String,
     detailUrl: String,
   ) {
-    val emittedMessage = inboundMessageListener.blockForMessage()
+    val emittedMessage = snsDomainEventListener.blockForMessage()
 
     assertThat(emittedMessage.eventType).isEqualTo(eventType)
     assertThat(emittedMessage.description).isEqualTo(eventDescription)
