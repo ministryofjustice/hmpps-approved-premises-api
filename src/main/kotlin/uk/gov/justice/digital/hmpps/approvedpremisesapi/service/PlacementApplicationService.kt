@@ -477,7 +477,7 @@ class PlacementApplicationService(
     val createdByUser = placementApplication.createdByUser
     createdByUser.email?.let { email ->
       emailNotificationService.sendEmail(
-        email = email,
+        recipientEmailAddress = email,
         templateId = notifyConfig.templates.placementRequestSubmitted,
         personalisation = mapOf(
           "crn" to placementApplication.application.crn,
@@ -494,7 +494,7 @@ class PlacementApplicationService(
     val createdByUser = placementApplication.createdByUser
     createdByUser.email?.let { email ->
       emailNotificationService.sendEmail(
-        email = email,
+        recipientEmailAddress = email,
         templateId = notifyConfig.templates.placementRequestAllocated,
         personalisation = mapOf(
           "crn" to placementApplication.application.crn,

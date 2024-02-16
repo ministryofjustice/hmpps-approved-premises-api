@@ -614,7 +614,7 @@ class ApplicationService(
   fun sendEmailApplicationWithdrawn(user: UserEntity, application: ApplicationEntity, premisesName: String?) {
     user.email?.let { email ->
       emailNotificationService.sendEmail(
-        email = email,
+        recipientEmailAddress = email,
         templateId = notifyConfig.templates.applicationWithdrawn,
         personalisation = mapOf(
           "name" to user.name,
@@ -810,7 +810,7 @@ class ApplicationService(
 
   fun sendEmailApplicationSubmitted(user: UserEntity, application: ApplicationEntity) {
     emailNotificationService.sendEmail(
-      email = user.email!!,
+      recipientEmailAddress = user.email!!,
       templateId = notifyConfig.templates.applicationSubmitted,
       personalisation = mapOf(
         "name" to user.name,

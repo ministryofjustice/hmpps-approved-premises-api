@@ -300,7 +300,7 @@ class ApplicationService(
 
   private fun sendEmailApplicationSubmitted(user: NomisUserEntity, application: Cas2ApplicationEntity) {
     emailNotificationService.sendEmail(
-      email = notifyConfig.emailAddresses.cas2Assessors,
+      recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
       templateId = notifyConfig.templates.cas2ApplicationSubmitted,
       personalisation = mapOf(
         "name" to user.name,

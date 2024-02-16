@@ -37,7 +37,7 @@ class EmailNotificationServiceTest {
     every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
 
     emailNotificationService.sendEmail(
-      email = user.email!!,
+      recipientEmailAddress = user.email!!,
       templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888",
       personalisation = mapOf(
         "name" to "Jim",
@@ -62,7 +62,7 @@ class EmailNotificationServiceTest {
     every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
 
     emailNotificationService.sendEmail(
-      email = user.email!!,
+      recipientEmailAddress = user.email!!,
       templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888",
       personalisation = mapOf(
         "name" to "Jim",
@@ -116,7 +116,7 @@ class EmailNotificationServiceTest {
 
     if (user.email != null) {
       emailNotificationService.sendEmail(
-        email = user.email!!,
+        recipientEmailAddress = user.email!!,
         templateId = templateId,
         personalisation = personalisation,
       )
@@ -162,7 +162,7 @@ class EmailNotificationServiceTest {
 
     if (user.email != null) {
       emailNotificationService.sendEmail(
-        email = user.email!!,
+        recipientEmailAddress = user.email!!,
         templateId = templateId,
         personalisation = personalisation,
       )
@@ -209,7 +209,7 @@ class EmailNotificationServiceTest {
     } returns mockk()
     if (user.email != null) {
       emailNotificationService.sendEmail(
-        email = user.email!!,
+        recipientEmailAddress = user.email!!,
         templateId = templateId,
         personalisation = personalisation,
       )
@@ -261,7 +261,7 @@ class EmailNotificationServiceTest {
     every { logger.error(any<String>(), any()) } returns Unit
 
     emailNotificationService.sendEmail(
-      email = user.email!!,
+      recipientEmailAddress = user.email!!,
       templateId = templateId,
       personalisation = personalisation,
     )
