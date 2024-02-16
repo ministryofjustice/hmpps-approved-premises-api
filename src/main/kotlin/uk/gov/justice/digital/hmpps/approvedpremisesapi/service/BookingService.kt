@@ -811,10 +811,6 @@ class BookingService(
 
       cas3DomainEventService.saveBookingProvisionallyMadeEvent(booking, user)
 
-      if (assessmentId != null) {
-        closeTransitionalAccommodationAssessment(assessmentId, user, booking)
-      }
-
       success(booking)
     }
 

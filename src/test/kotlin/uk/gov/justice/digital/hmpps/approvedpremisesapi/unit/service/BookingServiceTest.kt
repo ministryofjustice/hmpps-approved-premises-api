@@ -4694,10 +4694,6 @@ class BookingServiceTest {
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
-      every { mockAssessmentService.closeAssessment(user, application.id) } returns AuthorisableActionResult.Success(ValidatableActionResult.Success(assessment))
-
-      mockkStatic(Sentry::class)
-
       val authorisableResult = bookingService.createTemporaryAccommodationBooking(
         user,
         premises,
@@ -4738,12 +4734,6 @@ class BookingServiceTest {
           },
           user,
         )
-      }
-      verify(exactly = 1) {
-        mockAssessmentService.closeAssessment(user, application.id)
-      }
-      verify(exactly = 0) {
-        Sentry.captureException(any())
       }
     }
 
@@ -4822,12 +4812,6 @@ class BookingServiceTest {
 
       verify(exactly = 0) {
         mockAssessmentRepository.findByIdOrNull(any())
-      }
-      verify(exactly = 0) {
-        mockAssessmentService.closeAssessment(user, any())
-      }
-      verify(exactly = 0) {
-        Sentry.captureException(any())
       }
     }
 
@@ -5069,8 +5053,6 @@ class BookingServiceTest {
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
-      every { mockAssessmentService.closeAssessment(user, application.id) } returns AuthorisableActionResult.Unauthorised()
-
       mockkStatic(Sentry::class)
       every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
 
@@ -5114,12 +5096,6 @@ class BookingServiceTest {
           },
           user,
         )
-      }
-      verify(exactly = 1) {
-        mockAssessmentService.closeAssessment(user, application.id)
-      }
-      verify(exactly = 1) {
-        Sentry.captureException(any())
       }
     }
 
@@ -5175,13 +5151,6 @@ class BookingServiceTest {
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
-      every { mockAssessmentService.closeAssessment(user, application.id) } returns AuthorisableActionResult.Success(
-        ValidatableActionResult.FieldValidationError(ValidationErrors()),
-      )
-
-      mockkStatic(Sentry::class)
-      every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
-
       val authorisableResult = bookingService.createTemporaryAccommodationBooking(
         user,
         premises,
@@ -5222,12 +5191,6 @@ class BookingServiceTest {
           },
           user,
         )
-      }
-      verify(exactly = 1) {
-        mockAssessmentService.closeAssessment(user, application.id)
-      }
-      verify(exactly = 1) {
-        Sentry.captureException(any())
       }
     }
 
@@ -5283,11 +5246,6 @@ class BookingServiceTest {
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
-      every { mockAssessmentService.closeAssessment(user, application.id) } throws RuntimeException("A database exception")
-
-      mockkStatic(Sentry::class)
-      every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
-
       val authorisableResult = bookingService.createTemporaryAccommodationBooking(
         user,
         premises,
@@ -5328,9 +5286,6 @@ class BookingServiceTest {
           },
           user,
         )
-      }
-      verify(exactly = 1) {
-        mockAssessmentService.closeAssessment(user, application.id)
       }
     }
 
@@ -5395,9 +5350,6 @@ class BookingServiceTest {
         entry("$.assessmentId", "doesNotExist"),
       )
 
-      verify(exactly = 0) {
-        mockAssessmentService.closeAssessment(user, assessmentId)
-      }
     }
 
     @Test
@@ -5452,10 +5404,6 @@ class BookingServiceTest {
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
-      every { mockAssessmentService.closeAssessment(user, application.id) } returns AuthorisableActionResult.Success(ValidatableActionResult.Success(assessment))
-
-      mockkStatic(Sentry::class)
-
       assertThatExceptionOfType(RuntimeException::class.java)
         .isThrownBy {
           bookingService.createTemporaryAccommodationBooking(
@@ -5495,9 +5443,6 @@ class BookingServiceTest {
           },
           user,
         )
-      }
-      verify(exactly = 0) {
-        mockAssessmentService.closeAssessment(user, application.id)
       }
     }
   }
