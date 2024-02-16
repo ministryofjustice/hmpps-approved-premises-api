@@ -1,0 +1,1 @@
+ALTER TABLE ap_areas ADD COLUMN email_address text NULL;
