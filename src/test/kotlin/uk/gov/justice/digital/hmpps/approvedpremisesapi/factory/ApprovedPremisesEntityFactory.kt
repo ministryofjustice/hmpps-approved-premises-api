@@ -38,6 +38,11 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
   private var point: Yielded<Point>? = null
 
+  fun withDefaults() = apply {
+    withDefaultProbationRegion()
+    withDefaultLocalAuthorityArea()
+  }
+
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
@@ -140,6 +145,10 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
 
   fun withPoint(point: Point) = apply {
     this.point = { point }
+  }
+
+  fun withEmailAddress(emailAddress: String) = apply {
+    this.emailAddress = { emailAddress }
   }
 
   override fun produce(): ApprovedPremisesEntity = ApprovedPremisesEntity(
