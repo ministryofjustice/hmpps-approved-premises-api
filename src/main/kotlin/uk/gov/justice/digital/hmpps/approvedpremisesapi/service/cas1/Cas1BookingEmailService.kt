@@ -49,7 +49,7 @@ class Cas1BookingEmailService(
     }
   }
 
-  fun bookingWithdrawn(application: ApplicationEntity, booking: BookingEntity) {
+  fun bookingWithdrawn(application: ApprovedPremisesApplicationEntity, booking: BookingEntity) {
     if(!sendNewWithdrawalNotifications) {
       return
     }
@@ -71,6 +71,15 @@ class Cas1BookingEmailService(
 
     val premises = booking.premises
     premises.emailAddress?.let { email ->
+      emailNotificationService.sendEmail(
+        recipientEmailAddress = email,
+        templateId = notifyConfig.templates.bookingWithdrawn,
+        personalisation = allPersonalisation,
+      )
+    }
+
+    val area = application.apArea
+    area?.emailAddress?.let { email ->
       emailNotificationService.sendEmail(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.bookingWithdrawn,

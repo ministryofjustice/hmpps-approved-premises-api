@@ -569,7 +569,7 @@ class WithdrawalTest : IntegrationTestBase() {
           assertPlacementRequestWithdrawn(placementRequest3, PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN)
           assertBookingNotWithdrawn(booking2HasArrival)
 
-          emailNotificationAsserter.assertEmailsRequestedCount(3)
+          emailNotificationAsserter.assertEmailsRequestedCount(4)
           emailNotificationAsserter.assertEmailRequested(
             applicant.email!!,
             notifyConfig.templates.applicationWithdrawn,
@@ -580,6 +580,10 @@ class WithdrawalTest : IntegrationTestBase() {
           )
           emailNotificationAsserter.assertEmailRequested(
             booking1NoArrival.premises.emailAddress!!,
+            notifyConfig.templates.bookingWithdrawn,
+          )
+          emailNotificationAsserter.assertEmailRequested(
+            application.apArea?.emailAddress!!,
             notifyConfig.templates.bookingWithdrawn,
           )
         }
@@ -654,13 +658,17 @@ class WithdrawalTest : IntegrationTestBase() {
 
           assertPlacementApplicationNotWithdrawn(placementApplication2)
 
-          emailNotificationAsserter.assertEmailsRequestedCount(2)
+          emailNotificationAsserter.assertEmailsRequestedCount(3)
           emailNotificationAsserter.assertEmailRequested(
             applicant.email!!,
             notifyConfig.templates.bookingWithdrawn,
           )
           emailNotificationAsserter.assertEmailRequested(
             booking1NoArrival.premises.emailAddress!!,
+            notifyConfig.templates.bookingWithdrawn,
+          )
+          emailNotificationAsserter.assertEmailRequested(
+            application.apArea?.emailAddress!!,
             notifyConfig.templates.bookingWithdrawn,
           )
         }
@@ -708,13 +716,17 @@ class WithdrawalTest : IntegrationTestBase() {
           assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
           assertBookingWithdrawn(bookingNoArrival, "Related placement request withdrawn")
 
-          emailNotificationAsserter.assertEmailsRequestedCount(2)
+          emailNotificationAsserter.assertEmailsRequestedCount(3)
           emailNotificationAsserter.assertEmailRequested(
             applicant.email!!,
             notifyConfig.templates.bookingWithdrawn,
           )
           emailNotificationAsserter.assertEmailRequested(
             bookingNoArrival.premises.emailAddress!!,
+            notifyConfig.templates.bookingWithdrawn,
+          )
+          emailNotificationAsserter.assertEmailRequested(
+            application.apArea?.emailAddress!!,
             notifyConfig.templates.bookingWithdrawn,
           )
         }
@@ -877,11 +889,16 @@ class WithdrawalTest : IntegrationTestBase() {
       withAddedAt(OffsetDateTime.now())
     }
 
+    val apArea = apAreaEntityFactory.produceAndPersist {
+      withEmailAddress("apAreaEmail@test.com")
+    }
+
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCrn(offenderDetails.otherIds.crn)
       withCreatedByUser(applicant)
       withApplicationSchema(applicationSchema)
       withSubmittedAt(OffsetDateTime.now())
+      withApArea(apArea)
     }
 
     val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {

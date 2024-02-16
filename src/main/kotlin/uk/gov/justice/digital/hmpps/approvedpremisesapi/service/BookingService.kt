@@ -1155,6 +1155,11 @@ class BookingService(
       return success(existingCancellation)
     }
 
+    if(booking.application != null && booking.application !is ApprovedPremisesApplicationEntity) {
+      return generalError("Application is not for CAS1")
+    }
+    val application = booking.application as ApprovedPremisesApplicationEntity?
+
     if(!booking.isInCancellableStateCas1()) {
       return generalError("The Booking is not in a state that can be cancelled")
     }
@@ -1203,9 +1208,7 @@ class BookingService(
       isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.Booking
     )
 
-    booking.application?.let { application ->
-      cas1BookingEmailService.bookingWithdrawn(application, booking)
-    }
+    application?.let { cas1BookingEmailService.bookingWithdrawn(it, booking) }
 
     return success(cancellationEntity)
   }
