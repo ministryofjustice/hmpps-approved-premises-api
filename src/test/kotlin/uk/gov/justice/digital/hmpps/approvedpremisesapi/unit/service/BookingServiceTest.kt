@@ -108,12 +108,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -3679,19 +3679,7 @@ class BookingServiceTest {
 
   @Test
   fun `createConfirmation returns Success with correct result when validation passed and emits domain event`() {
-    val bookingEntity = BookingEntityFactory()
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withService(ServiceName.temporaryAccommodation.value)
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
+    val bookingEntity = createTemporaryAccommodationBooking(null)
 
     every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
     every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
@@ -3719,6 +3707,259 @@ class BookingServiceTest {
       mockBookingRepository.save(bookingEntity)
     }
   }
+
+  @Test
+  fun `createConfirmation returns Success with correct result and not closing the referral when booking is done without application`() {
+    val bookingEntity = createTemporaryAccommodationBooking(null)
+
+    every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+    every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
+
+    val result = bookingService.createConfirmation(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
+      notes = "notes",
+      user = user,
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
+    assertThat(result.entity.notes).isEqualTo("notes")
+    assertThat(bookingEntity.confirmation).isEqualTo(result.entity)
+    assertThat(result.entity.booking.status).isEqualTo(BookingStatus.confirmed)
+
+    verify(exactly = 1) {
+      mockCas3DomainEventService.saveBookingConfirmedEvent(bookingEntity, user)
+    }
+    verify(exactly = 1) {
+      mockBookingRepository.save(bookingEntity)
+    }
+    verify(exactly = 0) {
+      mockAssessmentService.closeAssessment(user, any())
+    }
+    verify(exactly = 0) {
+      mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(any())
+    }
+  }
+
+  @Test
+  fun `createConfirmation returns Success with correct result when validation passed and emits domain event and close referral`() {
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withProbationRegion(user.probationRegion)
+      .withCreatedByUser(user)
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    val bookingEntity = createTemporaryAccommodationBooking(application)
+
+    every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+    every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
+    every { mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
+    every { mockAssessmentService.closeAssessment(user, assessment.id) } returns AuthorisableActionResult.Success(ValidatableActionResult.Success(assessment))
+    mockkStatic(Sentry::class)
+
+    val result = bookingService.createConfirmation(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
+      notes = "notes",
+      user = user,
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
+    assertThat(result.entity.notes).isEqualTo("notes")
+    assertThat(bookingEntity.confirmation).isEqualTo(result.entity)
+    assertThat(result.entity.booking.status).isEqualTo(BookingStatus.confirmed)
+
+    verify(exactly = 1) {
+      mockCas3DomainEventService.saveBookingConfirmedEvent(bookingEntity, user)
+    }
+    verify(exactly = 1) {
+      mockBookingRepository.save(bookingEntity)
+    }
+    verify(exactly = 1) {
+      mockAssessmentService.closeAssessment(user, assessment.id)
+    }
+    verify(exactly = 1) {
+      mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id)
+    }
+    verify(exactly = 0) {
+      Sentry.captureException(any())
+    }
+  }
+
+  @Test
+  fun `createConfirmation returns Success with correct result and not closing the referral when assessment not found`() {
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withProbationRegion(user.probationRegion)
+      .withCreatedByUser(user)
+      .produce()
+    val bookingEntity = createTemporaryAccommodationBooking(application)
+
+    every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+    every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
+    every { mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id) } returns null
+
+    val result = bookingService.createConfirmation(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
+      notes = "notes",
+      user = user,
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
+    assertThat(result.entity.notes).isEqualTo("notes")
+    assertThat(bookingEntity.confirmation).isEqualTo(result.entity)
+    assertThat(result.entity.booking.status).isEqualTo(BookingStatus.confirmed)
+
+    verify(exactly = 1) {
+      mockCas3DomainEventService.saveBookingConfirmedEvent(bookingEntity, user)
+    }
+    verify(exactly = 1) {
+      mockBookingRepository.save(bookingEntity)
+    }
+    verify(exactly = 1) {
+      mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id)
+    }
+    verify(exactly = 0) {
+      mockAssessmentService.closeAssessment(user, any())
+    }
+  }
+
+  @Test
+  fun `createConfirmation returns Success with correct result when closing referral failed`() {
+    val application = TemporaryAccommodationApplicationEntityFactory()
+      .withProbationRegion(user.probationRegion)
+      .withCreatedByUser(user)
+      .produce()
+
+    val assessment = TemporaryAccommodationAssessmentEntityFactory()
+      .withApplication(application)
+      .produce()
+
+    val bookingEntity = createTemporaryAccommodationBooking(application)
+
+    every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+    every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
+    every { mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id) } returns assessment
+    every { mockAssessmentService.closeAssessment(user, assessment.id) } returns AuthorisableActionResult.Unauthorised()
+    mockkStatic(Sentry::class)
+    every { Sentry.captureException(any()) } returns SentryId.EMPTY_ID
+
+    val result = bookingService.createConfirmation(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
+      notes = "notes",
+      user = user,
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
+    assertThat(result.entity.notes).isEqualTo("notes")
+    assertThat(bookingEntity.confirmation).isEqualTo(result.entity)
+    assertThat(result.entity.booking.status).isEqualTo(BookingStatus.confirmed)
+
+    verify(exactly = 1) {
+      mockCas3DomainEventService.saveBookingConfirmedEvent(bookingEntity, user)
+    }
+    verify(exactly = 1) {
+      mockBookingRepository.save(bookingEntity)
+    }
+    verify(exactly = 1) {
+      mockAssessmentService.closeAssessment(user, assessment.id)
+    }
+    verify(exactly = 1) {
+      mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id)
+    }
+    verify(exactly = 1) {
+      Sentry.captureException(any())
+    }
+  }
+
+  @Test
+  fun `createConfirmation returns Success with correct result not closing referral when the request is not Temporary premises accommodation`() {
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .produce()
+    val bookingEntity = createApprovedPremisesAccommodationBooking(application)
+
+    every { mockConfirmationRepository.save(any()) } answers { it.invocation.args[0] as ConfirmationEntity }
+    every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+    every { mockCas3DomainEventService.saveBookingConfirmedEvent(any(), user) } just Runs
+
+    val result = bookingService.createConfirmation(
+      booking = bookingEntity,
+      dateTime = OffsetDateTime.parse("2022-08-25T12:34:56.789Z"),
+      notes = "notes",
+      user = user,
+    )
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.dateTime).isEqualTo(OffsetDateTime.parse("2022-08-25T12:34:56.789Z"))
+    assertThat(result.entity.notes).isEqualTo("notes")
+    assertThat(bookingEntity.confirmation).isEqualTo(result.entity)
+    assertThat(result.entity.booking.status).isEqualTo(BookingStatus.confirmed)
+
+    verify(exactly = 0) {
+      mockCas3DomainEventService.saveBookingConfirmedEvent(bookingEntity, user)
+    }
+    verify(exactly = 1) {
+      mockBookingRepository.save(bookingEntity)
+    }
+    verify(exactly = 0) {
+      mockAssessmentService.closeAssessment(user,any())
+    }
+    verify(exactly = 0) {
+      mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id)
+    }
+  }
+
+  private fun createTemporaryAccommodationBooking(application: TemporaryAccommodationApplicationEntity?) =
+    BookingEntityFactory()
+      .withYieldedPremises {
+        TemporaryAccommodationPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withService(ServiceName.temporaryAccommodation.value)
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withApplication(application.let { application })
+      .produce()
+
+  private fun createApprovedPremisesAccommodationBooking(application: ApprovedPremisesApplicationEntity?) =
+    BookingEntityFactory()
+      .withYieldedPremises {
+        ApprovedPremisesEntityFactory()
+          .withYieldedProbationRegion {
+            ProbationRegionEntityFactory()
+              .withYieldedApArea { ApAreaEntityFactory().produce() }
+              .produce()
+          }
+          .withService(ServiceName.approvedPremises.value)
+          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+          .produce()
+      }
+      .withApplication(application.let { application })
+      .produce()
 
   @Nested
   inner class CreateApprovedPremisesAdHocBooking {
