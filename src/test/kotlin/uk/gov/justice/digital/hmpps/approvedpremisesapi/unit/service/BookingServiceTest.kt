@@ -133,6 +133,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.time.Instant
 import java.time.LocalDate
@@ -149,7 +150,7 @@ class BookingServiceTest {
   private val mockCruService = mockk<CruService>()
   private val mockApplicationService = mockk<ApplicationService>()
   private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
-  private val mockEmailNotificationService = mockk<EmailNotificationService>()
+
   private val mockPlacementRequestService = mockk<PlacementRequestService>()
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockBookingRepository = mockk<BookingRepository>()
@@ -175,6 +176,7 @@ class BookingServiceTest {
   private val mockUserService = mockk<UserService>()
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockAssessmentService = mockk<AssessmentService>()
+  private val mockCas1BookingEmailService = mockk<Cas1BookingEmailService>()
 
   fun createBookingService(arrivedAndDepartedDomainEventsDisabled: Boolean): BookingService {
     return BookingService(
@@ -186,7 +188,6 @@ class BookingServiceTest {
       cruService = mockCruService,
       applicationService = mockApplicationService,
       workingDayCountService = mockWorkingDayCountService,
-      emailNotificationService = mockEmailNotificationService,
       placementRequestService = mockPlacementRequestService,
       communityApiClient = mockCommunityApiClient,
       bookingRepository = mockBookingRepository,
@@ -209,13 +210,12 @@ class BookingServiceTest {
       bedMoveRepository = mockBedMoveRepository,
       premisesRepository = mockPremisesRepository,
       assessmentRepository = mockAssessmentRepository,
-      notifyConfig = NotifyConfig(),
       applicationUrlTemplate = "http://frontend/applications/#id",
-      bookingUrlTemplate = "http://frontend/premises/#premisesId/bookings/#bookingId",
       arrivedAndDepartedDomainEventsDisabled = arrivedAndDepartedDomainEventsDisabled,
       userService = mockUserService,
       userAccessService = mockUserAccessService,
       assessmentService = mockAssessmentService,
+      cas1BookingEmailService = mockCas1BookingEmailService,
     )
   }
 
@@ -4020,7 +4020,7 @@ class BookingServiceTest {
       every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
       every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
       every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
-      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+      every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
     }
 
     @Test
@@ -4224,18 +4224,8 @@ class BookingServiceTest {
         )
       }
 
-      verify(exactly = 2) {
-        mockEmailNotificationService.sendEmail(
-          any(),
-          any(),
-          match {
-            it["name"] == user.name &&
-              (it["apName"] as String) == premises.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
-              (it["bookingUrl"] as String).matches(Regex("http://frontend/premises/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}/bookings/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-          },
-        )
-      }
+      val booking = (validatableResult as ValidatableActionResult.Success).entity
+      verify(exactly = 1) { mockCas1BookingEmailService.bookingMade(application, booking) }
     }
 
     @ParameterizedTest
@@ -4295,18 +4285,8 @@ class BookingServiceTest {
         )
       }
 
-      verify(exactly = 2) {
-        mockEmailNotificationService.sendEmail(
-          any(),
-          any(),
-          match {
-            it["name"] == user.name &&
-              (it["apName"] as String) == premises.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
-              (it["bookingUrl"] as String).matches(Regex("http://frontend/premises/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}/bookings/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-          },
-        )
-      }
+      val booking = (validatableResult as ValidatableActionResult.Success).entity
+      verify(exactly = 1) { mockCas1BookingEmailService.bookingMade(existingApplication, booking) }
     }
 
     @Test
@@ -4365,80 +4345,8 @@ class BookingServiceTest {
         )
       }
 
-      verify(exactly = 2) {
-        mockEmailNotificationService.sendEmail(
-          any(),
-          any(),
-          match {
-            it["name"] == user.name &&
-              (it["apName"] as String) == premises.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
-              (it["bookingUrl"] as String).matches(Regex("http://frontend/premises/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}/bookings/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-          },
-        )
-      }
-    }
-
-    @Test
-    fun `createApprovedPremisesAdHocBooking uses days in Booking length for email when not whole number of weeks`() {
-      user.addRoleForUnitTest(UserRole.CAS1_MANAGER)
-
-      val arrivalDate = LocalDate.parse("2023-02-22")
-      val departureDate = LocalDate.parse("2023-02-27")
-
-      every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
-      val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, premises, bed.id, "eventNumber")
-      assertThat(authorisableResult is AuthorisableActionResult.Success)
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.Success)
-
-      verify(exactly = 2) {
-        mockEmailNotificationService.sendEmail(
-          any(),
-          any(),
-          match {
-            it["name"] == user.name &&
-              (it["apName"] as String) == premises.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
-              (it["bookingUrl"] as String).matches(Regex("http://frontend/premises/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}/bookings/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
-              (it["lengthStay"] as Int) == 6 &&
-              (it["lengthStayUnit"] as String) == "days"
-          },
-        )
-      }
-    }
-
-    @Test
-    fun `createApprovedPremisesAdHocBooking uses weeks in Booking length for email when whole number of weeks`() {
-      user.addRoleForUnitTest(UserRole.CAS1_MANAGER)
-
-      val arrivalDate = LocalDate.parse("2023-02-01")
-      val departureDate = LocalDate.parse("2023-02-14")
-
-      every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
-      val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, premises, bed.id, "eventNumber")
-      assertThat(authorisableResult is AuthorisableActionResult.Success)
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.Success)
-
-      verify(exactly = 2) {
-        mockEmailNotificationService.sendEmail(
-          any(),
-          any(),
-          match {
-            it["name"] == user.name &&
-              (it["apName"] as String) == premises.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
-              (it["bookingUrl"] as String).matches(Regex("http://frontend/premises/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}/bookings/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
-              (it["lengthStay"] as Int) == 2 &&
-              (it["lengthStayUnit"] as String) == "weeks"
-          },
-        )
-      }
+      val booking = (validatableResult as ValidatableActionResult.Success).entity
+      verify(exactly = 1) { mockCas1BookingEmailService.bookingMade(existingApplication, booking) }
     }
 
     @ParameterizedTest
@@ -6220,8 +6128,7 @@ class BookingServiceTest {
       every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
       every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
-
-      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+      every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
 
       val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
         user = user,
@@ -6232,9 +6139,9 @@ class BookingServiceTest {
         departureDate = departureDate,
       )
 
-      assertBookingCreated(authorisableResult, application, premises, arrivalDate, departureDate)
+      val booking = assertBookingCreated(authorisableResult, application, premises, arrivalDate, departureDate)
       assertDomainEventSent(placementRequest, offenderDetails, premises, arrivalDate)
-      assertEmailsSent(otherUser, premises)
+      assertEmailsSent(application, booking)
     }
 
     @Test
@@ -6276,8 +6183,7 @@ class BookingServiceTest {
       every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
       every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
-
-      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+      every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
 
       val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
         user = user,
@@ -6288,9 +6194,9 @@ class BookingServiceTest {
         departureDate = departureDate,
       )
 
-      assertBookingCreated(authorisableResult, application, premises, arrivalDate, departureDate)
+      val booking = assertBookingCreated(authorisableResult, application, premises, arrivalDate, departureDate)
       assertDomainEventSent(placementRequest, offenderDetails, premises, arrivalDate)
-      assertEmailsSent(otherUser, premises)
+      assertEmailsSent(application, booking)
     }
 
     @Test
@@ -6357,8 +6263,7 @@ class BookingServiceTest {
       every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
       every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
-
-      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+      every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
 
       val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
         user = user,
@@ -6369,9 +6274,9 @@ class BookingServiceTest {
         departureDate = departureDate,
       )
 
-      assertBookingCreated(authorisableResult, application, premises, arrivalDate, departureDate)
+      val booking = assertBookingCreated(authorisableResult, application, premises, arrivalDate, departureDate)
       assertDomainEventSent(placementRequest, offenderDetails, premises, arrivalDate)
-      assertEmailsSent(otherUser, premises)
+      assertEmailsSent(application, booking)
     }
 
     @Test
@@ -6424,8 +6329,7 @@ class BookingServiceTest {
       every { mockCommunityApiClient.getStaffUserDetails(workflowManager.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { mockCruService.cruNameFromProbationAreaCode(staffUserDetails.probationArea.code) } returns "CRU NAME"
       every { mockDomainEventService.saveBookingMadeDomainEvent(any()) } just Runs
-
-      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+      every { mockCas1BookingEmailService.bookingMade(any(), any()) } just Runs
 
       val authorisableResult = bookingService.createApprovedPremisesBookingFromPlacementRequest(
         user = workflowManager,
@@ -6436,9 +6340,9 @@ class BookingServiceTest {
         departureDate = departureDate,
       )
 
-      assertBookingCreated(authorisableResult, application, premises, arrivalDate, departureDate)
+      val booking = assertBookingCreated(authorisableResult, application, premises, arrivalDate, departureDate)
       assertDomainEventSent(placementRequest, offenderDetails, premises, arrivalDate)
-      assertEmailsSent(otherUser, premises)
+      assertEmailsSent(application, booking)
     }
 
     private fun assertBookingCreated(
@@ -6447,7 +6351,7 @@ class BookingServiceTest {
       premises: ApprovedPremisesEntity,
       arrivalDate: LocalDate,
       departureDate: LocalDate,
-    ) {
+    ) : BookingEntity {
       assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
       val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
       assertThat(validatableResult is ValidatableActionResult.Success).isTrue
@@ -6473,6 +6377,8 @@ class BookingServiceTest {
           },
         )
       }
+
+      return createdBooking
     }
 
     private fun assertDomainEventSent(
@@ -6512,19 +6418,8 @@ class BookingServiceTest {
       }
     }
 
-    private fun assertEmailsSent(user: UserEntity, premises: ApprovedPremisesEntity) {
-      verify(exactly = 2) {
-        mockEmailNotificationService.sendEmail(
-          any(),
-          any(),
-          match {
-            it["name"] == user.name &&
-              (it["apName"] as String) == premises.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")) &&
-              (it["bookingUrl"] as String).matches(Regex("http://frontend/premises/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}/bookings/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-          },
-        )
-      }
+    private fun assertEmailsSent(application: ApprovedPremisesApplicationEntity, booking: BookingEntity) {
+      verify(exactly = 1) { mockCas1BookingEmailService.bookingMade(application, booking) }
     }
   }
 
