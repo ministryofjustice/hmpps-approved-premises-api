@@ -2307,6 +2307,8 @@ class BookingServiceTest {
       every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
       every { mockApplicationService.updateApprovedPremisesApplicationStatus(any(),any()) } returns Unit
 
+      every { mockCas1BookingEmailService.bookingWithdrawn(application,bookingEntity) } returns Unit
+
       val cancelledAt = LocalDate.parse("2022-08-25")
       val notes = "notes"
 
@@ -2358,6 +2360,60 @@ class BookingServiceTest {
       verify(exactly = 1) {
         mockBookingRepository.save(bookingEntity)
       }
+    }
+
+
+    @Test
+    fun `createCancellation triggers emails when linked to Application`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      val bookingEntity = BookingEntityFactory()
+        .withPremises(premises)
+        .withApplication(application)
+        .withCrn(application.crn)
+        .produce()
+      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
+      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
+      every { mockDomainEventService.saveBookingCancelledEvent(any()) } just Runs
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(bookingEntity.crn)
+        .produce()
+
+      every { mockOffenderService.getOffenderByCrn(bookingEntity.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(offenderDetails)
+
+      val staffUserDetails = StaffUserDetailsFactory().produce()
+
+      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        staffUserDetails,
+      )
+
+      every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
+      every { mockApplicationService.updateApprovedPremisesApplicationStatus(any(),any()) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application,bookingEntity) } returns Unit
+
+      val cancelledAt = LocalDate.parse("2022-08-25")
+      val notes = "notes"
+
+      val result = bookingService.createCas1Cancellation(
+        booking = bookingEntity,
+        cancelledAt = cancelledAt,
+        userProvidedReason = reasonId,
+        notes = notes,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.Booking,
+        ),
+      )
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+
+      verify(exactly = 1) { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity) }
     }
 
     @Test
@@ -2663,6 +2719,8 @@ class BookingServiceTest {
         )
       } returns Unit
 
+      every { mockCas1BookingEmailService.bookingWithdrawn(application,bookingEntity) } returns Unit
+
       val cancelledBooking1 = BookingEntityFactory()
         .withPremises(premises)
         .withCancellations(
@@ -2742,6 +2800,8 @@ class BookingServiceTest {
         )
       } returns Unit
 
+      every { mockCas1BookingEmailService.bookingWithdrawn(application,bookingEntity) } returns Unit
+
       val cancelledBooking1 = BookingEntityFactory()
         .withPremises(premises)
         .withCancellations(
@@ -2810,6 +2870,7 @@ class BookingServiceTest {
           ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT
         )
       } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application,bookingEntity) } returns Unit
 
       every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
 

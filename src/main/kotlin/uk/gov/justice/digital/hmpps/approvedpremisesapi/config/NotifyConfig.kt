@@ -31,6 +31,7 @@ class NotifyTemplates {
   val assessmentWithdrawn = "44ade006-7ac6-4769-aa40-542da56f21b5"
   val bookingMade = "1e3d2ee2-250e-4755-af38-80d24cdc3480"
   val bookingMadePremises = "337bb149-6f12-4be2-b5a3-a9a73d73c1e1"
+  val bookingWithdrawn = "30cdc876-40a6-41b0-b642-a6b6115c835c"
   val placementRequestAllocated = "375d83be-c973-44ed-939f-48ffc00230f3"
   val placementRequestDecisionAccepted = "dd6f7526-05ce-4951-ba98-a2e68962fb43"
   val placementRequestDecisionRejected = "b258a025-d1e8-47f2-833e-641d7c119ff5"
