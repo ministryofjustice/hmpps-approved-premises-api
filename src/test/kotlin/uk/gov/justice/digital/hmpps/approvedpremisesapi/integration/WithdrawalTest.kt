@@ -569,13 +569,17 @@ class WithdrawalTest : IntegrationTestBase() {
           assertPlacementRequestWithdrawn(placementRequest3, PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN)
           assertBookingNotWithdrawn(booking2HasArrival)
 
-          emailNotificationAsserter.assertEmailsRequestedCount(2)
+          emailNotificationAsserter.assertEmailsRequestedCount(3)
           emailNotificationAsserter.assertEmailRequested(
             applicant.email!!,
             notifyConfig.templates.applicationWithdrawn,
           )
           emailNotificationAsserter.assertEmailRequested(
             applicant.email!!,
+            notifyConfig.templates.bookingWithdrawn,
+          )
+          emailNotificationAsserter.assertEmailRequested(
+            booking1NoArrival.premises.emailAddress!!,
             notifyConfig.templates.bookingWithdrawn,
           )
         }
@@ -650,9 +654,13 @@ class WithdrawalTest : IntegrationTestBase() {
 
           assertPlacementApplicationNotWithdrawn(placementApplication2)
 
-          emailNotificationAsserter.assertEmailsRequestedCount(1)
+          emailNotificationAsserter.assertEmailsRequestedCount(2)
           emailNotificationAsserter.assertEmailRequested(
             applicant.email!!,
+            notifyConfig.templates.bookingWithdrawn,
+          )
+          emailNotificationAsserter.assertEmailRequested(
+            booking1NoArrival.premises.emailAddress!!,
             notifyConfig.templates.bookingWithdrawn,
           )
         }
@@ -700,9 +708,13 @@ class WithdrawalTest : IntegrationTestBase() {
           assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
           assertBookingWithdrawn(bookingNoArrival, "Related placement request withdrawn")
 
-          emailNotificationAsserter.assertEmailsRequestedCount(1)
+          emailNotificationAsserter.assertEmailsRequestedCount(2)
           emailNotificationAsserter.assertEmailRequested(
             applicant.email!!,
+            notifyConfig.templates.bookingWithdrawn,
+          )
+          emailNotificationAsserter.assertEmailRequested(
+            bookingNoArrival.premises.emailAddress!!,
             notifyConfig.templates.bookingWithdrawn,
           )
         }

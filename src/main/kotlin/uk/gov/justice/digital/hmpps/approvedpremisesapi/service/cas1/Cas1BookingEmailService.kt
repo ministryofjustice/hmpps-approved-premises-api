@@ -69,6 +69,14 @@ class Cas1BookingEmailService(
       )
     }
 
+    val premises = booking.premises
+    premises.emailAddress?.let { email ->
+      emailNotificationService.sendEmail(
+        recipientEmailAddress = email,
+        templateId = notifyConfig.templates.bookingWithdrawn,
+        personalisation = allPersonalisation,
+      )
+    }
   }
 
   fun buildCommonPersonalisation(application: ApplicationEntity, booking: BookingEntity): Map<String,Any> {
