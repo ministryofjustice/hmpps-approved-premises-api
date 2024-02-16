@@ -584,11 +584,12 @@ class WithdrawalTest : IntegrationTestBase() {
      * ------------------------------------------
      * application                      NO
      *  - assessment                    NO
-     *    - placement application       YES
+     *    - placement application 1     YES
      *      - placement request 1       YES
      *        - booking 1 no arrival    YES
      *      - placement request 2       YES
      *        - booking 2 has arrival   NO
+     *    - placement application 2     NO
      * ```
      */
     @Test
@@ -597,9 +598,9 @@ class WithdrawalTest : IntegrationTestBase() {
         `Given an Offender` { offenderDetails, _ ->
           val (application, assessment) = createApplicationAndAssessment(user, user, offenderDetails)
 
-          val placementApplication = createPlacementApplication(application)
+          val placementApplication1 = createPlacementApplication(application)
           val placementRequest1 = createPlacementRequest(application) {
-            withPlacementApplication(placementApplication)
+            withPlacementApplication(placementApplication1)
           }
           val booking1NoArrival = createBooking(
             application = application,
@@ -610,7 +611,7 @@ class WithdrawalTest : IntegrationTestBase() {
           addBookingToPlacementRequest(placementRequest1, booking1NoArrival)
 
           val placementRequest2 = createPlacementRequest(application) {
-            withPlacementApplication(placementApplication)
+            withPlacementApplication(placementApplication1)
           }
           val booking2HasArrival = createBooking(
             application = application,
@@ -620,8 +621,10 @@ class WithdrawalTest : IntegrationTestBase() {
           )
           addBookingToPlacementRequest(placementRequest2, booking2HasArrival)
 
+          val placementApplication2 = createPlacementApplication(application)
+
           withdrawPlacementApplication(
-            placementApplication,
+            placementApplication1,
             WithdrawPlacementRequestReason.duplicatePlacementRequest,
             jwt
           )
@@ -630,7 +633,7 @@ class WithdrawalTest : IntegrationTestBase() {
           assertAssessmentNotWithdrawn(assessment)
 
           assertPlacementApplicationWithdrawn(
-            placementApplication,
+            placementApplication1,
             PlacementApplicationDecision.WITHDRAW,
             PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
           )
@@ -640,6 +643,8 @@ class WithdrawalTest : IntegrationTestBase() {
 
           assertPlacementRequestWithdrawn(placementRequest2, PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN)
           assertBookingNotWithdrawn(booking2HasArrival)
+
+          assertPlacementApplicationNotWithdrawn(placementApplication2)
 
           emailNotificationAsserter.assertNoEmailsRequested()
         }
@@ -794,6 +799,12 @@ class WithdrawalTest : IntegrationTestBase() {
     val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplication.id)!!
     assertThat(updatedPlacementApplication.decision).isEqualTo(decision)
     assertThat(updatedPlacementApplication.withdrawalReason).isEqualTo(reason)
+  }
+
+  private fun assertPlacementApplicationNotWithdrawn(placementApplication: PlacementApplicationEntity) {
+    val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplication.id)!!
+    assertThat(updatedPlacementApplication.decision).isNull()
+    assertThat(updatedPlacementApplication.withdrawalReason).isNull()
   }
 
   private fun assertApplicationStatus(application: ApprovedPremisesApplicationEntity, expectedStatus: ApprovedPremisesApplicationStatus) {
