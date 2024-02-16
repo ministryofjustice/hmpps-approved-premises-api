@@ -1207,6 +1207,10 @@ class BookingService(
       isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.Booking
     )
 
+    booking.application?.let { application ->
+      cas1BookingEmailService.bookingWithdrawn(application, booking)
+    }
+
     return success(cancellationEntity)
   }
 
