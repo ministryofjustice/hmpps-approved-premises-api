@@ -22,4 +22,5 @@ data class ApAreaEntity(
   val identifier: String,
   @OneToMany(mappedBy = "apArea")
   val probationRegions: MutableList<ProbationRegionEntity>,
+  val emailAddress: String?,
 )
