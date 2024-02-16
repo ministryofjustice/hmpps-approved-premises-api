@@ -67,7 +67,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -501,7 +500,7 @@ class BookingService(
 
     if (applicationSubmittedByUser.email != null) {
       emailNotificationService.sendEmail(
-        email = applicationSubmittedByUser.email!!,
+        recipientEmailAddress = applicationSubmittedByUser.email!!,
         templateId = notifyConfig.templates.bookingMade,
         personalisation = emailPersonalisation,
       )
@@ -509,7 +508,7 @@ class BookingService(
 
     if (booking.premises.emailAddress != null) {
       emailNotificationService.sendEmail(
-        email = booking.premises.emailAddress!!,
+        recipientEmailAddress = booking.premises.emailAddress!!,
         templateId = notifyConfig.templates.bookingMadePremises,
         personalisation = emailPersonalisation,
       )
