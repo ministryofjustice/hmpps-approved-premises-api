@@ -22,7 +22,6 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
       TransitionalAccommodationReferralReportRow(
         referralId = referralData.referralId,
         referralDate = referralData.referralCreatedDate,
-        deliusNumber = "",
         personName = personInfo.tryGetDetails {
           val nameParts = listOf(it.name.forename) + it.name.middleNames + it.name.surname
           nameParts.joinToString(" ")
@@ -47,6 +46,7 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
         sourceOfReferral = referralData.referralEligibilityReason,
         prisonName = "",
         prisonReleaseDate = null,
+        accommodationRequiredDate = referralData.accommodationRequiredDate?.toLocalDateTime()?.toLocalDate(),
         bookingOffered = referralData.bookingId != null,
       ),
     )

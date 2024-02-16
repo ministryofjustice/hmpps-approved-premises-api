@@ -15,7 +15,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.ReportService
 import java.io.ByteArrayOutputStream
+import java.sql.Timestamp
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 class ReportServiceTest {
@@ -92,7 +94,7 @@ class ReportServiceTest {
     assessmentSubmittedDate = LocalDate.now(),
     referralEligibleForCas3 = true,
     referralEligibilityReason = "reason",
-    nomsNumber = "noms",
+    accommodationRequiredDate = Timestamp.valueOf(LocalDateTime.now())
   )
 
   @Suppress("LongParameterList")
@@ -116,6 +118,6 @@ class ReportServiceTest {
     override val assessmentSubmittedDate: LocalDate?,
     override val referralEligibleForCas3: Boolean?,
     override val referralEligibilityReason: String?,
-    override val nomsNumber: String?,
+    override val accommodationRequiredDate: Timestamp?,
   ) : TransitionalAccommodationReferralReportData
 }

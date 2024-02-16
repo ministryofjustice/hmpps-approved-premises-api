@@ -461,6 +461,7 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
     assertThat(actualReferralReportRow.referralRejected).isEqualTo(isAssessmentRejected)
     assertThat(actualReferralReportRow.rejectionDate).isEqualTo(rejectedDate?.toLocalDate())
     assertThat(actualReferralReportRow.rejectionReason).isEqualTo(expectedAssessment.rejectionRationale)
+    assertThat(actualReferralReportRow.accommodationRequiredDate).isEqualTo(application.arrivalDate?.toLocalDate())
   }
 
   private fun createTemporaryAccommodationAssessmentForStatus(

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.repository
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import java.sql.Timestamp
 import java.time.LocalDate
 import java.util.UUID
 
@@ -28,7 +29,8 @@ interface TransitionalAccommodationReferralReportRepository : JpaRepository<Book
       CAST(b.id AS text) AS bookingId,
       taa.is_eligible AS isReferralEligibleForCas3,
       taa.eligibility_reason AS referralEligibilityReason,
-      ap.noms_number as nomsNumber
+      ap.noms_number as nomsNumber,
+      taa.arrival_date as accommodationRequiredDate
     FROM temporary_accommodation_assessments aa
     JOIN assessments a on aa.assessment_id = a.id AND a.service='temporary-accommodation' AND a.reallocated_at IS NULL
     JOIN applications ap on a.application_id = ap.id AND ap.service='temporary-accommodation'
@@ -70,5 +72,5 @@ interface TransitionalAccommodationReferralReportData {
   val assessmentSubmittedDate: LocalDate?
   val referralEligibleForCas3: Boolean?
   val referralEligibilityReason: String?
-  val nomsNumber: String?
+  val accommodationRequiredDate: Timestamp?
 }
