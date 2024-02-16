@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.TestConstants.APPLICANT_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.TestConstants.CRN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.TestConstants.PREMISES_EMAIL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -35,8 +36,8 @@ class Cas1BookingEmailServiceTest {
   val service = Cas1BookingEmailService(
     mockEmailNotificationService,
     notifyConfig = notifyConfig,
-    applicationUrlTemplate = "http://frontend/applications/#id",
-    bookingUrlTemplate = "http://frontend/premises/#premisesId/bookings/#bookingId",
+    applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
+    bookingUrlTemplate = UrlTemplate("http://frontend/premises/#premisesId/bookings/#bookingId"),
   )
 
   val premises = ApprovedPremisesEntityFactory()
