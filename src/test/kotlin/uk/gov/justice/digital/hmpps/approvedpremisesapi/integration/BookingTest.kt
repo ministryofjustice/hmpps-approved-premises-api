@@ -2747,8 +2747,9 @@ class BookingTest : IntegrationTestBase() {
           val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(booking.application!!.id)!!
           assertThat(updatedApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
 
-          emailNotificationAsserter.assertEmailsRequestedCount(1)
+          emailNotificationAsserter.assertEmailsRequestedCount(2)
           emailNotificationAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawn)
+          emailNotificationAsserter.assertEmailRequested(booking.premises.emailAddress!!, notifyConfig.templates.bookingWithdrawn)
         }
       }
     }

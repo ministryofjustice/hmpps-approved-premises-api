@@ -31,7 +31,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var addressLine2: Yielded<String> = { randomStringUpperCase(10) }
   private var town: Yielded<String> = { randomStringUpperCase(10) }
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
-  private var emailAddress: Yielded<String> = { randomStringUpperCase(10) }
+  private var emailAddress: Yielded<String?> = { randomStringUpperCase(10) }
   private var service: Yielded<String> = { "CAS1" }
   private var qCode: Yielded<String> = { randomStringUpperCase(4) }
   private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
@@ -147,7 +147,7 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
     this.point = { point }
   }
 
-  fun withEmailAddress(emailAddress: String) = apply {
+  fun withEmailAddress(emailAddress: String?) = apply {
     this.emailAddress = { emailAddress }
   }
 

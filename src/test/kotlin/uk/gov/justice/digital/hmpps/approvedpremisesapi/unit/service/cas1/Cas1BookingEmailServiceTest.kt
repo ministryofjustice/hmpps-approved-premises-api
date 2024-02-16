@@ -195,7 +195,7 @@ class Cas1BookingEmailServiceTest {
   }
 
   @Test
-  fun `bookingWithdrawn sends email to applicant if email defined`() {
+  fun `bookingWithdrawn sends email to applicant and premises if emails are defined`() {
     val applicant = UserEntityFactory()
       .withUnitTestControlProbationRegion()
       .withEmail(APPLICANT_EMAIL)
@@ -212,7 +212,7 @@ class Cas1BookingEmailServiceTest {
 
     service.bookingWithdrawn(application, booking)
 
-    verify(exactly = 1) {
+    verify(exactly = 2) {
       mockEmailNotificationService.sendEmail(any(),any(),any())
     }
 
@@ -231,13 +231,34 @@ class Cas1BookingEmailServiceTest {
       )
     }
 
+    verify(exactly = 1) {
+      mockEmailNotificationService.sendEmail(
+        PREMISES_EMAIL,
+        notifyConfig.templates.bookingWithdrawn,
+        match {
+          it["apName"] == PREMISES_NAME &&
+                  (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/${application.id}")) &&
+                  it["crn"] == CRN &&
+                  it["startDate"] == "2023-02-01" &&
+                  it["endDate"] == "2023-02-14" &&
+                  it["region"] == REGION_NAME
+        },
+      )
+    }
   }
 
   @Test
-  fun `bookingWithdrawn doesn't send email to applicant if email not defined`() {
+  fun `bookingWithdrawn doesn't send email to applicant or premises if email not defined`() {
     val applicant = UserEntityFactory()
       .withUnitTestControlProbationRegion()
       .withEmail(null)
+      .produce()
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withDefaults()
+      .withEmailAddress(null)
+      .withName(PREMISES_NAME)
+      .withProbationRegion(ProbationRegionEntityFactory().withDefaults().withName(REGION_NAME).produce())
       .produce()
 
     val (application,booking) = createApplicationAndBooking(
