@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AppealD
 @Service
 class AppealService(
   private val appealRepository: AppealRepository,
+  private val assessmentService: AssessmentService,
   private val domainEventService: DomainEventService,
   private val communityApiClient: CommunityApiClient,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
@@ -96,6 +97,10 @@ class AppealService(
         )
 
         saveEvent(appeal)
+
+        if (decision == AppealDecision.accepted) {
+          assessmentService.createApprovedPremisesAssessment(application as ApprovedPremisesApplicationEntity)
+        }
 
         success(appeal)
       },

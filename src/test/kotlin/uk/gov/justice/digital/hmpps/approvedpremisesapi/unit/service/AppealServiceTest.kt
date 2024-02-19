@@ -27,11 +27,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
@@ -43,6 +45,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AppealD
 
 class AppealServiceTest {
   private val appealRepository = mockk<AppealRepository>()
+  private val assessmentService = mockk<AssessmentService>()
   private val domainEventService = mockk<DomainEventService>()
   private val communityApiClient = mockk<CommunityApiClient>()
   private val applicationUrlTemplate = mockk<UrlTemplate>()
@@ -50,6 +53,7 @@ class AppealServiceTest {
 
   private val appealService = AppealService(
     appealRepository,
+    assessmentService,
     domainEventService,
     communityApiClient,
     applicationUrlTemplate,
@@ -272,6 +276,7 @@ class AppealServiceTest {
       val now = LocalDate.now()
 
       every { appealRepository.save(any()) } returnsArgument 0
+      every { assessmentService.createApprovedPremisesAssessment(any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
       every { domainEventService.saveAssessmentAppealedEvent(any()) } just Runs
       every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
@@ -315,6 +320,7 @@ class AppealServiceTest {
       val now = LocalDate.now()
 
       every { appealRepository.save(any()) } returnsArgument 0
+      every { assessmentService.createApprovedPremisesAssessment(any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
       every { domainEventService.saveAssessmentAppealedEvent(any()) } just Runs
       every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
@@ -344,6 +350,80 @@ class AppealServiceTest {
               it.matches()
             },
           )
+        }
+      }
+    }
+
+    @Test
+    fun `Does not create a new assessment if the appeal was rejected`() {
+      createdByUser.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
+
+      val now = LocalDate.now()
+
+      every { appealRepository.save(any()) } returnsArgument 0
+      every { assessmentService.createApprovedPremisesAssessment(any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
+      every { domainEventService.saveAssessmentAppealedEvent(any()) } just Runs
+      every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+      every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
+      every { applicationAppealUrlTemplate.resolve(any()) } returns "http://frontend/applications/${application.id}/appeals/$appealId"
+
+      mockkStatic(UUID::class) {
+        every { UUID.randomUUID() } returns appealId
+
+        val result = appealService.createAppeal(
+          now,
+          "Some information about why the appeal is being made",
+          "ReviewBot 9000",
+          AppealDecision.rejected,
+          "Some information about the decision made",
+          application,
+          assessment,
+          createdByUser,
+        )
+
+        assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+        result as AuthorisableActionResult.Success
+        assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
+
+        verify(exactly = 0) {
+          assessmentService.createApprovedPremisesAssessment(any())
+        }
+      }
+    }
+
+    @Test
+    fun `Creates a new assessment if the appeal was accepted`() {
+      createdByUser.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
+
+      val now = LocalDate.now()
+
+      every { appealRepository.save(any()) } returnsArgument 0
+      every { assessmentService.createApprovedPremisesAssessment(any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
+      every { domainEventService.saveAssessmentAppealedEvent(any()) } just Runs
+      every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+      every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
+      every { applicationAppealUrlTemplate.resolve(any()) } returns "http://frontend/applications/${application.id}/appeals/$appealId"
+
+      mockkStatic(UUID::class) {
+        every { UUID.randomUUID() } returns appealId
+
+        val result = appealService.createAppeal(
+          now,
+          "Some information about why the appeal is being made",
+          "ReviewBot 9000",
+          AppealDecision.accepted,
+          "Some information about the decision made",
+          application,
+          assessment,
+          createdByUser,
+        )
+
+        assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+        result as AuthorisableActionResult.Success
+        assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
+
+        verify(exactly = 1) {
+          assessmentService.createApprovedPremisesAssessment(application)
         }
       }
     }
