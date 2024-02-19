@@ -30,7 +30,8 @@ interface TransitionalAccommodationReferralReportRepository : JpaRepository<Book
       taa.is_eligible AS isReferralEligibleForCas3,
       taa.eligibility_reason AS referralEligibilityReason,
       ap.noms_number as nomsNumber,
-      taa.arrival_date as accommodationRequiredDate
+      taa.arrival_date as accommodationRequiredDate,
+      taa.prison_name_on_creation as prisonNameOnCreation
     FROM temporary_accommodation_assessments aa
     JOIN assessments a on aa.assessment_id = a.id AND a.service='temporary-accommodation' AND a.reallocated_at IS NULL
     JOIN applications ap on a.application_id = ap.id AND ap.service='temporary-accommodation'
@@ -73,4 +74,5 @@ interface TransitionalAccommodationReferralReportData {
   val referralEligibleForCas3: Boolean?
   val referralEligibilityReason: String?
   val accommodationRequiredDate: Timestamp?
+  val prisonNameOnCreation: String?
 }

@@ -183,6 +183,7 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
               ),
             )
           }
+          withPrisonNameAtReferral("HM Hounslow")
         }
 
         val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
