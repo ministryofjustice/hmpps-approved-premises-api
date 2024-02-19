@@ -70,11 +70,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderIds
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
@@ -424,7 +431,13 @@ class ApplicationServiceTest {
   fun `createTemporaryAccommodationApplication returns Unauthorised when user doesn't have CAS3_REFERRER role`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
-
+    val offenderDetailSummary = createOffenderDetailsSummary(crn)
+    val inmateDetail = createInmateDetail(InOutStatus.IN, "Bristol Prison")
+    val personInfo = PersonInfoResult.Success.Full(
+      crn = crn,
+      offenderDetailSummary = offenderDetailSummary,
+      inmateDetail = inmateDetail,
+    )
     val user = userWithUsername(username).apply {
       this.roles.add(
         UserRoleAssignmentEntityFactory()
@@ -434,7 +447,15 @@ class ApplicationServiceTest {
       )
     }
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
+    val actionResult = applicationService.createTemporaryAccommodationApplication(
+      crn,
+      user,
+      "jwt",
+      123,
+      "1",
+      "A12HI",
+      personInfo = personInfo,
+    )
 
     assertThat(actionResult is AuthorisableActionResult.Unauthorised<*>).isTrue
   }
@@ -443,7 +464,13 @@ class ApplicationServiceTest {
   fun `createTemporaryAccommodationApplication returns FieldValidationError when CRN does not exist`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
-
+    val offenderDetailSummary = createOffenderDetailsSummary(crn)
+    val inmateDetail = createInmateDetail(InOutStatus.IN, "Bristol Prison")
+    val personInfo = PersonInfoResult.Success.Full(
+      crn = crn,
+      offenderDetailSummary = offenderDetailSummary,
+      inmateDetail = inmateDetail,
+    )
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.NotFound()
 
     val user = userWithUsername(username).apply {
@@ -455,7 +482,15 @@ class ApplicationServiceTest {
       )
     }
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
+    val actionResult = applicationService.createTemporaryAccommodationApplication(
+      crn,
+      user,
+      "jwt",
+      123,
+      "1",
+      "A12HI",
+      personInfo = personInfo,
+    )
 
     assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
     actionResult as AuthorisableActionResult.Success
@@ -468,7 +503,13 @@ class ApplicationServiceTest {
   fun `createTemporaryAccommodationApplication returns FieldValidationError when CRN is LAO restricted`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
-
+    val offenderDetailSummary = createOffenderDetailsSummary(crn)
+    val inmateDetail = createInmateDetail(InOutStatus.IN, "Bristol Prison")
+    val personInfo = PersonInfoResult.Success.Full(
+      crn = crn,
+      offenderDetailSummary = offenderDetailSummary,
+      inmateDetail = inmateDetail,
+    )
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Unauthorised()
 
     val user = userWithUsername(username).apply {
@@ -480,7 +521,15 @@ class ApplicationServiceTest {
       )
     }
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
+    val actionResult = applicationService.createTemporaryAccommodationApplication(
+      crn,
+      user,
+      "jwt",
+      123,
+      "1",
+      "A12HI",
+      personInfo = personInfo,
+    )
 
     assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
     actionResult as AuthorisableActionResult.Success
@@ -493,6 +542,13 @@ class ApplicationServiceTest {
   fun `createTemporaryAccommodationApplication returns FieldValidationError when convictionId, eventNumber or offenceId are null`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
+    val offenderDetailSummary = createOffenderDetailsSummary(crn)
+    val inmateDetail = createInmateDetail(InOutStatus.IN, "HMP Bristol")
+    val personInfo = PersonInfoResult.Success.Full(
+      crn = crn,
+      offenderDetailSummary = offenderDetailSummary,
+      inmateDetail = inmateDetail,
+    )
 
     every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce(),
@@ -507,7 +563,15 @@ class ApplicationServiceTest {
       )
     }
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", null, null, null)
+    val actionResult = applicationService.createTemporaryAccommodationApplication(
+      crn,
+      user,
+      "jwt",
+      null,
+      null,
+      null,
+      personInfo = personInfo,
+    )
 
     assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
     actionResult as AuthorisableActionResult.Success
@@ -522,7 +586,14 @@ class ApplicationServiceTest {
   fun `createTemporaryAccommodationApplication returns Success with created Application + persisted Risk data`() {
     val crn = "CRN345"
     val username = "SOMEPERSON"
-
+    val offenderDetailSummary = createOffenderDetailsSummary(crn)
+    val agencyName = "HMP Bristol"
+    val inmateDetail = createInmateDetail(InOutStatus.IN, agencyName)
+    val personInfo = PersonInfoResult.Success.Full(
+      crn = crn,
+      offenderDetailSummary = offenderDetailSummary,
+      inmateDetail = inmateDetail,
+    )
     val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     val user = userWithUsername(username).apply {
@@ -576,7 +647,15 @@ class ApplicationServiceTest {
       riskRatings,
     )
 
-    val actionResult = applicationService.createTemporaryAccommodationApplication(crn, user, "jwt", 123, "1", "A12HI")
+    val actionResult = applicationService.createTemporaryAccommodationApplication(
+      crn,
+      user,
+      "jwt",
+      123,
+      "1",
+      "A12HI",
+      personInfo = personInfo,
+    )
 
     assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
     actionResult as AuthorisableActionResult.Success
@@ -584,6 +663,257 @@ class ApplicationServiceTest {
     val validationResult = actionResult.entity as ValidatableActionResult.Success
     val temporaryAccommodationApplication = validationResult.entity as TemporaryAccommodationApplicationEntity
     assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
+    assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isEqualTo(agencyName)
+  }
+
+  @Test
+  fun `createTemporaryAccommodationApplication returns Success with created Application with prison name when person status is TRN`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+    val offenderDetailSummary = createOffenderDetailsSummary(crn)
+    val agencyName = "HMP Bristol"
+    val inmateDetail = createInmateDetail(InOutStatus.TRN, agencyName)
+    val personInfo = PersonInfoResult.Success.Full(
+      crn = crn,
+      offenderDetailSummary = offenderDetailSummary,
+      inmateDetail = inmateDetail,
+    )
+    val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+    val user = userWithUsername(username).apply {
+      this.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS3_REFERRER)
+          .produce(),
+      )
+    }
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockJsonSchemaService.getNewestSchema(TemporaryAccommodationApplicationJsonSchemaEntity::class.java) } returns schema
+    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+    val riskRatings = PersonRisksFactory()
+      .withRoshRisks(
+        RiskWithStatus(
+          value = RoshRisks(
+            overallRisk = "High",
+            riskToChildren = "Medium",
+            riskToPublic = "Low",
+            riskToKnownAdult = "High",
+            riskToStaff = "High",
+            lastUpdated = null,
+          ),
+        ),
+      )
+      .withMappa(
+        RiskWithStatus(
+          value = Mappa(
+            level = "",
+            lastUpdated = LocalDate.parse("2022-12-12"),
+          ),
+        ),
+      )
+      .withFlags(
+        RiskWithStatus(
+          value = listOf(
+            "flag1",
+            "flag2",
+          ),
+        ),
+      )
+      .produce()
+
+    every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(
+      riskRatings,
+    )
+
+    val actionResult = applicationService.createTemporaryAccommodationApplication(
+      crn,
+      user,
+      "jwt",
+      123,
+      "1",
+      "A12HI",
+      personInfo = personInfo,
+    )
+
+    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
+    actionResult as AuthorisableActionResult.Success
+    assertThat(actionResult.entity is ValidatableActionResult.Success).isTrue
+    val validationResult = actionResult.entity as ValidatableActionResult.Success
+    val temporaryAccommodationApplication = validationResult.entity as TemporaryAccommodationApplicationEntity
+    assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
+    assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isEqualTo(agencyName)
+  }
+
+  @Test
+  fun `createTemporaryAccommodationApplication returns Success with created Application without prison name when person status is Out`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+    val offenderDetailSummary = createOffenderDetailsSummary(crn)
+    val inmateDetail = createInmateDetail(InOutStatus.OUT, "HMP Bristol")
+    val personInfo = PersonInfoResult.Success.Full(
+      crn = crn,
+      offenderDetailSummary = offenderDetailSummary,
+      inmateDetail = inmateDetail,
+    )
+    val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+    val user = userWithUsername(username).apply {
+      this.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS3_REFERRER)
+          .produce(),
+      )
+    }
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockJsonSchemaService.getNewestSchema(TemporaryAccommodationApplicationJsonSchemaEntity::class.java) } returns schema
+    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+    val riskRatings = PersonRisksFactory()
+      .withRoshRisks(
+        RiskWithStatus(
+          value = RoshRisks(
+            overallRisk = "High",
+            riskToChildren = "Medium",
+            riskToPublic = "Low",
+            riskToKnownAdult = "High",
+            riskToStaff = "High",
+            lastUpdated = null,
+          ),
+        ),
+      )
+      .withMappa(
+        RiskWithStatus(
+          value = Mappa(
+            level = "",
+            lastUpdated = LocalDate.parse("2022-12-12"),
+          ),
+        ),
+      )
+      .withFlags(
+        RiskWithStatus(
+          value = listOf(
+            "flag1",
+            "flag2",
+          ),
+        ),
+      )
+      .produce()
+
+    every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(
+      riskRatings,
+    )
+
+    val actionResult = applicationService.createTemporaryAccommodationApplication(
+      crn,
+      user,
+      "jwt",
+      123,
+      "1",
+      "A12HI",
+      personInfo = personInfo,
+    )
+
+    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
+    actionResult as AuthorisableActionResult.Success
+    assertThat(actionResult.entity is ValidatableActionResult.Success).isTrue
+    val validationResult = actionResult.entity as ValidatableActionResult.Success
+    val temporaryAccommodationApplication = validationResult.entity as TemporaryAccommodationApplicationEntity
+    assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
+    assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
+  }
+
+  @Test
+  fun `createTemporaryAccommodationApplication returns Success with created Application without prison name when assignedLivingUnit is null`() {
+    val crn = "CRN345"
+    val username = "SOMEPERSON"
+    val offenderDetailSummary = createOffenderDetailsSummary(crn)
+    val inmateDetail = createInmateDetail(InOutStatus.IN, null)
+    val personInfo = PersonInfoResult.Success.Full(
+      crn = crn,
+      offenderDetailSummary = offenderDetailSummary,
+      inmateDetail = inmateDetail,
+    )
+    val schema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+    val user = userWithUsername(username).apply {
+      this.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS3_REFERRER)
+          .produce(),
+      )
+    }
+
+    every { mockOffenderService.getOffenderByCrn(crn, username) } returns AuthorisableActionResult.Success(
+      OffenderDetailsSummaryFactory().produce(),
+    )
+    every { mockUserService.getUserForRequest() } returns user
+    every { mockJsonSchemaService.getNewestSchema(TemporaryAccommodationApplicationJsonSchemaEntity::class.java) } returns schema
+    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+    val riskRatings = PersonRisksFactory()
+      .withRoshRisks(
+        RiskWithStatus(
+          value = RoshRisks(
+            overallRisk = "High",
+            riskToChildren = "Medium",
+            riskToPublic = "Low",
+            riskToKnownAdult = "High",
+            riskToStaff = "High",
+            lastUpdated = null,
+          ),
+        ),
+      )
+      .withMappa(
+        RiskWithStatus(
+          value = Mappa(
+            level = "",
+            lastUpdated = LocalDate.parse("2022-12-12"),
+          ),
+        ),
+      )
+      .withFlags(
+        RiskWithStatus(
+          value = listOf(
+            "flag1",
+            "flag2",
+          ),
+        ),
+      )
+      .produce()
+
+    every { mockOffenderService.getRiskByCrn(crn, "jwt", username) } returns AuthorisableActionResult.Success(
+      riskRatings,
+    )
+
+    val actionResult = applicationService.createTemporaryAccommodationApplication(
+      crn,
+      user,
+      "jwt",
+      123,
+      "1",
+      "A12HI",
+      personInfo = personInfo,
+    )
+
+    assertThat(actionResult is AuthorisableActionResult.Success).isTrue()
+    actionResult as AuthorisableActionResult.Success
+    assertThat(actionResult.entity is ValidatableActionResult.Success).isTrue
+    val validationResult = actionResult.entity as ValidatableActionResult.Success
+    val temporaryAccommodationApplication = validationResult.entity as TemporaryAccommodationApplicationEntity
+    assertThat(temporaryAccommodationApplication.riskRatings).isEqualTo(riskRatings)
+    assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
   }
 
   @Test
@@ -2193,7 +2523,6 @@ class ApplicationServiceTest {
         mockWithdrawableService.withdrawAllForApplication(application, user)
       }
     }
-
   }
 
   @Nested
@@ -2207,4 +2536,68 @@ class ApplicationServiceTest {
         .produce(),
     )
     .produce()
+
+  private fun createInmateDetail(
+    inOutStatus: InOutStatus,
+    agencyName: String?,
+  ) = InmateDetail(
+    offenderNo = "NOMS321",
+    inOutStatus = inOutStatus,
+    assignedLivingUnit = agencyName?.let {
+      AssignedLivingUnit(
+        agencyId = "BRI",
+        locationId = 5,
+        description = "B-2F-004",
+        agencyName = it,
+      )
+    },
+  )
+
+  private fun createOffenderDetailsSummary(crn: String) = OffenderDetailSummary(
+    offenderId = 547839,
+    title = "Mr",
+    firstName = "Greggory",
+    middleNames = listOf(),
+    surname = "Someone",
+    previousSurname = null,
+    preferredName = null,
+    dateOfBirth = LocalDate.parse("1980-09-12"),
+    gender = "Male",
+    otherIds = OffenderIds(
+      crn = crn,
+      croNumber = null,
+      immigrationNumber = null,
+      mostRecentPrisonNumber = null,
+      niNumber = null,
+      nomsNumber = "NOMS321",
+      pncNumber = "PNC456",
+    ),
+    offenderProfile = OffenderProfile(
+      ethnicity = "White and Asian",
+      nationality = "Spanish",
+      secondaryNationality = null,
+      notes = null,
+      immigrationStatus = null,
+      offenderLanguages = OffenderLanguages(
+        primaryLanguage = null,
+        otherLanguages = listOf(),
+        languageConcerns = null,
+        requiresInterpreter = null,
+      ),
+      religion = "Sikh",
+      sexualOrientation = null,
+      offenderDetails = null,
+      remandStatus = null,
+      riskColour = null,
+      disabilities = listOf(),
+      genderIdentity = null,
+      selfDescribedGender = null,
+    ),
+    softDeleted = null,
+    currentDisposal = "",
+    partitionArea = null,
+    currentRestriction = false,
+    currentExclusion = false,
+    isActiveProbationManagedSentence = false,
+  )
 }

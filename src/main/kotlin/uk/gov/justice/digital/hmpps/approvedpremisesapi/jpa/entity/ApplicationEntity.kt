@@ -403,6 +403,7 @@ class TemporaryAccommodationApplicationEntity(
   var isEligible: Boolean?,
   var eligibilityReason: String?,
   var dutyToReferLocalAuthorityAreaName: String?,
+  var prisonNameOnCreation: String?,
 ) : ApplicationEntity(
   id,
   crn,

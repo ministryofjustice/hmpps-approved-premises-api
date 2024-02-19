@@ -118,6 +118,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
@@ -1710,6 +1712,80 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create new application for Temporary Accommodation returns 201 with correct body and store prison-name in DB`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
+      val agencyName = "HMP Bristol"
+      `Given an Offender`(
+        offenderDetailsConfigBlock = {
+          withCrn("CRN")
+          withDateOfBirth(LocalDate.parse("1985-05-05"))
+          withNomsNumber("NOMS321")
+          withFirstName("James")
+          withLastName("Someone")
+          withGender("Male")
+          withEthnicity("White British")
+          withNationality("English")
+          withReligionOrBelief("Judaism")
+          withGenderIdentity("Prefer to self-describe")
+          withSelfDescribedGenderIdentity("This is a self described identity")
+        },
+        inmateDetailsConfigBlock = {
+          withOffenderNo("NOMS321")
+          withInOutStatus(InOutStatus.IN)
+          withAssignedLivingUnit(
+            AssignedLivingUnit(
+              agencyId = "BRI",
+              locationId = 5,
+              description = "B-2F-004",
+              agencyName = agencyName,
+            ),
+          )
+        },
+      ) { offenderDetails, _ ->
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withAddedAt(OffsetDateTime.now())
+          withId(UUID.randomUUID())
+        }
+
+        val offenceId = "789"
+
+        val result = webTestClient.post()
+          .uri("/applications")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .bodyValue(
+            NewApplication(
+              crn = offenderDetails.otherIds.crn,
+              convictionId = 123,
+              deliusEventNumber = "1",
+              offenceId = offenceId,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .returnResult(TemporaryAccommodationApplication::class.java)
+
+        assertThat(result.responseHeaders["Location"]).anyMatch {
+          it.matches(Regex("/applications/.+"))
+        }
+
+        val blockFirst = result.responseBody.blockFirst()
+        assertThat(blockFirst).matches {
+          it.person.crn == offenderDetails.otherIds.crn &&
+            it.schemaVersion == applicationSchema.id &&
+            it.offenceId == offenceId
+        }
+
+        val accommodationApplicationEntity =
+          temporaryAccommodationApplicationRepository.findByIdOrNull(blockFirst.id)
+        assertThat(accommodationApplicationEntity!!.prisonNameOnCreation).isNotNull()
+        assertThat(accommodationApplicationEntity!!.prisonNameOnCreation).isEqualTo(agencyName)
+      }
+    }
+  }
+
+  @Test
   fun `Update existing AP application returns 200 with correct body`() {
     `Given a User` { submittingUser, jwt ->
       `Given a User`(
@@ -2954,7 +3030,6 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
-
   /**
    * Note - Withdrawal cascading is tested in [WithdrawalTest]
    */
@@ -3052,7 +3127,6 @@ class ApplicationTest : IntegrationTestBase() {
         }
       }
     }
-
   }
 
   @Nested
