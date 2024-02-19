@@ -150,3 +150,12 @@ Required fields:
 - `notes`
   
 [Example CSV](./example_csvs/approved_premises_rooms_seeding_example.csv)
+
+### Approved Premises AP Area (CRU) Email Address Seed Job
+
+"seed type": `approved_premises_ap_area_email_addresses`
+
+Required fields:
+
+- `ap_area_identifier`
+- `email_address`
