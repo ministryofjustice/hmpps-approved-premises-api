@@ -32,12 +32,10 @@ class ApplicationNoteService(
       ?: return AuthorisableActionResult.NotFound()
 
     val isExternalUser = httpAuthService.getCas2AuthenticatedPrincipalOrThrow().isExternalUser()
-    val user = getExternalOrNomisUser(isExternalUser)
+    val user = getCas2User(isExternalUser)
 
-    if (!isExternalUser) {
-      if (!isApplicationCreatedByUser(application, user as NomisUserEntity)) {
-        return AuthorisableActionResult.Unauthorised()
-      }
+    if (!isExternalUser && !isApplicationCreatedByUser(application, user as NomisUserEntity)) {
+      return AuthorisableActionResult.Unauthorised()
     }
 
     if (application.submittedAt == null) {
@@ -55,7 +53,7 @@ class ApplicationNoteService(
     )
   }
 
-  private fun getExternalOrNomisUser(isExternalUser: Boolean): Cas2User {
+  private fun getCas2User(isExternalUser: Boolean): Cas2User {
     return if (isExternalUser) {
       externalUserService.getUserForRequest()
     } else {
