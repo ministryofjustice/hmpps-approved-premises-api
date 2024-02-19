@@ -811,10 +811,6 @@ class BookingService(
 
       cas3DomainEventService.saveBookingProvisionallyMadeEvent(booking, user)
 
-      if (assessmentId != null) {
-        closeTransitionalAccommodationAssessment(assessmentId, user, booking)
-      }
-
       success(booking)
     }
 
@@ -1434,6 +1430,7 @@ class BookingService(
 
     if (booking.premises is TemporaryAccommodationPremisesEntity) {
       cas3DomainEventService.saveBookingConfirmedEvent(booking, user)
+      findAndCloseCAS3Assessment(booking, user)
     }
 
     return success(confirmationEntity)
@@ -1857,6 +1854,16 @@ class BookingService(
     val submittedAt = application?.submittedAt ?: offlineApplication?.createdAt as OffsetDateTime
 
     return Triple(applicationId, eventNumber, submittedAt)
+  }
+
+  private fun findAndCloseCAS3Assessment(booking: BookingEntity, user: UserEntity) {
+    booking.application?.let {
+      val assessment =
+        assessmentRepository.findByApplication_IdAndReallocatedAtNull(booking.application!!.id)
+      if (assessment != null) {
+        closeTransitionalAccommodationAssessment(assessment.id, user, booking)
+      }
+    }
   }
 
   @SuppressWarnings("TooGenericExceptionCaught")

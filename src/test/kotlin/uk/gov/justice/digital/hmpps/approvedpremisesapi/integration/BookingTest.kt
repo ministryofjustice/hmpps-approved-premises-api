@@ -919,95 +919,6 @@ class BookingTest : IntegrationTestBase() {
           .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
           .jsonPath("$.bed.name").isEqualTo("test-bed")
           .jsonPath("$.assessmentId").isEqualTo("${assessment.id}")
-
-        assertClosedCAS3Assessment(assessment)
-      }
-    }
-  }
-
-  @Test
-  fun `Create Temporary Accommodation Booking returns OK with correct body even closing assessment is failed for schema validation`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-        }
-
-        val bed = bedEntityFactory.produceAndPersist {
-          withName("test-bed")
-          withYieldedRoom {
-            roomEntityFactory.produceAndPersist {
-              withName("test-room")
-              withYieldedPremises { premises }
-            }
-          }
-        }
-
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
-        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-          withCreatedByUser(userEntity)
-          withCrn(offenderDetails.otherIds.crn)
-          withProbationRegion(userEntity.probationRegion)
-          withApplicationSchema(applicationSchema)
-        }
-
-        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
-          withPermissiveSchema()
-        }
-
-        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-          withApplication(application)
-          withAssessmentSchema(assessmentSchema)
-        }
-        assessment.schemaUpToDate = true
-
-        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
-
-        webTestClient.post()
-          .uri("/premises/${premises.id}/bookings")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewBooking(
-              crn = offenderDetails.otherIds.crn,
-              arrivalDate = LocalDate.parse("2022-08-12"),
-              departureDate = LocalDate.parse("2022-08-30"),
-              serviceName = ServiceName.temporaryAccommodation,
-              bedId = bed.id,
-              assessmentId = assessment.id,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
-          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
-          .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
-          .jsonPath("$.departureDate").isEqualTo("2022-08-30")
-          .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
-          .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
-          .jsonPath("$.keyWorker").isEqualTo(null)
-          .jsonPath("$.status").isEqualTo("provisional")
-          .jsonPath("$.arrival").isEqualTo(null)
-          .jsonPath("$.departure").isEqualTo(null)
-          .jsonPath("$.nonArrival").isEqualTo(null)
-          .jsonPath("$.cancellation").isEqualTo(null)
-          .jsonPath("$.confirmation").isEqualTo(null)
-          .jsonPath("$.serviceName").isEqualTo(ServiceName.temporaryAccommodation.value)
-          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
-          .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
-          .jsonPath("$.bed.name").isEqualTo("test-bed")
-          .jsonPath("$.assessmentId").isEqualTo("${assessment.id}")
-
-        // Assert the assessment is not closed
-        val temporaryAccommodationAssessmentEntity = temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)
-        assertThat(temporaryAccommodationAssessmentEntity!!.completedAt).isNull()
       }
     }
   }
@@ -1108,8 +1019,6 @@ class BookingTest : IntegrationTestBase() {
           .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
           .jsonPath("$.bed.name").isEqualTo("test-bed")
           .jsonPath("$.assessmentId").isEqualTo("${assessment.id}")
-
-        assertClosedCAS3Assessment(assessment)
       }
     }
   }
@@ -3816,6 +3725,68 @@ class BookingTest : IntegrationTestBase() {
     }
   }
 
+  @Test
+  fun `Create Confirmation on Temporary Accommodation Booking returns OK with correct body and close associated referral`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withProbationRegion(userEntity.probationRegion)
+          withCreatedByUser(userEntity)
+          withApplicationSchema(applicationSchema)
+          withCrn(offenderDetails.otherIds.crn)
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }
+        assessment.schemaUpToDate = true
+
+        val booking = bookingEntityFactory.produceAndPersist {
+          withYieldedPremises {
+            temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+              withYieldedProbationRegion {
+                probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+              }
+            }
+          }
+          withApplication(application)
+          withServiceName(ServiceName.temporaryAccommodation)
+        }
+
+        assertCAS3AssessmentIsNotClosed(assessment)
+
+        webTestClient.post()
+          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/confirmations")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewConfirmation(
+              notes = null,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
+          .jsonPath("$.dateTime").value(withinSeconds(5L), OffsetDateTime::class.java)
+          .jsonPath("$.notes").isEqualTo(null)
+          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+
+        assertCAS3AssessmentIsClosed(assessment)
+      }
+    }
+  }
+
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
   fun `Create Non Arrival on Approved Premises Booking returns 200 with correct body when user has one of roles MANAGER, MATCHER`(
@@ -4075,11 +4046,11 @@ class BookingTest : IntegrationTestBase() {
     )
   }
 
-  private fun assertClosedCAS3Assessment(assessment: TemporaryAccommodationAssessmentEntity) {
+  private fun assertCAS3AssessmentIsNotClosed(assessment: TemporaryAccommodationAssessmentEntity) {
     val temporaryAccommodationAssessmentEntity =
       temporaryAccommodationAssessmentRepository.findByIdOrNull(assessment.id)
 
-    assertThat(temporaryAccommodationAssessmentEntity!!.completedAt).isNotNull()
+    assertThat(temporaryAccommodationAssessmentEntity!!.completedAt).isNull()
   }
 
   private fun assertCAS3AssessmentIsReadyToPlace(assessment: TemporaryAccommodationAssessmentEntity) {
