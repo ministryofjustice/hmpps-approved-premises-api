@@ -25,7 +25,7 @@ class TimelineEventsTransformer {
         type = TimelineEventType.cas2Note,
         occurredAt = it.createdAt.toInstant(),
         label = "Note",
-        createdByName = it.createdByNomisUser.name,
+        createdByName = it.getUser().name,
         body = it.body,
       )
     }
@@ -35,7 +35,7 @@ class TimelineEventsTransformer {
     jpa.statusUpdates?.forEach {
       timelineEvents += Cas2TimelineEvent(
         type = TimelineEventType.cas2StatusUpdate,
-        occurredAt = it.createdAt?.toInstant()!!,
+        occurredAt = it.createdAt.toInstant(),
         label = it.label,
         createdByName = it.assessor.name,
         body = it.statusUpdateDetails?.joinToString { detail -> detail.label },
