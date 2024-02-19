@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -16,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.TestConstants.APPLICANT_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.TestConstants.AP_AREA_EMAIL
@@ -24,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.TestCo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.TestConstants.PREMISES_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.TestConstants.PREMISES_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.TestConstants.REGION_NAME
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockEmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -38,8 +36,8 @@ object TestConstants {
 }
 
 class Cas1BookingEmailServiceTest {
-  private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val notifyConfig = NotifyConfig()
+  private val mockEmailNotificationService = MockEmailNotificationService()
 
   val service = Cas1BookingEmailService(
     mockEmailNotificationService,
@@ -56,6 +54,11 @@ class Cas1BookingEmailServiceTest {
     .withProbationRegion(ProbationRegionEntityFactory().withDefaults().withName(REGION_NAME).produce())
     .produce()
 
+  @BeforeEach
+  fun beforeEach() {
+    mockEmailNotificationService.reset()
+  }
+
   @Test
   fun `bookingMade doesnt send email to applicant if no email address defined`() {
     val applicant = UserEntityFactory()
@@ -70,31 +73,25 @@ class Cas1BookingEmailServiceTest {
       departureDate = LocalDate.of(2023,2,14),
     )
 
-    every { mockEmailNotificationService.sendEmail(any(),any(),any()) } returns Unit
-
     service.bookingMade(application, booking)
 
-    verify(exactly = 1) {
-      mockEmailNotificationService.sendEmail(any(),any(),any())
-    }
+    mockEmailNotificationService.assertEmailRequestCount(1)
+    mockEmailNotificationService.assertEmailRequested(
+      PREMISES_EMAIL,
+      notifyConfig.templates.bookingMadePremises,
+      mapOf(
+        "name" to applicant.name,
+        "apName" to PREMISES_NAME,
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "bookingUrl" to "http://frontend/premises/${premises.id}/bookings/${booking.id}",
+        "crn" to CRN,
+        "startDate" to "2023-02-01",
+        "endDate" to "2023-02-14",
+        "lengthStay" to 2,
+        "lengthStayUnit" to "weeks",
+      ),
+    )
 
-    verify(exactly = 1) {
-      mockEmailNotificationService.sendEmail(
-        PREMISES_EMAIL,
-        notifyConfig.templates.bookingMadePremises,
-        match {
-          it["name"] == applicant.name &&
-            it["apName"] == PREMISES_NAME &&
-            (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/${application.id}")) &&
-            (it["bookingUrl"] as String).matches(Regex("http://frontend/premises/${premises.id}/bookings/${booking.id}")) &&
-            it["crn"] == CRN &&
-            it["startDate"] == "2023-02-01" &&
-            it["endDate"] == "2023-02-14" &&
-            (it["lengthStay"] as Int) == 2 &&
-            (it["lengthStayUnit"] as String) == "weeks"
-        },
-      )
-    }
   }
 
   @SuppressWarnings("CyclomaticComplexMethod")
@@ -112,47 +109,33 @@ class Cas1BookingEmailServiceTest {
       departureDate = LocalDate.of(2023,2,14),
     )
 
-    every { mockEmailNotificationService.sendEmail(any(),any(),any()) } returns Unit
-
     service.bookingMade(application, booking)
 
-    verify(exactly = 2) { mockEmailNotificationService.sendEmail(any(),any(),any()) }
+    mockEmailNotificationService.assertEmailRequestCount(2)
 
-    verify(exactly = 1) {
-        mockEmailNotificationService.sendEmail(
-          APPLICANT_EMAIL,
-          notifyConfig.templates.bookingMade,
-          match {
-            it["name"] == applicant.name &&
-              it["apName"] == premises.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/${application.id}")) &&
-              (it["bookingUrl"] as String).matches(Regex("http://frontend/premises/${premises.id}/bookings/${booking.id}")) &&
-              it["crn"] == CRN &&
-              it["startDate"] == "2023-02-01" &&
-              it["endDate"] == "2023-02-14" &&
-              (it["lengthStay"] as Int) == 2 &&
-              it["lengthStayUnit"] as String == "weeks"
-          },
-        )
-      }
+    val personalisation = mapOf(
+      "name" to applicant.name,
+      "apName" to PREMISES_NAME,
+      "applicationUrl" to "http://frontend/applications/${application.id}",
+      "bookingUrl" to "http://frontend/premises/${premises.id}/bookings/${booking.id}",
+      "crn" to CRN,
+      "startDate" to "2023-02-01",
+      "endDate" to "2023-02-14",
+      "lengthStay" to 2,
+      "lengthStayUnit" to "weeks",
+    )
 
-    verify(exactly = 1) {
-      mockEmailNotificationService.sendEmail(
-        PREMISES_EMAIL,
-        notifyConfig.templates.bookingMadePremises,
-        match {
-          it["name"] == applicant.name &&
-            it["apName"] == PREMISES_NAME &&
-            (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/${application.id}")) &&
-            (it["bookingUrl"] as String).matches(Regex("http://frontend/premises/${premises.id}/bookings/${booking.id}")) &&
-            it["crn"] == CRN &&
-            it["startDate"] == "2023-02-01" &&
-            it["endDate"] == "2023-02-14" &&
-            (it["lengthStay"] as Int) == 2 &&
-            it["lengthStayUnit"] as String == "weeks"
-        },
-      )
-    }
+    mockEmailNotificationService.assertEmailRequested(
+      APPLICANT_EMAIL,
+      notifyConfig.templates.bookingMade,
+      personalisation,
+    )
+
+    mockEmailNotificationService.assertEmailRequested(
+      PREMISES_EMAIL,
+      notifyConfig.templates.bookingMadePremises,
+      personalisation,
+    )
   }
 
   @Test
@@ -169,33 +152,26 @@ class Cas1BookingEmailServiceTest {
       departureDate = LocalDate.of(2023,2,27),
     )
 
-    every { mockEmailNotificationService.sendEmail(any(),any(),any()) } returns Unit
-
     service.bookingMade(application, booking)
 
-    verify(exactly = 2) { mockEmailNotificationService.sendEmail(any(),any(),any()) }
+    mockEmailNotificationService.assertEmailRequestCount(2)
 
-    verify(exactly = 1) {
-      mockEmailNotificationService.sendEmail(
-        APPLICANT_EMAIL,
-        notifyConfig.templates.bookingMade,
-        match {
-          (it["lengthStay"] as Int) == 6 &&
-          it["lengthStayUnit"] as String == "days"
-        },
-      )
-    }
+    val expectedPersonalisation = mapOf(
+      "lengthStay" to 6,
+      "lengthStayUnit" to "days",
+    )
 
-    verify(exactly = 1) {
-      mockEmailNotificationService.sendEmail(
-        PREMISES_EMAIL,
-        notifyConfig.templates.bookingMadePremises,
-        match {
-          (it["lengthStay"] as Int) == 6 &&
-          it["lengthStayUnit"] as String == "days"
-        },
-      )
-    }
+    mockEmailNotificationService.assertEmailRequested(
+      APPLICANT_EMAIL,
+      notifyConfig.templates.bookingMade,
+      expectedPersonalisation,
+    )
+
+    mockEmailNotificationService.assertEmailRequested(
+      PREMISES_EMAIL,
+      notifyConfig.templates.bookingMadePremises,
+      expectedPersonalisation,
+    )
   }
 
   @Test
@@ -212,58 +188,36 @@ class Cas1BookingEmailServiceTest {
       departureDate = LocalDate.of(2023,2,14),
     )
 
-    every { mockEmailNotificationService.sendEmail(any(),any(),any()) } returns Unit
-
     service.bookingWithdrawn(application, booking)
 
-    verify(exactly = 3) {
-      mockEmailNotificationService.sendEmail(any(),any(),any())
-    }
+    val expectedPersonalisation = mapOf(
+      "apName" to PREMISES_NAME,
+      "applicationUrl" to "http://frontend/applications/${application.id}",
+      "crn" to CRN,
+      "startDate" to "2023-02-01",
+      "endDate" to "2023-02-14",
+      "region" to REGION_NAME,
+    )
 
-    verify(exactly = 1) {
-      mockEmailNotificationService.sendEmail(
-        APPLICANT_EMAIL,
-        notifyConfig.templates.bookingWithdrawn,
-        match {
-            it["apName"] == PREMISES_NAME &&
-            (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/${application.id}")) &&
-            it["crn"] == CRN &&
-            it["startDate"] == "2023-02-01" &&
-            it["endDate"] == "2023-02-14" &&
-            it["region"] == REGION_NAME
-        },
-      )
-    }
+    mockEmailNotificationService.assertEmailRequestCount(3)
+    mockEmailNotificationService.assertEmailRequested(
+      APPLICANT_EMAIL,
+      notifyConfig.templates.bookingWithdrawn,
+      expectedPersonalisation,
+    )
 
-    verify(exactly = 1) {
-      mockEmailNotificationService.sendEmail(
-        PREMISES_EMAIL,
-        notifyConfig.templates.bookingWithdrawn,
-        match {
-          it["apName"] == PREMISES_NAME &&
-                  (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/${application.id}")) &&
-                  it["crn"] == CRN &&
-                  it["startDate"] == "2023-02-01" &&
-                  it["endDate"] == "2023-02-14" &&
-                  it["region"] == REGION_NAME
-        },
-      )
-    }
+    mockEmailNotificationService.assertEmailRequested(
+      PREMISES_EMAIL,
+      notifyConfig.templates.bookingWithdrawn,
+      expectedPersonalisation,
+    )
 
-    verify(exactly = 1) {
-      mockEmailNotificationService.sendEmail(
-        AP_AREA_EMAIL,
-        notifyConfig.templates.bookingWithdrawn,
-        match {
-          it["apName"] == PREMISES_NAME &&
-            (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/${application.id}")) &&
-            it["crn"] == CRN &&
-            it["startDate"] == "2023-02-01" &&
-            it["endDate"] == "2023-02-14" &&
-            it["region"] == REGION_NAME
-        },
-      )
-    }
+    mockEmailNotificationService.assertEmailRequested(
+      AP_AREA_EMAIL,
+      notifyConfig.templates.bookingWithdrawn,
+      expectedPersonalisation,
+    )
+
   }
 
   @Test
@@ -288,13 +242,9 @@ class Cas1BookingEmailServiceTest {
       departureDate = LocalDate.of(2023,2,14),
     )
 
-    every { mockEmailNotificationService.sendEmail(any(),any(),any()) } returns Unit
-
     service.bookingWithdrawn(application, booking)
 
-    verify(exactly = 0) {
-      mockEmailNotificationService.sendEmail(any(),any(),any())
-    }
+    mockEmailNotificationService.assertNoEmailsRequested()
   }
 
   private fun createApplicationAndBooking(
