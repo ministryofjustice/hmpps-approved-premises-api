@@ -1388,15 +1388,15 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Creating a Booking from a Placement Request that is allocated to the User returns a 200`() {
+    fun `Creating a Booking from a Placement Request that is allocated to the User returns a 200 and sends email`() {
       `Given a User` { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
-            `Given an Application`(createdByUser = otherUser) {
+        `Given a User` { applicant, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            `Given an Application`(createdByUser = applicant) {
               `Given a Placement Request`(
                 placementRequestAllocatedTo = user,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = otherUser,
+                assessmentAllocatedTo = applicant,
+                createdByUser = applicant,
                 crn = offenderDetails.otherIds.crn,
               ) { placementRequest, _ ->
                 val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -1427,6 +1427,16 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   .exchange()
                   .expectStatus()
                   .isOk
+
+                emailNotificationAsserter.assertEmailsRequestedCount(2)
+                emailNotificationAsserter.assertEmailRequested(
+                  applicant.email!!,
+                  notifyConfig.templates.bookingMade,
+                )
+                emailNotificationAsserter.assertEmailRequested(
+                  premises.emailAddress!!,
+                  notifyConfig.templates.bookingMadePremises,
+                )
               }
             }
           }

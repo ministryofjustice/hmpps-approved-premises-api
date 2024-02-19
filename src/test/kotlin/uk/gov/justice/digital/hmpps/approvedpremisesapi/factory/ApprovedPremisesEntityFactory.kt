@@ -31,12 +31,17 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
   private var addressLine2: Yielded<String> = { randomStringUpperCase(10) }
   private var town: Yielded<String> = { randomStringUpperCase(10) }
   private var notes: Yielded<String> = { randomStringUpperCase(15) }
-  private var emailAddress: Yielded<String> = { randomStringUpperCase(10) }
+  private var emailAddress: Yielded<String?> = { randomStringUpperCase(10) }
   private var service: Yielded<String> = { "CAS1" }
   private var qCode: Yielded<String> = { randomStringUpperCase(4) }
   private var characteristics: Yielded<MutableList<CharacteristicEntity>> = { mutableListOf() }
   private var status: Yielded<PropertyStatus> = { randomOf(PropertyStatus.values().asList()) }
   private var point: Yielded<Point>? = null
+
+  fun withDefaults() = apply {
+    withDefaultProbationRegion()
+    withDefaultLocalAuthorityArea()
+  }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -140,6 +145,10 @@ class ApprovedPremisesEntityFactory : Factory<ApprovedPremisesEntity> {
 
   fun withPoint(point: Point) = apply {
     this.point = { point }
+  }
+
+  fun withEmailAddress(emailAddress: String?) = apply {
+    this.emailAddress = { emailAddress }
   }
 
   override fun produce(): ApprovedPremisesEntity = ApprovedPremisesEntity(

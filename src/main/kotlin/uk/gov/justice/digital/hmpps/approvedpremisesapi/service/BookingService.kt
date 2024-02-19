@@ -31,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
@@ -67,7 +66,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -84,8 +82,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.Instant
 import java.time.LocalDate
@@ -105,7 +103,6 @@ class BookingService(
   private val cruService: CruService,
   private val applicationService: ApplicationService,
   private val workingDayCountService: WorkingDayCountService,
-  private val emailNotificationService: EmailNotificationService,
   private val placementRequestService: PlacementRequestService,
   private val communityApiClient: CommunityApiClient,
   private val bookingRepository: BookingRepository,
@@ -128,13 +125,12 @@ class BookingService(
   private val bedMoveRepository: BedMoveRepository,
   private val premisesRepository: PremisesRepository,
   private val assessmentRepository: AssessmentRepository,
-  private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
-  @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: String,
   @Value("\${arrived-departed-domain-events-disabled}") private val arrivedAndDepartedDomainEventsDisabled: Boolean,
   private val userService: UserService,
   private val userAccessService: UserAccessService,
   private val assessmentService: AssessmentService,
+  private val cas1BookingEmailService: Cas1BookingEmailService,
 ) {
   val approvedPremisesBookingAppealedCancellationReasonId: UUID =
     UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
@@ -296,7 +292,7 @@ class BookingService(
         situation = application.situation,
       )
 
-      sendEmailNotifications(placementRequest.application, booking)
+      cas1BookingEmailService.bookingMade(placementRequest.application, booking)
 
       return@validated success(booking)
     }
@@ -441,7 +437,7 @@ class BookingService(
         createApprovedPremisesAdHocBookingDomainEvent(onlineApplication, offlineApplication, eventNumber, booking, user!!, bookingCreatedAt)
 
         if (onlineApplication != null) {
-          sendEmailNotifications(onlineApplication, booking)
+          cas1BookingEmailService.bookingMade(onlineApplication, booking)
         }
       }
 
@@ -477,43 +473,6 @@ class BookingService(
       sentenceType = onlineApplication?.sentenceType,
       situation = onlineApplication?.situation,
     )
-  }
-
-  private fun sendEmailNotifications(application: ApprovedPremisesApplicationEntity, booking: BookingEntity) {
-    val applicationSubmittedByUser = application.createdByUser
-
-    val lengthOfStayDays = booking.arrivalDate.getDaysUntilInclusive(booking.departureDate).size
-    val lengthOfStayWeeks = lengthOfStayDays.toDouble() / 7
-    val lengthOfStayWeeksWholeNumber = (lengthOfStayDays.toDouble() % 7) == 0.0
-
-    val emailPersonalisation = mapOf(
-      "name" to applicationSubmittedByUser.name,
-      "apName" to booking.premises.name,
-      "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
-      "bookingUrl" to bookingUrlTemplate.replace("#premisesId", booking.premises.id.toString())
-        .replace("#bookingId", booking.id.toString()),
-      "crn" to application.crn,
-      "startDate" to booking.arrivalDate.toString(),
-      "endDate" to booking.departureDate.toString(),
-      "lengthStay" to if (lengthOfStayWeeksWholeNumber) lengthOfStayWeeks.toInt() else lengthOfStayDays,
-      "lengthStayUnit" to if (lengthOfStayWeeksWholeNumber) "weeks" else "days",
-    )
-
-    if (applicationSubmittedByUser.email != null) {
-      emailNotificationService.sendEmail(
-        email = applicationSubmittedByUser.email!!,
-        templateId = notifyConfig.templates.bookingMade,
-        personalisation = emailPersonalisation,
-      )
-    }
-
-    if (booking.premises.emailAddress != null) {
-      emailNotificationService.sendEmail(
-        email = booking.premises.emailAddress!!,
-        templateId = notifyConfig.templates.bookingMadePremises,
-        personalisation = emailPersonalisation,
-      )
-    }
   }
 
   private fun fetchApplication(
@@ -1243,6 +1202,10 @@ class BookingService(
       booking = booking,
       isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.Booking
     )
+
+    booking.application?.let { application ->
+      cas1BookingEmailService.bookingWithdrawn(application, booking)
+    }
 
     return success(cancellationEntity)
   }

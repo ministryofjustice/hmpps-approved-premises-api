@@ -569,10 +569,18 @@ class WithdrawalTest : IntegrationTestBase() {
           assertPlacementRequestWithdrawn(placementRequest3, PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN)
           assertBookingNotWithdrawn(booking2HasArrival)
 
-          emailNotificationAsserter.assertEmailsRequestedCount(1)
+          emailNotificationAsserter.assertEmailsRequestedCount(3)
           emailNotificationAsserter.assertEmailRequested(
             applicant.email!!,
             notifyConfig.templates.applicationWithdrawn,
+          )
+          emailNotificationAsserter.assertEmailRequested(
+            applicant.email!!,
+            notifyConfig.templates.bookingWithdrawn,
+          )
+          emailNotificationAsserter.assertEmailRequested(
+            booking1NoArrival.premises.emailAddress!!,
+            notifyConfig.templates.bookingWithdrawn,
           )
         }
       }
@@ -594,9 +602,9 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Withdrawing a placement application cascades to applicable placement requests and bookings entities`() {
-      `Given a User` { user, jwt ->
+      `Given a User` { applicant, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          val (application, assessment) = createApplicationAndAssessment(user, user, offenderDetails)
+          val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
           val placementApplication1 = createPlacementApplication(application)
           val placementRequest1 = createPlacementRequest(application) {
@@ -646,7 +654,15 @@ class WithdrawalTest : IntegrationTestBase() {
 
           assertPlacementApplicationNotWithdrawn(placementApplication2)
 
-          emailNotificationAsserter.assertNoEmailsRequested()
+          emailNotificationAsserter.assertEmailsRequestedCount(2)
+          emailNotificationAsserter.assertEmailRequested(
+            applicant.email!!,
+            notifyConfig.templates.bookingWithdrawn,
+          )
+          emailNotificationAsserter.assertEmailRequested(
+            booking1NoArrival.premises.emailAddress!!,
+            notifyConfig.templates.bookingWithdrawn,
+          )
         }
       }
     }
@@ -663,9 +679,9 @@ class WithdrawalTest : IntegrationTestBase() {
      */
     @Test
     fun `Withdrawing a placement request cascades to booking with arrival and updates the application status`() {
-      `Given a User` { user, jwt ->
+      `Given a User` { applicant, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          val (application, assessment) = createApplicationAndAssessment(user, user, offenderDetails)
+          val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
           val placementRequest = createPlacementRequest(application)
           val bookingNoArrival = createBooking(
@@ -692,7 +708,15 @@ class WithdrawalTest : IntegrationTestBase() {
           assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
           assertBookingWithdrawn(bookingNoArrival, "Related placement request withdrawn")
 
-          emailNotificationAsserter.assertNoEmailsRequested()
+          emailNotificationAsserter.assertEmailsRequestedCount(2)
+          emailNotificationAsserter.assertEmailRequested(
+            applicant.email!!,
+            notifyConfig.templates.bookingWithdrawn,
+          )
+          emailNotificationAsserter.assertEmailRequested(
+            bookingNoArrival.premises.emailAddress!!,
+            notifyConfig.templates.bookingWithdrawn,
+          )
         }
       }
     }

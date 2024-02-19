@@ -19,22 +19,22 @@ class EmailNotificationService(
 ) {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
-  fun sendEmail(email: String, templateId: String, personalisation: Map<String, *>) {
-    applicationEventPublisher.publishEvent(SendEmailRequestedEvent(EmailRequest(email, templateId, personalisation)))
+  fun sendEmail(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>) {
+    applicationEventPublisher.publishEvent(SendEmailRequestedEvent(EmailRequest(recipientEmailAddress, templateId, personalisation)))
 
     try {
       if (notifyConfig.mode == NotifyMode.DISABLED) {
-        log.info("Email sending is disabled - would have sent template $templateId to user $email")
+        log.info("Email sending is disabled - would have sent template $templateId to user $recipientEmailAddress")
         return
       }
 
       if (notifyConfig.mode == NotifyMode.TEST_AND_GUEST_LIST) {
-        guestListNotificationClient!!.sendEmail(templateId, email, personalisation, null)
+        guestListNotificationClient!!.sendEmail(templateId, recipientEmailAddress, personalisation, null)
       } else {
-        normalNotificationClient!!.sendEmail(templateId, email, personalisation, null)
+        normalNotificationClient!!.sendEmail(templateId, recipientEmailAddress, personalisation, null)
       }
     } catch (notificationClientException: NotificationClientException) {
-      log.error("Unable to send template $templateId to user $email", notificationClientException)
+      log.error("Unable to send template $templateId to user $recipientEmailAddress", notificationClientException)
     }
   }
 }

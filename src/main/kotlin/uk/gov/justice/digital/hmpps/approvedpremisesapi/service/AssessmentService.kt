@@ -222,7 +222,7 @@ class AssessmentService(
     if (allocatedUser != null) {
       if (allocatedUser.email != null) {
         emailNotificationService.sendEmail(
-          email = allocatedUser.email!!,
+          recipientEmailAddress = allocatedUser.email!!,
           templateId = notifyConfig.templates.assessmentAllocated,
           personalisation = mapOf(
             "name" to allocatedUser.name,
@@ -428,7 +428,7 @@ class AssessmentService(
 
       application.createdByUser.email?.let { email ->
         emailNotificationService.sendEmail(
-          email = email,
+          recipientEmailAddress = email,
           templateId = notifyConfig.templates.assessmentAccepted,
           personalisation = mapOf(
             "name" to application.createdByUser.name,
@@ -439,7 +439,7 @@ class AssessmentService(
 
         if (createPlacementRequest && sendPlacementRequestNotifications) {
           emailNotificationService.sendEmail(
-            email = email,
+            recipientEmailAddress = email,
             templateId = notifyConfig.templates.placementRequestSubmitted,
             personalisation = mapOf(
               "crn" to application.crn,
@@ -637,7 +637,7 @@ class AssessmentService(
       )
       if (application.createdByUser.email != null) {
         emailNotificationService.sendEmail(
-          email = application.createdByUser.email!!,
+          recipientEmailAddress = application.createdByUser.email!!,
           templateId = notifyConfig.templates.assessmentRejected,
           personalisation = mapOf(
             "name" to application.createdByUser.name,
@@ -770,7 +770,7 @@ class AssessmentService(
     if (application is ApprovedPremisesApplicationEntity) {
       if (assigneeUser.email != null) {
         emailNotificationService.sendEmail(
-          email = assigneeUser.email!!,
+          recipientEmailAddress = assigneeUser.email!!,
           templateId = notifyConfig.templates.assessmentAllocated,
           personalisation = mapOf(
             "name" to assigneeUser.name,
@@ -783,7 +783,7 @@ class AssessmentService(
       if (allocatedToUser != null) {
         if (allocatedToUser.email != null) {
           emailNotificationService.sendEmail(
-            email = allocatedToUser.email!!,
+            recipientEmailAddress = allocatedToUser.email!!,
             templateId = notifyConfig.templates.assessmentDeallocated,
             personalisation = mapOf(
               "name" to currentAssessment.allocatedToUser!!.name,
@@ -959,7 +959,7 @@ class AssessmentService(
         allocatedUserEmail != null
       ) {
         emailNotificationService.sendEmail(
-          email = allocatedUserEmail,
+          recipientEmailAddress = allocatedUserEmail,
           templateId = notifyConfig.templates.assessmentWithdrawn,
           personalisation = mapOf(
             "applicationUrl" to applicationUrlTemplate.resolve("id", assessment.application.id.toString()),
