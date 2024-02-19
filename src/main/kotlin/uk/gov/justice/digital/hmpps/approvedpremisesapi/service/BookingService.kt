@@ -1150,26 +1150,20 @@ class BookingService(
     notes: String?,
     withdrawalContext: WithdrawalContext,
   ) = validated<CancellationEntity> {
+    if(booking.application != null && booking.application !is ApprovedPremisesApplicationEntity) {
+      return generalError("Application is not for CAS1")
+    }
+
     val existingCancellation = booking.cancellation
     if (booking.premises is ApprovedPremisesEntity && existingCancellation != null) {
       return success(existingCancellation)
     }
 
-    if(booking.application != null && booking.application !is ApprovedPremisesApplicationEntity) {
-      return generalError("Application is not for CAS1")
-    }
-    val application = booking.application as ApprovedPremisesApplicationEntity?
-
     if(!booking.isInCancellableStateCas1()) {
       return generalError("The Booking is not in a state that can be cancelled")
     }
 
-    val resolvedReasonId = when(withdrawalContext.triggeringEntityType) {
-      WithdrawableEntityType.Application -> CAS1_RELATED_APP_WITHDRAWN_ID
-      WithdrawableEntityType.PlacementApplication -> CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
-      WithdrawableEntityType.PlacementRequest -> CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
-      WithdrawableEntityType.Booking -> userProvidedReason
-    }
+    val resolvedReasonId = toCas1CancellationReason(withdrawalContext, userProvidedReason)
 
     val reason = cancellationReasonRepository.findByIdOrNull(resolvedReasonId)
     if (reason == null) {
@@ -1208,9 +1202,20 @@ class BookingService(
       isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.Booking
     )
 
+    val application = booking.application as ApprovedPremisesApplicationEntity?
     application?.let { cas1BookingEmailService.bookingWithdrawn(it, booking) }
 
     return success(cancellationEntity)
+  }
+
+  private fun toCas1CancellationReason(
+    withdrawalContext: WithdrawalContext,
+    userProvidedReason: UUID?,
+  ) = when (withdrawalContext.triggeringEntityType) {
+    WithdrawableEntityType.Application -> CAS1_RELATED_APP_WITHDRAWN_ID
+    WithdrawableEntityType.PlacementApplication -> CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
+    WithdrawableEntityType.PlacementRequest -> CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
+    WithdrawableEntityType.Booking -> userProvidedReason
   }
 
   private fun updateApplicationStatusOnCancellation(
