@@ -94,6 +94,7 @@ class Cas2ApplicationsSeedJob(
         description = status.description,
         label = status.label,
         statusId = status.id,
+        createdAt = OffsetDateTime.now(),
       ),
     )
   }

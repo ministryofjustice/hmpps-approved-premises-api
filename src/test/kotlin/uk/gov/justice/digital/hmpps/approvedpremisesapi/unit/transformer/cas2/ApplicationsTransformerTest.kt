@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.sql.Timestamp
 import java.time.Instant
@@ -31,6 +33,7 @@ class ApplicationsTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val mockNomisTransformer = mockk<NomisUserTransformer>()
   private val mockStatusUpdateTransformer = mockk<StatusUpdateTransformer>()
+  private val mockTimelineEventsTransformer = mockk<TimelineEventsTransformer>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -44,6 +47,7 @@ class ApplicationsTransformerTest {
       mockPersonTransformer,
       mockNomisTransformer,
       mockStatusUpdateTransformer,
+      mockTimelineEventsTransformer,
     )
 
   private val user = NomisUserEntityFactory().produce()
@@ -63,6 +67,7 @@ class ApplicationsTransformerTest {
       isActive = user.isActive,
     )
     every { mockStatusUpdateTransformer.transformJpaToApi(any()) } returns mockk<Cas2StatusUpdate>()
+    every { mockTimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf()
   }
 
   @Nested
@@ -76,9 +81,27 @@ class ApplicationsTransformerTest {
 
       val result = applicationsTransformer.transformJpaToApi(application, mockk())
 
+      assertThat(result).hasOnlyFields(
+        "id",
+        "person",
+        "createdBy",
+        "schemaVersion",
+        "outdatedSchema",
+        "createdAt",
+        "submittedAt",
+        "data",
+        "document",
+        "status",
+        "type",
+        "telephoneNumber",
+        "statusUpdates",
+        "timelineEvents",
+      )
+
       assertThat(result.id).isEqualTo(application.id)
       assertThat(result.createdBy.id).isEqualTo(user.id)
       assertThat(result.status).isEqualTo(ApplicationStatus.inProgress)
+      assertThat(result.timelineEvents).isEqualTo(listOf<Cas2TimelineEvent>())
     }
 
     @Test

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmittedApplicationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.sql.Timestamp
 import java.time.Instant
@@ -31,6 +33,7 @@ class SubmittedApplicationTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val mockNomisUserTransformer = mockk<NomisUserTransformer>()
   private val mockStatusUpdateTransformer = mockk<StatusUpdateTransformer>()
+  private val mockTimelineEventsTransformer = mockk<TimelineEventsTransformer>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -43,6 +46,7 @@ class SubmittedApplicationTransformerTest {
     mockPersonTransformer,
     mockNomisUserTransformer,
     mockStatusUpdateTransformer,
+    mockTimelineEventsTransformer,
   )
 
   private val user = NomisUserEntityFactory().produce()
@@ -62,6 +66,7 @@ class SubmittedApplicationTransformerTest {
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
     every { mockNomisUserTransformer.transformJpaToApi(any()) } returns mockNomisUser
     every { mockStatusUpdateTransformer.transformJpaToApi(any()) } returns mockStatusUpdateApi
+    every { mockTimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf(mockk<Cas2TimelineEvent>())
   }
 
   @Nested
@@ -89,6 +94,7 @@ class SubmittedApplicationTransformerTest {
         "submittedAt",
         "submittedBy",
         "telephoneNumber",
+        "timelineEvents",
       )
     }
   }

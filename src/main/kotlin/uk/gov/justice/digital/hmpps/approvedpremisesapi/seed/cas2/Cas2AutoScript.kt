@@ -115,6 +115,7 @@ class Cas2AutoScript(
         description = status.description,
         label = status.label,
         statusId = status.id,
+        createdAt = OffsetDateTime.now(),
       ),
     )
     update.apply { this.createdAt = application.submittedAt!!.plusDays(idx + 1.toLong()) }

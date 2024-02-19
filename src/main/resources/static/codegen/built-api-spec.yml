@@ -6205,6 +6205,10 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Cas2StatusUpdate'
+            timelineEvents:
+              type: array
+              items:
+                $ref: '#/components/schemas/Cas2TimelineEvent'
           required:
             - createdBy
             - schemaVersion
@@ -6239,6 +6243,10 @@ components:
             $ref: '#/components/schemas/Cas2StatusUpdate'
         telephoneNumber:
           type: string
+        timelineEvents:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2TimelineEvent'
       required:
         - id
         - person
@@ -6247,6 +6255,7 @@ components:
         - schemaVersion
         - outdatedSchema
         - status
+        - timelineEvents
     TemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/Application'
@@ -7879,12 +7888,34 @@ components:
         - cas3_person_arrived
         - cas3_person_departed
         - application_timeline_note
+        - cas2_application_submitted
+        - cas2_note
+        - cas2_status_update
     TimelineEventUrlType:
       type: string
       enum:
         - application
         - booking
         - assessment
+    Cas2TimelineEvent:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/TimelineEventType'
+        occurredAt:
+          type: string
+          format: date-time
+        label:
+          type: string
+        body:
+          type: string
+        createdByName:
+          type: string
+      required:
+        - type
+        - occurredAt
+        - label
+        - createdByName
     SeedRequest:
       type: object
       properties:
