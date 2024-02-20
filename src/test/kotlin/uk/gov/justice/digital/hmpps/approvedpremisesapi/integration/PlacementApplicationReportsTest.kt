@@ -77,6 +77,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PlacementApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -493,6 +494,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       checkNotNull(booking)
 
       assertThat(reportRow.bookingID).isEqualTo(booking.id.toString())
+      assertThat(reportRow.bookingMadeDate).isToday()
 
       if (expectedRow.hasCancellation) {
         val cancellation = booking.cancellation!!

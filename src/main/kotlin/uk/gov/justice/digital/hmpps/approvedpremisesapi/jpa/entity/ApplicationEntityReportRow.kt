@@ -42,6 +42,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       cast(withdrawl_event.data -> 'eventDetails' ->> 'withdrawnAt' as date) as applicationWithdrawalDate,
       withdrawl_event.data -> 'eventDetails' ->> 'withdrawalReason' as applicationWithdrawalReason,
       cast(booking_made_event.booking_id as text) as bookingID,
+      booking_made_event.occurred_at as bookingMadeDate,
       booking_cancelled_event.data -> 'eventDetails' ->> 'cancellationReason' as bookingCancellationReason,
       cast(booking_cancelled_event.data -> 'eventDetails' ->> 'cancelledAt' as date) as bookingCancellationDate,
       cast(booking_made_event.data -> 'eventDetails' ->> 'arrivalOn' as date) as expectedArrivalDate,
@@ -131,6 +132,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       ) as applicationWithdrawalDate,
       withdrawl_event.data -> 'eventDetails' ->> 'withdrawalReason' as applicationWithdrawalReason,
       cast(booking_made_event.booking_id as text) as bookingID,
+      booking_made_event.occurred_at as bookingMadeDate,
       booking_cancelled_event.data -> 'eventDetails' ->> 'cancellationReason' as bookingCancellationReason,
       cast(
         booking_cancelled_event.data -> 'eventDetails' ->> 'cancelledAt' as date
@@ -213,6 +215,7 @@ interface ApplicationEntityReportRow {
   fun getApplicationWithdrawalDate(): Date?
   fun getApplicationWithdrawalReason(): String?
   fun getBookingID(): String?
+  fun getBookingMadeDate(): Timestamp?
   fun getBookingCancellationReason(): String?
   fun getBookingCancellationDate(): Date?
   fun getExpectedArrivalDate(): Date?

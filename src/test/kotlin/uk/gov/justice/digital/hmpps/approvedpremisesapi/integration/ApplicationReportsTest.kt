@@ -74,6 +74,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -356,6 +357,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
 
     if (booking != null) {
       assertThat(reportRow.bookingID).isEqualTo(booking.id.toString())
+      assertThat(reportRow.bookingMadeDate).isToday()
       assertThat(reportRow.expectedArrivalDate).isEqualTo(booking.arrivalDate)
       assertThat(reportRow.expectedDepartureDate).isEqualTo("2022-08-30")
       assertThat(reportRow.premisesName).isEqualTo(booking.premises.name)
