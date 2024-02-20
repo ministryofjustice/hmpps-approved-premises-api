@@ -11,10 +11,12 @@ class ApplicationNotesTransformer {
     jpa: Cas2ApplicationNoteEntity,
   ):
     Cas2ApplicationNote {
+    val name = jpa.getUser().name
+    val email = jpa.getUser().email ?: "Not found"
     return Cas2ApplicationNote(
       id = jpa.id,
-      name = jpa.createdByNomisUser.name,
-      email = jpa.createdByNomisUser.email ?: "Not found",
+      name = name,
+      email = email,
       body = jpa.body,
       createdAt = jpa.createdAt.toInstant(),
     )

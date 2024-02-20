@@ -22,17 +22,17 @@ data class NomisUserEntity(
   val id: UUID,
   val nomisUsername: String,
   var nomisStaffId: Long,
-  var name: String,
+  override var name: String,
   var accountType: String,
   var isEnabled: Boolean,
   var isActive: Boolean,
-  var email: String?,
+  override var email: String?,
 
   @CreationTimestamp
   private val createdAt: OffsetDateTime? = null,
 
   @OneToMany(mappedBy = "createdByUser")
   val applications: MutableList<Cas2ApplicationEntity>,
-) {
+) : Cas2User {
   override fun toString() = "Nomis user $id"
 }

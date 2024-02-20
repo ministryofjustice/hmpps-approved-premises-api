@@ -74,7 +74,7 @@ class TimelineEventsTransformerTest {
       val note = Cas2ApplicationNoteEntity(
         id = UUID.randomUUID(),
         createdAt = noteCreatedAt,
-        createdByNomisUser = nomisUser,
+        createdByUser = nomisUser,
         application = submittedCas2ApplicationFactory.produce(),
         body = "a comment",
       )
@@ -110,7 +110,7 @@ class TimelineEventsTransformerTest {
             type = TimelineEventType.cas2Note,
             occurredAt = noteCreatedAt.toInstant(),
             label = "Note",
-            createdByName = note.createdByNomisUser.name,
+            createdByName = note.getUser().name,
             body = "a comment",
           ),
           Cas2TimelineEvent(
