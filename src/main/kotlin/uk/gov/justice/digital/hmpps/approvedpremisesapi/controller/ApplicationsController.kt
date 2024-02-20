@@ -317,7 +317,6 @@ class ApplicationsController(
 
   override fun applicationsApplicationIdTimelineGet(applicationId: UUID, xServiceName: ServiceName):
     ResponseEntity<List<TimelineEvent>> {
-    val user = userService.getUserForRequest()
     if (xServiceName != ServiceName.approvedPremises) {
       throw NotImplementedProblem("Timeline is only supported for Approved Premises applications")
     }

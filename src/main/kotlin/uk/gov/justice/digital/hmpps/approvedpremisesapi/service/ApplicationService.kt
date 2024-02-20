@@ -526,7 +526,7 @@ class ApplicationService(
   }
 
   fun updateApprovedPremisesApplicationStatus(applicationId: UUID, status: ApprovedPremisesApplicationStatus) {
-    applicationRepository.updateStatus(applicationId,status)
+    applicationRepository.updateStatus(applicationId, status)
   }
 
   @Transactional

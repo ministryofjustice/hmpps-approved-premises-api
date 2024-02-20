@@ -28,6 +28,7 @@ class ApplicationTimelineTransformerTest {
     UrlTemplate("http://somehost:3000/applications/#id"),
     UrlTemplate("http://somehost:3000/assessments/#id"),
     UrlTemplate("http://somehost:3000/premises/#premisesId/bookings/#bookingId"),
+    UrlTemplate("http://somehost:3000/applications/#applicationId/appeals/#appealId"),
     mockDomainEventDescriber,
   )
 
@@ -39,6 +40,7 @@ class ApplicationTimelineTransformerTest {
     override val assessmentId: UUID?,
     override val bookingId: UUID?,
     override val premisesId: UUID?,
+    override val appealId: UUID?,
   ) : DomainEventSummary
 
   @ParameterizedTest
@@ -53,6 +55,7 @@ class ApplicationTimelineTransformerTest {
       applicationId = null,
       assessmentId = null,
       premisesId = null,
+      appealId = null,
     )
 
     every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
@@ -89,6 +92,7 @@ class ApplicationTimelineTransformerTest {
       applicationId = applicationId,
       assessmentId = null,
       premisesId = null,
+      appealId = null,
     )
 
     every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
@@ -106,6 +110,44 @@ class ApplicationTimelineTransformerTest {
     )
   }
 
+  @ParameterizedTest
+  @MethodSource("domainEventTypeArgs")
+  fun `transformDomainEventSummaryToTimelineEvent adds appealUrl for appeal events`(args: Pair<DomainEventType, TimelineEventType>) {
+    val applicationId = UUID.randomUUID()
+    val appealId = UUID.randomUUID()
+    val (domainEventType, timelineEventType) = args
+    val domainEvent = DomainEventSummaryImpl(
+      id = UUID.randomUUID().toString(),
+      type = domainEventType,
+      occurredAt = OffsetDateTime.now().toTimestamp(),
+      bookingId = null,
+      applicationId = applicationId,
+      assessmentId = null,
+      premisesId = null,
+      appealId = appealId,
+    )
+
+    every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
+
+    Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
+      TimelineEvent(
+        id = domainEvent.id,
+        type = timelineEventType,
+        occurredAt = domainEvent.occurredAt.toInstant(),
+        associatedUrls = if (domainEventType == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED) {
+          listOf(
+            TimelineEventAssociatedUrl(TimelineEventUrlType.assessmentAppeal, "http://somehost:3000/applications/$applicationId/appeals/$appealId"),
+          )
+        } else {
+          listOf(
+            TimelineEventAssociatedUrl(TimelineEventUrlType.application, "http://somehost:3000/applications/$applicationId"),
+          )
+        },
+        content = "Some event",
+      ),
+    )
+  }
+
   @Test
   fun `transformDomainEventSummaryToTimelineEvent adds bookingUrl if booking id defined`() {
     val bookingId = UUID.randomUUID()
@@ -118,6 +160,7 @@ class ApplicationTimelineTransformerTest {
       applicationId = null,
       assessmentId = null,
       premisesId = premisesId,
+      appealId = null,
     )
 
     every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
@@ -146,6 +189,7 @@ class ApplicationTimelineTransformerTest {
       applicationId = null,
       assessmentId = assessmentId,
       premisesId = null,
+      appealId = null,
     )
 
     every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
@@ -169,6 +213,7 @@ class ApplicationTimelineTransformerTest {
     val assessmentId = UUID.randomUUID()
     val bookingId = UUID.randomUUID()
     val premisesId = UUID.randomUUID()
+    val appealId = UUID.randomUUID()
     val domainEvent = DomainEventSummaryImpl(
       id = UUID.randomUUID().toString(),
       type = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
@@ -177,6 +222,7 @@ class ApplicationTimelineTransformerTest {
       applicationId = applicationId,
       assessmentId = assessmentId,
       premisesId = premisesId,
+      appealId = appealId,
     )
 
     every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
