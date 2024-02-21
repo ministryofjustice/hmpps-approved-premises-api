@@ -94,7 +94,8 @@ class ReportServiceTest {
     assessmentSubmittedDate = LocalDate.now(),
     referralEligibleForCas3 = true,
     referralEligibilityReason = "reason",
-    accommodationRequiredDate = Timestamp.valueOf(LocalDateTime.now())
+    accommodationRequiredDate = Timestamp.valueOf(LocalDateTime.now()),
+    prisonNameOnCreation = null,
   )
 
   @Suppress("LongParameterList")
@@ -119,5 +120,6 @@ class ReportServiceTest {
     override val referralEligibleForCas3: Boolean?,
     override val referralEligibilityReason: String?,
     override val accommodationRequiredDate: Timestamp?,
+    override val prisonNameOnCreation: String?,
   ) : TransitionalAccommodationReferralReportData
 }

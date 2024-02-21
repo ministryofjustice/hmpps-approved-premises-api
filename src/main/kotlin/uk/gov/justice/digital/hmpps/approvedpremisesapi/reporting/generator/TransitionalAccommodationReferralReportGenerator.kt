@@ -44,7 +44,7 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
         rejectionReason = referralData.assessmentRejectionReason,
         rejectionDate = if (AssessmentDecision.REJECTED.name == referralData.assessmentDecision) referralData.assessmentSubmittedDate else null,
         sourceOfReferral = referralData.referralEligibilityReason,
-        prisonName = "",
+        prisonAtReferral = referralData.prisonNameOnCreation,
         prisonReleaseDate = null,
         accommodationRequiredDate = referralData.accommodationRequiredDate?.toLocalDateTime()?.toLocalDate(),
         bookingOffered = referralData.bookingId != null,

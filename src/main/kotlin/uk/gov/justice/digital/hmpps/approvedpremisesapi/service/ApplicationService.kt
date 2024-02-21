@@ -44,11 +44,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -358,6 +360,7 @@ class ApplicationService(
     deliusEventNumber: String?,
     offenceId: String?,
     createWithRisks: Boolean? = true,
+    personInfo: PersonInfoResult.Success.Full,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     if (!user.hasRole(UserRole.CAS3_REFERRER)) {
       return AuthorisableActionResult.Unauthorised()
@@ -408,6 +411,8 @@ class ApplicationService(
           }
         }
 
+        val prisonName = getPrisonName(personInfo)
+
         val createdApplication = applicationRepository.save(
           createTemporaryAccommodationApplicationEntity(
             crn,
@@ -417,6 +422,7 @@ class ApplicationService(
             offenceId,
             riskRatings,
             offenderDetails,
+            prisonName,
           ),
         )
 
@@ -433,6 +439,7 @@ class ApplicationService(
     offenceId: String?,
     riskRatings: PersonRisks?,
     offenderDetails: OffenderDetailSummary,
+    prisonName: String?,
   ): TemporaryAccommodationApplicationEntity {
     return TemporaryAccommodationApplicationEntity(
       id = UUID.randomUUID(),
@@ -462,6 +469,7 @@ class ApplicationService(
       isEligible = null,
       eligibilityReason = null,
       dutyToReferLocalAuthorityAreaName = null,
+      prisonNameOnCreation = prisonName,
     )
   }
 
@@ -1051,5 +1059,17 @@ class ApplicationService(
   ): ApplicationTimelineNote {
     val savedNote = applicationTimelineNoteService.saveApplicationTimelineNote(applicationId, note, user)
     return applicationTimelineNoteTransformer.transformJpaToApi(savedNote)
+  }
+
+  private fun getPrisonName(personInfo: PersonInfoResult.Success.Full): String? {
+    val prisonName = when (personInfo.inmateDetail?.inOutStatus) {
+      InOutStatus.IN,
+      InOutStatus.TRN,
+      -> {
+        personInfo.inmateDetail?.assignedLivingUnit?.agencyName ?: personInfo.inmateDetail?.assignedLivingUnit?.agencyId
+      }
+      else -> null
+    }
+    return prisonName
   }
 }

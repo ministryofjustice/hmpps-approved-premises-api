@@ -228,6 +228,7 @@ class ApplicationsController(
             body.deliusEventNumber,
             body.offenceId,
             createWithRisks,
+            personInfo,
           )
       ) {
         is AuthorisableActionResult.NotFound -> throw NotFoundProblem(actionResult.id!!, actionResult.entityType!!)

@@ -45,6 +45,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var isEligible: Yielded<Boolean?> = { null }
   private var eligibilityReason: Yielded<String?> = { null }
   private var dutyToReferLocalAuthorityAreaName: Yielded<String?> = { null }
+  private var prisonNameAtReferral: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -154,6 +155,10 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.dutyToReferLocalAuthorityAreaName = { dutyToReferLocalAuthorityAreaName }
   }
 
+  fun withPrisonNameAtReferral(prisonNameAtReferral: String?) = apply {
+    this.prisonNameAtReferral = { prisonNameAtReferral }
+  }
+
   override fun produce(): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -180,5 +185,6 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     isEligible = this.isEligible(),
     eligibilityReason = this.eligibilityReason(),
     dutyToReferLocalAuthorityAreaName = this.dutyToReferLocalAuthorityAreaName(),
+    prisonNameOnCreation = this.prisonNameAtReferral(),
   )
 }

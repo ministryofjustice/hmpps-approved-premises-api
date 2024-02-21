@@ -1,0 +1,2 @@
+-- Alter table temporary_accommodation_applications by adding new optional column prison_name_on_creation
+ALTER TABLE temporary_accommodation_applications ADD COLUMN prison_name_on_creation TEXT NULL;
