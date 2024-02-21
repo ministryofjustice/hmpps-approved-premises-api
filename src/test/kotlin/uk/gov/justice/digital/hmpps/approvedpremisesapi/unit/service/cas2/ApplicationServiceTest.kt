@@ -484,8 +484,7 @@ class ApplicationServiceTest {
 
       assertThat(applicationService.submitApplication(submitCas2Application) is AuthorisableActionResult.NotFound).isTrue
 
-      verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
-      verify(exactly = 0) { mockAssessmentService.createCas2Assessment(any()) }
+      assertEmailAndAssessmentsWereNotCreated()
     }
 
     @Test
@@ -506,8 +505,8 @@ class ApplicationServiceTest {
         application
 
       assertThat(applicationService.submitApplication(submitCas2Application) is AuthorisableActionResult.Unauthorised).isTrue
-      verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
-      verify(exactly = 0) { mockAssessmentService.createCas2Assessment(any()) }
+
+      assertEmailAndAssessmentsWereNotCreated()
     }
 
     @Test
@@ -536,8 +535,8 @@ class ApplicationServiceTest {
       val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
-      verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
-      verify(exactly = 0) { mockAssessmentService.createCas2Assessment(any()) }
+
+      assertEmailAndAssessmentsWereNotCreated()
     }
 
     @Test
@@ -569,8 +568,8 @@ class ApplicationServiceTest {
       val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
-      verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
-      verify(exactly = 0) { mockAssessmentService.createCas2Assessment(any()) }
+
+      assertEmailAndAssessmentsWereNotCreated()
     }
 
     @Test
@@ -621,6 +620,11 @@ class ApplicationServiceTest {
         applicationService.submitApplication(submitCas2Application)
       }
       assertThat(exception.message).isEqualTo("Inmate Detail not found")
+
+      assertEmailAndAssessmentsWereNotCreated()
+    }
+
+    private fun assertEmailAndAssessmentsWereNotCreated() {
       verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
       verify(exactly = 0) { mockAssessmentService.createCas2Assessment(any()) }
     }
