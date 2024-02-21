@@ -271,6 +271,9 @@ class ApplicationReportsTest : IntegrationTestBase() {
       val multipleBookings1 = createBookingForApplication(applicationWithMultipleBookings)
       val multipleBookings2 = createBookingForApplication(applicationWithMultipleBookings)
 
+      val applicationShortNotice = createApplication()
+      acceptAssessmentForApplication(applicationShortNotice, shortNotice = true)
+
       webTestClient.get()
         .uri("/reports/referrals?year=${LocalDate.now().year}&month=${LocalDate.now().monthValue}")
         .header("Authorization", "Bearer $jwt")
@@ -285,7 +288,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
             .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(8)
+          assertThat(actual.size).isEqualTo(9)
 
           assertApplicationRowHasCorrectData(actual, applicationWithoutAssessment.id, null, userEntity, ApplicationFacets(reportType = ReportType.Referrals, isAssessed = false))
           assertApplicationRowHasCorrectData(actual, applicationWithBooking.id, arrivedBooking, userEntity, ApplicationFacets(reportType = ReportType.Referrals))
@@ -295,6 +298,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
           assertApplicationRowHasCorrectData(actual, applicationWithPlacementApplication.id, null, userEntity, ApplicationFacets(hasPlacementApplication = true, reportType = ReportType.Referrals))
           assertApplicationRowHasCorrectData(actual, applicationWithMultipleAssessments.id, null, userEntity, ApplicationFacets(reportType = ReportType.Referrals))
           assertApplicationRowHasCorrectData(actual, applicationWithMultipleBookings.id, multipleBookings2, userEntity, ApplicationFacets(reportType = ReportType.Referrals))
+          assertApplicationRowHasCorrectData(actual, applicationShortNotice.id, booking = null, userEntity, ApplicationFacets(reportType = ReportType.Referrals, isShortNotice = true))
         }
     }
   }
@@ -311,6 +315,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
     val isAssessed: Boolean = true,
     val hasPlacementApplication: Boolean = false,
     val reportType: ReportType = ReportType.Applications,
+    val isShortNotice: Boolean = false,
   )
 
   private fun assertApplicationRowHasCorrectData(
@@ -340,6 +345,11 @@ class ApplicationReportsTest : IntegrationTestBase() {
       assertThat(reportRow.assessorCru).isEqualTo("Wales")
       assertThat(reportRow.assessmentDecision).isEqualTo(assessment.decision.toString())
       assertThat(reportRow.assessmentDecisionRationale).isEqualTo(assessment.rejectionRationale)
+
+      if (applicationFacets.isShortNotice) {
+        assertThat(reportRow.agreeWithShortNoticeReason).isEqualTo("yes")
+        assertThat(reportRow.reasonForLateApplication).isEqualTo("thisIsTheReasonForLateApplication")
+      }
     }
 
     assertThat(reportRow.ageInYears).isEqualTo(Period.between(offenderDetailSummary.dateOfBirth, LocalDate.now()).years)
@@ -512,12 +522,25 @@ class ApplicationReportsTest : IntegrationTestBase() {
     return realApplicationRepository.findByIdOrNull(application.id) as ApprovedPremisesApplicationEntity
   }
 
-  private fun acceptAssessmentForApplication(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
+  private fun acceptAssessmentForApplication(application: ApprovedPremisesApplicationEntity, shortNotice: Boolean = false): ApprovedPremisesAssessmentEntity {
     val (assessorEntity, jwt) = assessorDetails
     val assessment = realAssessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)!!
     val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 
-    assessment.data = "{}"
+    assessment.data =  if (shortNotice) {
+      """{
+         "suitability-assessment": {
+            "application-timeliness": {
+               "agreeWithShortNoticeReason": "yes",
+               "agreeWithShortNoticeReasonComments": "",
+               "reasonForLateApplication": "thisIsTheReasonForLateApplication"
+            }
+         }
+      }"""
+    } else {
+      "{ }"
+    }
+
     assessment.allocatedToUser = assessorEntity
     realAssessmentRepository.save(assessment)
 

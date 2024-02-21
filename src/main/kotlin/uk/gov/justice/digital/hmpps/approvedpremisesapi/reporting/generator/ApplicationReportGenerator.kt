@@ -19,6 +19,8 @@ class ApplicationReportGenerator : ReportGenerator<ApplicationEntityReportRow, A
         assessorCru = this.getAssessorCru(),
         assessmentDecision = this.getAssessmentDecision(),
         assessmentDecisionRationale = this.getAssessmentDecisionRationale(),
+        agreeWithShortNoticeReason = this.getAgreeWithShortNoticeReason(),
+        reasonForLateApplication = this.getReasonForLateApplication(),
         ageInYears = this.getAgeInYears()?.toInt(),
         gender = this.getGender(),
         mappa = this.getMappa() ?: "Not found",
