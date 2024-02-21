@@ -343,6 +343,12 @@ components:
     AssessmentTask:
       allOf:
         - $ref: '#/components/schemas/Task'
+        - type: object
+          properties:
+            createdFromAppeal:
+              type: boolean
+          required:
+            - createdFromAppeal
     PlacementRequestTask:
       allOf:
         - $ref: '#/components/schemas/Task'
