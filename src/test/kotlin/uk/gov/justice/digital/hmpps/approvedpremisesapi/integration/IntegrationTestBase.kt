@@ -496,6 +496,9 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var notifyConfig: NotifyConfig
 
+  @Autowired
+  lateinit var snsDomainEventListener: SnsDomainEventListener
+
   lateinit var probationRegionEntityFactory: PersistedFactory<ProbationRegionEntity, UUID, ProbationRegionEntityFactory>
   lateinit var apAreaEntityFactory: PersistedFactory<ApAreaEntity, UUID, ApAreaEntityFactory>
   lateinit var localAuthorityEntityFactory: PersistedFactory<LocalAuthorityAreaEntity, UUID, LocalAuthorityEntityFactory>

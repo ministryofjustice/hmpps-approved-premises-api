@@ -212,6 +212,7 @@ url-templates:
       booking-changed-event-detail: http://localhost:3000/events/booking-changed/#eventId
       application-withdrawn-event-detail: http://localhost:3000/events/application-withdrawn/#eventId
       assessment-appealed-event-detail: http://localhost:3000/events/assessment-appealed/#eventId
+      placement-application-withdrawn-event-detail: http://localhost:3000/events/placement-application-withdrawn/#eventId
     cas2:
       application-submitted-event-detail: http://localhost:3000/events/cas2/application-submitted/#eventId
       application-status-updated-event-detail: http://localhost:3000/events/cas2/application-status-updated/#eventId

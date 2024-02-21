@@ -76,7 +76,8 @@ class ApplicationTimelineTransformer(
       DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> TimelineEventType.approvedPremisesBookingChanged
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> TimelineEventType.approvedPremisesApplicationWithdrawn
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> TimelineEventType.approvedPremisesAssessmentAppealed
-      else -> throw IllegalArgumentException("Only CAS1 is currently supported")
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> TimelineEventType.approvedPremisesPlacementApplicationWithdrawn
+      else -> throw IllegalArgumentException("Cannot map $domainEventType, only CAS1 is currently supported")
     }
   }
 }

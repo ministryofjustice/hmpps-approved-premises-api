@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReferenceCollection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -46,6 +48,7 @@ class DomainEventService(
   @Value("\${url-templates.api.cas1.booking-changed-event-detail}") private val bookingChangedDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas1.application-withdrawn-event-detail}") private val applicationWithdrawnDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas1.assessment-appealed-event-detail}") private val assessmentAppealedDetailUrlTemplate: String,
+  @Value("\${url-templates.api.cas1.placement-application-withdrawn-event-detail}") private val placementApplicationWithdrawnDetailUrlTemplate: UrlTemplate,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -59,6 +62,7 @@ class DomainEventService(
   fun getBookingCancelledEvent(id: UUID) = get<BookingCancelledEnvelope>(id)
   fun getBookingChangedEvent(id: UUID) = get<BookingChangedEnvelope>(id)
   fun getApplicationWithdrawnEvent(id: UUID) = get<ApplicationWithdrawnEnvelope>(id)
+  fun getPlacementApplicationWithdrawnEvent(id: UUID) = get<PlacementApplicationWithdrawnEnvelope>(id)
   fun getAssessmentAppealedEvent(id: UUID) = get<AssessmentAppealedEnvelope>(id)
 
   private inline fun <reified T> get(id: UUID): DomainEvent<T>? {
@@ -196,6 +200,17 @@ class DomainEventService(
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
+  @Transactional
+  fun savePlacementApplicationWithdrawnEvent(domainEvent: DomainEvent<PlacementApplicationWithdrawnEnvelope>) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "approved-premises.placement-application.withdrawn",
+      typeDescription = "An Approved Premises Request for Placement has been withdrawn",
+      detailUrl = placementApplicationWithdrawnDetailUrlTemplate.resolve("eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+    )
+
   fun getAllDomainEventsForApplication(applicationId: UUID) =
     domainEventRepository.findAllTimelineEventsByApplicationId(applicationId)
 
@@ -266,6 +281,8 @@ class DomainEventService(
     BookingChangedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED
     ApplicationWithdrawnEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN
     AssessmentAppealedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED
+    PlacementApplicationWithdrawnEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN
     else -> throw RuntimeException("Unrecognised domain event type: ${type.name}")
   }
+
 }

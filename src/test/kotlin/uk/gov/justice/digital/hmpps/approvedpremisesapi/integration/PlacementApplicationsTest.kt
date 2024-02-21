@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -990,7 +991,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
   inner class WithdrawPlacementApplicationTest {
 
     @Test
-    fun `Withdrawing a placement application JWT returns 401`() {
+    fun `withdrawing a placement application JWT returns 401`() {
       webTestClient.post()
         .uri("/placement-applications/${UUID.randomUUID()}/withdraw")
         .exchange()
@@ -999,7 +1000,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Withdrawing a placement application decision when the placement application does not exist returns 404`() {
+    fun `withdrawing a placement application decision when the placement application does not exist returns 404`() {
       `Given a User` { _, jwt ->
         webTestClient.post()
           .uri("/placement-applications/${UUID.randomUUID()}/withdraw")
@@ -1094,7 +1095,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `withdrawing a submitted placement application returns successfully`() {
+    fun `withdrawing a submitted placement application returns successfully and raise a domain event`() {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { _, _ ->
         `Given a User` { user, jwt ->
           `Given a Placement Application`(
@@ -1111,6 +1112,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .withCrn(placementApplicationEntity.application.crn)
                 .produce(),
             )
+
+            val application = placementApplicationEntity.application
 
             val rawResult = webTestClient.post()
               .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
@@ -1129,12 +1132,15 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
             assertThat(body).matches {
               placementApplicationEntity.id == it.id &&
-                placementApplicationEntity.application.id == it.applicationId &&
+                application.id == it.applicationId &&
                 placementApplicationEntity.createdByUser.id == it.createdByUserId &&
                 placementApplicationEntity.schemaVersion.id == it.schemaVersion &&
                 placementApplicationEntity.createdAt.toInstant() == it.createdAt &&
                 serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
             }
+
+            val emittedMessage = snsDomainEventListener.blockForMessage()
+            assertThat(emittedMessage.eventType).isEqualTo("approved-premises.placement-application.withdrawn")
 
             emailNotificationAsserter.assertNoEmailsRequested()
           }

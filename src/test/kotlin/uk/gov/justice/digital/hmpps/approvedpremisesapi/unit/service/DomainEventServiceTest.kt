@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAppealedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
@@ -34,12 +35,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNotArrivedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomainEventWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -69,6 +72,7 @@ class DomainEventServiceTest {
     bookingChangedDetailUrlTemplate = "http://api/events/booking-changed/#eventId",
     applicationWithdrawnDetailUrlTemplate = "http://api/events/application-withdrawn/#eventId",
     assessmentAppealedDetailUrlTemplate = "http://api/events/assessment-appealed/#eventId",
+    placementApplicationWithdrawnDetailUrlTemplate = UrlTemplate("http://api/events/placement-application-withdrawn/#eventId"),
   )
 
   @Test
@@ -1013,6 +1017,51 @@ class DomainEventServiceTest {
     )
   }
 
+
+  @Test
+  fun `getPlacementApplicationWithdrawnEvent returns null when event does not exist`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+
+    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
+
+    assertThat(domainEventService.getPlacementApplicationWithdrawnEvent(id)).isNull()
+  }
+
+  @Test
+  fun `getPlacementApplicationNotArrivedEvent returns event`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    val data = PlacementApplicationWithdrawnEnvelope(
+      id = id,
+      timestamp = occurredAt.toInstant(),
+      eventType = "approved-premises.placement-application.withdrawn",
+      eventDetails = PlacementApplicationWithdrawnFactory().produce(),
+    )
+
+    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
+      .withId(id)
+      .withApplicationId(applicationId)
+      .withCrn(crn)
+      .withType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
+      .withData(objectMapper.writeValueAsString(data))
+      .withOccurredAt(occurredAt)
+      .produce()
+
+    val event = domainEventService.getPlacementApplicationWithdrawnEvent(id)
+    assertThat(event).isEqualTo(
+      DomainEvent(
+        id = id,
+        applicationId = applicationId,
+        crn = "CRN",
+        occurredAt = occurredAt.toInstant(),
+        data = data,
+      ),
+    )
+  }
+
   @Test
   fun `savePersonNotArrivedEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
@@ -1754,6 +1803,106 @@ class DomainEventServiceTest {
         match {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 0) {
+      domainEventWorkerMock.emitEvent(any(), any())
+    }
+  }
+
+
+  @Test
+  fun `savePlacementApplicationWithdrawnEvent persists event, emits event to SNS`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = PlacementApplicationWithdrawnEnvelope(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = "approved-premises.placement-application.withdrawn",
+        eventDetails = PlacementApplicationWithdrawnFactory().produce(),
+      ),
+    )
+
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
+
+    domainEventService.savePlacementApplicationWithdrawnEvent(domainEventToSave)
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 1) {
+      domainEventWorkerMock.emitEvent(
+        match { snsEvent ->
+          snsEvent.eventType == "approved-premises.placement-application.withdrawn" &&
+            snsEvent.version == 1 &&
+            snsEvent.description == "An Approved Premises Request for Placement has been withdrawn" &&
+            snsEvent.detailUrl == "http://api/events/placement-application-withdrawn/$id" &&
+            snsEvent.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            snsEvent.additionalInformation.applicationId == applicationId &&
+            snsEvent.personReference.identifiers.any { id -> id.type == "CRN" && id.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            snsEvent.personReference.identifiers.any { id -> id.type == "NOMS" && id.value == domainEventToSave.data.eventDetails.personReference.noms }
+        },
+        domainEventToSave.id,
+      )
+    }
+  }
+
+  @Test
+  fun `savePlacementApplicationWithdrawnEvent does not emit event to SNS if event fails to persist to database`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = PlacementApplicationWithdrawnEnvelope(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = "approved-premises.placement-application.withdrawn",
+        eventDetails = PlacementApplicationWithdrawnFactory().produce(),
+      ),
+    )
+
+    try {
+      domainEventService.savePlacementApplicationWithdrawnEvent(domainEventToSave)
+    } catch (_: Exception) {
+    }
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)

@@ -236,6 +236,15 @@ class DomainEventDescriberTest {
     assertThat(result).isEqualTo("The assessment was appealed and $decision. The reason was: $reason")
   }
 
+  @Test
+  fun `Returns expected description for placement application withdrawn event`() {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
+
+    val result = domainEventDescriber.getDescription(domainEventSummary)
+
+    assertThat(result).isEqualTo("A request for placement was withdrawn")
+  }
+
   private fun <T> buildDomainEvent(builder: (UUID) -> T): DomainEvent<T> {
     val id = UUID.randomUUID()
     val applicationId = UUID.randomUUID()

@@ -9,12 +9,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnWithdrawnBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
@@ -58,6 +55,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.time.Instant
@@ -79,29 +77,30 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEvent
   "TooGenericExceptionThrown",
 )
 class ApplicationService(
-  private val userRepository: UserRepository,
-  private val applicationRepository: ApplicationRepository,
-  private val jsonSchemaService: JsonSchemaService,
-  private val offenderService: OffenderService,
-  private val userService: UserService,
-  private val assessmentService: AssessmentService,
-  private val offlineApplicationRepository: OfflineApplicationRepository,
-  private val applicationTimelineNoteService: ApplicationTimelineNoteService,
-  private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
-  private val domainEventService: DomainEventService,
-  private val cas3DomainEventService: Cas3DomainEventService,
-  private val communityApiClient: CommunityApiClient,
-  private val apDeliusContextApiClient: ApDeliusContextApiClient,
-  private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
-  private val emailNotificationService: EmailNotificationService,
-  private val userAccessService: UserAccessService,
-  private val notifyConfig: NotifyConfig,
-  private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
-  private val objectMapper: ObjectMapper,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
-  private val apAreaRepository: ApAreaRepository,
-  private val applicationTimelineTransformer: ApplicationTimelineTransformer,
-  private val withdrawableService: WithdrawableService,
+    private val userRepository: UserRepository,
+    private val applicationRepository: ApplicationRepository,
+    private val jsonSchemaService: JsonSchemaService,
+    private val offenderService: OffenderService,
+    private val userService: UserService,
+    private val assessmentService: AssessmentService,
+    private val offlineApplicationRepository: OfflineApplicationRepository,
+    private val applicationTimelineNoteService: ApplicationTimelineNoteService,
+    private val applicationTimelineNoteTransformer: ApplicationTimelineNoteTransformer,
+    private val domainEventService: DomainEventService,
+    private val cas3DomainEventService: Cas3DomainEventService,
+    private val communityApiClient: CommunityApiClient,
+    private val apDeliusContextApiClient: ApDeliusContextApiClient,
+    private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
+    private val emailNotificationService: EmailNotificationService,
+    private val userAccessService: UserAccessService,
+    private val notifyConfig: NotifyConfig,
+    private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
+    private val objectMapper: ObjectMapper,
+    @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
+    private val apAreaRepository: ApAreaRepository,
+    private val applicationTimelineTransformer: ApplicationTimelineTransformer,
+    private val withdrawableService: WithdrawableService,
+    private val domainEventTransformer: DomainEventTransformer,
 ) {
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationSummary> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
@@ -573,12 +572,6 @@ class ApplicationService(
         val domainEventId = UUID.randomUUID()
         val eventOccurredAt = Instant.now()
 
-        val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
-        val staffDetails = when (staffDetailsResult) {
-          is ClientResult.Success -> staffDetailsResult.body
-          is ClientResult.Failure -> staffDetailsResult.throwException()
-        }
-
         domainEventService.saveApplicationWithdrawnEvent(
           DomainEvent(
             id = domainEventId,
@@ -589,7 +582,7 @@ class ApplicationService(
               id = domainEventId,
               timestamp = eventOccurredAt,
               eventType = "approved-premises.application.withdrawn",
-              eventDetails = getApplicationWithdrawn(application, staffDetails, eventOccurredAt),
+              eventDetails = getApplicationWithdrawn(application, user, eventOccurredAt),
             ),
           ),
         )
@@ -628,7 +621,7 @@ class ApplicationService(
 
   private fun getApplicationWithdrawn(
     application: ApprovedPremisesApplicationEntity,
-    staffDetails: StaffUserDetails,
+    user: UserEntity,
     eventOccurredAt: Instant,
   ): ApplicationWithdrawn {
     return ApplicationWithdrawn(
@@ -640,32 +633,9 @@ class ApplicationService(
       ),
       deliusEventNumber = application.eventNumber,
       withdrawnAt = eventOccurredAt,
-      withdrawnBy = getApplicationWithdrawnWithdrawnBy(staffDetails),
+      withdrawnBy = domainEventTransformer.toWithdrawnBy(user),
       withdrawalReason = application.withdrawalReason!!,
       otherWithdrawalReason = application.otherWithdrawalReason,
-    )
-  }
-
-  private fun getApplicationWithdrawnWithdrawnBy(staffDetails: StaffUserDetails): ApplicationWithdrawnWithdrawnBy {
-    val staffMember = getStaffMemberFromStaffUserDetail(staffDetails)
-    val probationArea = getProbationAreaFromStaffUserDetails(staffDetails)
-    return ApplicationWithdrawnWithdrawnBy(staffMember, probationArea)
-  }
-
-  private fun getProbationAreaFromStaffUserDetails(staffDetails: StaffUserDetails): ProbationArea {
-    return ProbationArea(
-      code = staffDetails.probationArea.code,
-      name = staffDetails.probationArea.description,
-    )
-  }
-
-  private fun getStaffMemberFromStaffUserDetail(staffDetails: StaffUserDetails): StaffMember {
-    return StaffMember(
-      staffCode = staffDetails.staffCode,
-      staffIdentifier = staffDetails.staffIdentifier,
-      forenames = staffDetails.staff.forenames,
-      surname = staffDetails.staff.surname,
-      username = staffDetails.username,
     )
   }
 
@@ -1005,8 +975,8 @@ class ApplicationService(
     caseDetail: CaseDetail,
   ): ApplicationSubmittedSubmittedBy {
     return ApplicationSubmittedSubmittedBy(
-      staffMember = getStaffMemberFromStaffUserDetail(staffDetails),
-      probationArea = getProbationAreaFromStaffUserDetails(staffDetails),
+      staffMember = domainEventTransformer.toStaffMember(staffDetails),
+      probationArea = domainEventTransformer.toProbationArea(staffDetails),
       team = getTeamFromCaseDetail(caseDetail),
       ldu = getLduFromCaseDetail(caseDetail),
       region = getRegionFromStaffDetails(staffDetails),

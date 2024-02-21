@@ -26,7 +26,8 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> "The booking had its arrival or departure date changed"
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> "The application was withdrawn"
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> buildAssessmentAppealedDescription(domainEventSummary)
-      else -> throw IllegalArgumentException("Only CAS1 is currently supported")
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> "A request for placement was withdrawn"
+      else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
     }
   }
 
