@@ -41,6 +41,7 @@ class PlacementApplicationReportGenerator :
         applicationWithdrawalDate = this.getApplicationWithdrawalDate()?.toLocalDate(),
         applicationWithdrawalReason = this.getApplicationWithdrawalReason(),
         bookingID = this.getBookingID(),
+        bookingMadeDate = this.getBookingMadeDate()?.toLocalDateTime()?.toLocalDate(),
         bookingCancellationReason = this.getBookingCancellationReason(),
         bookingCancellationDate = this.getBookingCancellationDate()?.toLocalDate(),
         expectedArrivalDate = this.getExpectedArrivalDate()?.toLocalDate(),

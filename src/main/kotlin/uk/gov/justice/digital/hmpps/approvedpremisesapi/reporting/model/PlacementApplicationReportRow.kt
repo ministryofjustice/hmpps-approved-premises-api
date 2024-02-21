@@ -30,6 +30,7 @@ data class PlacementApplicationReportRow(
   val applicationWithdrawalDate: LocalDate?,
   val applicationWithdrawalReason: String?,
   val bookingID: String?,
+  val bookingMadeDate: LocalDate?,
   val bookingCancellationReason: String?,
   val bookingCancellationDate: LocalDate?,
   val expectedArrivalDate: LocalDate?,

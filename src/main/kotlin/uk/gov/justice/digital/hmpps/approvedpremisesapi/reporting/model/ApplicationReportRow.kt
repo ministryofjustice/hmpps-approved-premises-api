@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class ApplicationReportRow(
   val id: String,
@@ -27,6 +28,7 @@ data class ApplicationReportRow(
   val applicationWithdrawalDate: LocalDate?,
   val applicationWithdrawalReason: String?,
   val bookingID: String?,
+  val bookingMadeDate: LocalDate?,
   val bookingCancellationReason: String?,
   val bookingCancellationDate: LocalDate?,
   val expectedArrivalDate: LocalDate?,

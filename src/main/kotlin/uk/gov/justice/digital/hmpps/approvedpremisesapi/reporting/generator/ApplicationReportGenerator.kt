@@ -36,6 +36,7 @@ class ApplicationReportGenerator : ReportGenerator<ApplicationEntityReportRow, A
         applicationWithdrawalReason = this.getApplicationWithdrawalReason(),
         applicationWithdrawalDate = this.getApplicationWithdrawalDate()?.toLocalDate(),
         bookingID = this.getBookingID(),
+        bookingMadeDate = this.getBookingMadeDate()?.toLocalDateTime()?.toLocalDate(),
         bookingCancellationReason = this.getBookingCancellationReason(),
         bookingCancellationDate = this.getBookingCancellationDate()?.toLocalDate(),
         expectedArrivalDate = this.getExpectedArrivalDate()?.toLocalDate(),
