@@ -1976,6 +1976,7 @@ class ApplicationTest : IntegrationTestBase() {
           val createdAssessment =
             approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
           assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(assessorUser.id)
+          assertThat(createdAssessment.createdFromAppeal).isFalse()
 
           val persistedDomainEvent = domainEventRepository.findAll().firstOrNull { it.applicationId == applicationId }
 

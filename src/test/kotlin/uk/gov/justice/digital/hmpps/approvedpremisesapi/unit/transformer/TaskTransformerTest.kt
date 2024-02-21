@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
@@ -29,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
@@ -185,6 +187,29 @@ class TaskTransformerTest {
       verify {
         mockApAreaTransformer.transformJpaToApi(apArea)
       }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `assessment with createdFromAppeal is transformed correctly`(createdFromAppeal: Boolean) {
+      val assessment = assessmentFactory.withCreatedFromAppeal(createdFromAppeal).produce()
+
+      val result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
+
+      assertThat(result.createdFromAppeal).isEqualTo(createdFromAppeal)
+    }
+
+    @Test
+    fun `Temporary Accommodation assessment returns false for createdFromAppeal`() {
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(user)
+        .withCreatedAt(OffsetDateTime.parse("2022-12-07T10:40:00Z"))
+        .produce()
+
+      val result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
+
+      assertThat(result.createdFromAppeal).isEqualTo(false)
     }
   }
 

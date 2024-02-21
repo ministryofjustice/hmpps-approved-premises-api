@@ -162,6 +162,7 @@ class AssessmentTransformerTest {
     assertThat(result.createdAt).isEqualTo(Instant.parse("2022-12-14T12:05:00Z"))
     assertThat(result.submittedAt).isEqualTo(Instant.parse("2022-12-14T12:06:00Z"))
     assertThat(result.allocatedToStaffMember).isEqualTo(approvedPremisesUser)
+    assertThat(result.createdFromAppeal).isEqualTo(assessment.createdFromAppeal)
 
     verify { mockUserTransformer.transformJpaToApi(allocatedToUser, ServiceName.approvedPremises) }
   }

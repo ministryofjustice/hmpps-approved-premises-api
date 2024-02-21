@@ -15,6 +15,8 @@ import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -1884,8 +1886,9 @@ class AssessmentServiceTest {
     assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingQualifications")
   }
 
-  @Test
-  fun `reallocateAssessment for Approved Premises returns Success, deallocates old assessment and creates a new one, sends allocation email & deallocation email`() {
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `reallocateAssessment for Approved Premises returns Success, deallocates old assessment and creates a new one, sends allocation email & deallocation email`(createdFromAppeal: Boolean) {
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1920,6 +1923,7 @@ class AssessmentServiceTest {
 
     val previousAssessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
+      .withCreatedFromAppeal(createdFromAppeal)
       .withAllocatedToUser(
         UserEntityFactory()
           .withYieldedProbationRegion {
@@ -1949,9 +1953,10 @@ class AssessmentServiceTest {
     val validationResult = (result as AuthorisableActionResult.Success).entity
 
     assertThat(validationResult is ValidatableActionResult.Success).isTrue
-    validationResult as ValidatableActionResult.Success
+    val newAssessment = (validationResult as ValidatableActionResult.Success).entity as ApprovedPremisesAssessmentEntity
 
     assertThat(previousAssessment.reallocatedAt).isNotNull
+    assertThat(newAssessment.createdFromAppeal).isEqualTo(createdFromAppeal)
 
     verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
     verify(exactly = 1) {

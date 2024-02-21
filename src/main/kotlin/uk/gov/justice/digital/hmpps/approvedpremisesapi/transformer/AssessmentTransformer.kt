@@ -54,6 +54,7 @@ class AssessmentTransformer(
       rejectionRationale = jpa.rejectionRationale,
       status = getStatusForApprovedPremisesAssessment(jpa),
       service = "CAS1",
+      createdFromAppeal = jpa.createdFromAppeal,
     )
 
     is TemporaryAccommodationAssessmentEntity -> TemporaryAccommodationAssessment(

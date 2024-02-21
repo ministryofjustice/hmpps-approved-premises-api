@@ -343,6 +343,12 @@ components:
     AssessmentTask:
       allOf:
         - $ref: '#/components/schemas/Task'
+        - type: object
+          properties:
+            createdFromAppeal:
+              type: boolean
+          required:
+            - createdFromAppeal
     PlacementRequestTask:
       allOf:
         - $ref: '#/components/schemas/Task'
@@ -2447,8 +2453,11 @@ components:
               $ref: '#/components/schemas/ApprovedPremisesUser'
             status:
               $ref: '#/components/schemas/ApprovedPremisesAssessmentStatus'
+            createdFromAppeal:
+              type: boolean
           required:
             - application
+            - createdFromAppeal
     TemporaryAccommodationAssessment:
       allOf:
         - $ref: '#/components/schemas/Assessment'

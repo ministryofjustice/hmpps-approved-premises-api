@@ -192,7 +192,7 @@ class AssessmentService(
     return AuthorisableActionResult.Success(assessment)
   }
 
-  fun createApprovedPremisesAssessment(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
+  fun createApprovedPremisesAssessment(application: ApprovedPremisesApplicationEntity, createdFromAppeal: Boolean = false): ApprovedPremisesAssessmentEntity {
     val dateTimeNow = OffsetDateTime.now()
 
     var assessment = ApprovedPremisesAssessmentEntity(
@@ -212,6 +212,7 @@ class AssessmentService(
       clarificationNotes = mutableListOf(),
       referralHistoryNotes = mutableListOf(),
       isWithdrawn = false,
+      createdFromAppeal = createdFromAppeal,
     )
 
     val allocatedUser = userAllocator.getUserForAssessmentAllocation(assessment)
@@ -764,6 +765,7 @@ class AssessmentService(
         clarificationNotes = mutableListOf(),
         referralHistoryNotes = mutableListOf(),
         isWithdrawn = false,
+        createdFromAppeal = currentAssessment.createdFromAppeal,
       ),
     )
 
