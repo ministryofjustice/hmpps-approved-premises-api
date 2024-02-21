@@ -115,6 +115,7 @@ class BookingTransformerTest {
         identifier = "APA",
         name = "Ap Area",
         probationRegions = mutableListOf(),
+        emailAddress = "email@test.com",
       ),
     ).apply { apArea.probationRegions.add(this) },
     localAuthorityArea = LocalAuthorityAreaEntity(

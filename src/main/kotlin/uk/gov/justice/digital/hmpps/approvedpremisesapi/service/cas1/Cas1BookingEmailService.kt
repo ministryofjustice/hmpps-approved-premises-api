@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Constants.DAYS_IN_WEEK
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
@@ -17,7 +18,7 @@ object Constants {
 
 @Service
 class Cas1BookingEmailService(
-  private val emailNotificationService: EmailNotificationService,
+  private val emailNotificationService: EmailNotifier,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: UrlTemplate,
@@ -49,7 +50,7 @@ class Cas1BookingEmailService(
     }
   }
 
-  fun bookingWithdrawn(application: ApplicationEntity, booking: BookingEntity) {
+  fun bookingWithdrawn(application: ApprovedPremisesApplicationEntity, booking: BookingEntity) {
     if(!sendNewWithdrawalNotifications) {
       return
     }
@@ -71,6 +72,15 @@ class Cas1BookingEmailService(
 
     val premises = booking.premises
     premises.emailAddress?.let { email ->
+      emailNotificationService.sendEmail(
+        recipientEmailAddress = email,
+        templateId = notifyConfig.templates.bookingWithdrawn,
+        personalisation = allPersonalisation,
+      )
+    }
+
+    val area = application.apArea
+    area?.emailAddress?.let { email ->
       emailNotificationService.sendEmail(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.bookingWithdrawn,

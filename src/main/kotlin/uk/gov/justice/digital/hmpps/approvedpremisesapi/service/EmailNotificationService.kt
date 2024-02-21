@@ -11,15 +11,15 @@ import uk.gov.service.notify.NotificationClient
 import uk.gov.service.notify.NotificationClientException
 
 @Service
-class EmailNotificationService(
+class EmailNotificationService (
   private val notifyConfig: NotifyConfig,
   @Qualifier("normalNotificationClient") private val normalNotificationClient: NotificationClient?,
   @Qualifier("guestListNotificationClient") private val guestListNotificationClient: NotificationClient?,
   private val applicationEventPublisher: ApplicationEventPublisher,
-) {
+) : EmailNotifier {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
-  fun sendEmail(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>) {
+  override fun sendEmail(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>) {
     applicationEventPublisher.publishEvent(SendEmailRequestedEvent(EmailRequest(recipientEmailAddress, templateId, personalisation)))
 
     try {
@@ -37,6 +37,10 @@ class EmailNotificationService(
       log.error("Unable to send template $templateId to user $recipientEmailAddress", notificationClientException)
     }
   }
+}
+
+interface EmailNotifier {
+  fun sendEmail(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>)
 }
 
 data class EmailRequest(val email: String, val templateId: String, val personalisation: Map<String, *>)

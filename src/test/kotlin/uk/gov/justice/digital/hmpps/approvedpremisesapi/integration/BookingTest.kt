@@ -2687,13 +2687,18 @@ class BookingTest : IntegrationTestBase() {
   @ParameterizedTest
   @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_WORKFLOW_MANAGER"])
   fun `Create Cancellation on CAS1 Booking returns OK with correct body and sends emails when user has one of roles MANAGER, WORKFLOW_MANAGER`(role: UserRole) {
-    `Given a User`(roles = listOf(role)) { user, jwt ->
+    `Given a User`(roles = listOf(role)) { _, jwt ->
       `Given a User`(roles = listOf(role)) { applicant, _ ->
         `Given an Offender` { offenderDetails, _ ->
+          val apArea = apAreaEntityFactory.produceAndPersist {
+            withEmailAddress("apAreaEmail@test.com")
+          }
+
           val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(applicant)
             withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+            withApArea(apArea)
             withSubmittedAt(OffsetDateTime.now())
           }
 
@@ -2739,9 +2744,10 @@ class BookingTest : IntegrationTestBase() {
           val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(booking.application!!.id)!!
           assertThat(updatedApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
 
-          emailNotificationAsserter.assertEmailsRequestedCount(2)
+          emailNotificationAsserter.assertEmailsRequestedCount(3)
           emailNotificationAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawn)
           emailNotificationAsserter.assertEmailRequested(booking.premises.emailAddress!!, notifyConfig.templates.bookingWithdrawn)
+          emailNotificationAsserter.assertEmailRequested(apArea.emailAddress!!, notifyConfig.templates.bookingWithdrawn)
         }
       }
     }
