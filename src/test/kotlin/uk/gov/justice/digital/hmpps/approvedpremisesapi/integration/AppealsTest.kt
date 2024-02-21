@@ -67,26 +67,6 @@ class AppealsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get appeal returns 403 when user does not have CAS1_APPEALS_MANAGER role`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Assessment for Approved Premises`(userEntity, userEntity) { assessment, application ->
-        val appeal = appealEntityFactory.produceAndPersist {
-          withApplication(application)
-          withAssessment(assessment as ApprovedPremisesAssessmentEntity)
-          withCreatedBy(userEntity)
-        }
-
-        webTestClient.get()
-          .uri("/applications/${application.id}/appeals/${appeal.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
-  }
-
-  @Test
   fun `Get appeal returns 404 when appeal could not be found`() {
     `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
       `Given an Application`(userEntity) { application ->

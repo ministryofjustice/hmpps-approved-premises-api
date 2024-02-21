@@ -36,9 +36,7 @@ class AppealService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-appeal}") private val applicationAppealUrlTemplate: UrlTemplate,
 ) {
-  fun getAppeal(appealId: UUID, application: ApplicationEntity, user: UserEntity): AuthorisableActionResult<AppealEntity> {
-    if (!user.hasRole(UserRole.CAS1_APPEALS_MANAGER)) return AuthorisableActionResult.Unauthorised()
-
+  fun getAppeal(appealId: UUID, application: ApplicationEntity): AuthorisableActionResult<AppealEntity> {
     val appeal = appealRepository.findByIdOrNull(appealId)
       ?: return AuthorisableActionResult.NotFound("Appeal", appealId.toString())
 

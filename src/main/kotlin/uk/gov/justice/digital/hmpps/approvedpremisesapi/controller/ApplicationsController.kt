@@ -417,7 +417,7 @@ class ApplicationsController(
       is AuthorisableActionResult.Success -> applicationResult.entity
     }
 
-    val appeal = when (val getAppealResult = appealService.getAppeal(appealId, application, user)) {
+    val appeal = when (val getAppealResult = appealService.getAppeal(appealId, application)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(appealId, "Appeal")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> getAppealResult.entity
