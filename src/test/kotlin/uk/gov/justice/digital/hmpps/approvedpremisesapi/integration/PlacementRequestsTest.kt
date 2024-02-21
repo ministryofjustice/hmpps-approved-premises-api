@@ -1620,7 +1620,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Withdraw Placement Request returns 200, sets isWithdrawn to true and sends email to CRU when no booking`() {
+    fun `Withdraw Placement Request returns 200, sets isWithdrawn to true, sends email to CRU and sends email to Applicant as it represents dates included on application on submission`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           `Given a Placement Request`(
@@ -1647,10 +1647,13 @@ class PlacementRequestsTest : IntegrationTestBase() {
             assertThat(persistedPlacementRequest.isWithdrawn).isTrue
             assertThat(persistedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
 
-            emailAsserter.assertEmailsRequestedCount(1)
+            emailAsserter.assertEmailsRequestedCount(2)
             emailAsserter.assertEmailRequested(
-              placementRequest.application.apArea
-              !!.emailAddress!!,
+              placementRequest.application.apArea!!.emailAddress!!,
+              notifyConfig.templates.matchRequestWithdrawn
+            )
+            emailAsserter.assertEmailRequested(
+              placementRequest.application.createdByUser.email!!,
               notifyConfig.templates.matchRequestWithdrawn
             )
           }

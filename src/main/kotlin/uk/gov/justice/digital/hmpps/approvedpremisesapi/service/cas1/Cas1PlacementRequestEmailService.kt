@@ -19,10 +19,6 @@ class Cas1PlacementRequestEmailService(
       return
     }
 
-    if (placementRequest.hasActiveBooking()) {
-      return
-    }
-
     val application = placementRequest.application
 
     val personalisation = mapOf(
@@ -30,13 +26,26 @@ class Cas1PlacementRequestEmailService(
       "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
     )
 
-    val area = application.apArea
-    area?.emailAddress?.let { cruEmail ->
-      emailNotifier.sendEmail(
-        recipientEmailAddress = cruEmail,
-        templateId = notifyConfig.templates.matchRequestWithdrawn,
-        personalisation = personalisation,
-      )
+    if (placementRequest.isFromApplicationsArrivalDate()) {
+      val applicant = application.createdByUser
+      applicant.email?.let { applicantEmail ->
+        emailNotifier.sendEmail(
+          recipientEmailAddress = applicantEmail,
+          templateId = notifyConfig.templates.matchRequestWithdrawn,
+          personalisation = personalisation,
+        )
+      }
+    }
+
+    if (!placementRequest.hasActiveBooking()) {
+      val area = application.apArea
+      area?.emailAddress?.let { cruEmail ->
+        emailNotifier.sendEmail(
+          recipientEmailAddress = cruEmail,
+          templateId = notifyConfig.templates.matchRequestWithdrawn,
+          personalisation = personalisation,
+        )
+      }
     }
   }
 }

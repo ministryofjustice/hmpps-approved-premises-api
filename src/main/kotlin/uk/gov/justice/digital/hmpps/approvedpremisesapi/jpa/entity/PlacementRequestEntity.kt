@@ -180,6 +180,8 @@ data class PlacementRequestEntity(
   fun isReallocated() = reallocatedAt != null
 
   fun isActive() = !isWithdrawn && !isReallocated()
+
+  fun isFromApplicationsArrivalDate() = placementApplication == null
 }
 
 enum class PlacementRequestWithdrawalReason {
