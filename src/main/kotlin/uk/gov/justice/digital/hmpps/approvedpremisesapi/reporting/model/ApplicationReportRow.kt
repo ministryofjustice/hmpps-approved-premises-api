@@ -11,6 +11,8 @@ data class ApplicationReportRow(
   val assessorCru: String?,
   val assessmentDecision: String?,
   val assessmentDecisionRationale: String?,
+  val agreeWithShortNoticeReason: String?,
+  val reasonForLateApplication: String?,
   val ageInYears: Int?,
   val gender: String?,
   val mappa: String,
