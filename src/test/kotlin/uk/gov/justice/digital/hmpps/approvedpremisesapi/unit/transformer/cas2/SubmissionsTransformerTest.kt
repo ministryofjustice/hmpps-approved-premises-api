@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpd
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmittedApplicationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.sql.Timestamp
@@ -29,7 +29,7 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class SubmittedApplicationTransformerTest {
+class SubmissionsTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val mockNomisUserTransformer = mockk<NomisUserTransformer>()
   private val mockStatusUpdateTransformer = mockk<StatusUpdateTransformer>()
@@ -41,7 +41,7 @@ class SubmittedApplicationTransformerTest {
     registerKotlinModule()
   }
 
-  private val applicationTransformer = SubmittedApplicationTransformer(
+  private val applicationTransformer = SubmissionsTransformer(
     objectMapper,
     mockPersonTransformer,
     mockNomisUserTransformer,

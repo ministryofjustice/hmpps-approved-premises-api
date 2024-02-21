@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 
 @Component("Cas2SubmittedApplicationTransformer")
-class SubmittedApplicationTransformer(
+class SubmissionsTransformer(
   private val objectMapper: ObjectMapper,
   private val personTransformer: PersonTransformer,
   private val nomisUserTransformer: NomisUserTransformer,
