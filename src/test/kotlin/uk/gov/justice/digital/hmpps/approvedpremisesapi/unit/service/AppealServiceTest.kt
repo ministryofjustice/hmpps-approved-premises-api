@@ -244,7 +244,7 @@ class AppealServiceTest {
       val now = LocalDate.now()
 
       every { appealRepository.save(any()) } returnsArgument 0
-      every { assessmentService.createApprovedPremisesAssessment(any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
+      every { assessmentService.createApprovedPremisesAssessment(any(), any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
       every { domainEventService.saveAssessmentAppealedEvent(any()) } just Runs
       every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
@@ -288,7 +288,7 @@ class AppealServiceTest {
       val now = LocalDate.now()
 
       every { appealRepository.save(any()) } returnsArgument 0
-      every { assessmentService.createApprovedPremisesAssessment(any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
+      every { assessmentService.createApprovedPremisesAssessment(any(), any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
       every { domainEventService.saveAssessmentAppealedEvent(any()) } just Runs
       every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
@@ -366,7 +366,7 @@ class AppealServiceTest {
       val now = LocalDate.now()
 
       every { appealRepository.save(any()) } returnsArgument 0
-      every { assessmentService.createApprovedPremisesAssessment(any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
+      every { assessmentService.createApprovedPremisesAssessment(any(), any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
       every { domainEventService.saveAssessmentAppealedEvent(any()) } just Runs
       every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
@@ -391,7 +391,7 @@ class AppealServiceTest {
         assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
 
         verify(exactly = 1) {
-          assessmentService.createApprovedPremisesAssessment(application)
+          assessmentService.createApprovedPremisesAssessment(application, createdFromAppeal = true)
         }
       }
     }

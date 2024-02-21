@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Appeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
@@ -385,9 +386,16 @@ class AppealsTest : IntegrationTestBase() {
 
           assertThat(applicationBody.status).isEqualTo(ApprovedPremisesApplicationStatus.unallocatedAssesment)
 
+          assertThat(applicationBody.assessmentId).isNotNull()
           assertThat(applicationBody.assessmentId).isNotEqualTo(assessment.id)
           assertThat(applicationBody.assessmentDecision).isNull()
           assertThat(applicationBody.assessmentDecisionDate).isNull()
+
+          val newAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(applicationBody.assessmentId!!)
+
+          assertThat(newAssessment).isNotNull()
+
+          assertThat(newAssessment!!.createdFromAppeal).isTrue()
         }
       }
     }

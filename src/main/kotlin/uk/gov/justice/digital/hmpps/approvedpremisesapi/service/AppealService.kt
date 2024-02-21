@@ -97,7 +97,7 @@ class AppealService(
         saveEvent(appeal)
 
         if (decision == AppealDecision.accepted) {
-          assessmentService.createApprovedPremisesAssessment(application as ApprovedPremisesApplicationEntity)
+          assessmentService.createApprovedPremisesAssessment(application as ApprovedPremisesApplicationEntity, createdFromAppeal = true)
         }
 
         success(appeal)
