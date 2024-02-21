@@ -6,8 +6,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
-import org.springframework.test.web.reactive.server.returnResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -540,7 +538,7 @@ class WithdrawalTest : IntegrationTestBase() {
             )
             addBookingToPlacementRequest(placementRequest1, booking1NoArrival)
 
-            val placementRequest2 = createPlacementRequest(application) {
+            val placementRequest2NoBooking = createPlacementRequest(application) {
               withPlacementApplication(placementApplication)
             }
 
@@ -569,7 +567,7 @@ class WithdrawalTest : IntegrationTestBase() {
             )
             assertBookingWithdrawn(booking1NoArrival, "Related application withdrawn")
             assertPlacementRequestWithdrawn(
-              placementRequest2,
+              placementRequest2NoBooking,
               PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
             )
 
@@ -579,7 +577,7 @@ class WithdrawalTest : IntegrationTestBase() {
             )
             assertBookingNotWithdrawn(booking2HasArrival)
 
-            emailNotificationAsserter.assertEmailsRequestedCount(5)
+            emailNotificationAsserter.assertEmailsRequestedCount(6)
             emailNotificationAsserter.assertEmailRequested(
               applicant.email!!,
               notifyConfig.templates.applicationWithdrawn,
@@ -587,6 +585,10 @@ class WithdrawalTest : IntegrationTestBase() {
             emailNotificationAsserter.assertEmailRequested(
               placementApplication.createdByUser.email!!,
               notifyConfig.templates.placementRequestWithdrawn
+            )
+            emailNotificationAsserter.assertEmailRequested(
+              application.apArea!!.emailAddress!!,
+              notifyConfig.templates.matchRequestWithdrawn,
             )
             emailNotificationAsserter.assertEmailRequested(
               applicant.email!!,

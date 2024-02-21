@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
@@ -1620,34 +1621,39 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Withdraw Placement Request returns 200, sets isWithdrawn to true`() {
+    fun `Withdraw Placement Request returns 200, sets isWithdrawn to true and sends email to CRU when no booking`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          `Given an Application`(createdByUser = user) {
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = user,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            ) { placementRequest, _ ->
-              webTestClient.post()
-                .uri("/placement-requests/${placementRequest.id}/withdrawal")
-                .bodyValue(
-                  WithdrawPlacementRequest(
-                    reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
-                  ),
-                )
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isOk
+          `Given a Placement Request`(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = offenderDetails.otherIds.crn,
+            apArea = apAreaEntityFactory.produceAndPersist()
+          ) { placementRequest, _ ->
 
-              val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
-              assertThat(persistedPlacementRequest.isWithdrawn).isTrue
-              assertThat(persistedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+            webTestClient.post()
+              .uri("/placement-requests/${placementRequest.id}/withdrawal")
+              .bodyValue(
+                WithdrawPlacementRequest(
+                  reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
+                ),
+              )
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
 
-              emailNotificationAsserter.assertNoEmailsRequested()
-            }
+            val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
+            assertThat(persistedPlacementRequest.isWithdrawn).isTrue
+            assertThat(persistedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+
+            emailNotificationAsserter.assertEmailsRequestedCount(1)
+            emailNotificationAsserter.assertEmailRequested(
+              placementRequest.application.apArea
+              !!.emailAddress!!,
+              notifyConfig.templates.matchRequestWithdrawn
+            )
           }
         }
       }

@@ -80,9 +80,9 @@ class Cas1BookingEmailService(
     }
 
     val area = application.apArea
-    area?.emailAddress?.let { email ->
+    area?.emailAddress?.let { cruEmail ->
       emailNotificationService.sendEmail(
-        recipientEmailAddress = email,
+        recipientEmailAddress = cruEmail,
         templateId = notifyConfig.templates.bookingWithdrawn,
         personalisation = allPersonalisation,
       )

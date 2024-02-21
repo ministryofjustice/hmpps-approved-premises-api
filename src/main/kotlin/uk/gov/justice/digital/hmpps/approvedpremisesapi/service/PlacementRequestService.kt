@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.extractMessage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
@@ -68,6 +69,7 @@ class PlacementRequestService(
   @Lazy private val bookingService: BookingService,
   private val userAccessService: UserAccessService,
   @Lazy private val applicationService: ApplicationService,
+  private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
 
@@ -329,6 +331,8 @@ class PlacementRequestService(
     placementRequestRepository.save(placementRequest)
 
     updateApplicationStatusOnWithdrawal(placementRequest, isUserRequestedWithdrawal)
+
+    cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest)
 
     placementRequest.booking?.let { booking ->
       val bookingCancellationResult = bookingService.createCas1Cancellation(
