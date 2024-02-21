@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.mockito.kotlin.any
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -38,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
@@ -60,6 +62,7 @@ class ApplicationServiceTest {
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockDomainEventService = mockk<DomainEventService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
+  private val mockAssessmentService = mockk<AssessmentService>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
 
@@ -72,6 +75,7 @@ class ApplicationServiceTest {
     mockUserAccessService,
     mockDomainEventService,
     mockEmailNotificationService,
+    mockAssessmentService,
     mockNotifyConfig,
     mockObjectMapper,
     "http://frontend/applications/#id",
@@ -481,6 +485,7 @@ class ApplicationServiceTest {
       assertThat(applicationService.submitApplication(submitCas2Application) is AuthorisableActionResult.NotFound).isTrue
 
       verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
+      verify(exactly = 0) { mockAssessmentService.createCas2Assessment(any()) }
     }
 
     @Test
@@ -502,6 +507,7 @@ class ApplicationServiceTest {
 
       assertThat(applicationService.submitApplication(submitCas2Application) is AuthorisableActionResult.Unauthorised).isTrue
       verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
+      verify(exactly = 0) { mockAssessmentService.createCas2Assessment(any()) }
     }
 
     @Test
@@ -531,6 +537,7 @@ class ApplicationServiceTest {
 
       assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
       verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
+      verify(exactly = 0) { mockAssessmentService.createCas2Assessment(any()) }
     }
 
     @Test
@@ -563,6 +570,7 @@ class ApplicationServiceTest {
 
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
       verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
+      verify(exactly = 0) { mockAssessmentService.createCas2Assessment(any()) }
     }
 
     @Test
@@ -614,6 +622,7 @@ class ApplicationServiceTest {
       }
       assertThat(exception.message).isEqualTo("Inmate Detail not found")
       verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
+      verify(exactly = 0) { mockAssessmentService.createCas2Assessment(any()) }
     }
 
     @Test
@@ -674,6 +683,8 @@ class ApplicationServiceTest {
         offenderDetails,
       )
 
+      every { mockAssessmentService.createCas2Assessment(any()) } returns any()
+
       val _schema = application.schemaVersion as Cas2ApplicationJsonSchemaEntity
 
       val result = applicationService.submitApplication(submitCas2Application)
@@ -723,6 +734,8 @@ class ApplicationServiceTest {
           },
         )
       }
+
+      verify(exactly = 1) { mockAssessmentService.createCas2Assessment(persistedApplication) }
     }
   }
 

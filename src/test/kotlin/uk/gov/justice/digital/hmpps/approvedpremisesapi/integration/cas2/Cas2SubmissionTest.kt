@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Ma
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
@@ -43,6 +44,9 @@ class Cas2SubmissionTest(
 ) : IntegrationTestBase() {
   @SpykBean
   lateinit var realApplicationRepository: ApplicationRepository
+
+  @SpykBean
+  lateinit var realAssessmentRepository: Cas2AssessmentRepository
 
   @SpykBean
   lateinit var realStatusUpdateRepository: Cas2StatusUpdateRepository
@@ -75,6 +79,7 @@ class Cas2SubmissionTest(
     // SpringMockK does not correctly clear mocks for @SpyKBeans that are also a @Repository, causing mocked behaviour
     // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
     // Manually clearing after each test seems to fix this.
+    clearMocks(realApplicationRepository)
     clearMocks(realApplicationRepository)
     clearMocks(realStatusUpdateRepository)
     clearMocks(realStatusUpdateDetailRepository)
@@ -650,6 +655,8 @@ class Cas2SubmissionTest(
               PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
             }
 
+            Assertions.assertThat(realAssessmentRepository.count()).isEqualTo(0)
+
             webTestClient.post()
               .uri("/cas2/submissions")
               .header("Authorization", "Bearer $jwt")
@@ -678,6 +685,9 @@ class Cas2SubmissionTest(
           )
           Assertions.assertThat(domainEventFromJson.eventDetails.applicationUrl)
             .isEqualTo(expectedFrontEndUrl)
+
+          val persistedAssessment = realAssessmentRepository.findAll().first()
+          Assertions.assertThat(persistedAssessment!!.application.id).isEqualTo(applicationId)
         }
       }
     }
