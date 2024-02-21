@@ -539,7 +539,7 @@ class PlacementApplicationServiceTest {
       val templateId = UUID.randomUUID().toString()
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { userAccessService.userMayWithdrawPlacemenApplication(any(),any()) } returns true
+      every { userAccessService.userMayWithdrawPlacementApplication(any(),any()) } returns true
       every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }

@@ -1092,53 +1092,65 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `withdrawing a submitted placement application as the applicant  sends emails, raises a domain event and returns successfully`() {
+    fun `withdrawing a submitted placement application as the applicant sends emails, raises a domain event and returns successfully`() {
       `Given a User` { applicant, jwt ->
-        `Given a Placement Application`(
-          createdByUser = applicant,
-          schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withPermissiveSchema()
-          },
-          decision = null,
-          submittedAt = OffsetDateTime.now(),
-        ) { placementApplicationEntity ->
 
-          CommunityAPI_mockSuccessfulOffenderDetailsCall(
-            OffenderDetailsSummaryFactory()
-              .withCrn(placementApplicationEntity.application.crn)
-              .produce(),
-          )
+        `Given a User` { assessor, _ ->
+          `Given a Placement Application`(
+            createdByUser = applicant,
+            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+            decision = null,
+            submittedAt = OffsetDateTime.now(),
+            allocatedToUser = assessor,
+          ) { placementApplicationEntity ->
 
-          val application = placementApplicationEntity.application
-
-          val rawResult = webTestClient.post()
-            .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
-            .header("Authorization", "Bearer $jwt")
-            .bodyValue(
-              WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+            CommunityAPI_mockSuccessfulOffenderDetailsCall(
+              OffenderDetailsSummaryFactory()
+                .withCrn(placementApplicationEntity.application.crn)
+                .produce(),
             )
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
 
-          val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+            val application = placementApplicationEntity.application
 
-          assertThat(body).matches {
-            placementApplicationEntity.id == it.id &&
-              application.id == it.applicationId &&
-              placementApplicationEntity.createdByUser.id == it.createdByUserId &&
-              placementApplicationEntity.schemaVersion.id == it.schemaVersion &&
-              placementApplicationEntity.createdAt.toInstant() == it.createdAt &&
-              serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
+            val rawResult = webTestClient.post()
+              .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+
+            assertThat(body).matches {
+              placementApplicationEntity.id == it.id &&
+                application.id == it.applicationId &&
+                placementApplicationEntity.createdByUser.id == it.createdByUserId &&
+                placementApplicationEntity.schemaVersion.id == it.schemaVersion &&
+                placementApplicationEntity.createdAt.toInstant() == it.createdAt &&
+                serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
+            }
+
+            val emittedMessage = snsDomainEventListener.blockForMessage()
+            assertThat(emittedMessage.eventType).isEqualTo("approved-premises.placement-application.withdrawn")
+
+            emailAsserter.assertEmailsRequestedCount(2)
+            emailAsserter.assertEmailRequested(
+              placementApplicationEntity.createdByUser.email!!,
+              notifyConfig.templates.placementRequestWithdrawn
+            )
+            emailAsserter.assertEmailRequested(
+              placementApplicationEntity.allocatedToUser!!.email!!,
+              notifyConfig.templates.placementRequestWithdrawn
+            )
           }
-
-          val emittedMessage = snsDomainEventListener.blockForMessage()
-          assertThat(emittedMessage.eventType).isEqualTo("approved-premises.placement-application.withdrawn")
-
-          emailNotificationAsserter.assertNoEmailsRequested()
         }
       }
     }
@@ -1193,20 +1205,20 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               val emittedMessage = snsDomainEventListener.blockForMessage()
               assertThat(emittedMessage.eventType).isEqualTo("approved-premises.placement-application.withdrawn")
 
-              emailNotificationAsserter.assertEmailsRequestedCount(2)
-              emailNotificationAsserter.assertEmailRequested(
+              emailAsserter.assertEmailsRequestedCount(2)
+              emailAsserter.assertEmailRequested(
                 placementApplicationEntity.createdByUser.email!!,
                 notifyConfig.templates.placementRequestWithdrawn
               )
-              emailNotificationAsserter.assertEmailRequested(
+              emailAsserter.assertEmailRequested(
                 placementApplicationEntity.allocatedToUser!!.email!!,
                 notifyConfig.templates.placementRequestWithdrawn
               )
-            }
           }
         }
       }
     }
+  }
 
 
   }

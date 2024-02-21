@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.notification
 
 import org.assertj.core.api.Assertions.assertThat
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 import org.springframework.test.context.event.annotation.BeforeTestMethod
@@ -11,10 +13,13 @@ import kotlin.math.exp
 @Component
 class EmailNotificationAsserter {
 
+  var log: Logger = LoggerFactory.getLogger(this::class.java)
+
   private val requestedEmails = mutableListOf<EmailRequest>()
 
   @EventListener
   fun consumeEmailRequestedEvent(emailRequested: SendEmailRequestedEvent) {
+    log.info("Email requested ${emailRequested.request}")
     requestedEmails.add(emailRequested.request)
   }
 

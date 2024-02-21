@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Request`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
@@ -1429,12 +1428,12 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   .expectStatus()
                   .isOk
 
-                emailNotificationAsserter.assertEmailsRequestedCount(2)
-                emailNotificationAsserter.assertEmailRequested(
+                emailAsserter.assertEmailsRequestedCount(2)
+                emailAsserter.assertEmailRequested(
                   applicant.email!!,
                   notifyConfig.templates.bookingMade,
                 )
-                emailNotificationAsserter.assertEmailRequested(
+                emailAsserter.assertEmailRequested(
                   premises.emailAddress!!,
                   notifyConfig.templates.bookingMadePremises,
                 )
@@ -1648,8 +1647,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
             assertThat(persistedPlacementRequest.isWithdrawn).isTrue
             assertThat(persistedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
 
-            emailNotificationAsserter.assertEmailsRequestedCount(1)
-            emailNotificationAsserter.assertEmailRequested(
+            emailAsserter.assertEmailsRequestedCount(1)
+            emailAsserter.assertEmailRequested(
               placementRequest.application.apArea
               !!.emailAddress!!,
               notifyConfig.templates.matchRequestWithdrawn

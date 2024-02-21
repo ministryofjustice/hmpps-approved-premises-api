@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -765,12 +764,12 @@ class BookingTest : IntegrationTestBase() {
               SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
             )
 
-            emailNotificationAsserter.assertEmailsRequestedCount(2)
-            emailNotificationAsserter.assertEmailRequested(
+            emailAsserter.assertEmailsRequestedCount(2)
+            emailAsserter.assertEmailRequested(
               applicant.email!!,
               notifyConfig.templates.bookingMade,
             )
-            emailNotificationAsserter.assertEmailRequested(
+            emailAsserter.assertEmailRequested(
               premises.emailAddress!!,
               notifyConfig.templates.bookingMadePremises,
             )
@@ -2744,10 +2743,10 @@ class BookingTest : IntegrationTestBase() {
           val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(booking.application!!.id)!!
           assertThat(updatedApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
 
-          emailNotificationAsserter.assertEmailsRequestedCount(3)
-          emailNotificationAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawn)
-          emailNotificationAsserter.assertEmailRequested(booking.premises.emailAddress!!, notifyConfig.templates.bookingWithdrawn)
-          emailNotificationAsserter.assertEmailRequested(apArea.emailAddress!!, notifyConfig.templates.bookingWithdrawn)
+          emailAsserter.assertEmailsRequestedCount(3)
+          emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawn)
+          emailAsserter.assertEmailRequested(booking.premises.emailAddress!!, notifyConfig.templates.bookingWithdrawn)
+          emailAsserter.assertEmailRequested(apArea.emailAddress!!, notifyConfig.templates.bookingWithdrawn)
         }
       }
     }
