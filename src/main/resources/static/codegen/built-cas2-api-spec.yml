@@ -3824,6 +3824,7 @@ components:
         - application
         - booking
         - assessment
+        - assessmentAppeal
     Cas2TimelineEvent:
       type: object
       properties:

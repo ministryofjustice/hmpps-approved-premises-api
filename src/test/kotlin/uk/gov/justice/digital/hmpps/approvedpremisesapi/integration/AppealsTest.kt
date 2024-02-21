@@ -11,7 +11,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventAssociatedUrl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventUrlType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Approved Premises`
@@ -448,10 +450,14 @@ class AppealsTest : IntegrationTestBase() {
             .isOk
             .returnResult(String::class.java)
 
+          val appeal = result.responseBody.blockFirst()!!
           val timeline = objectMapper.readValue<List<TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
 
           assertThat(timeline).anyMatch {
-            it.type == TimelineEventType.approvedPremisesAssessmentAppealed
+            it.type == TimelineEventType.approvedPremisesAssessmentAppealed &&
+              it.associatedUrls?.contains(
+              TimelineEventAssociatedUrl(TimelineEventUrlType.assessmentAppeal, "http://frontend/applications/${application.id}/appeals/${appeal.id}"),
+            ) == true
           }
         }
       }

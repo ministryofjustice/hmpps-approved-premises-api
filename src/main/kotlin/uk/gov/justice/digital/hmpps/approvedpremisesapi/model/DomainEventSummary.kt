@@ -12,4 +12,5 @@ interface DomainEventSummary {
   val assessmentId: UUID?
   val bookingId: UUID?
   val premisesId: UUID?
+  val appealId: UUID?
 }

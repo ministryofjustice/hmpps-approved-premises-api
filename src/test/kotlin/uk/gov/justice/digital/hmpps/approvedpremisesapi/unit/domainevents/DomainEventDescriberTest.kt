@@ -267,6 +267,7 @@ data class DomainEventSummaryImpl(
   override val assessmentId: UUID?,
   override val bookingId: UUID?,
   override val premisesId: UUID?,
+  override val appealId: UUID?,
 ) : DomainEventSummary {
   companion object {
     fun ofType(type: DomainEventType) = DomainEventSummaryImpl(
@@ -277,6 +278,7 @@ data class DomainEventSummaryImpl(
       assessmentId = null,
       bookingId = null,
       premisesId = null,
+      appealId = null,
     )
   }
 }

@@ -16,15 +16,12 @@ class ApplicationTimelineTransformer(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: UrlTemplate,
+  @Value("\${url-templates.frontend.application-appeal}") private val appealUrlTemplate: UrlTemplate,
   private val domainEventDescriber: DomainEventDescriber,
 ) {
 
   fun transformDomainEventSummaryToTimelineEvent(domainEventSummary: DomainEventSummary): TimelineEvent {
-    val associatedUrls = listOfNotNull(
-      applicationUrlOrNull(domainEventSummary),
-      assessmentUrlOrNull(domainEventSummary),
-      bookingUrlOrNull(domainEventSummary),
-    )
+    val associatedUrls = generateUrlsForTimelineEventType(domainEventSummary)
 
     return TimelineEvent(
       id = domainEventSummary.id,
@@ -33,6 +30,22 @@ class ApplicationTimelineTransformer(
       associatedUrls = associatedUrls,
       content = domainEventDescriber.getDescription(domainEventSummary),
     )
+  }
+
+  private fun appealUrlOrNull(domainEventSummary: DomainEventSummary): TimelineEventAssociatedUrl? {
+    return if (domainEventSummary.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED && domainEventSummary.appealId !== null) {
+      TimelineEventAssociatedUrl(
+        TimelineEventUrlType.assessmentAppeal,
+        appealUrlTemplate.resolve(
+          mapOf(
+            "applicationId" to domainEventSummary.applicationId.toString(),
+            "appealId" to domainEventSummary.appealId.toString(),
+          ),
+        ),
+      )
+    } else {
+      null
+    }
   }
 
   private fun applicationUrlOrNull(domainEventSummary: DomainEventSummary) = domainEventSummary.applicationId?.let {
@@ -59,6 +72,20 @@ class ApplicationTimelineTransformer(
             "bookingId" to domainEventSummary.bookingId.toString(),
           ),
         ),
+      )
+    }
+  }
+
+  fun generateUrlsForTimelineEventType(domainEventSummary: DomainEventSummary): List<TimelineEventAssociatedUrl> {
+    return if (domainEventSummary.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED) {
+      listOfNotNull(
+        appealUrlOrNull(domainEventSummary),
+      )
+    } else {
+      listOfNotNull(
+        applicationUrlOrNull(domainEventSummary),
+        assessmentUrlOrNull(domainEventSummary),
+        bookingUrlOrNull(domainEventSummary),
       )
     }
   }

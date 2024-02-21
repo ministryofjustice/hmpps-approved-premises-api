@@ -5,10 +5,10 @@ import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
@@ -39,9 +39,11 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
         cast(d.application_id as TEXT) as applicationId,
         cast(d.assessment_id as TEXT) as assessmentId,
         cast(d.booking_id as TEXT) as bookingId,
-        cast(b.premises_id as TEXT) as premisesId
+        cast(b.premises_id as TEXT) as premisesId,
+        cast(a.id as TEXT) as appealId
       FROM domain_events d 
       LEFT OUTER JOIN bookings b ON b.id = d.booking_id
+      LEFT OUTER JOIN appeals a ON d.application_id = a.application_id
       WHERE d.application_id = :applicationId
     """,
     nativeQuery = true,
