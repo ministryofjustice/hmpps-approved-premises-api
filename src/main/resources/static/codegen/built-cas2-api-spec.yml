@@ -2882,8 +2882,11 @@ components:
               $ref: '#/components/schemas/ApprovedPremisesUser'
             status:
               $ref: '#/components/schemas/ApprovedPremisesAssessmentStatus'
+            createdFromAppeal:
+              type: boolean
           required:
             - application
+            - createdFromAppeal
     TemporaryAccommodationAssessment:
       allOf:
         - $ref: '#/components/schemas/Assessment'
