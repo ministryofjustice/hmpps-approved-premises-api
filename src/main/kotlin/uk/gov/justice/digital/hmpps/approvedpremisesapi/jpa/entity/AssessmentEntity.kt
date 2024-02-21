@@ -276,6 +276,7 @@ class ApprovedPremisesAssessmentEntity(
   referralHistoryNotes: MutableList<AssessmentReferralHistoryNoteEntity>,
   schemaUpToDate: Boolean,
   isWithdrawn: Boolean,
+  val createdFromAppeal: Boolean,
 ) : AssessmentEntity(
   id,
   application,
