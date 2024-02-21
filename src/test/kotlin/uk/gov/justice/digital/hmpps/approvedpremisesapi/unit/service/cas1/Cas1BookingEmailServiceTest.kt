@@ -15,27 +15,30 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.TestConstants.APPLICANT_EMAIL
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.TestConstants.AP_AREA_EMAIL
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.TestConstants.CRN
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.TestConstants.PREMISES_EMAIL
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.TestConstants.PREMISES_NAME
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.TestConstants.REGION_NAME
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.APPLICANT_EMAIL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.AP_AREA_EMAIL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.CRN
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.PREMISES_EMAIL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.PREMISES_NAME
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.REGION_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockEmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
-object TestConstants {
-  const val AP_AREA_EMAIL = "apAreaEmail@test.com"
-  const val APPLICANT_EMAIL = "applicantEmail@test.com"
-  const val CRN = "CRN123"
-  const val PREMISES_EMAIL = "premisesEmail@test.com"
-  const val PREMISES_NAME = "The Premises Name"
-  const val REGION_NAME = "The Region Name"
-}
+
 
 class Cas1BookingEmailServiceTest {
+
+  private object TestConstants {
+    const val AP_AREA_EMAIL = "apAreaEmail@test.com"
+    const val APPLICANT_EMAIL = "applicantEmail@test.com"
+    const val CRN = "CRN123"
+    const val PREMISES_EMAIL = "premisesEmail@test.com"
+    const val PREMISES_NAME = "The Premises Name"
+    const val REGION_NAME = "The Region Name"
+  }
+
   private val notifyConfig = NotifyConfig()
   private val mockEmailNotificationService = MockEmailNotificationService()
 

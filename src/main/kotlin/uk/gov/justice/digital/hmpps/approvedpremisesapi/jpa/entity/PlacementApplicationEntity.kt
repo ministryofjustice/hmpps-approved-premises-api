@@ -94,9 +94,13 @@ data class PlacementApplicationEntity(
 ) {
   fun isReallocated() = reallocatedAt != null
 
-  fun isInWithdrawableState() = !isReallocated() && !isWithdrawn()
+  fun isActive() = !isReallocated() && !isWithdrawn()
+
+  fun isInWithdrawableState() = isActive()
 
   fun isSubmitted() = submittedAt != null
+
+  fun isBeingAssessed() = isActive() && decision == null
 
   override fun toString() = "PlacementApplicationEntity: $id"
   fun isWithdrawn(): Boolean = decision?.let { listOf(PlacementApplicationDecision.WITHDRAWN_BY_PP, PlacementApplicationDecision.WITHDRAW).contains(it) } ?: false
