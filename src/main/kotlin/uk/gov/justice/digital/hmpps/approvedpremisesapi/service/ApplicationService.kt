@@ -470,6 +470,7 @@ class ApplicationService(
       eligibilityReason = null,
       dutyToReferLocalAuthorityAreaName = null,
       prisonNameOnCreation = prisonName,
+      personReleaseDate = null,
     )
   }
 
@@ -858,6 +859,7 @@ class ApplicationService(
       isEligible = submitApplication.isApplicationEligible
       eligibilityReason = submitApplication.eligibilityReason
       dutyToReferLocalAuthorityAreaName = submitApplication.dutyToReferLocalAuthorityAreaName
+      personReleaseDate = submitApplication.personReleaseDate
     }
 
     assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData)

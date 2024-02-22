@@ -2338,6 +2338,70 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
+  @Test
+  fun `Submit Temporary Accommodation application returns 200 with optionl elements in the request`() {
+    `Given a User`(
+      staffUserDetailsConfigBlock = {
+        withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory().produce(),
+          ),
+        )
+      },
+    ) { submittingUser, jwt ->
+      `Given a User` { _, _ ->
+        `Given an Offender` { offenderDetails, _ ->
+          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+            withSchema(schemaText())
+          }
+
+          temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withId(applicationId)
+            withApplicationSchema(applicationSchema)
+            withCreatedByUser(submittingUser)
+            withProbationRegion(submittingUser.probationRegion)
+            withData(
+              """
+              {}
+            """,
+            )
+          }
+
+          webTestClient.post()
+            .uri("/applications/$applicationId/submission")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              SubmitTemporaryAccommodationApplication(
+                translatedDocument = {},
+                type = "CAS3",
+                arrivalDate = LocalDate.now(),
+                summaryData = object {
+                  val num = 50
+                  val text = "Hello world!"
+                },
+                personReleaseDate = LocalDate.now(),
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+
+          val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
+          val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
+
+          assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
+          assertThat(persistedApplication.personReleaseDate).isEqualTo(LocalDate.now())
+        }
+      }
+    }
+  }
+
   private fun schemaText(): String {
     return """
               {
