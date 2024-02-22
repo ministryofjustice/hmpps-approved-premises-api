@@ -208,6 +208,9 @@ class ApplicationReportsTest : IntegrationTestBase() {
       val multipleBookings1 = createBookingForApplication(applicationWithMultipleBookings)
       val multipleBookings2 = createBookingForApplication(applicationWithMultipleBookings)
 
+      val applicationShortNotice = createApplication()
+      acceptAssessmentForApplication(applicationShortNotice, shortNotice = true)
+
       webTestClient.get()
         .uri("/reports/applications?year=${LocalDate.now().year}&month=${LocalDate.now().monthValue}")
         .header("Authorization", "Bearer $jwt")
@@ -222,7 +225,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
             .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(9)
+          assertThat(actual.size).isEqualTo(10)
 
           assertApplicationRowHasCorrectData(actual, applicationWithoutAssessment.id, booking = null, userEntity, ApplicationFacets(isAssessed = false))
           assertApplicationRowHasCorrectData(actual, applicationWithBooking.id, arrivedBooking, userEntity)
@@ -233,6 +236,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
           assertApplicationRowHasCorrectData(actual, applicationWithReallocatedCompleteAssessments.id, booking = null, userEntity)
           assertApplicationRowHasCorrectData(actual, applicationWithMultipleBookings.id, multipleBookings1, userEntity)
           assertApplicationRowHasCorrectData(actual, applicationWithMultipleBookings.id, multipleBookings2, userEntity)
+          assertApplicationRowHasCorrectData(actual, applicationShortNotice.id, booking = null, userEntity, ApplicationFacets(isShortNotice = true))
         }
     }
   }
