@@ -67,5 +67,7 @@ user-allocations:
         south-west-south central: JIMSNOWLDAP
         wales: JIMSNOWLDAP
         nat: JIMSNOWLDAP
+    reallocated-assessments:
+      enabled: true
     female-assessments:
       enabled: true
