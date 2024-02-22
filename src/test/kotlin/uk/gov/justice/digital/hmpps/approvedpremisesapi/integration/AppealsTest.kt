@@ -101,7 +101,6 @@ class AppealsTest : IntegrationTestBase() {
           .expectBody()
           .jsonPath("$.appealDate").isEqualTo(appeal.appealDate.toString())
           .jsonPath("$.appealDetail").isEqualTo(appeal.appealDetail)
-          .jsonPath("$.reviewer").isEqualTo(appeal.reviewer)
           .jsonPath("$.createdAt").isEqualTo(appeal.createdAt.toString())
           .jsonPath("$.applicationId").isEqualTo(application.id.toString())
           .jsonPath("$.decision").isEqualTo(appeal.decision)
@@ -121,7 +120,6 @@ class AppealsTest : IntegrationTestBase() {
         NewAppeal(
           appealDate = LocalDate.parse("2024-01-01"),
           appealDetail = "Some details about the appeal.",
-          reviewer = "Someone Else",
           decision = AppealDecision.accepted,
           decisionDetail = "Some details about the decision.",
         ),
@@ -140,7 +138,6 @@ class AppealsTest : IntegrationTestBase() {
           NewAppeal(
             appealDate = LocalDate.parse("2024-01-01"),
             appealDetail = "Some details about the appeal.",
-            reviewer = "Someone Else",
             decision = AppealDecision.accepted,
             decisionDetail = "Some details about the decision.",
           ),
@@ -163,7 +160,6 @@ class AppealsTest : IntegrationTestBase() {
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
                 appealDetail = "Some details about the appeal.",
-                reviewer = "Someone Else",
                 decision = AppealDecision.accepted,
                 decisionDetail = "Some details about the decision.",
               ),
@@ -187,7 +183,6 @@ class AppealsTest : IntegrationTestBase() {
             NewAppeal(
               appealDate = LocalDate.parse("2024-01-01"),
               appealDetail = "Some details about the appeal.",
-              reviewer = "Someone Else",
               decision = AppealDecision.accepted,
               decisionDetail = "Some details about the decision.",
             ),
@@ -210,7 +205,6 @@ class AppealsTest : IntegrationTestBase() {
             NewAppeal(
               appealDate = LocalDate.now().plusDays(1),
               appealDetail = "  ",
-              reviewer = "\t",
               decision = AppealDecision.rejected,
               decisionDetail = "\n",
             ),
@@ -233,7 +227,6 @@ class AppealsTest : IntegrationTestBase() {
             NewAppeal(
               appealDate = LocalDate.parse("2024-01-01"),
               appealDetail = "Some details about the appeal.",
-              reviewer = "Someone Else",
               decision = AppealDecision.accepted,
               decisionDetail = "Some details about the decision.",
             ),
@@ -265,7 +258,6 @@ class AppealsTest : IntegrationTestBase() {
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
                 appealDetail = "Some details about the appeal.",
-                reviewer = "Someone Else",
                 decision = AppealDecision.rejected,
                 decisionDetail = "Some details about the decision.",
               ),
@@ -279,7 +271,6 @@ class AppealsTest : IntegrationTestBase() {
             .expectBody()
             .jsonPath("$.appealDate").isEqualTo("2024-01-01")
             .jsonPath("$.appealDetail").isEqualTo("Some details about the appeal.")
-            .jsonPath("$.reviewer").isEqualTo("Someone Else")
             .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
             .jsonPath("$.applicationId").isEqualTo(application.id.toString())
             .jsonPath("$.decision").isEqualTo(AppealDecision.rejected.value)
@@ -309,7 +300,6 @@ class AppealsTest : IntegrationTestBase() {
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
                 appealDetail = "Some details about the appeal.",
-                reviewer = "Someone Else",
                 decision = AppealDecision.rejected,
                 decisionDetail = "Some details about the decision.",
               ),
@@ -357,7 +347,6 @@ class AppealsTest : IntegrationTestBase() {
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
                 appealDetail = "Some details about the appeal.",
-                reviewer = "Someone Else",
                 decision = AppealDecision.accepted,
                 decisionDetail = "Some details about the decision.",
               ),
@@ -412,7 +401,6 @@ class AppealsTest : IntegrationTestBase() {
               NewAppeal(
                 appealDate = LocalDate.parse("2024-01-01"),
                 appealDetail = "Some details about the appeal.",
-                reviewer = "Someone Else",
                 decision = AppealDecision.accepted,
                 decisionDetail = "Some details about the decision.",
               ),

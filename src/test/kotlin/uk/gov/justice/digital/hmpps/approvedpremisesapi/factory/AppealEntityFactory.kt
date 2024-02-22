@@ -8,7 +8,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.time.LocalDate
@@ -19,7 +18,6 @@ class AppealEntityFactory : Factory<AppealEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var appealDate: Yielded<LocalDate> = { LocalDate.now().randomDateBefore() }
   private var appealDetail: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
-  private var reviewer: Yielded<String> = { randomEmailAddress() }
   private var decision: Yielded<String> = { randomOf(AppealDecision.entries).value }
   private var decisionDetail: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now() }
@@ -55,10 +53,6 @@ class AppealEntityFactory : Factory<AppealEntity> {
 
   fun withAppealDetail(appealDetail: String) = apply {
     this.appealDetail = { appealDetail }
-  }
-
-  fun withReviewer(reviewer: String) = apply {
-    this.reviewer = { reviewer }
   }
 
   fun withDecision(decision: AppealDecision) = apply {
@@ -101,7 +95,6 @@ class AppealEntityFactory : Factory<AppealEntity> {
     id = this.id(),
     appealDate = this.appealDate(),
     appealDetail = this.appealDetail(),
-    reviewer = this.reviewer(),
     decision = this.decision(),
     decisionDetail = this.decisionDetail(),
     createdAt = this.createdAt(),

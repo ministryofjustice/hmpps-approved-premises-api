@@ -4281,8 +4281,6 @@ components:
           format: date
         appealDetail:
           type: string
-        reviewer:
-          type: string
         decision:
           $ref: '#/components/schemas/AppealDecision'
         decisionDetail:
@@ -4290,7 +4288,6 @@ components:
       required:
         - appealDate
         - appealDetail
-        - reviewer
         - decision
         - decisionDetail
     Appeal:
@@ -4303,8 +4300,6 @@ components:
           type: string
           format: date
         appealDetail:
-          type: string
-        reviewer:
           type: string
         decision:
           $ref: '#/components/schemas/AppealDecision'
@@ -4325,7 +4320,6 @@ components:
         - id
         - appealDate
         - appealDetail
-        - reviewer
         - decision
         - decisionDetail
         - createdAt

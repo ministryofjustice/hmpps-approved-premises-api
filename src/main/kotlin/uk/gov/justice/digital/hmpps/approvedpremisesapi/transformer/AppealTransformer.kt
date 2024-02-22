@@ -12,7 +12,6 @@ class AppealTransformer(private val userTransformer: UserTransformer) {
     id = jpa.id,
     appealDate = jpa.appealDate,
     appealDetail = jpa.appealDetail,
-    reviewer = jpa.reviewer,
     createdAt = jpa.createdAt.toInstant(),
     applicationId = jpa.application.id,
     createdByUser = userTransformer.transformJpaToApi(jpa.createdBy, ServiceName.approvedPremises),

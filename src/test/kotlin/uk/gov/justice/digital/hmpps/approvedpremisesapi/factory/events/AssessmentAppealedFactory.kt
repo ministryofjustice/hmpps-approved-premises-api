@@ -21,7 +21,6 @@ class AssessmentAppealedFactory : Factory<AssessmentAppealed> {
   private var deliusEventNumber: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var createdAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(7) }
   private var createdBy: Yielded<StaffMember> = { StaffMemberFactory().produce() }
-  private var reviewer: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var appealDetail: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var decision: Yielded<AppealDecision> = { randomOf(AppealDecision.entries) }
   private var decisionDetail: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
@@ -62,10 +61,6 @@ class AssessmentAppealedFactory : Factory<AssessmentAppealed> {
     this.createdBy = { StaffMemberFactory().apply(configuration).produce() }
   }
 
-  fun withReviewer(reviewer: String) = apply {
-    this.reviewer = { reviewer }
-  }
-
   fun withAppealDetail(appealDetail: String) = apply {
     this.appealDetail = { appealDetail }
   }
@@ -87,7 +82,6 @@ class AssessmentAppealedFactory : Factory<AssessmentAppealed> {
     deliusEventNumber = this.deliusEventNumber(),
     createdAt = this.createdAt(),
     createdBy = this.createdBy(),
-    reviewer = this.reviewer(),
     appealDetail = this.appealDetail(),
     decision = this.decision(),
     decisionDetail = this.decisionDetail(),

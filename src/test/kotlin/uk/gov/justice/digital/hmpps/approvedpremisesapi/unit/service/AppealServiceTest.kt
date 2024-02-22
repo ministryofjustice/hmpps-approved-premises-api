@@ -132,7 +132,6 @@ class AppealServiceTest {
       val result = appealService.createAppeal(
         LocalDate.now(),
         "Some information about why the appeal is being made",
-        "ReviewBot 9000",
         AppealDecision.accepted,
         "Some information about the decision made",
         application,
@@ -150,7 +149,6 @@ class AppealServiceTest {
       val result = appealService.createAppeal(
         LocalDate.now().plusDays(1),
         "Some information about why the appeal is being made",
-        "ReviewBot 9000",
         AppealDecision.accepted,
         "Some information about the decision made",
         application,
@@ -174,7 +172,6 @@ class AppealServiceTest {
       val result = appealService.createAppeal(
         LocalDate.now(),
         appealDetail,
-        "ReviewBot 9000",
         AppealDecision.accepted,
         "Some information about the decision made",
         application,
@@ -192,37 +189,12 @@ class AppealServiceTest {
     @ParameterizedTest
     @EmptySource
     @ValueSource(strings = ["  ", "\t", "\n"])
-    fun `Returns FieldValidationError if the reviewer is blank`(reviewer: String) {
-      createdByUser.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
-
-      val result = appealService.createAppeal(
-        LocalDate.now(),
-        "Some information about why the appeal is being made",
-        reviewer,
-        AppealDecision.accepted,
-        "Some information about the decision made",
-        application,
-        assessment,
-        createdByUser,
-      )
-
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      result as AuthorisableActionResult.Success
-      assertThat(result.entity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      val resultEntity = result.entity as ValidatableActionResult.FieldValidationError
-      assertThat(resultEntity.validationMessages).containsEntry("$.reviewer", "empty")
-    }
-
-    @ParameterizedTest
-    @EmptySource
-    @ValueSource(strings = ["  ", "\t", "\n"])
     fun `Returns FieldValidationError if the decision detail is blank`(decisionDetail: String) {
       createdByUser.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
 
       val result = appealService.createAppeal(
         LocalDate.now(),
         "Some information about why the appeal is being made",
-        "ReviewBot 9000",
         AppealDecision.accepted,
         decisionDetail,
         application,
@@ -256,7 +228,6 @@ class AppealServiceTest {
         val result = appealService.createAppeal(
           now,
           "Some information about why the appeal is being made",
-          "ReviewBot 9000",
           AppealDecision.accepted,
           "Some information about the decision made",
           application,
@@ -300,7 +271,6 @@ class AppealServiceTest {
         val result = appealService.createAppeal(
           now,
           "Some information about why the appeal is being made",
-          "ReviewBot 9000",
           AppealDecision.accepted,
           "Some information about the decision made",
           application,
@@ -341,7 +311,6 @@ class AppealServiceTest {
         val result = appealService.createAppeal(
           now,
           "Some information about why the appeal is being made",
-          "ReviewBot 9000",
           AppealDecision.rejected,
           "Some information about the decision made",
           application,
@@ -378,7 +347,6 @@ class AppealServiceTest {
         val result = appealService.createAppeal(
           now,
           "Some information about why the appeal is being made",
-          "ReviewBot 9000",
           AppealDecision.accepted,
           "Some information about the decision made",
           application,
@@ -400,7 +368,6 @@ class AppealServiceTest {
       this.id == appealId &&
         this.appealDate == now &&
         this.appealDetail == "Some information about why the appeal is being made" &&
-        this.reviewer == "ReviewBot 9000" &&
         this.decision == AppealDecision.accepted.value &&
         this.decisionDetail == "Some information about the decision made" &&
         this.application == application &&
@@ -425,7 +392,6 @@ class AppealServiceTest {
         this.eventDetails.deliusEventNumber == application.eventNumber &&
         withinSeconds(10).matches(this.eventDetails.createdAt.toString()) &&
         this.eventDetails.createdBy.matches() &&
-        this.eventDetails.reviewer == "ReviewBot 9000" &&
         this.eventDetails.appealDetail == "Some information about why the appeal is being made" &&
         this.eventDetails.decision == DomainEventApiAppealDecision.accepted &&
         this.eventDetails.decisionDetail == "Some information about the decision made"

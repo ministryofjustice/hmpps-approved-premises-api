@@ -36,7 +36,6 @@ class AppealTransformerTest {
     assertThat(transformedAppeal.id).isEqualTo(appealEntity.id)
     assertThat(transformedAppeal.appealDate).isEqualTo(appealEntity.appealDate)
     assertThat(transformedAppeal.appealDetail).isEqualTo(appealEntity.appealDetail)
-    assertThat(transformedAppeal.reviewer).isEqualTo(appealEntity.reviewer)
     assertThat(transformedAppeal.createdAt).isCloseTo(Instant.now(), within(1, ChronoUnit.SECONDS))
     assertThat(transformedAppeal.applicationId).isEqualTo(appealEntity.application.id)
     assertThat(transformedAppeal.createdByUser).isEqualTo(mockUser)

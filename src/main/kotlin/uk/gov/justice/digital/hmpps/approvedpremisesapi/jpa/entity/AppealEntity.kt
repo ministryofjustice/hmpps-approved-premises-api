@@ -21,7 +21,6 @@ data class AppealEntity(
   val id: UUID,
   val appealDate: LocalDate,
   val appealDetail: String,
-  val reviewer: String,
   var decision: String,
   var decisionDetail: String,
   val createdAt: OffsetDateTime,

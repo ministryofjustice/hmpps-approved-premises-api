@@ -1287,8 +1287,6 @@ components:
           format: date-time
         createdBy:
           $ref: '#/components/schemas/StaffMember'
-        reviewer:
-          type: string
         appealDetail:
           type: string
         decision:
