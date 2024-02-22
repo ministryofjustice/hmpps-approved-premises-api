@@ -445,7 +445,6 @@ class ApplicationsController(
     val createAppealResult = appealService.createAppeal(
       appealDate = body.appealDate,
       appealDetail = body.appealDetail,
-      reviewer = body.reviewer,
       decision = body.decision,
       decisionDetail = body.decisionDetail,
       application = application,

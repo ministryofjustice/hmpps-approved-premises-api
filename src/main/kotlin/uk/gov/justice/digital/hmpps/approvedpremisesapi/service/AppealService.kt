@@ -48,7 +48,6 @@ class AppealService(
   fun createAppeal(
     appealDate: LocalDate,
     appealDetail: String,
-    reviewer: String,
     decision: AppealDecision,
     decisionDetail: String,
     application: ApplicationEntity,
@@ -67,10 +66,6 @@ class AppealService(
           "$.appealDetail" hasValidationError "empty"
         }
 
-        if (reviewer.isBlank()) {
-          "$.reviewer" hasValidationError "empty"
-        }
-
         if (decisionDetail.isBlank()) {
           "$.decisionDetail" hasValidationError "empty"
         }
@@ -84,7 +79,6 @@ class AppealService(
             id = UUID.randomUUID(),
             appealDate = appealDate,
             appealDetail = appealDetail,
-            reviewer = reviewer,
             decision = decision.value,
             decisionDetail = decisionDetail,
             createdAt = OffsetDateTime.now(),
@@ -146,7 +140,6 @@ class AppealService(
               surname = staffDetails.staff.surname,
               username = staffDetails.username,
             ),
-            reviewer = appeal.reviewer,
             appealDetail = appeal.appealDetail,
             decision = parseDecision(appeal.decision),
             decisionDetail = appeal.decisionDetail,

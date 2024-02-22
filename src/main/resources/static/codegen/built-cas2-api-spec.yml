@@ -4764,8 +4764,6 @@ components:
           format: date
         appealDetail:
           type: string
-        reviewer:
-          type: string
         decision:
           $ref: '#/components/schemas/AppealDecision'
         decisionDetail:
@@ -4773,7 +4771,6 @@ components:
       required:
         - appealDate
         - appealDetail
-        - reviewer
         - decision
         - decisionDetail
     Appeal:
@@ -4786,8 +4783,6 @@ components:
           type: string
           format: date
         appealDetail:
-          type: string
-        reviewer:
           type: string
         decision:
           $ref: '#/components/schemas/AppealDecision'
@@ -4802,19 +4797,17 @@ components:
         assessmentId:
           type: string
           format: uuid
-        createdByUserId:
-          type: string
-          format: uuid
+        createdByUser:
+          $ref: '#/components/schemas/User'
       required:
         - id
         - appealDate
         - appealDetail
-        - reviewer
         - decision
         - decisionDetail
         - createdAt
         - applicationId
-        - createdByUserId
+        - createdByUser
     AppealDecision:
       type: string
       enum:
