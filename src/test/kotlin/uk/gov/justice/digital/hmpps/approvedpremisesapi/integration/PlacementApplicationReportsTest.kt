@@ -66,6 +66,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -455,7 +456,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     assertThat(reportRow.requestedDurationDays).isEqualTo(expectedRow.placementDate!!.duration)
 
     if (expectedRow.isAccepted || expectedRow.hasBooking) {
-      assertThat(reportRow.decision).isEqualTo("ACCEPTED")
+      assertThat(reportRow.decision).isEqualTo(if (expectedRow.isWithdrawn) "WITHDRAW" else "ACCEPTED")
       assertThat(reportRow.decisionMadeAt).isToday()
     } else {
       assertThat(reportRow.decision).isNull()

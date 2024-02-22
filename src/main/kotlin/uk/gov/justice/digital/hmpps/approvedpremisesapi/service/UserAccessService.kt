@@ -221,7 +221,7 @@ class UserAccessService(
    *
    * It doesn't consider if the placement request is in a withdrawable state
    */
-  fun userMayWithdrawPlacemenApplication(user: UserEntity, placementApplication: PlacementApplicationEntity)
+  fun userMayWithdrawPlacementApplication(user: UserEntity, placementApplication: PlacementApplicationEntity)
     = placementApplication.createdByUser == user ||
       (placementApplication.isSubmitted() && user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER))
 
