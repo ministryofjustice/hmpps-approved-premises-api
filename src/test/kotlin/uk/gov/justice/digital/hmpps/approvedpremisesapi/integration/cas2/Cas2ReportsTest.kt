@@ -243,7 +243,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           conditionalReleaseDate = event2Details.conditionalReleaseDate.toString(),
           submittedAt = event2Details.submittedAt.toString().split(".").first(),
           submittedBy = event2Details.submittedBy.staffMember.username.toString(),
-          createdAt = application2.createdAt.toString().split(".").first(),
+          startedAt = application2.createdAt.toString().split(".").first(),
         ),
         SubmittedApplicationReportRow(
           eventId = event1Id.toString(),
@@ -256,7 +256,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           conditionalReleaseDate = event1Details.conditionalReleaseDate.toString(),
           submittedAt = event1Details.submittedAt.toString().split(".").first(),
           submittedBy = event1Details.submittedBy.staffMember.username.toString(),
-          createdAt = application1.createdAt.toString().split(".").first(),
+          startedAt = application1.createdAt.toString().split(".").first(),
         ),
       )
         .toDataFrame()

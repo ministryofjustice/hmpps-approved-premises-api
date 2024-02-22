@@ -42,7 +42,7 @@ class ReportsService(
         conditionalReleaseDate = row.getConditionalReleaseDate(),
         submittedBy = row.getSubmittedBy(),
         submittedAt = row.getSubmittedAt(),
-        createdAt = row.getCreatedAt(),
+        startedAt = row.getStartedAt(),
       )
     }
 

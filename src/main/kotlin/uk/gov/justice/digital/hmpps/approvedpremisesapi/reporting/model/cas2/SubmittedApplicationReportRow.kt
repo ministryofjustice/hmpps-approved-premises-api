@@ -11,5 +11,5 @@ data class SubmittedApplicationReportRow(
   val conditionalReleaseDate: String?,
   val submittedAt: String,
   val submittedBy: String,
-  val createdAt: String,
+  val startedAt: String,
 )
