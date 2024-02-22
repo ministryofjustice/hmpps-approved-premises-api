@@ -6,4 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
 import java.util.UUID
 
 @Repository
-interface AppealTestRepository : JpaRepository<AppealEntity, UUID>
+interface AppealTestRepository : JpaRepository<AppealEntity, UUID> {
+  fun findByApplication_Id(applicationId: UUID): AppealEntity?
+}

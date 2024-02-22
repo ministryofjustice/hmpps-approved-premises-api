@@ -92,25 +92,23 @@ class AppealsTest : IntegrationTestBase() {
           withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
         }
 
-        val result = webTestClient.get()
+        webTestClient.get()
           .uri("/applications/${application.id}/appeals/${appeal.id}")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .returnResult(Appeal::class.java)
-
-        assertThat(result.responseBody.blockFirst()).matches {
-          it.appealDate == appeal.appealDate &&
-            it.appealDetail == appeal.appealDetail &&
-            it.reviewer == appeal.reviewer &&
-            it.createdAt == appeal.createdAt.toInstant() &&
-            it.applicationId == application.id &&
-            it.createdByUserId == userEntity.id &&
-            it.decision.value == appeal.decision &&
-            it.decisionDetail == appeal.decisionDetail &&
-            it.assessmentId == assessment.id
-        }
+          .expectBody()
+          .jsonPath("$.appealDate").isEqualTo(appeal.appealDate.toString())
+          .jsonPath("$.appealDetail").isEqualTo(appeal.appealDetail)
+          .jsonPath("$.reviewer").isEqualTo(appeal.reviewer)
+          .jsonPath("$.createdAt").isEqualTo(appeal.createdAt.toString())
+          .jsonPath("$.applicationId").isEqualTo(application.id.toString())
+          .jsonPath("$.decision").isEqualTo(appeal.decision)
+          .jsonPath("$.decisionDetail").isEqualTo(appeal.decisionDetail)
+          .jsonPath("$.assessmentId").isEqualTo(appeal.assessment.id.toString())
+          .jsonPath("$.createdByUser.id").isEqualTo(appeal.createdBy.id.toString())
+          .jsonPath("$.createdByUser.name").isEqualTo(appeal.createdBy.name)
       }
     }
   }
@@ -261,7 +259,7 @@ class AppealsTest : IntegrationTestBase() {
           decision = AssessmentDecision.REJECTED,
           submittedAt = OffsetDateTime.now(),
         ) { assessment, application ->
-          val result = webTestClient.post()
+          webTestClient.post()
             .uri("/applications/${application.id}/appeals")
             .bodyValue(
               NewAppeal(
@@ -275,24 +273,20 @@ class AppealsTest : IntegrationTestBase() {
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
-            .isCreated
-            .returnResult(Appeal::class.java)
-
-          assertThat(result.responseHeaders["Location"]).anyMatch {
-            it.matches(Regex("/applications/${application.id}/appeals/[0-9a-f-]+"))
-          }
-
-          assertThat(result.responseBody.blockFirst()).matches {
-            it.appealDate == LocalDate.parse("2024-01-01") &&
-              it.appealDetail == "Some details about the appeal." &&
-              it.reviewer == "Someone Else" &&
-              withinSeconds(5L).matches(it.createdAt.toString()) &&
-              it.applicationId == application.id &&
-              it.createdByUserId == userEntity.id &&
-              it.decision == AppealDecision.rejected &&
-              it.decisionDetail == "Some details about the decision." &&
-              it.assessmentId == assessment.id
-          }
+            .isCreated()
+            .expectHeader()
+            .valueMatches("Location", "/applications/${application.id}/appeals/[0-9a-f-]+")
+            .expectBody()
+            .jsonPath("$.appealDate").isEqualTo("2024-01-01")
+            .jsonPath("$.appealDetail").isEqualTo("Some details about the appeal.")
+            .jsonPath("$.reviewer").isEqualTo("Someone Else")
+            .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+            .jsonPath("$.applicationId").isEqualTo(application.id.toString())
+            .jsonPath("$.decision").isEqualTo(AppealDecision.rejected.value)
+            .jsonPath("$.decisionDetail").isEqualTo("Some details about the decision.")
+            .jsonPath("$.assessmentId").isEqualTo(assessment.id.toString())
+            .jsonPath("$.createdByUser.id").isEqualTo(userEntity.id.toString())
+            .jsonPath("$.createdByUser.name").isEqualTo(userEntity.name)
         }
       }
     }
@@ -412,7 +406,7 @@ class AppealsTest : IntegrationTestBase() {
           decision = AssessmentDecision.REJECTED,
           submittedAt = OffsetDateTime.now(),
         ) { assessment, application ->
-          val result = webTestClient.post()
+          webTestClient.post()
             .uri("/applications/${application.id}/appeals")
             .bodyValue(
               NewAppeal(
@@ -427,7 +421,8 @@ class AppealsTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isCreated
-            .returnResult(Appeal::class.java)
+
+          val appeal = appealTestRepository.findByApplication_Id(application.id)!!
 
           val timelineResult = webTestClient.get()
             .uri("/applications/${application.id}/timeline")
@@ -438,7 +433,6 @@ class AppealsTest : IntegrationTestBase() {
             .isOk
             .returnResult(String::class.java)
 
-          val appeal = result.responseBody.blockFirst()!!
           val timeline = objectMapper.readValue<List<TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
 
           assertThat(timeline).anyMatch {

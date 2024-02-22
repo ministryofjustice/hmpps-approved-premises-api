@@ -8876,9 +8876,8 @@ components:
         assessmentId:
           type: string
           format: uuid
-        createdByUserId:
-          type: string
-          format: uuid
+        createdByUser:
+          $ref: '#/components/schemas/User'
       required:
         - id
         - appealDate
@@ -8888,7 +8887,7 @@ components:
         - decisionDetail
         - createdAt
         - applicationId
-        - createdByUserId
+        - createdByUser
     AppealDecision:
       type: string
       enum:
