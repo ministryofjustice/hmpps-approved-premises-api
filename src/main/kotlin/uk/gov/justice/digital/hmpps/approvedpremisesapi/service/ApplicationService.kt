@@ -561,10 +561,6 @@ class ApplicationService(
           return@validated success(Unit)
         }
 
-        if (withdrawalReason == WithdrawalReason.other.value && otherReason == null) {
-          return@validated "$.otherReason" hasSingleValidationError "empty"
-        }
-
         applicationRepository.save(
           application.apply {
             this.isWithdrawn = true

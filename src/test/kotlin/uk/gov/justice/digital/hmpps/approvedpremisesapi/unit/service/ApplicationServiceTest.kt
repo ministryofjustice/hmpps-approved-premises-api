@@ -2295,34 +2295,6 @@ class ApplicationServiceTest {
     }
 
     @Test
-    fun `withdrawApprovedPremisesApplication returns FieldValidationError if the reason is null and the otherReason has not been set`() {
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(user)
-        .produce()
-
-      every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
-
-      val authorisableActionResult =
-        applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", null)
-
-      assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
-
-      val validatableActionResult = (authorisableActionResult as AuthorisableActionResult.Success).entity
-
-      assertThat(validatableActionResult is ValidatableActionResult.FieldValidationError).isTrue
-
-      val validationMessages =
-        (validatableActionResult as ValidatableActionResult.FieldValidationError).validationMessages
-
-      assertThat(validationMessages).containsEntry("$.otherReason", "empty")
-    }
-
-    @Test
     fun `withdrawApprovedPremisesApplication returns Success and saves Application with isWithdrawn set to true, emits domain event`() {
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
