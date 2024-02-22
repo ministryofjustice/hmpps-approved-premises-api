@@ -118,19 +118,72 @@ class WithdrawalTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get withdrawables for an application returns withdrawable placement requests for application creator`() {
+    fun `Get withdrawables for an application returns withdrawable placement request not linked to booking for application creator`() {
       `Given a User` { applicant, jwt ->
         `Given a User` { allocatedTo, _ ->
           `Given an Offender` { offenderDetails, _ ->
 
             val (application, _) = createApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
 
-            val placementRequest1 = createPlacementRequest(application)
-            val placementRequest2 = createPlacementRequest(application)
+            val placementRequest = createPlacementRequest(application)
+
+            val placementApplicationExpectedArrival = LocalDate.now().plusDays(50)
+            val placementApplicationDuration = 6
+            val placementApplication = createPlacementApplication(
+              application,
+              listOf(placementApplicationExpectedArrival to placementApplicationDuration),
+            )
+            createPlacementRequest(application) {
+              withPlacementApplication(placementApplication)
+            }
 
             createPlacementRequest(application) {
               withReallocatedAt(OffsetDateTime.now())
             }
+
+            createPlacementRequest(application) {
+              withIsWithdrawn(true)
+            }
+
+            val expected = listOf(
+              Withdrawable(
+                application.id,
+                WithdrawableType.application,
+                emptyList(),
+              ),
+              Withdrawable(
+                placementRequest.id,
+                WithdrawableType.placementRequest,
+                listOf(datePeriodForDuration(placementRequest.expectedArrival, placementRequest.duration)),
+              ),
+              Withdrawable(
+                placementApplication.id,
+                WithdrawableType.placementApplication,
+                listOf(datePeriodForDuration(placementApplicationExpectedArrival, placementApplicationDuration)),
+              ),
+            )
+
+            webTestClient.get()
+              .uri("/applications/${application.id}/withdrawables")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.approvedPremises.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .jsonForObject(expected)
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get withdrawables for an application returns withdrawable placement request linked to a booking for application creator`() {
+      `Given a User` { applicant, jwt ->
+        `Given a User` { allocatedTo, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+
+            val (application, _) = createApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
 
             val placementRequestWithBooking = createPlacementRequest(application) {
               val premises = approvedPremisesEntityFactory.produceAndPersist {
@@ -154,16 +207,6 @@ class WithdrawalTest : IntegrationTestBase() {
                 application.id,
                 WithdrawableType.application,
                 emptyList(),
-              ),
-              Withdrawable(
-                placementRequest1.id,
-                WithdrawableType.placementRequest,
-                listOf(datePeriodForDuration(placementRequest1.expectedArrival, placementRequest1.duration)),
-              ),
-              Withdrawable(
-                placementRequest2.id,
-                WithdrawableType.placementRequest,
-                listOf(datePeriodForDuration(placementRequest2.expectedArrival, placementRequest2.duration)),
               ),
               Withdrawable(
                 placementRequestWithBooking.id,
@@ -383,31 +426,152 @@ class WithdrawalTest : IntegrationTestBase() {
       }
     }
 
+    /**
+     * ```
+     * | Entities                         | Withdrawable |
+     * | -------------------------------- | ------------ |
+     * | Application                      | YES          |
+     * | -> Request for placement 1       | YES          |
+     * | ---> Match request 1             | -            |
+     * | -----> Booking 1 arrival pending | YES          |
+     * | ---> Match request 2             | -            |
+     * | -> Request for placement 2       | YES          |
+     * | -> Match request 3               | YES          |
+     * | ---> Booking 2 has arrival       | -            |
+     * ```
+     */
     @Test
     fun `Get withdrawables for all possible types when a user can manage bookings`() {
       `Given a User` { applicant, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { allocatedTo, jwt ->
+        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+          `Given a User` { requestForPlacementAssessor, _ ->
+            `Given an Offender` { offenderDetails, _ ->
+              val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
+
+              val placementApplication1 = createPlacementApplication(application, listOf(LocalDate.now() to 2))
+              val placementRequest1 = createPlacementRequest(application) {
+                withPlacementApplication(placementApplication1)
+              }
+              val booking1NoArrival = createBooking(
+                application = application,
+                hasArrival = false,
+                startDate = LocalDate.now().plusDays(1),
+                endDate = LocalDate.now().plusDays(6),
+              )
+              addBookingToPlacementRequest(placementRequest1, booking1NoArrival)
+
+              val placementRequest2NoBooking = createPlacementRequest(application) {
+                withPlacementApplication(placementApplication1)
+              }
+
+              val placementApplication2 = createPlacementApplication(application, listOf(LocalDate.now() to 2)) {
+                withDecision(null)
+                withAllocatedToUser(requestForPlacementAssessor)
+              }
+
+              val placementRequest3 = createPlacementRequest(application)
+              val booking2HasArrival = createBooking(
+                application = application,
+                hasArrival = true,
+                startDate = LocalDate.now(),
+                endDate = LocalDate.now().plusDays(1),
+              )
+              addBookingToPlacementRequest(placementRequest3, booking2HasArrival)
+
+              val expected = listOf(
+                Withdrawable(
+                  application.id,
+                  WithdrawableType.application,
+                  emptyList(),
+                ),
+                Withdrawable(
+                  placementApplication1.id,
+                  WithdrawableType.placementApplication,
+                  listOf(datePeriodForDuration(placementApplication1.placementDates[0].expectedArrival, placementApplication1.placementDates[0].duration)),
+                ),
+                Withdrawable(
+                  booking1NoArrival.id,
+                  WithdrawableType.booking,
+                  listOf(DatePeriod(booking1NoArrival.arrivalDate, booking1NoArrival.departureDate)),
+                ),
+                Withdrawable(
+                  placementApplication2.id,
+                  WithdrawableType.placementApplication,
+                  listOf(datePeriodForDuration(placementApplication2.placementDates[0].expectedArrival, placementApplication2.placementDates[0].duration)),
+                ),
+                Withdrawable(
+                  placementRequest3.id,
+                  WithdrawableType.placementRequest,
+                  listOf(DatePeriod(placementRequest3.expectedArrival, placementRequest3.expectedDeparture())),
+                ),
+              )
+
+              webTestClient.get()
+                .uri("/applications/${application.id}/withdrawables")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.approvedPremises.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .jsonForObject(expected)
+
+            }
+          }
+        }
+      }
+    }
+
+    /**
+     * ```
+     * | Entities                         | Withdrawable |
+     * | -------------------------------- | ------------ |
+     * | Application                      | YES          |
+     * | -> Request for placement 1       | YES          |
+     * | ---> Match request 1             | -            |
+     * | -----> Booking 1 arrival pending | -            |
+     * | ---> Match request 2             | -            |
+     * | -> Request for placement 2       | YES          |
+     * | -> Match request 3               | YES          |
+     * | ---> Booking 2 has arrival       | -            |
+     * ```
+     */
+    @Test
+    fun `Get withdrawables for all possible types when a user cannot manage bookings`() {
+      `Given a User` { applicant, jwt ->
+        `Given a User` { requestForPlacementAssessor, _ ->
           `Given an Offender` { offenderDetails, _ ->
+            val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
-            val (application, _) = createApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
-
-            val booking1ExpectedArrival = LocalDate.now().plusDays(1)
-            val booking1ExpectedDeparture = LocalDate.now().plusDays(6)
-            val booking1 = createBooking(
-              application,
-              booking1ExpectedArrival,
-              booking1ExpectedDeparture,
+            val placementApplication1 = createPlacementApplication(application, listOf(LocalDate.now() to 2))
+            val placementRequest1 = createPlacementRequest(application) {
+              withPlacementApplication(placementApplication1)
+            }
+            val booking1NoArrival = createBooking(
+              application = application,
+              hasArrival = false,
+              startDate = LocalDate.now().plusDays(1),
+              endDate = LocalDate.now().plusDays(6),
             )
+            addBookingToPlacementRequest(placementRequest1, booking1NoArrival)
 
-            val placementApplicationExpectedArrival = LocalDate.now().plusDays(1)
-            val placementApplicationDuration = 5
+            val placementRequest2NoBooking = createPlacementRequest(application) {
+              withPlacementApplication(placementApplication1)
+            }
 
-            val placementApplication = createPlacementApplication(
-              application,
-              listOf(placementApplicationExpectedArrival to placementApplicationDuration),
+            val placementApplication2 = createPlacementApplication(application, listOf(LocalDate.now() to 2)) {
+              withDecision(null)
+              withAllocatedToUser(requestForPlacementAssessor)
+            }
+
+            val placementRequest3 = createPlacementRequest(application)
+            val booking2HasArrival = createBooking(
+              application = application,
+              hasArrival = true,
+              startDate = LocalDate.now(),
+              endDate = LocalDate.now().plusDays(1),
             )
-
-            val placementRequest = createPlacementRequest(application)
+            addBookingToPlacementRequest(placementRequest3, booking2HasArrival)
 
             val expected = listOf(
               Withdrawable(
@@ -416,19 +580,19 @@ class WithdrawalTest : IntegrationTestBase() {
                 emptyList(),
               ),
               Withdrawable(
-                booking1.id,
-                WithdrawableType.booking,
-                listOf(DatePeriod(booking1ExpectedArrival, booking1ExpectedDeparture)),
-              ),
-              Withdrawable(
-                placementApplication.id,
+                placementApplication1.id,
                 WithdrawableType.placementApplication,
-                listOf(datePeriodForDuration(placementApplicationExpectedArrival, placementApplicationDuration)),
+                listOf(datePeriodForDuration(placementApplication1.placementDates[0].expectedArrival, placementApplication1.placementDates[0].duration)),
               ),
               Withdrawable(
-                placementRequest.id,
+                placementApplication2.id,
+                WithdrawableType.placementApplication,
+                listOf(datePeriodForDuration(placementApplication2.placementDates[0].expectedArrival, placementApplication2.placementDates[0].duration)),
+              ),
+              Withdrawable(
+                placementRequest3.id,
                 WithdrawableType.placementRequest,
-                listOf(datePeriodForDuration(placementRequest.expectedArrival, placementRequest.duration)),
+                listOf(DatePeriod(placementRequest3.expectedArrival, placementRequest3.expectedDeparture())),
               ),
             )
 
@@ -441,63 +605,8 @@ class WithdrawalTest : IntegrationTestBase() {
               .isOk
               .expectBody()
               .jsonForObject(expected)
+
           }
-        }
-      }
-    }
-
-    @Test
-    fun `Get withdrawables for all possible types filters out bookings when a user cannot manage bookings`() {
-      `Given a User` { applicant, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-
-          val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
-
-          val booking1ExpectedArrival = LocalDate.now().plusDays(1)
-          val booking1ExpectedDeparture = LocalDate.now().plusDays(6)
-          createBooking(
-            application,
-            booking1ExpectedArrival,
-            booking1ExpectedDeparture,
-          )
-
-          val placementApplicationExpectedArrival = LocalDate.now().plusDays(1)
-          val placementApplicationDuration = 5
-
-          val placementApplication = createPlacementApplication(
-            application,
-            listOf(placementApplicationExpectedArrival to placementApplicationDuration),
-          )
-
-          val placementRequest = createPlacementRequest(application)
-
-          val expected = listOf(
-            Withdrawable(
-              application.id,
-              WithdrawableType.application,
-              emptyList(),
-            ),
-            Withdrawable(
-              placementApplication.id,
-              WithdrawableType.placementApplication,
-              listOf(datePeriodForDuration(placementApplicationExpectedArrival, placementApplicationDuration)),
-            ),
-            Withdrawable(
-              placementRequest.id,
-              WithdrawableType.placementRequest,
-              listOf(datePeriodForDuration(placementRequest.expectedArrival, placementRequest.duration)),
-            ),
-          )
-
-          webTestClient.get()
-            .uri("/applications/${application.id}/withdrawables")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.approvedPremises.value)
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .jsonForObject(expected)
         }
       }
     }
@@ -567,7 +676,7 @@ class WithdrawalTest : IntegrationTestBase() {
           `Given an Offender` { offenderDetails, _ ->
             val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
-            val placementApplication1 = createPlacementApplication(application)
+            val placementApplication1 = createPlacementApplication(application, listOf(LocalDate.now() to 2))
             val placementRequest1 = createPlacementRequest(application) {
               withPlacementApplication(placementApplication1)
             }
@@ -583,7 +692,7 @@ class WithdrawalTest : IntegrationTestBase() {
               withPlacementApplication(placementApplication1)
             }
 
-            val placementApplication2 = createPlacementApplication(application) {
+            val placementApplication2 = createPlacementApplication(application, listOf(LocalDate.now() to 2)) {
               withDecision(null)
               withAllocatedToUser(requestForPlacementAssessor)
             }
@@ -669,7 +778,7 @@ class WithdrawalTest : IntegrationTestBase() {
           `Given an Offender` { offenderDetails, _ ->
             val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
-            val placementApplication1 = createPlacementApplication(application)
+            val placementApplication1 = createPlacementApplication(application, listOf(LocalDate.now() to 2))
             val placementRequest1 = createPlacementRequest(application) {
               withPlacementApplication(placementApplication1)
             }
@@ -692,7 +801,7 @@ class WithdrawalTest : IntegrationTestBase() {
             )
             addBookingToPlacementRequest(placementRequest2, booking2HasArrival)
 
-            val placementApplication2 = createPlacementApplication(application)
+            val placementApplication2 = createPlacementApplication(application, listOf(LocalDate.now() to 2))
 
             withdrawPlacementApplication(
               placementApplication1,
@@ -748,7 +857,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * ```
      */
     @Test
-    fun `Withdrawing a placement request cascades to booking pending arrival and updates the application status`() {
+    fun `Withdrawing a Match Request cascades to booking pending arrival and updates the application status`() {
       `Given a User` { applicant, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
@@ -802,7 +911,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * ```
      */
     @Test
-    fun `Withdrawing a placement request doesn't cascade to booking with arrival`() {
+    fun `Withdrawing a Match Request doesn't cascade to booking with arrival`() {
       `Given a User` { applicant, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
@@ -1032,7 +1141,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
   private fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
-    arrivalsToDuration: List<Pair<LocalDate, Int>> = emptyList(),
+    arrivalsToDuration: List<Pair<LocalDate, Int>>,
     configuration: (PlacementApplicationEntityFactory.() -> Unit)? = null,
   ): PlacementApplicationEntity {
     val placementApplication = placementApplicationFactory.produceAndPersist {
@@ -1049,13 +1158,14 @@ class WithdrawalTest : IntegrationTestBase() {
       configuration?.invoke(this)
     }
 
-    arrivalsToDuration.forEach { (start, duration) ->
+    val dates = arrivalsToDuration.map { (start, duration) ->
       placementDateFactory.produceAndPersist {
         withPlacementApplication(placementApplication)
         withExpectedArrival(start)
         withDuration(duration)
       }
     }
+    placementApplication.placementDates.addAll(dates)
 
     return placementApplication
   }

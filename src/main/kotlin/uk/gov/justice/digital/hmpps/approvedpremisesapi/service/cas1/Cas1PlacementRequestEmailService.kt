@@ -26,7 +26,7 @@ class Cas1PlacementRequestEmailService(
       "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
     )
 
-    if (placementRequest.isFromApplicationsArrivalDate()) {
+    if (placementRequest.isForApplicationsArrivalDate()) {
       val applicant = application.createdByUser
       applicant.email?.let { applicantEmail ->
         emailNotifier.sendEmail(
