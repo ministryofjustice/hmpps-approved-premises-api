@@ -1302,7 +1302,6 @@ components:
         - deliusEventNumber
         - createdAt
         - createdBy
-        - reviewer
         - appealDetail
         - decision
         - decisionDetail
