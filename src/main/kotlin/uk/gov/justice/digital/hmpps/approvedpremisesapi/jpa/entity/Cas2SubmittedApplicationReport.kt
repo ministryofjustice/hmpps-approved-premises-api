@@ -22,8 +22,11 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
         TO_CHAR(
           CAST(events.data -> 'eventDetails' ->> 'submittedAt' AS TIMESTAMP),
           'YYYY-MM-DD"T"HH24:MI:SS'
-        ) AS submittedAt
+        ) AS submittedAt,
+        TO_CHAR(applications.created_at, 'YYYY-MM-DD"T"HH24:MI:SS') AS startedAt
       FROM domain_events events
+      JOIN cas_2_applications applications
+      ON events.application_id = applications.id      
       WHERE events.type = 'CAS2_APPLICATION_SUBMITTED'
         AND events.occurred_at  > CURRENT_DATE - 365
       ORDER BY submittedAt DESC;
@@ -33,6 +36,7 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
   fun generateSubmittedApplicationReportRows(): List<Cas2SubmittedApplicationReportRow>
 }
 
+@SuppressWarnings("TooManyFunctions")
 interface Cas2SubmittedApplicationReportRow {
   fun getId(): String
   fun getApplicationId(): String
@@ -44,4 +48,5 @@ interface Cas2SubmittedApplicationReportRow {
   fun getPreferredAreas(): String
   fun getHdcEligibilityDate(): String
   fun getConditionalReleaseDate(): String
+  fun getStartedAt(): String
 }

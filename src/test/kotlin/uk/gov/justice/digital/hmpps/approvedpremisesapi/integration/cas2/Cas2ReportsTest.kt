@@ -116,18 +116,72 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val event2Id = UUID.randomUUID()
       val event3Id = UUID.randomUUID()
 
-      val old = Instant.now().minusSeconds(daysInSeconds(365))
-      val newer = Instant.now().minusSeconds(daysInSeconds(100))
-      val tooOld = Instant.now().minusSeconds(daysInSeconds(366))
+      val oldSubmitted = Instant.now().minusSeconds(daysInSeconds(365))
+      val oldCreated = oldSubmitted.minusSeconds(daysInSeconds(7))
+
+      val newerSubmitted = Instant.now().minusSeconds(daysInSeconds(100))
+      val newerCreated = newerSubmitted.minusSeconds(daysInSeconds(7))
+
+      val tooOldSubmitted = Instant.now().minusSeconds(daysInSeconds(366))
+      val tooOldCreated = tooOldSubmitted.minusSeconds(daysInSeconds(7))
+
+      val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withAddedAt(OffsetDateTime.now())
+        withId(UUID.randomUUID())
+      }
+
+      val user1 = nomisUserEntityFactory.produceAndPersist {
+        withNomisUsername("NOMIS_USER_1")
+      }
+
+      val user2 = nomisUserEntityFactory.produceAndPersist {
+        withNomisUsername("NOMIS_USER_2")
+      }
+
+      val applicationId1 = UUID.randomUUID()
+      val applicationId2 = UUID.randomUUID()
+      val applicationId3 = UUID.randomUUID()
+
+      val application1 = cas2ApplicationEntityFactory.produceAndPersist {
+        withId(applicationId1)
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(user1)
+        withCrn("CRN_1")
+        withNomsNumber("NOMS_1")
+        withCreatedAt(oldCreated.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withData("{}")
+        withSubmittedAt(oldSubmitted.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+      }
+
+      val application2 = cas2ApplicationEntityFactory.produceAndPersist {
+        withId(applicationId2)
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(user2)
+        withCrn("CRN_2")
+        withNomsNumber("NOMS_2")
+        withCreatedAt(newerCreated.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withData("{}")
+        withSubmittedAt(newerSubmitted.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+      }
+
+      // outside time limit -- should not feature in report
+      cas2ApplicationEntityFactory.produceAndPersist {
+        withId(applicationId3)
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(user2)
+        withCreatedAt(tooOldCreated.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withData("{}")
+        withSubmittedAt(tooOldSubmitted.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+      }
 
       val event1Details = Cas2ApplicationSubmittedEventDetailsFactory()
-        .withSubmittedAt(old)
+        .withSubmittedAt(oldSubmitted)
         .produce()
       val event2Details = Cas2ApplicationSubmittedEventDetailsFactory()
-        .withSubmittedAt(newer)
+        .withSubmittedAt(newerSubmitted)
         .produce()
       val event3Details = Cas2ApplicationSubmittedEventDetailsFactory()
-        .withSubmittedAt(tooOld)
+        .withSubmittedAt(tooOldSubmitted)
         .produce()
 
       val event1ToSave = Cas2ApplicationSubmittedEvent(
@@ -155,14 +209,16 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withId(event1Id)
         withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
         withData(objectMapper.writeValueAsString(event1ToSave))
-        withOccurredAt(old.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withOccurredAt(oldSubmitted.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withApplicationId(applicationId1)
       }
 
       val event2 = domainEventFactory.produceAndPersist {
         withId(event2Id)
         withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
         withData(objectMapper.writeValueAsString(event2ToSave))
-        withOccurredAt(newer.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withOccurredAt(newerSubmitted.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withApplicationId(applicationId2)
       }
 
       // we don't expect this event to be included as it relates to an application
@@ -171,7 +227,8 @@ class Cas2ReportsTest : IntegrationTestBase() {
         withId(event3Id)
         withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
         withData(objectMapper.writeValueAsString(event3ToSave))
-        withOccurredAt(tooOld.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withOccurredAt(tooOldSubmitted.atOffset(ZoneOffset.ofHoursMinutes(0, 0)))
+        withApplicationId(applicationId3)
       }
 
       val expectedDataFrame = listOf(
@@ -186,6 +243,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           conditionalReleaseDate = event2Details.conditionalReleaseDate.toString(),
           submittedAt = event2Details.submittedAt.toString().split(".").first(),
           submittedBy = event2Details.submittedBy.staffMember.username.toString(),
+          startedAt = application2.createdAt.toString().split(".").first(),
         ),
         SubmittedApplicationReportRow(
           eventId = event1Id.toString(),
@@ -198,6 +256,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           conditionalReleaseDate = event1Details.conditionalReleaseDate.toString(),
           submittedAt = event1Details.submittedAt.toString().split(".").first(),
           submittedBy = event1Details.submittedBy.staffMember.username.toString(),
+          startedAt = application1.createdAt.toString().split(".").first(),
         ),
       )
         .toDataFrame()
