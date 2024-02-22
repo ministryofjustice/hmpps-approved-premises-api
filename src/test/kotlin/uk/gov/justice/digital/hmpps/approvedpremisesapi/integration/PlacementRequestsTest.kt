@@ -1428,12 +1428,12 @@ class PlacementRequestsTest : IntegrationTestBase() {
                   .expectStatus()
                   .isOk
 
-                emailNotificationAsserter.assertEmailsRequestedCount(2)
-                emailNotificationAsserter.assertEmailRequested(
+                emailAsserter.assertEmailsRequestedCount(2)
+                emailAsserter.assertEmailRequested(
                   applicant.email!!,
                   notifyConfig.templates.bookingMade,
                 )
-                emailNotificationAsserter.assertEmailRequested(
+                emailAsserter.assertEmailRequested(
                   premises.emailAddress!!,
                   notifyConfig.templates.bookingMadePremises,
                 )
@@ -1620,34 +1620,42 @@ class PlacementRequestsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Withdraw Placement Request returns 200, sets isWithdrawn to true`() {
+    fun `Withdraw Placement Request returns 200, sets isWithdrawn to true, sends email to CRU and sends email to Applicant as it represents dates included on application on submission`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          `Given an Application`(createdByUser = user) {
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = user,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            ) { placementRequest, _ ->
-              webTestClient.post()
-                .uri("/placement-requests/${placementRequest.id}/withdrawal")
-                .bodyValue(
-                  WithdrawPlacementRequest(
-                    reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
-                  ),
-                )
-                .header("Authorization", "Bearer $jwt")
-                .exchange()
-                .expectStatus()
-                .isOk
+          `Given a Placement Request`(
+            placementRequestAllocatedTo = user,
+            assessmentAllocatedTo = user,
+            createdByUser = user,
+            crn = offenderDetails.otherIds.crn,
+            apArea = apAreaEntityFactory.produceAndPersist()
+          ) { placementRequest, _ ->
 
-              val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
-              assertThat(persistedPlacementRequest.isWithdrawn).isTrue
-              assertThat(persistedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+            webTestClient.post()
+              .uri("/placement-requests/${placementRequest.id}/withdrawal")
+              .bodyValue(
+                WithdrawPlacementRequest(
+                  reason = WithdrawPlacementRequestReason.duplicatePlacementRequest,
+                ),
+              )
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isOk
 
-              emailNotificationAsserter.assertNoEmailsRequested()
-            }
+            val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
+            assertThat(persistedPlacementRequest.isWithdrawn).isTrue
+            assertThat(persistedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+
+            emailAsserter.assertEmailsRequestedCount(2)
+            emailAsserter.assertEmailRequested(
+              placementRequest.application.apArea!!.emailAddress!!,
+              notifyConfig.templates.matchRequestWithdrawn
+            )
+            emailAsserter.assertEmailRequested(
+              placementRequest.application.createdByUser.email!!,
+              notifyConfig.templates.matchRequestWithdrawn
+            )
           }
         }
       }

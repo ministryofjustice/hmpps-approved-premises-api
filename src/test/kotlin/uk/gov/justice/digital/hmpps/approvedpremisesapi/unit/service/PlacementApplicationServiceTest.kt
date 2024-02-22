@@ -53,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
@@ -71,6 +72,7 @@ class PlacementApplicationServiceTest {
   private val userAccessService = mockk<UserAccessService>()
   private val domainEventService = mockk<DomainEventService>()
   private val domainEventTransformer = mockk<DomainEventTransformer>()
+  private val cas1PlacementApplicationEmailService = mockk<Cas1PlacementApplicationEmailService>()
 
   private val placementApplicationService = PlacementApplicationService(
     placementApplicationRepository,
@@ -82,6 +84,7 @@ class PlacementApplicationServiceTest {
     emailNotificationService,
     notifyConfig,
     userAccessService,
+    cas1PlacementApplicationEmailService,
     domainEventService,
     domainEventTransformer,
     sendPlacementRequestNotifications = true,
@@ -523,6 +526,50 @@ class PlacementApplicationServiceTest {
     }
 
     @Test
+    fun `it withdraws a placement application and triggers emails`() {
+      val allocatedTo = UserEntityFactory().withDefaultProbationRegion().produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(allocatedTo)
+        .withDecision(null)
+        .withCreatedByUser(user)
+        .produce()
+
+      val templateId = UUID.randomUUID().toString()
+
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { userAccessService.userMayWithdrawPlacementApplication(any(),any()) } returns true
+      every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
+      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+      every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
+      every { domainEventTransformer.toWithdrawnBy(user) } returns WithdrawnByFactory().produce()
+      every { domainEventService.savePlacementApplicationWithdrawnEvent(any()) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any()) } returns Unit
+
+      val result = placementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
+        withdrawalContext = WithdrawalContext(
+          user,
+          WithdrawableEntityType.PlacementApplication
+        ),
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      val validationResult = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(validationResult is ValidatableActionResult.Success).isTrue
+      validationResult as ValidatableActionResult.Success
+
+      val entity = validationResult.entity
+
+      assertThat(entity.decision).isEqualTo(PlacementApplicationDecision.WITHDRAW)
+
+      verify { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(placementApplication, allocatedTo) }
+    }
+
+    @Test
     fun `it creates a domain event`() {
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
@@ -538,6 +585,7 @@ class PlacementApplicationServiceTest {
       every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
+      every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any()) } returns Unit
 
       val withdrawnBy = WithdrawnByFactory().produce()
       every { domainEventTransformer.toWithdrawnBy(user) } returns withdrawnBy
@@ -593,6 +641,7 @@ class PlacementApplicationServiceTest {
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { domainEventTransformer.toWithdrawnBy(user) } returns WithdrawnByFactory().produce()
       every { domainEventService.savePlacementApplicationWithdrawnEvent(any()) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any()) } returns Unit
 
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
@@ -669,6 +718,7 @@ class PlacementApplicationServiceTest {
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { domainEventTransformer.toWithdrawnBy(user) } returns WithdrawnByFactory().produce()
       every { domainEventService.savePlacementApplicationWithdrawnEvent(any()) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any()) } returns Unit
       every {
         placementRequestService.withdrawPlacementRequest(any(), any(), any())
       }  returns AuthorisableActionResult.Success(Unit)
@@ -731,6 +781,7 @@ class PlacementApplicationServiceTest {
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { domainEventTransformer.toWithdrawnBy(user) } returns WithdrawnByFactory().produce()
       every { domainEventService.savePlacementApplicationWithdrawnEvent(any()) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any()) } returns Unit
       every {
         placementRequestService.withdrawPlacementRequest(any(), any(), any())
       }  returns AuthorisableActionResult.Unauthorised()

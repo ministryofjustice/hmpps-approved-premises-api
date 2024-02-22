@@ -3079,8 +3079,8 @@ class ApplicationTest : IntegrationTestBase() {
         val updatedAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(assessment.id)!!
         assertThat(updatedAssessment.isWithdrawn).isTrue
 
-        emailNotificationAsserter.assertEmailsRequestedCount(1)
-        emailNotificationAsserter.assertEmailRequested(
+        emailAsserter.assertEmailsRequestedCount(1)
+        emailAsserter.assertEmailRequested(
           user.email!!,
           notifyConfig.templates.applicationWithdrawn,
         )
@@ -3116,12 +3116,12 @@ class ApplicationTest : IntegrationTestBase() {
             .expectStatus()
             .isOk
 
-          emailNotificationAsserter.assertEmailsRequestedCount(2)
-          emailNotificationAsserter.assertEmailRequested(
+          emailAsserter.assertEmailsRequestedCount(2)
+          emailAsserter.assertEmailRequested(
             applicant.email!!,
             notifyConfig.templates.applicationWithdrawn,
           )
-          emailNotificationAsserter.assertEmailRequested(
+          emailAsserter.assertEmailRequested(
             assessor.email!!,
             notifyConfig.templates.assessmentWithdrawn,
           )

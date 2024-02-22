@@ -89,7 +89,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.duration = { duration }
   }
 
-  fun withPlacementApplication(placementApplication: PlacementApplicationEntity) = apply {
+  fun withPlacementApplication(placementApplication: PlacementApplicationEntity?) = apply {
     this.placementApplication = { placementApplication }
   }
 

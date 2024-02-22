@@ -491,7 +491,7 @@ abstract class IntegrationTestBase {
   lateinit var appealTestRepository: AppealTestRepository
 
   @Autowired
-  lateinit var emailNotificationAsserter: EmailNotificationAsserter
+  lateinit var emailAsserter: EmailNotificationAsserter
 
   @Autowired
   lateinit var notifyConfig: NotifyConfig

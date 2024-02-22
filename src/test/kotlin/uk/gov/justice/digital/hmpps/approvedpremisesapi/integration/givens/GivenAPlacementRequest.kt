@@ -135,6 +135,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   expectedArrival: LocalDate? = null,
   tier: String? = null,
   isWithdrawn: Boolean = false,
+  apArea: ApAreaEntity? = null,
   block: (placementRequest: PlacementRequestEntity, application: ApplicationEntity) -> Unit,
 ) {
   val result = `Given a Placement Request`(
@@ -146,6 +147,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     expectedArrival = expectedArrival,
     tier = tier,
     isWithdrawn = isWithdrawn,
+    apArea = apArea,
   )
 
   block(result.first, result.second)

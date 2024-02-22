@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.Instant
@@ -53,6 +54,7 @@ class PlacementApplicationService(
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
   private val userAccessService: UserAccessService,
+  private val cas1PlacementApplicationEmailService: Cas1PlacementApplicationEmailService,
   private val domainEventService: DomainEventService,
   private val domainEventTransformer: DomainEventTransformer,
   @Value("\${notify.send-placement-request-notifications}")
@@ -208,6 +210,8 @@ class PlacementApplicationService(
       )
     }
 
+    val wasBeingAssessedBy = if (placementApplication.isBeingAssessed()) { placementApplication.allocatedToUser } else null
+
     placementApplication.decision = PlacementApplicationDecision.WITHDRAW
     placementApplication.decisionMadeAt = OffsetDateTime.now()
     placementApplication.withdrawalReason = when(withdrawalContext.triggeringEntityType) {
@@ -220,6 +224,8 @@ class PlacementApplicationService(
     val savedApplication = placementApplicationRepository.save(placementApplication)
 
     createWithdrawalDomainEvent(placementApplication, user)
+
+    cas1PlacementApplicationEmailService.placementApplicationWithdrawn(placementApplication, wasBeingAssessedBy)
 
     withdrawPlacementRequests(placementApplication, withdrawalContext)
 
