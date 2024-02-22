@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -33,6 +34,7 @@ class AppealService(
   private val assessmentService: AssessmentService,
   private val domainEventService: DomainEventService,
   private val communityApiClient: CommunityApiClient,
+  private val cas1AppealEmailService: Cas1AppealEmailService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-appeal}") private val applicationAppealUrlTemplate: UrlTemplate,
 ) {
@@ -92,6 +94,7 @@ class AppealService(
 
         if (decision == AppealDecision.accepted) {
           assessmentService.createApprovedPremisesAssessment(application as ApprovedPremisesApplicationEntity, createdFromAppeal = true)
+          cas1AppealEmailService.appealSuccess(application, appeal)
         }
 
         success(appeal)

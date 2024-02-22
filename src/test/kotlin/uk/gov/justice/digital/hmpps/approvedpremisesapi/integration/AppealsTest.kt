@@ -331,7 +331,7 @@ class AppealsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create new appeal creates a new assessment and updates the application status if the appeal was accepted`() {
+  fun `Create new appeal creates a new assessment, updates the application status and sends notification emails if the appeal was accepted`() {
     `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         `Given an Assessment for Approved Premises`(
@@ -380,6 +380,12 @@ class AppealsTest : IntegrationTestBase() {
           assertThat(newAssessment!!.createdFromAppeal).isTrue()
           assertThat(newAssessment.allocatedToUser).isNotNull()
           assertThat(newAssessment.allocatedToUser!!.id).isEqualTo(userEntity.id)
+
+          emailAsserter.assertEmailsRequestedCount(3)
+          emailAsserter.assertEmailRequested(userEntity.email!!, notifyConfig.templates.appealSuccess)
+          emailAsserter.assertEmailRequested(application.createdByUser.email!!, notifyConfig.templates.appealSuccess)
+
+          emailAsserter.assertEmailRequested(userEntity.email!!, notifyConfig.templates.assessmentAllocated)
         }
       }
     }
