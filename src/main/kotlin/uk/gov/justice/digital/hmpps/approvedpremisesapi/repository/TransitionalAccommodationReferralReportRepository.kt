@@ -31,7 +31,8 @@ interface TransitionalAccommodationReferralReportRepository : JpaRepository<Book
       taa.eligibility_reason AS referralEligibilityReason,
       ap.noms_number as nomsNumber,
       taa.arrival_date as accommodationRequiredDate,
-      taa.prison_name_on_creation as prisonNameOnCreation
+      taa.prison_name_on_creation as prisonNameOnCreation,
+      taa.person_release_date as personReleaseDate
     FROM temporary_accommodation_assessments aa
     JOIN assessments a on aa.assessment_id = a.id AND a.service='temporary-accommodation' AND a.reallocated_at IS NULL
     JOIN applications ap on a.application_id = ap.id AND ap.service='temporary-accommodation'
@@ -75,4 +76,5 @@ interface TransitionalAccommodationReferralReportData {
   val referralEligibilityReason: String?
   val accommodationRequiredDate: Timestamp?
   val prisonNameOnCreation: String?
+  val personReleaseDate: LocalDate?
 }
