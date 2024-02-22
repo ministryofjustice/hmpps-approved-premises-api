@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
@@ -40,6 +41,7 @@ class SubmissionsTransformer(
       document = if (jpa.document != null) objectMapper.readTree(jpa.document) else null,
       telephoneNumber = jpa.telephoneNumber,
       timelineEvents = timelineEventsTransformer.transformApplicationToTimelineEvents(jpa),
+      assessment = Cas2Assessment(nacroReferralId = jpa.assessment?.nacroReferralId, assessorName = jpa.assessment?.assessorName),
     )
   }
 

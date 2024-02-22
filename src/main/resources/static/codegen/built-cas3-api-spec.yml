@@ -1753,6 +1753,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Cas2TimelineEvent'
+        assessment:
+          type: object
+          $ref: '#/components/schemas/Cas2Assessment'
       required:
         - id
         - person
@@ -1762,6 +1765,7 @@ components:
         - outdatedSchema
         - status
         - timelineEvents
+        - assessment
     TemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/Application'
@@ -2487,6 +2491,13 @@ components:
           required:
             - application
             - summaryData
+    Cas2Assessment:
+      type: object
+      properties:
+        nacroReferralId:
+          type: string
+        assessorName:
+          type: string
     AssessmentSummary:
       type: object
       properties:

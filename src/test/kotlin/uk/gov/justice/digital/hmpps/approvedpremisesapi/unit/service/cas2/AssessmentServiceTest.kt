@@ -6,11 +6,9 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatcher
 import org.mockito.kotlin.times
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import java.time.OffsetDateTime
@@ -54,13 +52,6 @@ class AssessmentServiceTest {
           match { it.application == application },
         )
       }
-    }
-  }
-
-  class AssessmentMatcher(var application: Cas2ApplicationEntity) : ArgumentMatcher<Cas2AssessmentEntity> {
-
-    override fun matches(assessment: Cas2AssessmentEntity): Boolean {
-      return assessment.application.id == application.id
     }
   }
 }
