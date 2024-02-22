@@ -1662,7 +1662,7 @@ class UserAccessServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      assertThat(userAccessService.userMayWithdrawPlacemenApplication(user, placementApplication)).isTrue
+      assertThat(userAccessService.userMayWithdrawPlacementApplication(user, placementApplication)).isTrue
     }
 
     @Test
@@ -1676,7 +1676,7 @@ class UserAccessServiceTest {
         .withCreatedByUser(anotherUserInRegion)
         .produce()
 
-      assertThat(userAccessService.userMayWithdrawPlacemenApplication(user, placementApplication)).isFalse
+      assertThat(userAccessService.userMayWithdrawPlacementApplication(user, placementApplication)).isFalse
     }
 
     @Test
@@ -1702,7 +1702,7 @@ class UserAccessServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      assertThat(userAccessService.userMayWithdrawPlacemenApplication(user, placementApplication)).isTrue
+      assertThat(userAccessService.userMayWithdrawPlacementApplication(user, placementApplication)).isTrue
     }
 
     @Test
@@ -1728,7 +1728,7 @@ class UserAccessServiceTest {
         .withSubmittedAt(null)
         .produce()
 
-      assertThat(userAccessService.userMayWithdrawPlacemenApplication(user, placementApplication)).isFalse
+      assertThat(userAccessService.userMayWithdrawPlacementApplication(user, placementApplication)).isFalse
     }
 
   }

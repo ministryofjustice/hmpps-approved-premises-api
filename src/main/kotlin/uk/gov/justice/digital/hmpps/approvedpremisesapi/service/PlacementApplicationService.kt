@@ -178,7 +178,7 @@ class PlacementApplicationService(
   fun getWithdrawablePlacementApplicationsForUser(user: UserEntity, application: ApprovedPremisesApplicationEntity) =
     placementApplicationRepository
       .findByApplication(application)
-      .filter { it.isInWithdrawableState() && userAccessService.userMayWithdrawPlacemenApplication(user, it)}
+      .filter { it.isInWithdrawableState() && userAccessService.userMayWithdrawPlacementApplication(user, it)}
 
   @Transactional
   fun withdrawPlacementApplication(
@@ -204,7 +204,7 @@ class PlacementApplicationService(
     }
 
     val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementApplication
-    if(isUserRequestedWithdrawal && !userAccessService.userMayWithdrawPlacemenApplication(user, placementApplication)) {
+    if(isUserRequestedWithdrawal && !userAccessService.userMayWithdrawPlacementApplication(user, placementApplication)) {
       return AuthorisableActionResult.Unauthorised()
     }
 
