@@ -510,10 +510,10 @@ class WithdrawalTest : IntegrationTestBase() {
 
     /**
      * ```
-     * elements                         | withdrawn | email pp | email assessor |
-     * --------------------------------------------------------------------------
-     * application                      | YES       | YES      | NO             |
-     *  - assessment (pending)          | YES       | NO       | YES            |
+     * | Entities                         | Withdrawn | Email PP | Email Assessor |
+     * | -------------------------------- | --------- | -------- | -------------- |
+     * | Application                      | YES       | YES      | -              |
+     * | -> Assessment (pending)          | YES       | -        | YES            |
      * ```
      */
     @Test
@@ -547,17 +547,17 @@ class WithdrawalTest : IntegrationTestBase() {
 
     /**
      * ```
-     * elements                          | withdrawn | email pp | email ap | email cru | email assessor |
-     * --------------------------------------------------------------------------------------------------
-     * application                       | YES       | YES      | NO       | NO        | NO             |
-     *  - assessment                     | YES       | NO       | NO       | NO        | NO             |
-     *  - request for placement 1        | YES       | YES      | NO       | NO        | NO             |
-     *    - match request 1              | YES       | NO       | NO       | NO        | NO             |
-     *      - booking 1 arrival pending  | YES       | YES      | YES      | YES       | NO             |
-     *    - match request 2              | YES       | NO       | NO       | YES       | NO             |
-     *  - request for placement 2        | YES       | YES      | NO       | NO        | YES            |
-     *  - match request 3                | YES       | YES      | NO       | NO        | NO             |
-     *    - booking 2 has arrival        | NO        | NO       | NO       | NO        | NO             |
+     * | Entities                         | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
+     * | -------------------------------- | --------- | -------- | -------- | --------- | -------------- |
+     * | Application                      | YES       | YES      | -        | -         | -              |
+     * | -> Assessment                    | YES       | -        | -        | -         | -              |
+     * | -> Request for placement 1       | YES       | YES      | -        | -         | -              |
+     * | ---> Match request 1             | YES       | -        | -        | -         | -              |
+     * | -----> Booking 1 arrival pending | YES       | YES      | YES      | YES       | -              |
+     * | ---> Match request 2             | YES       | -        | -        | YES       | -              |
+     * | -> Request for placement 2       | YES       | YES      | -        | -         | YES            |
+     * | -> Match request 3               | YES       | YES      | -        | -         | -              |
+     * | ---> Booking 2 has arrival       | -         | -        | -        | -         | -              |
      * ```
      */
     @Test
@@ -651,16 +651,15 @@ class WithdrawalTest : IntegrationTestBase() {
 
     /**
      * ```
-     * elements                         | withdrawn | email pp | email ap | email cru |
-     * --------------------------------------------------------------------------------
-     * application                      | NO        | NO       | NO       | NO        |
-     *  - assessment                    | NO        | NO       | NO       | NO        |
-     *  - request for placement 1       | YES       | YES      | NO       | NO        |
-     *    - match request 1             | YES       | NO       | NO       | NO        |
-     *      - booking 1 arrival pending | YES       | YES      | YES      | YES       |
-     *    - match request 2             | YES       | NO       | NO       | NO        |
-     *      - booking 2 has arrival     | NO        | NO       | NO       | NO        |
-     *  - request for placement 2       | NO        | NO       | NO       | NO        |
+     * | Entities                         | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
+     * | -------------------------------- | --------- | -------- | -------- | --------- | -------------- |
+     * | Application                      | -         | -        | -        | -         | -              |
+     * | -> Assessment                    | -         | -        | -        | -         | -              |
+     * | -> Request for placement 1       | YES       | YES      | -        | -         | -              |
+     * | ---> Match request 1             | YES       | -        | -        | -         | -              |
+     * | -----> Booking 1 arrival pending | YES       | YES      | YES      | YES       | -              |
+     * | ---> Match request 2             | YES       | -        | -        | -         | -              |
+     * | -> Request for placement 2       | -         | -        | -        | -         | -              |
      * ```
      */
     @Test
@@ -740,12 +739,12 @@ class WithdrawalTest : IntegrationTestBase() {
 
     /**
      * ```
-     * elements                         | withdrawn | email pp | email ap | email cru |
-     * --------------------------------------------------------------------------------
-     * application                      | NO        | NO       | NO       | NO        |
-     *  - assessment                    | NO        | NO       | NO       | NO        |
-     *  - match request                 | YES       | YES      | NO       | NO        |
-     *    - booking pending arrival     | YES       | YES      | YES      | YES       |
+     * | Entities                         | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
+     * | -------------------------------- | --------- | -------- | -------- | --------- | -------------- |
+     * | Application                      | -         | -        | -        | -         | -              |
+     * | -> Assessment                    | -         | -        | -        | -         | -              |
+     * | -> Match request                 | YES       | YES      | -        | -         | -              |
+     * | ---> Booking arrival pending     | YES       | YES      | YES      | YES       | -              |
      * ```
      */
     @Test
@@ -794,12 +793,12 @@ class WithdrawalTest : IntegrationTestBase() {
 
     /**
      * ```
-     * elements                         | withdrawn | email pp | email ap | email cru |
-     * --------------------------------------------------------------------------------
-     * application                      | NO        | NO       | NO       | NO        |
-     *  - assessment                    | NO        | NO       | NO       | NO        |
-     *  - match request                 | YES       | YES      | NO       | NO        |
-     *    - booking has arrival         | NO        | NO       | NO       | NO       |
+     * | Entities                         | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
+     * | -------------------------------- | --------- | -------- | -------- | --------- | -------------- |
+     * | Application                      | -         | -        | -        | -         | -              |
+     * | -> Assessment                    | -         | -        | -        | -         | -              |
+     * | -> Match request                 | YES       | YES      | -        | -         | -              |
+     * | ---> Booking has arrival         | -         | -        | -        | -         | -              |
      * ```
      */
     @Test
