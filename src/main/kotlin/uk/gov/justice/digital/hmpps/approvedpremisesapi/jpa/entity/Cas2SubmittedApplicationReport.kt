@@ -36,6 +36,7 @@ interface Cas2SubmittedApplicationReportRepository : JpaRepository<DomainEventEn
   fun generateSubmittedApplicationReportRows(): List<Cas2SubmittedApplicationReportRow>
 }
 
+@SuppressWarnings("TooManyFunctions")
 interface Cas2SubmittedApplicationReportRow {
   fun getId(): String
   fun getApplicationId(): String
