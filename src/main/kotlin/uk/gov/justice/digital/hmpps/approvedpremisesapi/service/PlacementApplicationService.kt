@@ -186,16 +186,10 @@ class PlacementApplicationService(
     userProvidedReason: PlacementApplicationWithdrawalReason?,
     withdrawalContext: WithdrawalContext,
   ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
-    val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
     val user = requireNotNull(withdrawalContext.triggeringUser)
 
-    when (placementApplicationAuthorisationResult) {
-      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
-      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.Success -> Unit
-    }
-
-    val placementApplication = placementApplicationAuthorisationResult.entity
+    val placementApplication =
+      placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
 
     if(placementApplication.isWithdrawn()) {
       return AuthorisableActionResult.Success(

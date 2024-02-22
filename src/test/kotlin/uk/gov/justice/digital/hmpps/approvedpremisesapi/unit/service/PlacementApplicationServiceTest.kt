@@ -523,45 +523,6 @@ class PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `it withdraws a placement application`() {
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
-        .withDecision(null)
-        .withCreatedByUser(user)
-        .produce()
-
-      val templateId = UUID.randomUUID().toString()
-
-      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { userAccessService.userMayWithdrawPlacementApplication(any(),any()) } returns true
-      every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
-      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
-      every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
-      every { domainEventTransformer.toWithdrawnBy(user) } returns WithdrawnByFactory().produce()
-      every { domainEventService.savePlacementApplicationWithdrawnEvent(any()) } returns Unit
-
-      val result = placementApplicationService.withdrawPlacementApplication(
-        placementApplication.id,
-        PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
-        withdrawalContext = WithdrawalContext(
-          user,
-          WithdrawableEntityType.PlacementApplication
-        ),
-      )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(validationResult is ValidatableActionResult.Success).isTrue
-      validationResult as ValidatableActionResult.Success
-
-      val entity = validationResult.entity
-
-      assertThat(entity.decision).isEqualTo(PlacementApplicationDecision.WITHDRAW)
-    }
-
-    @Test
     fun `it creates a domain event`() {
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
@@ -842,37 +803,6 @@ class PlacementApplicationServiceTest {
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
-    }
-
-    @Test
-    fun `it returns unauthorised if a user did not create the placement application`() {
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
-        .withDecision(PlacementApplicationDecision.ACCEPTED)
-        .withCreatedByUser(
-          UserEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .produce(),
-        )
-        .produce()
-
-      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-
-      val result = placementApplicationService.withdrawPlacementApplication(
-        placementApplication.id,
-        PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
-        withdrawalContext = WithdrawalContext(
-          user,
-          WithdrawableEntityType.PlacementApplication
-        ),
-      )
-
-      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
     }
 
     @Test

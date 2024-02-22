@@ -1144,6 +1144,61 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       }
     }
 
+    @Test
+    fun `withdrawing a submitted placement application as a workflow manager returns successfully and raise a domain event`() {
+      `Given a User` { applicant, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+          `Given a Placement Application`(
+            createdByUser = applicant,
+            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+            decision = null,
+            submittedAt = OffsetDateTime.now(),
+          ) { placementApplicationEntity ->
+
+            CommunityAPI_mockSuccessfulOffenderDetailsCall(
+              OffenderDetailsSummaryFactory()
+                .withCrn(placementApplicationEntity.application.crn)
+                .produce(),
+            )
+
+            val application = placementApplicationEntity.application
+
+            val rawResult = webTestClient.post()
+              .uri("/placement-applications/${placementApplicationEntity.id}/withdraw")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                WithdrawPlacementApplication(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+
+            assertThat(body).matches {
+              placementApplicationEntity.id == it.id &&
+                application.id == it.applicationId &&
+                placementApplicationEntity.createdByUser.id == it.createdByUserId &&
+                placementApplicationEntity.schemaVersion.id == it.schemaVersion &&
+                placementApplicationEntity.createdAt.toInstant() == it.createdAt &&
+                serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
+            }
+
+            val emittedMessage = snsDomainEventListener.blockForMessage()
+            assertThat(emittedMessage.eventType).isEqualTo("approved-premises.placement-application.withdrawn")
+
+            emailNotificationAsserter.assertNoEmailsRequested()
+          }
+        }
+      }
+    }
+
+
   }
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {
