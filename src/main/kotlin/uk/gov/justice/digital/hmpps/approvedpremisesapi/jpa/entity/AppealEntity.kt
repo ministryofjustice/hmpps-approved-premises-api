@@ -12,7 +12,9 @@ import javax.persistence.ManyToOne
 import javax.persistence.Table
 
 @Repository
-interface AppealRepository : JpaRepository<AppealEntity, UUID>
+interface AppealRepository : JpaRepository<AppealEntity, UUID> {
+  fun findByApplication(application: ApplicationEntity): AppealEntity?
+}
 
 @Entity
 @Table(name = "appeals")
