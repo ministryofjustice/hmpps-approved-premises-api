@@ -367,7 +367,7 @@ class AppealsTest : IntegrationTestBase() {
 
           val applicationBody = applicationResult.responseBody.blockFirst()!!
 
-          assertThat(applicationBody.status).isEqualTo(ApprovedPremisesApplicationStatus.unallocatedAssesment)
+          assertThat(applicationBody.status).isEqualTo(ApprovedPremisesApplicationStatus.awaitingAssesment)
 
           assertThat(applicationBody.assessmentId).isNotNull()
           assertThat(applicationBody.assessmentId).isNotEqualTo(assessment.id)
@@ -377,8 +377,9 @@ class AppealsTest : IntegrationTestBase() {
           val newAssessment = approvedPremisesAssessmentRepository.findByIdOrNull(applicationBody.assessmentId!!)
 
           assertThat(newAssessment).isNotNull()
-
           assertThat(newAssessment!!.createdFromAppeal).isTrue()
+          assertThat(newAssessment.allocatedToUser).isNotNull()
+          assertThat(newAssessment.allocatedToUser!!.id).isEqualTo(userEntity.id)
         }
       }
     }
