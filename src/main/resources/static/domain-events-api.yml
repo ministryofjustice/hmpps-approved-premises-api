@@ -747,6 +747,10 @@ components:
         withdrawalReason:
           type: string
           example: 'RELATED_APPLICATION_WITHDRAWN'
+        placementDates:
+          type: array
+          items:
+            $ref: '#/components/schemas/DatePeriod'
       required:
         - applicationId
         - applicationUrl
@@ -1403,3 +1407,15 @@ components:
         instance:
           type: string
           example: f7493e12-546d-42c3-b838-06c12671ab5b
+    DatePeriod:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+      required:
+        - startDate
+        - endDate

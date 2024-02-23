@@ -6,9 +6,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawn
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -25,16 +22,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
-import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
@@ -56,11 +50,9 @@ class PlacementApplicationService(
   private val notifyConfig: NotifyConfig,
   private val userAccessService: UserAccessService,
   private val cas1PlacementApplicationEmailService: Cas1PlacementApplicationEmailService,
-  private val domainEventService: DomainEventService,
-  private val domainEventTransformer: DomainEventTransformer,
+  private val cas1PlacementApplicationDomainEventService: Cas1PlacementApplicationDomainEventService,
   @Value("\${notify.send-placement-request-notifications}")
   private val sendPlacementRequestNotifications: Boolean,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -228,52 +220,13 @@ class PlacementApplicationService(
 
     val savedApplication = placementApplicationRepository.save(placementApplication)
 
-    createWithdrawalDomainEvent(placementApplication, user)
-
+    cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(placementApplication, withdrawalContext)
     cas1PlacementApplicationEmailService.placementApplicationWithdrawn(placementApplication, wasBeingAssessedBy)
 
     withdrawPlacementRequests(placementApplication, withdrawalContext)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedApplication),
-    )
-  }
-
-  private fun createWithdrawalDomainEvent(
-    placementApplication: PlacementApplicationEntity,
-    user: UserEntity,
-  ) {
-    val domainEventId = UUID.randomUUID()
-    val eventOccurredAt = Instant.now()
-    val application = placementApplication.application
-
-    val placementApplicationWithdrawn = PlacementApplicationWithdrawn(
-      applicationId = application.id,
-      applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
-      placementApplicationId = placementApplication.id,
-      personReference = PersonReference(
-        crn = application.crn,
-        noms = application.nomsNumber ?: "Unknown NOMS Number",
-      ),
-      deliusEventNumber = application.eventNumber,
-      withdrawnAt = eventOccurredAt,
-      withdrawnBy = domainEventTransformer.toWithdrawnBy(user),
-      withdrawalReason = placementApplication.withdrawalReason!!.name,
-    )
-
-    domainEventService.savePlacementApplicationWithdrawnEvent(
-      DomainEvent(
-        id = domainEventId,
-        applicationId = application.id,
-        crn = application.crn,
-        occurredAt = eventOccurredAt,
-        data = PlacementApplicationWithdrawnEnvelope(
-          id = domainEventId,
-          timestamp = eventOccurredAt,
-          eventType = "approved-premises.placement-application.withdrawn",
-          eventDetails = placementApplicationWithdrawn,
-        ),
-      ),
     )
   }
 
