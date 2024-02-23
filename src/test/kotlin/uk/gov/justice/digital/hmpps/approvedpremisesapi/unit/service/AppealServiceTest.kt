@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -48,6 +49,7 @@ class AppealServiceTest {
   private val assessmentService = mockk<AssessmentService>()
   private val domainEventService = mockk<DomainEventService>()
   private val communityApiClient = mockk<CommunityApiClient>()
+  private val cas1AppealEmailService = mockk<Cas1AppealEmailService>()
   private val applicationUrlTemplate = mockk<UrlTemplate>()
   private val applicationAppealUrlTemplate = mockk<UrlTemplate>()
 
@@ -56,6 +58,7 @@ class AppealServiceTest {
     assessmentService,
     domainEventService,
     communityApiClient,
+    cas1AppealEmailService,
     applicationUrlTemplate,
     applicationAppealUrlTemplate,
   )
@@ -221,6 +224,7 @@ class AppealServiceTest {
       every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
       every { applicationAppealUrlTemplate.resolve(any()) } returns "http://frontend/applications/${application.id}/appeals/$appealId"
+      every { cas1AppealEmailService.appealSuccess(any(), any()) } returns Unit
 
       mockkStatic(UUID::class) {
         every { UUID.randomUUID() } returns appealId
@@ -264,6 +268,7 @@ class AppealServiceTest {
       every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
       every { applicationAppealUrlTemplate.resolve(any()) } returns "http://frontend/applications/${application.id}/appeals/$appealId"
+      every { cas1AppealEmailService.appealSuccess(any(), any()) } returns Unit
 
       mockkStatic(UUID::class) {
         every { UUID.randomUUID() } returns appealId
@@ -304,6 +309,7 @@ class AppealServiceTest {
       every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
       every { applicationAppealUrlTemplate.resolve(any()) } returns "http://frontend/applications/${application.id}/appeals/$appealId"
+      every { cas1AppealEmailService.appealSuccess(any(), any()) } returns Unit
 
       mockkStatic(UUID::class) {
         every { UUID.randomUUID() } returns appealId
@@ -329,6 +335,42 @@ class AppealServiceTest {
     }
 
     @Test
+    fun `Does not send a success email if the appeal was rejected`() {
+      createdByUser.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
+
+      val now = LocalDate.now()
+
+      every { appealRepository.save(any()) } returnsArgument 0
+      every { assessmentService.createApprovedPremisesAssessment(any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
+      every { domainEventService.saveAssessmentAppealedEvent(any()) } just Runs
+      every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+      every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
+      every { applicationAppealUrlTemplate.resolve(any()) } returns "http://frontend/applications/${application.id}/appeals/$appealId"
+
+      mockkStatic(UUID::class) {
+        every { UUID.randomUUID() } returns appealId
+
+        val result = appealService.createAppeal(
+          now,
+          "Some information about why the appeal is being made",
+          AppealDecision.rejected,
+          "Some information about the decision made",
+          application,
+          assessment,
+          createdByUser,
+        )
+
+        assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+        result as AuthorisableActionResult.Success
+        assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
+
+        verify(exactly = 0) {
+          cas1AppealEmailService.appealSuccess(any(), any())
+        }
+      }
+    }
+
+    @Test
     fun `Creates a new assessment if the appeal was accepted`() {
       createdByUser.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
 
@@ -340,6 +382,7 @@ class AppealServiceTest {
       every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
       every { applicationAppealUrlTemplate.resolve(any()) } returns "http://frontend/applications/${application.id}/appeals/$appealId"
+      every { cas1AppealEmailService.appealSuccess(any(), any()) } returns Unit
 
       mockkStatic(UUID::class) {
         every { UUID.randomUUID() } returns appealId
@@ -360,6 +403,42 @@ class AppealServiceTest {
 
         verify(exactly = 1) {
           assessmentService.createApprovedPremisesAssessment(application, createdFromAppeal = true)
+        }
+      }
+    }
+
+    @Test
+    fun `Sends emails when the appeal was accepted`() {
+      createdByUser.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
+
+      val now = LocalDate.now()
+
+      every { appealRepository.save(any()) } returnsArgument 0
+      every { assessmentService.createApprovedPremisesAssessment(any(), any()) } returns mockk<ApprovedPremisesAssessmentEntity>()
+      every { domainEventService.saveAssessmentAppealedEvent(any()) } just Runs
+      every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
+      every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
+      every { applicationAppealUrlTemplate.resolve(any()) } returns "http://frontend/applications/${application.id}/appeals/$appealId"
+      every { cas1AppealEmailService.appealSuccess(any(), any()) } returns Unit
+
+      mockkStatic(UUID::class) {
+        every { UUID.randomUUID() } returns appealId
+
+        val result = appealService.createAppeal(
+          now,
+          "Some information about why the appeal is being made",
+          AppealDecision.accepted,
+          "Some information about the decision made",
+          application,
+          assessment,
+          createdByUser,
+        )
+
+        verify(exactly = 1) {
+          cas1AppealEmailService.appealSuccess(
+            application,
+            match { it.application == application && it.createdBy == createdByUser },
+          )
         }
       }
     }

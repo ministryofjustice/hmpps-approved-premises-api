@@ -39,6 +39,7 @@ class NotifyTemplates {
   val placementRequestSubmitted = "deb11bc6-d424-4370-bbe5-41f6a823d292"
   val placementRequestWithdrawn = "a5f44549-e849-4a26-abb1-802316081533"
   val cas2ApplicationSubmitted = "a0823218-91dd-4cf0-9835-4b90024f62c8"
+  val appealSuccess = "ae21f3ae-3a4a-4df8-a1b8-2640ea80d101"
 }
 
 enum class NotifyMode {
