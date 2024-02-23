@@ -309,7 +309,7 @@ class AppealServiceTest {
       every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
       every { applicationAppealUrlTemplate.resolve(any()) } returns "http://frontend/applications/${application.id}/appeals/$appealId"
-      every { cas1AppealEmailService.appealSuccess(any(), any()) } returns Unit
+      every { cas1AppealEmailService.appealFailed(any()) } returns Unit
 
       mockkStatic(UUID::class) {
         every { UUID.randomUUID() } returns appealId
@@ -335,7 +335,7 @@ class AppealServiceTest {
     }
 
     @Test
-    fun `Does not send a success email if the appeal was rejected`() {
+    fun `Sends a failure email if the appeal was rejected`() {
       createdByUser.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
 
       val now = LocalDate.now()
@@ -346,6 +346,7 @@ class AppealServiceTest {
       every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
       every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
       every { applicationAppealUrlTemplate.resolve(any()) } returns "http://frontend/applications/${application.id}/appeals/$appealId"
+      every { cas1AppealEmailService.appealFailed(any()) } returns Unit
 
       mockkStatic(UUID::class) {
         every { UUID.randomUUID() } returns appealId
@@ -364,8 +365,8 @@ class AppealServiceTest {
         result as AuthorisableActionResult.Success
         assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
 
-        verify(exactly = 0) {
-          cas1AppealEmailService.appealSuccess(any(), any())
+        verify(exactly = 1) {
+          cas1AppealEmailService.appealFailed(application)
         }
       }
     }

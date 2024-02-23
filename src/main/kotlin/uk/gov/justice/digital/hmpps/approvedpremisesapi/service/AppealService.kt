@@ -92,9 +92,14 @@ class AppealService(
 
         saveEvent(appeal)
 
-        if (decision == AppealDecision.accepted) {
-          assessmentService.createApprovedPremisesAssessment(application as ApprovedPremisesApplicationEntity, createdFromAppeal = true)
-          cas1AppealEmailService.appealSuccess(application, appeal)
+        when (decision) {
+          AppealDecision.accepted -> {
+            assessmentService.createApprovedPremisesAssessment(application as ApprovedPremisesApplicationEntity, createdFromAppeal = true)
+            cas1AppealEmailService.appealSuccess(application, appeal)
+          }
+          AppealDecision.rejected -> {
+            cas1AppealEmailService.appealFailed(application)
+          }
         }
 
         success(appeal)

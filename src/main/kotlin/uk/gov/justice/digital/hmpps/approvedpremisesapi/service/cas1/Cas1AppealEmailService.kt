@@ -20,6 +20,19 @@ class Cas1AppealEmailService(
     }
   }
 
+  fun appealFailed(application: ApplicationEntity) {
+    application.createdByUser.email?.let { emailAddress ->
+      emailNotificationService.sendEmail(
+        recipientEmailAddress = emailAddress,
+        templateId = notifyConfig.templates.appealReject,
+        personalisation = mapOf(
+          "crn" to application.crn,
+          "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
+        ),
+      )
+    }
+  }
+
   private fun sendAppealSuccessEmailToEmailAddress(emailAddress: String, application: ApplicationEntity) {
     emailNotificationService.sendEmail(
       recipientEmailAddress = emailAddress,
