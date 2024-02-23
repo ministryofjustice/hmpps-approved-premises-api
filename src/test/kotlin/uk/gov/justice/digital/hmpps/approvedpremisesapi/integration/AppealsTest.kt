@@ -284,7 +284,7 @@ class AppealsTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create new appeal does not create a new assessment if the appeal was rejected`() {
+  fun `Create new appeal does not create a new assessment and sends the correct notification email if the appeal was rejected`() {
     `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
         `Given an Assessment for Approved Premises`(
@@ -325,6 +325,13 @@ class AppealsTest : IntegrationTestBase() {
           assertThat(applicationBody.assessmentId).isEqualTo(assessment.id)
           assertThat(applicationBody.assessmentDecision).isEqualTo(ApiAssessmentDecision.rejected)
           assertThat(applicationBody.assessmentDecisionDate).isEqualTo(assessment.submittedAt!!.toLocalDate())
+
+          emailAsserter.assertEmailsRequestedCount(1)
+          emailAsserter.assertEmailRequested(application.createdByUser.email!!, notifyConfig.templates.appealReject)
+
+          val assessments = assessmentTestRepository.findAllByApplication(application)
+          assertThat(assessments.size).isEqualTo(1)
+          assertThat(assessments[0].id).isEqualTo(assessment.id)
         }
       }
     }
