@@ -57,7 +57,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
@@ -73,7 +72,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.LocalDate
@@ -525,7 +523,6 @@ class PlacementRequestServiceTest {
     }
   }
 
-
   @Nested
   inner class GetWithdrawablePlacementRequestsForUser {
 
@@ -591,7 +588,7 @@ class PlacementRequestServiceTest {
         placementApplication = PlacementApplicationEntityFactory()
           .withCreatedByUser(user)
           .withApplication(application)
-          .produce()
+          .produce(),
       )
 
       every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestNotWithdrawable)
@@ -734,7 +731,7 @@ class PlacementRequestServiceTest {
         applicationService.updateApprovedPremisesApplicationStatus(
           application.id,
           PENDING_PLACEMENT_REQUEST,
-          )
+        )
       }
     }
 
@@ -810,7 +807,7 @@ class PlacementRequestServiceTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = WithdrawableEntityType::class, names = ["Booking","PlacementRequest"], mode = EnumSource.Mode.EXCLUDE)
+    @EnumSource(value = WithdrawableEntityType::class, names = ["Booking", "PlacementRequest"], mode = EnumSource.Mode.EXCLUDE)
     fun `withdrawPlacementRequest sets correct reason if withdrawal triggered by other entity and user permissions not checked`(triggeringEntity: WithdrawableEntityType) {
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
@@ -828,7 +825,7 @@ class PlacementRequestServiceTest {
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
 
-      val expectedWithdrawalReason = when(triggeringEntity) {
+      val expectedWithdrawalReason = when (triggeringEntity) {
         WithdrawableEntityType.Application -> PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
         WithdrawableEntityType.PlacementApplication -> PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN
         WithdrawableEntityType.Booking -> providedReason

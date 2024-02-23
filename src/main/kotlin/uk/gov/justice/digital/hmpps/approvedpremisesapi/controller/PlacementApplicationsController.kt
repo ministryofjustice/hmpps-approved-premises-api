@@ -135,7 +135,7 @@ class PlacementApplicationsController(
       withdrawalReason,
       withdrawalContext = WithdrawalContext(
         userService.getUserForRequest(),
-        WithdrawableEntityType.PlacementApplication
+        WithdrawableEntityType.PlacementApplication,
       ),
     )
 

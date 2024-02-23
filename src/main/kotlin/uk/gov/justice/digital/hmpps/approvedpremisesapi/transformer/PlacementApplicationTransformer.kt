@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 
 @Component
 class PlacementApplicationTransformer(
@@ -33,7 +32,7 @@ class PlacementApplicationTransformer(
       submittedAt = jpa.submittedAt?.toInstant(),
       canBeWithdrawn = jpa.isInWithdrawableState(),
       isWithdrawn = jpa.isWithdrawn(),
-      withdrawalReason = getWithdrawalReason(jpa.withdrawalReason)
+      withdrawalReason = getWithdrawalReason(jpa.withdrawalReason),
     )
   }
 
@@ -45,7 +44,7 @@ class PlacementApplicationTransformer(
     },
   )
 
-  fun getWithdrawalReason(withdrawalReason: PlacementApplicationWithdrawalReason?): WithdrawPlacementRequestReason? = when(withdrawalReason) {
+  fun getWithdrawalReason(withdrawalReason: PlacementApplicationWithdrawalReason?): WithdrawPlacementRequestReason? = when (withdrawalReason) {
     PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST -> WithdrawPlacementRequestReason.duplicatePlacementRequest
     PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED -> WithdrawPlacementRequestReason.alternativeProvisionIdentified
     PlacementApplicationWithdrawalReason.WITHDRAWN_BY_PP -> WithdrawPlacementRequestReason.withdrawnByPP
@@ -55,7 +54,7 @@ class PlacementApplicationTransformer(
     PlacementApplicationWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION -> WithdrawPlacementRequestReason.noCapacityDueToPlacementPrioritisation
     PlacementApplicationWithdrawalReason.NO_CAPACITY -> WithdrawPlacementRequestReason.noCapacity
     PlacementApplicationWithdrawalReason.ERROR_IN_PLACEMENT_REQUEST -> WithdrawPlacementRequestReason.errorInPlacementRequest
-    PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN ->WithdrawPlacementRequestReason.relatedPlacementApplicationWithdrawn
+    PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN -> WithdrawPlacementRequestReason.relatedPlacementApplicationWithdrawn
     null -> null
   }
 }

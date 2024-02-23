@@ -28,10 +28,10 @@ class MockEmailNotificationService : EmailNotifier {
   fun assertEmailRequested(
     recipientEmailAddress: String,
     templateId: String,
-    personalisationSubSet: Map<String,Any>
+    personalisationSubSet: Map<String, Any>,
   ) {
     assertThat(requestedEmails)
-      .extracting<Tuple> { tuple(it.email,it.templateId) }
+      .extracting<Tuple> { tuple(it.email, it.templateId) }
       .contains(tuple(recipientEmailAddress, templateId))
 
     val emailRequest = requestedEmails.first { it.email == recipientEmailAddress && it.templateId == templateId }
@@ -42,4 +42,3 @@ class MockEmailNotificationService : EmailNotifier {
     requestedEmails.clear()
   }
 }
-

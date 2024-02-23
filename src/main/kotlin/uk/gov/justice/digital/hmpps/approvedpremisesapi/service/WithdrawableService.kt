@@ -41,7 +41,7 @@ class WithdrawableService(
   ) {
     val placementRequests = application.placementRequests
     placementRequests.forEach { placementRequest ->
-      if(placementRequest.isInWithdrawableState()) {
+      if (placementRequest.isInWithdrawableState()) {
         val result = placementRequestService.withdrawPlacementRequest(
           placementRequest.id,
           userProvidedReason = null,
@@ -63,16 +63,16 @@ class WithdrawableService(
     }
 
     val placementApplications = placementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(
-      application.id
+      application.id,
     )
     placementApplications.forEach { placementApplication ->
-      if(placementApplication.isInWithdrawableState()) {
+      if (placementApplication.isInWithdrawableState()) {
         val result = placementApplicationService.withdrawPlacementApplication(
           id = placementApplication.id,
           userProvidedReason = null,
           withdrawalContext = WithdrawalContext(
             user,
-            WithdrawableEntityType.Application
+            WithdrawableEntityType.Application,
           ),
         )
 

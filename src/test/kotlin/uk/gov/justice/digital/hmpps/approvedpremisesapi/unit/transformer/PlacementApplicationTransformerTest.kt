@@ -204,6 +204,5 @@ class PlacementApplicationTransformerTest {
     }
 
     assertThat(result.withdrawalReason).isEqualTo(WithdrawPlacementRequestReason.errorInPlacementRequest)
-
   }
 }

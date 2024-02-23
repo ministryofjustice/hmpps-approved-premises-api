@@ -26,8 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
-
-
 class Cas1BookingEmailServiceTest {
 
   private object TestConstants {
@@ -69,11 +67,11 @@ class Cas1BookingEmailServiceTest {
       .withEmail(null)
       .produce()
 
-    val (application,booking) = createApplicationAndBooking(
+    val (application, booking) = createApplicationAndBooking(
       applicant,
       premises,
-      arrivalDate = LocalDate.of(2023,2,1),
-      departureDate = LocalDate.of(2023,2,14),
+      arrivalDate = LocalDate.of(2023, 2, 1),
+      departureDate = LocalDate.of(2023, 2, 14),
     )
 
     service.bookingMade(application, booking)
@@ -94,7 +92,6 @@ class Cas1BookingEmailServiceTest {
         "lengthStayUnit" to "weeks",
       ),
     )
-
   }
 
   @SuppressWarnings("CyclomaticComplexMethod")
@@ -105,11 +102,11 @@ class Cas1BookingEmailServiceTest {
       .withEmail(APPLICANT_EMAIL)
       .produce()
 
-    val (application,booking) = createApplicationAndBooking(
+    val (application, booking) = createApplicationAndBooking(
       applicant,
       premises,
-      arrivalDate = LocalDate.of(2023,2,1),
-      departureDate = LocalDate.of(2023,2,14),
+      arrivalDate = LocalDate.of(2023, 2, 1),
+      departureDate = LocalDate.of(2023, 2, 14),
     )
 
     service.bookingMade(application, booking)
@@ -148,11 +145,11 @@ class Cas1BookingEmailServiceTest {
       .withEmail(APPLICANT_EMAIL)
       .produce()
 
-    val (application,booking) = createApplicationAndBooking(
+    val (application, booking) = createApplicationAndBooking(
       applicant,
       premises,
-      arrivalDate = LocalDate.of(2023,2,22),
-      departureDate = LocalDate.of(2023,2,27),
+      arrivalDate = LocalDate.of(2023, 2, 22),
+      departureDate = LocalDate.of(2023, 2, 27),
     )
 
     service.bookingMade(application, booking)
@@ -184,11 +181,11 @@ class Cas1BookingEmailServiceTest {
       .withEmail(APPLICANT_EMAIL)
       .produce()
 
-    val (application,booking) = createApplicationAndBooking(
+    val (application, booking) = createApplicationAndBooking(
       applicant,
       premises,
-      arrivalDate = LocalDate.of(2023,2,1),
-      departureDate = LocalDate.of(2023,2,14),
+      arrivalDate = LocalDate.of(2023, 2, 1),
+      departureDate = LocalDate.of(2023, 2, 14),
     )
 
     service.bookingWithdrawn(application, booking)
@@ -220,7 +217,6 @@ class Cas1BookingEmailServiceTest {
       notifyConfig.templates.bookingWithdrawn,
       expectedPersonalisation,
     )
-
   }
 
   @Test
@@ -237,12 +233,12 @@ class Cas1BookingEmailServiceTest {
       .withProbationRegion(ProbationRegionEntityFactory().withDefaults().withName(REGION_NAME).produce())
       .produce()
 
-    val (application,booking) = createApplicationAndBooking(
+    val (application, booking) = createApplicationAndBooking(
       applicant,
       premises,
       apArea = ApAreaEntityFactory().withEmailAddress(null).produce(),
-      arrivalDate = LocalDate.of(2023,2,1),
-      departureDate = LocalDate.of(2023,2,14),
+      arrivalDate = LocalDate.of(2023, 2, 1),
+      departureDate = LocalDate.of(2023, 2, 14),
     )
 
     service.bookingWithdrawn(application, booking)
@@ -255,8 +251,8 @@ class Cas1BookingEmailServiceTest {
     premises: ApprovedPremisesEntity,
     apArea: ApAreaEntity = ApAreaEntityFactory().withEmailAddress(AP_AREA_EMAIL).produce(),
     arrivalDate: LocalDate,
-    departureDate: LocalDate): Pair<ApprovedPremisesApplicationEntity,BookingEntity> {
-
+    departureDate: LocalDate,
+  ): Pair<ApprovedPremisesApplicationEntity, BookingEntity> {
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCrn(CRN)
       .withCreatedByUser(applicant)
@@ -271,6 +267,6 @@ class Cas1BookingEmailServiceTest {
       .withDepartureDate(departureDate)
       .produce()
 
-    return Pair(application,booking)
+    return Pair(application, booking)
   }
 }

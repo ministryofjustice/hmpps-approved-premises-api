@@ -1628,7 +1628,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             assessmentAllocatedTo = user,
             createdByUser = user,
             crn = offenderDetails.otherIds.crn,
-            apArea = apAreaEntityFactory.produceAndPersist()
+            apArea = apAreaEntityFactory.produceAndPersist(),
           ) { placementRequest, _ ->
 
             webTestClient.post()
@@ -1650,11 +1650,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
             emailAsserter.assertEmailsRequestedCount(2)
             emailAsserter.assertEmailRequested(
               placementRequest.application.apArea!!.emailAddress!!,
-              notifyConfig.templates.matchRequestWithdrawn
+              notifyConfig.templates.matchRequestWithdrawn,
             )
             emailAsserter.assertEmailRequested(
               placementRequest.application.createdByUser.email!!,
-              notifyConfig.templates.matchRequestWithdrawn
+              notifyConfig.templates.matchRequestWithdrawn,
             )
           }
         }

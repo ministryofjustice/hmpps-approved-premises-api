@@ -212,8 +212,8 @@ class UserAccessService(
    *
    * It doesn't consider if the placement request is in a withdrawable state
    */
-  fun userMayWithdrawPlacementRequest(user: UserEntity, placementRequest: PlacementRequestEntity)
-    = placementRequest.application.createdByUser == user ||
+  fun userMayWithdrawPlacementRequest(user: UserEntity, placementRequest: PlacementRequestEntity) =
+    placementRequest.application.createdByUser == user ||
       user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)
 
   /**
@@ -221,10 +221,9 @@ class UserAccessService(
    *
    * It doesn't consider if the placement request is in a withdrawable state
    */
-  fun userMayWithdrawPlacementApplication(user: UserEntity, placementApplication: PlacementApplicationEntity)
-    = placementApplication.createdByUser == user ||
+  fun userMayWithdrawPlacementApplication(user: UserEntity, placementApplication: PlacementApplicationEntity) =
+    placementApplication.createdByUser == user ||
       (placementApplication.isSubmitted() && user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER))
-
 }
 
 enum class ApprovedPremisesApplicationAccessLevel {

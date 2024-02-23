@@ -1581,10 +1581,12 @@ class UserAccessServiceTest {
       val placementRequest = PlacementRequestEntityFactory()
         .withApplication(application)
         .withAssessment(assessment)
-        .withPlacementRequirements( PlacementRequirementsEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .produce())
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
         .produce()
 
       assertThat(userAccessService.userMayWithdrawPlacementRequest(user, placementRequest)).isTrue
@@ -1604,10 +1606,12 @@ class UserAccessServiceTest {
       val placementRequest = PlacementRequestEntityFactory()
         .withApplication(application)
         .withAssessment(assessment)
-        .withPlacementRequirements( PlacementRequirementsEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .produce())
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
         .produce()
 
       assertThat(userAccessService.userMayWithdrawPlacementRequest(user, placementRequest)).isFalse
@@ -1638,10 +1642,12 @@ class UserAccessServiceTest {
       val placementRequest = PlacementRequestEntityFactory()
         .withApplication(application)
         .withAssessment(assessment)
-        .withPlacementRequirements( PlacementRequirementsEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .produce())
+        .withPlacementRequirements(
+          PlacementRequirementsEntityFactory()
+            .withApplication(application)
+            .withAssessment(assessment)
+            .produce(),
+        )
         .produce()
 
       assertThat(userAccessService.userMayWithdrawPlacementRequest(workflowManager, placementRequest)).isTrue
@@ -1730,7 +1736,5 @@ class UserAccessServiceTest {
 
       assertThat(userAccessService.userMayWithdrawPlacementApplication(user, placementApplication)).isFalse
     }
-
   }
-
 }

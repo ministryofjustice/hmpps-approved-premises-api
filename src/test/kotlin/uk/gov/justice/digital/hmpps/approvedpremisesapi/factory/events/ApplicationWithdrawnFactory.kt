@@ -40,7 +40,6 @@ class ApplicationWithdrawnFactory : Factory<ApplicationWithdrawn> {
     this.submittedAt = { submittedAt }
   }
 
-
   fun withWithdrawnAt(withdrawnAt: Instant) = apply {
     this.withdrawnAt = { withdrawnAt }
   }

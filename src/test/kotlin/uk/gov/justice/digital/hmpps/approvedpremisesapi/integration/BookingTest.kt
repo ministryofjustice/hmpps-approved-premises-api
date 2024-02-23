@@ -753,7 +753,7 @@ class BookingTest : IntegrationTestBase() {
               .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
               .jsonPath("$.bed.name").isEqualTo(bed.name)
 
-        val emittedMessage = snsDomainEventListener.blockForMessage()
+            val emittedMessage = snsDomainEventListener.blockForMessage()
 
             assertThat(emittedMessage.eventType).isEqualTo("approved-premises.booking.made")
             assertThat(emittedMessage.description).isEqualTo("An Approved Premises booking has been made")
@@ -844,7 +844,6 @@ class BookingTest : IntegrationTestBase() {
         }
       }
     }
-
   }
 
   @Test

@@ -40,7 +40,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SituationOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -122,7 +121,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
@@ -2146,7 +2144,7 @@ class BookingServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
-        )
+        ),
       )
 
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
@@ -2305,9 +2303,9 @@ class BookingServiceTest {
       )
 
       every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
-      every { mockApplicationService.updateApprovedPremisesApplicationStatus(any(),any()) } returns Unit
+      every { mockApplicationService.updateApprovedPremisesApplicationStatus(any(), any()) } returns Unit
 
-      every { mockCas1BookingEmailService.bookingWithdrawn(application,bookingEntity) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity) } returns Unit
 
       val cancelledAt = LocalDate.parse("2022-08-25")
       val notes = "notes"
@@ -2362,7 +2360,6 @@ class BookingServiceTest {
       }
     }
 
-
     @Test
     fun `createCancellation triggers emails when linked to Application`() {
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -2394,8 +2391,8 @@ class BookingServiceTest {
       )
 
       every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
-      every { mockApplicationService.updateApprovedPremisesApplicationStatus(any(),any()) } returns Unit
-      every { mockCas1BookingEmailService.bookingWithdrawn(application,bookingEntity) } returns Unit
+      every { mockApplicationService.updateApprovedPremisesApplicationStatus(any(), any()) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity) } returns Unit
 
       val cancelledAt = LocalDate.parse("2022-08-25")
       val notes = "notes"
@@ -2558,7 +2555,7 @@ class BookingServiceTest {
     @Test
     fun `createCancellation returns Success and creates new Placement Request when cancellation reason is 'Booking successfully appealed' and cancelled Booking was linked to Placement Request`() {
       val bookingSuccessfullyAppealedReasonId = UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2")
-      val bookingSuccessfullyAppealedReason =  CancellationReasonEntityFactory()
+      val bookingSuccessfullyAppealedReason = CancellationReasonEntityFactory()
         .withId(bookingSuccessfullyAppealedReasonId)
         .withServiceScope("*")
         .produce()
@@ -2657,7 +2654,7 @@ class BookingServiceTest {
         .withPremises(premises)
         .produce()
 
-      val expectedReasonId = when(triggeringEntity) {
+      val expectedReasonId = when (triggeringEntity) {
         WithdrawableEntityType.Application -> CancellationReasonRepository.CAS1_RELATED_APP_WITHDRAWN_ID
         WithdrawableEntityType.PlacementApplication -> CancellationReasonRepository.CAS1_RELATED_PLACEMENT_APP_WITHDRAWN_ID
         WithdrawableEntityType.PlacementRequest -> CancellationReasonRepository.CAS1_RELATED_PLACEMENT_REQ_WITHDRAWN_ID
@@ -2714,33 +2711,44 @@ class BookingServiceTest {
       )
 
       every {
-        mockApplicationService.updateApprovedPremisesApplicationStatus(application.id,
-          ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT
+        mockApplicationService.updateApprovedPremisesApplicationStatus(
+          application.id,
+          ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
         )
       } returns Unit
 
-      every { mockCas1BookingEmailService.bookingWithdrawn(application,bookingEntity) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity) } returns Unit
 
       val cancelledBooking1 = BookingEntityFactory()
         .withPremises(premises)
         .withCancellations(
-          mutableListOf(CancellationEntityFactory()
-            .withBooking(BookingEntityFactory()
-              .withPremises(premises)
-              .withApplication(application)
-              .produce())
-            .withDefaultReason().produce())
+          mutableListOf(
+            CancellationEntityFactory()
+              .withBooking(
+                BookingEntityFactory()
+                  .withPremises(premises)
+                  .withApplication(application)
+                  .produce(),
+              )
+              .withDefaultReason().produce(),
+          ),
         )
         .produce()
 
       val cancelledBooking2 = BookingEntityFactory()
         .withPremises(premises)
-        .withCancellations(mutableListOf(CancellationEntityFactory()
-          .withBooking(BookingEntityFactory()
-            .withPremises(premises)
-            .withApplication(application)
-            .produce())
-          .withDefaultReason().produce()))
+        .withCancellations(
+          mutableListOf(
+            CancellationEntityFactory()
+              .withBooking(
+                BookingEntityFactory()
+                  .withPremises(premises)
+                  .withApplication(application)
+                  .produce(),
+              )
+              .withDefaultReason().produce(),
+          ),
+        )
         .produce()
 
       every { mockBookingRepository.findAllByApplication(application) } returns listOf(
@@ -2765,7 +2773,8 @@ class BookingServiceTest {
       verify {
         mockApplicationService.updateApprovedPremisesApplicationStatus(
           application.id,
-          ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+          ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
+        )
       }
     }
 
@@ -2795,22 +2804,27 @@ class BookingServiceTest {
       )
 
       every {
-        mockApplicationService.updateApprovedPremisesApplicationStatus(application.id,
-          ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT
+        mockApplicationService.updateApprovedPremisesApplicationStatus(
+          application.id,
+          ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
         )
       } returns Unit
 
-      every { mockCas1BookingEmailService.bookingWithdrawn(application,bookingEntity) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity) } returns Unit
 
       val cancelledBooking1 = BookingEntityFactory()
         .withPremises(premises)
         .withCancellations(
-          mutableListOf(CancellationEntityFactory()
-            .withBooking(BookingEntityFactory()
-              .withPremises(premises)
-              .withApplication(application)
-              .produce())
-            .withDefaultReason().produce())
+          mutableListOf(
+            CancellationEntityFactory()
+              .withBooking(
+                BookingEntityFactory()
+                  .withPremises(premises)
+                  .withApplication(application)
+                  .produce(),
+              )
+              .withDefaultReason().produce(),
+          ),
         )
         .produce()
 
@@ -2837,7 +2851,7 @@ class BookingServiceTest {
       assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
       result as ValidatableActionResult.Success
 
-      verify {  mockApplicationService wasNot Called }
+      verify { mockApplicationService wasNot Called }
     }
 
     @Test
@@ -2866,11 +2880,12 @@ class BookingServiceTest {
       )
 
       every {
-        mockApplicationService.updateApprovedPremisesApplicationStatus(application.id,
-          ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT
+        mockApplicationService.updateApprovedPremisesApplicationStatus(
+          application.id,
+          ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
         )
       } returns Unit
-      every { mockCas1BookingEmailService.bookingWithdrawn(application,bookingEntity) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity) } returns Unit
 
       every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
 
@@ -2890,7 +2905,6 @@ class BookingServiceTest {
 
       verify { mockApplicationService wasNot Called }
     }
-
   }
 
   @Nested
@@ -3983,7 +3997,7 @@ class BookingServiceTest {
       mockBookingRepository.save(bookingEntity)
     }
     verify(exactly = 0) {
-      mockAssessmentService.closeAssessment(user,any())
+      mockAssessmentService.closeAssessment(user, any())
     }
     verify(exactly = 0) {
       mockAssessmentRepository.findByApplication_IdAndReallocatedAtNull(bookingEntity.application!!.id)
@@ -5559,7 +5573,6 @@ class BookingServiceTest {
       assertThat((validatableResult as ValidatableActionResult.FieldValidationError).validationMessages).contains(
         entry("$.assessmentId", "doesNotExist"),
       )
-
     }
 
     @Test
@@ -6412,7 +6425,7 @@ class BookingServiceTest {
       premises: ApprovedPremisesEntity,
       arrivalDate: LocalDate,
       departureDate: LocalDate,
-    ) : BookingEntity {
+    ): BookingEntity {
       assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
       val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
       assertThat(validatableResult is ValidatableActionResult.Success).isTrue

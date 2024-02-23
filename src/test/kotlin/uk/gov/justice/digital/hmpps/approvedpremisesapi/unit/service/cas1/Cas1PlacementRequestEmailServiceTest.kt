@@ -5,16 +5,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.APPLICANT_EMAIL
@@ -87,7 +84,7 @@ class Cas1PlacementRequestEmailServiceTest {
   @Test
   fun `placementRequestWithdrawn does not send email to applicant if placement request not linked to placement application but no email addresses defined`() {
     val application = createApplication(
-      applicantEmail = null
+      applicantEmail = null,
     )
     val booking = BookingEntityFactory()
       .withApplication(application)
@@ -109,7 +106,7 @@ class Cas1PlacementRequestEmailServiceTest {
   @Test
   fun `placementRequestWithdrawn does not send email to applicant if placement request linked to placement application because this is a cascaded withdrawal from placement application and they would be informed of placement application being withdrawn instead`() {
     val application = createApplication(
-      applicantEmail = null
+      applicantEmail = null,
     )
     val booking = BookingEntityFactory()
       .withApplication(application)
@@ -130,7 +127,7 @@ class Cas1PlacementRequestEmailServiceTest {
   @Test
   fun `placementRequestWithdrawn does send email to applicant if placement request not linked to placement application `() {
     val application = createApplication(
-      applicantEmail = APPLICANT_EMAIL
+      applicantEmail = APPLICANT_EMAIL,
     )
     val booking = BookingEntityFactory()
       .withApplication(application)
@@ -158,9 +155,8 @@ class Cas1PlacementRequestEmailServiceTest {
 
   private fun createApplication(
     applicantEmail: String? = null,
-    apAreaEmail: String? = null
+    apAreaEmail: String? = null,
   ): ApprovedPremisesApplicationEntity {
-
     val applicant = UserEntityFactory()
       .withUnitTestControlProbationRegion()
       .withEmail(applicantEmail)
@@ -170,15 +166,19 @@ class Cas1PlacementRequestEmailServiceTest {
       .withCrn(TestConstants.CRN)
       .withCreatedByUser(applicant)
       .withSubmittedAt(OffsetDateTime.now())
-      .withApArea(ApAreaEntityFactory()
-        .withEmailAddress(apAreaEmail)
-        .produce())
+      .withApArea(
+        ApAreaEntityFactory()
+          .withEmailAddress(apAreaEmail)
+          .produce(),
+      )
       .produce()
   }
 
-  private fun createPlacementRequest(application: ApprovedPremisesApplicationEntity,
-                                     booking: BookingEntity?,
-                                     hasPlacementApplication: Boolean = false): PlacementRequestEntity {
+  private fun createPlacementRequest(
+    application: ApprovedPremisesApplicationEntity,
+    booking: BookingEntity?,
+    hasPlacementApplication: Boolean = false,
+  ): PlacementRequestEntity {
     val assessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .produce()

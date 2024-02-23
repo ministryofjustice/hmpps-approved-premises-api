@@ -45,6 +45,5 @@ class Cas1PlacementApplicationEmailService(
         personalisation = personalisation,
       )
     }
-
   }
 }

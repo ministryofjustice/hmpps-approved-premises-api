@@ -1144,11 +1144,11 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             emailAsserter.assertEmailsRequestedCount(2)
             emailAsserter.assertEmailRequested(
               placementApplicationEntity.createdByUser.email!!,
-              notifyConfig.templates.placementRequestWithdrawn
+              notifyConfig.templates.placementRequestWithdrawn,
             )
             emailAsserter.assertEmailRequested(
               placementApplicationEntity.allocatedToUser!!.email!!,
-              notifyConfig.templates.placementRequestWithdrawn
+              notifyConfig.templates.placementRequestWithdrawn,
             )
           }
         }
@@ -1208,19 +1208,17 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               emailAsserter.assertEmailsRequestedCount(2)
               emailAsserter.assertEmailRequested(
                 placementApplicationEntity.createdByUser.email!!,
-                notifyConfig.templates.placementRequestWithdrawn
+                notifyConfig.templates.placementRequestWithdrawn,
               )
               emailAsserter.assertEmailRequested(
                 placementApplicationEntity.allocatedToUser!!.email!!,
-                notifyConfig.templates.placementRequestWithdrawn
+                notifyConfig.templates.placementRequestWithdrawn,
               )
+            }
           }
         }
       }
     }
-  }
-
-
   }
 
   private fun serializableToJsonNode(serializable: Any?): JsonNode {

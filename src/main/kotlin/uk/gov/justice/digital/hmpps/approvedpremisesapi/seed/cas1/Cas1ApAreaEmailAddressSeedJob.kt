@@ -14,7 +14,7 @@ class Cas1ApAreaEmailAddressSeedJob(
   requiredHeaders = setOf(
     "ap_area_identifier",
     "email_address",
-  )
+  ),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -28,11 +28,11 @@ class Cas1ApAreaEmailAddressSeedJob(
       ?: error("AP Area with identifier '${row.apAreaIdentifier}' does not exist")
 
     val emailAddress = row.emailAddress
-    if(emailAddress.isBlank()) {
+    if (emailAddress.isBlank()) {
       error("Email address for '${row.apAreaIdentifier}' is blank")
     }
 
-    apAreaRepository.updateEmailAddress(apArea.id,emailAddress)
+    apAreaRepository.updateEmailAddress(apArea.id, emailAddress)
 
     log.info("Updated email address for AP Area ${apArea.id} to $emailAddress")
   }
