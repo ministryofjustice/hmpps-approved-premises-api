@@ -222,6 +222,9 @@ class SeedService(
       }
 
       transactionTemplate.executeWithoutResult { processJob(job, resolveCsvPath) }
+
+      seedLogger.info("Seed request complete")
+
     } catch (exception: Exception) {
       seedLogger.error("Unable to complete Seed Job", exception)
     }
