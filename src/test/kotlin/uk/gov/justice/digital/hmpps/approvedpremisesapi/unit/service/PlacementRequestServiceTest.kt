@@ -71,6 +71,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
@@ -93,6 +94,7 @@ class PlacementRequestServiceTest {
   private val userAccessService = mockk<UserAccessService>()
   private val applicationService = mockk<ApplicationService>()
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
+  private val cas1PlacementRequestDomainEventService = mockk<Cas1PlacementRequestDomainEventService>()
 
   private val placementRequestService = PlacementRequestService(
     placementRequestRepository,
@@ -109,6 +111,7 @@ class PlacementRequestServiceTest {
     userAccessService,
     applicationService,
     cas1PlacementRequestEmailService,
+    cas1PlacementRequestDomainEventService,
     "http://frontend/applications/#id",
   )
 
@@ -655,7 +658,7 @@ class PlacementRequestServiceTest {
     @ParameterizedTest
     @EnumSource(PlacementRequestWithdrawalReason::class)
     @NullSource
-    fun `withdrawPlacementRequest returns Success and saves withdrawn PlacementRequest, triggering emails`(
+    fun `withdrawPlacementRequest returns Success and saves withdrawn PlacementRequest, triggering emails and domain events`(
       reason: PlacementRequestWithdrawalReason?,
     ) {
       every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
@@ -663,17 +666,20 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequest)
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
+      every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
       every {
         applicationService.updateApprovedPremisesApplicationStatus(application.id, PENDING_PLACEMENT_REQUEST)
       } returns Unit
 
+      val withdrawalContext = WithdrawalContext(
+        user,
+        WithdrawableEntityType.PlacementRequest,
+      )
+
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
         reason,
-        WithdrawalContext(
-          user,
-          WithdrawableEntityType.PlacementRequest,
-        ),
+        withdrawalContext,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -689,6 +695,7 @@ class PlacementRequestServiceTest {
       }
 
       verify { cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest) }
+      verify { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(placementRequest, withdrawalContext) }
 
       verify { bookingService wasNot Called }
     }
@@ -699,6 +706,7 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
+      every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
 
       val withdrawnPlacementRequest = createValidPlacementRequest(application, user)
       withdrawnPlacementRequest.isWithdrawn = true
@@ -741,6 +749,7 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
+      every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
 
       val withdrawnPlacementRequest = createValidPlacementRequest(application, user)
       withdrawnPlacementRequest.isWithdrawn = true
@@ -778,6 +787,7 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
+      every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
 
       val withdrawnPlacementRequest = createValidPlacementRequest(application, user)
       withdrawnPlacementRequest.isWithdrawn = true
@@ -812,6 +822,7 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
+      every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
 
       val providedReason = PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
       val result = placementRequestService.withdrawPlacementRequest(
@@ -912,6 +923,7 @@ class PlacementRequestServiceTest {
         applicationService.updateApprovedPremisesApplicationStatus(application.id, PENDING_PLACEMENT_REQUEST)
       } returns Unit
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
+      every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
       every {
         bookingService.createCas1Cancellation(any(), any(), any(), any(), any())
       } returns mockk<ValidatableActionResult.Success<CancellationEntity>>()
@@ -969,6 +981,7 @@ class PlacementRequestServiceTest {
         applicationService.updateApprovedPremisesApplicationStatus(application.id, PENDING_PLACEMENT_REQUEST)
       } returns Unit
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
+      every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
       every {
         bookingService.createCas1Cancellation(any(), any(), any(), any(), any())
       } returns ValidatableActionResult.GeneralValidationError("booking cancellation didn't work!")
@@ -1031,6 +1044,7 @@ class PlacementRequestServiceTest {
         applicationService.updateApprovedPremisesApplicationStatus(application.id, PENDING_PLACEMENT_REQUEST)
       } returns Unit
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
+      every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
 
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,

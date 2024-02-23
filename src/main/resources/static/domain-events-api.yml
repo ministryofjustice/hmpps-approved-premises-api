@@ -355,6 +355,33 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /events/match-request-withdrawn/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "'Manage' events"
+      summary: A 'match-request-withdrawn' event
+      responses:
+        '200':
+          description: The 'match-request-withdrawn' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchRequestWithdrawnEnvelope'
+        404:
+          description: No 'match-request-withdrawn' event found for the provided `eventId`
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
 components:
   responses:
     500Response:
@@ -760,6 +787,62 @@ components:
         - withdrawnAt
         - withdrawnBy
         - withdrawalReason
+    MatchRequestWithdrawnEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          type: string
+          example: approved-premises.match-request.withdrawn
+        eventDetails:
+          $ref: '#/components/schemas/MatchRequestWithdrawn'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
+    MatchRequestWithdrawn:
+      type: object
+      properties:
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
+        matchRequestId:
+          $ref: '#/components/schemas/PlacementApplicationId'
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          $ref: '#/components/schemas/DeliusEventNumber'
+        withdrawnAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+        withdrawnBy:
+          $ref: '#/components/schemas/WithdrawnBy'
+        withdrawalReason:
+          type: string
+          example: 'RELATED_APPLICATION_WITHDRAWN'
+        datePeriod:
+          $ref: '#/components/schemas/DatePeriod'
+        requestIsForApplicationsArrivalDate:
+          type: boolean
+          description: 'Indicate if this match request was created for the arrival date specified when the application was initially submitted'
+      required:
+        - applicationId
+        - applicationUrl
+        - placementApplicationId
+        - personReference
+        - deliusEventNumber
+        - withdrawnAt
+        - withdrawnBy
+        - withdrawalReason
+        - datePeriod
     BookingMadeEnvelope:
       type: object
       properties:

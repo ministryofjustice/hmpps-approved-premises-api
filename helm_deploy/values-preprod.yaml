@@ -54,6 +54,7 @@ generic-service:
     URL-TEMPLATES_API_CAS1_APPLICATION-WITHDRAWN-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/application-withdrawn/#eventId
     URL-TEMPLATES_API_CAS1_ASSESSMENT-APPEALED-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/assessment-appealed/#eventId
     URL-TEMPLATES_API_CAS1_PLACEMENT-APPLICATION-WITHDRAWN-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/placement-application-withdrawn/#eventId
+    URL-TEMPLATES_API_CAS1_MATCH-REQUEST-WITHDRAWN-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/match-request-withdrawn/#eventId
     URL-TEMPLATES_API_CAS2_APPLICATION-SUBMITTED-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/cas2/application-submitted/#eventId
     URL-TEMPLATES_API_CAS2_APPLICATION-STATUS-UPDATED-EVENT-DETAIL: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/events/cas2/application-status-updated/#eventId
     URL-TEMPLATES_API_CAS3_APPLICATION: https://approved-premises-api-preprod.hmpps.service.justice.gov.uk/applications/#applicationId

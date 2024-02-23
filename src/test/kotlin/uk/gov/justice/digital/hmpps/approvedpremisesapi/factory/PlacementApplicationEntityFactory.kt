@@ -32,6 +32,10 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var placementType: Yielded<PlacementType?> = { null }
   private var withdrawalReason: Yielded<PlacementApplicationWithdrawalReason?> = { null }
 
+  fun withDefaults() = apply {
+    this.createdByUser = { UserEntityFactory().withDefaultProbationRegion().produce() }
+  }
+
   fun withId(id: UUID) = apply {
     this.id = { id }
   }

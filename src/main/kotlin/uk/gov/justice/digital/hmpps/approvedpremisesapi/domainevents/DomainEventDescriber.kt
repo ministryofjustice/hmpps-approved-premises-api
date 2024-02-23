@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -15,8 +16,9 @@ class DomainEventDescriber(
   private val domainEventService: DomainEventService,
 ) {
 
-  val cas1UiExtendedDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE dd MMMM yyyy")
+  val cas1UiExtendedDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy")
 
+  @SuppressWarnings("CyclomaticComplexMethod")
   fun getDescription(domainEventSummary: DomainEventSummary): String? {
     return when (domainEventSummary.type) {
       DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED -> "The application was submitted"
@@ -31,6 +33,7 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> "The application was withdrawn"
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> buildAssessmentAppealedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> buildPlacementApplicationWithdrawnDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> buildMatchRequestWithdrawnDescription(domainEventSummary)
       else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
     }
   }
@@ -75,14 +78,27 @@ class DomainEventDescriber(
     return event.describe { "The assessment was appealed and ${it.eventDetails.decision.value}. The reason was: ${it.eventDetails.decisionDetail}" }
   }
 
-  private fun buildPlacementApplicationWithdrawnDescription(domainEventSummary: DomainEventSummary): String? {
+  private fun buildPlacementApplicationWithdrawnDescription(domainEventSummary: DomainEventSummary): String {
     val event = domainEventService.getPlacementApplicationWithdrawnEvent(domainEventSummary.id())
     val dates = event?.data?.eventDetails?.placementDates ?: emptyList()
     return "A request for placement was withdrawn" +
       if (dates.isNotEmpty()) {
-        " for dates " + dates.joinToString(", ") { "${it.startDate.format(cas1UiExtendedDateFormat)} to ${it.endDate.format(cas1UiExtendedDateFormat)}" }
+        " for dates " + dates.joinToString(", ") { "${formatDate(it.startDate)} to ${formatDate(it.endDate)}" }
       } else { "" }
   }
+
+  private fun buildMatchRequestWithdrawnDescription(domainEventSummary: DomainEventSummary): String? {
+    val event = domainEventService.getMatchRequestWithdrawnEvent(domainEventSummary.id())
+    /**
+     * See documentation in [Cas1PlacementRequestDomainEventService] for why this is reported as a request for placement
+     **/
+    return event.describe {
+      val dates = it.eventDetails.datePeriod
+      "A request for placement was withdrawn for dates ${formatDate(dates.startDate)} to ${formatDate(dates.endDate)}"
+    }
+  }
+
+  private fun formatDate(localDate: LocalDate) = localDate.format(cas1UiExtendedDateFormat)
 
   private fun DomainEventSummary.id(): UUID = UUID.fromString(this.id)
   private fun <T> DomainEvent<T>?.describe(describe: (T) -> String?): String? = this?.let { describe(it.data) }

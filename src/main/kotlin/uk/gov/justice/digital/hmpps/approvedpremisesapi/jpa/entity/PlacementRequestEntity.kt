@@ -124,6 +124,10 @@ interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUI
   ): Page<PlacementRequestEntity>
 }
 
+/**
+ * Note - in the future this entity will be renamed to 'Match Request' to align with terminology
+ * used on the UI
+ */
 @Entity
 @Table(name = "placement_requests")
 data class PlacementRequestEntity(
@@ -181,6 +185,34 @@ data class PlacementRequestEntity(
 
   fun isActive() = !isWithdrawn && !isReallocated()
 
+  /**
+   * In the model we don't currently have an entity representing the placement request
+   * dates specified when the application was originally created. Instead, this is first
+   * realised as an automatically created [PlacementRequestEntity] when the [AssessmentEntity]
+   * is approved.
+   *
+   * Ideally we'd model the request for these dates as a subtype of [PlacementApplicationEntity].
+   * Unfortunately, it's non-trivial to amend the data model and workflow implementation
+   * to allow us to use [PlacementApplicationEntity] for this purpose.
+   *
+   * For Withdrawal functionality we have a use-case for the user to be able to withdraw the original
+   * application dates without withdrawing the whole application and/or assessment.
+   *
+   * Without a first class entity to represent these dates, we have instead elected to use
+   * the [PlacementRequestEntity] that was created for these dates to represent this yet unrealised entity.
+   *
+   * Whilst not ideal, this gives us a tangible and addressable entity against which:
+   *
+   * 1) The user can request withdrawals
+   * 2) We can raise domain events
+   * 3) We can send emails
+   *
+   * To achieve the aforementioned facade we present such instances of [PlacementRequestEntity] as a
+   * 'Request for Placement' whenever presented to user, whether in a list of withdrawable elements,
+   * being described on the domain event timeline, or being mentioned in an email on withdrawal
+   *
+   * This property is used to identify such instances.
+   */
   fun isForApplicationsArrivalDate() = placementApplication == null
 }
 
