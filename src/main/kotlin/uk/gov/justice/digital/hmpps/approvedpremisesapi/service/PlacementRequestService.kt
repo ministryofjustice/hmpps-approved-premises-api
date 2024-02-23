@@ -292,13 +292,21 @@ class PlacementRequestService(
     )
   }
 
+  /**
+   * This should return a maximum of one placement request, representing the dates known
+   * at the point of application submission
+   */
   fun getWithdrawablePlacementRequestsForUser(
     user: UserEntity,
     application: ApprovedPremisesApplicationEntity,
   ): List<PlacementRequestEntity> =
     placementRequestRepository
       .findByApplication(application)
-      .filter { it.isInWithdrawableState() && userAccessService.userMayWithdrawPlacementRequest(user, it) }
+      .filter {
+        it.isInWithdrawableState() &&
+        it.isForApplicationsArrivalDate() &&
+        userAccessService.userMayWithdrawPlacementRequest(user, it)
+      }
 
   @Transactional
   fun withdrawPlacementRequest(
