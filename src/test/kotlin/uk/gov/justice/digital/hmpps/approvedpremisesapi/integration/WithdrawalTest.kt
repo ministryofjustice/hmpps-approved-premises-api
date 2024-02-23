@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -515,7 +514,6 @@ class WithdrawalTest : IntegrationTestBase() {
                 .isOk
                 .expectBody()
                 .jsonForObject(expected)
-
             }
           }
         }
@@ -605,7 +603,6 @@ class WithdrawalTest : IntegrationTestBase() {
               .isOk
               .expectBody()
               .jsonForObject(expected)
-
           }
         }
       }
@@ -635,7 +632,7 @@ class WithdrawalTest : IntegrationTestBase() {
               assignee = applicant,
               offenderDetails = offenderDetails,
               assessmentSubmitted = false,
-              assessmentAllocatedTo = assessor
+              assessmentAllocatedTo = assessor,
             )
 
             withdrawApplication(application, jwt)
@@ -647,8 +644,8 @@ class WithdrawalTest : IntegrationTestBase() {
             val assessorEmail = assessment.allocatedToUser!!.email!!
 
             emailAsserter.assertEmailsRequestedCount(2)
-            emailAsserter.assertEmailRequested(applicantEmail,templates.applicationWithdrawn)
-            emailAsserter.assertEmailRequested(assessorEmail,templates.assessmentWithdrawn)
+            emailAsserter.assertEmailRequested(applicantEmail, templates.applicationWithdrawn)
+            emailAsserter.assertEmailRequested(assessorEmail, templates.assessmentWithdrawn)
           }
         }
       }
@@ -718,12 +715,12 @@ class WithdrawalTest : IntegrationTestBase() {
             )
             assertPlacementRequestWithdrawn(
               placementRequest1,
-              PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
+              PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
             )
             assertBookingWithdrawn(booking1NoArrival, "Related application withdrawn")
             assertPlacementRequestWithdrawn(
               placementRequest2NoBooking,
-              PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
+              PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
             )
 
             assertPlacementApplicationWithdrawn(
@@ -734,7 +731,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
             assertPlacementRequestWithdrawn(
               placementRequest3,
-              PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
+              PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN,
             )
             assertBookingNotWithdrawn(booking2HasArrival)
 
@@ -744,15 +741,15 @@ class WithdrawalTest : IntegrationTestBase() {
             val requestForPlacementAssessorEmail = requestForPlacementAssessor.email!!
 
             emailAsserter.assertEmailsRequestedCount(9)
-            emailAsserter.assertEmailRequested(applicantEmail,templates.applicationWithdrawn)
-            emailAsserter.assertEmailRequested(applicantEmail,templates.placementRequestWithdrawn)
-            emailAsserter.assertEmailRequested(cruEmail,templates.matchRequestWithdrawn)
-            emailAsserter.assertEmailRequested(applicantEmail,templates.bookingWithdrawn)
-            emailAsserter.assertEmailRequested(apEmail,templates.bookingWithdrawn)
-            emailAsserter.assertEmailRequested(cruEmail,templates.bookingWithdrawn)
-            emailAsserter.assertEmailRequested(applicantEmail,templates.placementRequestWithdrawn)
-            emailAsserter.assertEmailRequested(applicantEmail,templates.matchRequestWithdrawn)
-            emailAsserter.assertEmailRequested(requestForPlacementAssessorEmail,templates.placementRequestWithdrawn)
+            emailAsserter.assertEmailRequested(applicantEmail, templates.applicationWithdrawn)
+            emailAsserter.assertEmailRequested(applicantEmail, templates.placementRequestWithdrawn)
+            emailAsserter.assertEmailRequested(cruEmail, templates.matchRequestWithdrawn)
+            emailAsserter.assertEmailRequested(applicantEmail, templates.bookingWithdrawn)
+            emailAsserter.assertEmailRequested(apEmail, templates.bookingWithdrawn)
+            emailAsserter.assertEmailRequested(cruEmail, templates.bookingWithdrawn)
+            emailAsserter.assertEmailRequested(applicantEmail, templates.placementRequestWithdrawn)
+            emailAsserter.assertEmailRequested(applicantEmail, templates.matchRequestWithdrawn)
+            emailAsserter.assertEmailRequested(requestForPlacementAssessorEmail, templates.placementRequestWithdrawn)
           }
         }
       }
@@ -806,7 +803,7 @@ class WithdrawalTest : IntegrationTestBase() {
             withdrawPlacementApplication(
               placementApplication1,
               WithdrawPlacementRequestReason.duplicatePlacementRequest,
-              jwt
+              jwt,
             )
 
             assertApplicationNotWithdrawn(application)
@@ -820,13 +817,13 @@ class WithdrawalTest : IntegrationTestBase() {
 
             assertPlacementRequestWithdrawn(
               placementRequest1,
-              PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN
+              PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
             )
             assertBookingWithdrawn(booking1NoArrival, "Related request for placement withdrawn")
 
             assertPlacementRequestWithdrawn(
               placementRequest2,
-              PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN
+              PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
             )
             assertBookingNotWithdrawn(booking2HasArrival)
 
@@ -837,9 +834,9 @@ class WithdrawalTest : IntegrationTestBase() {
             val apEmail = booking1NoArrival.premises.emailAddress!!
 
             emailAsserter.assertEmailsRequestedCount(4)
-            emailAsserter.assertEmailRequested(applicantEmail,templates.placementRequestWithdrawn)
-            emailAsserter.assertEmailRequested(applicantEmail,templates.bookingWithdrawn)
-            emailAsserter.assertEmailRequested(apEmail,templates.bookingWithdrawn)
+            emailAsserter.assertEmailRequested(applicantEmail, templates.placementRequestWithdrawn)
+            emailAsserter.assertEmailRequested(applicantEmail, templates.bookingWithdrawn)
+            emailAsserter.assertEmailRequested(apEmail, templates.bookingWithdrawn)
             emailAsserter.assertEmailRequested(cruEmail, templates.bookingWithdrawn)
           }
         }
@@ -876,10 +873,10 @@ class WithdrawalTest : IntegrationTestBase() {
           withdrawPlacementRequest(
             placementRequest,
             WithdrawPlacementRequestReason.duplicatePlacementRequest,
-            jwt
+            jwt,
           )
 
-          assertApplicationStatus(application,ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
+          assertApplicationStatus(application, ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST)
 
           assertApplicationNotWithdrawn(application)
           assertAssessmentNotWithdrawn(assessment)
@@ -892,10 +889,10 @@ class WithdrawalTest : IntegrationTestBase() {
           val apEmail = bookingNoArrival.premises.emailAddress!!
 
           emailAsserter.assertEmailsRequestedCount(4)
-          emailAsserter.assertEmailRequested(applicantEmail,templates.matchRequestWithdrawn)
-          emailAsserter.assertEmailRequested(applicantEmail,templates.bookingWithdrawn)
-          emailAsserter.assertEmailRequested(apEmail,templates.bookingWithdrawn)
-          emailAsserter.assertEmailRequested(cruEmail,templates.bookingWithdrawn)
+          emailAsserter.assertEmailRequested(applicantEmail, templates.matchRequestWithdrawn)
+          emailAsserter.assertEmailRequested(applicantEmail, templates.bookingWithdrawn)
+          emailAsserter.assertEmailRequested(apEmail, templates.bookingWithdrawn)
+          emailAsserter.assertEmailRequested(cruEmail, templates.bookingWithdrawn)
         }
       }
     }
@@ -928,7 +925,7 @@ class WithdrawalTest : IntegrationTestBase() {
           withdrawPlacementRequest(
             placementRequest,
             WithdrawPlacementRequestReason.duplicatePlacementRequest,
-            jwt
+            jwt,
           )
 
           assertApplicationNotWithdrawn(application)
@@ -940,7 +937,7 @@ class WithdrawalTest : IntegrationTestBase() {
           val applicantEmail = applicant.email!!
 
           emailAsserter.assertEmailsRequestedCount(1)
-          emailAsserter.assertEmailRequested(applicantEmail,templates.matchRequestWithdrawn)
+          emailAsserter.assertEmailRequested(applicantEmail, templates.matchRequestWithdrawn)
         }
       }
     }
@@ -965,9 +962,11 @@ class WithdrawalTest : IntegrationTestBase() {
       .isOk
   }
 
-  private fun withdrawPlacementApplication(placementApplication: PlacementApplicationEntity,
-                                           reason: WithdrawPlacementRequestReason,
-                                           jwt: String) {
+  private fun withdrawPlacementApplication(
+    placementApplication: PlacementApplicationEntity,
+    reason: WithdrawPlacementRequestReason,
+    jwt: String,
+  ) {
     webTestClient.post()
       .uri("/placement-applications/${placementApplication.id}/withdraw")
       .header("Authorization", "Bearer $jwt")
@@ -977,9 +976,11 @@ class WithdrawalTest : IntegrationTestBase() {
       .isOk
   }
 
-  private fun withdrawPlacementRequest(placementRequest: PlacementRequestEntity,
-                                       reason: WithdrawPlacementRequestReason,
-                                       jwt: String) {
+  private fun withdrawPlacementRequest(
+    placementRequest: PlacementRequestEntity,
+    reason: WithdrawPlacementRequestReason,
+    jwt: String,
+  ) {
     webTestClient.post()
       .uri("/placement-requests/${placementRequest.id}/withdrawal")
       .bodyValue(WithdrawPlacementRequest(reason))
@@ -999,9 +1000,11 @@ class WithdrawalTest : IntegrationTestBase() {
     assertThat(updatedAssessment.isWithdrawn).isTrue
   }
 
-  private fun assertPlacementApplicationWithdrawn(placementApplication: PlacementApplicationEntity,
-                                                  decision: PlacementApplicationDecision,
-                                                  reason: PlacementApplicationWithdrawalReason) {
+  private fun assertPlacementApplicationWithdrawn(
+    placementApplication: PlacementApplicationEntity,
+    decision: PlacementApplicationDecision,
+    reason: PlacementApplicationWithdrawalReason,
+  ) {
     val updatedPlacementApplication = placementApplicationRepository.findByIdOrNull(placementApplication.id)!!
     assertThat(updatedPlacementApplication.decision).isEqualTo(decision)
     assertThat(updatedPlacementApplication.withdrawalReason).isEqualTo(reason)
@@ -1218,7 +1221,7 @@ class WithdrawalTest : IntegrationTestBase() {
       configuration?.invoke(this)
     }
 
-    if(hasArrival) {
+    if (hasArrival) {
       arrivalEntityFactory.produceAndPersist {
         withBooking(booking)
       }

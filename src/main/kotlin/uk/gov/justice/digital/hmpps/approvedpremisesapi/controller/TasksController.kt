@@ -140,7 +140,7 @@ class TasksController(
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
     apAreaId: UUID?,
-    allocatedToUserId: UUID?
+    allocatedToUserId: UUID?,
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
@@ -167,7 +167,7 @@ class TasksController(
     )
   }
 
-  private fun toTaskEntityType(taskType: TaskType) =  when (taskType) {
+  private fun toTaskEntityType(taskType: TaskType) = when (taskType) {
     TaskType.assessment -> TaskEntityType.ASSESSMENT
     TaskType.placementRequest -> TaskEntityType.PLACEMENT_REQUEST
     TaskType.placementApplication -> TaskEntityType.PLACEMENT_APPLICATION

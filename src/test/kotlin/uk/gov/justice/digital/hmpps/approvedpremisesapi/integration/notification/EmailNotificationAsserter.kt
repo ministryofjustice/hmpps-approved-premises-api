@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component
 import org.springframework.test.context.event.annotation.BeforeTestMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SendEmailRequestedEvent
-import kotlin.math.exp
 
 @Component
 class EmailNotificationAsserter {

@@ -11,7 +11,7 @@ import uk.gov.service.notify.NotificationClient
 import uk.gov.service.notify.NotificationClientException
 
 @Service
-class EmailNotificationService (
+class EmailNotificationService(
   private val notifyConfig: NotifyConfig,
   @Qualifier("normalNotificationClient") private val normalNotificationClient: NotificationClient?,
   @Qualifier("guestListNotificationClient") private val guestListNotificationClient: NotificationClient?,

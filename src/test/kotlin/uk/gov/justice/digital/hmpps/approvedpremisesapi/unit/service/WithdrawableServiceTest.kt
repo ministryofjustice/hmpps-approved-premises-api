@@ -180,7 +180,8 @@ class WithdrawableServiceTest {
           WithdrawalContext(
             user,
             WithdrawableEntityType.Application,
-          ),)
+          ),
+        )
       }
     }
   }
@@ -216,7 +217,8 @@ class WithdrawableServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.Application,
-        ),)
+        ),
+      )
     } returns AuthorisableActionResult.Unauthorised()
 
     every { logger.error(any<String>()) } returns Unit
@@ -238,6 +240,5 @@ class WithdrawableServiceTest {
           "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult\$Unauthorised",
       )
     }
-
   }
 }

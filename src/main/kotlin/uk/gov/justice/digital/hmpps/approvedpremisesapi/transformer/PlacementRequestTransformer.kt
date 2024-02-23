@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -52,7 +51,7 @@ class PlacementRequestTransformer(
       booking = jpa.booking?.let { bookingSummaryTransformer.transformJpaToApi(jpa.booking!!) },
       requestType = if (jpa.isParole) PlacementRequestRequestType.parole else PlacementRequestRequestType.standardRelease,
       isWithdrawn = jpa.isWithdrawn,
-      withdrawalReason = getWithdrawalReason(jpa.withdrawalReason)
+      withdrawalReason = getWithdrawalReason(jpa.withdrawalReason),
     )
   }
 
@@ -94,7 +93,7 @@ class PlacementRequestTransformer(
     else -> throw RuntimeException("Unrecognised releaseType: $releaseType")
   }
 
-  fun getWithdrawalReason(withdrawalReason: PlacementRequestWithdrawalReason?): WithdrawPlacementRequestReason? = when(withdrawalReason) {
+  fun getWithdrawalReason(withdrawalReason: PlacementRequestWithdrawalReason?): WithdrawPlacementRequestReason? = when (withdrawalReason) {
     PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST -> WithdrawPlacementRequestReason.duplicatePlacementRequest
     PlacementRequestWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED -> WithdrawPlacementRequestReason.alternativeProvisionIdentified
     PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP -> WithdrawPlacementRequestReason.withdrawnByPP

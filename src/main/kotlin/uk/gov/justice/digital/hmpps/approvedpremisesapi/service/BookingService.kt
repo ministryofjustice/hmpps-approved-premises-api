@@ -1150,7 +1150,7 @@ class BookingService(
     notes: String?,
     withdrawalContext: WithdrawalContext,
   ) = validated<CancellationEntity> {
-    if(booking.application != null && booking.application !is ApprovedPremisesApplicationEntity) {
+    if (booking.application != null && booking.application !is ApprovedPremisesApplicationEntity) {
       return generalError("Application is not for CAS1")
     }
 
@@ -1159,7 +1159,7 @@ class BookingService(
       return success(existingCancellation)
     }
 
-    if(!booking.isInCancellableStateCas1()) {
+    if (!booking.isInCancellableStateCas1()) {
       return generalError("The Booking is not in a state that can be cancelled")
     }
 
@@ -1199,7 +1199,7 @@ class BookingService(
 
     updateApplicationStatusOnCancellation(
       booking = booking,
-      isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.Booking
+      isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.Booking,
     )
 
     val application = booking.application as ApprovedPremisesApplicationEntity?
@@ -1220,19 +1220,19 @@ class BookingService(
 
   private fun updateApplicationStatusOnCancellation(
     booking: BookingEntity,
-    isUserRequestedWithdrawal: Boolean
+    isUserRequestedWithdrawal: Boolean,
   ) {
-    if(!isUserRequestedWithdrawal || booking.application == null) {
+    if (!isUserRequestedWithdrawal || booking.application == null) {
       return
     }
 
     val application = booking.application!!
     val bookings = bookingRepository.findAllByApplication(application)
     val anyActiveBookings = bookings.any { it.isActive() }
-    if(!anyActiveBookings) {
+    if (!anyActiveBookings) {
       applicationService.updateApprovedPremisesApplicationStatus(
         application.id,
-        ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT
+        ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
       )
     }
   }
@@ -1253,7 +1253,7 @@ class BookingService(
         isParole = false,
         null,
       )
-      }
+    }
   }
 
   @SuppressWarnings("LongMethod")

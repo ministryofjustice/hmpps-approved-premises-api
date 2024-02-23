@@ -19,7 +19,6 @@ class DomainEventTransformerTest {
 
   val domainEventTransformerService = DomainEventTransformer(communityApiClient)
 
-
   @Test
   fun `toProbationArea success`() {
     val staffDetails = StaffUserDetailsFactory()

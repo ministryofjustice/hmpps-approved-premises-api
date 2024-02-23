@@ -74,7 +74,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -531,7 +530,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
     val assessment = realAssessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)!!
     val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 
-    assessment.data =  if (shortNotice) {
+    assessment.data = if (shortNotice) {
       """{
          "suitability-assessment": {
             "application-timeliness": {

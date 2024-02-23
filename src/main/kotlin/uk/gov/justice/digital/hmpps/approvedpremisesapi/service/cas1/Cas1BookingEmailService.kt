@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Constants.DAYS_IN_WEEK
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -51,15 +50,15 @@ class Cas1BookingEmailService(
   }
 
   fun bookingWithdrawn(application: ApprovedPremisesApplicationEntity, booking: BookingEntity) {
-    if(!sendNewWithdrawalNotifications) {
+    if (!sendNewWithdrawalNotifications) {
       return
     }
 
-   val allPersonalisation =
-     buildCommonPersonalisation(application, booking) +
-     mapOf(
-       "region" to booking.premises.probationRegion.name
-     )
+    val allPersonalisation =
+      buildCommonPersonalisation(application, booking) +
+        mapOf(
+          "region" to booking.premises.probationRegion.name,
+        )
 
     val applicationSubmittedByUser = application.createdByUser
     applicationSubmittedByUser.email?.let { email ->
@@ -89,7 +88,7 @@ class Cas1BookingEmailService(
     }
   }
 
-  fun buildCommonPersonalisation(application: ApplicationEntity, booking: BookingEntity): Map<String,Any> {
+  fun buildCommonPersonalisation(application: ApplicationEntity, booking: BookingEntity): Map<String, Any> {
     val applicationSubmittedByUser = application.createdByUser
 
     val lengthOfStayDays = booking.arrivalDate.getDaysUntilInclusive(booking.departureDate).size
@@ -103,8 +102,8 @@ class Cas1BookingEmailService(
       "bookingUrl" to bookingUrlTemplate.resolve(
         mapOf(
           "premisesId" to booking.premises.id.toString(),
-          "bookingId" to booking.id.toString()
-        )
+          "bookingId" to booking.id.toString(),
+        ),
       ),
       "crn" to application.crn,
       "startDate" to booking.arrivalDate.toString(),

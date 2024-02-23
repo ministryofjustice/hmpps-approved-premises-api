@@ -81,7 +81,7 @@ class PlacementApplicationService(
       return generalError("You cannot request a placement request for an application that has not been approved")
     }
 
-    if(application.status == ApprovedPremisesApplicationStatus.WITHDRAWN) {
+    if (application.status == ApprovedPremisesApplicationStatus.WITHDRAWN) {
       return generalError("You cannot request a placement request for an application that has been withdrawn")
     }
 
@@ -185,7 +185,7 @@ class PlacementApplicationService(
   fun getWithdrawablePlacementApplicationsForUser(user: UserEntity, application: ApprovedPremisesApplicationEntity) =
     placementApplicationRepository
       .findByApplication(application)
-      .filter { it.isInWithdrawableState() && userAccessService.userMayWithdrawPlacementApplication(user, it)}
+      .filter { it.isInWithdrawableState() && userAccessService.userMayWithdrawPlacementApplication(user, it) }
 
   @Transactional
   fun withdrawPlacementApplication(
@@ -198,14 +198,14 @@ class PlacementApplicationService(
     val placementApplication =
       placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
 
-    if(placementApplication.isWithdrawn()) {
+    if (placementApplication.isWithdrawn()) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.Success(placementApplication),
       )
     }
 
     val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementApplication
-    if(isUserRequestedWithdrawal && !userAccessService.userMayWithdrawPlacementApplication(user, placementApplication)) {
+    if (isUserRequestedWithdrawal && !userAccessService.userMayWithdrawPlacementApplication(user, placementApplication)) {
       return AuthorisableActionResult.Unauthorised()
     }
 
@@ -219,7 +219,7 @@ class PlacementApplicationService(
 
     placementApplication.decision = PlacementApplicationDecision.WITHDRAW
     placementApplication.decisionMadeAt = OffsetDateTime.now()
-    placementApplication.withdrawalReason = when(withdrawalContext.triggeringEntityType) {
+    placementApplication.withdrawalReason = when (withdrawalContext.triggeringEntityType) {
       WithdrawableEntityType.Application -> PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
       WithdrawableEntityType.PlacementApplication -> userProvidedReason
       WithdrawableEntityType.PlacementRequest -> throw InternalServerErrorProblem("Withdrawing a PlacementRequest should not cascade to PlacementApplications")
@@ -241,7 +241,7 @@ class PlacementApplicationService(
 
   private fun createWithdrawalDomainEvent(
     placementApplication: PlacementApplicationEntity,
-    user: UserEntity
+    user: UserEntity,
   ) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = Instant.now()
@@ -298,7 +298,7 @@ class PlacementApplicationService(
           )
         }
       }
-      }
+    }
   }
 
   fun updateApplication(

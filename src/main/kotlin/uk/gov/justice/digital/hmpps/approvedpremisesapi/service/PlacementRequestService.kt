@@ -304,8 +304,8 @@ class PlacementRequestService(
       .findByApplication(application)
       .filter {
         it.isInWithdrawableState() &&
-        it.isForApplicationsArrivalDate() &&
-        userAccessService.userMayWithdrawPlacementRequest(user, it)
+          it.isForApplicationsArrivalDate() &&
+          userAccessService.userMayWithdrawPlacementRequest(user, it)
       }
 
   @Transactional
@@ -329,7 +329,7 @@ class PlacementRequestService(
     }
 
     placementRequest.isWithdrawn = true
-    placementRequest.withdrawalReason = when(withdrawalContext.triggeringEntityType) {
+    placementRequest.withdrawalReason = when (withdrawalContext.triggeringEntityType) {
       WithdrawableEntityType.Application -> PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
       WithdrawableEntityType.PlacementApplication -> PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN
       WithdrawableEntityType.PlacementRequest -> userProvidedReason
@@ -364,19 +364,21 @@ class PlacementRequestService(
     return AuthorisableActionResult.Success(Unit)
   }
 
-  private fun updateApplicationStatusOnWithdrawal(placementRequest: PlacementRequestEntity,
-                                                  isUserRequestedWithdrawal: Boolean) {
-    if(!isUserRequestedWithdrawal) {
+  private fun updateApplicationStatusOnWithdrawal(
+    placementRequest: PlacementRequestEntity,
+    isUserRequestedWithdrawal: Boolean,
+  ) {
+    if (!isUserRequestedWithdrawal) {
       return
     }
 
     val application = placementRequest.application
     val placementRequests = placementRequestRepository.findByApplication(application)
     val anyActivePlacementRequests = placementRequests.any { it.isActive() }
-    if(!anyActivePlacementRequests) {
+    if (!anyActivePlacementRequests) {
       applicationService.updateApprovedPremisesApplicationStatus(
         application.id,
-        ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST
+        ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST,
       )
     }
   }

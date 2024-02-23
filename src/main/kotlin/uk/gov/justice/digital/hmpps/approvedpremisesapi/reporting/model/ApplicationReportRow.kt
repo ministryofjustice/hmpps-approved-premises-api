@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model
 
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 data class ApplicationReportRow(
   val id: String,

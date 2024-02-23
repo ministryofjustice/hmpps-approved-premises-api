@@ -245,7 +245,7 @@ class ApprovedPremisesBookingSeedJob(
           withdrawalContext = WithdrawalContext(
             triggeringUser = null,
             triggeringEntityType = WithdrawableEntityType.Booking,
-          )
+          ),
         ),
       )
 

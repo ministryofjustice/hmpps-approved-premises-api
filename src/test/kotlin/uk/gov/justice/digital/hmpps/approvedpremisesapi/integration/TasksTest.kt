@@ -1744,7 +1744,7 @@ class TasksTest : IntegrationTestBase() {
               crn = offenderDetails.otherIds.crn,
             )
 
-            val (assessment1,_) = `Given an Assessment for Approved Premises`(
+            val (assessment1, _) = `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
@@ -1767,7 +1767,7 @@ class TasksTest : IntegrationTestBase() {
               submittedAt = OffsetDateTime.now(),
             )
 
-            val (assessment2,_) = `Given an Assessment for Approved Premises`(
+            val (assessment2, _) = `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,

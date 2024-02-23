@@ -62,7 +62,7 @@ class SeedCas1ApAreaEmailAddressTest : SeedTestBase() {
     withCsv(
       "missing-headers",
       "totally,wrong_headers\n" +
-               "SWSC,me@here.com"
+        "SWSC,me@here.com",
     )
 
     seedService.seedData(SeedFileType.approvedPremisesApAreaEmailAddresses, "missing-headers")
@@ -90,8 +90,8 @@ class SeedCas1ApAreaEmailAddressTest : SeedTestBase() {
         listOf(
           Cas1ApAreaEmailAddressSeedCsvRow(apAreaIdentifier = "SWSC", emailAddress = "swsc@test.com"),
           Cas1ApAreaEmailAddressSeedCsvRow(apAreaIdentifier = "Mids", emailAddress = "mids@midlands.com"),
-        )
-      )
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.approvedPremisesApAreaEmailAddresses, "valid-csv")
