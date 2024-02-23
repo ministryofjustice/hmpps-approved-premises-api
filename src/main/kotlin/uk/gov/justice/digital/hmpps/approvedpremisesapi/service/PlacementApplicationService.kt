@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -70,7 +71,7 @@ class PlacementApplicationService(
     )
   }
 
-  fun createApplication(
+  fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
   ) = validated<PlacementApplicationEntity> {
@@ -78,6 +79,10 @@ class PlacementApplicationService(
 
     if (assessment?.decision !== AssessmentDecision.ACCEPTED) {
       return generalError("You cannot request a placement request for an application that has not been approved")
+    }
+
+    if(application.status == ApprovedPremisesApplicationStatus.WITHDRAWN) {
+      return generalError("You cannot request a placement request for an application that has been withdrawn")
     }
 
     val createdApplication = placementApplicationRepository.save(

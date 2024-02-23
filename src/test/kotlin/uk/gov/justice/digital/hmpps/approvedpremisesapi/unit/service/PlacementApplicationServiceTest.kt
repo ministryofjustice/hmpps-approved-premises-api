@@ -6,6 +6,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -31,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Withdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
@@ -41,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
@@ -90,6 +93,44 @@ class PlacementApplicationServiceTest {
     sendPlacementRequestNotifications = true,
     UrlTemplate("http://frontend/applications/#id"),
   )
+
+  @Nested
+  inner class CreatePlacementApplicationTest {
+    lateinit var user: UserEntity
+
+    @BeforeEach
+    fun setup() {
+      user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      every { userService.getUserForRequest() } returns user
+    }
+
+    @Test
+    fun `If application withdrawn, return error`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withStatus(ApprovedPremisesApplicationStatus.WITHDRAWN)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withDecision(AssessmentDecision.ACCEPTED)
+        .produce()
+
+      application.assessments = mutableListOf(
+        assessment,
+      )
+
+      val result = placementApplicationService.createPlacementApplication(application, user)
+
+      assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
+      assertThat((result as ValidatableActionResult.GeneralValidationError).message)
+        .isEqualTo("You cannot request a placement request for an application that has been withdrawn")
+    }
+
+  }
 
   @Nested
   inner class SubmitApplicationTest {

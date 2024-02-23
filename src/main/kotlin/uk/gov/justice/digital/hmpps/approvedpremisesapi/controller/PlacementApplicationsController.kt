@@ -49,7 +49,7 @@ class PlacementApplicationsController(
     }
 
     val placementApplication = extractEntityFromValidatableActionResult(
-      placementApplicationService.createApplication(application, user),
+      placementApplicationService.createPlacementApplication(application, user),
     )
 
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
