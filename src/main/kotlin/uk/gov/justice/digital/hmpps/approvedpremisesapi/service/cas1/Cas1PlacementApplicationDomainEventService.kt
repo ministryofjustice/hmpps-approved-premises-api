@@ -7,8 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
@@ -46,9 +44,9 @@ class Cas1PlacementApplicationDomainEventService(
       placementDates = placementApplication.placementDates.map {
         DatePeriod(
           it.expectedArrival,
-          it.expectedDeparture()
+          it.expectedDeparture(),
         )
-      }
+      },
     )
 
     domainEventService.savePlacementApplicationWithdrawnEvent(
@@ -61,11 +59,9 @@ class Cas1PlacementApplicationDomainEventService(
           id = domainEventId,
           timestamp = eventOccurredAt,
           eventType = "approved-premises.placement-application.withdrawn",
-          eventDetails = placementApplicationWithdrawn
+          eventDetails = placementApplicationWithdrawn,
         ),
       ),
     )
-
   }
-
 }

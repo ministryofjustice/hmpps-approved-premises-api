@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementDateEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
@@ -22,7 +21,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
 import java.time.OffsetDateTime
-import java.util.UUID
 
 class Cas1PlacementApplicationDomainEventServiceTest {
 
@@ -35,7 +33,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
   val service = Cas1PlacementApplicationDomainEventService(
     domainEventService,
     domainEventTransformer,
-    applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id")
+    applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
   )
 
   @Nested
@@ -64,14 +62,14 @@ class Cas1PlacementApplicationDomainEventServiceTest {
       placementApplication.placementDates = mutableListOf(
         PlacementDateEntityFactory()
           .withPlacementApplication(placementApplication)
-          .withExpectedArrival(LocalDate.of(2024,5,3))
+          .withExpectedArrival(LocalDate.of(2024, 5, 3))
           .withDuration(7)
           .produce(),
         PlacementDateEntityFactory()
           .withPlacementApplication(placementApplication)
-          .withExpectedArrival(LocalDate.of(2025,2,2))
+          .withExpectedArrival(LocalDate.of(2025, 2, 2))
           .withDuration(14)
-          .produce()
+          .produce(),
       )
 
       val withdrawnBy = WithdrawnByFactory().produce()
@@ -82,7 +80,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
         placementApplication,
         withdrawalContext = WithdrawalContext(
           user,
-          WithdrawableEntityType.PlacementApplication
+          WithdrawableEntityType.PlacementApplication,
         ),
       )
 
@@ -101,24 +99,21 @@ class Cas1PlacementApplicationDomainEventServiceTest {
               noms = application.nomsNumber!!,
             ) &&
               data.deliusEventNumber == application.eventNumber &&
-              data.withdrawnBy== withdrawnBy
-              data.withdrawalReason == "ALTERNATIVE_PROVISION_IDENTIFIED" &&
+              data.withdrawnBy == withdrawnBy
+            data.withdrawalReason == "ALTERNATIVE_PROVISION_IDENTIFIED" &&
               data.placementDates == listOf(
-                DatePeriod(
-                  LocalDate.of(2024,5,3),
-                  LocalDate.of(2024,5,10)
-                ),
-                DatePeriod(
-                  LocalDate.of(2025,2,2),
-                  LocalDate.of(2025,2,16)
-                )
-              )
+              DatePeriod(
+                LocalDate.of(2024, 5, 3),
+                LocalDate.of(2024, 5, 10),
+              ),
+              DatePeriod(
+                LocalDate.of(2025, 2, 2),
+                LocalDate.of(2025, 2, 16),
+              ),
+            )
           },
         )
       }
     }
-
-
   }
-
 }

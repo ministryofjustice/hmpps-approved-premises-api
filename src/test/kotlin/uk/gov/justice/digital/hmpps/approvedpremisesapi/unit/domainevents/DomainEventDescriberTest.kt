@@ -268,10 +268,12 @@ class DomainEventDescriberTest {
         timestamp = Instant.now(),
         eventType = "approved-premises.placement-application.withdrawn",
         eventDetails = PlacementApplicationWithdrawnFactory()
-          .withPlacementDates(listOf(
-            DatePeriod(LocalDate.of(2024,1,2),LocalDate.of(2024,3,4)),
-            DatePeriod(LocalDate.of(2024,5,6),LocalDate.of(2024,7,8))
-          ))
+          .withPlacementDates(
+            listOf(
+              DatePeriod(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 3, 4)),
+              DatePeriod(LocalDate.of(2024, 5, 6), LocalDate.of(2024, 7, 8)),
+            ),
+          )
           .produce(),
       )
     }
