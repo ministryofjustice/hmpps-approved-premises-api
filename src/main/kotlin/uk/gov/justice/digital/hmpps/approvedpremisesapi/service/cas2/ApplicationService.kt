@@ -45,6 +45,7 @@ class ApplicationService(
   private val userAccessService: UserAccessService,
   private val domainEventService: DomainEventService,
   private val emailNotificationService: EmailNotificationService,
+  private val assessmentService: AssessmentService,
   private val notifyConfig: NotifyConfig,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
@@ -237,6 +238,8 @@ class ApplicationService(
 
     createCas2ApplicationSubmittedEvent(application)
 
+    createAssessment(application)
+
     sendEmailApplicationSubmitted(user, application)
 
     return AuthorisableActionResult.Success(
@@ -282,6 +285,10 @@ class ApplicationService(
         ),
       ),
     )
+  }
+
+  fun createAssessment(application: Cas2ApplicationEntity) {
+    assessmentService.createCas2Assessment(application)
   }
 
   private fun retrievePrisonCode(application: Cas2ApplicationEntity): String {

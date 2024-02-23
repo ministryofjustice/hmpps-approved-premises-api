@@ -18,6 +18,7 @@ import javax.persistence.JoinColumn
 import javax.persistence.LockModeType
 import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
+import javax.persistence.OneToOne
 import javax.persistence.Table
 
 @Repository
@@ -105,6 +106,9 @@ data class Cas2ApplicationEntity(
   @OneToMany(mappedBy = "application")
   @OrderBy(clause = "createdAt DESC")
   var notes: MutableList<Cas2ApplicationNoteEntity>? = null,
+
+  @OneToOne(mappedBy = "application")
+  var assessment: Cas2AssessmentEntity? = null,
 
   @Transient
   var schemaUpToDate: Boolean,
