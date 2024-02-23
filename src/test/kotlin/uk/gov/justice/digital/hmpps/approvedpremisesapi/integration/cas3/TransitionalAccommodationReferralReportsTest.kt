@@ -184,6 +184,7 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
             )
           }
           withPrisonNameAtReferral("HM Hounslow")
+          withPersonReleaseDate(LocalDate.now())
         }
 
         val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
@@ -463,6 +464,8 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
     assertThat(actualReferralReportRow.rejectionDate).isEqualTo(rejectedDate?.toLocalDate())
     assertThat(actualReferralReportRow.rejectionReason).isEqualTo(expectedAssessment.rejectionRationale)
     assertThat(actualReferralReportRow.accommodationRequiredDate).isEqualTo(application.arrivalDate?.toLocalDate())
+    assertThat(actualReferralReportRow.prisonAtReferral).isEqualTo(application.prisonNameOnCreation)
+    assertThat(actualReferralReportRow.releaseDate).isEqualTo(application.personReleaseDate)
   }
 
   private fun createTemporaryAccommodationAssessmentForStatus(

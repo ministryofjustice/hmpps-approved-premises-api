@@ -96,6 +96,7 @@ class ReportServiceTest {
     referralEligibilityReason = "reason",
     accommodationRequiredDate = Timestamp.valueOf(LocalDateTime.now()),
     prisonNameOnCreation = null,
+    personReleaseDate = null,
   )
 
   @Suppress("LongParameterList")
@@ -121,5 +122,6 @@ class ReportServiceTest {
     override val referralEligibilityReason: String?,
     override val accommodationRequiredDate: Timestamp?,
     override val prisonNameOnCreation: String?,
+    override val personReleaseDate: LocalDate?,
   ) : TransitionalAccommodationReferralReportData
 }

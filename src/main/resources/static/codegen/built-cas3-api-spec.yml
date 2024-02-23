@@ -2266,6 +2266,10 @@ components:
               type: string
             dutyToReferLocalAuthorityAreaName:
               type: string
+            personReleaseDate:
+              type: string
+              format: date
+              example: '2024-02-21'
             summaryData:
               $ref: '#/components/schemas/AnyValue'
           required:

@@ -404,6 +404,7 @@ class TemporaryAccommodationApplicationEntity(
   var eligibilityReason: String?,
   var dutyToReferLocalAuthorityAreaName: String?,
   var prisonNameOnCreation: String?,
+  var personReleaseDate: LocalDate?,
 ) : ApplicationEntity(
   id,
   crn,
