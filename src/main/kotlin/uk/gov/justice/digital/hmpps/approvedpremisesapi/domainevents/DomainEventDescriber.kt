@@ -7,12 +7,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import java.time.LocalDate
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Component
 class DomainEventDescriber(
   private val domainEventService: DomainEventService,
 ) {
+
+  val cas1UiExtendedDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE dd MMMM yyyy")
+
   fun getDescription(domainEventSummary: DomainEventSummary): String? {
     return when (domainEventSummary.type) {
       DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED -> "The application was submitted"
@@ -26,7 +30,7 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> "The booking had its arrival or departure date changed"
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> "The application was withdrawn"
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> buildAssessmentAppealedDescription(domainEventSummary)
-      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> "A request for placement was withdrawn"
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> buildPlacementApplicationWithdrawnDescription(domainEventSummary)
       else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
     }
   }
@@ -69,6 +73,15 @@ class DomainEventDescriber(
   private fun buildAssessmentAppealedDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getAssessmentAppealedEvent(domainEventSummary.id())
     return event.describe { "The assessment was appealed and ${it.eventDetails.decision.value}. The reason was: ${it.eventDetails.decisionDetail}" }
+  }
+
+  private fun buildPlacementApplicationWithdrawnDescription(domainEventSummary: DomainEventSummary): String? {
+    val event = domainEventService.getPlacementApplicationWithdrawnEvent(domainEventSummary.id())
+    val dates = event?.data?.eventDetails?.placementDates ?: emptyList()
+    return "A request for placement was withdrawn" +
+      if (dates.isNotEmpty()) {
+        " for dates " + dates.joinToString(", ") { "${it.startDate.format(cas1UiExtendedDateFormat)} to ${it.endDate.format(cas1UiExtendedDateFormat)}" }
+      } else { "" }
   }
 
   private fun DomainEventSummary.id(): UUID = UUID.fromString(this.id)

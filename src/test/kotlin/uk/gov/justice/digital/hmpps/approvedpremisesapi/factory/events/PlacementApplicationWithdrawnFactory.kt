@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
@@ -23,6 +24,7 @@ class PlacementApplicationWithdrawnFactory : Factory<PlacementApplicationWithdra
   private var withdrawnByProbationArea: Yielded<ProbationArea> = { ProbationAreaFactory().produce() }
   private var withdrawnAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(5) }
   private var withdrawalReason: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
+  private var placementDates: Yielded<List<DatePeriod>?> = { null }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -60,6 +62,10 @@ class PlacementApplicationWithdrawnFactory : Factory<PlacementApplicationWithdra
     this.withdrawalReason = { withdrawalReason }
   }
 
+  fun withPlacementDates(placementDates: List<DatePeriod>?) = apply {
+    this.placementDates = { placementDates }
+  }
+
   override fun produce() = PlacementApplicationWithdrawn(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
@@ -72,5 +78,6 @@ class PlacementApplicationWithdrawnFactory : Factory<PlacementApplicationWithdra
     ),
     withdrawnAt = this.withdrawnAt(),
     withdrawalReason = this.withdrawalReason(),
+    placementDates = this.placementDates(),
   )
 }
