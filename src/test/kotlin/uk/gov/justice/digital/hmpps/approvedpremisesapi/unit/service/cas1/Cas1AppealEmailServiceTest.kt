@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AppealEntityFactory
@@ -34,89 +35,129 @@ class Cas1AppealEmailServiceTest {
     mockEmailNotificationService.reset()
   }
 
-  @Test
-  fun `appealSuccess doesn't send an email if the user does not have an email address`() {
-    val (application, appeal) = createApplicationAndAppeal(null, null)
+  @Nested
+  inner class AppealSuccess {
+    @Test
+    fun `appealSuccess doesn't send an email if the user does not have an email address`() {
+      val (application, appeal) = createApplicationAndAppeal(null, null)
 
-    service.appealSuccess(application, appeal)
+      service.appealSuccess(application, appeal)
 
-    mockEmailNotificationService.assertEmailRequestCount(0)
-  }
+      mockEmailNotificationService.assertEmailRequestCount(0)
+    }
 
-  @Test
-  fun `appealSuccess sends an email to the applicant, but not the arbitrator if the applicant has an email address, but the arbitrator doesn't`() {
-    val (application, appeal) = createApplicationAndAppeal(Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL, null)
+    @Test
+    fun `appealSuccess sends an email to the applicant, but not the arbitrator if the applicant has an email address, but the arbitrator doesn't`() {
+      val (application, appeal) = createApplicationAndAppeal(Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL, null)
 
-    service.appealSuccess(application, appeal)
+      service.appealSuccess(application, appeal)
 
-    mockEmailNotificationService.assertEmailRequestCount(1)
-    mockEmailNotificationService.assertEmailRequested(
-      Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL,
-      notifyConfig.templates.appealSuccess,
-      expectedPersonalisationForAppealSuccess(application),
+      mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertEmailRequested(
+        Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL,
+        notifyConfig.templates.appealSuccess,
+        expectedPersonalisationForAppealSuccess(application),
+      )
+    }
+
+    @Test
+    fun `appealSuccess sends an email to the arbitrator, but not the applicant if the arbitrator has an email address, but the applicant doesn't`() {
+      val (application, appeal) = createApplicationAndAppeal(null, Cas1AppealEmailServiceTestConstants.APPEAL_ARBITRATOR_EMAIL)
+
+      service.appealSuccess(application, appeal)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertEmailRequested(
+        Cas1AppealEmailServiceTestConstants.APPEAL_ARBITRATOR_EMAIL,
+        notifyConfig.templates.appealSuccess,
+        expectedPersonalisationForAppealSuccess(application),
+      )
+    }
+
+    @Test
+    fun `appealSuccess sends an email to the arbitrator and applicant when both users have an email address`() {
+      val (application, appeal) = createApplicationAndAppeal(
+        Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL,
+        Cas1AppealEmailServiceTestConstants.APPEAL_ARBITRATOR_EMAIL,
+      )
+
+      service.appealSuccess(application, appeal)
+
+      mockEmailNotificationService.assertEmailRequestCount(2)
+      mockEmailNotificationService.assertEmailRequested(
+        Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL,
+        notifyConfig.templates.appealSuccess,
+        expectedPersonalisationForAppealSuccess(application),
+      )
+      mockEmailNotificationService.assertEmailRequested(
+        Cas1AppealEmailServiceTestConstants.APPEAL_ARBITRATOR_EMAIL,
+        notifyConfig.templates.appealSuccess,
+        expectedPersonalisationForAppealSuccess(application),
+      )
+    }
+
+    private fun expectedPersonalisationForAppealSuccess(application: ApprovedPremisesApplicationEntity) = mapOf(
+      "crn" to application.crn,
+      "applicationUrl" to "http://frontend/applications/${application.id}",
     )
   }
 
-  @Test
-  fun `appealSuccess sends an email to the arbitrator, but not the applicant if the arbitrator has an email address, but the applicant doesn't`() {
-    val (application, appeal) = createApplicationAndAppeal(null, Cas1AppealEmailServiceTestConstants.APPEAL_ARBITRATOR_EMAIL)
+  @Nested
+  inner class AppealFailed {
+    @Test
+    fun `appealFailed does not send an email if the applicant doesn't have an email address`() {
+      val application = createApplication(null)
 
-    service.appealSuccess(application, appeal)
+      service.appealFailed(application)
 
-    mockEmailNotificationService.assertEmailRequestCount(1)
-    mockEmailNotificationService.assertEmailRequested(
-      Cas1AppealEmailServiceTestConstants.APPEAL_ARBITRATOR_EMAIL,
-      notifyConfig.templates.appealSuccess,
-      expectedPersonalisationForAppealSuccess(application),
+      mockEmailNotificationService.assertEmailRequestCount(0)
+    }
+
+    @Test
+    fun `appealFailed sends an email when the applicant has an email address`() {
+      val application = createApplication(Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL)
+
+      service.appealFailed(application)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertEmailRequested(
+        Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL,
+        notifyConfig.templates.appealReject,
+        expectedPersonalisationForAppealFailed(application),
+      )
+    }
+
+    private fun expectedPersonalisationForAppealFailed(application: ApprovedPremisesApplicationEntity) = mapOf(
+      "crn" to application.crn,
+      "applicationUrl" to "http://frontend/applications/${application.id}",
     )
   }
 
-  @Test
-  fun `appealSuccess sends an email to the arbitrator and applicant when both users have an email address`() {
-    val (application, appeal) = createApplicationAndAppeal(
-      Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL,
-      Cas1AppealEmailServiceTestConstants.APPEAL_ARBITRATOR_EMAIL,
-    )
-
-    service.appealSuccess(application, appeal)
-
-    mockEmailNotificationService.assertEmailRequestCount(2)
-    mockEmailNotificationService.assertEmailRequested(
-      Cas1AppealEmailServiceTestConstants.APPLICANT_EMAIL,
-      notifyConfig.templates.appealSuccess,
-      expectedPersonalisationForAppealSuccess(application),
-    )
-    mockEmailNotificationService.assertEmailRequested(
-      Cas1AppealEmailServiceTestConstants.APPEAL_ARBITRATOR_EMAIL,
-      notifyConfig.templates.appealSuccess,
-      expectedPersonalisationForAppealSuccess(application),
-    )
-  }
-
-  private fun expectedPersonalisationForAppealSuccess(application: ApprovedPremisesApplicationEntity) = mapOf(
-    "crn" to application.crn,
-    "applicationUrl" to "http://frontend/applications/${application.id}",
-  )
-
-  private fun createApplicationAndAppeal(
+  private fun createApplication(
     applicantEmail: String?,
-    arbitratorEmail: String?,
-  ): Pair<ApprovedPremisesApplicationEntity, AppealEntity> {
+  ): ApprovedPremisesApplicationEntity {
     val applicant = UserEntityFactory()
       .withUnitTestControlProbationRegion()
       .withEmail(applicantEmail)
       .produce()
 
+    return ApprovedPremisesApplicationEntityFactory()
+      .withCrn(Cas1AppealEmailServiceTestConstants.CRN)
+      .withCreatedByUser(applicant)
+      .withSubmittedAt(OffsetDateTime.now())
+      .produce()
+  }
+
+  private fun createApplicationAndAppeal(
+    applicantEmail: String?,
+    arbitratorEmail: String?,
+  ): Pair<ApprovedPremisesApplicationEntity, AppealEntity> {
     val arbitrator = UserEntityFactory()
       .withUnitTestControlProbationRegion()
       .withEmail(arbitratorEmail)
       .produce()
 
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCrn(Cas1AppealEmailServiceTestConstants.CRN)
-      .withCreatedByUser(applicant)
-      .withSubmittedAt(OffsetDateTime.now())
-      .produce()
+    val application = createApplication(applicantEmail)
 
     val appeal = AppealEntityFactory()
       .withCreatedBy(arbitrator)
