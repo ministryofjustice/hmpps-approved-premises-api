@@ -42,7 +42,13 @@ class Cas1PlacementApplicationDomainEventService(
       deliusEventNumber = application.eventNumber,
       withdrawnAt = eventOccurredAt,
       withdrawnBy = domainEventTransformer.toWithdrawnBy(user),
-      withdrawalReason = placementApplication.withdrawalReason!!.name
+      withdrawalReason = placementApplication.withdrawalReason!!.name,
+      placementDates = placementApplication.placementDates.map {
+        DatePeriod(
+          it.expectedArrival,
+          it.expectedDeparture()
+        )
+      }
     )
 
     domainEventService.savePlacementApplicationWithdrawnEvent(
@@ -55,7 +61,7 @@ class Cas1PlacementApplicationDomainEventService(
           id = domainEventId,
           timestamp = eventOccurredAt,
           eventType = "approved-premises.placement-application.withdrawn",
-          eventDetails = placementApplicationWithdrawn,
+          eventDetails = placementApplicationWithdrawn
         ),
       ),
     )

@@ -61,6 +61,19 @@ class Cas1PlacementApplicationDomainEventServiceTest {
         .withWithdrawalReason(PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED)
         .produce()
 
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withPlacementApplication(placementApplication)
+          .withExpectedArrival(LocalDate.of(2024,5,3))
+          .withDuration(7)
+          .produce(),
+        PlacementDateEntityFactory()
+          .withPlacementApplication(placementApplication)
+          .withExpectedArrival(LocalDate.of(2025,2,2))
+          .withDuration(14)
+          .produce()
+      )
+
       val withdrawnBy = WithdrawnByFactory().produce()
       every { domainEventTransformer.toWithdrawnBy(user) } returns withdrawnBy
       every { domainEventService.savePlacementApplicationWithdrawnEvent(any()) } returns Unit
@@ -89,7 +102,17 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             ) &&
               data.deliusEventNumber == application.eventNumber &&
               data.withdrawnBy== withdrawnBy
-            data.withdrawalReason == "ALTERNATIVE_PROVISION_IDENTIFIED"
+              data.withdrawalReason == "ALTERNATIVE_PROVISION_IDENTIFIED" &&
+              data.placementDates == listOf(
+                DatePeriod(
+                  LocalDate.of(2024,5,3),
+                  LocalDate.of(2024,5,10)
+                ),
+                DatePeriod(
+                  LocalDate.of(2025,2,2),
+                  LocalDate.of(2025,2,16)
+                )
+              )
           },
         )
       }
