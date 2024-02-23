@@ -3911,6 +3911,7 @@ components:
         - update_booking_status
         - update_application_ap_areas
         - update_task_due_dates
+        - update_cas2_applications_with_assessments
     PlacementDates:
       type: object
       properties:

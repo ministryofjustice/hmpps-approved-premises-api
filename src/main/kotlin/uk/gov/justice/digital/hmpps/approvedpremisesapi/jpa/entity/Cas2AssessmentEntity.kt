@@ -11,7 +11,9 @@ import javax.persistence.ManyToOne
 import javax.persistence.Table
 
 @Repository
-interface Cas2AssessmentRepository : JpaRepository<Cas2AssessmentEntity, UUID>
+interface Cas2AssessmentRepository : JpaRepository<Cas2AssessmentEntity, UUID> {
+  fun findFirstByApplicationId(applicationId: UUID): Cas2AssessmentEntity?
+}
 
 @Entity
 @Table(name = "cas_2_assessments")

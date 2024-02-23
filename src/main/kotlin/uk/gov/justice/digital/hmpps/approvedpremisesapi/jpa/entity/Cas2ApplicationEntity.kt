@@ -4,6 +4,7 @@ import org.hibernate.annotations.OrderBy
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Query
@@ -73,6 +74,12 @@ WHERE a.submitted_at IS NOT NULL
   @Query("SELECT a FROM Cas2ApplicationEntity a WHERE a.id = :id")
   @Lock(LockModeType.PESSIMISTIC_WRITE)
   fun findByIdOrNullWithWriteLock(id: UUID): Cas2ApplicationEntity?
+
+  @Query(
+    "SELECT a FROM Cas2ApplicationEntity a WHERE a.submittedAt IS NOT NULL " +
+      "AND a.id NOT IN (SELECT application FROM Cas2AssessmentEntity)",
+  )
+  fun findAllSubmittedApplicationsWithoutAssessments(): Slice<Cas2ApplicationEntity>
 }
 
 @Entity
