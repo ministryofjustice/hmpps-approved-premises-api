@@ -213,6 +213,7 @@ class AssessmentService(
       referralHistoryNotes = mutableListOf(),
       isWithdrawn = false,
       createdFromAppeal = createdFromAppeal,
+      dueAt = null,
     )
 
     val allocatedUser = userAllocator.getUserForAssessmentAllocation(assessment)
@@ -263,6 +264,7 @@ class AssessmentService(
         completedAt = null,
         summaryData = objectMapper.writeValueAsString(summaryData),
         isWithdrawn = false,
+        dueAt = null,
       ),
     )
 
@@ -765,6 +767,7 @@ class AssessmentService(
         referralHistoryNotes = mutableListOf(),
         isWithdrawn = false,
         createdFromAppeal = currentAssessment.createdFromAppeal,
+        dueAt = currentAssessment.dueAt,
       ),
     )
 

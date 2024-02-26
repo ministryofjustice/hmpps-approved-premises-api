@@ -91,6 +91,8 @@ data class PlacementApplicationEntity(
 
   @Enumerated(value = EnumType.STRING)
   var withdrawalReason: PlacementApplicationWithdrawalReason?,
+
+  var dueAt: OffsetDateTime?,
 ) {
   fun isReallocated() = reallocatedAt != null
 

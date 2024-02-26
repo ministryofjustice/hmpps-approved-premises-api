@@ -97,6 +97,7 @@ class PlacementApplicationService(
         placementDates = mutableListOf(),
         placementRequests = mutableListOf(),
         withdrawalReason = null,
+        dueAt = null,
       ),
     )
 

@@ -261,6 +261,7 @@ class PlacementRequestService(
       isParole = isParole,
       isWithdrawn = false,
       withdrawalReason = null,
+      dueAt = null,
     )
 
     val allocatedUser = userAllocator.getUserForPlacementRequestAllocation(placementRequest)

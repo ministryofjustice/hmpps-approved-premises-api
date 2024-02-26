@@ -252,6 +252,8 @@ abstract class AssessmentEntity(
   var schemaUpToDate: Boolean,
 
   var isWithdrawn: Boolean,
+
+  var dueAt: OffsetDateTime?,
 )
 
 @EntityListeners(AssessmentListener::class)
@@ -276,6 +278,7 @@ class ApprovedPremisesAssessmentEntity(
   referralHistoryNotes: MutableList<AssessmentReferralHistoryNoteEntity>,
   schemaUpToDate: Boolean,
   isWithdrawn: Boolean,
+  dueAt: OffsetDateTime?,
   val createdFromAppeal: Boolean,
 ) : AssessmentEntity(
   id,
@@ -294,6 +297,7 @@ class ApprovedPremisesAssessmentEntity(
   referralHistoryNotes,
   schemaUpToDate,
   isWithdrawn,
+  dueAt,
 ) {
   fun isPendingAssessment() = this.submittedAt == null && this.reallocatedAt == null && !this.isWithdrawn
 }
@@ -322,6 +326,7 @@ class TemporaryAccommodationAssessmentEntity(
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   var summaryData: String,
   isWithdrawn: Boolean,
+  dueAt: OffsetDateTime?,
 ) : AssessmentEntity(
   id,
   application,
@@ -339,6 +344,7 @@ class TemporaryAccommodationAssessmentEntity(
   referralHistoryNotes,
   schemaUpToDate,
   isWithdrawn,
+  dueAt,
 )
 
 interface DomainAssessmentSummary {

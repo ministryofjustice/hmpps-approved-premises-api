@@ -1957,6 +1957,7 @@ class AssessmentServiceTest {
 
     assertThat(previousAssessment.reallocatedAt).isNotNull
     assertThat(newAssessment.createdFromAppeal).isEqualTo(createdFromAppeal)
+    assertThat(newAssessment.dueAt).isEqualTo(previousAssessment.dueAt)
 
     verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
     verify(exactly = 1) {

@@ -37,6 +37,7 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
   private var referralHistoryNotes: Yielded<MutableList<AssessmentReferralHistoryNoteEntity>> = { mutableListOf() }
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var createdFromAppeal: Yielded<Boolean> = { false }
+  private var dueAt: Yielded<OffsetDateTime?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -106,6 +107,10 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     this.createdFromAppeal = { createdFromAppeal }
   }
 
+  fun withDueAt(dueAt: OffsetDateTime) = apply {
+    this.dueAt = { dueAt }
+  }
+
   override fun produce(): ApprovedPremisesAssessmentEntity = ApprovedPremisesAssessmentEntity(
     id = this.id(),
     data = this.data(),
@@ -124,5 +129,6 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     referralHistoryNotes = this.referralHistoryNotes(),
     isWithdrawn = this.isWithdrawn(),
     createdFromAppeal = this.createdFromAppeal(),
+    dueAt = this.dueAt(),
   )
 }

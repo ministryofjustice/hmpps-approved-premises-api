@@ -176,6 +176,8 @@ data class PlacementRequestEntity(
 
   @Enumerated(value = EnumType.STRING)
   var withdrawalReason: PlacementRequestWithdrawalReason?,
+
+  var dueAt: OffsetDateTime?,
 ) {
   fun isInWithdrawableState() = isActive()
 

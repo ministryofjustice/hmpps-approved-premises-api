@@ -31,6 +31,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var placementDates: Yielded<MutableList<PlacementDateEntity>?> = { null }
   private var placementType: Yielded<PlacementType?> = { null }
   private var withdrawalReason: Yielded<PlacementApplicationWithdrawalReason?> = { null }
+  private var dueAt: Yielded<OffsetDateTime?> = { null }
 
   fun withDefaults() = apply {
     this.createdByUser = { UserEntityFactory().withDefaultProbationRegion().produce() }
@@ -92,6 +93,10 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.withdrawalReason = { withdrawalReason }
   }
 
+  fun withDueAt(dueAt: OffsetDateTime) = apply {
+    this.dueAt = { dueAt }
+  }
+
   override fun produce(): PlacementApplicationEntity = PlacementApplicationEntity(
     id = this.id(),
     application = this.application?.invoke() ?: throw RuntimeException("Must provide an application"),
@@ -111,5 +116,6 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     placementDates = this.placementDates() ?: mutableListOf(),
     placementRequests = mutableListOf(),
     withdrawalReason = this.withdrawalReason(),
+    dueAt = this.dueAt(),
   )
 }
