@@ -372,7 +372,7 @@ class PlacementRequestService(
   fun getPlacementRequestForInitialApplicationDates(applicationId: UUID) =
     placementRequestRepository.findByApplication_id(applicationId)
       .filter { it.isForApplicationsArrivalDate() }
-      .firstOrNull { it.isActive() }
+      .firstOrNull { !it.isReallocated() }
 
   private fun updateApplicationStatusOnWithdrawal(
     placementRequest: PlacementRequestEntity,

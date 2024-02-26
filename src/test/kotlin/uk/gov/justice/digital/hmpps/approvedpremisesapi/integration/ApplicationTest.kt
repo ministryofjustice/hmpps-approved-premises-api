@@ -1233,7 +1233,7 @@ class ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get placement applications returns initial request for placement alongside other placement apps if requested()`() {
+    fun `Get placement applications returns initial request for placement alongside other placement apps if requested, even if withdrawn`() {
       `Given a User` { user, jwt ->
         `Given a Placement Application`(
           createdByUser = user,
@@ -1247,7 +1247,7 @@ class ApplicationTest : IntegrationTestBase() {
           val application = placementApplicationEntity.application
 
           val placementRequestEntity = placementRequestFactory.produceAndPersist {
-            val assessment = application.assessments.get(0)
+            val assessment = application.assessments[0]
 
             val placementRequirements = placementRequirementsFactory.produceAndPersist {
               withApplication(application)
@@ -1265,6 +1265,8 @@ class ApplicationTest : IntegrationTestBase() {
             withApplication(application)
             withAssessment(assessment)
             withPlacementRequirements(placementRequirements)
+            withReallocatedAt(null)
+            withIsWithdrawn(true)
           }
 
           val applicationId = placementApplicationEntity.application.id
