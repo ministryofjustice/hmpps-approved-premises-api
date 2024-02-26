@@ -1,7 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.hibernate.annotations.Type
+import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
@@ -36,6 +39,13 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
   fun findAllSubmittedNonReallocatedAndNonWithdrawnApplicationsForApplicationId(applicationId: UUID): List<PlacementApplicationEntity>
 
   fun findByApplication(application: ApplicationEntity): List<PlacementApplicationEntity>
+
+  @Query("SELECT p from PlacementApplicationEntity p WHERE p.dueAt IS NULL")
+  fun findAllWithNullDueAt(pageable: Pageable?): Slice<PlacementApplicationEntity>
+
+  @Modifying
+  @Query("UPDATE PlacementApplicationEntity p SET p.dueAt = :dueAt WHERE p.id = :id")
+  fun updateDueAt(id: UUID, dueAt: OffsetDateTime?)
 }
 
 @Entity

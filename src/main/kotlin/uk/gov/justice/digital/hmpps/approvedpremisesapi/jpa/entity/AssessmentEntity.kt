@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
@@ -204,6 +206,13 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
     nativeQuery = true,
   )
   fun findAllReferralsDataForMonthAndYear(month: Int, year: Int): List<ReferralsDataResult>
+
+  @Query("SELECT a from ApprovedPremisesAssessmentEntity a WHERE a.dueAt IS NULL")
+  fun findAllWithNullDueAt(pageable: Pageable?): Slice<ApprovedPremisesAssessmentEntity>
+
+  @Modifying
+  @Query("UPDATE ApprovedPremisesAssessmentEntity a SET a.dueAt = :dueAt WHERE a.id = :id")
+  fun updateDueAt(id: UUID, dueAt: OffsetDateTime?)
 }
 
 @Entity
