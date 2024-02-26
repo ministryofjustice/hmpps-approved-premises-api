@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
@@ -41,6 +42,7 @@ class PlacementApplicationTransformer(
       isWithdrawn = jpa.isWithdrawn(),
       withdrawalReason = getWithdrawalReason(jpa.withdrawalReason),
       type = PlacementApplicationType.additional,
+      placementDates = jpa.placementDates.map { PlacementDates(it.expectedArrival, it.duration) },
     )
   }
 
@@ -65,6 +67,7 @@ class PlacementApplicationTransformer(
       isWithdrawn = jpa.isWithdrawn,
       withdrawalReason = placementRequestTransformer.getWithdrawalReason(jpa.withdrawalReason),
       type = PlacementApplicationType.initial,
+      placementDates = listOf(PlacementDates(jpa.expectedArrival, jpa.duration)),
     )
   }
 
