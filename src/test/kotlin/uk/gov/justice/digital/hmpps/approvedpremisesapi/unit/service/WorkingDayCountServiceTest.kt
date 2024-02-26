@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.Ba
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.CountryBankHolidays
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.UKBankHolidays
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNextWorkingDay
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
@@ -222,5 +223,20 @@ class WorkingDayCountServiceTest {
     val expected = LocalDate.of(2023, 5, 15)
 
     assertThat(workingDayCountService.addWorkingDays(thursday, 10)).isEqualTo(expected)
+  }
+
+  @Test
+  fun `getNextWorking day returns next working day`() {
+    every {
+      mockGovUKBankHolidaysApiClient.getUKBankHolidays()
+    } returns emptyBankHolidays
+
+    val date = LocalDate.now()
+
+    assertThat(
+      workingDayCountService.nextWorkingDay(date),
+    ).isEqualTo(
+      date.getNextWorkingDay(workingDayCountService.bankHolidays),
+    )
   }
 }
