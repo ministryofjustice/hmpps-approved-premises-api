@@ -13,7 +13,7 @@ import javax.persistence.Table
 
 @Repository
 interface AppealRepository : JpaRepository<AppealEntity, UUID> {
-  fun findByApplication(application: ApplicationEntity): AppealEntity?
+  fun findByApplication(application: ApplicationEntity): List<AppealEntity>
 }
 
 @Entity
