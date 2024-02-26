@@ -2032,6 +2032,12 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: includeInitialRequestForPlacement
+          in: query
+          description: If true, will return a PlacementApplication of type 'Initial' representing the placement requests as part of the original application submission (i.e. when arrival date is known).
+          required: false
+          schema:
+            type: boolean
         - name: X-Service-Name
           in: header
           required: true

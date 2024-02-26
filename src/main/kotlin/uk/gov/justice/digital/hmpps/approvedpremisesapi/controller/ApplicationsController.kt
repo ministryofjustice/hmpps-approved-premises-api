@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AppealTransformer
@@ -82,6 +83,7 @@ class ApplicationsController(
   private val withdrawableService: WithdrawableService,
   private val appealService: AppealService,
   private val appealTransformer: AppealTransformer,
+  private val placementRequestService: PlacementRequestService,
 ) : ApplicationsApiDelegate {
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
@@ -493,17 +495,27 @@ class ApplicationsController(
   override fun applicationsApplicationIdPlacementApplicationsGet(
     applicationId: UUID,
     xServiceName: ServiceName,
+    includeInitialRequestForPlacement: Boolean?,
   ): ResponseEntity<List<PlacementApplication>> {
     if (xServiceName != ServiceName.approvedPremises) {
       throw ForbiddenProblem()
     }
+
+    val initialPlacementRequest = if (includeInitialRequestForPlacement == true) {
+      listOfNotNull(
+        placementRequestService.getPlacementRequestForInitialApplicationDates(applicationId)?.let {
+          placementApplicationTransformer.transformPlacementRequestJpaToApi(it)
+        },
+      )
+    } else { emptyList() }
+
     val placementApplicationEntities =
       placementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(applicationId)
-    val placementApplications = placementApplicationEntities.map {
+    val additionalPlacementRequests = placementApplicationEntities.map {
       placementApplicationTransformer.transformJpaToApi(it)
     }
 
-    return ResponseEntity.ok(placementApplications)
+    return ResponseEntity.ok(initialPlacementRequest.plus(additionalPlacementRequests))
   }
 
   override fun applicationsApplicationIdWithdrawablesGet(

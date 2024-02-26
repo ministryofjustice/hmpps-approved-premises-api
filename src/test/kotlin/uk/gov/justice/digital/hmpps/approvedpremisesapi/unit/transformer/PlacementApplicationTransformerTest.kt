@@ -19,15 +19,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementDateEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -38,7 +45,15 @@ class PlacementApplicationTransformerTest {
     registerModule(JavaTimeModule())
     registerKotlinModule()
   }
-  private val placementApplicationTransformer = PlacementApplicationTransformer(objectMapper)
+
+  private val jsonSchemaService = mockk<JsonSchemaService>()
+  private val placementRequestTransformer = mockk<PlacementRequestTransformer>()
+
+  private val placementApplicationTransformer = PlacementApplicationTransformer(
+    objectMapper,
+    jsonSchemaService,
+    placementRequestTransformer,
+  )
 
   private var user = UserEntityFactory()
     .withYieldedProbationRegion {
@@ -206,5 +221,78 @@ class PlacementApplicationTransformerTest {
     }
 
     assertThat(result.withdrawalReason).isEqualTo(WithdrawPlacementRequestReason.errorInPlacementRequest)
+  }
+
+  @Test
+  fun `transformPlacementRequestJpaToApi converts correctly`() {
+    val placementRequest = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withAssessment(assessment)
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
+          .withApplication(application)
+          .withAssessment(assessment)
+          .produce(),
+      )
+      .produce()
+
+    val schemaId = UUID.randomUUID()
+    every {
+      jsonSchemaService.getNewestSchema<ApprovedPremisesPlacementApplicationJsonSchemaEntity>(any())
+    } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().withId(schemaId).produce()
+
+    every { placementRequestTransformer.getWithdrawalReason(null) } returns null
+
+    val result = placementApplicationTransformer.transformPlacementRequestJpaToApi(placementRequest)
+
+    assertThat(result.id).isEqualTo(placementRequest.id)
+    assertThat(result.applicationId).isEqualTo(application.id)
+    assertThat(result.applicationCompletedAt).isEqualTo(application.submittedAt!!.toInstant())
+    assertThat(result.assessmentId).isEqualTo(assessment.id)
+    assertThat(result.assessmentCompletedAt).isEqualTo(assessment.submittedAt!!.toInstant())
+    assertThat(result.createdByUserId).isEqualTo(application.createdByUser.id)
+    assertThat(result.schemaVersion).isEqualTo(schemaId)
+    assertThat(result.createdAt).isEqualTo(placementRequest.createdAt.toInstant())
+    assertThat(result.data).isEqualTo("{}")
+    assertThat(result.document).isEqualTo("{}")
+    assertThat(result.outdatedSchema).isEqualTo(false)
+    assertThat(result.submittedAt).isEqualTo(application.submittedAt?.toInstant())
+    assertThat(result.canBeWithdrawn).isEqualTo(true)
+    assertThat(result.isWithdrawn).isEqualTo(false)
+    assertThat(result.withdrawalReason).isNull()
+    assertThat(result.type).isEqualTo(PlacementApplicationType.initial)
+  }
+
+  @Test
+  fun `transformPlacementRequestJpaToApi converts correctly for withdrawn request`() {
+    val placementRequest = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withAssessment(assessment)
+      .withPlacementRequirements(
+        PlacementRequirementsEntityFactory()
+          .withApplication(application)
+          .withAssessment(assessment)
+          .produce(),
+      )
+      .withIsWithdrawn(true)
+      .withWithdrawalReason(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+      .produce()
+
+    val schemaId = UUID.randomUUID()
+    every {
+      jsonSchemaService.getNewestSchema<ApprovedPremisesPlacementApplicationJsonSchemaEntity>(any())
+    } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().withId(schemaId).produce()
+
+    every {
+      placementRequestTransformer.getWithdrawalReason(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+    } returns WithdrawPlacementRequestReason.duplicatePlacementRequest
+
+    val result = placementApplicationTransformer.transformPlacementRequestJpaToApi(placementRequest)
+
+    assertThat(result.id).isEqualTo(placementRequest.id)
+    assertThat(result.canBeWithdrawn).isEqualTo(false)
+    assertThat(result.isWithdrawn).isEqualTo(true)
+    assertThat(result.withdrawalReason).isEqualTo(WithdrawPlacementRequestReason.duplicatePlacementRequest)
+    assertThat(result.type).isEqualTo(PlacementApplicationType.initial)
   }
 }
