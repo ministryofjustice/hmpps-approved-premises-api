@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import arrow.core.Either
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -268,22 +269,11 @@ class PlacementApplicationService(
   ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
 
-    when (placementApplicationAuthorisationResult) {
-      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
-      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.Success -> Unit
+    if (placementApplicationAuthorisationResult is Either.Left) {
+      return placementApplicationAuthorisationResult.value
     }
 
-    val placementApplicationValidationResult =
-      confirmApplicationCanBeUpdatedOrSubmitted(
-        placementApplicationAuthorisationResult.entity,
-      )
-
-    if (placementApplicationValidationResult !is ValidatableActionResult.Success) {
-      return AuthorisableActionResult.Success(placementApplicationValidationResult)
-    }
-
-    val placementApplicationEntity = placementApplicationValidationResult.entity
+    val placementApplicationEntity = (placementApplicationAuthorisationResult as Either.Right).value
 
     placementApplicationEntity.data = data
 
@@ -302,22 +292,11 @@ class PlacementApplicationService(
   ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
 
-    when (placementApplicationAuthorisationResult) {
-      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
-      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.Success -> Unit
+    if (placementApplicationAuthorisationResult is Either.Left) {
+      return placementApplicationAuthorisationResult.value
     }
 
-    val placementApplicationValidationResult =
-      confirmApplicationCanBeUpdatedOrSubmitted(
-        placementApplicationAuthorisationResult.entity,
-      )
-
-    if (placementApplicationValidationResult !is ValidatableActionResult.Success) {
-      return AuthorisableActionResult.Success(placementApplicationValidationResult)
-    }
-
-    val placementApplicationEntity = placementApplicationValidationResult.entity
+    val placementApplicationEntity = (placementApplicationAuthorisationResult as Either.Right).value
 
     val allocatedUser = userAllocator.getUserForPlacementApplicationAllocation(placementApplicationEntity)
 
@@ -456,16 +435,22 @@ class PlacementApplicationService(
     return placementApplicationEntity
   }
 
-  private fun getApplicationForUpdateOrSubmit(id: UUID): AuthorisableActionResult<PlacementApplicationEntity> {
-    val placementApplication =
-      placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+  private fun getApplicationForUpdateOrSubmit(id: UUID): Either<AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>>, PlacementApplicationEntity> {
+    val placementApplication = placementApplicationRepository.findByIdOrNull(id)
+      ?: return Either.Left(AuthorisableActionResult.NotFound())
     val user = userService.getUserForRequest()
 
     if (placementApplication.createdByUser != user) {
-      return AuthorisableActionResult.Unauthorised()
+      return Either.Left(AuthorisableActionResult.Unauthorised())
     }
 
-    return AuthorisableActionResult.Success(placementApplication)
+    val canBeUpdatedOrSubmittedResult = confirmApplicationCanBeUpdatedOrSubmitted(placementApplication)
+
+    if (canBeUpdatedOrSubmittedResult !is ValidatableActionResult.Success) {
+      return Either.Left(AuthorisableActionResult.Success(canBeUpdatedOrSubmittedResult))
+    }
+
+    return Either.Right(placementApplication)
   }
 
   private fun confirmApplicationCanBeUpdatedOrSubmitted(
