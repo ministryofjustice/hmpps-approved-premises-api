@@ -296,11 +296,11 @@ class PlacementApplicationService(
       return placementApplicationAuthorisationResult.value
     }
 
-    val placementApplicationEntity = (placementApplicationAuthorisationResult as Either.Right).value
+    val submittedPlacementApplication = (placementApplicationAuthorisationResult as Either.Right).value
 
-    val allocatedUser = userAllocator.getUserForPlacementApplicationAllocation(placementApplicationEntity)
+    val allocatedUser = userAllocator.getUserForPlacementApplicationAllocation(submittedPlacementApplication)
 
-    placementApplicationEntity.apply {
+    submittedPlacementApplication.apply {
       document = translatedDocument
       allocatedToUser = allocatedUser
       submittedAt = OffsetDateTime.now()
@@ -308,32 +308,36 @@ class PlacementApplicationService(
       placementType = getPlacementType(apiPlacementType)
     }
 
-    placementApplicationEntity.dueAt = taskDeadlineService.getDeadline(placementApplicationEntity)
+    submittedPlacementApplication.dueAt = taskDeadlineService.getDeadline(submittedPlacementApplication)
 
-    val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
+    val baselinePlacementApplication = placementApplicationRepository.save(submittedPlacementApplication)
 
+    saveDatesOnSubmission(baselinePlacementApplication, apiPlacementDates)
+
+    cas1PlacementApplicationEmailService.placementApplicationSubmitted(baselinePlacementApplication)
+    if (baselinePlacementApplication.allocatedToUser != null) {
+      cas1PlacementApplicationEmailService.placementApplicationAllocated(baselinePlacementApplication)
+    }
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(baselinePlacementApplication),
+    )
+  }
+
+  private fun saveDatesOnSubmission(baselinePlacementApplication: PlacementApplicationEntity,
+                                    apiPlacementDates: List<ApiPlacementDates>) {
     val placementDates = apiPlacementDates.map {
       PlacementDateEntity(
         id = UUID.randomUUID(),
         expectedArrival = it.expectedArrival,
         duration = it.duration,
-        placementApplication = placementApplicationEntity,
+        placementApplication = baselinePlacementApplication,
         createdAt = OffsetDateTime.now(),
       )
     }.toMutableList()
 
     placementDateRepository.saveAll(placementDates)
-    placementApplicationEntity.placementDates = placementDates
-
-    cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplicationEntity)
-
-    if (allocatedUser != null) {
-      cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplicationEntity)
-    }
-
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedApplication),
-    )
+    baselinePlacementApplication.placementDates = placementDates
   }
 
   @Transactional
