@@ -11,7 +11,7 @@ import java.util.UUID
 interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity, UUID> {
   @Query(
     """
-    SELECT DISTINCT
+    SELECT DISTINCT on (application.id, booking_made_event.booking_id)
       cast(application.id as TEXT) as id,
       submission_event.data -> 'eventDetails' -> 'personReference' ->> 'crn' as crn,
       assessments.allocated_at as lastAllocatedToAssessorDate,
@@ -59,6 +59,19 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       non_arrival_event.data -> 'eventDetails' ->> 'reason' as notArrivedReason,
       cast(placement_applications.data -> 'request-a-placement' -> 'decision-to-release' ->> 'decisionToReleaseDate' as date) as paroleDecisionDate,
       (
+        select count(*)
+        from appeals
+        where appeals.application_id = application.id
+        and appeals.assessment_id = assessment_event.assessment_id
+      ) as assessmentAppealCount,
+      latest_appeal.decision as lastAssessmentAppealedDecision,
+      latest_appeal.appeal_date as lastAssessmentAppealedDate,
+      (
+        select decision
+        from assessments
+        where assessments.id = assessment_event.assessment_id
+      ) as assessmentAppealedFromStatus,
+      (
         CASE
           WHEN placement_applications.id IS NULL THEN 'referral'
           ELSE 'placement request'
@@ -84,12 +97,20 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       left join domain_events non_arrival_event on non_arrival_event.type = 'APPROVED_PREMISES_PERSON_NOT_ARRIVED'
       and application.id = non_arrival_event.application_id
       left join assessments on application.id = assessments.application_id AND assessments.reallocated_at IS NULL
+      left join (
+        select distinct on (appeals.application_id, appeals.assessment_id)
+          appeals.*
+        from appeals
+        order by appeals.application_id, appeals.assessment_id, created_at desc
+      ) latest_appeal on latest_appeal.application_id = application.id
+      and latest_appeal.assessment_id = assessment_event.assessment_id
       left join placement_requests on placement_requests.booking_id = booking_made_event.booking_id
       left join placement_applications on placement_applications.id = placement_requests.placement_application_id
     where
       date_part('month', application.submitted_at) = :month
       AND date_part('year', application.submitted_at) = :year
-      AND application.service = 'approved-premises';
+      AND application.service = 'approved-premises'
+    order by application.id, booking_made_event.booking_id, latest_appeal.appeal_date desc nulls last;
     """,
     nativeQuery = true,
   )
@@ -158,7 +179,20 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       departure_event.data -> 'eventDetails' ->> 'reason' as departureReason,
       departure_event.data -> 'eventDetails' -> 'destination' -> 'moveOnCategory' ->> 'description' as departureMoveOnCategory,
       non_arrival_event.data IS NOT NULL as hasNotArrived,
-      non_arrival_event.data -> 'eventDetails' ->> 'reason' as notArrivedReason
+      non_arrival_event.data -> 'eventDetails' ->> 'reason' as notArrivedReason,
+      (
+        select count(*)
+        from appeals
+        where appeals.application_id = application.id
+        and appeals.assessment_id = assessment_event.assessment_id
+      ) as assessmentAppealCount,
+      latest_appeal.decision as lastAssessmentAppealedDecision,
+      latest_appeal.appeal_date as lastAssessmentAppealedDate,
+      (
+        select decision
+        from assessments
+        where assessments.id = assessment_event.assessment_id
+      ) as assessmentAppealedFromStatus
     from
       applications application
       left join approved_premises_applications apa on application.id = apa.id
@@ -180,6 +214,12 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       and application.id = non_arrival_event.application_id
       left join assessments on application.id = assessments.application_id
       AND assessments.reallocated_at IS NULL
+      left join (
+        select distinct on (appeals.application_id, appeals.assessment_id)
+          appeals.*
+        from appeals
+        order by appeals.application_id, appeals.assessment_id, created_at desc
+      ) latest_appeal on latest_appeal.application_id = application.id
     where
       date_part('month', application.submitted_at) = :month
       AND date_part('year', application.submitted_at) = :year
@@ -187,7 +227,8 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
     order by
       application.id,
       submission_event.occurred_at, 
-      booking_made_event.occurred_at desc;
+      booking_made_event.occurred_at desc,
+      latest_appeal.appeal_date desc nulls last;
     """,
     nativeQuery = true,
   )
@@ -235,5 +276,9 @@ interface ApplicationEntityReportRow {
   fun getHasNotArrived(): Boolean?
   fun getNotArrivedReason(): String?
   fun getParoleDecisionDate(): Date?
+  fun getAssessmentAppealCount(): Int?
+  fun getLastAssessmentAppealedDecision(): String?
+  fun getLastAssessmentAppealedDate(): Date?
+  fun getAssessmentAppealedFromStatus(): String?
   fun getType(): String?
 }

@@ -17,7 +17,7 @@ class ApplicationReportGenerator : ReportGenerator<ApplicationEntityReportRow, A
         lastAllocatedToAssessorDate = this.getLastAllocatedToAssessorDate()?.toLocalDateTime()?.toLocalDate(),
         applicationAssessedDate = this.getApplicationAssessedDate()?.toLocalDate(),
         assessorCru = this.getAssessorCru(),
-        assessmentDecision = this.getAssessmentDecision(),
+        assessmentDecision = this.deriveAssessmentDecision(),
         assessmentDecisionRationale = this.getAssessmentDecisionRationale(),
         agreeWithShortNoticeReason = this.getAgreeWithShortNoticeReason(),
         reasonForLateApplication = this.getReasonForLateApplication(),
@@ -52,8 +52,17 @@ class ApplicationReportGenerator : ReportGenerator<ApplicationEntityReportRow, A
         hasNotArrived = this.getHasNotArrived(),
         notArrivedReason = this.getNotArrivedReason(),
         paroleDecisionDate = this.getParoleDecisionDate()?.toLocalDate(),
+        assessmentAppealCount = this.getAssessmentAppealCount(),
+        lastAssessmentAppealedDecision = this.getLastAssessmentAppealedDecision(),
+        lastAssessmentAppealedDate = this.getLastAssessmentAppealedDate()?.toLocalDate(),
+        assessmentAppealedFromStatus = this.getAssessmentAppealedFromStatus(),
         type = this.getType(),
       ),
     )
+  }
+
+  private fun ApplicationEntityReportRow.deriveAssessmentDecision() = when (this.getAssessmentAppealCount()) {
+    0, null -> this.getAssessmentDecision()
+    else -> this.getLastAssessmentAppealedDecision()
   }
 }
