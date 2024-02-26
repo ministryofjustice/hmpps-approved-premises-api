@@ -583,6 +583,15 @@ components:
           - RelatedApplicationWithdrawn
           - RelatedPlacementRequestWithdrawn
           - RelatedPlacementApplicationWithdrawn
+    PlacementApplicationType:
+      type: string
+      description: |
+        'Initial' means that the request for placement was created for the arrival date included on the original application. 
+        'Additional' means the request for placement was created after the application had been assessed as suitable.
+        A given application should only have, at most, one request for placement of type 'Initial'.
+      enum:
+        - Initial
+        - Additional
     Booking:
       allOf:
         - $ref: '#/components/schemas/BookingBody'
@@ -3511,6 +3520,7 @@ components:
           properties:
             id:
               type: string
+              description: If type is 'Additional', provides the PlacementApplication ID. If type is 'Initial' this field provides a PlacementRequest ID.
               format: uuid
             createdByUserId:
               type: string
@@ -3528,6 +3538,7 @@ components:
               format: date-time
             assessmentId:
               type: string
+              description: If type is 'Additional', provides the PlacementApplication ID. If type is 'Initial' this field shouldn't be used.
               format: uuid
             assessmentCompletedAt:
               type: string
@@ -3545,6 +3556,8 @@ components:
               type: boolean
             withdrawalReason:
               $ref: '#/components/schemas/WithdrawPlacementRequestReason'
+            type:
+              $ref: '#/components/schemas/PlacementApplicationType'
           required:
             - id
             - createdByUserId
@@ -3556,6 +3569,7 @@ components:
             - applicationCompletedAt
             - canBeWithdrawn
             - isWithdrawn
+            - type
     NewPlacementApplication:
       type: object
       properties:

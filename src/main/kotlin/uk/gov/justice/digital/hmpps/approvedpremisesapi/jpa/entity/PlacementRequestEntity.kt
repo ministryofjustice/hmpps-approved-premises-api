@@ -25,6 +25,8 @@ import javax.persistence.Table
 @Suppress("FunctionNaming")
 @Repository
 interface PlacementRequestRepository : JpaRepository<PlacementRequestEntity, UUID> {
+  fun findByApplication_id(applicationId: UUID): List<PlacementRequestEntity>
+
   fun findByApplication(application: ApprovedPremisesApplicationEntity): List<PlacementRequestEntity>
 
   @Query(
@@ -179,7 +181,7 @@ data class PlacementRequestEntity(
 
   fun hasActiveBooking() = booking != null && booking?.cancellations.isNullOrEmpty()
 
-  fun expectedDeparture() = expectedArrival.plusDays(duration.toLong())
+  fun expectedDeparture(): LocalDate = expectedArrival.plusDays(duration.toLong())
 
   fun isReallocated() = reallocatedAt != null
 

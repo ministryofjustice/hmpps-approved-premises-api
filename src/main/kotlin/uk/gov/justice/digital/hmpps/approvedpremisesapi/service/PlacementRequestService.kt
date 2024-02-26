@@ -369,6 +369,11 @@ class PlacementRequestService(
     return AuthorisableActionResult.Success(Unit)
   }
 
+  fun getPlacementRequestForInitialApplicationDates(applicationId: UUID) =
+    placementRequestRepository.findByApplication_id(applicationId)
+      .filter { it.isForApplicationsArrivalDate() }
+      .firstOrNull { it.isActive() }
+
   private fun updateApplicationStatusOnWithdrawal(
     placementRequest: PlacementRequestEntity,
     isUserRequestedWithdrawal: Boolean,
