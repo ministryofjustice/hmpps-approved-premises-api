@@ -61,6 +61,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequirementsService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
@@ -85,6 +86,7 @@ class AcceptAssessmentTest {
   private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
   private val userAllocator = mockk<UserAllocator>()
   private val objectMapperMock = mockk<ObjectMapper>()
+  private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
 
   private val assessmentService = AssessmentService(
     userServiceMock,
@@ -107,6 +109,7 @@ class AcceptAssessmentTest {
     UrlTemplate("http://frontend/assessments/#id"),
     sendPlacementRequestNotifications = true,
     sendNewWithdrawalNotifications = true,
+    taskDeadlineServiceMock,
   )
 
   lateinit var user: UserEntity

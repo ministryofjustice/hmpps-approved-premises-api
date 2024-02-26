@@ -91,6 +91,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -2066,6 +2067,8 @@ class ApplicationTest : IntegrationTestBase() {
             CaseDetailFactory().produce(),
           )
 
+          GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
           webTestClient.post()
             .uri("/applications/$applicationId/submission")
             .header("Authorization", "Bearer $jwt")
@@ -2215,6 +2218,8 @@ class ApplicationTest : IntegrationTestBase() {
             CaseDetailFactory().produce(),
           )
 
+          GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
           val apArea = apAreaEntityFactory.produceAndPersist {
           }
 
@@ -2355,6 +2360,8 @@ class ApplicationTest : IntegrationTestBase() {
           )
 
           val responseStatuses = mutableListOf<HttpStatus>()
+
+          GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
           (1..10).map {
             val thread = Thread {

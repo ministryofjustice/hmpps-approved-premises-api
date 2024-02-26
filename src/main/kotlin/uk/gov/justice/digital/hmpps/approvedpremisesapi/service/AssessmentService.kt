@@ -81,6 +81,7 @@ class AssessmentService(
   private val sendPlacementRequestNotifications: Boolean,
   @Value("\${notify.send-new-withdrawal-notifications}")
   private val sendNewWithdrawalNotifications: Boolean,
+  private val taskDeadlineService: TaskDeadlineService,
 ) {
   fun getVisibleAssessmentSummariesForUserCAS1(
     user: UserEntity,
@@ -215,6 +216,8 @@ class AssessmentService(
       createdFromAppeal = createdFromAppeal,
       dueAt = null,
     )
+
+    assessment.dueAt = taskDeadlineService.getDeadline(assessment)
 
     val allocatedUser = userAllocator.getUserForAssessmentAllocation(assessment)
     assessment.allocatedToUser = allocatedUser
