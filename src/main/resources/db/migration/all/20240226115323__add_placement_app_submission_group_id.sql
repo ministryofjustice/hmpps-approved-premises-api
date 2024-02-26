@@ -1,0 +1,1 @@
+ALTER TABLE placement_applications ADD COLUMN placement_application_submission_group_id UUID NULL

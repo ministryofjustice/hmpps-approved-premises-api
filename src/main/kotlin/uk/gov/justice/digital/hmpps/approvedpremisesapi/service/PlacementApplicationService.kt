@@ -78,26 +78,29 @@ class PlacementApplicationService(
       return generalError("You cannot request a placement request for an application that has been withdrawn")
     }
 
-    val placementApplication = PlacementApplicationEntity(
-      id = UUID.randomUUID(),
-      application = application,
-      createdByUser = user,
-      schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java),
-      schemaUpToDate = true,
-      data = null,
-      document = null,
-      createdAt = OffsetDateTime.now(),
-      submittedAt = null,
-      allocatedToUser = null,
-      allocatedAt = null,
-      reallocatedAt = null,
-      decision = null,
-      decisionMadeAt = null,
-      placementType = null,
-      placementDates = mutableListOf(),
-      placementRequests = mutableListOf(),
-      withdrawalReason = null,
-      dueAt = null,
+    val placementApplication = placementApplicationRepository.save(
+      PlacementApplicationEntity(
+        id = UUID.randomUUID(),
+        application = application,
+        createdByUser = user,
+        schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java),
+        schemaUpToDate = true,
+        data = null,
+        document = null,
+        createdAt = OffsetDateTime.now(),
+        submittedAt = null,
+        allocatedToUser = null,
+        allocatedAt = null,
+        reallocatedAt = null,
+        decision = null,
+        decisionMadeAt = null,
+        placementType = null,
+        placementDates = mutableListOf(),
+        placementRequests = mutableListOf(),
+        withdrawalReason = null,
+        dueAt = null,
+        submissionGroupId = UUID.randomUUID(),
+      ),
     )
 
     val createdApplication = placementApplicationRepository.save(placementApplication)

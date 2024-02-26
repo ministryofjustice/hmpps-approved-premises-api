@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
@@ -103,6 +104,9 @@ data class PlacementApplicationEntity(
   var withdrawalReason: PlacementApplicationWithdrawalReason?,
 
   var dueAt: OffsetDateTime?,
+
+  @Column(name = "placement_application_submission_group_id")
+  var submissionGroupId: UUID?,
 ) {
   fun isReallocated() = reallocatedAt != null
 

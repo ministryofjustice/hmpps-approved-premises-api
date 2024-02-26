@@ -32,6 +32,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var placementType: Yielded<PlacementType?> = { null }
   private var withdrawalReason: Yielded<PlacementApplicationWithdrawalReason?> = { null }
   private var dueAt: Yielded<OffsetDateTime?> = { null }
+  private var submissionGroupId: Yielded<UUID> = { UUID.randomUUID() }
 
   fun withDefaults() = apply {
     this.createdByUser = { UserEntityFactory().withDefaultProbationRegion().produce() }
@@ -117,5 +118,6 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     placementRequests = mutableListOf(),
     withdrawalReason = this.withdrawalReason(),
     dueAt = this.dueAt(),
+    submissionGroupId = this.submissionGroupId(),
   )
 }
