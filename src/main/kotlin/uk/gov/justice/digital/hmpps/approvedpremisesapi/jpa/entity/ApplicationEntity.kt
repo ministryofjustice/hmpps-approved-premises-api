@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.App
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import java.sql.Timestamp
+import java.time.Duration
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -32,6 +33,8 @@ import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.PrimaryKeyJoinColumn
 import javax.persistence.Table
+import kotlin.time.Duration.Companion.days
+import kotlin.time.toKotlinDuration
 
 @Repository
 interface ApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
@@ -353,6 +356,8 @@ class ApprovedPremisesApplicationEntity(
   fun getLatestPlacementRequest(): PlacementRequestEntity? = this.placementRequests.maxByOrNull { it.createdAt }
   fun getLatestBooking(): BookingEntity? = getLatestPlacementRequest()?.booking
   fun isSubmitted() = submittedAt != null
+
+  fun isShortNoticeApplication() = this.arrivalDate?.let { Duration.between(this.createdAt, this.arrivalDate).toKotlinDuration() < 28.days }
 }
 
 @Repository
