@@ -122,7 +122,7 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
     "SELECT b FROM BookingEntity b WHERE (b.bed, b.departureDate) IN (" +
       "  SELECT b2.bed, MAX(b2.departureDate)" +
       "  FROM BookingEntity b2 " +
-      "  WHERE b2.departureDate < :date " +
+      "  WHERE b2.departureDate <= :date " +
       "  AND b2.bed.id IN :bedIds " +
       "  AND SIZE(b2.cancellations) = 0 " +
       "  GROUP BY b2.bed " +

@@ -321,6 +321,84 @@ class BedSearchTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Searching for a Temporary Accommodation Bed returns results when existing booking departure-date is same as search start-date`() {
+    val probationRegion = probationRegionEntityFactory.produceAndPersist {
+      withYieldedApArea {
+        apAreaEntityFactory.produceAndPersist()
+      }
+    }
+
+    val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
+      withProbationRegion(probationRegion)
+    }
+
+    `Given a User`(
+      probationRegion = probationRegion,
+    ) { _, jwt ->
+      val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withProbationRegion(probationRegion)
+        withLocalAuthorityArea(localAuthorityArea)
+        withProbationDeliveryUnit(searchPdu)
+        withProbationRegion(probationRegion)
+        withStatus(PropertyStatus.active)
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withPremises(premises)
+      }
+
+      val bed = bedEntityFactory.produceAndPersist {
+        withName("Matching Bed")
+        withRoom(room)
+      }
+
+      val booking = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withBed(bed)
+        withArrivalDate(LocalDate.parse("2022-12-21"))
+        withDepartureDate(LocalDate.parse("2023-03-21"))
+      }
+
+      val turnaround = turnaroundFactory.produceAndPersist {
+        withBooking(booking)
+        withWorkingDayCount(2)
+      }
+
+      booking.turnarounds = mutableListOf(turnaround)
+
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+      webTestClient.post()
+        .uri("/beds/search")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          TemporaryAccommodationBedSearchParameters(
+            startDate = LocalDate.parse("2023-03-21"),
+            durationDays = 7,
+            serviceName = "temporary-accommodation",
+            probationDeliveryUnit = searchPdu.name,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            BedSearchResults(
+              resultsRoomCount = 0,
+              resultsPremisesCount = 0,
+              resultsBedCount = 0,
+              results = listOf(),
+            ),
+          ),
+        )
+    }
+  }
+
+  @Test
   fun `Searching for a Temporary Accommodation Bed returns results which include overlapping bookings for rooms in the same premises`() {
     val probationRegion = probationRegionEntityFactory.produceAndPersist {
       withYieldedApArea {
