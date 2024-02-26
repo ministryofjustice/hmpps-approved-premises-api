@@ -13,6 +13,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
@@ -93,6 +94,7 @@ class PlacementApplicationTransformerTest {
     assertThat(result.canBeWithdrawn).isEqualTo(true)
     assertThat(result.isWithdrawn).isEqualTo(false)
     assertThat(result.withdrawalReason).isNull()
+    assertThat(result.type).isEqualTo(PlacementApplicationType.additional)
   }
 
   @Test

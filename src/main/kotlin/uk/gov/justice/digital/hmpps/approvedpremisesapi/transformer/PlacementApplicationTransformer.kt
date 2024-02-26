@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
@@ -33,6 +34,7 @@ class PlacementApplicationTransformer(
       canBeWithdrawn = jpa.isInWithdrawableState(),
       isWithdrawn = jpa.isWithdrawn(),
       withdrawalReason = getWithdrawalReason(jpa.withdrawalReason),
+      type = PlacementApplicationType.additional,
     )
   }
 
