@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
@@ -655,6 +656,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .produce(),
             )
 
+            GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
             val placementDates = listOf(
               PlacementDates(
                 expectedArrival = LocalDate.now(),
@@ -877,6 +880,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now()) { placementRequirements ->
                   `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now().minusDays(4)) { _ ->
                     `Given placement dates`(placementApplicationEntity = placementApplicationEntity) { placementDates ->
+                      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
                       webTestClient.post()
                         .uri("/placement-applications/${placementApplicationEntity.id}/decision")
                         .header("Authorization", "Bearer $jwt")

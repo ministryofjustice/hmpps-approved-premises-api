@@ -53,6 +53,7 @@ class PlacementApplicationService(
   private val cas1PlacementApplicationDomainEventService: Cas1PlacementApplicationDomainEventService,
   @Value("\${notify.send-placement-request-notifications}")
   private val sendPlacementRequestNotifications: Boolean,
+  private val taskDeadlineService: TaskDeadlineService,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -77,29 +78,29 @@ class PlacementApplicationService(
       return generalError("You cannot request a placement request for an application that has been withdrawn")
     }
 
-    val createdApplication = placementApplicationRepository.save(
-      PlacementApplicationEntity(
-        id = UUID.randomUUID(),
-        application = application,
-        createdByUser = user,
-        schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java),
-        schemaUpToDate = true,
-        data = null,
-        document = null,
-        createdAt = OffsetDateTime.now(),
-        submittedAt = null,
-        allocatedToUser = null,
-        allocatedAt = null,
-        reallocatedAt = null,
-        decision = null,
-        decisionMadeAt = null,
-        placementType = null,
-        placementDates = mutableListOf(),
-        placementRequests = mutableListOf(),
-        withdrawalReason = null,
-        dueAt = null,
-      ),
+    val placementApplication = PlacementApplicationEntity(
+      id = UUID.randomUUID(),
+      application = application,
+      createdByUser = user,
+      schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java),
+      schemaUpToDate = true,
+      data = null,
+      document = null,
+      createdAt = OffsetDateTime.now(),
+      submittedAt = null,
+      allocatedToUser = null,
+      allocatedAt = null,
+      reallocatedAt = null,
+      decision = null,
+      decisionMadeAt = null,
+      placementType = null,
+      placementDates = mutableListOf(),
+      placementRequests = mutableListOf(),
+      withdrawalReason = null,
+      dueAt = null,
     )
+
+    val createdApplication = placementApplicationRepository.save(placementApplication)
 
     return success(createdApplication.apply { schemaUpToDate = true })
   }
@@ -321,6 +322,8 @@ class PlacementApplicationService(
       allocatedAt = OffsetDateTime.now()
       placementType = getPlacementType(apiPlacementType)
     }
+
+    placementApplicationEntity.dueAt = taskDeadlineService.getDeadline(placementApplicationEntity)
 
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
 

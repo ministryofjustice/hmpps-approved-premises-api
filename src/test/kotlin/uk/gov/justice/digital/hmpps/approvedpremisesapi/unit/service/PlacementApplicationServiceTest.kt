@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
@@ -71,6 +72,7 @@ class PlacementApplicationServiceTest {
   private val userAccessService = mockk<UserAccessService>()
   private val cas1PlacementApplicationEmailService = mockk<Cas1PlacementApplicationEmailService>()
   private val cas1PlacementApplicationDomainEventService = mockk<Cas1PlacementApplicationDomainEventService>()
+  private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
 
   private val placementApplicationService = PlacementApplicationService(
     placementApplicationRepository,
@@ -85,6 +87,7 @@ class PlacementApplicationServiceTest {
     cas1PlacementApplicationEmailService,
     cas1PlacementApplicationDomainEventService,
     sendPlacementRequestNotifications = true,
+    taskDeadlineServiceMock,
   )
 
   @Nested
@@ -127,14 +130,17 @@ class PlacementApplicationServiceTest {
   @Nested
   inner class SubmitApplicationTest {
     lateinit var user: UserEntity
+    lateinit var dueAt: OffsetDateTime
 
     @BeforeEach
     fun setup() {
       user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
+      dueAt = OffsetDateTime.now()
 
       every { userService.getUserForRequest() } returns user
+      every { taskDeadlineServiceMock.getDeadline(any<PlacementApplicationEntity>()) } returns dueAt
     }
 
     @Test
@@ -173,6 +179,11 @@ class PlacementApplicationServiceTest {
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
+
+      val validatableActionResult = (result as AuthorisableActionResult.Success).entity
+      val updatedApplication = (validatableActionResult as ValidatableActionResult.Success).entity
+
+      assertThat(updatedApplication.dueAt).isEqualTo(dueAt)
 
       verify(exactly = 1) {
         emailNotificationService.sendEmail(
