@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult.ValidatableActionResultError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
 import java.time.OffsetDateTime
@@ -267,7 +268,7 @@ class PlacementApplicationService(
     id: UUID,
     data: String,
   ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
-    val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
+    val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit<PlacementApplicationEntity>(id)
 
     if (placementApplicationAuthorisationResult is Either.Left) {
       return placementApplicationAuthorisationResult.value
@@ -289,8 +290,8 @@ class PlacementApplicationService(
     translatedDocument: String,
     apiPlacementType: ApiPlacementType,
     apiPlacementDates: List<ApiPlacementDates>,
-  ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
-    val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
+  ): AuthorisableActionResult<ValidatableActionResult<List<PlacementApplicationEntity>>> {
+    val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit<List<PlacementApplicationEntity>>(id)
 
     if (placementApplicationAuthorisationResult is Either.Left) {
       return placementApplicationAuthorisationResult.value
@@ -320,12 +321,14 @@ class PlacementApplicationService(
     }
 
     return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(baselinePlacementApplication),
+      ValidatableActionResult.Success(listOf(baselinePlacementApplication)),
     )
   }
 
-  private fun saveDatesOnSubmission(baselinePlacementApplication: PlacementApplicationEntity,
-                                    apiPlacementDates: List<ApiPlacementDates>) {
+  private fun saveDatesOnSubmission(
+    baselinePlacementApplication: PlacementApplicationEntity,
+    apiPlacementDates: List<ApiPlacementDates>,
+  ) {
     val placementDates = apiPlacementDates.map {
       PlacementDateEntity(
         id = UUID.randomUUID(),
@@ -439,7 +442,7 @@ class PlacementApplicationService(
     return placementApplicationEntity
   }
 
-  private fun getApplicationForUpdateOrSubmit(id: UUID): Either<AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>>, PlacementApplicationEntity> {
+  private fun <T> getApplicationForUpdateOrSubmit(id: UUID): Either<AuthorisableActionResult<ValidatableActionResult<T>>, PlacementApplicationEntity> {
     val placementApplication = placementApplicationRepository.findByIdOrNull(id)
       ?: return Either.Left(AuthorisableActionResult.NotFound())
     val user = userService.getUserForRequest()
@@ -448,18 +451,17 @@ class PlacementApplicationService(
       return Either.Left(AuthorisableActionResult.Unauthorised())
     }
 
-    val canBeUpdatedOrSubmittedResult = confirmApplicationCanBeUpdatedOrSubmitted(placementApplication)
-
-    if (canBeUpdatedOrSubmittedResult !is ValidatableActionResult.Success) {
+    val canBeUpdatedOrSubmittedResult = confirmApplicationCanBeUpdatedOrSubmitted<T>(placementApplication)
+    if (canBeUpdatedOrSubmittedResult != null) {
       return Either.Left(AuthorisableActionResult.Success(canBeUpdatedOrSubmittedResult))
     }
 
     return Either.Right(placementApplication)
   }
 
-  private fun confirmApplicationCanBeUpdatedOrSubmitted(
+  private fun <T> confirmApplicationCanBeUpdatedOrSubmitted(
     placementApplicationEntity: PlacementApplicationEntity,
-  ): ValidatableActionResult<PlacementApplicationEntity> {
+  ): ValidatableActionResultError<T>? {
     val latestSchema = jsonSchemaService.getNewestSchema(
       ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java,
     )
@@ -473,6 +475,6 @@ class PlacementApplicationService(
       return ValidatableActionResult.GeneralValidationError("This application has already been submitted")
     }
 
-    return ValidatableActionResult.Success(placementApplicationEntity)
+    return null
   }
 }

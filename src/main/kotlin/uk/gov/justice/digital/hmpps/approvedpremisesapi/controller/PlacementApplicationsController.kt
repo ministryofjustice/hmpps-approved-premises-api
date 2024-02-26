@@ -88,14 +88,14 @@ class PlacementApplicationsController(
   override fun placementApplicationsIdSubmissionPost(
     id: UUID,
     submitPlacementApplication: SubmitPlacementApplication,
-  ): ResponseEntity<PlacementApplication> {
+  ): ResponseEntity<List<PlacementApplication>> {
     val serializedData = objectMapper.writeValueAsString(submitPlacementApplication.translatedDocument)
 
     val result = placementApplicationService.submitApplication(id, serializedData, submitPlacementApplication.placementType, submitPlacementApplication.placementDates)
 
-    val placementApplication = extractEntityFromNestedAuthorisableValidatableActionResult(result)
+    val placementApplications = extractEntityFromNestedAuthorisableValidatableActionResult(result)
 
-    return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
+    return ResponseEntity.ok(placementApplications.map { placementApplicationTransformer.transformJpaToApi(it) })
   }
 
   override fun placementApplicationsIdDecisionPost(

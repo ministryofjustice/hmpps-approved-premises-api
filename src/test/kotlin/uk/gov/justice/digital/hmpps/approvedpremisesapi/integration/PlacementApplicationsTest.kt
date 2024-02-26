@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -681,13 +682,13 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .responseBody
               .blockFirst()
 
-            val body = objectMapper.readValue(rawResult, PlacementApplication::class.java)
+            val body = objectMapper.readValue<List<PlacementApplication>>(rawResult!!)
             val expectedUpdatedPlacementApplication = placementApplicationEntity.copy(
               schemaUpToDate = true,
               document = "{\"thingId\":123}",
             )
 
-            assertThat(body).matches {
+            assertThat(body[0]).matches {
               expectedUpdatedPlacementApplication.id == it.id &&
                 expectedUpdatedPlacementApplication.application.id == it.applicationId &&
                 expectedUpdatedPlacementApplication.createdByUser.id == it.createdByUserId &&

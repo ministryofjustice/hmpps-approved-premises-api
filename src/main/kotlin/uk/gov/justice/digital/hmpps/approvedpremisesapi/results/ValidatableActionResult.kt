@@ -12,10 +12,11 @@ sealed interface ValidatableActionResult<EntityType> {
   }
 
   data class Success<EntityType>(val entity: EntityType) : ValidatableActionResult<EntityType>
+  sealed interface ValidatableActionResultError<EntityType> : ValidatableActionResult<EntityType>
   data class FieldValidationError<EntityType>(val validationMessages: ValidationErrors) :
-    ValidatableActionResult<EntityType>
-  data class GeneralValidationError<EntityType>(val message: String) : ValidatableActionResult<EntityType>
-  data class ConflictError<EntityType>(val conflictingEntityId: UUID, val message: String) : ValidatableActionResult<EntityType>
+    ValidatableActionResultError<EntityType>
+  data class GeneralValidationError<EntityType>(val message: String) : ValidatableActionResultError<EntityType>
+  data class ConflictError<EntityType>(val conflictingEntityId: UUID, val message: String) : ValidatableActionResultError<EntityType>
 }
 
 fun extractMessage(validatableActionResult: ValidatableActionResult<*>): String? = when (validatableActionResult) {

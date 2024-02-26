@@ -57,14 +57,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
-import kotlin.math.exp
 
 class PlacementApplicationServiceTest {
   private val placementApplicationRepository = mockk<PlacementApplicationRepository>()
@@ -215,22 +212,22 @@ class PlacementApplicationServiceTest {
         "translatedDocument",
         PlacementType.releaseFollowingDecision,
         listOf(
-          PlacementDates(expectedArrival = LocalDate.of(2024,4,1), duration = 5),
-          PlacementDates(expectedArrival = LocalDate.of(2024,5,2), duration = 10),
-          PlacementDates(expectedArrival = LocalDate.of(2024,6,3), duration = 15)
+          PlacementDates(expectedArrival = LocalDate.of(2024, 4, 1), duration = 5),
+          PlacementDates(expectedArrival = LocalDate.of(2024, 5, 2), duration = 10),
+          PlacementDates(expectedArrival = LocalDate.of(2024, 6, 3), duration = 15),
         ),
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       val updatedPlacementApplication = extractEntityFromNestedAuthorisableValidatableActionResult(result)
 
-      val dates = updatedPlacementApplication.placementDates
+      val dates = updatedPlacementApplication[0].placementDates
       assertThat(dates).hasSize(3)
-      assertThat(dates[0].expectedArrival).isEqualTo(LocalDate.of(2024,4,1))
+      assertThat(dates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
       assertThat(dates[0].duration).isEqualTo(5)
-      assertThat(dates[1].expectedArrival).isEqualTo(LocalDate.of(2024,5,2))
+      assertThat(dates[1].expectedArrival).isEqualTo(LocalDate.of(2024, 5, 2))
       assertThat(dates[1].duration).isEqualTo(10)
-      assertThat(dates[2].expectedArrival).isEqualTo(LocalDate.of(2024,6,3))
+      assertThat(dates[2].expectedArrival).isEqualTo(LocalDate.of(2024, 6, 3))
       assertThat(dates[2].duration).isEqualTo(15)
     }
   }
