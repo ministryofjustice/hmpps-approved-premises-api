@@ -1619,8 +1619,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
       }
     }
 
+    @SuppressWarnings("MaxLineLength")
     @Test
-    fun `Withdraw Placement Request returns 200, sets isWithdrawn to true, sends email to CRU and sends email to Applicant as it represents dates included on application on submission`() {
+    fun `Withdraw Placement Request returns 200, sets isWithdrawn to true, raises domain event, sends email to CRU and sends email to Applicant if it represents dates included on application on submission`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           `Given a Placement Request`(
@@ -1646,6 +1647,9 @@ class PlacementRequestsTest : IntegrationTestBase() {
             val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
             assertThat(persistedPlacementRequest.isWithdrawn).isTrue
             assertThat(persistedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+
+            val emittedMessage = snsDomainEventListener.blockForMessage()
+            assertThat(emittedMessage.eventType).isEqualTo("approved-premises.match-request.withdrawn")
 
             emailAsserter.assertEmailsRequestedCount(2)
             emailAsserter.assertEmailRequested(

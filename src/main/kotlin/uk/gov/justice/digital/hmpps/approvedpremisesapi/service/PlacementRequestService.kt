@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.extractMessage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -70,6 +71,7 @@ class PlacementRequestService(
   private val userAccessService: UserAccessService,
   @Lazy private val applicationService: ApplicationService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
+  private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
 ) {
 
@@ -294,7 +296,9 @@ class PlacementRequestService(
 
   /**
    * This should return a maximum of one placement request, representing the dates known
-   * at the point of application submission
+   * at the point of application submission.
+   *
+   * For more information on why we do this, see [PlacementRequestEntity.isForApplicationsArrivalDate]
    */
   fun getWithdrawablePlacementRequestsForUser(
     user: UserEntity,
@@ -341,6 +345,7 @@ class PlacementRequestService(
     updateApplicationStatusOnWithdrawal(placementRequest, isUserRequestedWithdrawal)
 
     cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest)
+    cas1PlacementRequestDomainEventService.placementRequestWithdrawn(placementRequest, withdrawalContext)
 
     placementRequest.booking?.let { booking ->
       val bookingCancellationResult = bookingService.createCas1Cancellation(
