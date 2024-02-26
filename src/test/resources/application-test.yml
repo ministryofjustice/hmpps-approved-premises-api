@@ -202,4 +202,6 @@ user-allocations:
 
 notify:
   send-placement-request-notifications: false
-  send-new-withdrawal-notifications: true
+
+feature-flags:
+  cas1-use-new-withdrawal-logic: true

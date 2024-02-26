@@ -104,7 +104,7 @@ generic-service:
     USER-ALLOCATIONS_RULES_EMERGENCY-ASSESSMENTS_ALLOCATE-TO-USERS_NAT: # TODO: Determine appropriate user
 
     NOTIFY_SEND-PLACEMENT-REQUEST-NOTIFICATIONS: true
-    NOTIFY_SEND-NEW-WITHDRAWAL-NOTIFICATIONS: false
+    FEATURE-FLAGS_CAS1-USE-NEW-WITHDRAWAL-LOGIC: false
 
   namespace_secrets:
     hmpps-domain-events-topic:

@@ -13,7 +13,7 @@ class Cas1PlacementApplicationEmailService(
   private val emailNotifier: EmailNotifier,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
-  @Value("\${notify.send-new-withdrawal-notifications}") private val sendNewWithdrawalNotifications: Boolean,
+  @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val sendNewWithdrawalNotifications: Boolean,
 ) {
 
   fun placementApplicationWithdrawn(placementApplication: PlacementApplicationEntity, wasBeingAssessedBy: UserEntity?) {
