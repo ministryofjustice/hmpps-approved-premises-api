@@ -171,7 +171,7 @@ class PlacementApplicationService(
 
     val applicationWasntPreviouslyAllocated = currentPlacementApplication.allocatedToUser == null
     if (applicationWasntPreviouslyAllocated) {
-      sendPlacementRequestAllocatedEmail(newPlacementApplication)
+      cas1PlacementApplicationEmailService.placementApplicationAllocated(newPlacementApplication)
     }
 
     newPlacementApplication.placementDates = newPlacementDates
@@ -328,7 +328,7 @@ class PlacementApplicationService(
     cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplicationEntity)
 
     if (allocatedUser != null) {
-      sendPlacementRequestAllocatedEmail(placementApplicationEntity)
+      cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplicationEntity)
     }
 
     return AuthorisableActionResult.Success(
@@ -470,22 +470,5 @@ class PlacementApplicationService(
     }
 
     return ValidatableActionResult.Success(placementApplicationEntity)
-  }
-
-  private fun sendPlacementRequestAllocatedEmail(placementApplication: PlacementApplicationEntity) {
-    if (!sendPlacementRequestNotifications) {
-      return
-    }
-
-    val createdByUser = placementApplication.createdByUser
-    createdByUser.email?.let { email ->
-      emailNotificationService.sendEmail(
-        recipientEmailAddress = email,
-        templateId = notifyConfig.templates.placementRequestAllocated,
-        personalisation = mapOf(
-          "crn" to placementApplication.application.crn,
-        ),
-      )
-    }
   }
 }

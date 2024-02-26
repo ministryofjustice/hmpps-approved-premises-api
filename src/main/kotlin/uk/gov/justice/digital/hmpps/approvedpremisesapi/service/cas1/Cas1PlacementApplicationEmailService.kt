@@ -34,6 +34,23 @@ class Cas1PlacementApplicationEmailService(
     }
   }
 
+  fun placementApplicationAllocated(placementApplication: PlacementApplicationEntity) {
+    if (!sendPlacementRequestNotifications) {
+      return
+    }
+
+    val createdByUser = placementApplication.createdByUser
+    createdByUser.email?.let { email ->
+      emailNotifier.sendEmail(
+        recipientEmailAddress = email,
+        templateId = notifyConfig.templates.placementRequestAllocated,
+        personalisation = mapOf(
+          "crn" to placementApplication.application.crn,
+        ),
+      )
+    }
+  }
+
   fun placementApplicationWithdrawn(placementApplication: PlacementApplicationEntity, wasBeingAssessedBy: UserEntity?) {
     if (!sendNewWithdrawalNotifications) {
       return

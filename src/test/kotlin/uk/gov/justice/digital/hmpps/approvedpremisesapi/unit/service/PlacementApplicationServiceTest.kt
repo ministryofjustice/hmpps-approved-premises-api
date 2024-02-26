@@ -165,10 +165,9 @@ class PlacementApplicationServiceTest {
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { placementDateRepository.saveAll(any<List<PlacementDateEntity>>()) } answers { emptyList() }
 
-      val allocatedNotifyTemplateId = UUID.randomUUID().toString()
-      every { notifyConfig.templates.placementRequestAllocated } answers { allocatedNotifyTemplateId }
-      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } returns Unit
+
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
         "translatedDocument",
@@ -188,13 +187,7 @@ class PlacementApplicationServiceTest {
       }
 
       verify(exactly = 1) {
-        emailNotificationService.sendEmail(
-          user.email!!,
-          allocatedNotifyTemplateId,
-          mapOf(
-            "crn" to placementApplication.application.crn,
-          ),
-        )
+        cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication)
       }
     }
   }
@@ -462,7 +455,7 @@ class PlacementApplicationServiceTest {
 
       val notifyTemplateId = UUID.randomUUID().toString()
       every { notifyConfig.templates.placementRequestAllocated } answers { notifyTemplateId }
-      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(any()) } returns Unit
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
@@ -489,13 +482,7 @@ class PlacementApplicationServiceTest {
       assertThat(newPlacementApplication.dueAt).isEqualTo(dueAt)
 
       verify(exactly = 1) {
-        emailNotificationService.sendEmail(
-          newPlacementApplication.createdByUser.email!!,
-          notifyTemplateId,
-          mapOf(
-            "crn" to newPlacementApplication.application.crn,
-          ),
-        )
+        cas1PlacementApplicationEmailService.placementApplicationAllocated(newPlacementApplication)
       }
     }
 

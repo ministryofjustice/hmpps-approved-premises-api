@@ -93,6 +93,66 @@ class Cas1PlacementApplicationEmailServiceTest {
   }
 
   @Test
+  fun `placementApplicationAllocated doesnt sent email to applicant if no email address defined`() {
+    val applicant = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .withEmail(null)
+      .produce()
+
+    val assessor = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .withEmail(null)
+      .produce()
+
+    val application = createApplicationForApplicant(applicant)
+
+    val placementApplication = PlacementApplicationEntityFactory()
+      .withApplication(application)
+      .withCreatedByUser(applicant)
+      .withAllocatedToUser(assessor)
+      .produce()
+
+    service.placementApplicationAllocated(placementApplication)
+
+    mockEmailNotificationService.assertNoEmailsRequested()
+  }
+
+  @Test
+  fun `placementApplicationAllocated sends email to applicant if email address defined`() {
+    val applicant = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .withEmail(APPLICANT_EMAIL)
+      .produce()
+
+    val assessor = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .withEmail(null)
+      .produce()
+
+    val application = createApplicationForApplicant(applicant)
+
+    val placementApplication = PlacementApplicationEntityFactory()
+      .withApplication(application)
+      .withCreatedByUser(applicant)
+      .withAllocatedToUser(assessor)
+      .produce()
+
+    service.placementApplicationAllocated(placementApplication)
+
+    mockEmailNotificationService.assertEmailRequestCount(1)
+
+    val personalisation = mapOf(
+      "crn" to TestConstants.CRN,
+    )
+
+    mockEmailNotificationService.assertEmailRequested(
+      APPLICANT_EMAIL,
+      notifyConfig.templates.placementRequestAllocated,
+      personalisation,
+    )
+  }
+
+  @Test
   fun `placementApplicationWithdrawn doesnt send email to applicant or assessor if no email addresses defined`() {
     val applicant = UserEntityFactory()
       .withUnitTestControlProbationRegion()
