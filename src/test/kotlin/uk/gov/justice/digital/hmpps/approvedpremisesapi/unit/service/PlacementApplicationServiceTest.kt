@@ -167,10 +167,8 @@ class PlacementApplicationServiceTest {
 
       val allocatedNotifyTemplateId = UUID.randomUUID().toString()
       every { notifyConfig.templates.placementRequestAllocated } answers { allocatedNotifyTemplateId }
-      val placementRequestCreatedTemplateId = UUID.randomUUID().toString()
-      every { notifyConfig.templates.placementRequestSubmitted } answers { placementRequestCreatedTemplateId }
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
-
+      every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } returns Unit
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
         "translatedDocument",
@@ -186,13 +184,7 @@ class PlacementApplicationServiceTest {
       assertThat(updatedApplication.dueAt).isEqualTo(dueAt)
 
       verify(exactly = 1) {
-        emailNotificationService.sendEmail(
-          user.email!!,
-          placementRequestCreatedTemplateId,
-          mapOf(
-            "crn" to placementApplication.application.crn,
-          ),
-        )
+        cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication)
       }
 
       verify(exactly = 1) {

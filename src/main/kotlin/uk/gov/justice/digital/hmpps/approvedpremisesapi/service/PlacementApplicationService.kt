@@ -325,7 +325,7 @@ class PlacementApplicationService(
     placementDateRepository.saveAll(placementDates)
     placementApplicationEntity.placementDates = placementDates
 
-    sendPlacementRequestCreatedEmail(placementApplicationEntity)
+    cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplicationEntity)
 
     if (allocatedUser != null) {
       sendPlacementRequestAllocatedEmail(placementApplicationEntity)
@@ -470,23 +470,6 @@ class PlacementApplicationService(
     }
 
     return ValidatableActionResult.Success(placementApplicationEntity)
-  }
-
-  private fun sendPlacementRequestCreatedEmail(placementApplication: PlacementApplicationEntity) {
-    if (!sendPlacementRequestNotifications) {
-      return
-    }
-
-    val createdByUser = placementApplication.createdByUser
-    createdByUser.email?.let { email ->
-      emailNotificationService.sendEmail(
-        recipientEmailAddress = email,
-        templateId = notifyConfig.templates.placementRequestSubmitted,
-        personalisation = mapOf(
-          "crn" to placementApplication.application.crn,
-        ),
-      )
-    }
   }
 
   private fun sendPlacementRequestAllocatedEmail(placementApplication: PlacementApplicationEntity) {
