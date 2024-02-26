@@ -73,6 +73,7 @@ class PlacementRequestService(
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
+  private val taskDeadlineService: TaskDeadlineService,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -265,7 +266,9 @@ class PlacementRequestService(
     )
 
     val allocatedUser = userAllocator.getUserForPlacementRequestAllocation(placementRequest)
+
     placementRequest.allocatedToUser = allocatedUser
+    placementRequest.dueAt = taskDeadlineService.getDeadline(placementRequest)
 
     return placementRequestRepository.save(placementRequest)
   }

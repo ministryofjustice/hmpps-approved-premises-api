@@ -24,6 +24,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
@@ -68,6 +69,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
@@ -95,6 +97,7 @@ class PlacementRequestServiceTest {
   private val applicationService = mockk<ApplicationService>()
   private val cas1PlacementRequestEmailService = mockk<Cas1PlacementRequestEmailService>()
   private val cas1PlacementRequestDomainEventService = mockk<Cas1PlacementRequestDomainEventService>()
+  private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
 
   private val placementRequestService = PlacementRequestService(
     placementRequestRepository,
@@ -113,6 +116,7 @@ class PlacementRequestServiceTest {
     cas1PlacementRequestEmailService,
     cas1PlacementRequestDomainEventService,
     "http://frontend/applications/#id",
+    taskDeadlineServiceMock,
   )
 
   private val previousUser = UserEntityFactory()
@@ -134,6 +138,51 @@ class PlacementRequestServiceTest {
   @BeforeEach
   fun before() {
     PaginationConfig(defaultPageSize = 10).postInit()
+  }
+
+  @Test
+  fun `createPlacementRequest creates a placement request with the correct deadline`() {
+    val dueAt = OffsetDateTime.now()
+
+    every { taskDeadlineServiceMock.getDeadline(any<PlacementRequestEntity>()) } returns dueAt
+    every { userAllocator.getUserForPlacementRequestAllocation(any()) } returns assigneeUser
+    every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(assigneeUser)
+      .produce()
+
+    val assessment = ApprovedPremisesAssessmentEntityFactory()
+      .withApplication(application)
+      .withAllocatedToUser(assigneeUser)
+      .produce()
+
+    val placementRequirements = PlacementRequirementsEntityFactory()
+      .withApplication(application)
+      .withAssessment(assessment)
+      .produce()
+
+    val placementDates = PlacementDates(
+      expectedArrival = LocalDate.now(),
+      duration = 12,
+    )
+
+    val placementRequest = placementRequestService.createPlacementRequest(
+      placementRequirements,
+      placementDates,
+      "Some notes",
+      false,
+      null,
+    )
+
+    assertThat(placementRequest.duration).isEqualTo(placementDates.duration)
+    assertThat(placementRequest.expectedArrival).isEqualTo(placementDates.expectedArrival)
+    assertThat(placementRequest.placementRequirements).isEqualTo(placementRequirements)
+    assertThat(placementRequest.assessment.id).isEqualTo(assessment.id)
+    assertThat(placementRequest.application.id).isEqualTo(application.id)
+    assertThat(placementRequest.isParole).isFalse()
+    assertThat(placementRequest.dueAt).isEqualTo(dueAt)
+    assertThat(placementRequest.allocatedToUser!!.id).isEqualTo(assigneeUser.id)
   }
 
   @Test
