@@ -11,7 +11,7 @@ import java.util.UUID
 interface PlacementApplicationEntityReportRowRepository : JpaRepository<PlacementApplicationEntity, UUID> {
   @Query(
     """
-      select
+      select distinct on (pa.id, pa_dates.expected_arrival, pa_dates.duration, placement_request.booking_id)
         cast(pa.id as TEXT) as id,
         application.crn as crn,
         pa_dates.expected_arrival as requestedArrivalDate,
@@ -74,7 +74,20 @@ interface PlacementApplicationEntityReportRowRepository : JpaRepository<Placemen
         pa.data -> 'request-a-placement' -> 'reason-for-placement' ->> 'reason' as placementRequestType,
         cast(
           pa.data -> 'request-a-placement' -> 'decision-to-release' ->> 'decisionToReleaseDate' as date
-        ) as paroleDecisionDate
+        ) as paroleDecisionDate,
+        (
+          select count(*)
+          from appeals
+          where appeals.application_id = application.id
+          and appeals.assessment_id = assessment_event.assessment_id
+        ) as assessmentAppealCount,
+        latest_appeal.decision as lastAssessmentAppealedDecision,
+        latest_appeal.appeal_date as lastAssessmentAppealedDate,
+        (
+          select decision
+          from assessments
+          where assessments.id = assessment_event.assessment_id
+        ) as assessmentAppealedFromStatus
       from
         placement_applications pa
         left join applications application on pa.application_id = application.id
@@ -89,6 +102,13 @@ interface PlacementApplicationEntityReportRowRepository : JpaRepository<Placemen
         and placement_request.booking_id = booking_cancelled_event.booking_id
         left join domain_events assessment_event on assessment_event.type = 'APPROVED_PREMISES_APPLICATION_ASSESSED'
         and application.id = assessment_event.application_id
+        left join (
+          select distinct on (appeals.application_id, appeals.assessment_id)
+            appeals.*
+          from appeals
+          order by appeals.application_id, appeals.assessment_id, created_at desc
+        ) latest_appeal on latest_appeal.application_id = application.id
+        and latest_appeal.assessment_id = assessment_event.assessment_id
         left join domain_events withdrawl_event on withdrawl_event.type = 'APPROVED_PREMISES_APPLICATION_WITHDRAWN'
         and application.id = withdrawl_event.application_id
         left join domain_events arrival_event on arrival_event.type = 'APPROVED_PREMISES_PERSON_ARRIVED'
@@ -102,7 +122,8 @@ interface PlacementApplicationEntityReportRowRepository : JpaRepository<Placemen
         AND pa.submitted_at is not null
         AND date_part('month', pa.submitted_at) = :month
         AND date_part('year', pa.submitted_at) = :year
-        AND application.service = 'approved-premises';
+        AND application.service = 'approved-premises'
+      order by pa.id, pa_dates.expected_arrival, pa_dates.duration, placement_request.booking_id, latest_appeal.appeal_date desc nulls last;
     """,
     nativeQuery = true,
   )
@@ -152,4 +173,8 @@ interface PlacementApplicationEntityReportRow {
   fun getNotArrivedReason(): String?
   fun getPlacementRequestType(): String?
   fun getParoleDecisionDate(): Date?
+  fun getAssessmentAppealCount(): Int?
+  fun getLastAssessmentAppealedDecision(): String?
+  fun getLastAssessmentAppealedDate(): Date?
+  fun getAssessmentAppealedFromStatus(): String?
 }

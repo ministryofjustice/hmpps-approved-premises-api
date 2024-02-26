@@ -24,7 +24,7 @@ class PlacementApplicationReportGenerator :
         applicationSubmittedAt = this.getApplicationSubmittedAt()?.toLocalDateTime()?.toLocalDate(),
         applicationAssessedDate = this.getApplicationAssessedDate()?.toLocalDate(),
         assessorCru = this.getAssessorCru(),
-        assessmentDecision = this.getAssessmentDecision(),
+        assessmentDecision = this.deriveAssessmentDecision(),
         assessmentDecisionRationale = this.getAssessmentDecisionRationale(),
         ageInYears = this.getAgeInYears()?.toInt(),
         gender = this.getGender(),
@@ -55,7 +55,16 @@ class PlacementApplicationReportGenerator :
         notArrivedReason = this.getNotArrivedReason(),
         placementRequestType = this.getPlacementRequestType(),
         paroleDecisionDate = this.getParoleDecisionDate()?.toLocalDate(),
+        assessmentAppealCount = this.getAssessmentAppealCount(),
+        lastAssessmentAppealedDecision = this.getLastAssessmentAppealedDecision(),
+        lastAssessmentAppealedDate = this.getLastAssessmentAppealedDate()?.toLocalDate(),
+        assessmentAppealedFromStatus = this.getAssessmentAppealedFromStatus(),
       ),
     )
+  }
+
+  private fun PlacementApplicationEntityReportRow.deriveAssessmentDecision() = when (this.getAssessmentAppealCount()) {
+    0, null -> this.getAssessmentDecision()
+    else -> this.getLastAssessmentAppealedDecision()
   }
 }
