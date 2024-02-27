@@ -718,7 +718,7 @@ components:
         mapping:
           FullPerson: '#/components/schemas/FullPerson'
           RestrictedPerson: '#/components/schemas/RestrictedPerson'
-          UnknownPerson: '#/components/schemas/FullPerson'
+          UnknownPerson: '#/components/schemas/UnknownPerson'
       required:
         - crn
         - type
