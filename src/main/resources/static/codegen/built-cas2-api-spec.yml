@@ -130,6 +130,45 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /assessments/{assessmentId}:
+    put:
+      tags:
+        - Operations on submitted CAS2 applications (Assessors)
+      summary: Updates a single CAS2 assessment by its ID
+      parameters:
+        - name: assessmentId
+          in: path
+          description: ID of the assessment
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Information to update the assessment with
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/UpdateCas2Assessment'
+        required: true
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Cas2Assessment'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid assessmentId
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /submissions:
     get:
       tags:
@@ -2936,10 +2975,25 @@ components:
     Cas2Assessment:
       type: object
       properties:
+        id:
+          type: string
+          format: uuid
         nacroReferralId:
           type: string
         assessorName:
           type: string
+      required:
+        - id
+    UpdateCas2Assessment:
+      type: object
+      properties:
+        nacroReferralId:
+          type: string
+        assessorName:
+          type: string
+      required:
+        - nacroReferralId
+        - assessorName
     AssessmentSummary:
       type: object
       properties:
