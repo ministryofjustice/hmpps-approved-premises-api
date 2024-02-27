@@ -163,6 +163,7 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
       WHERE b.service = :serviceName
       AND (:status is null or b.status = :#{#status?.toString()})
       AND (Cast(:probationRegionId as varchar) is null or p.probation_region_id = :probationRegionId)
+      AND (:crn is null OR b.crn = :crn)
     """,
     nativeQuery = true,
   )
@@ -170,6 +171,7 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
     serviceName: String,
     status: BookingStatus?,
     probationRegionId: UUID?,
+    crn: String?,
     pageable: Pageable?,
   ): Page<BookingSearchResult>
 
