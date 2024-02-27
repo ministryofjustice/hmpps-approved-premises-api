@@ -43,5 +43,9 @@ data class ApplicationReportRow(
   val hasNotArrived: Boolean?,
   val notArrivedReason: String?,
   val paroleDecisionDate: LocalDate?,
+  val assessmentAppealCount: Int?,
+  val lastAssessmentAppealedDecision: String?,
+  val lastAssessmentAppealedDate: LocalDate?,
+  val assessmentAppealedFromStatus: String?,
   val type: String?,
 )

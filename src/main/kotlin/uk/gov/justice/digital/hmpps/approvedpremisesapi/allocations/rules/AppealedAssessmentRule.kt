@@ -35,7 +35,8 @@ class AppealedAssessmentRule(
   }
 
   private fun allocateToArbitrator(application: ApplicationEntity): UserAllocatorRuleOutcome {
-    return when (val appeal = appealRepository.findByApplication(application)) {
+    val appeal = appealRepository.findByApplication(application).maxByOrNull { it.createdAt }
+    return when (appeal) {
       null -> UserAllocatorRuleOutcome.Skip
       else -> UserAllocatorRuleOutcome.AllocateToUser(appeal.createdBy.deliusUsername)
     }

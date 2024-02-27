@@ -87,7 +87,7 @@ class AppealedAssessmentRuleTest {
     @Test
     fun `Returns Skip with when no appeal is found for the assessment`() {
       val (assessment, _) = createAssessmentAndAppeal(true, OffsetDateTime.now())
-      every { mockAppealRepository.findByApplication(assessment.application) } returns null
+      every { mockAppealRepository.findByApplication(assessment.application) } returns listOf()
 
       val result = appealedAssessmentRule.evaluateAssessment(assessment)
 
@@ -126,7 +126,7 @@ class AppealedAssessmentRuleTest {
         .withCreatedBy(appealUser)
         .produce()
 
-      every { mockAppealRepository.findByApplication(application) } returns appeal
+      every { mockAppealRepository.findByApplication(application) } returns listOf(appeal)
 
       return Pair(assessment, appeal)
     }

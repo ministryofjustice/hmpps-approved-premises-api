@@ -12,8 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1Arrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
@@ -49,6 +52,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.AP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -58,6 +63,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
@@ -96,6 +103,9 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
   lateinit var realBookingRepository: BookingRepository
 
   @Autowired
+  lateinit var realAppealRepository: AppealRepository
+
+  @Autowired
   lateinit var realOffenderService: OffenderService
 
   @Autowired
@@ -109,6 +119,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
   lateinit var managerDetails: Pair<UserEntity, String>
   lateinit var workflowManagerDetails: Pair<UserEntity, String>
   lateinit var matcherDetails: Pair<UserEntity, String>
+  lateinit var appealManagerDetails: Pair<UserEntity, String>
 
   lateinit var applicationSchema: ApprovedPremisesApplicationJsonSchemaEntity
   lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
@@ -140,6 +151,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     managerDetails = `Given a User`(roles = listOf(UserRole.CAS1_MANAGER))
     workflowManagerDetails = `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER))
     matcherDetails = `Given a User`(roles = listOf(UserRole.CAS1_MATCHER))
+    appealManagerDetails = `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER))
 
     applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.now())
@@ -186,6 +198,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     }
   }
 
+  @SuppressWarnings("detekt:LongMethod") // This should be resolvable by using @ParameterizedTest, but this refactoring isn't trivial to do in a way that doesn't just move the warning
   @Test
   fun `Get placement application report returns OK with correct applications`() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
@@ -370,6 +383,51 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         )
       }
 
+      val acceptedAppeal = run {
+        val placementDate = placementDateStarting(LocalDate.now())
+        val (application, assessment) = createRejectedApplication("acceptedAppeal")
+        val (_, newAssessment) = acceptAppealForAssessment(assessment)
+        acceptAssessment(newAssessment)
+        createAndAcceptPlacementApplication(application, listOf(placementDate))
+
+        expectedRow {
+          this.isAccepted = true
+          this.application = application
+          this.hasAppeal = true
+          this.placementDate = placementDate
+        }
+      }
+
+      val rejectedAppeal = run {
+        val placementDate = placementDateStarting(LocalDate.now())
+        val (application, assessment) = createRejectedApplication("rejectedAppeal")
+        rejectAppealForAssessment(assessment)
+
+        expectedRow {
+          this.isAccepted = false
+          this.application = application
+          this.hasAppeal = true
+          this.placementDate = placementDate
+        }
+      }
+
+      val multipleAppeals = run {
+        val placementDate = placementDateStarting(LocalDate.now())
+        val (application, assessment) = createRejectedApplication("multipleAppeals")
+        rejectAppealForAssessment(assessment)
+        acceptAppealForAssessment(assessment)
+        val (_, newAssessment) = acceptAppealForAssessment(assessment)
+        acceptAssessment(newAssessment)
+        createAndAcceptPlacementApplication(application, listOf(placementDate))
+
+        expectedRow {
+          this.isAccepted = true
+          this.application = application
+          this.hasAppeal = true
+          this.placementDate = placementDate
+        }
+      }
+
       webTestClient.get()
         .uri("/reports/placement-applications?year=${LocalDate.now().year}&month=${LocalDate.now().monthValue}")
         .header("Authorization", "Bearer $jwt")
@@ -384,13 +442,15 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
             .convertTo<PlacementApplicationReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actualRows.size).isEqualTo(14)
+          assertThat(actualRows.size).isEqualTo(16)
 
           val unsubmittedPlacementApplication = getPlacementApplication(singleDateUnsubmittedPlacement.application)
           assertThat(actualRows).noneMatch { row -> row.placementRequestId == unsubmittedPlacementApplication.id.toString() }
 
           val outOfDateRangePlacementApplication = getPlacementApplication(singleDateBookedPlacementApplicationSubmittedOutsideOfDateRange.application)
           assertThat(actualRows).noneMatch { row -> row.placementRequestId == outOfDateRangePlacementApplication.id.toString() }
+
+          assertThat(actualRows).noneMatch { row -> row.crn == rejectedAppeal.application.crn }
 
           assertApplicationRowHasCorrectData(actualRows, singleDateNoBookingReallocated, userEntity)
           assertApplicationRowHasCorrectData(actualRows, singleDateBooked, userEntity)
@@ -406,6 +466,8 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
           assertApplicationRowHasCorrectData(actualRows, multiDateAllBooked2, userEntity)
           assertApplicationRowHasCorrectData(actualRows, multiDateSomeBooked1, userEntity)
           assertApplicationRowHasCorrectData(actualRows, multiDateSomeBooked2, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, acceptedAppeal, userEntity)
+          assertApplicationRowHasCorrectData(actualRows, multipleAppeals, userEntity)
         }
     }
   }
@@ -428,6 +490,15 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     var hasCancellation: Boolean = false
     var hasNonArrival: Boolean = false
     var isWithdrawn: Boolean = false
+    var hasAppeal: Boolean = false
+  }
+
+  private fun ApprovedPremisesApplicationEntity.getAppropriateAssessment(hasAppeal: Boolean): AssessmentEntity? = when (hasAppeal) {
+    // By the time the assertions are made, a newer assessment will have automatically been made for accepted appeals.
+    // To correctly assert on accepted appeals, the assessment that should be used is the latest one that was *rejected*,
+    // not the latest one of any status.
+    true -> this.assessments.filter { it.decision == AssessmentDecision.REJECTED }.maxByOrNull { it.createdAt }
+    false -> this.getLatestAssessment()
   }
 
   private fun assertApplicationRowHasCorrectData(
@@ -439,7 +510,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     val booking = expectedRow.booking
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
     val placementApplication = getPlacementApplication(application)
-    val assessment = application.getLatestAssessment()!!
+    val assessment = application.getAppropriateAssessment(expectedRow.hasAppeal)!!
     val offenderDetailSummary = getOffenderDetailForApplication(application, userEntity.deliusUsername)
 
     val reportRow = report.find {
@@ -466,7 +537,10 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     assertThat(reportRow.applicationSubmittedAt).isEqualTo(application.submittedAt!!.toLocalDate())
     assertThat(reportRow.applicationAssessedDate).isEqualTo(assessment.submittedAt!!.toLocalDate())
     assertThat(reportRow.assessorCru).isEqualTo("Wales")
-    assertThat(reportRow.assessmentDecision).isEqualTo(assessment.decision.toString())
+
+    if (!expectedRow.hasAppeal) {
+      assertThat(reportRow.assessmentDecision).isEqualTo(assessment.decision.toString())
+    }
     assertThat(reportRow.assessmentDecisionRationale).isEqualTo(assessment.rejectionRationale)
     assertThat(reportRow.ageInYears).isEqualTo(Period.between(offenderDetailSummary.dateOfBirth, LocalDate.now()).years)
     assertThat(reportRow.gender).isEqualTo(offenderDetailSummary.gender)
@@ -530,6 +604,16 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
     assertThat(reportRow.placementRequestType).isEqualTo("Some Test Reason")
     assertThat(reportRow.paroleDecisionDate).isEqualTo("2023-11-11")
+
+    if (expectedRow.hasAppeal) {
+      val appeals = realAppealRepository.findAllByAssessmentId(assessment.id)
+      val latestAppeal = appeals.maxByOrNull { it.createdAt }!!
+      assertThat(reportRow.assessmentAppealCount).isEqualTo(appeals.size)
+      assertThat(reportRow.lastAssessmentAppealedDecision).isEqualTo(latestAppeal.decision)
+      assertThat(reportRow.lastAssessmentAppealedDate).isEqualTo(latestAppeal.appealDate)
+      assertThat(reportRow.assessmentAppealedFromStatus).isEqualTo(assessment.decision.toString())
+      assertThat(reportRow.assessmentDecision).isEqualTo(latestAppeal.decision)
+    }
   }
 
   fun getPlacementApplication(application: ApprovedPremisesApplicationEntity) = placementApplicationTestRepository.findByApplicationAndReallocatedAtNull(application)
@@ -555,6 +639,12 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     val application = createAndSubmitApplication(crn)
     acceptAssessmentForApplication(application)
     return application
+  }
+
+  private fun createRejectedApplication(crn: String): Pair<ApprovedPremisesApplicationEntity, ApprovedPremisesAssessmentEntity> {
+    val application = createAndSubmitApplication(crn)
+    val assessment = rejectAssessmentForApplication(application)
+    return application to assessment
   }
 
   private fun createAndSubmitApplication(crn: String): ApprovedPremisesApplicationEntity {
@@ -635,6 +725,13 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     val (assessorEntity, jwt) = assessorDetails
 
     val assessment = realAssessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)!!
+
+    return acceptAssessment(assessment)
+  }
+
+  private fun acceptAssessment(assessment: AssessmentEntity): ApprovedPremisesAssessmentEntity {
+    val (assessorEntity, jwt) = assessorDetails
+
     val postcodeDistrict = postCodeDistrictFactory.produceAndPersist()
 
     assessment.data = "{}"
@@ -657,6 +754,26 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       .uri("/assessments/${assessment.id}/acceptance")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(AssessmentAcceptance(document = mapOf("document" to "value"), requirements = placementRequirements))
+      .exchange()
+      .expectStatus()
+      .isOk
+
+    return realAssessmentRepository.findByIdOrNull(assessment.id) as ApprovedPremisesAssessmentEntity
+  }
+
+  private fun rejectAssessmentForApplication(application: ApprovedPremisesApplicationEntity): ApprovedPremisesAssessmentEntity {
+    val (assessorEntity, jwt) = assessorDetails
+
+    val assessment = realAssessmentRepository.findByApplication_IdAndReallocatedAtNull(application.id)!!
+
+    assessment.data = "{}"
+    assessment.allocatedToUser = assessorEntity
+    realAssessmentRepository.save(assessment)
+
+    webTestClient.post()
+      .uri("/assessments/${assessment.id}/rejection")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(AssessmentRejection(document = mapOf("document" to "value"), rejectionRationale = "Some reason"))
       .exchange()
       .expectStatus()
       .isOk
@@ -959,5 +1076,50 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
+  }
+
+  private fun acceptAppealForAssessment(assessment: ApprovedPremisesAssessmentEntity): Pair<AppealEntity, AssessmentEntity> {
+    val (_, jwt) = appealManagerDetails
+
+    webTestClient.post()
+      .uri("/applications/${assessment.application.id}/appeals/")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewAppeal(
+          appealDate = LocalDate.now(),
+          appealDetail = "Some details about the appeal",
+          decision = AppealDecision.accepted,
+          decisionDetail = "Some details about why the appeal was accepted",
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isCreated
+
+    val appeal = realAppealRepository.findAllByAssessmentId(assessment.id).maxByOrNull { it.createdAt }!!
+    val newAssessment = realApplicationRepository.findByIdOrNull(assessment.application.id)!!.getLatestAssessment()!!
+
+    return appeal to newAssessment
+  }
+
+  private fun rejectAppealForAssessment(assessment: ApprovedPremisesAssessmentEntity): AppealEntity {
+    val (_, jwt) = appealManagerDetails
+
+    webTestClient.post()
+      .uri("/applications/${assessment.application.id}/appeals/")
+      .header("Authorization", "Bearer $jwt")
+      .bodyValue(
+        NewAppeal(
+          appealDate = LocalDate.now(),
+          appealDetail = "Some details about the appeal",
+          decision = AppealDecision.rejected,
+          decisionDetail = "Some details about why the appeal was rejected",
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isCreated
+
+    return realAppealRepository.findAllByAssessmentId(assessment.id).maxByOrNull { it.createdAt }!!
   }
 }
