@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -31,7 +32,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var placementDates: Yielded<MutableList<PlacementDateEntity>?> = { null }
   private var placementType: Yielded<PlacementType?> = { null }
   private var withdrawalReason: Yielded<PlacementApplicationWithdrawalReason?> = { null }
-  private var dueAt: Yielded<OffsetDateTime?> = { null }
+  private var dueAt: Yielded<OffsetDateTime?> = { OffsetDateTime.now().randomDateTimeAfter(10) }
   private var submissionGroupId: Yielded<UUID> = { UUID.randomUUID() }
 
   fun withDefaults() = apply {
@@ -94,7 +95,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.withdrawalReason = { withdrawalReason }
   }
 
-  fun withDueAt(dueAt: OffsetDateTime) = apply {
+  fun withDueAt(dueAt: OffsetDateTime?) = apply {
     this.dueAt = { dueAt }
   }
 

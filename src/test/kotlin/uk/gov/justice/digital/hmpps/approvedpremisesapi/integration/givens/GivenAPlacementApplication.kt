@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.OffsetDateTime
 
 @SuppressWarnings("LongParameterList")
@@ -23,6 +24,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
   reallocated: Boolean = false,
   placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
   apArea: ApAreaEntity? = null,
+  dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
 ): PlacementApplicationEntity {
   val (_, application) = `Given an Assessment for Approved Premises`(
     decision = assessmentDecision,
@@ -56,6 +58,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())
     }
+    withDueAt(dueAt)
   }
 }
 
@@ -69,6 +72,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
   decision: PlacementApplicationDecision? = null,
   reallocated: Boolean = false,
   placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
+  dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit,
 ) {
   block(
@@ -82,6 +86,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
       decision,
       reallocated,
       placementType,
+      dueAt = dueAt,
     ),
   )
 }

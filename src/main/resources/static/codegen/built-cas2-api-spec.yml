@@ -775,6 +775,7 @@ components:
       type: string
       enum:
         - createdAt
+        - dueAt
     AssessmentTask:
       allOf:
         - $ref: '#/components/schemas/Task'
