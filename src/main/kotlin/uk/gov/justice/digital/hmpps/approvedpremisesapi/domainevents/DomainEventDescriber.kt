@@ -83,7 +83,7 @@ class DomainEventDescriber(
     val dates = event?.data?.eventDetails?.placementDates ?: emptyList()
     return "A request for placement was withdrawn" +
       if (dates.isNotEmpty()) {
-        " for dates " + dates.joinToString(", ") { "${formatDate(it.startDate)} to ${formatDate(it.endDate)}" }
+        " for dates " + dates.joinToString(", ") { datePeriodAsString(it.startDate,it.endDate) }
       } else { "" }
   }
 
@@ -94,9 +94,11 @@ class DomainEventDescriber(
      **/
     return event.describe {
       val dates = it.eventDetails.datePeriod
-      "A request for placement was withdrawn for dates ${formatDate(dates.startDate)} to ${formatDate(dates.endDate)}"
+      "A request for placement was withdrawn for dates ${datePeriodAsString(dates.startDate,dates.endDate)}"
     }
   }
+
+  private fun datePeriodAsString(startDate: LocalDate, endDate: LocalDate) = "${formatDate(startDate)} to ${formatDate(endDate)}"
 
   private fun formatDate(localDate: LocalDate) = localDate.format(cas1UiExtendedDateFormat)
 
