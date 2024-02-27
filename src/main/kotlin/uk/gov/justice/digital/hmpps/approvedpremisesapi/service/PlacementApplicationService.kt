@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.annotation.PostConstruct
 import javax.transaction.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiPlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates as ApiPlacementDates
@@ -60,6 +61,14 @@ class PlacementApplicationService(
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
+
+  @PostConstruct
+  fun init() {
+    if (!useNewWithdrawalLogic) {
+      log.warn("Old withdrawal logic is being used. This will add multiple dates to the same placement application " +
+        "on submission which limits potential withdrawal options. This behaviour is deprecated.")
+    }
+  }
 
   fun getAllPlacementApplicationEntitiesForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
     return placementApplicationRepository.findAllSubmittedNonReallocatedAndNonWithdrawnApplicationsForApplicationId(
