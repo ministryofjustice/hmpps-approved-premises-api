@@ -56,6 +56,7 @@ class PlacementApplicationService(
   @Value("\${notify.send-placement-request-notifications}")
   private val sendPlacementRequestNotifications: Boolean,
   private val taskDeadlineService: TaskDeadlineService,
+  @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val useNewWithdrawalLogic: Boolean,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -285,6 +286,7 @@ class PlacementApplicationService(
     )
   }
 
+  @Transactional
   fun submitApplication(
     id: UUID,
     translatedDocument: String,
@@ -307,13 +309,18 @@ class PlacementApplicationService(
       submittedAt = OffsetDateTime.now()
       allocatedAt = OffsetDateTime.now()
       placementType = getPlacementType(apiPlacementType)
+      submissionGroupId = UUID.randomUUID()
     }
 
     submittedPlacementApplication.dueAt = taskDeadlineService.getDeadline(submittedPlacementApplication)
 
     val baselinePlacementApplication = placementApplicationRepository.save(submittedPlacementApplication)
 
-    saveDatesOnSubmission(baselinePlacementApplication, apiPlacementDates)
+    val placementApplicationsWithDates = if (useNewWithdrawalLogic) {
+      saveDatesOnSubmissionToAnAppPerDate(baselinePlacementApplication, apiPlacementDates)
+    } else {
+      saveDatesOnSubmissionToASingleApp(baselinePlacementApplication, apiPlacementDates)
+    }
 
     cas1PlacementApplicationEmailService.placementApplicationSubmitted(baselinePlacementApplication)
     if (baselinePlacementApplication.allocatedToUser != null) {
@@ -321,14 +328,15 @@ class PlacementApplicationService(
     }
 
     return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(listOf(baselinePlacementApplication)),
+      ValidatableActionResult.Success(placementApplicationsWithDates),
     )
   }
 
-  private fun saveDatesOnSubmission(
+  @Deprecated("This is legacy behaviour that will be removed once the new withdrawals functionality has been released")
+  private fun saveDatesOnSubmissionToASingleApp(
     baselinePlacementApplication: PlacementApplicationEntity,
     apiPlacementDates: List<ApiPlacementDates>,
-  ) {
+  ): List<PlacementApplicationEntity> {
     val placementDates = apiPlacementDates.map {
       PlacementDateEntity(
         id = UUID.randomUUID(),
@@ -341,6 +349,36 @@ class PlacementApplicationService(
 
     placementDateRepository.saveAll(placementDates)
     baselinePlacementApplication.placementDates = placementDates
+    return listOf(baselinePlacementApplication)
+  }
+
+  private fun saveDatesOnSubmissionToAnAppPerDate(
+    baselinePlacementApplication: PlacementApplicationEntity,
+    apiPlacementDates: List<ApiPlacementDates>,
+  ): List<PlacementApplicationEntity> {
+    val additionalPlacementApps = List(apiPlacementDates.size - 1) {
+      placementApplicationRepository.save(
+        baselinePlacementApplication.copy(id = UUID.randomUUID()),
+      )
+    }
+
+    val allPlacementApps = listOf(baselinePlacementApplication) + additionalPlacementApps
+
+    allPlacementApps.zip(apiPlacementDates) { placementApp, apiDate ->
+      val placementDate = placementDateRepository.save(
+        PlacementDateEntity(
+          id = UUID.randomUUID(),
+          expectedArrival = apiDate.expectedArrival,
+          duration = apiDate.duration,
+          placementApplication = placementApp,
+          createdAt = OffsetDateTime.now(),
+        ),
+      )
+
+      placementApp.placementDates = mutableListOf(placementDate)
+    }
+
+    return allPlacementApps
   }
 
   @Transactional
@@ -451,9 +489,9 @@ class PlacementApplicationService(
       return Either.Left(AuthorisableActionResult.Unauthorised())
     }
 
-    val canBeUpdatedOrSubmittedResult = confirmApplicationCanBeUpdatedOrSubmitted<T>(placementApplication)
-    if (canBeUpdatedOrSubmittedResult != null) {
-      return Either.Left(AuthorisableActionResult.Success(canBeUpdatedOrSubmittedResult))
+    val validationError = confirmApplicationCanBeUpdatedOrSubmitted<T>(placementApplication)
+    if (validationError != null) {
+      return Either.Left(AuthorisableActionResult.Success(validationError))
     }
 
     return Either.Right(placementApplication)

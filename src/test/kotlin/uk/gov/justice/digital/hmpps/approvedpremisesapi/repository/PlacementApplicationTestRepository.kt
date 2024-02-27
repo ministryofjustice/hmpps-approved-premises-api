@@ -13,7 +13,6 @@ import javax.transaction.Transactional
 @Repository
 interface PlacementApplicationTestRepository : JpaRepository<PlacementApplicationEntity, UUID> {
   fun findByApplicationAndReallocatedAtNull(application: ApplicationEntity): PlacementApplicationEntity
-
   @Transactional
   @Modifying
   @Query(

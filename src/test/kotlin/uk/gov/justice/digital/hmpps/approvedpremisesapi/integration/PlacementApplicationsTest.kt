@@ -536,7 +536,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `submitting a submitted placement request application returns an error`() {
+    fun `submitting an already submitted placement request application returns an error`() {
       `Given a User` { user, jwt ->
         `Given a Placement Application`(
           createdByUser = user,
@@ -642,7 +642,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `submitting an in-progress placement request application returns successfully and updates the application`() {
+    fun `submitting a placement application with a single date returns successfully and updates the application`() {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { matcherUser, _ ->
         `Given a User` { user, jwt ->
           `Given a Placement Application`(
@@ -683,6 +683,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               .blockFirst()
 
             val body = objectMapper.readValue<List<PlacementApplication>>(rawResult!!)
+            assertThat(body).hasSize(1)
+
             val expectedUpdatedPlacementApplication = placementApplicationEntity.copy(
               schemaUpToDate = true,
               document = "{\"thingId\":123}",
@@ -712,6 +714,96 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             assertThat(createdPlacementDates[0].placementApplication.id).isEqualTo(placementApplicationEntity.id)
             assertThat(createdPlacementDates[0].duration).isEqualTo(placementDates[0].duration)
             assertThat(createdPlacementDates[0].expectedArrival).isEqualTo(placementDates[0].expectedArrival)
+
+            emailAsserter.assertEmailsRequestedCount(2)
+            emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestSubmitted)
+            emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestAllocated)
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `submitting a placement application with multiple dates returns successfully and produces multiple placment apps`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { matcherUser, _ ->
+        `Given a User` { user, jwt ->
+          `Given a Placement Application`(
+            createdByUser = user,
+            schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withPermissiveSchema()
+            },
+          ) { placementApplicationEntity ->
+            CommunityAPI_mockSuccessfulOffenderDetailsCall(
+              OffenderDetailsSummaryFactory()
+                .withCrn(placementApplicationEntity.application.crn)
+                .produce(),
+            )
+
+            val arrival1 = LocalDate.now()
+            val duration1 = 12
+            val arrival2 = LocalDate.now().plusDays(30)
+            val duration2 = 10
+            val arrival3 = LocalDate.now().plusDays(60)
+            val duration3 = 15
+
+            val placementDates = listOf(
+              PlacementDates(
+                expectedArrival = arrival1,
+                duration = duration1,
+              ),
+              PlacementDates(
+                expectedArrival = arrival2,
+                duration = duration2,
+              ),
+              PlacementDates(
+                expectedArrival = arrival3,
+                duration = duration3,
+              ),
+            )
+            val rawResult = webTestClient.post()
+              .uri("/placement-applications/${placementApplicationEntity.id}/submission")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                SubmitPlacementApplication(
+                  translatedDocument = mapOf("thingId" to 123),
+                  placementType = PlacementType.additionalPlacement,
+                  placementDates = placementDates,
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val body = objectMapper.readValue<List<PlacementApplication>>(rawResult!!)
+            assertThat(body).hasSize(3)
+
+            val createdApp1Id = body[0].id
+            val updatedEntity1 = placementApplicationRepository.findByIdOrNull(createdApp1Id)!!
+            assertThat(updatedEntity1.placementDates[0].expectedArrival).isEqualTo(arrival1)
+            assertThat(updatedEntity1.placementDates[0].duration).isEqualTo(duration1)
+            assertThat(updatedEntity1.submittedAt).isNotNull()
+            assertThat(updatedEntity1.allocatedToUser!!.id).isEqualTo(matcherUser.id)
+
+            val createdApp2Id = body[1].id
+            val updatedEntity2 = placementApplicationRepository.findByIdOrNull(createdApp2Id)!!
+            assertThat(updatedEntity2.placementDates[0].expectedArrival).isEqualTo(arrival2)
+            assertThat(updatedEntity2.placementDates[0].duration).isEqualTo(duration2)
+            assertThat(updatedEntity2.submittedAt).isNotNull()
+            assertThat(updatedEntity2.allocatedToUser!!.id).isEqualTo(matcherUser.id)
+
+            val createdApp3Id = body[2].id
+            val updatedEntity3 = placementApplicationRepository.findByIdOrNull(createdApp3Id)!!
+            assertThat(updatedEntity3.placementDates[0].expectedArrival).isEqualTo(arrival3)
+            assertThat(updatedEntity3.placementDates[0].duration).isEqualTo(duration3)
+            assertThat(updatedEntity3.submittedAt).isNotNull()
+            assertThat(updatedEntity3.allocatedToUser!!.id).isEqualTo(matcherUser.id)
+
+            emailAsserter.assertEmailsRequestedCount(2)
+            emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestSubmitted)
+            emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestAllocated)
           }
         }
       }
