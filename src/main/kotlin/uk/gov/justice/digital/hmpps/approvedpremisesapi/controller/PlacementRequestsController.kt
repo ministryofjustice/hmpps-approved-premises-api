@@ -177,7 +177,7 @@ class PlacementRequestsController(
     return ResponseEntity(bookingNotMadeTransformer.transformJpaToApi(bookingNotMade), HttpStatus.OK)
   }
 
-  override fun placementRequestsIdWithdrawalPost(id: UUID, body: WithdrawPlacementRequest?): ResponseEntity<Unit> {
+  override fun placementRequestsIdWithdrawalPost(id: UUID, body: WithdrawPlacementRequest?): ResponseEntity<PlacementRequestDetail> {
     val user = userService.getUserForRequest()
 
     val reason = when (body?.reason) {
@@ -196,7 +196,7 @@ class PlacementRequestsController(
       null -> null
     }
 
-    val result = extractEntityFromAuthorisableActionResult(
+    val placementRequestAndCancellations = extractEntityFromAuthorisableActionResult(
       placementRequestService.withdrawPlacementRequest(
         id,
         reason,
@@ -207,7 +207,7 @@ class PlacementRequestsController(
       ),
     )
 
-    return ResponseEntity.ok(result)
+    return ResponseEntity.ok(toPlacementRequestDetail(user, placementRequestAndCancellations))
   }
 
   private fun toPlacementRequestDetail(forUser: UserEntity,

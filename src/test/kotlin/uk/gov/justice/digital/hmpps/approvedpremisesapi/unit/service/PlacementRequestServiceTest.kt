@@ -723,6 +723,7 @@ class PlacementRequestServiceTest {
       every {
         applicationService.updateApprovedPremisesApplicationStatus(application.id, PENDING_PLACEMENT_REQUEST)
       } returns Unit
+      every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
 
       val withdrawalContext = WithdrawalContext(
         user,
@@ -760,6 +761,7 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
+      every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
 
       val withdrawnPlacementRequest = createValidPlacementRequest(application, user)
       withdrawnPlacementRequest.isWithdrawn = true
@@ -803,6 +805,7 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
+      every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
 
       val withdrawnPlacementRequest = createValidPlacementRequest(application, user)
       withdrawnPlacementRequest.isWithdrawn = true
@@ -841,6 +844,7 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
+      every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
 
       val withdrawnPlacementRequest = createValidPlacementRequest(application, user)
       withdrawnPlacementRequest.isWithdrawn = true
@@ -876,6 +880,7 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
+      every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
 
       val providedReason = PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
       val result = placementRequestService.withdrawPlacementRequest(
@@ -946,6 +951,7 @@ class PlacementRequestServiceTest {
 
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+      every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
 
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
@@ -980,6 +986,7 @@ class PlacementRequestServiceTest {
       every {
         bookingService.createCas1Cancellation(any(), any(), any(), any(), any())
       } returns mockk<ValidatableActionResult.Success<CancellationEntity>>()
+      every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
 
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,
@@ -1038,6 +1045,8 @@ class PlacementRequestServiceTest {
       every {
         bookingService.createCas1Cancellation(any(), any(), any(), any(), any())
       } returns ValidatableActionResult.GeneralValidationError("booking cancellation didn't work!")
+      every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
+
       every { logger.error(any<String>()) } returns Unit
 
       val result = placementRequestService.withdrawPlacementRequest(
@@ -1098,6 +1107,7 @@ class PlacementRequestServiceTest {
       } returns Unit
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
+      every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
 
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,

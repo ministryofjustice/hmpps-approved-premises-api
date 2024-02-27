@@ -852,7 +852,12 @@ class WithdrawalTest : IntegrationTestBase() {
     fun `Withdrawing a Match Request cascades to booking pending arrival and updates the application status`() {
       `Given a User` { applicant, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
+          val (application, assessment) = createApplicationAndAssessment(
+            applicant = applicant,
+            assignee = applicant,
+            offenderDetails = offenderDetails,
+            assessmentAllocatedTo = applicant
+          )
 
           val placementRequest = createPlacementRequest(application)
           val bookingNoArrival = createBooking(
@@ -906,7 +911,12 @@ class WithdrawalTest : IntegrationTestBase() {
     fun `Withdrawing a Match Request doesn't cascade to booking with arrival`() {
       `Given a User` { applicant, jwt ->
         `Given an Offender` { offenderDetails, _ ->
-          val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
+          val (application, assessment) = createApplicationAndAssessment(
+            applicant = applicant,
+            assignee = applicant,
+            offenderDetails = offenderDetails,
+            assessmentAllocatedTo = applicant
+          )
 
           val placementRequest = createPlacementRequest(application)
           val bookingNoArrival = createBooking(
@@ -1069,6 +1079,7 @@ class WithdrawalTest : IntegrationTestBase() {
       withApplicationSchema(applicationSchema)
       withSubmittedAt(OffsetDateTime.now())
       withApArea(apArea)
+      withReleaseType("licence")
     }
 
     val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
@@ -1173,7 +1184,7 @@ class WithdrawalTest : IntegrationTestBase() {
     configuration: (PlacementRequestEntityFactory.() -> Unit)? = null,
   ) =
     placementRequestFactory.produceAndPersist {
-      val assessment = application.assessments.get(0)
+      val assessment = application.assessments[0]
 
       val placementRequirements = placementRequirementsFactory.produceAndPersist {
         withApplication(application)

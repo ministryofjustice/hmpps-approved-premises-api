@@ -811,7 +811,7 @@ class PlacementApplicationServiceTest {
       every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any()) } returns Unit
       every {
         placementRequestService.withdrawPlacementRequest(any(), any(), any())
-      } returns AuthorisableActionResult.Success(Unit)
+      } returns AuthorisableActionResult.Success(mockk<PlacementRequestService.PlacementRequestAndCancellations>())
 
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,

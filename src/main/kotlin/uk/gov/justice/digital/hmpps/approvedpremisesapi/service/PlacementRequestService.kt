@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
@@ -311,14 +312,14 @@ class PlacementRequestService(
     placementRequestId: UUID,
     userProvidedReason: PlacementRequestWithdrawalReason?,
     withdrawalContext: WithdrawalContext,
-  ): AuthorisableActionResult<Unit> {
+  ): AuthorisableActionResult<PlacementRequestAndCancellations> {
     val user = requireNotNull(withdrawalContext.triggeringUser)
 
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
 
     if (placementRequest.isWithdrawn) {
-      return AuthorisableActionResult.Success(Unit)
+      return AuthorisableActionResult.Success(toPlacementRequestAndCancellations(placementRequest))
     }
 
     val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementRequest
@@ -360,7 +361,7 @@ class PlacementRequestService(
       }
     }
 
-    return AuthorisableActionResult.Success(Unit)
+    return AuthorisableActionResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }
 
   fun getPlacementRequestForInitialApplicationDates(applicationId: UUID) =
