@@ -759,7 +759,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
   }
 
   private fun cancelBooking(booking: BookingEntity): CancellationEntity {
-    val (_, jwt) = managerDetails
+    val (_, jwt) = workflowManagerDetails
 
     val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
       withServiceScope("*")

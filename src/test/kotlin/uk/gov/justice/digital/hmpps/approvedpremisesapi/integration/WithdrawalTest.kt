@@ -345,11 +345,10 @@ class WithdrawalTest : IntegrationTestBase() {
       }
     }
 
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_WORKFLOW_MANAGER"])
-    fun `Get withdrawables for an application returns withdrawable bookings when a user can manage bookings`(role: UserRole) {
+    @Test
+    fun `Get withdrawables for an application returns withdrawable bookings when a user can manage bookings`() {
       `Given a User` { applicant, _ ->
-        `Given a User`(roles = listOf(role)) { allocatedTo, jwt ->
+        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { allocatedTo, jwt ->
           `Given an Offender` { offenderDetails, _ ->
 
             val (application, _) = createApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
@@ -389,16 +388,12 @@ class WithdrawalTest : IntegrationTestBase() {
               withBooking(bookingWithArrival)
             }
 
-            val expected = listOfNotNull(
-              if (role == UserRole.CAS1_WORKFLOW_MANAGER) {
-                Withdrawable(
-                  application.id,
-                  WithdrawableType.application,
-                  emptyList(),
-                )
-              } else {
-                null
-              },
+            val expected = listOf(
+              Withdrawable(
+                application.id,
+                WithdrawableType.application,
+                emptyList(),
+              ),
               Withdrawable(
                 booking1.id,
                 WithdrawableType.booking,

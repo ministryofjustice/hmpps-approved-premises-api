@@ -501,7 +501,7 @@ class UserAccessServiceTest {
   }
 
   @Nested
-  inner class UserCanCancelBooking {
+  inner class UserMayCancelBooking {
     private val cas1Booking = BookingEntityFactory()
       .withPremises(approvedPremises)
       .produce()
@@ -516,27 +516,27 @@ class UserAccessServiceTest {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class)
-    fun `userCanCancelBooking returns true if the given premises is a CAS1 premises and the user has either the MANAGER or CAS1_WORKFLOW_MANAGER user role`(
+    fun `userMayCancelBooking returns true if the given premises is a CAS1 premises and the user has either the MANAGER or CAS1_WORKFLOW_MANAGER user role`(
       role: UserRole,
     ) {
       currentRequestIsFor(ServiceName.approvedPremises)
 
       user.addRoleForUnitTest(role)
 
-      val canCancelBooking = listOf(UserRole.CAS1_MANAGER, UserRole.CAS1_WORKFLOW_MANAGER).contains(role)
+      val canCancelBooking = listOf(UserRole.CAS1_WORKFLOW_MANAGER).contains(role)
 
       assertThat(userAccessService.userMayCancelBooking(user, cas1Booking)).isEqualTo(canCancelBooking)
     }
 
     @Test
-    fun `userCanCancelBooking returns false if the given premises is a CAS1 premises and the user has no suitable role`() {
+    fun `userMayCancelBooking returns false if the given premises is a CAS1 premises and the user has no suitable role`() {
       currentRequestIsFor(ServiceName.approvedPremises)
 
       assertThat(userAccessService.userMayCancelBooking(user, cas1Booking)).isFalse
     }
 
     @Test
-    fun `userCanCancelBooking returns true if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
+    fun `userMayCancelBooking returns true if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and can access the premises's probation region`() {
       currentRequestIsFor(ServiceName.temporaryAccommodation)
 
       user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
@@ -545,7 +545,7 @@ class UserAccessServiceTest {
     }
 
     @Test
-    fun `userCanCancelBooking returns false if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
+    fun `userMayCancelBooking returns false if the given premises is a CAS3 premises and the user has the CAS3_ASSESSOR role and cannot access the premises's probation region`() {
       currentRequestIsFor(ServiceName.temporaryAccommodation)
 
       user.addRoleForUnitTest(UserRole.CAS3_ASSESSOR)
@@ -554,7 +554,7 @@ class UserAccessServiceTest {
     }
 
     @Test
-    fun `userCanCancelBooking returns false if the given premises is a CAS3 premises and the user does not have a suitable role`() {
+    fun `userMayCancelBooking returns false if the given premises is a CAS3 premises and the user does not have a suitable role`() {
       currentRequestIsFor(ServiceName.temporaryAccommodation)
 
       assertThat(userAccessService.userMayCancelBooking(user, cas3BookingInUserRegion)).isFalse
@@ -1486,10 +1486,10 @@ class UserAccessServiceTest {
   }
 
   @Nested
-  inner class UserCanWithdrawApplication {
+  inner class UserMayWithdrawApplication {
 
     @Test
-    fun `userCanWithdrawApplication returns true if application was created by user`() {
+    fun `userMayWithdrawApplication returns true if application was created by user`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
         .produce()
@@ -1498,7 +1498,7 @@ class UserAccessServiceTest {
     }
 
     @Test
-    fun `userCanWithdrawApplication returns false if application was not created by user`() {
+    fun `userMayWithdrawApplication returns false if application was not created by user`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(anotherUserInRegion)
         .produce()
@@ -1507,7 +1507,7 @@ class UserAccessServiceTest {
     }
 
     @Test
-    fun `userCanWithdrawApplication returns true if submitted and has CAS1_WORKFLOW_MANAGER role`() {
+    fun `userMayWithdrawApplication returns true if submitted and has CAS1_WORKFLOW_MANAGER role`() {
       val workflowManager = UserEntityFactory()
         .withProbationRegion(probationRegion)
         .produce()
@@ -1528,7 +1528,7 @@ class UserAccessServiceTest {
     }
 
     @Test
-    fun `userCanWithdrawApplication returns false if not submitted and has CAS1_WORKFLOW_MANAGER role`() {
+    fun `userMayWithdrawApplication returns false if not submitted and has CAS1_WORKFLOW_MANAGER role`() {
       val workflowManager = UserEntityFactory()
         .withProbationRegion(probationRegion)
         .produce()
@@ -1548,7 +1548,7 @@ class UserAccessServiceTest {
     }
 
     @Test
-    fun `userCanWithdrawApplication returns false if not CAS1`() {
+    fun `userMayWithdrawApplication returns false if not CAS1`() {
       val newestJsonSchema = TemporaryAccommodationApplicationJsonSchemaEntityFactory()
         .withSchema("{}")
         .produce()
@@ -1565,10 +1565,10 @@ class UserAccessServiceTest {
   }
 
   @Nested
-  inner class UserCanWithdrawPlacementRequest {
+  inner class UserMayWithdrawPlacementRequest {
 
     @Test
-    fun `userCanWithdrawPlacementRequest returns true if application was created by user`() {
+    fun `userMayWithdrawPlacementRequest returns true if application was created by user`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
         .produce()
@@ -1593,7 +1593,7 @@ class UserAccessServiceTest {
     }
 
     @Test
-    fun `userCanWithdrawPlacementRequest returns false if application was not created by user and doesn't have CAS1_WORKFLOW_MANAGER role`() {
+    fun `userMayWithdrawPlacementRequest returns false if application was not created by user and doesn't have CAS1_WORKFLOW_MANAGER role`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(anotherUserInRegion)
         .produce()
@@ -1618,7 +1618,7 @@ class UserAccessServiceTest {
     }
 
     @Test
-    fun `userCanWithdrawPlacementRequest returns true if user has CAS1_WORKFLOW_MANAGER role`() {
+    fun `userMayWithdrawPlacementRequest returns true if user has CAS1_WORKFLOW_MANAGER role`() {
       val workflowManager = UserEntityFactory()
         .withProbationRegion(probationRegion)
         .produce()
@@ -1655,10 +1655,10 @@ class UserAccessServiceTest {
   }
 
   @Nested
-  inner class UserCanWithdrawPlacementApplication {
+  inner class UserMayWithdrawPlacementApplication {
 
     @Test
-    fun `userCanWithdrawPlacementApplication returns true if application was created by user`() {
+    fun `userMayWithdrawPlacementApplication returns true if application was created by user`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
         .produce()
@@ -1672,7 +1672,7 @@ class UserAccessServiceTest {
     }
 
     @Test
-    fun `userCanWithdrawPlacementApplication returns false if application was not created by user`() {
+    fun `userMayWithdrawPlacementApplication returns false if application was not created by user`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(anotherUserInRegion)
         .produce()
@@ -1686,7 +1686,7 @@ class UserAccessServiceTest {
     }
 
     @Test
-    fun `userCanWithdrawPlacementApplication returns true if submitted and has CAS1_WORKFLOW_MANAGER role`() {
+    fun `userMayWithdrawPlacementApplication returns true if submitted and has CAS1_WORKFLOW_MANAGER role`() {
       val workflowManager = UserEntityFactory()
         .withProbationRegion(probationRegion)
         .produce()
@@ -1712,7 +1712,7 @@ class UserAccessServiceTest {
     }
 
     @Test
-    fun `userCanWithdrawPlacementApplication returns false if not submitted and has CAS1_WORKFLOW_MANAGER role`() {
+    fun `userMayWithdrawPlacementApplication returns false if not submitted and has CAS1_WORKFLOW_MANAGER role`() {
       val workflowManager = UserEntityFactory()
         .withProbationRegion(probationRegion)
         .produce()

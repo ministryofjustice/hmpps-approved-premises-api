@@ -2686,10 +2686,62 @@ class BookingTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_WORKFLOW_MANAGER"])
-    fun `Create Cancellation on CAS1 Booking returns OK with correct body and sends emails when user has one of roles MANAGER, WORKFLOW_MANAGER`(role: UserRole) {
+    @EnumSource(value = UserRole::class, names = ["CAS1_WORKFLOW_MANAGER"], mode = EnumSource.Mode.EXCLUDE)
+    fun `Create Cancellation with invalid role returns 401`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { _, jwt ->
         `Given a User`(roles = listOf(role)) { applicant, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val apArea = apAreaEntityFactory.produceAndPersist {
+              withEmailAddress("apAreaEmail@test.com")
+            }
+
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(applicant)
+              withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+              withApArea(apArea)
+              withSubmittedAt(OffsetDateTime.now())
+            }
+
+            val booking = bookingEntityFactory.produceAndPersist {
+              withYieldedPremises {
+                approvedPremisesEntityFactory.produceAndPersist {
+                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                  withYieldedProbationRegion {
+                    probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+                  }
+                }
+              }
+              withCrn(offenderDetails.otherIds.crn)
+              withApplication(application)
+            }
+
+            val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+              withServiceScope("*")
+            }
+
+            webTestClient.post()
+              .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                NewCancellation(
+                  date = LocalDate.parse("2022-08-17"),
+                  reason = cancellationReason.id,
+                  notes = null,
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isForbidden
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Create Cancellation on CAS1 Booking returns OK with correct body and sends emails when user has one of roles WORKFLOW_MANAGER`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        `Given a User` { applicant, _ ->
           `Given an Offender` { offenderDetails, _ ->
             val apArea = apAreaEntityFactory.produceAndPersist {
               withEmailAddress("apAreaEmail@test.com")
