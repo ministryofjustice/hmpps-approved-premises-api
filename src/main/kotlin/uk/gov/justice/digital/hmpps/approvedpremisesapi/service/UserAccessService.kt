@@ -79,8 +79,13 @@ class UserAccessService(
     else -> false
   }
 
+  /**
+   * This function only checks if the user has the correct permissions to cancel the given booking.
+   *
+   * It doesn't consider if the booking is in a cancellable state
+   */
   fun userMayCancelBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
-    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_MANAGER, UserRole.CAS1_WORKFLOW_MANAGER)
+    is ApprovedPremisesEntity -> user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER)
     is TemporaryAccommodationPremisesEntity -> userCanManagePremisesBookings(user, booking.premises)
     else -> false
   }
