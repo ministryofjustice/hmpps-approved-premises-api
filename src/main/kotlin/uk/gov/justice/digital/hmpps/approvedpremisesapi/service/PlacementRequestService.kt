@@ -124,21 +124,10 @@ class PlacementRequestService(
     return Pair(response.content, getMetadata(response, pageCriteria))
   }
 
-  data class AllActiveSearchCriteria(
-    val status: PlacementRequestStatus? = null,
-    val crn: String? = null,
-    val crnOrName: String? = null,
-    val tier: String? = null,
-    val arrivalDateStart: LocalDate? = null,
-    val arrivalDateEnd: LocalDate? = null,
-    val requestType: PlacementRequestRequestType? = null,
-    val apAreaId: UUID? = null,
-  )
-
   fun getPlacementRequestForUser(
     user: UserEntity,
     id: UUID,
-  ): AuthorisableActionResult<Pair<PlacementRequestEntity, List<CancellationEntity>>> {
+  ): AuthorisableActionResult<PlacementRequestAndCancellations> {
     val placementRequest = placementRequestRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -146,9 +135,7 @@ class PlacementRequestService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    val cancellations = cancellationRepository.getCancellationsForApplicationId(placementRequest.application.id)
-
-    return AuthorisableActionResult.Success(Pair(placementRequest, cancellations))
+    return AuthorisableActionResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }
 
   fun reallocatePlacementRequest(
@@ -472,4 +459,26 @@ class PlacementRequestService(
       ),
     )
   }
+
+  private fun toPlacementRequestAndCancellations(placementRequest: PlacementRequestEntity): PlacementRequestAndCancellations {
+    val cancellations = cancellationRepository.getCancellationsForApplicationId(placementRequest.application.id)
+    return PlacementRequestAndCancellations(placementRequest, cancellations)
+  }
+
+  data class AllActiveSearchCriteria(
+    val status: PlacementRequestStatus? = null,
+    val crn: String? = null,
+    val crnOrName: String? = null,
+    val tier: String? = null,
+    val arrivalDateStart: LocalDate? = null,
+    val arrivalDateEnd: LocalDate? = null,
+    val requestType: PlacementRequestRequestType? = null,
+    val apAreaId: UUID? = null,
+  )
+
+  data class PlacementRequestAndCancellations(
+    val placementRequest: PlacementRequestEntity,
+    val cancellations: List<CancellationEntity>,
+  )
+
 }
