@@ -2399,6 +2399,12 @@ paths:
           description: Filters the bookings to those relevant to the specified service.
           schema:
             $ref: '#/components/schemas/ServiceName'
+        - name: crn
+          in: query
+          description: If provided, return only results for the given CRN
+          required: false
+          schema:
+            type: string
       responses:
         200:
           description: successful operation
