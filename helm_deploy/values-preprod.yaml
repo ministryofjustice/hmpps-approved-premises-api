@@ -112,3 +112,6 @@ generic-prometheus-alerts:
 
 env_details:
   production_env: false
+
+cas3-report:
+  end-date-override: 3

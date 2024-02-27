@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.reporting.generato
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.jetbrains.kotlinx.dataframe.api.count
 import org.junit.jupiter.api.Test
@@ -41,6 +42,7 @@ class BedUsageReportGeneratorTest {
     mockBookingRepository,
     mockLostBedsRepository,
     mockWorkingDayCountService,
+    0,
   )
 
   @Test
@@ -98,6 +100,168 @@ class BedUsageReportGeneratorTest {
     assertThat(result.count()).isEqualTo(1)
     assertThat(result[0][BedUsageReportRow::propertyRef]).isEqualTo(temporaryAccommodationPremises.name)
     assertThat(result[0][BedUsageReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremises.id.toShortBase58())
+  }
+
+  @Test
+  fun `Only results for beds from the temporary accommodation service are returned in the report with 3 month duration`() {
+    val temporaryAccommodationPremises = TemporaryAccommodationPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val temporaryAccommodationRoom = RoomEntityFactory()
+      .withPremises(temporaryAccommodationPremises)
+      .produce()
+
+    val temporaryAccommodationBed = BedEntityFactory()
+      .withRoom(temporaryAccommodationRoom)
+      .produce()
+
+    val temporaryAccommodationLostBed = LostBedsEntityFactory()
+      .withBed(temporaryAccommodationBed)
+      .withStartDate(LocalDate.parse("2023-04-05"))
+      .withEndDate(LocalDate.parse("2023-04-07"))
+      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withPremises(temporaryAccommodationPremises)
+      .produce()
+
+    val approvedPremises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val approvedPremisesRoom = RoomEntityFactory()
+      .withPremises(approvedPremises)
+      .produce()
+
+    val approvedPremisesBed = BedEntityFactory()
+      .withRoom(approvedPremisesRoom)
+      .produce()
+
+    val approvedPremisesLostBed = LostBedsEntityFactory()
+      .withBed(approvedPremisesBed)
+      .withStartDate(LocalDate.parse("2023-04-05"))
+      .withEndDate(LocalDate.parse("2023-04-07"))
+      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withPremises(approvedPremises)
+      .produce()
+
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-07-01"),
+        temporaryAccommodationBed,
+      )
+    } returns emptyList()
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-07-01"),
+        approvedPremisesBed,
+      )
+    } returns emptyList()
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-07-01"),
+        temporaryAccommodationBed,
+      )
+    } returns listOf(temporaryAccommodationLostBed)
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2023-04-01"),
+        LocalDate.parse("2023-07-01"),
+        approvedPremisesBed,
+      )
+    } returns listOf(approvedPremisesLostBed)
+
+    val bedUsageReportGeneratorWithThreeMonth = BedUsageReportGenerator(
+      mockBookingTransformer,
+      mockBookingRepository,
+      mockLostBedsRepository,
+      mockWorkingDayCountService,
+      3,
+    )
+
+    val result = bedUsageReportGeneratorWithThreeMonth.createReport(
+      listOf(approvedPremisesBed, temporaryAccommodationBed),
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+    )
+
+    assertThat(result.count()).isEqualTo(1)
+    assertThat(result[0][BedUsageReportRow::propertyRef]).isEqualTo(temporaryAccommodationPremises.name)
+    assertThat(result[0][BedUsageReportRow::uniquePropertyRef]).isEqualTo(temporaryAccommodationPremises.id.toShortBase58())
+
+    verify {
+      mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-07-01"), any())
+    }
+  }
+
+  @Test
+  fun `Only results for beds from the approved premises service are returned in the report for 1 month for approved premises`() {
+    val temporaryAccommodationPremises = TemporaryAccommodationPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val temporaryAccommodationRoom = RoomEntityFactory()
+      .withPremises(temporaryAccommodationPremises)
+      .produce()
+
+    val temporaryAccommodationBed = BedEntityFactory()
+      .withRoom(temporaryAccommodationRoom)
+      .produce()
+
+    val temporaryAccommodationLostBed = LostBedsEntityFactory()
+      .withBed(temporaryAccommodationBed)
+      .withStartDate(LocalDate.parse("2023-04-05"))
+      .withEndDate(LocalDate.parse("2023-04-07"))
+      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withPremises(temporaryAccommodationPremises)
+      .produce()
+
+    val approvedPremises = ApprovedPremisesEntityFactory()
+      .withUnitTestControlTestProbationAreaAndLocalAuthority()
+      .produce()
+
+    val approvedPremisesRoom = RoomEntityFactory()
+      .withPremises(approvedPremises)
+      .produce()
+
+    val approvedPremisesBed = BedEntityFactory()
+      .withRoom(approvedPremisesRoom)
+      .produce()
+
+    val approvedPremisesLostBed = LostBedsEntityFactory()
+      .withBed(approvedPremisesBed)
+      .withStartDate(LocalDate.parse("2023-04-05"))
+      .withEndDate(LocalDate.parse("2023-04-07"))
+      .withYieldedReason { LostBedReasonEntityFactory().produce() }
+      .withPremises(approvedPremises)
+      .produce()
+
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns emptyList()
+    every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), approvedPremisesBed) } returns emptyList()
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), temporaryAccommodationBed) } returns listOf(temporaryAccommodationLostBed)
+    every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), approvedPremisesBed) } returns listOf(approvedPremisesLostBed)
+
+    val bedUsageReportGeneratorWithThreeMonth = BedUsageReportGenerator(
+      mockBookingTransformer,
+      mockBookingRepository,
+      mockLostBedsRepository,
+      mockWorkingDayCountService,
+      3,
+    )
+
+    val result = bedUsageReportGeneratorWithThreeMonth.createReport(
+      listOf(approvedPremisesBed, temporaryAccommodationBed),
+      BedUsageReportProperties(ServiceName.approvedPremises, null, 2023, 4),
+    )
+
+    assertThat(result.count()).isEqualTo(1)
+    assertThat(result[0][BedUsageReportRow::propertyRef]).isEqualTo(approvedPremises.name)
+    assertThat(result[0][BedUsageReportRow::uniquePropertyRef]).isEqualTo(approvedPremises.id.toShortBase58())
+
+    verify {
+      mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), any())
+    }
   }
 
   @Test

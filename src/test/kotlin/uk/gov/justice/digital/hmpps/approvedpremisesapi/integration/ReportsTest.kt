@@ -851,6 +851,7 @@ class ReportsTest : IntegrationTestBase() {
           realBookingRepository,
           realLostBedsRepository,
           realWorkingDayCountService,
+          0,
         )
           .createReport(listOf(bed), BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
 
@@ -958,6 +959,7 @@ class ReportsTest : IntegrationTestBase() {
           realBookingRepository,
           realLostBedsRepository,
           realWorkingDayCountService,
+          0,
         )
           .createReport(listOf(bed), BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
 

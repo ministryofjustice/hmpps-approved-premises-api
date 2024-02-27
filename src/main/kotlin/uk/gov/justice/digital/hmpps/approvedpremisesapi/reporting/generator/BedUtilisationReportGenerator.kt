@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
@@ -18,6 +19,7 @@ class BedUtilisationReportGenerator(
   private val bookingRepository: BookingRepository,
   private val lostBedsRepository: LostBedsRepository,
   private val workingDayCountService: WorkingDayCountService,
+  private val cas3EndDateOverride: Int,
 ) : ReportGenerator<BedEntity, BedUtilisationReportRow, BedUtilisationReportProperties>(BedUtilisationReportRow::class) {
   override fun filter(properties: BedUtilisationReportProperties): (BedEntity) -> Boolean = {
     checkServiceType(properties.serviceName, it.room.premises) &&
@@ -26,7 +28,11 @@ class BedUtilisationReportGenerator(
 
   override val convert: BedEntity.(properties: BedUtilisationReportProperties) -> List<BedUtilisationReportRow> = { properties ->
     val startOfMonth = LocalDate.of(properties.year, properties.month, 1)
-    val endOfMonth = LocalDate.of(properties.year, properties.month, startOfMonth.month.length(startOfMonth.isLeapYear))
+    val endOfMonth = if (properties.serviceName == temporaryAccommodation && cas3EndDateOverride != 0) {
+      startOfMonth.plusMonths(cas3EndDateOverride.toLong())
+    } else {
+      LocalDate.of(properties.year, properties.month, startOfMonth.month.length(startOfMonth.isLeapYear))
+    }
 
     var bookedDaysActiveAndClosed = 0
     var confirmedDays = 0
