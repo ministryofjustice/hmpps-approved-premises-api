@@ -92,6 +92,22 @@ class PlacementApplicationTransformerTest {
       .withDocument(null)
       .produce()
 
+    placementApplication.placementDates.add(
+      PlacementDateEntityFactory()
+        .withExpectedArrival(LocalDate.of(2023, 12, 11))
+        .withDuration(30)
+        .withPlacementApplication(placementApplication)
+        .produce(),
+    )
+
+    placementApplication.placementDates.add(
+      PlacementDateEntityFactory()
+        .withExpectedArrival(LocalDate.of(2024, 1, 31))
+        .withDuration(15)
+        .withPlacementApplication(placementApplication)
+        .produce(),
+    )
+
     val result = placementApplicationTransformer.transformJpaToApi(placementApplication)
 
     assertThat(result.id).isEqualTo(placementApplication.id)
@@ -110,6 +126,12 @@ class PlacementApplicationTransformerTest {
     assertThat(result.isWithdrawn).isEqualTo(false)
     assertThat(result.withdrawalReason).isNull()
     assertThat(result.type).isEqualTo(PlacementApplicationType.additional)
+
+    assertThat(result.placementDates).hasSize(2)
+    assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
+    assertThat(result.placementDates[0].duration).isEqualTo(30)
+    assertThat(result.placementDates[1].expectedArrival).isEqualTo(LocalDate.of(2024, 1, 31))
+    assertThat(result.placementDates[1].duration).isEqualTo(15)
   }
 
   @Test
@@ -234,6 +256,8 @@ class PlacementApplicationTransformerTest {
           .withAssessment(assessment)
           .produce(),
       )
+      .withExpectedArrival(LocalDate.of(2023, 12, 11))
+      .withDuration(30)
       .produce()
 
     val schemaId = UUID.randomUUID()
@@ -261,6 +285,10 @@ class PlacementApplicationTransformerTest {
     assertThat(result.isWithdrawn).isEqualTo(false)
     assertThat(result.withdrawalReason).isNull()
     assertThat(result.type).isEqualTo(PlacementApplicationType.initial)
+
+    assertThat(result.placementDates).hasSize(1)
+    assertThat(result.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2023, 12, 11))
+    assertThat(result.placementDates[0].duration).isEqualTo(30)
   }
 
   @Test

@@ -3510,6 +3510,10 @@ components:
               $ref: '#/components/schemas/WithdrawPlacementRequestReason'
             type:
               $ref: '#/components/schemas/PlacementApplicationType'
+            placementDates:
+              type: array
+              items:
+                $ref: '#/components/schemas/PlacementDates'
           required:
             - id
             - createdByUserId
@@ -3522,6 +3526,7 @@ components:
             - canBeWithdrawn
             - isWithdrawn
             - type
+            - placementDates
     NewPlacementApplication:
       type: object
       properties:
