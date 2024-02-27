@@ -81,6 +81,7 @@ class AssessmentService(
   private val sendPlacementRequestNotifications: Boolean,
   @Value("\${notify.send-new-withdrawal-notifications}")
   private val sendNewWithdrawalNotifications: Boolean,
+  private val taskDeadlineService: TaskDeadlineService,
 ) {
   fun getVisibleAssessmentSummariesForUserCAS1(
     user: UserEntity,
@@ -213,7 +214,10 @@ class AssessmentService(
       referralHistoryNotes = mutableListOf(),
       isWithdrawn = false,
       createdFromAppeal = createdFromAppeal,
+      dueAt = null,
     )
+
+    assessment.dueAt = taskDeadlineService.getDeadline(assessment)
 
     val allocatedUser = userAllocator.getUserForAssessmentAllocation(assessment)
     assessment.allocatedToUser = allocatedUser
@@ -263,6 +267,7 @@ class AssessmentService(
         completedAt = null,
         summaryData = objectMapper.writeValueAsString(summaryData),
         isWithdrawn = false,
+        dueAt = null,
       ),
     )
 
@@ -746,7 +751,7 @@ class AssessmentService(
 
     val dateTimeNow = OffsetDateTime.now()
 
-    val newAssessment = assessmentRepository.save(
+    val newAssessment =
       ApprovedPremisesAssessmentEntity(
         id = UUID.randomUUID(),
         application = application,
@@ -765,8 +770,12 @@ class AssessmentService(
         referralHistoryNotes = mutableListOf(),
         isWithdrawn = false,
         createdFromAppeal = currentAssessment.createdFromAppeal,
-      ),
-    )
+        dueAt = null,
+      )
+
+    newAssessment.dueAt = taskDeadlineService.getDeadline(newAssessment)
+
+    assessmentRepository.save(newAssessment)
 
     if (application is ApprovedPremisesApplicationEntity) {
       if (assigneeUser.email != null) {

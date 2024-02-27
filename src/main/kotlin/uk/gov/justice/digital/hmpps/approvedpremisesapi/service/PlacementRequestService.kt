@@ -73,6 +73,7 @@ class PlacementRequestService(
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
+  private val taskDeadlineService: TaskDeadlineService,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -179,15 +180,18 @@ class PlacementRequestService(
     // Make the timestamp precision less precise, so we don't have any issues with microsecond resolution in tests
     val dateTimeNow = OffsetDateTime.now().withNano(0)
 
-    val newPlacementRequest = placementRequestRepository.save(
-      currentPlacementRequest.copy(
-        id = UUID.randomUUID(),
-        reallocatedAt = null,
-        allocatedToUser = assigneeUser,
-        createdAt = dateTimeNow,
-        placementRequirements = currentPlacementRequest.placementRequirements,
-      ),
+    val newPlacementRequest = currentPlacementRequest.copy(
+      id = UUID.randomUUID(),
+      reallocatedAt = null,
+      allocatedToUser = assigneeUser,
+      createdAt = dateTimeNow,
+      placementRequirements = currentPlacementRequest.placementRequirements,
+      dueAt = null,
     )
+
+    newPlacementRequest.dueAt = taskDeadlineService.getDeadline(newPlacementRequest)
+
+    placementRequestRepository.save(newPlacementRequest)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
@@ -261,10 +265,13 @@ class PlacementRequestService(
       isParole = isParole,
       isWithdrawn = false,
       withdrawalReason = null,
+      dueAt = null,
     )
 
     val allocatedUser = userAllocator.getUserForPlacementRequestAllocation(placementRequest)
+
     placementRequest.allocatedToUser = allocatedUser
+    placementRequest.dueAt = taskDeadlineService.getDeadline(placementRequest)
 
     return placementRequestRepository.save(placementRequest)
   }

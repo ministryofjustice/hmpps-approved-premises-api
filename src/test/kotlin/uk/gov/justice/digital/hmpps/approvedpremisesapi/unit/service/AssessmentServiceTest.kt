@@ -74,6 +74,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequirementsService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
@@ -99,6 +100,7 @@ class AssessmentServiceTest {
   private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
   private val userAllocatorMock = mockk<UserAllocator>()
   private val objectMapperMock = spyk<ObjectMapper>()
+  private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
 
   private val assessmentService = AssessmentService(
     userServiceMock,
@@ -121,6 +123,7 @@ class AssessmentServiceTest {
     UrlTemplate("http://frontend/assessments/#id"),
     sendPlacementRequestNotifications = true,
     sendNewWithdrawalNotifications = true,
+    taskDeadlineServiceMock,
   )
 
   @Test
@@ -1924,6 +1927,7 @@ class AssessmentServiceTest {
     val previousAssessment = ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withCreatedFromAppeal(createdFromAppeal)
+      .withDueAt(OffsetDateTime.now())
       .withAllocatedToUser(
         UserEntityFactory()
           .withYieldedProbationRegion {
@@ -1934,6 +1938,8 @@ class AssessmentServiceTest {
           .produce(),
       )
       .produce()
+
+    val dueAt = OffsetDateTime.now()
 
     every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
@@ -1947,6 +1953,8 @@ class AssessmentServiceTest {
 
     every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 
+    every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
+
     val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1957,6 +1965,7 @@ class AssessmentServiceTest {
 
     assertThat(previousAssessment.reallocatedAt).isNotNull
     assertThat(newAssessment.createdFromAppeal).isEqualTo(createdFromAppeal)
+    assertThat(newAssessment.dueAt).isEqualTo(dueAt)
 
     verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
     verify(exactly = 1) {
@@ -2225,6 +2234,7 @@ class AssessmentServiceTest {
       UrlTemplate("http://frontend/assessments/#id"),
       sendPlacementRequestNotifications = true,
       sendNewWithdrawalNotifications = true,
+      taskDeadlineServiceMock,
     )
 
     private val user = UserEntityFactory()
@@ -2448,15 +2458,19 @@ class AssessmentServiceTest {
         .withIsPipeApplication(true)
         .produce()
 
+      val dueAt = OffsetDateTime.now()
+
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
       every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns userWithLeastAllocatedAssessments
 
       every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 
+      every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
+
       assessmentService.createApprovedPremisesAssessment(application)
 
-      verify { assessmentRepositoryMock.save(match { it.allocatedToUser == userWithLeastAllocatedAssessments }) }
+      verify { assessmentRepositoryMock.save(match { it.allocatedToUser == userWithLeastAllocatedAssessments && it.dueAt == dueAt }) }
       verify(exactly = 1) {
         emailNotificationServiceMock.sendEmail(
           any(),

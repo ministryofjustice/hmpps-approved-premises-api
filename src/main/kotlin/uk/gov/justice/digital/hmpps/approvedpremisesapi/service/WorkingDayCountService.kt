@@ -13,25 +13,27 @@ class WorkingDayCountService(
   private val govUKBankHolidaysApiClient: GovUKBankHolidaysApiClient,
 ) {
 
-  fun getWorkingDaysCount(from: LocalDate, to: LocalDate): Int {
-    val bankHolidays = when (val govUKBankHolidaysResponse = govUKBankHolidaysApiClient.getUKBankHolidays()) {
+  val bankHolidays: List<LocalDate> by lazy {
+    when (val govUKBankHolidaysResponse = this.govUKBankHolidaysApiClient.getUKBankHolidays()) {
       is ClientResult.Success -> govUKBankHolidaysResponse.body.englandAndWales.events.map { it.date }
       is ClientResult.Failure -> govUKBankHolidaysResponse.throwException()
     }
+  }
+
+  fun getWorkingDaysCount(from: LocalDate, to: LocalDate): Int {
     return from.getDaysUntilInclusive(to).filter { it.isWorkingDay(bankHolidays) }.size
   }
 
   fun addWorkingDays(date: LocalDate, count: Int): LocalDate {
-    val bankHolidays = when (val govUKBankHolidaysResponse = govUKBankHolidaysApiClient.getUKBankHolidays()) {
-      is ClientResult.Success -> govUKBankHolidaysResponse.body.englandAndWales.events.map { it.date }
-      is ClientResult.Failure -> govUKBankHolidaysResponse.throwException()
-    }
-
     var result = date
     for (i in 0 until count) {
       result = result.getNextWorkingDay(bankHolidays)
     }
 
     return result
+  }
+
+  fun nextWorkingDay(date: LocalDate): LocalDate {
+    return date.getNextWorkingDay(bankHolidays)
   }
 }

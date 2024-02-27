@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.hibernate.annotations.Type
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.AssessmentClarificationNoteListener
@@ -204,6 +206,13 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
     nativeQuery = true,
   )
   fun findAllReferralsDataForMonthAndYear(month: Int, year: Int): List<ReferralsDataResult>
+
+  @Query("SELECT a from ApprovedPremisesAssessmentEntity a WHERE a.dueAt IS NULL")
+  fun findAllWithNullDueAt(pageable: Pageable?): Slice<ApprovedPremisesAssessmentEntity>
+
+  @Modifying
+  @Query("UPDATE ApprovedPremisesAssessmentEntity a SET a.dueAt = :dueAt WHERE a.id = :id")
+  fun updateDueAt(id: UUID, dueAt: OffsetDateTime?)
 }
 
 @Entity
@@ -252,6 +261,8 @@ abstract class AssessmentEntity(
   var schemaUpToDate: Boolean,
 
   var isWithdrawn: Boolean,
+
+  var dueAt: OffsetDateTime?,
 )
 
 @EntityListeners(AssessmentListener::class)
@@ -276,6 +287,7 @@ class ApprovedPremisesAssessmentEntity(
   referralHistoryNotes: MutableList<AssessmentReferralHistoryNoteEntity>,
   schemaUpToDate: Boolean,
   isWithdrawn: Boolean,
+  dueAt: OffsetDateTime?,
   val createdFromAppeal: Boolean,
 ) : AssessmentEntity(
   id,
@@ -294,6 +306,7 @@ class ApprovedPremisesAssessmentEntity(
   referralHistoryNotes,
   schemaUpToDate,
   isWithdrawn,
+  dueAt,
 ) {
   fun isPendingAssessment() = this.submittedAt == null && this.reallocatedAt == null && !this.isWithdrawn
 }
@@ -322,6 +335,7 @@ class TemporaryAccommodationAssessmentEntity(
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   var summaryData: String,
   isWithdrawn: Boolean,
+  dueAt: OffsetDateTime?,
 ) : AssessmentEntity(
   id,
   application,
@@ -339,6 +353,7 @@ class TemporaryAccommodationAssessmentEntity(
   referralHistoryNotes,
   schemaUpToDate,
   isWithdrawn,
+  dueAt,
 )
 
 interface DomainAssessmentSummary {

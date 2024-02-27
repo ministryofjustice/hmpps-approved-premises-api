@@ -37,6 +37,7 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
   private var referralHistoryNotes: Yielded<MutableList<AssessmentReferralHistoryNoteEntity>> = { mutableListOf() }
   private var completedAt: Yielded<OffsetDateTime?> = { null }
   private var summaryData: Yielded<String> = { "{}" }
+  private var dueAt: Yielded<OffsetDateTime?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -106,6 +107,10 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     this.summaryData = { summaryData }
   }
 
+  fun withDueAt(dueAt: OffsetDateTime) = apply {
+    this.dueAt = { dueAt }
+  }
+
   override fun produce(): TemporaryAccommodationAssessmentEntity = TemporaryAccommodationAssessmentEntity(
     id = this.id(),
     data = this.data(),
@@ -125,5 +130,6 @@ class TemporaryAccommodationAssessmentEntityFactory : Factory<TemporaryAccommoda
     completedAt = this.completedAt(),
     summaryData = this.summaryData(),
     isWithdrawn = false,
+    dueAt = this.dueAt(),
   )
 }

@@ -10,7 +10,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.PrisonsApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApAreaMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApAreaMigrationJobApplicationRepository
@@ -18,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.BookingStatusM
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.InmateStatusOnSubmissionMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.TaskDueMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationRepository
@@ -65,6 +69,15 @@ class MigrationJobService(
           applicationContext.getBean(ApAreaMigrationJobApplicationRepository::class.java),
           applicationContext.getBean(ApAreaRepository::class.java),
           transactionTemplate,
+        )
+
+        MigrationJobType.taskDueDates -> TaskDueMigrationJob(
+          applicationContext.getBean(AssessmentRepository::class.java),
+          applicationContext.getBean(PlacementApplicationRepository::class.java),
+          applicationContext.getBean(PlacementRequestRepository::class.java),
+          applicationContext.getBean(EntityManager::class.java),
+          applicationContext.getBean(TaskDeadlineService::class.java),
+          pageSize,
         )
       }
 

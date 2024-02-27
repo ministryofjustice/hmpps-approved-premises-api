@@ -3475,6 +3475,7 @@ components:
         - update_sentence_type_and_situation
         - update_booking_status
         - update_application_ap_areas
+        - update_task_due_dates
     PlacementDates:
       type: object
       properties:

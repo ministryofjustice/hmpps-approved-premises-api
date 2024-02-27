@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -179,6 +180,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
   @Test
   fun `Get application report returns OK with correct applications`() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
       val applicationWithoutAssessment = createApplication()
 
@@ -243,6 +245,8 @@ class ApplicationReportsTest : IntegrationTestBase() {
   @Test
   fun `Get referrals report returns OK with correct applications`() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { userEntity, jwt ->
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
       val applicationWithoutAssessment = createApplication()
 
       val (applicationWithBooking, arrivedBooking) = createApplicationWithBooking()
