@@ -1939,6 +1939,8 @@ class AssessmentServiceTest {
       )
       .produce()
 
+    val dueAt = OffsetDateTime.now()
+
     every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -1951,6 +1953,8 @@ class AssessmentServiceTest {
 
     every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
 
+    every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
+
     val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1961,7 +1965,7 @@ class AssessmentServiceTest {
 
     assertThat(previousAssessment.reallocatedAt).isNotNull
     assertThat(newAssessment.createdFromAppeal).isEqualTo(createdFromAppeal)
-    assertThat(newAssessment.dueAt).isEqualTo(previousAssessment.dueAt)
+    assertThat(newAssessment.dueAt).isEqualTo(dueAt)
 
     verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
     verify(exactly = 1) {

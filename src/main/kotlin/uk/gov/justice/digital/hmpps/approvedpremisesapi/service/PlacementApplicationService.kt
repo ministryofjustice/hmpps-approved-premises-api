@@ -141,14 +141,17 @@ class PlacementApplicationService(
     // Make the timestamp precision less precise, so we don't have any issues with microsecond resolution in tests
     val dateTimeNow = OffsetDateTime.now().withNano(0)
 
-    val newPlacementApplication = placementApplicationRepository.save(
-      currentPlacementApplication.copy(
-        id = UUID.randomUUID(),
-        reallocatedAt = null,
-        allocatedToUser = assigneeUser,
-        createdAt = dateTimeNow,
-      ),
+    val newPlacementApplication = currentPlacementApplication.copy(
+      id = UUID.randomUUID(),
+      reallocatedAt = null,
+      allocatedToUser = assigneeUser,
+      createdAt = dateTimeNow,
+      dueAt = null,
     )
+
+    newPlacementApplication.dueAt = taskDeadlineService.getDeadline(newPlacementApplication)
+
+    placementApplicationRepository.save(newPlacementApplication)
 
     val newPlacementDates = placementDateRepository.saveAll(
       currentPlacementApplication.placementDates.map {

@@ -306,6 +306,9 @@ class PlacementRequestServiceTest {
       .withAllocatedToUser(previousUser)
       .produce()
 
+    val dueAt = OffsetDateTime.now()
+
+    every { taskDeadlineServiceMock.getDeadline(any<PlacementRequestEntity>()) } returns dueAt
     every { placementRequestRepository.findByIdOrNull(previousPlacementRequest.id) } returns previousPlacementRequest
 
     every { placementRequestRepository.save(previousPlacementRequest) } answers { it.invocation.args[0] as PlacementRequestEntity }
@@ -335,6 +338,7 @@ class PlacementRequestServiceTest {
     assertThat(newPlacementRequest.duration).isEqualTo(previousPlacementRequest.duration)
     assertThat(newPlacementRequest.placementRequirements.desirableCriteria).isEqualTo(previousPlacementRequest.placementRequirements.desirableCriteria)
     assertThat(newPlacementRequest.placementRequirements.essentialCriteria).isEqualTo(previousPlacementRequest.placementRequirements.essentialCriteria)
+    assertThat(newPlacementRequest.dueAt).isEqualTo(dueAt)
   }
 
   @Test

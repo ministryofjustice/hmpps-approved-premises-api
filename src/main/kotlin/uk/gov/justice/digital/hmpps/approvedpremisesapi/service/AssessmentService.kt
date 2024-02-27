@@ -751,7 +751,7 @@ class AssessmentService(
 
     val dateTimeNow = OffsetDateTime.now()
 
-    val newAssessment = assessmentRepository.save(
+    val newAssessment =
       ApprovedPremisesAssessmentEntity(
         id = UUID.randomUUID(),
         application = application,
@@ -770,9 +770,12 @@ class AssessmentService(
         referralHistoryNotes = mutableListOf(),
         isWithdrawn = false,
         createdFromAppeal = currentAssessment.createdFromAppeal,
-        dueAt = currentAssessment.dueAt,
-      ),
-    )
+        dueAt = null,
+      )
+
+    newAssessment.dueAt = taskDeadlineService.getDeadline(newAssessment)
+
+    assessmentRepository.save(newAssessment)
 
     if (application is ApprovedPremisesApplicationEntity) {
       if (assigneeUser.email != null) {

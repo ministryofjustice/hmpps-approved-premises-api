@@ -180,15 +180,18 @@ class PlacementRequestService(
     // Make the timestamp precision less precise, so we don't have any issues with microsecond resolution in tests
     val dateTimeNow = OffsetDateTime.now().withNano(0)
 
-    val newPlacementRequest = placementRequestRepository.save(
-      currentPlacementRequest.copy(
-        id = UUID.randomUUID(),
-        reallocatedAt = null,
-        allocatedToUser = assigneeUser,
-        createdAt = dateTimeNow,
-        placementRequirements = currentPlacementRequest.placementRequirements,
-      ),
+    val newPlacementRequest = currentPlacementRequest.copy(
+      id = UUID.randomUUID(),
+      reallocatedAt = null,
+      allocatedToUser = assigneeUser,
+      createdAt = dateTimeNow,
+      placementRequirements = currentPlacementRequest.placementRequirements,
+      dueAt = null,
     )
+
+    newPlacementRequest.dueAt = taskDeadlineService.getDeadline(newPlacementRequest)
+
+    placementRequestRepository.save(newPlacementRequest)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(

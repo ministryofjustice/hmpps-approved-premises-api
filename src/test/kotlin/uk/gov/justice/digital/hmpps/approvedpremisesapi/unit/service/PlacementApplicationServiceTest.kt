@@ -395,6 +395,9 @@ class PlacementApplicationServiceTest {
         ),
       )
 
+      val dueAt = OffsetDateTime.now()
+
+      every { taskDeadlineServiceMock.getDeadline(any<PlacementApplicationEntity>()) } returns dueAt
       every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
 
       every { placementApplicationRepository.save(previousPlacementApplication) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -427,6 +430,7 @@ class PlacementApplicationServiceTest {
       assertThat(newPlacementApplication.schemaVersion).isEqualTo(previousPlacementApplication.schemaVersion)
       assertThat(newPlacementApplication.placementType).isEqualTo(previousPlacementApplication.placementType)
       assertThat(newPlacementApplication.placementDates).isEqualTo(newPlacementDates)
+      assertThat(newPlacementApplication.dueAt).isEqualTo(dueAt)
     }
 
     @Test
@@ -451,6 +455,9 @@ class PlacementApplicationServiceTest {
         ),
       )
 
+      val dueAt = OffsetDateTime.now()
+
+      every { taskDeadlineServiceMock.getDeadline(any<PlacementApplicationEntity>()) } returns dueAt
       every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
 
       every { placementApplicationRepository.save(previousPlacementApplication) } answers { it.invocation.args[0] as PlacementApplicationEntity }
@@ -487,6 +494,7 @@ class PlacementApplicationServiceTest {
       assertThat(newPlacementApplication.schemaVersion).isEqualTo(previousPlacementApplication.schemaVersion)
       assertThat(newPlacementApplication.placementType).isEqualTo(previousPlacementApplication.placementType)
       assertThat(newPlacementApplication.placementDates).isEqualTo(newPlacementDates)
+      assertThat(newPlacementApplication.dueAt).isEqualTo(dueAt)
 
       verify(exactly = 1) {
         emailNotificationService.sendEmail(
