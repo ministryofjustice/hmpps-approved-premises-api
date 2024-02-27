@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.AssessmentsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
@@ -36,6 +37,7 @@ class SubmissionsTransformerTest {
   private val mockNomisUserTransformer = mockk<NomisUserTransformer>()
   private val mockStatusUpdateTransformer = mockk<StatusUpdateTransformer>()
   private val mockTimelineEventsTransformer = mockk<TimelineEventsTransformer>()
+  private val mockAssessmentsTransformer = mockk<AssessmentsTransformer>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -49,6 +51,7 @@ class SubmissionsTransformerTest {
     mockNomisUserTransformer,
     mockStatusUpdateTransformer,
     mockTimelineEventsTransformer,
+    mockAssessmentsTransformer,
   )
 
   private val user = NomisUserEntityFactory().produce()
@@ -57,6 +60,7 @@ class SubmissionsTransformerTest {
 
   private val mockStatusUpdateEntity = mockk<Cas2StatusUpdateEntity>()
   private val mockStatusUpdateApi = mockk<Cas2StatusUpdate>()
+  private val mockAssessment = mockk<Cas2Assessment>()
   private val submittedCas2ApplicationFactory = cas2ApplicationFactory
     .withStatusUpdates(mutableListOf(mockStatusUpdateEntity, mockStatusUpdateEntity))
     .withSubmittedAt(OffsetDateTime.now())
@@ -69,6 +73,7 @@ class SubmissionsTransformerTest {
     every { mockNomisUserTransformer.transformJpaToApi(any()) } returns mockNomisUser
     every { mockStatusUpdateTransformer.transformJpaToApi(any()) } returns mockStatusUpdateApi
     every { mockTimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf(mockk<Cas2TimelineEvent>())
+    every { mockAssessmentsTransformer.transformJpaToApiRepresentation(any()) } returns mockAssessment
   }
 
   @Nested
@@ -83,6 +88,8 @@ class SubmissionsTransformerTest {
 
       val jpaEntity = submittedCas2ApplicationFactory.withAssessment(assessmentEntity).produce()
 
+      every { mockAssessmentsTransformer.transformJpaToApiRepresentation(assessmentEntity) } returns mockAssessment
+
       val transformation = applicationTransformer.transformJpaToApiRepresentation(jpaEntity, mockk())
 
       assertThat(transformation.submittedBy).isEqualTo(mockNomisUser)
@@ -90,9 +97,6 @@ class SubmissionsTransformerTest {
       assertThat(transformation.statusUpdates).isEqualTo(
         listOf(mockStatusUpdateApi, mockStatusUpdateApi),
       )
-
-      assertThat(transformation.assessment)
-        .isEqualTo(Cas2Assessment(nacroReferralId = "OH123", assessorName = "Assessor name"))
 
       assertThat(transformation).hasOnlyFields(
         "createdAt",
