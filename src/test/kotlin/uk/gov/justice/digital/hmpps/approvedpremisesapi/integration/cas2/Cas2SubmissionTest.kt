@@ -30,10 +30,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Ma
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -80,7 +83,7 @@ class Cas2SubmissionTest(
     // in one test to show up in another (see https://github.com/Ninja-Squad/springmockk/issues/85)
     // Manually clearing after each test seems to fix this.
     clearMocks(realApplicationRepository)
-    clearMocks(realApplicationRepository)
+    clearMocks(realAssessmentRepository)
     clearMocks(realStatusUpdateRepository)
     clearMocks(realStatusUpdateDetailRepository)
   }
@@ -293,6 +296,33 @@ class Cas2SubmissionTest(
   @Nested
   inner class GetToShow {
 
+    private fun createSubmittedApplicationWithAssessment(
+      newestJsonSchema: Cas2ApplicationJsonSchemaEntity,
+      crn: String,
+      user: NomisUserEntity,
+      submittedAt: OffsetDateTime?,
+    ): Cas2ApplicationEntity {
+      val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(newestJsonSchema)
+        withCrn(crn)
+        withCreatedByUser(user)
+        withSubmittedAt(submittedAt)
+        withData(
+          """
+                              {
+                                 "thingId": 123
+                              }
+                              """,
+        )
+      }
+
+      cas2AssessmentEntityFactory.produceAndPersist {
+        withApplication(applicationEntity)
+      }
+
+      return applicationEntity
+    }
+
     @Test
     fun `Previously unknown Assessor has an ExternalUser record created from details retrieved from Manage-Users API`() {
       externalUserRepository.deleteAll()
@@ -457,19 +487,12 @@ class Cas2SubmissionTest(
                 )
               }
 
-            val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(newestJsonSchema)
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(user)
-              withSubmittedAt(null)
-              withData(
-                """
-            {
-               "thingId": 123
-            }
-            """,
-              )
-            }
+            val applicationEntity = createSubmittedApplicationWithAssessment(
+              newestJsonSchema,
+              offenderDetails.otherIds.crn,
+              user,
+              null,
+            )
 
             val rawResponseBody = webTestClient.get()
               .uri("/cas2/submissions/${applicationEntity.id}")
@@ -500,19 +523,12 @@ class Cas2SubmissionTest(
                     )
                   }
 
-                val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-                  withApplicationSchema(newestJsonSchema)
-                  withCrn(offenderDetails.otherIds.crn)
-                  withCreatedByUser(user)
-                  withSubmittedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-                  withData(
-                    """
-                        {
-                           "thingId": 123
-                        }
-                        """,
-                  )
-                }
+                val applicationEntity = createSubmittedApplicationWithAssessment(
+                  newestJsonSchema,
+                  offenderDetails.otherIds.crn,
+                  user,
+                  OffsetDateTime.parse("2022-09-21T12:45:00+01:00"),
+                )
 
                 val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
                   withApplication(applicationEntity)
@@ -597,19 +613,12 @@ class Cas2SubmissionTest(
                   )
                 }
 
-              val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(newestJsonSchema)
-                withCrn(offenderDetails.otherIds.crn)
-                withCreatedByUser(user)
-                withSubmittedAt(null)
-                withData(
-                  """
-            {
-               "thingId": 123
-            }
-            """,
-                )
-              }
+              val applicationEntity = createSubmittedApplicationWithAssessment(
+                newestJsonSchema,
+                offenderDetails.otherIds.crn,
+                user,
+                null,
+              )
 
               val rawResponseBody = webTestClient.get()
                 .uri("/cas2/submissions/${applicationEntity.id}")
