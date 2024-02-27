@@ -2666,89 +2666,132 @@ class BookingTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Create Cancellation without JWT returns 401`() {
-    webTestClient.post()
-      .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/cancellations")
-      .bodyValue(
-        NewCancellation(
-          date = LocalDate.parse("2022-08-17"),
-          reason = UUID.fromString("070149f6-c194-4558-a027-f67a10da7865"),
-          notes = null,
-        ),
-      )
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
+  @Nested
+  inner class CreateCancellationCas1 {
 
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_WORKFLOW_MANAGER"])
-  fun `Create Cancellation on CAS1 Booking returns OK with correct body and sends emails when user has one of roles MANAGER, WORKFLOW_MANAGER`(role: UserRole) {
-    `Given a User`(roles = listOf(role)) { _, jwt ->
-      `Given a User`(roles = listOf(role)) { applicant, _ ->
-        `Given an Offender` { offenderDetails, _ ->
-          val apArea = apAreaEntityFactory.produceAndPersist {
-            withEmailAddress("apAreaEmail@test.com")
-          }
+    @Test
+    fun `Create Cancellation without JWT returns 401`() {
+      webTestClient.post()
+        .uri("/premises/e0f03aa2-1468-441c-aa98-0b98d86b67f9/bookings/1617e729-13f3-4158-bd88-c59affdb8a45/cancellations")
+        .bodyValue(
+          NewCancellation(
+            date = LocalDate.parse("2022-08-17"),
+            reason = UUID.fromString("070149f6-c194-4558-a027-f67a10da7865"),
+            notes = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
 
-          val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(applicant)
-            withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
-            withApArea(apArea)
-            withSubmittedAt(OffsetDateTime.now())
-          }
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_WORKFLOW_MANAGER"])
+    fun `Create Cancellation on CAS1 Booking returns OK with correct body and sends emails when user has one of roles MANAGER, WORKFLOW_MANAGER`(role: UserRole) {
+      `Given a User`(roles = listOf(role)) { _, jwt ->
+        `Given a User`(roles = listOf(role)) { applicant, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val apArea = apAreaEntityFactory.produceAndPersist {
+              withEmailAddress("apAreaEmail@test.com")
+            }
 
-          val booking = bookingEntityFactory.produceAndPersist {
-            withYieldedPremises {
-              approvedPremisesEntityFactory.produceAndPersist {
-                withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                withYieldedProbationRegion {
-                  probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+            val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(applicant)
+              withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
+              withApArea(apArea)
+              withSubmittedAt(OffsetDateTime.now())
+            }
+
+            val booking = bookingEntityFactory.produceAndPersist {
+              withYieldedPremises {
+                approvedPremisesEntityFactory.produceAndPersist {
+                  withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                  withYieldedProbationRegion {
+                    probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+                  }
                 }
               }
+              withCrn(offenderDetails.otherIds.crn)
+              withApplication(application)
             }
-            withCrn(offenderDetails.otherIds.crn)
-            withApplication(application)
+
+            val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
+              withServiceScope("*")
+            }
+
+            webTestClient.post()
+              .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                NewCancellation(
+                  date = LocalDate.parse("2022-08-17"),
+                  reason = cancellationReason.id,
+                  notes = null,
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectBody()
+              .jsonPath(".bookingId").isEqualTo(booking.id.toString())
+              .jsonPath(".date").isEqualTo("2022-08-17")
+              .jsonPath(".notes").isEqualTo(null)
+              .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
+              .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
+              .jsonPath(".reason.isActive").isEqualTo(true)
+              .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+
+            val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(booking.application!!.id)!!
+            assertThat(updatedApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
+
+            emailAsserter.assertEmailsRequestedCount(3)
+            emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawn)
+            emailAsserter.assertEmailRequested(booking.premises.emailAddress!!, notifyConfig.templates.bookingWithdrawn)
+            emailAsserter.assertEmailRequested(apArea.emailAddress!!, notifyConfig.templates.bookingWithdrawn)
           }
-
-          val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
-            withServiceScope("*")
-          }
-
-          webTestClient.post()
-            .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
-            .header("Authorization", "Bearer $jwt")
-            .bodyValue(
-              NewCancellation(
-                date = LocalDate.parse("2022-08-17"),
-                reason = cancellationReason.id,
-                notes = null,
-              ),
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
-            .expectBody()
-            .jsonPath(".bookingId").isEqualTo(booking.id.toString())
-            .jsonPath(".date").isEqualTo("2022-08-17")
-            .jsonPath(".notes").isEqualTo(null)
-            .jsonPath(".reason.id").isEqualTo(cancellationReason.id.toString())
-            .jsonPath(".reason.name").isEqualTo(cancellationReason.name)
-            .jsonPath(".reason.isActive").isEqualTo(true)
-            .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
-
-          val updatedApplication = approvedPremisesApplicationRepository.findByIdOrNull(booking.application!!.id)!!
-          assertThat(updatedApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
-
-          emailAsserter.assertEmailsRequestedCount(3)
-          emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawn)
-          emailAsserter.assertEmailRequested(booking.premises.emailAddress!!, notifyConfig.templates.bookingWithdrawn)
-          emailAsserter.assertEmailRequested(apArea.emailAddress!!, notifyConfig.templates.bookingWithdrawn)
         }
       }
     }
+
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
+    fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(
+      role: UserRole,
+    ) {
+      `Given a User`(roles = listOf(role)) { userEntity, jwt ->
+        val booking = bookingEntityFactory.produceAndPersist {
+          withYieldedPremises {
+            approvedPremisesEntityFactory.produceAndPersist {
+              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+              withYieldedProbationRegion {
+                probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+              }
+            }
+          }
+          withServiceName(ServiceName.approvedPremises)
+        }
+
+        webTestClient.post()
+          .uri("/premises/${booking.premises.id}/bookings/${booking.id}/confirmations")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewConfirmation(
+              notes = null,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
+          .jsonPath("$.dateTime").value(withinSeconds(5L), OffsetDateTime::class.java)
+          .jsonPath("$.notes").isEqualTo(null)
+          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+      }
+    }
+
   }
 
   @Test
@@ -3670,43 +3713,6 @@ class BookingTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isUnauthorized
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-  fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(
-    role: UserRole,
-  ) {
-    `Given a User`(roles = listOf(role)) { userEntity, jwt ->
-      val booking = bookingEntityFactory.produceAndPersist {
-        withYieldedPremises {
-          approvedPremisesEntityFactory.produceAndPersist {
-            withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-            withYieldedProbationRegion {
-              probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-            }
-          }
-        }
-        withServiceName(ServiceName.approvedPremises)
-      }
-
-      webTestClient.post()
-        .uri("/premises/${booking.premises.id}/bookings/${booking.id}/confirmations")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewConfirmation(
-            notes = null,
-          ),
-        )
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .jsonPath("$.bookingId").isEqualTo(booking.id.toString())
-        .jsonPath("$.dateTime").value(withinSeconds(5L), OffsetDateTime::class.java)
-        .jsonPath("$.notes").isEqualTo(null)
-        .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
-    }
   }
 
   @Test
