@@ -57,10 +57,15 @@ class Cas1PlacementApplicationEmailService(
     }
 
     val application = placementApplication.application
+    val dates = placementApplication.placementDates
 
     val personalisation = mapOf(
       "crn" to application.crn,
       "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
+      "applicationArea" to application.apArea?.name,
+      "startDate" to dates.getOrNull(0)?.expectedArrival.toString(),
+      "endDate" to dates.getOrNull(0)?.expectedDeparture().toString(),
+      "additionalDatesSet" to if (dates.size > 1) "yes" else "no",
     )
 
     val createdByUserEmail = placementApplication.createdByUser.email
