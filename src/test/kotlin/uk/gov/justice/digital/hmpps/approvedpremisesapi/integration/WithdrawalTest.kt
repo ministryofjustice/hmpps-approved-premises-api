@@ -254,14 +254,10 @@ class WithdrawalTest : IntegrationTestBase() {
               listOf(submittedApplication2ExpectedArrival to submittedApplication2Duration),
             )
 
-            val unsubmittedApplicationExpectedArrival = LocalDate.now().plusDays(50)
-            val unsubmittedApplicationDuration = 6
-            val unsubmittedPlacementApplication = createPlacementApplication(
+            createPlacementApplication(
               application,
-              listOf(unsubmittedApplicationExpectedArrival to unsubmittedApplicationDuration),
-            ) {
-              withSubmittedAt(null)
-            }
+              isSubmitted = false,
+            )
 
             createPlacementApplication(application, listOf(LocalDate.now() to 2)) {
               withReallocatedAt(OffsetDateTime.now())
@@ -311,11 +307,6 @@ class WithdrawalTest : IntegrationTestBase() {
                 submittedPlacementApplication2.id,
                 WithdrawableType.placementApplication,
                 listOf(datePeriodForDuration(submittedApplication2ExpectedArrival, submittedApplication2Duration)),
-              ),
-              Withdrawable(
-                unsubmittedPlacementApplication.id,
-                WithdrawableType.placementApplication,
-                listOf(datePeriodForDuration(unsubmittedApplicationExpectedArrival, unsubmittedApplicationDuration)),
               ),
               Withdrawable(
                 applicationWithAcceptedDecision.id,
@@ -1199,7 +1190,8 @@ class WithdrawalTest : IntegrationTestBase() {
 
   private fun createPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
-    arrivalsToDuration: List<Pair<LocalDate, Int>>,
+    placementDates: List<Pair<LocalDate, Int>> = emptyList(),
+    isSubmitted: Boolean = true,
     configuration: (PlacementApplicationEntityFactory.() -> Unit)? = null,
   ): PlacementApplicationEntity {
     val placementApplication = placementApplicationFactory.produceAndPersist {
@@ -1210,20 +1202,22 @@ class WithdrawalTest : IntegrationTestBase() {
           withPermissiveSchema()
         },
       )
-      withSubmittedAt(OffsetDateTime.now())
-      withDecision(PlacementApplicationDecision.ACCEPTED)
+      withSubmittedAt(if (isSubmitted) OffsetDateTime.now() else null)
+      withDecision(if (isSubmitted) PlacementApplicationDecision.ACCEPTED else null)
       withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
       configuration?.invoke(this)
     }
 
-    val dates = arrivalsToDuration.map { (start, duration) ->
-      placementDateFactory.produceAndPersist {
-        withPlacementApplication(placementApplication)
-        withExpectedArrival(start)
-        withDuration(duration)
+    if (isSubmitted) {
+      val dates = placementDates.map { (start, duration) ->
+        placementDateFactory.produceAndPersist {
+          withPlacementApplication(placementApplication)
+          withExpectedArrival(start)
+          withDuration(duration)
+        }
       }
+      placementApplication.placementDates.addAll(dates)
     }
-    placementApplication.placementDates.addAll(dates)
 
     return placementApplication
   }

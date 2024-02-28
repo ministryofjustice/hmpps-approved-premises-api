@@ -1161,6 +1161,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
       `Given a User` { user, jwt ->
         `Given a Placement Application`(
           createdByUser = user,
+          submittedAt = OffsetDateTime.now(),
           schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           },
