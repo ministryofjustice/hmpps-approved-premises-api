@@ -13,12 +13,29 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.AssessmentsTransformer
+import java.util.UUID
 
 @Service("Cas2AssessmentsController")
 class AssessmentsController(
   private val assessmentService: AssessmentService,
   private val assessmentsTransformer: AssessmentsTransformer,
 ) : AssessmentsCas2Delegate {
+
+  override fun assessmentsAssessmentIdGet(assessmentId: UUID): ResponseEntity<Cas2Assessment> {
+    val assessment = when (
+      val assessmentResult = assessmentService.getAssessment(assessmentId)
+    ) {
+      is AuthorisableActionResult.NotFound -> null
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+      is AuthorisableActionResult.Success -> assessmentResult.entity
+    }
+
+    if (assessment != null) {
+      return ResponseEntity.ok(assessmentsTransformer.transformJpaToApiRepresentation(assessment))
+    }
+
+    throw NotFoundProblem(assessmentId, "Assessment")
+  }
 
   override fun assessmentsAssessmentIdPut(
     assessmentId: java.util.UUID,
