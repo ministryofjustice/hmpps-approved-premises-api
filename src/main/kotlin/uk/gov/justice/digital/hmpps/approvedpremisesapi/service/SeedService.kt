@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CharacteristicRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonRepository
@@ -159,6 +160,7 @@ class SeedService(
           applicationContext.getBean(NomisUserRepository::class.java),
           applicationContext.getBean(ExternalUserRepository::class.java),
           applicationContext.getBean(Cas2StatusUpdateRepository::class.java),
+          applicationContext.getBean(Cas2AssessmentRepository::class.java),
           applicationContext.getBean(JsonSchemaService::class.java),
           applicationContext.getBean(Cas2PersistedApplicationStatusFinder::class.java),
         )
