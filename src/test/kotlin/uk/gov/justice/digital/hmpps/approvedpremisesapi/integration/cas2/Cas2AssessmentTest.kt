@@ -34,52 +34,111 @@ class Cas2AssessmentTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class MissingJwt {
-    @Test
-    fun `updating an assessment without JWT returns 401`() {
-      webTestClient.put()
-        .uri("/cas2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237")
-        .exchange()
-        .expectStatus()
-        .isUnauthorized
+  inner class PutToUpdate {
+    @Nested
+    inner class MissingJwt {
+      @Test
+      fun `updating an assessment without JWT returns 401`() {
+        webTestClient.put()
+          .uri("/cas2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237")
+          .exchange()
+          .expectStatus()
+          .isUnauthorized
+      }
     }
-  }
 
-  @Nested
-  inner class ControlsOnExternalUsers {
-    @Test
-    fun `updating an assessment is forbidden to external users who are not Assessors`() {
-      val jwt = jwtAuthHelper.createClientCredentialsJwt(
-        username = "username",
-        authSource = "auth",
-        roles = listOf("ROLE_CAS2_ADMIN"),
-      )
+    @Nested
+    inner class ControlsOnExternalUsers {
+      @Test
+      fun `updating an assessment is forbidden to external users who are not Assessors`() {
+        val jwt = jwtAuthHelper.createClientCredentialsJwt(
+          username = "username",
+          authSource = "auth",
+          roles = listOf("ROLE_CAS2_ADMIN"),
+        )
 
-      webTestClient.post()
-        .uri("/cas2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isForbidden
+        webTestClient.put()
+          .uri("/cas2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
     }
-  }
 
-  @Nested
-  inner class ControlsOnInternalUsers {
+    @Nested
+    inner class ControlsOnInternalUsers {
+      @Test
+      fun `updating an application is forbidden to nomis users`() {
+        val jwt = jwtAuthHelper.createClientCredentialsJwt(
+          username = "username",
+          authSource = "nomis",
+          roles = listOf("ROLE_POM"),
+        )
+
+        webTestClient.put()
+          .uri("/cas2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isForbidden
+      }
+    }
+
     @Test
-    fun `updating an application is forbidden to nomis users`() {
-      val jwt = jwtAuthHelper.createClientCredentialsJwt(
-        username = "username",
-        authSource = "nomis",
-        roles = listOf("ROLE_POM"),
-      )
+    fun `assessors create note returns 201`() {
+      val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-      webTestClient.put()
-        .uri("/cas2/assessments/de6512fc-a225-4109-bdcd-86c6307a5237")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isForbidden
+      `Given a CAS2 User` { referrer, _ ->
+        `Given a CAS2 Assessor` { assessor, jwt ->
+          val submittedApplication = createSubmittedApplication(applicationId, referrer)
+
+          // with an assessment
+          val assessment = cas2AssessmentEntityFactory.produceAndPersist {
+            withApplication(submittedApplication)
+            withNacroReferralId("someID")
+            withAssessorName("some name")
+          }
+
+          val updatedNacroReferralId = "123N"
+          val updatedAssessorName = "Anne Assessor"
+
+          val rawResponseBody = webTestClient.put()
+            .uri("/cas2/assessments/${assessment.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.cas2.value)
+            .bodyValue(
+              UpdateCas2Assessment(
+                nacroReferralId = updatedNacroReferralId,
+                assessorName = updatedAssessorName,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody =
+            objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2Assessment>() {})
+
+          Assertions.assertThat(responseBody.nacroReferralId).isEqualTo(updatedNacroReferralId)
+          Assertions.assertThat(responseBody.assessorName).isEqualTo(updatedAssessorName)
+        }
+      }
+    }
+
+    private fun createSubmittedApplication(applicationId: UUID, referrer: NomisUserEntity): Cas2ApplicationEntity {
+      val applicationSchema =
+        cas2ApplicationJsonSchemaEntityFactory.produceAndPersist()
+
+      return cas2ApplicationEntityFactory.produceAndPersist {
+        withId(applicationId)
+        withCreatedByUser(referrer)
+        withApplicationSchema(applicationSchema)
+        withSubmittedAt(OffsetDateTime.now())
+      }
     }
   }
 
