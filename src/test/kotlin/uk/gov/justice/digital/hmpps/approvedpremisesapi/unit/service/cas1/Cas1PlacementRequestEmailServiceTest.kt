@@ -130,7 +130,7 @@ class Cas1PlacementRequestEmailServiceTest {
   }
 
   @Test
-  fun `placementRequestWithdrawn does send email to applicant if placement request not linked to placement application `() {
+  fun `placementRequestWithdrawn sends email to applicant if placement request not linked to placement application `() {
     val application = createApplication(
       applicantEmail = APPLICANT_EMAIL,
     )
@@ -150,7 +150,7 @@ class Cas1PlacementRequestEmailServiceTest {
     mockEmailNotificationService.assertEmailRequestCount(1)
     mockEmailNotificationService.assertEmailRequested(
       APPLICANT_EMAIL,
-      notifyConfig.templates.matchRequestWithdrawn,
+      notifyConfig.templates.placementRequestWithdrawn,
       mapOf(
         "applicationUrl" to "http://frontend/applications/${application.id}",
         "crn" to TestConstants.CRN,

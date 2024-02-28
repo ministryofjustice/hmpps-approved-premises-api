@@ -34,7 +34,11 @@ class Cas1PlacementRequestEmailService(
       applicant.email?.let { applicantEmail ->
         emailNotifier.sendEmail(
           recipientEmailAddress = applicantEmail,
-          templateId = notifyConfig.templates.matchRequestWithdrawn,
+          /**
+           * For information on why we send a request for placement email
+           * instead of match request, see [PlacementRequestEntity.isForApplicationsArrivalDate]
+           **/
+          templateId = notifyConfig.templates.placementRequestWithdrawn,
           personalisation = personalisation,
         )
       }
