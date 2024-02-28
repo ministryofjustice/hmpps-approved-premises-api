@@ -6,6 +6,8 @@ import org.springframework.util.FileCopyUtils
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserRepository
@@ -20,12 +22,14 @@ import java.io.InputStreamReader
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@SuppressWarnings("LongParameterList")
 class Cas2ApplicationsSeedJob(
   fileName: String,
   private val repository: Cas2ApplicationRepository,
   private val userRepository: NomisUserRepository,
   private val externalUserRepository: ExternalUserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
+  private val assessmentRepository: Cas2AssessmentRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
 ) : SeedJob<Cas2ApplicationSeedCsvRow>(
@@ -80,6 +84,9 @@ class Cas2ApplicationsSeedJob(
     if (row.statusUpdates != "0") {
       repeat(row.statusUpdates.toInt()) { idx -> createStatusUpdate(idx, application) }
     }
+    if (row.submittedAt != null) {
+      createAssessment(application)
+    }
   }
 
   private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
@@ -95,6 +102,18 @@ class Cas2ApplicationsSeedJob(
         label = status.label,
         statusId = status.id,
         createdAt = OffsetDateTime.now(),
+      ),
+    )
+  }
+
+  private fun createAssessment(application: Cas2ApplicationEntity) {
+    val id = UUID.randomUUID()
+    log.info("Seeding status update $id for application ${application.id}")
+    assessmentRepository.save(
+      Cas2AssessmentEntity(
+        id = id,
+        createdAt = OffsetDateTime.now(),
+        application = application,
       ),
     )
   }

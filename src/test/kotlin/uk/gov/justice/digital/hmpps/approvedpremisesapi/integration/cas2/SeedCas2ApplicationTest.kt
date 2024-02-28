@@ -61,7 +61,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
   }
 
   @Test
-  fun `An IN_PROGRESS application has _data_ but no _document_`() {
+  fun `An IN_PROGRESS application has _data_ but no _document_ or Assessment`() {
     cas2ApplicationRepository.deleteAll()
 
     nomisUserEntityFactory.produceAndPersist {
@@ -98,10 +98,11 @@ class SeedCas2ApplicationTest : SeedTestBase() {
 
     assertThat(serializableToJsonNode(persistedApplication.data)).isNotEmpty()
     assertThat(serializableToJsonNode(persistedApplication.document)).isEmpty()
+    assertThat(persistedApplication.assessment).isNull()
   }
 
   @Test
-  fun `A SUBMITTED application has _data_ AND _document_`() {
+  fun `A SUBMITTED application has _data_ AND _document_ AND an Assessment`() {
     cas2ApplicationRepository.deleteAll()
 
     nomisUserEntityFactory.produceAndPersist {
@@ -139,6 +140,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
 
     assertThat(serializableToJsonNode(persistedApplication.data)).isNotEmpty()
     assertThat(serializableToJsonNode(persistedApplication.document)).isNotEmpty()
+    assertThat(persistedApplication.assessment).isNotNull()
   }
 
   @Test
