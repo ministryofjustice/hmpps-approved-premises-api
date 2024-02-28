@@ -683,7 +683,6 @@ class PlacementApplicationServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      val templateId = UUID.randomUUID().toString()
       val withdrawalContext = WithdrawalContext(
         user,
         WithdrawableEntityType.PlacementApplication,
@@ -691,7 +690,6 @@ class PlacementApplicationServiceTest {
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAccessService.userMayWithdrawPlacementApplication(any(), any()) } returns true
-      every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(placementApplication, withdrawalContext) } returns Unit
@@ -725,10 +723,7 @@ class PlacementApplicationServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      val templateId = UUID.randomUUID().toString()
-
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(any(), any()) } returns Unit
@@ -766,10 +761,7 @@ class PlacementApplicationServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      val templateId = UUID.randomUUID().toString()
-
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
@@ -800,11 +792,8 @@ class PlacementApplicationServiceTest {
       val placementRequest2 = createValidPlacementRequest(application, user)
       placementApplication.placementRequests.add(placementRequest2)
 
-      val templateId = UUID.randomUUID().toString()
-
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAccessService.userMayWithdrawPlacementApplication(any(), any()) } returns true
-      every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(any(), any()) } returns Unit
@@ -862,11 +851,8 @@ class PlacementApplicationServiceTest {
       val placementRequest1 = createValidPlacementRequest(application, user)
       placementApplication.placementRequests.add(placementRequest1)
 
-      val templateId = UUID.randomUUID().toString()
-
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAccessService.userMayWithdrawPlacementApplication(any(), any()) } returns true
-      every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(any(), any()) } returns Unit
@@ -955,11 +941,8 @@ class PlacementApplicationServiceTest {
         .withCreatedByUser(user)
         .produce()
 
-      val templateId = UUID.randomUUID().toString()
-
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { userAccessService.userMayWithdrawPlacementApplication(user, placementApplication) } returns false
-      every { notifyConfig.templates.placementRequestWithdrawn } answers { templateId }
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
