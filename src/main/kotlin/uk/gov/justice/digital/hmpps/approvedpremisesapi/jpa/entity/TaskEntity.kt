@@ -20,6 +20,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
        SELECT
         cast(assessment.id as TEXT) AS id,
         assessment.created_at AS created_at,
+        assessment.due_at AS due_at,
         'ASSESSMENT' AS type
       FROM
         assessments assessment
@@ -49,6 +50,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
        SELECT
         cast(placement_application.id as TEXT) AS id,
         placement_application.created_at AS created_at,
+        placement_application.due_at AS due_at,
         'PLACEMENT_APPLICATION' AS type
       from
         placement_applications placement_application
@@ -78,6 +80,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
       SELECT
         cast(placement_request.id as TEXT) AS id,
         placement_request.created_at AS created_at,
+        placement_request.due_at AS due_at,
         'PLACEMENT_REQUEST' AS type
       FROM
         placement_requests placement_request

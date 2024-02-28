@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import java.time.OffsetDateTime
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
 
@@ -26,7 +26,6 @@ class TaskTransformer(
   private val userTransformer: UserTransformer,
   private val risksTransformer: RisksTransformer,
   private val placementRequestTransformer: PlacementRequestTransformer,
-  private val workingDayCountService: WorkingDayCountService,
   private val apAreaTransformer: ApAreaTransformer,
 ) {
   fun transformAssessmentToTask(assessment: AssessmentEntity, personName: String) = AssessmentTask(
@@ -34,7 +33,8 @@ class TaskTransformer(
     applicationId = assessment.application.id,
     personName = personName,
     crn = assessment.application.crn,
-    dueDate = workingDayCountService.addWorkingDays(assessment.createdAt.toLocalDate(), 10),
+    dueDate = transformDueAtToDate(assessment.dueAt),
+    dueAt = transformDueAtToInstant(assessment.dueAt),
     allocatedToStaffMember = transformUserOrNull(assessment.allocatedToUser),
     status = getAssessmentStatus(assessment),
     taskType = TaskType.assessment,
@@ -50,7 +50,8 @@ class TaskTransformer(
     applicationId = placementRequest.application.id,
     personName = personName,
     crn = placementRequest.application.crn,
-    dueDate = workingDayCountService.addWorkingDays(placementRequest.createdAt.toLocalDate(), 10),
+    dueDate = transformDueAtToDate(placementRequest.dueAt),
+    dueAt = transformDueAtToInstant(placementRequest.dueAt),
     allocatedToStaffMember = transformUserOrNull(placementRequest.allocatedToUser),
     status = getPlacementRequestStatus(placementRequest),
     taskType = TaskType.placementRequest,
@@ -67,7 +68,8 @@ class TaskTransformer(
     applicationId = placementApplication.application.id,
     personName = personName,
     crn = placementApplication.application.crn,
-    dueDate = workingDayCountService.addWorkingDays(placementApplication.createdAt.toLocalDate(), 10),
+    dueDate = transformDueAtToDate(placementApplication.dueAt),
+    dueAt = transformDueAtToInstant(placementApplication.dueAt),
     allocatedToStaffMember = transformUserOrNull(placementApplication.allocatedToUser),
     status = getPlacementApplicationStatus(placementApplication),
     taskType = TaskType.placementApplication,
@@ -117,4 +119,9 @@ class TaskTransformer(
       userTransformer.transformJpaToApi(userEntity, ServiceName.approvedPremises) as ApprovedPremisesUser
     }
   }
+
+  // Use the sure operator here as entities will definitely have a `dueAt` value by the time they're surfaced as tasks
+  private fun transformDueAtToDate(dueAt: OffsetDateTime?) = dueAt!!.toLocalDate()
+
+  private fun transformDueAtToInstant(dueAt: OffsetDateTime?) = dueAt!!.toInstant()
 }

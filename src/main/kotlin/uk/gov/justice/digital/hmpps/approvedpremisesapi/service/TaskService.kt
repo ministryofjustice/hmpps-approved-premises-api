@@ -105,6 +105,7 @@ class TaskService(
       pageCriteria.withSortBy(
         when (pageCriteria.sortBy) {
           TaskSortField.createdAt -> "created_at"
+          TaskSortField.dueAt -> "due_at"
         },
       ),
     )

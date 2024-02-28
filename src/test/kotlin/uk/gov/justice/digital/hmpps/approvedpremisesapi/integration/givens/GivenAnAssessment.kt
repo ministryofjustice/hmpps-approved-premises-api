@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.OffsetDateTime
 
 @Suppress(
@@ -24,6 +25,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   createdAt: OffsetDateTime? = null,
   isWithdrawn: Boolean = false,
   apArea: ApAreaEntity? = null,
+  dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
 ): Pair<AssessmentEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -60,6 +62,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
       withReallocatedAt(OffsetDateTime.now())
     }
     withIsWithdrawn(isWithdrawn)
+    withDueAt(dueAt)
   }
 
   assessment.schemaUpToDate = true

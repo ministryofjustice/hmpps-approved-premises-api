@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentReferralHistoryNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -37,7 +38,7 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
   private var referralHistoryNotes: Yielded<MutableList<AssessmentReferralHistoryNoteEntity>> = { mutableListOf() }
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var createdFromAppeal: Yielded<Boolean> = { false }
-  private var dueAt: Yielded<OffsetDateTime?> = { null }
+  private var dueAt: Yielded<OffsetDateTime?> = { OffsetDateTime.now().randomDateTimeAfter(10) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -107,7 +108,7 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     this.createdFromAppeal = { createdFromAppeal }
   }
 
-  fun withDueAt(dueAt: OffsetDateTime) = apply {
+  fun withDueAt(dueAt: OffsetDateTime?) = apply {
     this.dueAt = { dueAt }
   }
 

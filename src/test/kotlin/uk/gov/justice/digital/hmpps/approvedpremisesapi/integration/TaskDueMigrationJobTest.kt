@@ -95,6 +95,7 @@ class TaskDueMigrationJobTest : IntegrationTestBase() {
         withApplication(application)
         withCreatedByUser(user)
         withSchemaVersion(placementApplicationSchema)
+        withDueAt(null)
       }
   }
 
@@ -118,6 +119,7 @@ class TaskDueMigrationJobTest : IntegrationTestBase() {
           )
         },
       )
+      withDueAt(null)
     }
   }
 
@@ -138,6 +140,7 @@ class TaskDueMigrationJobTest : IntegrationTestBase() {
     return approvedPremisesAssessmentEntityFactory.produceAndPersist {
       withAssessmentSchema(assessmentSchema)
       withApplication(application)
+      withDueAt(null)
     }
   }
 }

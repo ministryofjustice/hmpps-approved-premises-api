@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -23,7 +24,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
@@ -896,8 +900,9 @@ class TasksTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Get all reallocatable tasks returns 200 when no type retains original sort order`() {
+    @ParameterizedTest
+    @CsvSource(value = ["createdAt,asc", "createdAt,desc", "dueAt,asc", "dueAt,desc"])
+    fun `Get all reallocatable tasks returns 200 when no type retains original sort order`(sortBy: String, sortDirection: String) {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
@@ -906,12 +911,14 @@ class TasksTest : IntegrationTestBase() {
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
               crn = offenderDetails.otherIds.crn,
+              dueAt = OffsetDateTime.parse("2023-01-01T00:00:00Z"),
             )
 
             val (task2, _) = `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
+              dueAt = OffsetDateTime.parse("2023-01-03T00:00:00Z"),
             )
 
             val (task3, _) = `Given a Placement Request`(
@@ -919,6 +926,7 @@ class TasksTest : IntegrationTestBase() {
               assessmentAllocatedTo = otherUser,
               createdByUser = user,
               crn = offenderDetails.otherIds.crn,
+              dueAt = OffsetDateTime.parse("2023-02-01T00:00:00Z"),
             )
 
             val task4 = `Given a Placement Application`(
@@ -929,39 +937,68 @@ class TasksTest : IntegrationTestBase() {
               },
               crn = offenderDetails.otherIds.crn,
               submittedAt = OffsetDateTime.now(),
+              dueAt = OffsetDateTime.parse("2023-01-06T00:00:00Z"),
             )
 
             val (task5) = `Given an Assessment for Approved Premises`(
               allocatedToUser = otherUser,
               createdByUser = otherUser,
               crn = offenderDetails.otherIds.crn,
+              dueAt = OffsetDateTime.parse("2022-09-06T00:00:00Z"),
             )
 
-            val expectedTasks = listOf(
-              taskTransformer.transformPlacementRequestToTask(
-                task1,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-              taskTransformer.transformAssessmentToTask(
-                task2,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-              taskTransformer.transformPlacementRequestToTask(
-                task3,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-              taskTransformer.transformPlacementApplicationToTask(
-                task4,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-              taskTransformer.transformAssessmentToTask(
-                task5,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
+            val tasks = listOf(
+              task1,
+              task2,
+              task3,
+              task4,
+              task5,
             )
+
+            var sortedTasks = if (sortBy == "createdAt") {
+              tasks.sortedBy {
+                when (it) {
+                  is PlacementApplicationEntity -> it.createdAt
+                  is PlacementRequestEntity -> it.createdAt
+                  is ApprovedPremisesAssessmentEntity -> it.createdAt
+                  else -> throw RuntimeException("Unexpected type $it")
+                }
+              }
+            } else {
+              tasks.sortedBy {
+                when (it) {
+                  is PlacementApplicationEntity -> it.dueAt
+                  is PlacementRequestEntity -> it.dueAt
+                  is ApprovedPremisesAssessmentEntity -> it.dueAt
+                  else -> throw RuntimeException("Unexpected type $it")
+                }
+              }
+            }
+
+            if (sortBy == "desc") {
+              sortedTasks = sortedTasks.reversed()
+            }
+
+            val expectedTasks = sortedTasks.map {
+              when (it) {
+                is PlacementApplicationEntity -> taskTransformer.transformPlacementApplicationToTask(
+                  it,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                )
+                is PlacementRequestEntity -> taskTransformer.transformPlacementRequestToTask(
+                  it,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                )
+                is ApprovedPremisesAssessmentEntity -> taskTransformer.transformAssessmentToTask(
+                  it,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                )
+                else -> throw RuntimeException("Unexpected type $it")
+              }
+            }
 
             webTestClient.get()
-              .uri("/tasks/reallocatable?page=1&sortBy=createdAt&sortDirection=asc")
+              .uri("/tasks/reallocatable?page=1&sortBy=$sortBy&sortDirection=$sortDirection")
               .header("Authorization", "Bearer $jwt")
               .exchange()
               .expectStatus()
@@ -970,19 +1007,6 @@ class TasksTest : IntegrationTestBase() {
               .json(
                 objectMapper.writeValueAsString(
                   expectedTasks,
-                ),
-              )
-
-            webTestClient.get()
-              .uri("/tasks/reallocatable?page=1&sortBy=createdAt&sortDirection=desc")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  expectedTasks.reversed(),
                 ),
               )
           }

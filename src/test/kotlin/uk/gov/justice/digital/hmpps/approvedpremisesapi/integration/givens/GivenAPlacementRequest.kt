@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -34,6 +35,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   applicationSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
   booking: BookingEntity? = null,
   apArea: ApAreaEntity? = null,
+  dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
 ): Pair<PlacementRequestEntity, ApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -118,6 +120,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     if (expectedArrival != null) {
       withExpectedArrival(expectedArrival)
     }
+    withDueAt(dueAt)
   }
 
   return Pair(placementRequest, application)
@@ -136,6 +139,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   tier: String? = null,
   isWithdrawn: Boolean = false,
   apArea: ApAreaEntity? = null,
+  dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   block: (placementRequest: PlacementRequestEntity, application: ApplicationEntity) -> Unit,
 ) {
   val result = `Given a Placement Request`(
@@ -148,6 +152,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
     tier = tier,
     isWithdrawn = isWithdrawn,
     apArea = apArea,
+    dueAt = dueAt,
   )
 
   block(result.first, result.second)
