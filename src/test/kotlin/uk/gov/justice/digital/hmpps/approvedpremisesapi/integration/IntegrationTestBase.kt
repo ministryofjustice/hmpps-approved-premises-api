@@ -2,10 +2,12 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.junit.jupiter.api.AfterEach
@@ -828,10 +830,16 @@ abstract class IntegrationTestBase {
       )
     }
 
-  fun mockSuccessfulGetCallWithBodyAndJsonResponse(url: String, requestBody: StringValuePattern, responseBody: Any, responseStatus: Int = 200) =
+  fun mockSuccessfulGetCallWithBodyAndJsonResponse(
+    url: String,
+    requestBody: StringValuePattern,
+    responseBody: Any,
+    responseStatus: Int = 200,
+    additionalConfig: MappingBuilder.() -> Unit = { },
+  ) =
     mockOAuth2ClientCredentialsCallIfRequired {
       wiremockServer.stubFor(
-        WireMock.get(urlEqualTo(url))
+        WireMock.get(urlPathEqualTo(url))
           .withRequestBody(requestBody)
           .willReturn(
             aResponse()
@@ -840,12 +848,19 @@ abstract class IntegrationTestBase {
               .withBody(
                 objectMapper.writeValueAsString(responseBody),
               ),
-          ),
+          )
+          .apply(additionalConfig),
       )
     }
 
-  fun editGetStubWithBodyAndJsonResponse(url: String, uuid: UUID, requestBody: StringValuePattern, responseBody: Any) = wiremockServer.editStub(
-    WireMock.get(WireMock.urlEqualTo(url)).withId(uuid)
+  fun editGetStubWithBodyAndJsonResponse(
+    url: String,
+    uuid: UUID,
+    requestBody: StringValuePattern,
+    responseBody: Any,
+    additionalConfig: MappingBuilder.() -> Unit = { },
+  ) = wiremockServer.editStub(
+    WireMock.get(WireMock.urlPathEqualTo(url)).withId(uuid)
       .withRequestBody(requestBody)
       .willReturn(
         WireMock.aResponse()
@@ -854,7 +869,8 @@ abstract class IntegrationTestBase {
           .withBody(
             objectMapper.writeValueAsString(responseBody),
           ),
-      ),
+      )
+      .apply(additionalConfig),
   )
 
   fun mockUnsuccessfulGetCall(url: String, responseStatus: Int) =

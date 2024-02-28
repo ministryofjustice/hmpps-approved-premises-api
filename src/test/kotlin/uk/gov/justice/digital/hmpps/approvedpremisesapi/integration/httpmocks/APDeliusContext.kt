@@ -39,9 +39,14 @@ fun IntegrationTestBase.APDeliusContext_mockSuccessfulTeamsManagingCaseCall(crn:
     responseBody = response,
   )
 
-fun IntegrationTestBase.ApDeliusContext_addResponseToUserAccessCall(caseAccess: CaseAccess, username: String = "\${json-unit.any-string}") {
-  val url = "/users/access?username=$username"
-  val existingMock = wiremockServer.listAllStubMappings().mappings.find { it.request.url == url }
+fun IntegrationTestBase.ApDeliusContext_mockUserAccess(caseAccess: CaseAccess, username: String = ".*") {
+  ApDeliusContext_addResponseToUserAccessCall(caseAccess, username)
+  ApDeliusContext_addSingleResponseToUserAccessCall(caseAccess, username)
+}
+
+fun IntegrationTestBase.ApDeliusContext_addResponseToUserAccessCall(caseAccess: CaseAccess, username: String = ".*") {
+  val url = "/users/access"
+  val existingMock = wiremockServer.listAllStubMappings().mappings.find { it.request.url == url && it.metadata != null && it.metadata.containsKey("bulk") }
 
   if (existingMock != null) {
     val mockId = existingMock.id
@@ -51,7 +56,15 @@ fun IntegrationTestBase.ApDeliusContext_addResponseToUserAccessCall(caseAccess: 
     requestBody += caseAccess.crn
     responseBody.access += caseAccess
 
-    editGetStubWithBodyAndJsonResponse(url, mockId, WireMock.equalToJson(objectMapper.writeValueAsString(requestBody), true, true), responseBody)
+    editGetStubWithBodyAndJsonResponse(
+      url = url,
+      uuid = mockId,
+      requestBody = WireMock.equalToJson(objectMapper.writeValueAsString(requestBody), true, true),
+      responseBody = responseBody,
+    ) {
+      withQueryParam("username", WireMock.matching(username))
+      withMetadata(mapOf("bulk" to Unit))
+    }
   } else {
     val requestBody = listOf(caseAccess.crn)
     mockSuccessfulGetCallWithBodyAndJsonResponse(
@@ -66,13 +79,39 @@ fun IntegrationTestBase.ApDeliusContext_addResponseToUserAccessCall(caseAccess: 
       responseBody = UserAccess(
         access = listOf(caseAccess),
       ),
-    )
+    ) {
+      withQueryParam("username", WireMock.matching(username))
+      withMetadata(mapOf("bulk" to Unit))
+    }
   }
+}
+
+fun IntegrationTestBase.ApDeliusContext_addSingleResponseToUserAccessCall(caseAccess: CaseAccess, username: String = ".*") {
+  mockSuccessfulGetCallWithBodyAndJsonResponse(
+    url = "/users/access",
+    requestBody = WireMock.equalToJson(
+      objectMapper.writeValueAsString(
+        listOf(caseAccess.crn),
+      ),
+      false,
+      false,
+    ),
+    responseBody = UserAccess(
+      access = listOf(caseAccess),
+    ),
+  ) {
+    withQueryParam("username", WireMock.matching(username))
+  }
+}
+
+fun IntegrationTestBase.ApDeliusContext_mockCaseSummary(caseSummary: CaseSummary) {
+  this.ApDeliusContext_addCaseSummaryToBulkResponse(caseSummary)
+  this.ApDeliusContext_addSingleCaseSummaryToBulkResponse(caseSummary)
 }
 
 fun IntegrationTestBase.ApDeliusContext_addCaseSummaryToBulkResponse(caseSummary: CaseSummary) {
   val url = "/probation-cases/summaries"
-  val existingMock = wiremockServer.listAllStubMappings().mappings.find { it.request.url == url }
+  val existingMock = wiremockServer.listAllStubMappings().mappings.find { it.request.url == url && it.metadata != null && it.metadata.containsKey("bulk") }
 
   if (existingMock != null) {
     val mockId = existingMock.id
@@ -82,7 +121,14 @@ fun IntegrationTestBase.ApDeliusContext_addCaseSummaryToBulkResponse(caseSummary
     requestBody += caseSummary.crn
     responseBody.cases += caseSummary
 
-    editGetStubWithBodyAndJsonResponse(url, mockId, WireMock.equalToJson(objectMapper.writeValueAsString(requestBody), true, true), responseBody)
+    editGetStubWithBodyAndJsonResponse(
+      url = url,
+      uuid = mockId,
+      requestBody = WireMock.equalToJson(objectMapper.writeValueAsString(requestBody), true, true),
+      responseBody = responseBody,
+    ) {
+      withMetadata(mapOf("bulk" to Unit))
+    }
   } else {
     mockSuccessfulGetCallWithBodyAndJsonResponse(
       url = url,
@@ -96,6 +142,24 @@ fun IntegrationTestBase.ApDeliusContext_addCaseSummaryToBulkResponse(caseSummary
       responseBody = CaseSummaries(
         cases = listOf(caseSummary),
       ),
-    )
+    ) {
+      withMetadata(mapOf("bulk" to Unit))
+    }
   }
+}
+
+fun IntegrationTestBase.ApDeliusContext_addSingleCaseSummaryToBulkResponse(caseSummary: CaseSummary) {
+  mockSuccessfulGetCallWithBodyAndJsonResponse(
+    url = "/probation-cases/summaries",
+    requestBody = WireMock.equalToJson(
+      objectMapper.writeValueAsString(
+        listOf(caseSummary.crn),
+      ),
+      false,
+      false,
+    ),
+    responseBody = CaseSummaries(
+      cases = listOf(caseSummary),
+    ),
+  )
 }
