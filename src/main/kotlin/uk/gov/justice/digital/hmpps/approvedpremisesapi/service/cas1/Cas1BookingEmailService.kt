@@ -21,7 +21,7 @@ class Cas1BookingEmailService(
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: UrlTemplate,
-  @Value("\${notify.send-new-withdrawal-notifications}") private val sendNewWithdrawalNotifications: Boolean,
+  @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val sendNewWithdrawalNotifications: Boolean,
 ) {
 
   fun bookingMade(application: ApplicationEntity, booking: BookingEntity) {

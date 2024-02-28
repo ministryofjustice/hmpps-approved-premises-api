@@ -206,7 +206,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
       val singleDateUnsubmittedPlacement = expectedRow {
         application = createAssessedApplication("singleDateUnsubmittedPlacement")
-        createPlacementApplication(application)
+        placementApplicationId = createPlacementApplication(application).id
       }
 
       val singleDateNoBookingReallocated = expectedRow {
@@ -216,10 +216,11 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         application = createAssessedApplication("singleDateNoBookingReallocated")
 
         val initialPlacementApplication = createAndSubmitPlacementApplication(application, listOf(placementDate!!))
-        reallocatePlacementApplication(initialPlacementApplication)
+        reallocatePlacementApplication(initialPlacementApplication[0])
 
         val reallocatedPlacementApplication = placementApplicationTestRepository.findByApplicationAndReallocatedAtNull(application)
         acceptPlacementApplication(reallocatedPlacementApplication.id)
+        placementApplicationId = reallocatedPlacementApplication.id
       }
 
       val singleDateBooked = expectedRow {
@@ -227,7 +228,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
         placementDate = placementDateStarting(LocalDate.now())
         application = createAssessedApplication("singleDateBooked")
-        createAndAcceptPlacementApplication(application, listOf(placementDate!!))
+        placementApplicationId = createAndAcceptPlacementApplication(application, listOf(placementDate!!))[0].id
         booking = createBookingForPlacementRequest(application.getLatestPlacementRequest()!!)
       }
 
@@ -236,8 +237,8 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
         placementDate = placementDateStarting(LocalDate.now().plusMonths(2))
         application = createAssessedApplication("singleDateBookedOutOfDateRange")
-        val placementApplication = createAndAcceptPlacementApplication(application, listOf(placementDate!!))
-        placementApplicationTestRepository.updateSubmittedOn(placementApplication.id, OffsetDateTime.now().plusMonths(2))
+        placementApplicationId = createAndAcceptPlacementApplication(application, listOf(placementDate!!))[0].id
+        placementApplicationTestRepository.updateSubmittedOn(placementApplicationId, OffsetDateTime.now().plusMonths(2))
 
         booking = createBookingForPlacementRequest(application.getLatestPlacementRequest()!!)
       }
@@ -249,7 +250,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         application = createAndSubmitApplication("singleDateReallocatedAssessment")
         reallocateAssessment(application)
         acceptAssessmentForApplication(application)
-        createAndAcceptPlacementApplication(application, listOf(placementDate!!))
+        placementApplicationId = createAndAcceptPlacementApplication(application, listOf(placementDate!!))[0].id
         booking = createBookingForPlacementRequest(application.getLatestPlacementRequest()!!)
       }
 
@@ -259,7 +260,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
         placementDate = placementDateStarting(LocalDate.now())
         application = createAssessedApplication("singleDateWithArrival")
-        createAndAcceptPlacementApplication(application, listOf(placementDate!!))
+        placementApplicationId = createAndAcceptPlacementApplication(application, listOf(placementDate!!))[0].id
         booking = createBookingForPlacementRequest(application.getLatestPlacementRequest()!!)
         markBookingAsArrived(booking!!)
       }
@@ -271,7 +272,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
         placementDate = placementDateStarting(LocalDate.now())
         application = createAssessedApplication("singleDateWithDeparture")
-        createAndAcceptPlacementApplication(application, listOf(placementDate!!))
+        placementApplicationId = createAndAcceptPlacementApplication(application, listOf(placementDate!!))[0].id
         booking = createBookingForPlacementRequest(application.getLatestPlacementRequest()!!)
         markBookingAsDeparted(booking!!)
       }
@@ -282,7 +283,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
         placementDate = placementDateStarting(LocalDate.now())
         application = createAssessedApplication("singleDateWithCancellation")
-        createAndAcceptPlacementApplication(application, listOf(placementDate!!))
+        placementApplicationId = createAndAcceptPlacementApplication(application, listOf(placementDate!!))[0].id
         booking = createBookingForPlacementRequest(application.getLatestPlacementRequest()!!)
         cancelBooking(booking!!)
       }
@@ -293,7 +294,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
         placementDate = placementDateStarting(LocalDate.now())
         application = createAssessedApplication("singleDateWithNonArrival")
-        createAndAcceptPlacementApplication(application, listOf(placementDate!!))
+        placementApplicationId = createAndAcceptPlacementApplication(application, listOf(placementDate!!))[0].id
         booking = createBookingForPlacementRequest(application.getLatestPlacementRequest()!!)
         markBookingAsNonArrived(booking!!)
         booking = bookingRepository.getReferenceById(booking!!.id)
@@ -305,7 +306,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
         placementDate = placementDateStarting(LocalDate.now())
         application = createAssessedApplication("singleDateWithWithdrawal")
-        createAndAcceptPlacementApplication(application, listOf(placementDate!!))
+        placementApplicationId = createAndAcceptPlacementApplication(application, listOf(placementDate!!))[0].id
         withdrawApplication(application)
       }
 
@@ -313,18 +314,22 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         val placementDate1 = placementDateStarting(LocalDate.now())
         val placementDate2 = placementDateStarting(LocalDate.now().plusMonths(1))
         val application = createAssessedApplication("multiDateNoneBooked")
-        createAndSubmitPlacementApplication(application, listOf(placementDate1, placementDate2))
+        val placementApplications = createAndSubmitPlacementApplication(application, listOf(placementDate1, placementDate2))
+        val placementApp1 = placementApplications[0]
+        val placementApp2 = placementApplications[1]
 
         listOf(
           expectedRow {
             hasBooking = false
             placementDate = placementDate1
             this.application = application
+            placementApplicationId = placementApp1.id
           },
           expectedRow {
             hasBooking = false
             placementDate = placementDate2
             this.application = application
+            placementApplicationId = placementApp2.id
           },
         )
       }
@@ -333,26 +338,26 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         val placementDate1 = placementDateStarting(LocalDate.now())
         val placementDate2 = placementDateStarting(LocalDate.now().plusMonths(1))
         val application = createAssessedApplication("multiDateAllBooked")
-        createAndAcceptPlacementApplication(application, listOf(placementDate1, placementDate2))
+        val placementApplications = createAndAcceptPlacementApplication(application, listOf(placementDate1, placementDate2))
+        val placementApp1 = placementApplications[0]
+        val placementApp2 = placementApplications[1]
+        val placementRequest1 = placementRequestTestRepository.findByPlacementApplication_id(placementApp1.id)
+        val placementRequest2 = placementRequestTestRepository.findByPlacementApplication_id(placementApp2.id)
 
         listOf(
           expectedRow {
             hasBooking = true
             placementDate = placementDate1
             this.application = application
-            booking = createBookingForPlacementRequest(
-              placementRequestTestRepository.findAllByApplication(application)
-                .first { it.expectedArrival == placementDate1.expectedArrival },
-            )
+            placementApplicationId = placementApp1.id
+            booking = createBookingForPlacementRequest(placementRequest1!!)
           },
           expectedRow {
             hasBooking = true
             placementDate = placementDate2
             this.application = application
-            booking = createBookingForPlacementRequest(
-              placementRequestTestRepository.findAllByApplication(application)
-                .first { it.expectedArrival == placementDate2.expectedArrival },
-            )
+            placementApplicationId = placementApp2.id
+            booking = createBookingForPlacementRequest(placementRequest2!!)
           },
         )
       }
@@ -361,7 +366,10 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         val placementDate1 = placementDateStarting(LocalDate.now())
         val placementDate2 = placementDateStarting(LocalDate.now().plusMonths(1))
         val application = createAssessedApplication("multiDateSomeBooked")
-        createAndAcceptPlacementApplication(application, listOf(placementDate1, placementDate2))
+        val placementApplications = createAndAcceptPlacementApplication(application, listOf(placementDate1, placementDate2))
+        val placementApp1 = placementApplications[0]
+        val placementApp2 = placementApplications[1]
+        val placementRequest2 = placementRequestTestRepository.findByPlacementApplication_id(placementApp2.id)
 
         listOf(
           expectedRow {
@@ -369,16 +377,15 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
             hasBooking = false
             placementDate = placementDate1
             this.application = application
+            placementApplicationId = placementApp1.id
           },
           expectedRow {
             isAccepted = true
             hasBooking = true
             placementDate = placementDate2
             this.application = application
-            booking = createBookingForPlacementRequest(
-              placementRequestTestRepository.findAllByApplication(application)
-                .first { it.expectedArrival == placementDate2.expectedArrival },
-            )
+            placementApplicationId = placementApp2.id
+            booking = createBookingForPlacementRequest(placementRequest2!!)
           },
         )
       }
@@ -388,13 +395,14 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         val (application, assessment) = createRejectedApplication("acceptedAppeal")
         val (_, newAssessment) = acceptAppealForAssessment(assessment)
         acceptAssessment(newAssessment)
-        createAndAcceptPlacementApplication(application, listOf(placementDate))
+        val placementApplication = createAndAcceptPlacementApplication(application, listOf(placementDate))[0]
 
         expectedRow {
           this.isAccepted = true
           this.application = application
           this.hasAppeal = true
           this.placementDate = placementDate
+          this.placementApplicationId = placementApplication.id
         }
       }
 
@@ -418,13 +426,14 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
         acceptAppealForAssessment(assessment)
         val (_, newAssessment) = acceptAppealForAssessment(assessment)
         acceptAssessment(newAssessment)
-        createAndAcceptPlacementApplication(application, listOf(placementDate))
+        val placementApplication = createAndAcceptPlacementApplication(application, listOf(placementDate))[0]
 
         expectedRow {
           this.isAccepted = true
           this.application = application
           this.hasAppeal = true
           this.placementDate = placementDate
+          this.placementApplicationId = placementApplication.id
         }
       }
 
@@ -480,6 +489,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
 
   class ExpectedRow {
     lateinit var application: ApprovedPremisesApplicationEntity
+    lateinit var placementApplicationId: UUID
     var placementDate: PlacementDates? = null
     var booking: BookingEntity? = null
 
@@ -509,7 +519,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     val applicationId = expectedRow.application.id
     val booking = expectedRow.booking
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
-    val placementApplication = getPlacementApplication(application)
+    val placementApplication =  placementApplicationTestRepository.findById(expectedRow.placementApplicationId).get()
     val assessment = application.getAppropriateAssessment(expectedRow.hasAppeal)!!
     val offenderDetailSummary = getOffenderDetailForApplication(application, userEntity.deliusUsername)
 
@@ -931,10 +941,10 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       duration = 12,
     )
 
-  private fun createAndAcceptPlacementApplication(application: ApprovedPremisesApplicationEntity, placementDates: List<PlacementDates>): PlacementApplication {
-    val placementApplication = createAndSubmitPlacementApplication(application, placementDates)
-    acceptPlacementApplication(placementApplication.id)
-    return placementApplication
+  private fun createAndAcceptPlacementApplication(application: ApprovedPremisesApplicationEntity, placementDates: List<PlacementDates>): List<PlacementApplication> {
+    val placementApplications = createAndSubmitPlacementApplication(application, placementDates)
+    placementApplications.forEach { acceptPlacementApplication(it.id) }
+    return placementApplications
   }
 
   private fun createPlacementApplication(application: ApprovedPremisesApplicationEntity): PlacementApplication {
@@ -961,7 +971,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
   private fun createAndSubmitPlacementApplication(
     application: ApprovedPremisesApplicationEntity,
     placementDates: List<PlacementDates>,
-  ): PlacementApplication {
+  ): List<PlacementApplication> {
     val (_, jwt) = assessorDetails
 
     val placementApplication = createPlacementApplication(application)
@@ -983,7 +993,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       .expectStatus()
       .isOk
 
-    webTestClient.post()
+    val rawResult = webTestClient.post()
       .uri("/placement-applications/${placementApplication.id}/submission")
       .header("Authorization", "Bearer $jwt")
       .bodyValue(
@@ -996,8 +1006,9 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
+      .returnResult<String>().responseBody.blockFirst()
 
-    return placementApplication
+    return objectMapper.readerForListOf(PlacementApplication::class.java).readValue(rawResult)
   }
 
   private fun acceptPlacementApplication(placementApplicationId: UUID) {

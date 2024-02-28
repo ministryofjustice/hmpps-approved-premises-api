@@ -71,3 +71,7 @@ user-allocations:
       enabled: true
     female-assessments:
       enabled: true
+
+feature-flags:
+  send-placement-request-notifications: true
+  cas1-use-new-withdrawal-logic: true

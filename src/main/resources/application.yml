@@ -260,4 +260,6 @@ pagination:
 
 notify:
   send-placement-request-notifications: false
-  send-new-withdrawal-notifications: false
+
+feature-flags:
+  cas1-use-new-withdrawal-logic: false

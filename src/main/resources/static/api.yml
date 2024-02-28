@@ -3433,7 +3433,9 @@ paths:
           content:
             'application/json':
               schema:
-                $ref: '_shared.yml#/components/schemas/PlacementApplication'
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/PlacementApplication'
         400:
           description: placement application has already been submitted
           content:

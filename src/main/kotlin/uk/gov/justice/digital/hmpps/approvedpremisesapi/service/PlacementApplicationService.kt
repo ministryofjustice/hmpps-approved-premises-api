@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import arrow.core.Either
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -27,10 +28,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult.ValidatableActionResultError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.annotation.PostConstruct
 import javax.transaction.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiPlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates as ApiPlacementDates
@@ -54,9 +57,18 @@ class PlacementApplicationService(
   @Value("\${notify.send-placement-request-notifications}")
   private val sendPlacementRequestNotifications: Boolean,
   private val taskDeadlineService: TaskDeadlineService,
+  @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val useNewWithdrawalLogic: Boolean,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
+
+  @PostConstruct
+  fun init() {
+    if (!useNewWithdrawalLogic) {
+      log.warn("Old withdrawal logic is being used. This will add multiple dates to the same placement application " +
+        "on submission which limits potential withdrawal options. This behaviour is deprecated.")
+    }
+  }
 
   fun getAllPlacementApplicationEntitiesForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
     return placementApplicationRepository.findAllSubmittedNonReallocatedAndNonWithdrawnApplicationsForApplicationId(
@@ -78,26 +90,29 @@ class PlacementApplicationService(
       return generalError("You cannot request a placement request for an application that has been withdrawn")
     }
 
-    val placementApplication = PlacementApplicationEntity(
-      id = UUID.randomUUID(),
-      application = application,
-      createdByUser = user,
-      schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java),
-      schemaUpToDate = true,
-      data = null,
-      document = null,
-      createdAt = OffsetDateTime.now(),
-      submittedAt = null,
-      allocatedToUser = null,
-      allocatedAt = null,
-      reallocatedAt = null,
-      decision = null,
-      decisionMadeAt = null,
-      placementType = null,
-      placementDates = mutableListOf(),
-      placementRequests = mutableListOf(),
-      withdrawalReason = null,
-      dueAt = null,
+    val placementApplication = placementApplicationRepository.save(
+      PlacementApplicationEntity(
+        id = UUID.randomUUID(),
+        application = application,
+        createdByUser = user,
+        schemaVersion = jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java),
+        schemaUpToDate = true,
+        data = null,
+        document = null,
+        createdAt = OffsetDateTime.now(),
+        submittedAt = null,
+        allocatedToUser = null,
+        allocatedAt = null,
+        reallocatedAt = null,
+        decision = null,
+        decisionMadeAt = null,
+        placementType = null,
+        placementDates = mutableListOf(),
+        placementRequests = mutableListOf(),
+        withdrawalReason = null,
+        dueAt = null,
+        submissionGroupId = UUID.randomUUID(),
+      ),
     )
 
     val createdApplication = placementApplicationRepository.save(placementApplication)
@@ -167,7 +182,7 @@ class PlacementApplicationService(
 
     val applicationWasntPreviouslyAllocated = currentPlacementApplication.allocatedToUser == null
     if (applicationWasntPreviouslyAllocated) {
-      sendPlacementRequestAllocatedEmail(newPlacementApplication)
+      cas1PlacementApplicationEmailService.placementApplicationAllocated(newPlacementApplication)
     }
 
     newPlacementApplication.placementDates = newPlacementDates
@@ -263,24 +278,13 @@ class PlacementApplicationService(
     id: UUID,
     data: String,
   ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
-    val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
+    val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit<PlacementApplicationEntity>(id)
 
-    when (placementApplicationAuthorisationResult) {
-      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
-      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.Success -> Unit
+    if (placementApplicationAuthorisationResult is Either.Left) {
+      return placementApplicationAuthorisationResult.value
     }
 
-    val placementApplicationValidationResult =
-      confirmApplicationCanBeUpdatedOrSubmitted(
-        placementApplicationAuthorisationResult.entity,
-      )
-
-    if (placementApplicationValidationResult !is ValidatableActionResult.Success) {
-      return AuthorisableActionResult.Success(placementApplicationValidationResult)
-    }
-
-    val placementApplicationEntity = placementApplicationValidationResult.entity
+    val placementApplicationEntity = (placementApplicationAuthorisationResult as Either.Right).value
 
     placementApplicationEntity.data = data
 
@@ -291,67 +295,99 @@ class PlacementApplicationService(
     )
   }
 
+  @Transactional
   fun submitApplication(
     id: UUID,
     translatedDocument: String,
     apiPlacementType: ApiPlacementType,
     apiPlacementDates: List<ApiPlacementDates>,
-  ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
-    val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit(id)
+  ): AuthorisableActionResult<ValidatableActionResult<List<PlacementApplicationEntity>>> {
+    val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit<List<PlacementApplicationEntity>>(id)
 
-    when (placementApplicationAuthorisationResult) {
-      is AuthorisableActionResult.NotFound -> return AuthorisableActionResult.NotFound()
-      is AuthorisableActionResult.Unauthorised -> return AuthorisableActionResult.Unauthorised()
-      is AuthorisableActionResult.Success -> Unit
+    if (placementApplicationAuthorisationResult is Either.Left) {
+      return placementApplicationAuthorisationResult.value
     }
 
-    val placementApplicationValidationResult =
-      confirmApplicationCanBeUpdatedOrSubmitted(
-        placementApplicationAuthorisationResult.entity,
-      )
+    val submittedPlacementApplication = (placementApplicationAuthorisationResult as Either.Right).value
 
-    if (placementApplicationValidationResult !is ValidatableActionResult.Success) {
-      return AuthorisableActionResult.Success(placementApplicationValidationResult)
-    }
+    val allocatedUser = userAllocator.getUserForPlacementApplicationAllocation(submittedPlacementApplication)
 
-    val placementApplicationEntity = placementApplicationValidationResult.entity
-
-    val allocatedUser = userAllocator.getUserForPlacementApplicationAllocation(placementApplicationEntity)
-
-    placementApplicationEntity.apply {
+    submittedPlacementApplication.apply {
       document = translatedDocument
       allocatedToUser = allocatedUser
       submittedAt = OffsetDateTime.now()
       allocatedAt = OffsetDateTime.now()
       placementType = getPlacementType(apiPlacementType)
+      submissionGroupId = UUID.randomUUID()
     }
 
-    placementApplicationEntity.dueAt = taskDeadlineService.getDeadline(placementApplicationEntity)
+    submittedPlacementApplication.dueAt = taskDeadlineService.getDeadline(submittedPlacementApplication)
 
-    val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
+    val baselinePlacementApplication = placementApplicationRepository.save(submittedPlacementApplication)
 
+    val placementApplicationsWithDates = if (useNewWithdrawalLogic) {
+      saveDatesOnSubmissionToAnAppPerDate(baselinePlacementApplication, apiPlacementDates)
+    } else {
+      saveDatesOnSubmissionToASingleApp(baselinePlacementApplication, apiPlacementDates)
+    }
+
+    cas1PlacementApplicationEmailService.placementApplicationSubmitted(baselinePlacementApplication)
+    if (baselinePlacementApplication.allocatedToUser != null) {
+      cas1PlacementApplicationEmailService.placementApplicationAllocated(baselinePlacementApplication)
+    }
+
+    return AuthorisableActionResult.Success(
+      ValidatableActionResult.Success(placementApplicationsWithDates),
+    )
+  }
+
+  @Deprecated("This is legacy behaviour that will be removed once the new withdrawals functionality has been released")
+  private fun saveDatesOnSubmissionToASingleApp(
+    baselinePlacementApplication: PlacementApplicationEntity,
+    apiPlacementDates: List<ApiPlacementDates>,
+  ): List<PlacementApplicationEntity> {
     val placementDates = apiPlacementDates.map {
       PlacementDateEntity(
         id = UUID.randomUUID(),
         expectedArrival = it.expectedArrival,
         duration = it.duration,
-        placementApplication = placementApplicationEntity,
+        placementApplication = baselinePlacementApplication,
         createdAt = OffsetDateTime.now(),
       )
     }.toMutableList()
 
     placementDateRepository.saveAll(placementDates)
-    placementApplicationEntity.placementDates = placementDates
+    baselinePlacementApplication.placementDates = placementDates
+    return listOf(baselinePlacementApplication)
+  }
 
-    sendPlacementRequestCreatedEmail(placementApplicationEntity)
-
-    if (allocatedUser != null) {
-      sendPlacementRequestAllocatedEmail(placementApplicationEntity)
+  private fun saveDatesOnSubmissionToAnAppPerDate(
+    baselinePlacementApplication: PlacementApplicationEntity,
+    apiPlacementDates: List<ApiPlacementDates>,
+  ): List<PlacementApplicationEntity> {
+    val additionalPlacementApps = List(apiPlacementDates.size - 1) {
+      placementApplicationRepository.save(
+        baselinePlacementApplication.copy(id = UUID.randomUUID()),
+      )
     }
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedApplication),
-    )
+    val allPlacementApps = listOf(baselinePlacementApplication) + additionalPlacementApps
+
+    allPlacementApps.zip(apiPlacementDates) { placementApp, apiDate ->
+      val placementDate = placementDateRepository.save(
+        PlacementDateEntity(
+          id = UUID.randomUUID(),
+          expectedArrival = apiDate.expectedArrival,
+          duration = apiDate.duration,
+          placementApplication = placementApp,
+          createdAt = OffsetDateTime.now(),
+        ),
+      )
+
+      placementApp.placementDates = mutableListOf(placementDate)
+    }
+
+    return allPlacementApps
   }
 
   @Transactional
@@ -453,21 +489,26 @@ class PlacementApplicationService(
     return placementApplicationEntity
   }
 
-  private fun getApplicationForUpdateOrSubmit(id: UUID): AuthorisableActionResult<PlacementApplicationEntity> {
-    val placementApplication =
-      placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+  private fun <T> getApplicationForUpdateOrSubmit(id: UUID): Either<AuthorisableActionResult<ValidatableActionResult<T>>, PlacementApplicationEntity> {
+    val placementApplication = placementApplicationRepository.findByIdOrNull(id)
+      ?: return Either.Left(AuthorisableActionResult.NotFound())
     val user = userService.getUserForRequest()
 
     if (placementApplication.createdByUser != user) {
-      return AuthorisableActionResult.Unauthorised()
+      return Either.Left(AuthorisableActionResult.Unauthorised())
     }
 
-    return AuthorisableActionResult.Success(placementApplication)
+    val validationError = confirmApplicationCanBeUpdatedOrSubmitted<T>(placementApplication)
+    if (validationError != null) {
+      return Either.Left(AuthorisableActionResult.Success(validationError))
+    }
+
+    return Either.Right(placementApplication)
   }
 
-  private fun confirmApplicationCanBeUpdatedOrSubmitted(
+  private fun <T> confirmApplicationCanBeUpdatedOrSubmitted(
     placementApplicationEntity: PlacementApplicationEntity,
-  ): ValidatableActionResult<PlacementApplicationEntity> {
+  ): ValidatableActionResultError<T>? {
     val latestSchema = jsonSchemaService.getNewestSchema(
       ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java,
     )
@@ -481,40 +522,6 @@ class PlacementApplicationService(
       return ValidatableActionResult.GeneralValidationError("This application has already been submitted")
     }
 
-    return ValidatableActionResult.Success(placementApplicationEntity)
-  }
-
-  private fun sendPlacementRequestCreatedEmail(placementApplication: PlacementApplicationEntity) {
-    if (!sendPlacementRequestNotifications) {
-      return
-    }
-
-    val createdByUser = placementApplication.createdByUser
-    createdByUser.email?.let { email ->
-      emailNotificationService.sendEmail(
-        recipientEmailAddress = email,
-        templateId = notifyConfig.templates.placementRequestSubmitted,
-        personalisation = mapOf(
-          "crn" to placementApplication.application.crn,
-        ),
-      )
-    }
-  }
-
-  private fun sendPlacementRequestAllocatedEmail(placementApplication: PlacementApplicationEntity) {
-    if (!sendPlacementRequestNotifications) {
-      return
-    }
-
-    val createdByUser = placementApplication.createdByUser
-    createdByUser.email?.let { email ->
-      emailNotificationService.sendEmail(
-        recipientEmailAddress = email,
-        templateId = notifyConfig.templates.placementRequestAllocated,
-        personalisation = mapOf(
-          "crn" to placementApplication.application.crn,
-        ),
-      )
-    }
+    return null
   }
 }

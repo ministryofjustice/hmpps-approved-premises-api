@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.persistence.Column
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
@@ -93,6 +94,10 @@ data class PlacementApplicationEntity(
 
   var placementType: PlacementType?,
 
+  /**
+   * Supporting multiple dates in a single Placement Application is legacy behaviour. Any new
+   * placement application should only ever have a single date set on this collection
+   */
   @OneToMany(mappedBy = "placementApplication")
   var placementDates: MutableList<PlacementDateEntity>,
 
@@ -103,6 +108,9 @@ data class PlacementApplicationEntity(
   var withdrawalReason: PlacementApplicationWithdrawalReason?,
 
   var dueAt: OffsetDateTime?,
+
+  @Column(name = "placement_application_submission_group_id")
+  var submissionGroupId: UUID?,
 ) {
   fun isReallocated() = reallocatedAt != null
 
@@ -118,6 +126,8 @@ data class PlacementApplicationEntity(
   fun isWithdrawn(): Boolean = decision?.let { listOf(PlacementApplicationDecision.WITHDRAWN_BY_PP, PlacementApplicationDecision.WITHDRAW).contains(it) } ?: false
 }
 
+// Do not re-order these elements as we currently use ordinal enum mapping in hibernate
+// (i.e. they're persisted as index numbers, not enum name strings)
 enum class PlacementType {
   ROTL,
   RELEASE_FOLLOWING_DECISION,

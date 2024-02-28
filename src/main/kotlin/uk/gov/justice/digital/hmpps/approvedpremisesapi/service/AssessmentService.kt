@@ -79,7 +79,7 @@ class AssessmentService(
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
   @Value("\${notify.send-placement-request-notifications}")
   private val sendPlacementRequestNotifications: Boolean,
-  @Value("\${notify.send-new-withdrawal-notifications}")
+  @Value("\${feature-flags.cas1-use-new-withdrawal-logic}")
   private val sendNewWithdrawalNotifications: Boolean,
   private val taskDeadlineService: TaskDeadlineService,
 ) {
