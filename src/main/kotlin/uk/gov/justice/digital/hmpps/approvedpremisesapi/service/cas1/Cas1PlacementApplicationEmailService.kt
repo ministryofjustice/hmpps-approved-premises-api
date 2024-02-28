@@ -27,9 +27,7 @@ class Cas1PlacementApplicationEmailService(
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.placementRequestSubmitted,
-        personalisation = mapOf(
-          "crn" to placementApplication.application.crn,
-        ),
+        personalisation = getPersonalisation(placementApplication),
       )
     }
   }
@@ -44,9 +42,7 @@ class Cas1PlacementApplicationEmailService(
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
         templateId = notifyConfig.templates.placementRequestAllocated,
-        personalisation = mapOf(
-          "crn" to placementApplication.application.crn,
-        ),
+        personalisation = getPersonalisation(placementApplication),
       )
     }
   }
@@ -56,17 +52,7 @@ class Cas1PlacementApplicationEmailService(
       return
     }
 
-    val application = placementApplication.application
-    val dates = placementApplication.placementDates
-
-    val personalisation = mapOf(
-      "crn" to application.crn,
-      "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
-      "applicationArea" to application.apArea?.name,
-      "startDate" to dates.getOrNull(0)?.expectedArrival.toString(),
-      "endDate" to dates.getOrNull(0)?.expectedDeparture().toString(),
-      "additionalDatesSet" to if (dates.size > 1) "yes" else "no",
-    )
+    val personalisation = getPersonalisation(placementApplication)
 
     val createdByUserEmail = placementApplication.createdByUser.email
     createdByUserEmail?.let { email ->
@@ -85,5 +71,19 @@ class Cas1PlacementApplicationEmailService(
         personalisation = personalisation,
       )
     }
+  }
+
+  private fun getPersonalisation(placementApplication: PlacementApplicationEntity): Map<String,String?> {
+    val application = placementApplication.application
+    val dates = placementApplication.placementDates
+
+    return mapOf(
+      "crn" to application.crn,
+      "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
+      "applicationArea" to application.apArea?.name,
+      "startDate" to dates.getOrNull(0)?.expectedArrival.toString(),
+      "endDate" to dates.getOrNull(0)?.expectedDeparture().toString(),
+      "additionalDatesSet" to if (dates.size > 1) "yes" else "no",
+    )
   }
 }

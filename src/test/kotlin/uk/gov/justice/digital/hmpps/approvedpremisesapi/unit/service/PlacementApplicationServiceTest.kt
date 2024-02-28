@@ -167,7 +167,7 @@ class PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `Submitting an application triggers allocation and submission emails and returns successfully`() {
+    fun `Submitting an application triggers allocation and sets a due date`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java) } returns placementApplication.schemaVersion
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
@@ -190,18 +190,10 @@ class PlacementApplicationServiceTest {
       val updatedApplication = (validatableActionResult as ValidatableActionResult.Success).entity
 
       assertThat(updatedApplication[0].dueAt).isEqualTo(dueAt)
-
-      verify(exactly = 1) {
-        cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication)
-      }
-
-      verify(exactly = 1) {
-        cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication)
-      }
     }
 
     @Test
-    fun `Submitting an application saves a single date to a placement application`() {
+    fun `Submitting an application saves a single date to a placement application and triggers emails`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java) } returns placementApplication.schemaVersion
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
@@ -225,22 +217,26 @@ class PlacementApplicationServiceTest {
 
       assertThat(updatedPlacementApplications).hasSize(1)
 
-      val firstSubmissionGroupId = updatedPlacementApplications[0].submissionGroupId
+      val updatedPlacementApp = updatedPlacementApplications[0]
+      assertThat(updatedPlacementApp.submissionGroupId).isNotNull()
 
-      assertThat(updatedPlacementApplications[0].placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
-      assertThat(updatedPlacementApplications[0].placementDates[0].duration).isEqualTo(5)
+      assertThat(updatedPlacementApp.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
+      assertThat(updatedPlacementApp.placementDates[0].duration).isEqualTo(5)
+
+      verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
+      verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp) }
     }
 
     @Test
-    fun `Submitting an application saves multiple dates to individual placement applications`() {
+    fun `Submitting an application saves multiple dates to individual placement applications and triggers emails per resultant placement application`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java) } returns placementApplication.schemaVersion
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { placementDateRepository.save(any()) } answers { it.invocation.args[0] as PlacementDateEntity }
 
-      every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } returns Unit
-      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(any()) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(any()) } returns Unit
 
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
@@ -260,19 +256,30 @@ class PlacementApplicationServiceTest {
 
       val firstSubmissionGroupId = updatedPlacementApplications[0].submissionGroupId
 
-      assertThat(updatedPlacementApplications[0].placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
-      assertThat(updatedPlacementApplications[0].placementDates[0].duration).isEqualTo(5)
-      assertThat(updatedPlacementApplications[0].submissionGroupId).isEqualTo(firstSubmissionGroupId)
-      assertThat(updatedPlacementApplications[1].placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 5, 2))
-      assertThat(updatedPlacementApplications[1].placementDates[0].duration).isEqualTo(10)
-      assertThat(updatedPlacementApplications[1].submissionGroupId).isEqualTo(firstSubmissionGroupId)
-      assertThat(updatedPlacementApplications[2].placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 6, 3))
-      assertThat(updatedPlacementApplications[2].placementDates[0].duration).isEqualTo(15)
-      assertThat(updatedPlacementApplications[2].submissionGroupId).isEqualTo(firstSubmissionGroupId)
+      val updatedPlacementApp1 = updatedPlacementApplications[0]
+      assertThat(updatedPlacementApp1.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
+      assertThat(updatedPlacementApp1.placementDates[0].duration).isEqualTo(5)
+      assertThat(updatedPlacementApp1.submissionGroupId).isEqualTo(firstSubmissionGroupId)
+      verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp1) }
+      verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp1) }
+
+      val updatedPlacementApp2 = updatedPlacementApplications[1]
+      assertThat(updatedPlacementApp2.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 5, 2))
+      assertThat(updatedPlacementApp2.placementDates[0].duration).isEqualTo(10)
+      assertThat(updatedPlacementApp2.submissionGroupId).isEqualTo(firstSubmissionGroupId)
+      verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp2) }
+      verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp2) }
+
+      val updatedPlacementApp3 = updatedPlacementApplications[2]
+      assertThat(updatedPlacementApp3.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 6, 3))
+      assertThat(updatedPlacementApp3.placementDates[0].duration).isEqualTo(15)
+      assertThat(updatedPlacementApp3.submissionGroupId).isEqualTo(firstSubmissionGroupId)
+      verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp3) }
+      verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp3) }
     }
 
     @Test
-    fun `Submitting an application saves multiple dates to a single placement application (legacy logic)`() {
+    fun `Submitting an application saves multiple dates to a single placement application (legacy logic) and triggers a single set of emails`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java) } returns placementApplication.schemaVersion
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
@@ -297,7 +304,11 @@ class PlacementApplicationServiceTest {
       val updatedPlacementApplications = extractEntityFromNestedAuthorisableValidatableActionResult(result)
 
       assertThat(updatedPlacementApplications).hasSize(1)
-      val dates = updatedPlacementApplications[0].placementDates
+
+      val updatedPlacementApp = updatedPlacementApplications[0]
+      assertThat(updatedPlacementApp.submissionGroupId).isNotNull()
+
+      val dates = updatedPlacementApp.placementDates
       assertThat(dates).hasSize(3)
       assertThat(dates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
       assertThat(dates[0].duration).isEqualTo(5)
@@ -305,6 +316,9 @@ class PlacementApplicationServiceTest {
       assertThat(dates[1].duration).isEqualTo(10)
       assertThat(dates[2].expectedArrival).isEqualTo(LocalDate.of(2024, 6, 3))
       assertThat(dates[2].duration).isEqualTo(15)
+
+      verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
+      verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp) }
     }
   }
 

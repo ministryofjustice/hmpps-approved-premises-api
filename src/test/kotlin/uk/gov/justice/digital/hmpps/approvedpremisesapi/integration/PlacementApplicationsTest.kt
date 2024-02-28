@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -45,6 +47,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
 
 class PlacementApplicationsTest : IntegrationTestBase() {
+
+  @BeforeEach
+  fun setupBankHolidays() {
+    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+  }
 
   @Nested
   inner class CreatePlacementApplicationTest {
@@ -642,7 +649,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `submitting a placement application with a single date returns successfully and updates the application`() {
+    fun `submitting a placement application with a single date returns successfully, sends emails and updates the application`() {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { matcherUser, _ ->
         `Given a User` { user, jwt ->
           `Given a Placement Application`(
@@ -739,11 +746,13 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 .produce(),
             )
 
-            val arrival1 = LocalDate.now()
+            GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+            val arrival1 = LocalDate.of(2024,1,2)
             val duration1 = 12
-            val arrival2 = LocalDate.now().plusDays(30)
+            val arrival2 = LocalDate.of(2024,2,3)
             val duration2 = 10
-            val arrival3 = LocalDate.now().plusDays(60)
+            val arrival3 = LocalDate.of(2024,3,4)
             val duration3 = 15
 
             val placementDates = listOf(
@@ -801,9 +810,16 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             assertThat(updatedEntity3.submittedAt).isNotNull()
             assertThat(updatedEntity3.allocatedToUser!!.id).isEqualTo(matcherUser.id)
 
-            emailAsserter.assertEmailsRequestedCount(2)
-            emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestSubmitted)
-            emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestAllocated)
+            val recipient = placementApplicationEntity.createdByUser.email!!
+            val templates = notifyConfig.templates
+
+            emailAsserter.assertEmailsRequestedCount(6)
+            emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmitted, mapOf("startDate" to "2024-01-02"))
+            emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocated, mapOf("startDate" to "2024-01-02"))
+            emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmitted, mapOf("startDate" to "2024-02-03"))
+            emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocated, mapOf("startDate" to "2024-02-03"))
+            emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmitted, mapOf("startDate" to "2024-03-04"))
+            emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocated, mapOf("startDate" to "2024-03-04"))
           }
         }
       }
@@ -973,8 +989,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now()) { placementRequirements ->
                   `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now().minusDays(4)) { _ ->
                     `Given placement dates`(placementApplicationEntity = placementApplicationEntity) { placementDates ->
-                      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
-
+                     
                       webTestClient.post()
                         .uri("/placement-applications/${placementApplicationEntity.id}/decision")
                         .header("Authorization", "Bearer $jwt")

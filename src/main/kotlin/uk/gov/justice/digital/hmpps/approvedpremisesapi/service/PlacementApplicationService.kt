@@ -331,9 +331,11 @@ class PlacementApplicationService(
       saveDatesOnSubmissionToASingleApp(baselinePlacementApplication, apiPlacementDates)
     }
 
-    cas1PlacementApplicationEmailService.placementApplicationSubmitted(baselinePlacementApplication)
-    if (baselinePlacementApplication.allocatedToUser != null) {
-      cas1PlacementApplicationEmailService.placementApplicationAllocated(baselinePlacementApplication)
+    placementApplicationsWithDates.forEach { placementApplication ->
+      cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication)
+      if (baselinePlacementApplication.allocatedToUser != null) {
+        cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication)
+      }
     }
 
     return AuthorisableActionResult.Success(

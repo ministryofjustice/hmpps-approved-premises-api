@@ -81,12 +81,25 @@ class Cas1PlacementApplicationEmailServiceTest {
       .withAllocatedToUser(assessor)
       .produce()
 
+    placementApplication.placementDates = mutableListOf(
+      PlacementDateEntityFactory()
+        .withExpectedArrival(LocalDate.of(2020, 3, 12))
+        .withDuration(10)
+        .withPlacementApplication(placementApplication)
+        .produce(),
+    )
+
     service.placementApplicationSubmitted(placementApplication)
 
     mockEmailNotificationService.assertEmailRequestCount(1)
 
     val personalisation = mapOf(
+      "applicationUrl" to "http://frontend/applications/${application.id}",
       "crn" to TestConstants.CRN,
+      "applicationArea" to AREA_NAME,
+      "startDate" to "2020-03-12",
+      "endDate" to "2020-03-22",
+      "additionalDatesSet" to "no",
     )
 
     mockEmailNotificationService.assertEmailRequested(
@@ -141,12 +154,25 @@ class Cas1PlacementApplicationEmailServiceTest {
       .withAllocatedToUser(assessor)
       .produce()
 
+    placementApplication.placementDates = mutableListOf(
+      PlacementDateEntityFactory()
+        .withExpectedArrival(LocalDate.of(2020, 3, 12))
+        .withDuration(10)
+        .withPlacementApplication(placementApplication)
+        .produce(),
+    )
+
     service.placementApplicationAllocated(placementApplication)
 
     mockEmailNotificationService.assertEmailRequestCount(1)
 
     val personalisation = mapOf(
+      "applicationUrl" to "http://frontend/applications/${application.id}",
       "crn" to TestConstants.CRN,
+      "applicationArea" to AREA_NAME,
+      "startDate" to "2020-03-12",
+      "endDate" to "2020-03-22",
+      "additionalDatesSet" to "no",
     )
 
     mockEmailNotificationService.assertEmailRequested(
