@@ -114,6 +114,72 @@ class BookingSearchTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Searching for Temporary Accommodation bookings correctly filtered single booking for a specific crn`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val crn = "S121978"
+        create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
+        val expectedBookingSearchResult =
+          createTestTemporaryAccommodationBookings(userEntity, 1, 1, crn)
+        val expectedResponse = getExpectedResponseWithoutPersonName(expectedBookingSearchResult, crn)
+
+        webTestClient.get()
+          .uri("/bookings/search?crn=$crn")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(objectMapper.writeValueAsString(expectedResponse))
+      }
+    }
+  }
+
+  @Test
+  fun `Searching for Temporary Accommodation bookings correctly filtered multiple booking for a specific crn`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        val crn = "S121978"
+        val expectedBookingInSearchResult =
+          create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
+        createTestTemporaryAccommodationBookings(userEntity, 1, 1, crn)
+        val expectedResponse = getExpectedResponse(expectedBookingInSearchResult, offenderDetails)
+
+        webTestClient.get()
+          .uri("/bookings/search?crn=${offenderDetails.otherIds.crn}")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(objectMapper.writeValueAsString(expectedResponse))
+      }
+    }
+  }
+
+  @Test
+  fun `Searching for Temporary Accommodation bookings with crn not exists in the database return empty response`() {
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        create15TestTemporaryAccommodationBookings(userEntity, offenderDetails)
+        val expectedBookingSearchResults = BookingSearchResults(resultsCount = 0, results = emptyList())
+
+        webTestClient.get()
+          .uri("/bookings/search?crn=S121978")
+          .header("Authorization", "Bearer $jwt")
+          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(objectMapper.writeValueAsString(expectedBookingSearchResults))
+      }
+    }
+  }
+
+  @Test
   fun `Results are filtered by booking status when query parameter is supplied`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, _ ->
@@ -596,6 +662,51 @@ class BookingSearchTest : IntegrationTestBase() {
     )
   }
 
+  private fun getExpectedResponseWithoutPersonName(expectedBookings: List<BookingEntity>, crn: String): BookingSearchResults {
+    return BookingSearchResults(
+      resultsCount = expectedBookings.size,
+      results = expectedBookings.map { booking ->
+        BookingSearchResult(
+          person = BookingSearchResultPersonSummary(
+            name = null,
+            crn = crn,
+          ),
+          booking = BookingSearchResultBookingSummary(
+            id = booking.id,
+            status = when {
+              booking.cancellation != null -> BookingStatus.cancelled
+              booking.departure != null -> BookingStatus.departed
+              booking.arrival != null -> BookingStatus.arrived
+              booking.nonArrival != null -> BookingStatus.notMinusArrived
+              booking.confirmation != null -> BookingStatus.confirmed
+              booking.service == ServiceName.approvedPremises.value -> BookingStatus.awaitingMinusArrival
+              else -> BookingStatus.provisional
+            },
+            startDate = booking.arrivalDate,
+            endDate = booking.departureDate,
+            createdAt = booking.createdAt.toInstant(),
+          ),
+          premises = BookingSearchResultPremisesSummary(
+            id = booking.premises.id,
+            name = booking.premises.name,
+            addressLine1 = booking.premises.addressLine1,
+            addressLine2 = booking.premises.addressLine2,
+            town = booking.premises.town,
+            postcode = booking.premises.postcode,
+          ),
+          room = BookingSearchResultRoomSummary(
+            id = booking.bed!!.room.id,
+            name = booking.bed!!.room.name,
+          ),
+          bed = BookingSearchResultBedSummary(
+            id = booking.bed!!.id,
+            name = booking.bed!!.name,
+          ),
+        )
+      },
+    )
+  }
+
   private fun create10TestTemporaryAccommodationBookings(
     userEntity: UserEntity,
     offenderDetails: OffenderDetailSummary,
@@ -615,6 +726,15 @@ class BookingSearchTest : IntegrationTestBase() {
     offenderDetails: OffenderDetailSummary,
     numberOfPremises: Int,
     numberOfBedsInEachPremises: Int,
+  ): MutableList<BookingEntity> {
+    return createTestTemporaryAccommodationBookings(userEntity, numberOfPremises, numberOfBedsInEachPremises, offenderDetails.otherIds.crn)
+  }
+
+  private fun createTestTemporaryAccommodationBookings(
+    userEntity: UserEntity,
+    numberOfPremises: Int,
+    numberOfBedsInEachPremises: Int,
+    crn: String,
   ): MutableList<BookingEntity> {
     val allPremises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(numberOfPremises) {
       withProbationRegion(userEntity.probationRegion)
@@ -642,7 +762,7 @@ class BookingSearchTest : IntegrationTestBase() {
     allBeds.forEachIndexed { index, bed ->
       val booking = bookingEntityFactory.produceAndPersist {
         withPremises(bed.room.premises)
-        withCrn(offenderDetails.otherIds.crn)
+        withCrn(crn)
         withBed(bed)
         withStatus(BookingStatus.provisional)
         withServiceName(ServiceName.temporaryAccommodation)

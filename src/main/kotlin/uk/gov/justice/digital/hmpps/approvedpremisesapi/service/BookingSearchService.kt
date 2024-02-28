@@ -35,6 +35,7 @@ class BookingSearchService(
     sortOrder: SortOrder,
     sortField: BookingSearchSortField,
     page: Int?,
+    crn: String?,
   ): Pair<List<BookingSearchResultDto>, PaginationMetadata?> {
     val user = userService.getUserForRequest()
     val probationRegionId = when (serviceName) {
@@ -49,6 +50,7 @@ class BookingSearchService(
       serviceName.value,
       status,
       probationRegionId,
+      crn,
       buildPage(sortOrder, sortField, page, pageSize),
     )
     var results = removeRestrictedAndUpdatePersonNameFromOffenderDetail(

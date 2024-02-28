@@ -65,7 +65,7 @@ class BookingSearchServiceTest {
       }
       .produce()
 
-    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any(), any()) } returns PageImpl(
       crns.map { TestBookingSearchResult().withPersonCrn(it) },
     )
 
@@ -78,6 +78,7 @@ class BookingSearchServiceTest {
       SortOrder.ascending,
       BookingSearchSortField.bookingCreatedAt,
       1,
+      null,
     )
 
     assertThat(results).hasSize(3)
@@ -98,7 +99,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any(), any()) } returns PageImpl(
       listOf(
         TestBookingSearchResult()
           .withPersonCrn("crn1")
@@ -124,6 +125,7 @@ class BookingSearchServiceTest {
       SortOrder.ascending,
       BookingSearchSortField.bookingCreatedAt,
       1,
+      null,
     )
     assertThat(results).hasSize(2)
     assertThat(results).matches { result ->
@@ -131,7 +133,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metadata).isNotNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any(), any())
     }
   }
 
@@ -146,7 +148,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any(), any()) } returns PageImpl(
       listOf(
         TestBookingSearchResult()
           .withPersonCrn("crn1")
@@ -178,6 +180,7 @@ class BookingSearchServiceTest {
       SortOrder.ascending,
       BookingSearchSortField.bookingCreatedAt,
       1,
+      null,
     )
 
     assertThat(results).hasSize(3)
@@ -187,7 +190,7 @@ class BookingSearchServiceTest {
     assertThat(results.last().personName).isNull()
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any(), any())
     }
   }
 
@@ -208,7 +211,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), pageable) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any(), pageable) } returns PageImpl(
       listOf(
         TestBookingSearchResult().withPersonCrn("crn1"),
         TestBookingSearchResult().withPersonCrn("crn2"),
@@ -228,6 +231,7 @@ class BookingSearchServiceTest {
       sortOrder,
       BookingSearchSortField.personName,
       1,
+      null,
     )
 
     assertThat(results).hasSize(3)
@@ -239,7 +243,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), pageable)
+      mockBookingRepository.findBookings(any(), any(), any(), any(), pageable)
     }
   }
 
@@ -260,7 +264,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), pageable) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any(), pageable) } returns PageImpl(
       listOf(
         TestBookingSearchResult().withPersonCrn("crn1"),
         TestBookingSearchResult().withPersonCrn("crn2"),
@@ -280,6 +284,7 @@ class BookingSearchServiceTest {
       sortOrder,
       BookingSearchSortField.personName,
       1,
+      null,
     )
 
     assertThat(results).hasSize(3)
@@ -291,7 +296,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), pageable)
+      mockBookingRepository.findBookings(any(), any(), any(), any(), pageable)
     }
   }
 
@@ -312,7 +317,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), pageable) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any(), pageable) } returns PageImpl(
       listOf(
         TestBookingSearchResult().withPersonCrn("crn1"),
         TestBookingSearchResult().withPersonCrn("crn2"),
@@ -332,6 +337,7 @@ class BookingSearchServiceTest {
       sortOrder,
       BookingSearchSortField.personName,
       null,
+      null,
     )
 
     assertThat(results).hasSize(3)
@@ -343,7 +349,7 @@ class BookingSearchServiceTest {
     }
     assertThat(metaData).isNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), pageable)
+      mockBookingRepository.findBookings(any(), any(), any(), any(), pageable)
     }
   }
 
@@ -364,7 +370,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), pageable) } returns PageImpl(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any(), pageable) } returns PageImpl(
       listOf(
         TestBookingSearchResult().withPersonCrn("crn1"),
         TestBookingSearchResult().withPersonCrn("crn2"),
@@ -384,12 +390,13 @@ class BookingSearchServiceTest {
       sortOrder,
       BookingSearchSortField.personCrn,
       2,
+      null,
     )
 
     assertThat(results).hasSize(3)
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), pageable)
+      mockBookingRepository.findBookings(any(), any(), any(), any(), pageable)
     }
   }
 
@@ -404,7 +411,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(emptyList())
+    every { mockBookingRepository.findBookings(any(), any(), any(), any(), any()) } returns PageImpl(emptyList())
     every { mockOffenderService.getOffenderSummariesByCrns(emptySet(), any(), any(), any()) } returns emptyList()
 
     val (results, metaData) = bookingSearchService.findBookings(
@@ -413,12 +420,13 @@ class BookingSearchServiceTest {
       SortOrder.ascending,
       BookingSearchSortField.bookingCreatedAt,
       1,
+      null,
     )
 
     assertThat(results).hasSize(0)
     assertThat(metaData).isNotNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any(), any())
     }
   }
 
@@ -433,7 +441,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), any()) } returns PageImpl(emptyList())
+    every { mockBookingRepository.findBookings(any(), any(), any(), any(), any()) } returns PageImpl(emptyList())
     every { mockOffenderService.getOffenderSummariesByCrns(emptySet(), any(), any(), any()) } returns emptyList()
 
     val (results, metaData) = bookingSearchService.findBookings(
@@ -442,12 +450,13 @@ class BookingSearchServiceTest {
       SortOrder.ascending,
       BookingSearchSortField.bookingCreatedAt,
       null,
+      "S448160",
     )
 
     assertThat(results).hasSize(0)
     assertThat(metaData).isNull()
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any(), any())
     }
   }
 
@@ -462,7 +471,7 @@ class BookingSearchServiceTest {
           .produce()
       }
       .produce()
-    every { mockBookingRepository.findBookings(any(), any(), any(), any()) }.throws(
+    every { mockBookingRepository.findBookings(any(), any(), any(), any(), any()) }.throws(
       DataRetrievalFailureException(
         "some-exception",
       ),
@@ -475,10 +484,11 @@ class BookingSearchServiceTest {
         SortOrder.ascending,
         BookingSearchSortField.bookingCreatedAt,
         1,
+        null,
       )
     }
     verify(exactly = 1) {
-      mockBookingRepository.findBookings(any(), any(), any(), any())
+      mockBookingRepository.findBookings(any(), any(), any(), any(), any())
     }
     verify(exactly = 0) {
       mockOffenderService.getOffenderByCrn(any(), any())

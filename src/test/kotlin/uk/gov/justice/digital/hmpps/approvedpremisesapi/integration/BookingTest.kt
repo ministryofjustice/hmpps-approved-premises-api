@@ -2806,7 +2806,6 @@ class BookingTest : IntegrationTestBase() {
       }
     }
 
-
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
     fun `Create Confirmation on Approved Premises Booking returns OK with correct body when user has one of roles MANAGER, MATCHER`(
@@ -2843,7 +2842,6 @@ class BookingTest : IntegrationTestBase() {
           .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
       }
     }
-
   }
 
   @Test
