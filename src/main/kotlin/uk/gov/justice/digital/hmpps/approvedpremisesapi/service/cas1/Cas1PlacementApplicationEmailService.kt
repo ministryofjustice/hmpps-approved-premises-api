@@ -22,11 +22,17 @@ class Cas1PlacementApplicationEmailService(
       return
     }
 
+    val templateId = if(sendNewWithdrawalNotifications) {
+      notifyConfig.templates.placementRequestSubmittedV2
+    } else {
+      notifyConfig.templates.placementRequestSubmitted
+    }
+
     val createdByUser = placementApplication.createdByUser
     createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.placementRequestSubmitted,
+        templateId = templateId,
         personalisation = getPersonalisation(placementApplication),
       )
     }

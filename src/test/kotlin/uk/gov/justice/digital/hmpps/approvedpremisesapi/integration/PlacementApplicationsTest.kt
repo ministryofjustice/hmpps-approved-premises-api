@@ -723,7 +723,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             assertThat(createdPlacementDates[0].expectedArrival).isEqualTo(placementDates[0].expectedArrival)
 
             emailAsserter.assertEmailsRequestedCount(2)
-            emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestSubmitted)
+            emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestSubmittedV2)
             emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestAllocated)
           }
         }
@@ -814,11 +814,11 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             val templates = notifyConfig.templates
 
             emailAsserter.assertEmailsRequestedCount(6)
-            emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmitted, mapOf("startDate" to "2024-01-02"))
+            emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2024-01-02"))
             emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocated, mapOf("startDate" to "2024-01-02"))
-            emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmitted, mapOf("startDate" to "2024-02-03"))
+            emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2024-02-03"))
             emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocated, mapOf("startDate" to "2024-02-03"))
-            emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmitted, mapOf("startDate" to "2024-03-04"))
+            emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2024-03-04"))
             emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocated, mapOf("startDate" to "2024-03-04"))
           }
         }
