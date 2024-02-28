@@ -471,7 +471,7 @@ class PlacementApplicationServiceTest {
         createdAt = OffsetDateTime.now(),
         duration = 12,
         expectedArrival = LocalDate.now(),
-        placementApplication = mockk<PlacementApplicationEntity>(),
+        placementApplication = previousPlacementApplication,
       ),
     )
 
@@ -486,13 +486,20 @@ class PlacementApplicationServiceTest {
 
       previousPlacementApplication.placementDates = placementDates
 
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(assigneeUser)
+        .withDecision(null)
+        .withCreatedByUser(assigneeUser)
+        .produce()
+
       val newPlacementDates = mutableListOf(
         PlacementDateEntity(
           id = UUID.randomUUID(),
           createdAt = OffsetDateTime.now(),
           duration = 12,
           expectedArrival = LocalDate.now(),
-          placementApplication = mockk<PlacementApplicationEntity>(),
+          placementApplication = placementApplication,
         ),
       )
 
@@ -501,7 +508,7 @@ class PlacementApplicationServiceTest {
       every { taskDeadlineServiceMock.getDeadline(any<PlacementApplicationEntity>()) } returns dueAt
       every { placementApplicationRepository.findByIdOrNull(previousPlacementApplication.id) } returns previousPlacementApplication
 
-      every { placementApplicationRepository.save(previousPlacementApplication) } answers { it.invocation.args[0] as PlacementApplicationEntity }
+      every { placementApplicationRepository.save(previousPlacementApplication) } answers { previousPlacementApplication }
       every { placementApplicationRepository.save(match { it.allocatedToUser == assigneeUser }) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every {
         placementDateRepository.saveAll<PlacementDateEntity>(
@@ -546,13 +553,20 @@ class PlacementApplicationServiceTest {
       previousPlacementApplication.placementDates = placementDates
       previousPlacementApplication.allocatedToUser = null
 
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(assigneeUser)
+        .withDecision(null)
+        .withCreatedByUser(assigneeUser)
+        .produce()
+
       val newPlacementDates = mutableListOf(
         PlacementDateEntity(
           id = UUID.randomUUID(),
           createdAt = OffsetDateTime.now(),
           duration = 12,
           expectedArrival = LocalDate.now(),
-          placementApplication = mockk<PlacementApplicationEntity>(),
+          placementApplication = placementApplication,
         ),
       )
 
