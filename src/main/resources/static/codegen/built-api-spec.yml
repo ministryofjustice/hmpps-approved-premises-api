@@ -3247,6 +3247,10 @@ paths:
       responses:
         200:
           description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PlacementRequestDetail'
         401:
           $ref: '#/components/responses/401Response'
         403:

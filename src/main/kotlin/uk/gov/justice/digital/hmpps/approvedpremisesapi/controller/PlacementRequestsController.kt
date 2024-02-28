@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService.PlacementRequestAndCancellations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
@@ -121,17 +122,13 @@ class PlacementRequestsController(
 
     val authorisationResult = placementRequestService.getPlacementRequestForUser(user, id)
 
-    val (placementRequest, cancellations) = when (authorisationResult) {
+    val placementRequestAndCancellations = when (authorisationResult) {
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, "PlacementRequest")
       is AuthorisableActionResult.Success -> authorisationResult.entity
     }
 
-    val personInfo = offenderService.getInfoForPerson(placementRequest.application.crn, user.deliusUsername, false)
-
-    return ResponseEntity.ok(
-      placementRequestDetailTransformer.transformJpaToApi(placementRequest, personInfo, cancellations),
-    )
+    return ResponseEntity.ok(toPlacementRequestDetail(user, placementRequestAndCancellations))
   }
 
   override fun placementRequestsIdBookingPost(id: UUID, newPlacementRequestBooking: NewPlacementRequestBooking): ResponseEntity<NewPlacementRequestBookingConfirmation> {
@@ -180,7 +177,7 @@ class PlacementRequestsController(
     return ResponseEntity(bookingNotMadeTransformer.transformJpaToApi(bookingNotMade), HttpStatus.OK)
   }
 
-  override fun placementRequestsIdWithdrawalPost(id: UUID, body: WithdrawPlacementRequest?): ResponseEntity<Unit> {
+  override fun placementRequestsIdWithdrawalPost(id: UUID, body: WithdrawPlacementRequest?): ResponseEntity<PlacementRequestDetail> {
     val user = userService.getUserForRequest()
 
     val reason = when (body?.reason) {
@@ -199,7 +196,7 @@ class PlacementRequestsController(
       null -> null
     }
 
-    val result = extractEntityFromAuthorisableActionResult(
+    val placementRequestAndCancellations = extractEntityFromAuthorisableActionResult(
       placementRequestService.withdrawPlacementRequest(
         id,
         reason,
@@ -210,9 +207,24 @@ class PlacementRequestsController(
       ),
     )
 
-    return ResponseEntity.ok(result)
+    return ResponseEntity.ok(toPlacementRequestDetail(user, placementRequestAndCancellations))
   }
 
+  private fun toPlacementRequestDetail(forUser: UserEntity,
+                                       placementRequestAndCancellations: PlacementRequestAndCancellations): PlacementRequestDetail {
+    val personInfo = offenderService.getInfoForPerson(
+      placementRequestAndCancellations.placementRequest.application.crn,
+      forUser.deliusUsername,
+      ignoreLao = false,
+    )
+
+    return placementRequestDetailTransformer.transformJpaToApi(
+      placementRequestAndCancellations.placementRequest,
+      personInfo,
+      placementRequestAndCancellations.cancellations
+    )
+  }
+  
   private fun mapPersonDetailOntoPlacementRequests(placementRequests: List<PlacementRequestEntity>, user: UserEntity): List<PlacementRequest> {
     return placementRequests.mapNotNull {
       val personInfo = offenderService.getInfoForPerson(it.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))

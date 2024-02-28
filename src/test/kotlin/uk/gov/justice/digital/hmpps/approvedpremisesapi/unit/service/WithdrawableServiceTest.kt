@@ -144,7 +144,7 @@ class WithdrawableServiceTest {
           WithdrawableEntityType.Application,
         ),
       )
-    } returns mockk<AuthorisableActionResult<Unit>>()
+    } returns mockk<AuthorisableActionResult<PlacementRequestService.PlacementRequestAndCancellations>>()
 
     every {
       mockPlacementApplicationService.withdrawPlacementApplication(

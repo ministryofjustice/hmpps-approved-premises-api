@@ -1621,7 +1621,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
 
     @SuppressWarnings("MaxLineLength")
     @Test
-    fun `Withdraw Placement Request returns 200, sets isWithdrawn to true, raises domain event, sends email to CRU and sends email to Applicant if it represents dates included on application on submission`() {
+    fun `Withdraw Placement Request returns 200, sets isWithdrawn to true, raises domain event, sends email to CRU and Applicant if it represents dates included on application on submission`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           `Given a Placement Request`(
@@ -1643,6 +1643,8 @@ class PlacementRequestsTest : IntegrationTestBase() {
               .exchange()
               .expectStatus()
               .isOk
+              .expectBody()
+              .jsonPath("$.person.crn").isEqualTo(placementRequest.application.crn)
 
             val persistedPlacementRequest = placementRequestRepository.findByIdOrNull(placementRequest.id)!!
             assertThat(persistedPlacementRequest.isWithdrawn).isTrue

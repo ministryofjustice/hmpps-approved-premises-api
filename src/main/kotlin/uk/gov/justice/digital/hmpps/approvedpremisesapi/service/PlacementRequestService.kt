@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
@@ -124,21 +125,10 @@ class PlacementRequestService(
     return Pair(response.content, getMetadata(response, pageCriteria))
   }
 
-  data class AllActiveSearchCriteria(
-    val status: PlacementRequestStatus? = null,
-    val crn: String? = null,
-    val crnOrName: String? = null,
-    val tier: String? = null,
-    val arrivalDateStart: LocalDate? = null,
-    val arrivalDateEnd: LocalDate? = null,
-    val requestType: PlacementRequestRequestType? = null,
-    val apAreaId: UUID? = null,
-  )
-
   fun getPlacementRequestForUser(
     user: UserEntity,
     id: UUID,
-  ): AuthorisableActionResult<Pair<PlacementRequestEntity, List<CancellationEntity>>> {
+  ): AuthorisableActionResult<PlacementRequestAndCancellations> {
     val placementRequest = placementRequestRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
@@ -146,9 +136,7 @@ class PlacementRequestService(
       return AuthorisableActionResult.Unauthorised()
     }
 
-    val cancellations = cancellationRepository.getCancellationsForApplicationId(placementRequest.application.id)
-
-    return AuthorisableActionResult.Success(Pair(placementRequest, cancellations))
+    return AuthorisableActionResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }
 
   fun reallocatePlacementRequest(
@@ -324,14 +312,14 @@ class PlacementRequestService(
     placementRequestId: UUID,
     userProvidedReason: PlacementRequestWithdrawalReason?,
     withdrawalContext: WithdrawalContext,
-  ): AuthorisableActionResult<Unit> {
+  ): AuthorisableActionResult<PlacementRequestAndCancellations> {
     val user = requireNotNull(withdrawalContext.triggeringUser)
 
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
 
     if (placementRequest.isWithdrawn) {
-      return AuthorisableActionResult.Success(Unit)
+      return AuthorisableActionResult.Success(toPlacementRequestAndCancellations(placementRequest))
     }
 
     val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementRequest
@@ -373,7 +361,7 @@ class PlacementRequestService(
       }
     }
 
-    return AuthorisableActionResult.Success(Unit)
+    return AuthorisableActionResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }
 
   fun getPlacementRequestForInitialApplicationDates(applicationId: UUID) =
@@ -472,4 +460,26 @@ class PlacementRequestService(
       ),
     )
   }
+
+  private fun toPlacementRequestAndCancellations(placementRequest: PlacementRequestEntity): PlacementRequestAndCancellations {
+    val cancellations = cancellationRepository.getCancellationsForApplicationId(placementRequest.application.id)
+    return PlacementRequestAndCancellations(placementRequest, cancellations)
+  }
+
+  data class AllActiveSearchCriteria(
+    val status: PlacementRequestStatus? = null,
+    val crn: String? = null,
+    val crnOrName: String? = null,
+    val tier: String? = null,
+    val arrivalDateStart: LocalDate? = null,
+    val arrivalDateEnd: LocalDate? = null,
+    val requestType: PlacementRequestRequestType? = null,
+    val apAreaId: UUID? = null,
+  )
+
+  data class PlacementRequestAndCancellations(
+    val placementRequest: PlacementRequestEntity,
+    val cancellations: List<CancellationEntity>,
+  )
+
 }
