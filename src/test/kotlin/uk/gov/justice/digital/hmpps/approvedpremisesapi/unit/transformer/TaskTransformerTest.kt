@@ -38,11 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
@@ -54,16 +50,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
 
 class TaskTransformerTest {
-  private val mockPersonTransformer = mockk<PersonTransformer>()
   private val mockUserTransformer = mockk<UserTransformer>()
   private val mockRisksTransformer = mockk<RisksTransformer>()
   private val mockPlacementRequestTransformer = mockk<PlacementRequestTransformer>()
   private val mockApAreaTransformer = mockk<ApAreaTransformer>()
 
   private val mockUser = mockk<ApprovedPremisesUser>()
-  private val mockOffenderDetailSummary = mockk<OffenderDetailSummary>()
-  private val mockInmateDetail = mockk<InmateDetail>()
-  private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
 
   private val user = UserEntityFactory()
     .withYieldedProbationRegion {
@@ -93,6 +85,7 @@ class TaskTransformerTest {
   private val assessmentFactory = ApprovedPremisesAssessmentEntityFactory()
     .withApplication(application)
     .withAllocatedToUser(user)
+    .withDueAt(OffsetDateTime.now())
     .withCreatedAt(OffsetDateTime.parse("2022-12-07T10:40:00Z"))
 
   private val placementRequestFactory = PlacementRequestEntityFactory()
@@ -105,11 +98,13 @@ class TaskTransformerTest {
     .withApplication(application)
     .withAssessment(assessmentFactory.produce())
     .withAllocatedToUser(user)
+    .withDueAt(OffsetDateTime.now())
 
   val placementApplicationFactory = PlacementApplicationEntityFactory()
     .withApplication(application)
     .withAllocatedToUser(user)
     .withCreatedByUser(user)
+    .withDueAt(OffsetDateTime.now())
 
   private val mockApArea = ApArea(UUID.randomUUID(), "someIdentifier", "someName")
 
@@ -117,14 +112,12 @@ class TaskTransformerTest {
     mockUserTransformer,
     mockRisksTransformer,
     mockPlacementRequestTransformer,
-    mockWorkingDayCountService,
     mockApAreaTransformer,
   )
 
   @BeforeEach
   fun setup() {
     every { mockUserTransformer.transformJpaToApi(user, ServiceName.approvedPremises) } returns mockUser
-    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } returns LocalDate.now().plusDays(2)
     every { mockApAreaTransformer.transformJpaToApi(any()) } returns mockApArea
   }
 
@@ -142,7 +135,8 @@ class TaskTransformerTest {
       assertThat(result.status).isEqualTo(TaskStatus.notStarted)
       assertThat(result.taskType).isEqualTo(TaskType.assessment)
       assertThat(result.applicationId).isEqualTo(application.id)
-      assertThat(result.dueDate).isEqualTo(LocalDate.now().plusDays(2))
+      assertThat(result.dueDate).isEqualTo(assessment.dueAt!!.toLocalDate())
+      assertThat(result.dueAt).isEqualTo(assessment.dueAt!!.toInstant())
       assertThat(result.personName).isEqualTo("First Last")
       assertThat(result.crn).isEqualTo(assessment.application.crn)
       assertThat(result.allocatedToStaffMember).isEqualTo(mockUser)
@@ -205,6 +199,7 @@ class TaskTransformerTest {
         .withApplication(application)
         .withAllocatedToUser(user)
         .withCreatedAt(OffsetDateTime.parse("2022-12-07T10:40:00Z"))
+        .withDueAt(OffsetDateTime.now())
         .produce()
 
       val result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
@@ -256,6 +251,8 @@ class TaskTransformerTest {
           ),
         ),
       )
+      assertThat(result.dueDate).isEqualTo(placementApplication.dueAt!!.toLocalDate())
+      assertThat(result.dueAt).isEqualTo(placementApplication.dueAt!!.toInstant())
     }
 
     @ParameterizedTest
@@ -348,6 +345,8 @@ class TaskTransformerTest {
       assertThat(result.expectedArrival).isEqualTo(placementRequest.expectedArrival)
       assertThat(result.duration).isEqualTo(placementRequest.duration)
       assertThat(result.placementRequestStatus).isEqualTo(placementRequestStatus)
+      assertThat(result.dueDate).isEqualTo(placementRequest.dueAt!!.toLocalDate())
+      assertThat(result.dueAt).isEqualTo(placementRequest.dueAt!!.toInstant())
     }
 
     @Test

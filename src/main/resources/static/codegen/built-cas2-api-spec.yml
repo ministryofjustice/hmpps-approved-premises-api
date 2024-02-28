@@ -744,6 +744,11 @@ components:
         dueDate:
           type: string
           format: date
+          deprecated: true
+          description: The Due date of the task - this is deprecated in favour of the `dueAt` field
+        dueAt:
+          type: string
+          format: date-time
         allocatedToStaffMember:
           $ref: '#/components/schemas/ApprovedPremisesUser'
         status:
@@ -765,6 +770,7 @@ components:
         - dueDate
         - status
         - crn
+        - dueAt
     TaskStatus:
       type: string
       enum:
