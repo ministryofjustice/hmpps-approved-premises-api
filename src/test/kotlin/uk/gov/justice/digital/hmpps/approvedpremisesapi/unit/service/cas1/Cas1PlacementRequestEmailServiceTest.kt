@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.APPLICANT_EMAIL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.AREA_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.CRU_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockEmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -24,6 +25,7 @@ class Cas1PlacementRequestEmailServiceTest {
 
   private object TestConstants {
     const val APPLICANT_EMAIL = "application@test.com"
+    const val AREA_NAME = "theAreaName"
     const val CRN = "CRN123"
     const val CRU_EMAIL = "cruEmail@test.com"
   }
@@ -77,6 +79,9 @@ class Cas1PlacementRequestEmailServiceTest {
       mapOf(
         "applicationUrl" to "http://frontend/applications/${application.id}",
         "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to placementRequest.expectedArrival.toString(),
+        "endDate" to placementRequest.expectedDeparture().toString(),
       ),
     )
   }
@@ -149,6 +154,9 @@ class Cas1PlacementRequestEmailServiceTest {
       mapOf(
         "applicationUrl" to "http://frontend/applications/${application.id}",
         "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to placementRequest.expectedArrival.toString(),
+        "endDate" to placementRequest.expectedDeparture().toString(),
       ),
     )
   }
@@ -168,6 +176,7 @@ class Cas1PlacementRequestEmailServiceTest {
       .withSubmittedAt(OffsetDateTime.now())
       .withApArea(
         ApAreaEntityFactory()
+          .withName(AREA_NAME)
           .withEmailAddress(apAreaEmail)
           .produce(),
       )

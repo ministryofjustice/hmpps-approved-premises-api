@@ -24,6 +24,9 @@ class Cas1PlacementRequestEmailService(
     val personalisation = mapOf(
       "crn" to application.crn,
       "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
+      "applicationArea" to application.apArea?.name,
+      "startDate" to placementRequest.expectedArrival.toString(),
+      "endDate" to placementRequest.expectedDeparture().toString(),
     )
 
     if (placementRequest.isForApplicationsArrivalDate()) {
