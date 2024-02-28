@@ -1705,6 +1705,9 @@ components:
           type: array
           items:
             $ref: '_shared.yml#/components/schemas/Cas2TimelineEvent'
+        assessment:
+          type: object
+          $ref: '_shared.yml#/components/schemas/Cas2Assessment'
       required:
         - id
         - person
@@ -1714,6 +1717,7 @@ components:
         - outdatedSchema
         - status
         - timelineEvents
+        - assessment
     TemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/Application'
@@ -2439,6 +2443,13 @@ components:
           required:
             - application
             - summaryData
+    Cas2Assessment:
+      type: object
+      properties:
+        nacroReferralId:
+          type: string
+        assessorName:
+          type: string
     AssessmentSummary:
       type: object
       properties:
@@ -3428,6 +3439,7 @@ components:
         - update_booking_status
         - update_application_ap_areas
         - update_task_due_dates
+        - update_cas2_applications_with_assessments
     PlacementDates:
       type: object
       properties:

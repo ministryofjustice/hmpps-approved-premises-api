@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
@@ -31,6 +32,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
   private var telephoneNumber: Yielded<String?> = { randomNumberChars(12) }
   private var notes: Yielded<MutableList<Cas2ApplicationNoteEntity>> = { mutableListOf() }
+  private var assessment: Yielded<Cas2AssessmentEntity?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -88,6 +90,10 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.eventNumber = { eventNumber }
   }
 
+  fun withAssessment(assessmentEntity: Cas2AssessmentEntity) = apply {
+    this.assessment = { assessmentEntity }
+  }
+
   override fun produce(): Cas2ApplicationEntity = Cas2ApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -102,5 +108,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     nomsNumber = this.nomsNumber(),
     telephoneNumber = this.telephoneNumber(),
     notes = this.notes(),
+    assessment = this.assessment(),
   )
 }

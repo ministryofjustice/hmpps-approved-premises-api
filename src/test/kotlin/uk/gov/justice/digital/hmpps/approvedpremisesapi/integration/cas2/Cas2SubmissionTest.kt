@@ -350,6 +350,12 @@ class Cas2SubmissionTest(
               )
             }
 
+            val assessmentEntity = cas2AssessmentEntityFactory.produceAndPersist {
+              withApplication(applicationEntity)
+              withNacroReferralId("OH123")
+              withAssessorName("Assessor name")
+            }
+
             val update1 = cas2StatusUpdateEntityFactory.produceAndPersist {
               withApplication(applicationEntity)
               withAssessor(assessor)
@@ -415,7 +421,9 @@ class Cas2SubmissionTest(
                 applicant == it.submittedBy &&
                 applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
                 serializableToJsonNode(applicationEntity.document) == serializableToJsonNode(it.document) &&
-                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema &&
+                assessmentEntity.assessorName == it.assessment.assessorName &&
+                assessmentEntity.nacroReferralId == it.assessment.nacroReferralId
             }
 
             Assertions.assertThat(responseBody.statusUpdates!!.map { update -> update.label })

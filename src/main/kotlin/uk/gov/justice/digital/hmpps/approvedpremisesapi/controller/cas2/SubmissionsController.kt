@@ -30,20 +30,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationNotesTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmittedApplicationTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getFullInfoForPersonOrThrow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.cas2.getInfoForPersonOrThrowInternalServerError
 import java.net.URI
 import java.util.UUID
-import javax.persistence.metamodel.EntityType
 
 @Service("Cas2SubmissionsController")
 class SubmissionsController(
   private val httpAuthService: HttpAuthService,
   private val applicationService: ApplicationService,
   private val applicationNoteService: ApplicationNoteService,
-  private val applicationTransformer: SubmittedApplicationTransformer,
+  private val submissionsTransformer: SubmissionsTransformer,
   private val applicationNotesTransformer: ApplicationNotesTransformer,
   private val offenderService: OffenderService,
   private val externalUserService: ExternalUserService,
@@ -181,7 +180,7 @@ class SubmissionsController(
     Cas2SubmittedApplicationSummary {
     val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn())
 
-    return applicationTransformer.transformJpaSummaryToApiRepresentation(
+    return submissionsTransformer.transformJpaSummaryToApiRepresentation(
       application,
       personInfo,
     )
@@ -192,7 +191,7 @@ class SubmissionsController(
   ): Cas2SubmittedApplication {
     val personInfo = offenderService.getFullInfoForPersonOrThrow(application.crn)
 
-    return applicationTransformer.transformJpaToApiRepresentation(
+    return submissionsTransformer.transformJpaToApiRepresentation(
       application,
       personInfo,
     )
