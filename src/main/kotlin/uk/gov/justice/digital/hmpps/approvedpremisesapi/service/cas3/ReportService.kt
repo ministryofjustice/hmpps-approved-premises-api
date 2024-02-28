@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3
 
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.TransitionalAccommodationReferralReportGenerator
@@ -18,13 +19,19 @@ class ReportService(
   private val offenderService: OffenderService,
   private val userService: UserService,
   private val transitionalAccommodationReferralReportRowRepository: TransitionalAccommodationReferralReportRepository,
+  @Value("\${cas3-report.end-date-override:0}") private val endDateOverride: Int,
 ) {
   fun createCas3ApplicationReferralsReport(
     properties: TransitionalAccommodationReferralReportProperties,
     outputStream: OutputStream,
   ) {
     val fromDate = LocalDate.of(properties.year, properties.month, 1)
-    val toDate = LocalDate.of(properties.year, properties.month, fromDate.month.length(fromDate.isLeapYear))
+    var toDate = LocalDate.of(properties.year, properties.month, fromDate.month.length(fromDate.isLeapYear))
+
+    if (endDateOverride != 0) {
+      toDate = fromDate.plusMonths((endDateOverride).toLong())
+    }
+
     val referralsInScope = transitionalAccommodationReferralReportRowRepository.findAllReferrals(
       fromDate,
       toDate,

@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntityReportRowRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTimelinessEntityRepository
@@ -59,10 +61,15 @@ class ReportService(
   private val bookingsReportRepository: BookingsReportRepository,
   private val placementApplicationEntityReportRowRepository: PlacementApplicationEntityReportRowRepository,
   private val objectMapper: ObjectMapper,
+  @Value("\${cas3-report.end-date-override:0}") private val cas3EndDateOverride: Int,
 ) {
   fun createBookingsReport(properties: BookingsReportProperties, outputStream: OutputStream) {
     val startOfMonth = LocalDate.of(properties.year, properties.month, 1)
-    val endOfMonth = LocalDate.of(properties.year, properties.month, startOfMonth.month.length(startOfMonth.isLeapYear))
+    val endOfMonth = if (properties.serviceName == temporaryAccommodation && cas3EndDateOverride != 0) {
+      startOfMonth.plusMonths(cas3EndDateOverride.toLong())
+    } else {
+      LocalDate.of(properties.year, properties.month, startOfMonth.month.length(startOfMonth.isLeapYear))
+    }
 
     val bookingsInScope = bookingsReportRepository.findAllByOverlappingDate(
       startOfMonth,
@@ -88,7 +95,7 @@ class ReportService(
   }
 
   fun createBedUsageReport(properties: BedUsageReportProperties, outputStream: OutputStream) {
-    BedUsageReportGenerator(bookingTransformer, bookingRepository, lostBedsRepository, workingDayCountService)
+    BedUsageReportGenerator(bookingTransformer, bookingRepository, lostBedsRepository, workingDayCountService, cas3EndDateOverride)
       .createReport(bedRepository.findAll(), properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
@@ -96,7 +103,7 @@ class ReportService(
   }
 
   fun createBedUtilisationReport(properties: BedUtilisationReportProperties, outputStream: OutputStream) {
-    BedUtilisationReportGenerator(bookingRepository, lostBedsRepository, workingDayCountService)
+    BedUtilisationReportGenerator(bookingRepository, lostBedsRepository, workingDayCountService, cas3EndDateOverride)
       .createReport(bedRepository.findAll(), properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)

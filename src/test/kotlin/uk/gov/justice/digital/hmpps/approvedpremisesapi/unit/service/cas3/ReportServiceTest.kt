@@ -30,6 +30,7 @@ class ReportServiceTest {
     mockOffenderService,
     mockUserService,
     mockTransitionalAccommodationReferralReportRowRepository,
+    0,
   )
 
   @Test
@@ -50,6 +51,38 @@ class ReportServiceTest {
       mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
         LocalDate.of(2024, 1, 1),
         LocalDate.of(2024, 1, 31),
+        probationRegionId,
+      )
+    }
+    verify { mockUserService.getUserForRequest() }
+    verify { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
+  }
+
+  @Test
+  fun `createCas3ApplicationReferralsReport successfully generate report for 3 months`() {
+    val probationRegionId = UUID.randomUUID()
+    val testTransitionalAccommodationReferralReportData = createDBReferralReportData()
+    val properties = TransitionalAccommodationReferralReportProperties(ServiceName.temporaryAccommodation, probationRegionId, 2024, 1)
+
+    every { mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(any(), any(), any()) } returns listOf(testTransitionalAccommodationReferralReportData)
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
+    every { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) } returns listOf(
+      PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
+    )
+
+    val reportServiceWithThreeMonths = ReportService(
+      mockOffenderService,
+      mockUserService,
+      mockTransitionalAccommodationReferralReportRowRepository,
+      3,
+    )
+
+    reportServiceWithThreeMonths.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
+
+    verify {
+      mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+        LocalDate.of(2024, 1, 1),
+        LocalDate.of(2024, 4, 1),
         probationRegionId,
       )
     }
