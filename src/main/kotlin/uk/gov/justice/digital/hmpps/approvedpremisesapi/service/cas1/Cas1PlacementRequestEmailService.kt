@@ -24,6 +24,9 @@ class Cas1PlacementRequestEmailService(
     val personalisation = mapOf(
       "crn" to application.crn,
       "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
+      "applicationArea" to application.apArea?.name,
+      "startDate" to placementRequest.expectedArrival.toString(),
+      "endDate" to placementRequest.expectedDeparture().toString(),
     )
 
     if (placementRequest.isForApplicationsArrivalDate()) {
@@ -31,7 +34,11 @@ class Cas1PlacementRequestEmailService(
       applicant.email?.let { applicantEmail ->
         emailNotifier.sendEmail(
           recipientEmailAddress = applicantEmail,
-          templateId = notifyConfig.templates.matchRequestWithdrawn,
+          /**
+           * For information on why we send a request for placement email
+           * instead of match request, see [PlacementRequestEntity.isForApplicationsArrivalDate]
+           **/
+          templateId = notifyConfig.templates.placementRequestWithdrawn,
           personalisation = personalisation,
         )
       }

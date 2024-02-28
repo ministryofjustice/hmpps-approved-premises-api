@@ -743,7 +743,7 @@ class WithdrawalTest : IntegrationTestBase() {
             emailAsserter.assertEmailRequested(apEmail, templates.bookingWithdrawn)
             emailAsserter.assertEmailRequested(cruEmail, templates.bookingWithdrawn)
             emailAsserter.assertEmailRequested(applicantEmail, templates.placementRequestWithdrawn)
-            emailAsserter.assertEmailRequested(applicantEmail, templates.matchRequestWithdrawn)
+            emailAsserter.assertEmailRequested(applicantEmail, templates.placementRequestWithdrawn)
             emailAsserter.assertEmailRequested(requestForPlacementAssessorEmail, templates.placementRequestWithdrawn)
           }
         }
@@ -849,7 +849,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * ```
      */
     @Test
-    fun `Withdrawing a Match Request cascades to booking pending arrival and updates the application status`() {
+    fun `Withdrawing a match request for original app dates cascades to booking pending arrival and updates the application status`() {
       `Given a User` { applicant, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           val (application, assessment) = createApplicationAndAssessment(
@@ -889,7 +889,7 @@ class WithdrawalTest : IntegrationTestBase() {
           val apEmail = bookingNoArrival.premises.emailAddress!!
 
           emailAsserter.assertEmailsRequestedCount(4)
-          emailAsserter.assertEmailRequested(applicantEmail, templates.matchRequestWithdrawn)
+          emailAsserter.assertEmailRequested(applicantEmail, templates.placementRequestWithdrawn)
           emailAsserter.assertEmailRequested(applicantEmail, templates.bookingWithdrawn)
           emailAsserter.assertEmailRequested(apEmail, templates.bookingWithdrawn)
           emailAsserter.assertEmailRequested(cruEmail, templates.bookingWithdrawn)
@@ -908,7 +908,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * ```
      */
     @Test
-    fun `Withdrawing a Match Request doesn't cascade to booking with arrival`() {
+    fun `Withdrawing a match request for original app dates doesn't cascade to booking with arrival`() {
       `Given a User` { applicant, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           val (application, assessment) = createApplicationAndAssessment(
@@ -942,7 +942,58 @@ class WithdrawalTest : IntegrationTestBase() {
           val applicantEmail = applicant.email!!
 
           emailAsserter.assertEmailsRequestedCount(1)
-          emailAsserter.assertEmailRequested(applicantEmail, templates.matchRequestWithdrawn)
+          emailAsserter.assertEmailRequested(applicantEmail, templates.placementRequestWithdrawn)
+        }
+      }
+    }
+
+    /**
+     * ```
+     * | Entities                         | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
+     * | -------------------------------- | --------- | -------- | -------- | --------- | -------------- |
+     * | Application                      | -         | -        | -        | -         | -              |
+     * | -> Assessment                    | -         | -        | -        | -         | -              |
+     * | -> Placement Request             | -         | -        | -        | -         | -              |
+     * | ---> Match request               | YES       | YES      | -        | -         | -              |
+     * | -----> Booking has arrival       | -         | -        | -        | -         | -              |
+     * ```
+     */
+    @Test
+    fun `Withdrawing a match request not for original app dates doesnt send email to applicant`() {
+      `Given a User` { applicant, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val (application, assessment) = createApplicationAndAssessment(
+            applicant = applicant,
+            assignee = applicant,
+            offenderDetails = offenderDetails,
+            assessmentAllocatedTo = applicant
+          )
+
+          val placementApplication1 = createPlacementApplication(application, listOf(LocalDate.now() to 2))
+          val placementRequest = createPlacementRequest(application) {
+            withPlacementApplication(placementApplication1)
+          }
+          val bookingNoArrival = createBooking(
+            application = application,
+            hasArrival = true,
+            startDate = LocalDate.now().plusDays(1),
+            endDate = LocalDate.now().plusDays(6),
+          )
+          addBookingToPlacementRequest(placementRequest, bookingNoArrival)
+
+          withdrawPlacementRequest(
+            placementRequest,
+            WithdrawPlacementRequestReason.duplicatePlacementRequest,
+            jwt,
+          )
+
+          assertApplicationNotWithdrawn(application)
+          assertAssessmentNotWithdrawn(assessment)
+
+          assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
+          assertBookingNotWithdrawn(bookingNoArrival)
+
+          emailAsserter.assertNoEmailsRequested()
         }
       }
     }
