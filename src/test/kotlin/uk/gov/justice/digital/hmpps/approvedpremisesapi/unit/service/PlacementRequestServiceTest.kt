@@ -147,6 +147,7 @@ class PlacementRequestServiceTest {
     every { taskDeadlineServiceMock.getDeadline(any<PlacementRequestEntity>()) } returns dueAt
     every { userAllocator.getUserForPlacementRequestAllocation(any()) } returns assigneeUser
     every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+    every { cas1PlacementRequestDomainEventService.placementRequestCreated(any()) } returns Unit
 
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(assigneeUser)
@@ -183,6 +184,8 @@ class PlacementRequestServiceTest {
     assertThat(placementRequest.isParole).isFalse()
     assertThat(placementRequest.dueAt).isEqualTo(dueAt)
     assertThat(placementRequest.allocatedToUser!!.id).isEqualTo(assigneeUser.id)
+
+    verify { cas1PlacementRequestDomainEventService.placementRequestCreated(placementRequest) }
   }
 
   @Test

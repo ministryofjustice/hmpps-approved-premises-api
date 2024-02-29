@@ -827,7 +827,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class CreatePlacementApplicationDecisionTest {
+  inner class SubmitPlacementApplicationDecisionTest {
 
     @Test
     fun `submitting a placement request application decision without a JWT returns 401`() {
@@ -1024,6 +1024,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                       assertThat(createdPlacementApplication.duration).isEqualTo(placementDates.duration)
                       assertThat(createdPlacementApplication.isParole).isEqualTo(isParole)
                       assertThat(createdPlacementApplication.placementRequirements.id).isEqualTo(placementRequirements.id)
+
+                      snsDomainEventListener.assertNoMessages()
                     }
                   }
                 }
@@ -1252,8 +1254,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
             }
 
-            val emittedMessage = snsDomainEventListener.blockForMessage()
-            assertThat(emittedMessage.eventType).isEqualTo("approved-premises.placement-application.withdrawn")
+            snsDomainEventListener.blockForMessage("approved-premises.placement-application.withdrawn")
 
             emailAsserter.assertEmailsRequestedCount(2)
             emailAsserter.assertEmailRequested(
@@ -1316,8 +1317,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                   serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
               }
 
-              val emittedMessage = snsDomainEventListener.blockForMessage()
-              assertThat(emittedMessage.eventType).isEqualTo("approved-premises.placement-application.withdrawn")
+              snsDomainEventListener.blockForMessage("approved-premises.placement-application.withdrawn")
 
               emailAsserter.assertEmailsRequestedCount(2)
               emailAsserter.assertEmailRequested(

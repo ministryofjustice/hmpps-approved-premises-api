@@ -1765,7 +1765,7 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Accept assessment returns 200, persists decision, creates and allocates a placement request, and emits SNS domain event message when requirements provided`() {
+  fun `Accept assessment returns 200, persists decision, creates and allocates a placement request, and emits SNS domain events when requirements provided`() {
     `Given a User`(
       staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
     ) { userEntity, jwt ->
@@ -1829,13 +1829,13 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
             assertThat(persistedAssessment.submittedAt).isNotNull
 
-            val emittedMessage = snsDomainEventListener.blockForMessage()
+            snsDomainEventListener.blockForMessage("approved-premises.match-request.created")
 
-            assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
-            assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
-            assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
-            assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
-            assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+            val applicationAssessedMessage = snsDomainEventListener.blockForMessage("approved-premises.application.assessed")
+            assertThat(applicationAssessedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
+            assertThat(applicationAssessedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+            assertThat(applicationAssessedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
+            assertThat(applicationAssessedMessage.personReference.identifiers).containsExactlyInAnyOrder(
               SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
               SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
             )
@@ -1864,7 +1864,7 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Accept assessment returns 200, persists decision, does not create a Placement Request, creates Placement Requirements and emits SNS domain event message when placement date information not provided`() {
+  fun `Accept assessment returns 200, persists decision, does not create a Placement Request, creates Placement Requirements and emits assessment domain event when placement date information not provided`() {
     `Given a User`(
       staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
     ) { userEntity, jwt ->
@@ -1921,13 +1921,11 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
             assertThat(persistedAssessment.submittedAt).isNotNull
 
-            val emittedMessage = snsDomainEventListener.blockForMessage()
-
-            assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
-            assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
-            assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
-            assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
-            assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+            val applicationAssessedMessage = snsDomainEventListener.blockForMessage("approved-premises.application.assessed")
+            assertThat(applicationAssessedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
+            assertThat(applicationAssessedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+            assertThat(applicationAssessedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
+            assertThat(applicationAssessedMessage.personReference.identifiers).containsExactlyInAnyOrder(
               SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
               SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
             )
@@ -2066,9 +2064,8 @@ class AssessmentTest : IntegrationTestBase() {
         assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
         assertThat(persistedAssessment.submittedAt).isNotNull
 
-        val emittedMessage = snsDomainEventListener.blockForMessage()
+        val emittedMessage = snsDomainEventListener.blockForMessage("approved-premises.application.assessed")
 
-        assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
         assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
         assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
         assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)

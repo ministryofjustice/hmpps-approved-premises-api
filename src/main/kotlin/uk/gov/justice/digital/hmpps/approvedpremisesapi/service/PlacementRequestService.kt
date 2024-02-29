@@ -226,6 +226,10 @@ class PlacementRequestService(
       placementRequest
     }
 
+    placementRequests.forEach {
+      cas1PlacementRequestDomainEventService.placementRequestCreated(it)
+    }
+
     return AuthorisableActionResult.Success(placementRequests)
   }
 
@@ -261,7 +265,11 @@ class PlacementRequestService(
     placementRequest.allocatedToUser = allocatedUser
     placementRequest.dueAt = taskDeadlineService.getDeadline(placementRequest)
 
-    return placementRequestRepository.save(placementRequest)
+    val savedPlacementRequest = placementRequestRepository.save(placementRequest)
+
+    cas1PlacementRequestDomainEventService.placementRequestCreated(savedPlacementRequest)
+
+    return savedPlacementRequest
   }
 
   @Transactional

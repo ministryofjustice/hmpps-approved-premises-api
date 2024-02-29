@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
@@ -24,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Assessmen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCancelledFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MatchRequestCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MatchRequestWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
@@ -283,6 +286,26 @@ class DomainEventDescriberTest {
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
     assertThat(result).isEqualTo("A request for placement was withdrawn for dates Tuesday 2 January 2024 to Monday 4 March 2024, Monday 6 May 2024 to Monday 8 July 2024")
+  }
+
+  @Test
+  fun `Returns expected description for match request created event`() {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_CREATED)
+
+    every { mockDomainEventService.getMatchRequestCreatedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
+      MatchRequestCreatedEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = "approved-premises.match-request.created",
+        eventDetails = MatchRequestCreatedFactory()
+          .withDatePeriod(DatePeriod(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 3, 4)))
+          .produce(),
+      )
+    }
+
+    val result = domainEventDescriber.getDescription(domainEventSummary)
+
+    assertThat(result).isEqualTo("A request for placement was created for dates Tuesday 2 January 2024 to Monday 4 March 2024")
   }
 
   @Test

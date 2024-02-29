@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
@@ -50,6 +51,7 @@ class DomainEventService(
   @Value("\${url-templates.api.cas1.application-withdrawn-event-detail}") private val applicationWithdrawnDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas1.assessment-appealed-event-detail}") private val assessmentAppealedDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas1.placement-application-withdrawn-event-detail}") private val placementApplicationWithdrawnDetailUrlTemplate: UrlTemplate,
+  @Value("\${url-templates.api.cas1.match-request-created-event-detail}") private val matchRequestCreatedDetailUrlTemplate: UrlTemplate,
   @Value("\${url-templates.api.cas1.match-request-withdrawn-event-detail}") private val matchRequestWithdrawnDetailUrlTemplate: UrlTemplate,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -65,6 +67,7 @@ class DomainEventService(
   fun getBookingChangedEvent(id: UUID) = get<BookingChangedEnvelope>(id)
   fun getApplicationWithdrawnEvent(id: UUID) = get<ApplicationWithdrawnEnvelope>(id)
   fun getPlacementApplicationWithdrawnEvent(id: UUID) = get<PlacementApplicationWithdrawnEnvelope>(id)
+  fun getMatchRequestCreatedEvent(id: UUID) = get<MatchRequestCreatedEnvelope>(id)
   fun getMatchRequestWithdrawnEvent(id: UUID) = get<MatchRequestWithdrawnEnvelope>(id)
   fun getAssessmentAppealedEvent(id: UUID) = get<AssessmentAppealedEnvelope>(id)
 
@@ -215,6 +218,17 @@ class DomainEventService(
     )
 
   @Transactional
+  fun saveMatchRequestCreatedEvent(domainEvent: DomainEvent<MatchRequestCreatedEnvelope>) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "approved-premises.match-request.created",
+      typeDescription = "An Approved Premises Match Request has been created",
+      detailUrl = matchRequestCreatedDetailUrlTemplate.resolve("eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+    )
+
+  @Transactional
   fun saveMatchRequestWithdrawnEvent(domainEvent: DomainEvent<MatchRequestWithdrawnEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
@@ -298,6 +312,7 @@ class DomainEventService(
     AssessmentAppealedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED
     PlacementApplicationWithdrawnEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN
     MatchRequestWithdrawnEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN
+    MatchRequestCreatedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_CREATED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.name}")
   }
 }

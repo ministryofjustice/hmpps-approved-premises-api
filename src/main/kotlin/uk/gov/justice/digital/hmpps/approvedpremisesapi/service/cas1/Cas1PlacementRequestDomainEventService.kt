@@ -3,10 +3,14 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
@@ -22,7 +26,7 @@ class Cas1PlacementRequestDomainEventService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
 ) {
 
-  fun placementRequestWithdrawn(placementRequest: PlacementRequestEntity, withdrawalContext: WithdrawalContext) {
+  fun placementRequestCreated(placementRequest: PlacementRequestEntity) {
     /**
      * We only raise domain events for the match request [PlacementRequestEntity] that was created
      * automatically when the application was assessed (i.e. the one created to fulfill the arrival
@@ -33,6 +37,52 @@ class Cas1PlacementRequestDomainEventService(
      * If this logic was to be changed to raise domain events on withdrawal of _any_ Match Request,
      * the logic setting requestIsForApplicationsArrivalDate on the domain event should be updated
      * and the logic used to render the event description for the timeline should also be reviewed
+     */
+    if (!placementRequest.isForApplicationsArrivalDate()) {
+      return
+    }
+
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = Instant.now()
+    val application = placementRequest.application
+
+    val matchRequestEntity = MatchRequestCreated(
+      applicationId = application.id,
+      applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+      matchRequestId = placementRequest.id,
+      personReference = PersonReference(
+        crn = application.crn,
+        noms = application.nomsNumber ?: "Unknown NOMS Number",
+      ),
+      deliusEventNumber = application.eventNumber,
+      requestIsForApplicationsArrivalDate = true,
+      datePeriod = DatePeriod(
+        placementRequest.expectedArrival,
+        placementRequest.expectedDeparture(),
+      ),
+    )
+
+    domainEventService.saveMatchRequestCreatedEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = eventOccurredAt,
+        data = MatchRequestCreatedEnvelope(
+          id = domainEventId,
+          timestamp = eventOccurredAt,
+          eventType = "approved-premises.match-request.created",
+          eventDetails = matchRequestEntity,
+        ),
+      ),
+    )
+
+  }
+
+  fun placementRequestWithdrawn(placementRequest: PlacementRequestEntity, withdrawalContext: WithdrawalContext) {
+
+    /**
+     * See javadoc on placementRequestCreated
      */
     if (!placementRequest.isForApplicationsArrivalDate()) {
       return

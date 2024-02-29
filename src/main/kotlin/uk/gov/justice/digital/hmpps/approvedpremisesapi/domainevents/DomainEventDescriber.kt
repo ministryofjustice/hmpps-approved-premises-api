@@ -34,6 +34,7 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> buildAssessmentAppealedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> buildPlacementApplicationWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> buildMatchRequestWithdrawnDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_CREATED -> buildMatchRequestCreatedDescription(domainEventSummary)
       else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
     }
   }
@@ -83,7 +84,7 @@ class DomainEventDescriber(
     val dates = event?.data?.eventDetails?.placementDates ?: emptyList()
     return "A request for placement was withdrawn" +
       if (dates.isNotEmpty()) {
-        " for dates " + dates.joinToString(", ") { "${formatDate(it.startDate)} to ${formatDate(it.endDate)}" }
+        " for dates " + dates.joinToString(", ") { datePeriodAsString(it.startDate,it.endDate) }
       } else { "" }
   }
 
@@ -94,9 +95,22 @@ class DomainEventDescriber(
      **/
     return event.describe {
       val dates = it.eventDetails.datePeriod
-      "A request for placement was withdrawn for dates ${formatDate(dates.startDate)} to ${formatDate(dates.endDate)}"
+      "A request for placement was withdrawn for dates ${datePeriodAsString(dates.startDate,dates.endDate)}"
     }
   }
+
+  private fun buildMatchRequestCreatedDescription(domainEventSummary: DomainEventSummary): String? {
+    val event = domainEventService.getMatchRequestCreatedEvent(domainEventSummary.id())
+    /**
+     * See documentation in [Cas1PlacementRequestDomainEventService] for why this is reported as a request for placement
+     **/
+    return event.describe {
+      val dates = it.eventDetails.datePeriod
+      "A request for placement was created for dates ${datePeriodAsString(dates.startDate,dates.endDate)}"
+    }
+  }
+
+  private fun datePeriodAsString(startDate: LocalDate, endDate: LocalDate) = "${formatDate(startDate)} to ${formatDate(endDate)}"
 
   private fun formatDate(localDate: LocalDate) = localDate.format(cas1UiExtendedDateFormat)
 
