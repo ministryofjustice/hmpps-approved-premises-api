@@ -19,6 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
@@ -33,6 +35,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingChangedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MatchRequestCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MatchRequestWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
@@ -76,6 +79,7 @@ class DomainEventServiceTest {
     assessmentAppealedDetailUrlTemplate = "http://api/events/assessment-appealed/#eventId",
     placementApplicationWithdrawnDetailUrlTemplate = UrlTemplate("http://api/events/placement-application-withdrawn/#eventId"),
     matchRequestWithdrawnDetailUrlTemplate = UrlTemplate("http://api/events/match-request-withdrawn/#eventId"),
+    matchRequestCreatedDetailUrlTemplate = UrlTemplate("http://api/events/match-request-created/#eventId"),
   )
 
   @Test
@@ -1029,6 +1033,51 @@ class DomainEventServiceTest {
     assertThat(domainEventService.getPlacementApplicationWithdrawnEvent(id)).isNull()
   }
 
+
+  @Test
+  fun `getMatchRequestCreatedEvent returns event`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    val data = MatchRequestCreatedEnvelope(
+      id = id,
+      timestamp = occurredAt.toInstant(),
+      eventType = "approved-premises.match-request.created",
+      eventDetails = MatchRequestCreatedFactory().produce(),
+    )
+
+    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
+      .withId(id)
+      .withApplicationId(applicationId)
+      .withCrn(crn)
+      .withType(DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_CREATED)
+      .withData(objectMapper.writeValueAsString(data))
+      .withOccurredAt(occurredAt)
+      .produce()
+
+    val event = domainEventService.getMatchRequestCreatedEvent(id)
+    assertThat(event).isEqualTo(
+      DomainEvent(
+        id = id,
+        applicationId = applicationId,
+        crn = "CRN",
+        occurredAt = occurredAt.toInstant(),
+        data = data,
+      ),
+    )
+  }
+
+  @Test
+  fun `getMatchRequestCreatedEvent returns null when event does not exist`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+
+    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
+
+    assertThat(domainEventService.getMatchRequestCreatedEvent(id)).isNull()
+  }
+
   @Test
   fun `getMatchRequestWithdrawnEvent returns event`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
@@ -1948,6 +1997,105 @@ class DomainEventServiceTest {
         match {
           it.id == domainEventToSave.id &&
             it.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 0) {
+      domainEventWorkerMock.emitEvent(any(), any())
+    }
+  }
+
+  @Test
+  fun `saveMatchRequestCreatedEvent persists event, emits event to SNS`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = MatchRequestCreatedEnvelope(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = "approved-premises.match-request.created",
+        eventDetails = MatchRequestCreatedFactory().produce(),
+      ),
+    )
+
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
+
+    domainEventService.saveMatchRequestCreatedEvent(domainEventToSave)
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_CREATED &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+        },
+      )
+    }
+
+    verify(exactly = 1) {
+      domainEventWorkerMock.emitEvent(
+        match { snsEvent ->
+          snsEvent.eventType == "approved-premises.match-request.created" &&
+            snsEvent.version == 1 &&
+            snsEvent.description == "An Approved Premises Match Request has been created" &&
+            snsEvent.detailUrl == "http://api/events/match-request-created/$id" &&
+            snsEvent.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            snsEvent.additionalInformation.applicationId == applicationId &&
+            snsEvent.personReference.identifiers.any { id -> id.type == "CRN" && id.value == domainEventToSave.data.eventDetails.personReference.crn } &&
+            snsEvent.personReference.identifiers.any { id -> id.type == "NOMS" && id.value == domainEventToSave.data.eventDetails.personReference.noms }
+        },
+        domainEventToSave.id,
+      )
+    }
+  }
+
+  @Test
+  fun `saveMatchRequestCreatedEvent does not emit event to SNS if event fails to persist to database`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = MatchRequestCreatedEnvelope(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = "approved-premises.match-request.created",
+        eventDetails = MatchRequestCreatedFactory().produce(),
+      ),
+    )
+
+    try {
+      domainEventService.saveMatchRequestCreatedEvent(domainEventToSave)
+    } catch (_: Exception) {
+    }
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_CREATED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data)

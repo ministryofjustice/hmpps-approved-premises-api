@@ -34,6 +34,7 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> buildAssessmentAppealedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> buildPlacementApplicationWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> buildMatchRequestWithdrawnDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_CREATED -> buildMatchRequestCreatedDescription(domainEventSummary)
       else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
     }
   }
@@ -95,6 +96,17 @@ class DomainEventDescriber(
     return event.describe {
       val dates = it.eventDetails.datePeriod
       "A request for placement was withdrawn for dates ${datePeriodAsString(dates.startDate,dates.endDate)}"
+    }
+  }
+
+  private fun buildMatchRequestCreatedDescription(domainEventSummary: DomainEventSummary): String? {
+    val event = domainEventService.getMatchRequestCreatedEvent(domainEventSummary.id())
+    /**
+     * See documentation in [Cas1PlacementRequestDomainEventService] for why this is reported as a request for placement
+     **/
+    return event.describe {
+      val dates = it.eventDetails.datePeriod
+      "A request for placement was created for dates ${datePeriodAsString(dates.startDate,dates.endDate)}"
     }
   }
 

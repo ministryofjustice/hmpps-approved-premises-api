@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.fail
 import org.slf4j.LoggerFactory
 import org.springframework.jms.annotation.JmsListener
@@ -34,6 +35,8 @@ class SnsDomainEventListener(private val objectMapper: ObjectMapper) {
 
   @BeforeTestMethod
   fun clearMessages() = messages.clear()
+
+  fun assertNoMessages() = assertThat(messages).isEmpty()
 
   fun blockForMessage(eventType: String): SnsEvent {
     var waitedCount = 0

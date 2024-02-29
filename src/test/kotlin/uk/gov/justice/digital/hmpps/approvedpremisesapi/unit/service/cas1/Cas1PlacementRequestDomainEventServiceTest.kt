@@ -39,6 +39,113 @@ class Cas1PlacementRequestDomainEventServiceTest {
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
   )
 
+
+  @Nested
+  inner class PlacementRequestCreated {
+
+    @Test
+    fun `it creates a domain event if for the applications arrival date`() {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCrn(TestConstants.CRN)
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      val placementRequirements = PlacementRequirementsEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withApplication(application)
+        .withPlacementRequirements(placementRequirements)
+        .withPlacementApplication(null)
+        .withAssessment(assessment)
+        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .withExpectedArrival(LocalDate.of(2024, 5, 3))
+        .withDuration(7)
+        .produce()
+
+      every { domainEventService.saveMatchRequestCreatedEvent(any()) } returns Unit
+
+      service.placementRequestCreated(placementRequest)
+
+      verify(exactly = 1) {
+        domainEventService.saveMatchRequestCreatedEvent(
+          match {
+            val data = it.data.eventDetails
+
+            it.applicationId == application.id &&
+              it.crn == application.crn &&
+              data.applicationId == application.id &&
+              data.applicationUrl == "http://frontend/applications/${application.id}" &&
+              data.matchRequestId == placementRequest.id &&
+              data.personReference == PersonReference(
+              crn = application.crn,
+              noms = application.nomsNumber!!,
+            ) &&
+              data.deliusEventNumber == application.eventNumber &&
+              data.requestIsForApplicationsArrivalDate == true &&
+              data.datePeriod ==
+              DatePeriod(
+                LocalDate.of(2024, 5, 3),
+                LocalDate.of(2024, 5, 10),
+              )
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `it doesnt creates a domain event if not for the applications arrival date`() {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCrn(TestConstants.CRN)
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      val placementRequirements = PlacementRequirementsEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withApplication(application)
+        .withPlacementRequirements(placementRequirements)
+        .withPlacementApplication(placementApplication)
+        .withAssessment(assessment)
+        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .withExpectedArrival(LocalDate.of(2024, 5, 3))
+        .withDuration(7)
+        .produce()
+
+      service.placementRequestCreated(placementRequest)
+
+      verify { domainEventService wasNot Called }
+    }
+  }
+
   @Nested
   inner class PlacementRequestWithdrawn {
 

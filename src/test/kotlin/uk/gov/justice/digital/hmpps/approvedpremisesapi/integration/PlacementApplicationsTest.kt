@@ -827,7 +827,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class CreatePlacementApplicationDecisionTest {
+  inner class SubmitPlacementApplicationDecisionTest {
 
     @Test
     fun `submitting a placement request application decision without a JWT returns 401`() {
@@ -1024,6 +1024,8 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                       assertThat(createdPlacementApplication.duration).isEqualTo(placementDates.duration)
                       assertThat(createdPlacementApplication.isParole).isEqualTo(isParole)
                       assertThat(createdPlacementApplication.placementRequirements.id).isEqualTo(placementRequirements.id)
+
+                      snsDomainEventListener.assertNoMessages()
                     }
                   }
                 }

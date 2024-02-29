@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
@@ -105,6 +107,8 @@ data class DomainEventEntity(
         objectMapper.readValue(this.data, T::class.java)
       T::class == MatchRequestWithdrawnEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN ->
         objectMapper.readValue(this.data, T::class.java)
+      T::class == MatchRequestCreatedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_CREATED ->
+        objectMapper.readValue(this.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${this.type.name}")
     }
 
@@ -134,6 +138,7 @@ enum class DomainEventType {
   APPROVED_PREMISES_ASSESSMENT_APPEALED,
   APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
   APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
+  APPROVED_PREMISES_MATCH_REQUEST_CREATED,
   CAS2_APPLICATION_SUBMITTED,
   CAS2_APPLICATION_STATUS_UPDATED,
   CAS3_BOOKING_CANCELLED,
