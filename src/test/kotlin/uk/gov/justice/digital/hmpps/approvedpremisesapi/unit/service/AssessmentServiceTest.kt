@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -77,6 +78,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -101,6 +103,7 @@ class AssessmentServiceTest {
   private val userAllocatorMock = mockk<UserAllocator>()
   private val objectMapperMock = spyk<ObjectMapper>()
   private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
+  private val assessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
 
   private val assessmentService = AssessmentService(
     userServiceMock,
@@ -120,10 +123,10 @@ class AssessmentServiceTest {
     userAllocatorMock,
     objectMapperMock,
     UrlTemplate("http://frontend/applications/#id"),
-    UrlTemplate("http://frontend/assessments/#id"),
     sendPlacementRequestNotifications = true,
     sendNewWithdrawalNotifications = true,
     taskDeadlineServiceMock,
+    assessmentEmailServiceMock,
   )
 
   @Test
@@ -1951,7 +1954,9 @@ class AssessmentServiceTest {
 
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
-    every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
+    every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
+
+    every { assessmentEmailServiceMock.assessmentDeallocated(any(), any(), any()) } just Runs
 
     every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
 
@@ -1968,24 +1973,22 @@ class AssessmentServiceTest {
     assertThat(newAssessment.dueAt).isEqualTo(dueAt)
 
     verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
+
     verify(exactly = 1) {
-      emailNotificationServiceMock.sendEmail(
-        match { it == assigneeUser.email },
-        "f3d78814-383f-4b5f-a681-9bd3ab912888",
-        match {
-          it["name"] == assigneeUser.name &&
-            (it["assessmentUrl"] as String).matches(Regex("http://frontend/assessments/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-        },
+      assessmentEmailServiceMock.assessmentAllocated(
+        match { it.id == assigneeUser.id },
+        any<UUID>(),
+        application.crn,
+        dueAt,
+        false,
       )
     }
+
     verify(exactly = 1) {
-      emailNotificationServiceMock.sendEmail(
-        match { it == previousAssessment.allocatedToUser!!.email },
-        "331ce452-ea83-4f0c-aec0-5eafe85094f2",
-        match {
-          it["name"] == previousAssessment.allocatedToUser!!.name &&
-            (it["assessmentUrl"] as String).matches(Regex("http://frontend/assessments/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-        },
+      assessmentEmailServiceMock.assessmentDeallocated(
+        match { it.id == previousAssessment.allocatedToUser!!.id },
+        any<UUID>(),
+        application.crn,
       )
     }
   }
@@ -2231,10 +2234,10 @@ class AssessmentServiceTest {
       userAllocatorMock,
       objectMapperMock,
       UrlTemplate("http://frontend/applications/#id"),
-      UrlTemplate("http://frontend/assessments/#id"),
       sendPlacementRequestNotifications = true,
       sendNewWithdrawalNotifications = true,
       taskDeadlineServiceMock,
+      assessmentEmailServiceMock,
     )
 
     private val user = UserEntityFactory()
@@ -2424,8 +2427,9 @@ class AssessmentServiceTest {
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
     }
 
-    @Test
-    fun `createApprovedPremisesAssessment creates an Assessment and sends allocation email`() {
+    @ParameterizedTest
+    @CsvSource(value = ["true,true", "false,true", "true,false", "false,false"])
+    fun `createApprovedPremisesAssessment creates an Assessment and sends allocation email`(isEmergencyApplication: Boolean, createdFromAppeal: Boolean) {
       val userWithLeastAllocatedAssessments = UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -2443,6 +2447,13 @@ class AssessmentServiceTest {
             .withUser(this)
             .withQualification(UserQualification.PIPE)
             .produce()
+
+          if (isEmergencyApplication) {
+            qualifications += UserQualificationAssignmentEntityFactory()
+              .withUser(this)
+              .withQualification(UserQualification.EMERGENCY)
+              .produce()
+          }
         }
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -2456,6 +2467,7 @@ class AssessmentServiceTest {
             .produce(),
         )
         .withIsPipeApplication(true)
+        .withIsEmergencyApplication(isEmergencyApplication)
         .produce()
 
       val dueAt = OffsetDateTime.now()
@@ -2464,22 +2476,35 @@ class AssessmentServiceTest {
 
       every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns userWithLeastAllocatedAssessments
 
-      every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
-
       every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
 
-      assessmentService.createApprovedPremisesAssessment(application)
+      if (createdFromAppeal) {
+        every { assessmentEmailServiceMock.appealedAssessmentAllocated(any(), any(), any()) } just Runs
+      } else {
+        every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
+      }
+
+      assessmentService.createApprovedPremisesAssessment(application, createdFromAppeal)
 
       verify { assessmentRepositoryMock.save(match { it.allocatedToUser == userWithLeastAllocatedAssessments && it.dueAt == dueAt }) }
-      verify(exactly = 1) {
-        emailNotificationServiceMock.sendEmail(
-          any(),
-          "f3d78814-383f-4b5f-a681-9bd3ab912888",
-          match {
-            it["name"] == userWithLeastAllocatedAssessments.name &&
-              (it["assessmentUrl"] as String).matches(Regex("http://frontend/assessments/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-          },
-        )
+      if (createdFromAppeal) {
+        verify(exactly = 1) {
+          assessmentEmailServiceMock.appealedAssessmentAllocated(
+            match { it.id == userWithLeastAllocatedAssessments.id },
+            any<UUID>(),
+            application.crn,
+          )
+        }
+      } else {
+        verify(exactly = 1) {
+          assessmentEmailServiceMock.assessmentAllocated(
+            match { it.id == userWithLeastAllocatedAssessments.id },
+            any<UUID>(),
+            application.crn,
+            dueAt,
+            isEmergencyApplication,
+          )
+        }
       }
     }
 

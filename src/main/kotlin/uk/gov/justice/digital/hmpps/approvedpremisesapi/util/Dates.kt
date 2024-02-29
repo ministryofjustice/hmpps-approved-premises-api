@@ -5,7 +5,11 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+
+val cas1UiExtendedDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy")
+val cas1UiTimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("ha")
 
 fun LocalDate.getDaysUntilInclusive(end: LocalDate): List<LocalDate> {
   val result = mutableListOf<LocalDate>()
@@ -80,6 +84,10 @@ fun LocalDate.getNextWorkingDay(bankHolidays: List<LocalDate>): LocalDate {
 
   return result
 }
+
+fun LocalDate.toUiFormat(): String = this.format(cas1UiExtendedDateFormat)
+
+fun OffsetDateTime.toUiFormattedHourOfDay(): String = this.format(cas1UiTimeFormat).lowercase()
 
 fun earliestDateOf(date1: LocalDate, date2: LocalDate): LocalDate {
   if (date1.isBefore(date2)) return date1

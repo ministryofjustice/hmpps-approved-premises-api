@@ -6,17 +6,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import java.time.LocalDate
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 @Component
 class DomainEventDescriber(
   private val domainEventService: DomainEventService,
 ) {
-
-  val cas1UiExtendedDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy")
 
   @SuppressWarnings("CyclomaticComplexMethod")
   fun getDescription(domainEventSummary: DomainEventSummary): String? {
@@ -83,7 +81,7 @@ class DomainEventDescriber(
     val dates = event?.data?.eventDetails?.placementDates ?: emptyList()
     return "A request for placement was withdrawn" +
       if (dates.isNotEmpty()) {
-        " for dates " + dates.joinToString(", ") { "${formatDate(it.startDate)} to ${formatDate(it.endDate)}" }
+        " for dates " + dates.joinToString(", ") { "${it.startDate.toUiFormat()} to ${it.endDate.toUiFormat()}" }
       } else { "" }
   }
 
@@ -94,11 +92,9 @@ class DomainEventDescriber(
      **/
     return event.describe {
       val dates = it.eventDetails.datePeriod
-      "A request for placement was withdrawn for dates ${formatDate(dates.startDate)} to ${formatDate(dates.endDate)}"
+      "A request for placement was withdrawn for dates ${dates.startDate.toUiFormat()} to ${dates.endDate.toUiFormat()}"
     }
   }
-
-  private fun formatDate(localDate: LocalDate) = localDate.format(cas1UiExtendedDateFormat)
 
   private fun DomainEventSummary.id(): UUID = UUID.fromString(this.id)
   private fun <T> DomainEvent<T>?.describe(describe: (T) -> String?): String? = this?.let { describe(it.data) }

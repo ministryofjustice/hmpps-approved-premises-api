@@ -47,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -76,12 +77,12 @@ class AssessmentService(
   private val userAllocator: UserAllocator,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
   @Value("\${notify.send-placement-request-notifications}")
   private val sendPlacementRequestNotifications: Boolean,
   @Value("\${feature-flags.cas1-use-new-withdrawal-logic}")
   private val sendNewWithdrawalNotifications: Boolean,
   private val taskDeadlineService: TaskDeadlineService,
+  private val assessmentEmailService: Cas1AssessmentEmailService,
 ) {
   fun getVisibleAssessmentSummariesForUserCAS1(
     user: UserEntity,
@@ -225,16 +226,10 @@ class AssessmentService(
     assessment = assessmentRepository.save(assessment)
 
     if (allocatedUser != null) {
-      if (allocatedUser.email != null) {
-        emailNotificationService.sendEmail(
-          recipientEmailAddress = allocatedUser.email!!,
-          templateId = notifyConfig.templates.assessmentAllocated,
-          personalisation = mapOf(
-            "name" to allocatedUser.name,
-            "assessmentUrl" to assessmentUrlTemplate.resolve("id", assessment.id.toString()),
-            "crn" to application.crn,
-          ),
-        )
+      if (createdFromAppeal) {
+        assessmentEmailService.appealedAssessmentAllocated(allocatedUser, assessment.id, application.crn)
+      } else {
+        assessmentEmailService.assessmentAllocated(allocatedUser, assessment.id, application.crn, assessment.dueAt, application.isEmergencyApplication ?: false)
       }
     }
 
@@ -778,30 +773,10 @@ class AssessmentService(
     assessmentRepository.save(newAssessment)
 
     if (application is ApprovedPremisesApplicationEntity) {
-      if (assigneeUser.email != null) {
-        emailNotificationService.sendEmail(
-          recipientEmailAddress = assigneeUser.email!!,
-          templateId = notifyConfig.templates.assessmentAllocated,
-          personalisation = mapOf(
-            "name" to assigneeUser.name,
-            "assessmentUrl" to assessmentUrlTemplate.resolve("id", newAssessment.id.toString()),
-            "crn" to application.crn,
-          ),
-        )
-      }
+      assessmentEmailService.assessmentAllocated(assigneeUser, newAssessment.id, application.crn, newAssessment.dueAt, application.isEmergencyApplication ?: false)
       val allocatedToUser = currentAssessment.allocatedToUser
       if (allocatedToUser != null) {
-        if (allocatedToUser.email != null) {
-          emailNotificationService.sendEmail(
-            recipientEmailAddress = allocatedToUser.email!!,
-            templateId = notifyConfig.templates.assessmentDeallocated,
-            personalisation = mapOf(
-              "name" to currentAssessment.allocatedToUser!!.name,
-              "assessmentUrl" to assessmentUrlTemplate.resolve("id", newAssessment.id.toString()),
-              "crn" to application.crn,
-            ),
-          )
-        }
+        assessmentEmailService.assessmentDeallocated(allocatedToUser, newAssessment.id, application.crn)
       }
     }
 
