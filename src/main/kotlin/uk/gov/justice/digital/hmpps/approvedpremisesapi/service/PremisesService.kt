@@ -50,6 +50,7 @@ class PremisesService(
   private val characteristicService: CharacteristicService,
   private val roomRepository: RoomRepository,
   private val bedRepository: BedRepository,
+  private val timeService: TimeService,
 ) {
   private val serviceNameToEntityType = mapOf(
     ServiceName.approvedPremises to ApprovedPremisesEntity::class.java,
@@ -529,23 +530,25 @@ class PremisesService(
   }
 
   fun getDateCapacities(premises: PremisesEntity): List<DateCapacity> {
-    val oneYearsTime = LocalDate.now().plusYears(1)
+    val now = timeService.nowAsLocalDate()
+
+    val oneYearsTime = now.plusYears(1)
     val lastBookingDate = minOf(
-      getLastBookingDate(premises) ?: LocalDate.now(),
+      getLastBookingDate(premises) ?: now,
       oneYearsTime,
     )
     val lastLostBedsDate = minOf(
-      getLastLostBedsDate(premises) ?: LocalDate.now(),
+      getLastLostBedsDate(premises) ?: now,
       oneYearsTime,
     )
 
     val capacityForPeriod = getAvailabilityForRange(
       premises,
-      LocalDate.now(),
+      now,
       maxOf(
-        LocalDate.now(),
-        lastBookingDate ?: LocalDate.now(),
-        lastLostBedsDate ?: LocalDate.now(),
+        now,
+        lastBookingDate ?: now,
+        lastLostBedsDate ?: now,
       ),
     )
 
