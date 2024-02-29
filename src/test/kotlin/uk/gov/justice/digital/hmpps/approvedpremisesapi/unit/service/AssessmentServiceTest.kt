@@ -1893,8 +1893,8 @@ class AssessmentServiceTest {
   }
 
   @ParameterizedTest
-  @CsvSource(value = ["true,true", "false,true", "true,false", "false,false"])
-  fun `reallocateAssessment for Approved Premises returns Success, deallocates old assessment and creates a new one, sends allocation email & deallocation email`(createdFromAppeal: Boolean, isEmergencyApplication: Boolean) {
+  @ValueSource(booleans = [true, false])
+  fun `reallocateAssessment for Approved Premises returns Success, deallocates old assessment and creates a new one, sends allocation email & deallocation email`(createdFromAppeal: Boolean) {
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1955,6 +1955,7 @@ class AssessmentServiceTest {
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
     every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
+
     every { assessmentEmailServiceMock.assessmentDeallocated(any(), any(), any()) } just Runs
 
     every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
@@ -1972,6 +1973,7 @@ class AssessmentServiceTest {
     assertThat(newAssessment.dueAt).isEqualTo(dueAt)
 
     verify { assessmentRepositoryMock.save(match { it.allocatedToUser == assigneeUser }) }
+
     verify(exactly = 1) {
       assessmentEmailServiceMock.assessmentAllocated(
         match { it.id == assigneeUser.id },
@@ -1981,6 +1983,7 @@ class AssessmentServiceTest {
         false,
       )
     }
+
     verify(exactly = 1) {
       assessmentEmailServiceMock.assessmentDeallocated(
         match { it.id == previousAssessment.allocatedToUser!!.id },
@@ -2425,8 +2428,8 @@ class AssessmentServiceTest {
     }
 
     @ParameterizedTest
-    @ValueSource(booleans = [true, false])
-    fun `createApprovedPremisesAssessment creates an Assessment and sends allocation email`(isEmergencyApplication: Boolean) {
+    @CsvSource(value = ["true,true", "false,true", "true,false", "false,false"])
+    fun `createApprovedPremisesAssessment creates an Assessment and sends allocation email`(isEmergencyApplication: Boolean, createdFromAppeal: Boolean) {
       val userWithLeastAllocatedAssessments = UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -2475,19 +2478,33 @@ class AssessmentServiceTest {
 
       every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
 
-      every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
+      if (createdFromAppeal) {
+        every { assessmentEmailServiceMock.appealedAssessmentAllocated(any(), any(), any()) } just Runs
+      } else {
+        every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
+      }
 
-      assessmentService.createApprovedPremisesAssessment(application)
+      assessmentService.createApprovedPremisesAssessment(application, createdFromAppeal)
 
       verify { assessmentRepositoryMock.save(match { it.allocatedToUser == userWithLeastAllocatedAssessments && it.dueAt == dueAt }) }
-      verify(exactly = 1) {
-        assessmentEmailServiceMock.assessmentAllocated(
-          match { it.id == userWithLeastAllocatedAssessments.id },
-          any<UUID>(),
-          application.crn,
-          dueAt,
-          isEmergencyApplication,
-        )
+      if (createdFromAppeal) {
+        verify(exactly = 1) {
+          assessmentEmailServiceMock.appealedAssessmentAllocated(
+            match { it.id == userWithLeastAllocatedAssessments.id },
+            any<UUID>(),
+            application.crn,
+          )
+        }
+      } else {
+        verify(exactly = 1) {
+          assessmentEmailServiceMock.assessmentAllocated(
+            match { it.id == userWithLeastAllocatedAssessments.id },
+            any<UUID>(),
+            application.crn,
+            dueAt,
+            isEmergencyApplication,
+          )
+        }
       }
     }
 

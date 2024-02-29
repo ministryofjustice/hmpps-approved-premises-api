@@ -26,6 +26,7 @@ class NotifyTemplates {
   val applicationWithdrawn = "ad6d2449-f5a1-432a-9a96-0835c3f92dad"
   val assessmentAllocated = "2edd59f9-0013-4fbf-91df-7421518b447d"
   val assessmentDeallocated = "331ce452-ea83-4f0c-aec0-5eafe85094f2"
+  val appealedAssessmentAllocated = "d378ad90-c20b-49d9-bd8b-5a50e1416dea"
   val assessmentAccepted = "ddf87b15-8866-4bad-a87b-47eba69eb6db"
   val assessmentRejected = "b3a98c60-8fe0-4450-8fd0-6430198ee43b"
   val assessmentWithdrawn = "44ade006-7ac6-4769-aa40-542da56f21b5"

@@ -23,6 +23,7 @@ import java.util.UUID
 object Cas1AssessmentEmailServiceTestConstants {
   const val ALLOCATED_USER_EMAIL = "applicant@test.com"
   const val DEALLOCATED_USER_EMAIL = "deallocated@test.com"
+  const val APPEALED_ASSESSMENT_ALLOCATED_USER_EMAIL = "appealed@test.com"
   const val CRN = "CRN123"
 }
 
@@ -130,37 +131,77 @@ class Cas1AssessmentEmailServiceTest {
     )
   }
 
-  @Test
-  fun `assessmentDeallocated sends an email when the user has an email address`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(Cas1AssessmentEmailServiceTestConstants.DEALLOCATED_USER_EMAIL)
-      .produce()
-    val assessmentID = UUID.randomUUID()
+  @Nested
+  inner class AssessmentDeallocated {
+    @Test
+    fun `assessmentDeallocated sends an email when the user has an email address`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(Cas1AssessmentEmailServiceTestConstants.DEALLOCATED_USER_EMAIL)
+        .produce()
+      val assessmentID = UUID.randomUUID()
 
-    service.assessmentDeallocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN)
+      service.assessmentDeallocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN)
 
-    mockEmailNotificationService.assertEmailRequestCount(1)
-    mockEmailNotificationService.assertEmailRequested(
-      Cas1AssessmentEmailServiceTestConstants.DEALLOCATED_USER_EMAIL,
-      notifyConfig.templates.assessmentDeallocated,
-      mapOf(
-        "name" to applicant.name,
-        "crn" to Cas1AssessmentEmailServiceTestConstants.CRN,
-        "assessmentUrl" to "http://frontend/assessments/$assessmentID",
-      ),
-    )
+      mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertEmailRequested(
+        Cas1AssessmentEmailServiceTestConstants.DEALLOCATED_USER_EMAIL,
+        notifyConfig.templates.assessmentDeallocated,
+        mapOf(
+          "name" to applicant.name,
+          "crn" to Cas1AssessmentEmailServiceTestConstants.CRN,
+          "assessmentUrl" to "http://frontend/assessments/$assessmentID",
+        ),
+      )
+    }
+
+    @Test
+    fun `assessmentDeallocated does not send an email to a user if they do not have an email address`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
+      val assessmentID = UUID.randomUUID()
+
+      service.assessmentDeallocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN)
+      mockEmailNotificationService.assertEmailRequestCount(0)
+    }
   }
 
-  @Test
-  fun `assessmentDeallocated does not send an email to a user if they do not have an email address`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
-    val assessmentID = UUID.randomUUID()
+  @Nested
+  inner class AppealedAssessmentAllocated {
+    @Test
+    fun `appealedAssessmentAllocated sends an email when the user has an email address`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(Cas1AssessmentEmailServiceTestConstants.APPEALED_ASSESSMENT_ALLOCATED_USER_EMAIL)
+        .produce()
+      val assessmentID = UUID.randomUUID()
 
-    service.assessmentDeallocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN)
-    mockEmailNotificationService.assertEmailRequestCount(0)
+      service.appealedAssessmentAllocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertEmailRequested(
+        Cas1AssessmentEmailServiceTestConstants.APPEALED_ASSESSMENT_ALLOCATED_USER_EMAIL,
+        notifyConfig.templates.appealedAssessmentAllocated,
+        mapOf(
+          "name" to applicant.name,
+          "crn" to Cas1AssessmentEmailServiceTestConstants.CRN,
+          "assessmentUrl" to "http://frontend/assessments/$assessmentID",
+        ),
+      )
+    }
+
+    @Test
+    fun `appealedAssessmentAllocated does not send an email to a user if they do not have an email address`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
+      val assessmentID = UUID.randomUUID()
+
+      service.appealedAssessmentAllocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN)
+      mockEmailNotificationService.assertEmailRequestCount(0)
+    }
   }
 }

@@ -50,6 +50,20 @@ class Cas1AssessmentEmailService(
     }
   }
 
+  fun appealedAssessmentAllocated(allocatedUser: UserEntity, assessmentId: UUID, crn: String) {
+    allocatedUser.email?.let { email ->
+      emailNotificationService.sendEmail(
+        recipientEmailAddress = email,
+        templateId = notifyConfig.templates.appealedAssessmentAllocated,
+        personalisation = mapOf(
+          "name" to allocatedUser.name,
+          "assessmentUrl" to assessmentUrlTemplate.resolve("id", assessmentId.toString()),
+          "crn" to crn,
+        ),
+      )
+    }
+  }
+
   private fun deadlineCopy(deadline: OffsetDateTime?, isEmergency: Boolean): String {
     if (deadline == null) {
       return DEFAULT_DEADLINE_COPY

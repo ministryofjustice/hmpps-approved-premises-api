@@ -226,7 +226,11 @@ class AssessmentService(
     assessment = assessmentRepository.save(assessment)
 
     if (allocatedUser != null) {
-      assessmentEmailService.assessmentAllocated(allocatedUser, assessment.id, application.crn, assessment.dueAt, application.isEmergencyApplication ?: false)
+      if (createdFromAppeal) {
+        assessmentEmailService.appealedAssessmentAllocated(allocatedUser, assessment.id, application.crn)
+      } else {
+        assessmentEmailService.assessmentAllocated(allocatedUser, assessment.id, application.crn, assessment.dueAt, application.isEmergencyApplication ?: false)
+      }
     }
 
     return assessment
@@ -769,9 +773,7 @@ class AssessmentService(
     assessmentRepository.save(newAssessment)
 
     if (application is ApprovedPremisesApplicationEntity) {
-      if (assigneeUser.email != null) {
-        assessmentEmailService.assessmentAllocated(assigneeUser, newAssessment.id, application.crn, newAssessment.dueAt, application.isEmergencyApplication ?: false)
-      }
+      assessmentEmailService.assessmentAllocated(assigneeUser, newAssessment.id, application.crn, newAssessment.dueAt, application.isEmergencyApplication ?: false)
       val allocatedToUser = currentAssessment.allocatedToUser
       if (allocatedToUser != null) {
         assessmentEmailService.assessmentDeallocated(allocatedToUser, newAssessment.id, application.crn)

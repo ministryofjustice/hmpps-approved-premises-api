@@ -395,7 +395,7 @@ class AppealsTest : IntegrationTestBase() {
           emailAsserter.assertEmailRequested(userEntity.email!!, notifyConfig.templates.appealSuccess)
           emailAsserter.assertEmailRequested(application.createdByUser.email!!, notifyConfig.templates.appealSuccess)
 
-          emailAsserter.assertEmailRequested(userEntity.email!!, notifyConfig.templates.assessmentAllocated)
+          emailAsserter.assertEmailRequested(userEntity.email!!, notifyConfig.templates.appealedAssessmentAllocated)
         }
       }
     }
