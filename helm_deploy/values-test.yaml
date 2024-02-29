@@ -96,6 +96,7 @@ generic-service:
 
     NOTIFY_SEND-PLACEMENT-REQUEST-NOTIFICATIONS: true
     FEATURE-FLAGS_CAS1-USE-NEW-WITHDRAWAL-LOGIC: true
+    CAS3-REPORT_END-DATE-OVERRIDE: 3
 
   namespace_secrets:
     hmpps-approved-premises-api:
@@ -133,6 +134,3 @@ generic-prometheus-alerts:
 
 env_details:
   production_env: false
-
-cas3-report:
-  end-date-override: 3
