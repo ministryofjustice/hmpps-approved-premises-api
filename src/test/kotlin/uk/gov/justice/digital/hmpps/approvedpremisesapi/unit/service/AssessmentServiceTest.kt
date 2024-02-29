@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -1892,8 +1893,8 @@ class AssessmentServiceTest {
   }
 
   @ParameterizedTest
-  @ValueSource(booleans = [true, false])
-  fun `reallocateAssessment for Approved Premises returns Success, deallocates old assessment and creates a new one, sends allocation email & deallocation email`(createdFromAppeal: Boolean) {
+  @CsvSource(value = ["true,true", "false,true", "true,false", "false,false"])
+  fun `reallocateAssessment for Approved Premises returns Success, deallocates old assessment and creates a new one, sends allocation email & deallocation email`(createdFromAppeal: Boolean, isEmergencyApplication: Boolean) {
     val assigneeUser = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -1953,7 +1954,7 @@ class AssessmentServiceTest {
 
     every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
-    every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any()) } just Runs
+    every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
     every { assessmentEmailServiceMock.assessmentDeallocated(any(), any(), any()) } just Runs
 
     every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
@@ -1976,6 +1977,8 @@ class AssessmentServiceTest {
         match { it.id == assigneeUser.id },
         any<UUID>(),
         application.crn,
+        dueAt,
+        false,
       )
     }
     verify(exactly = 1) {
@@ -2421,8 +2424,9 @@ class AssessmentServiceTest {
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
     }
 
-    @Test
-    fun `createApprovedPremisesAssessment creates an Assessment and sends allocation email`() {
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `createApprovedPremisesAssessment creates an Assessment and sends allocation email`(isEmergencyApplication: Boolean) {
       val userWithLeastAllocatedAssessments = UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -2440,6 +2444,13 @@ class AssessmentServiceTest {
             .withUser(this)
             .withQualification(UserQualification.PIPE)
             .produce()
+
+          if (isEmergencyApplication) {
+            qualifications += UserQualificationAssignmentEntityFactory()
+              .withUser(this)
+              .withQualification(UserQualification.EMERGENCY)
+              .produce()
+          }
         }
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -2453,6 +2464,7 @@ class AssessmentServiceTest {
             .produce(),
         )
         .withIsPipeApplication(true)
+        .withIsEmergencyApplication(isEmergencyApplication)
         .produce()
 
       val dueAt = OffsetDateTime.now()
@@ -2463,7 +2475,7 @@ class AssessmentServiceTest {
 
       every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
 
-      every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any()) } just Runs
+      every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
 
       assessmentService.createApprovedPremisesAssessment(application)
 
@@ -2473,6 +2485,8 @@ class AssessmentServiceTest {
           match { it.id == userWithLeastAllocatedAssessments.id },
           any<UUID>(),
           application.crn,
+          dueAt,
+          isEmergencyApplication,
         )
       }
     }
