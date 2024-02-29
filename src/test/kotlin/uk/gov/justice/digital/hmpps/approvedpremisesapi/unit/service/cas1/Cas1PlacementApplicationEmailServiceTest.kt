@@ -28,11 +28,14 @@ class Cas1PlacementApplicationEmailServiceTest {
   private val notifyConfig = NotifyConfig()
   private val mockEmailNotificationService = MockEmailNotificationService()
 
-  val service = Cas1PlacementApplicationEmailService(
+  val service = buildService(sendNewWithdrawalNotifications = true)
+  val serviceUsingLegacyWithdrawalsNotifications = buildService(sendNewWithdrawalNotifications = false)
+
+  fun buildService(sendNewWithdrawalNotifications: Boolean)  = Cas1PlacementApplicationEmailService(
     mockEmailNotificationService,
     notifyConfig = notifyConfig,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
-    sendNewWithdrawalNotifications = true,
+    sendNewWithdrawalNotifications = sendNewWithdrawalNotifications,
     sendPlacementRequestNotifications = true,
   )
 
@@ -62,7 +65,55 @@ class Cas1PlacementApplicationEmailServiceTest {
   }
 
   @Test
-  fun `placementApplicationSubmitted sends email to applicant if email address defined`() {
+  fun `placementApplicationSubmitted sends v1 email to applicant if email address defined and not using new withdrawals`() {
+    val applicant = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .withEmail(APPLICANT_EMAIL)
+      .produce()
+
+    val assessor = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .withEmail(null)
+      .produce()
+
+    val application = createApplicationForApplicant(applicant)
+
+    val placementApplication = PlacementApplicationEntityFactory()
+      .withApplication(application)
+      .withCreatedByUser(applicant)
+      .withAllocatedToUser(assessor)
+      .produce()
+
+    placementApplication.placementDates = mutableListOf(
+      PlacementDateEntityFactory()
+        .withExpectedArrival(LocalDate.of(2020, 3, 12))
+        .withDuration(10)
+        .withPlacementApplication(placementApplication)
+        .produce(),
+    )
+
+    serviceUsingLegacyWithdrawalsNotifications.placementApplicationSubmitted(placementApplication)
+
+    mockEmailNotificationService.assertEmailRequestCount(1)
+
+    val personalisation = mapOf(
+      "applicationUrl" to "http://frontend/applications/${application.id}",
+      "crn" to TestConstants.CRN,
+      "applicationArea" to AREA_NAME,
+      "startDate" to "2020-03-12",
+      "endDate" to "2020-03-22",
+      "additionalDatesSet" to "no",
+    )
+
+    mockEmailNotificationService.assertEmailRequested(
+      APPLICANT_EMAIL,
+      notifyConfig.templates.placementRequestSubmitted,
+      personalisation,
+    )
+  }
+
+  @Test
+  fun `placementApplicationSubmitted sends v2 email to applicant if email address defined and using new withdrawals`() {
     val applicant = UserEntityFactory()
       .withUnitTestControlProbationRegion()
       .withEmail(APPLICANT_EMAIL)
@@ -104,7 +155,7 @@ class Cas1PlacementApplicationEmailServiceTest {
 
     mockEmailNotificationService.assertEmailRequested(
       APPLICANT_EMAIL,
-      notifyConfig.templates.placementRequestSubmitted,
+      notifyConfig.templates.placementRequestSubmittedV2,
       personalisation,
     )
   }
