@@ -120,10 +120,10 @@ class PlacementApplicationTransformerTest {
     assertThat(result.createdAt).isEqualTo(placementApplication.createdAt.toInstant())
     assertThat(result.data).isNull()
     assertThat(result.document).isNull()
-    assertThat(result.outdatedSchema).isEqualTo(true)
+    assertThat(result.outdatedSchema).isTrue
     assertThat(result.submittedAt).isNull()
-    assertThat(result.canBeWithdrawn).isEqualTo(true)
-    assertThat(result.isWithdrawn).isEqualTo(false)
+    assertThat(result.canBeWithdrawn).isFalse
+    assertThat(result.isWithdrawn).isFalse
     assertThat(result.withdrawalReason).isNull()
     assertThat(result.type).isEqualTo(PlacementApplicationType.additional)
 

@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
+import java.time.OffsetDateTime
 
 class WithdrawableServiceTest {
   private val mockPlacementRequestService = mockk<PlacementRequestService>()
@@ -80,6 +81,7 @@ class WithdrawableServiceTest {
   val placementApplications = PlacementApplicationEntityFactory()
     .withCreatedByUser(user)
     .withApplication(application)
+    .withSubmittedAt(OffsetDateTime.now())
     .produceMany()
     .take(2)
     .toList()

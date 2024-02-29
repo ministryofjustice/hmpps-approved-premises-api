@@ -116,7 +116,7 @@ data class PlacementApplicationEntity(
 
   fun isActive() = !isReallocated() && !isWithdrawn()
 
-  fun isInWithdrawableState() = isActive()
+  fun isInWithdrawableState() = isSubmitted() && isActive()
 
   fun isSubmitted() = submittedAt != null
 

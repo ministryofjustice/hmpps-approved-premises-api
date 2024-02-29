@@ -709,6 +709,7 @@ class PlacementApplicationServiceTest {
         .withAllocatedToUser(allocatedTo)
         .withDecision(null)
         .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
       val withdrawalContext = WithdrawalContext(
@@ -749,6 +750,7 @@ class PlacementApplicationServiceTest {
         .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
         .withDecision(null)
         .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
@@ -787,6 +789,7 @@ class PlacementApplicationServiceTest {
         .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
         .withDecision(null)
         .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
@@ -812,6 +815,7 @@ class PlacementApplicationServiceTest {
         .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
         .withDecision(null)
         .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
       val placementRequest1 = createValidPlacementRequest(application, user)
@@ -874,6 +878,7 @@ class PlacementApplicationServiceTest {
         .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
         .withDecision(null)
         .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
         .produce()
 
       val placementRequest1 = createValidPlacementRequest(application, user)
