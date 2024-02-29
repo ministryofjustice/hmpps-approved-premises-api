@@ -1252,8 +1252,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                 serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
             }
 
-            val emittedMessage = snsDomainEventListener.blockForMessage()
-            assertThat(emittedMessage.eventType).isEqualTo("approved-premises.placement-application.withdrawn")
+            snsDomainEventListener.blockForMessage("approved-premises.placement-application.withdrawn")
 
             emailAsserter.assertEmailsRequestedCount(2)
             emailAsserter.assertEmailRequested(
@@ -1316,8 +1315,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                   serializableToJsonNode(placementApplicationEntity.document) == serializableToJsonNode(it.document)
               }
 
-              val emittedMessage = snsDomainEventListener.blockForMessage()
-              assertThat(emittedMessage.eventType).isEqualTo("approved-premises.placement-application.withdrawn")
+              snsDomainEventListener.blockForMessage("approved-premises.placement-application.withdrawn")
 
               emailAsserter.assertEmailsRequestedCount(2)
               emailAsserter.assertEmailRequested(
