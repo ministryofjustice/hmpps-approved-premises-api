@@ -4,7 +4,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.countOverlappingDays
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.overlaps
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormattedHourOfDay
 import java.time.LocalDate
+import java.time.OffsetDateTime
 
 class DatesTest {
   @Test
@@ -100,5 +103,19 @@ class DatesTest {
 
     assertThat(a countOverlappingDays b).isZero()
     assertThat(b countOverlappingDays a).isZero()
+  }
+
+  @Test
+  fun `toUiFormat formats a LocalDate correctly`() {
+    val date = LocalDate.parse("2024-01-01")
+
+    assertThat(date.toUiFormat()).isEqualTo("Monday 1 January 2024")
+  }
+
+  @Test
+  fun `toUiFormattedHourOfDay formats a LocalDate correctly`() {
+    val dateTime = OffsetDateTime.parse("2024-01-01T11:15:00Z")
+
+    assertThat(dateTime.toUiFormattedHourOfDay()).isEqualTo("11am")
   }
 }
