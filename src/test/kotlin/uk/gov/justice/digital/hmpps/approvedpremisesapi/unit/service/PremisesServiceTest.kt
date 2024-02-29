@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TimeService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
 import java.util.UUID
@@ -52,6 +53,7 @@ class PremisesServiceTest {
   private val characteristicServiceMock = mockk<CharacteristicService>()
   private val roomRepositoryMock = mockk<RoomRepository>()
   private val bedRepositoryMock = mockk<BedRepository>()
+  private val timeService = mockk<TimeService>()
 
   private val approvedPremisesFactory = ApprovedPremisesEntityFactory()
     .withYieldedProbationRegion {
@@ -79,6 +81,7 @@ class PremisesServiceTest {
     characteristicServiceMock,
     roomRepositoryMock,
     bedRepositoryMock,
+    timeService,
   )
 
   @Test
@@ -613,7 +616,10 @@ class PremisesServiceTest {
   fun `getDateCapacities looks ahead a maximum of one year in the future`() {
     val premises = approvedPremisesFactory.produce()
 
-    val today = LocalDate.now()
+    val today = LocalDate.of(2020,2,28)
+
+    every { timeService.nowAsLocalDate() } returns today
+
     val ninetyNineYearsFromNow = today.plusYears(99)
     val oneYearFromNow = today.plusYears(1)
 
@@ -639,7 +645,10 @@ class PremisesServiceTest {
   fun `getDateCapacities uses the getLastLostBedsDate if it is the latest date and less than one year ago`() {
     val premises = approvedPremisesFactory.produce()
 
-    val today = LocalDate.now()
+    val today = LocalDate.of(2020,2,28)
+
+    every { timeService.nowAsLocalDate() } returns today
+
     val fourMonthsFromNow = today.plusMonths(4)
 
     every { premisesService.getLastBookingDate(premises) } answers { today.plusWeeks(2) }
@@ -662,7 +671,10 @@ class PremisesServiceTest {
   fun `getDateCapacities uses the getLastBookingDate if it is the latest date and less than one year ago`() {
     val premises = approvedPremisesFactory.produce()
 
-    val today = LocalDate.now()
+    val today = LocalDate.of(2020,2,28)
+
+    every { timeService.nowAsLocalDate() } returns today
+
     val fourMonthsFromNow = today.plusMonths(4)
 
     every { premisesService.getLastBookingDate(premises) } answers { fourMonthsFromNow }
@@ -685,7 +697,10 @@ class PremisesServiceTest {
   fun `getDateCapacities prioritises the lastBookingDate if the lastLostBedsDate is null`() {
     val premises = approvedPremisesFactory.produce()
 
-    val today = LocalDate.now()
+    val today = LocalDate.of(2020,2,28)
+
+    every { timeService.nowAsLocalDate() } returns today
+
     val fourMonthsFromNow = today.plusMonths(4)
 
     every { premisesService.getLastBookingDate(premises) } answers { fourMonthsFromNow }
