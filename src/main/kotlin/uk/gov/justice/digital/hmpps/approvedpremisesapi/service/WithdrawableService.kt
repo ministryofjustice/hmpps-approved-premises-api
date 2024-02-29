@@ -8,6 +8,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.extractMessage
+import java.time.LocalDate
 
 @Service
 class WithdrawableService(
@@ -39,16 +42,19 @@ class WithdrawableService(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
   ) {
+
+    val withdrawalContext = WithdrawalContext(
+      user,
+      WithdrawableEntityType.Application,
+    )
+
     val placementRequests = application.placementRequests
     placementRequests.forEach { placementRequest ->
       if (placementRequest.isInWithdrawableState()) {
         val result = placementRequestService.withdrawPlacementRequest(
           placementRequest.id,
           userProvidedReason = null,
-          WithdrawalContext(
-            user,
-            WithdrawableEntityType.Application,
-          ),
+          withdrawalContext,
         )
 
         when (result) {
@@ -70,10 +76,7 @@ class WithdrawableService(
         val result = placementApplicationService.withdrawPlacementApplication(
           id = placementApplication.id,
           userProvidedReason = null,
-          withdrawalContext = WithdrawalContext(
-            user,
-            WithdrawableEntityType.Application,
-          ),
+          withdrawalContext,
         )
 
         when (result) {
@@ -82,6 +85,29 @@ class WithdrawableService(
             "Failed to automatically withdraw placement application ${placementApplication.id} " +
               "when withdrawing application ${application.id} " +
               "with error type ${result::class}",
+          )
+        }
+      }
+    }
+
+    val now = LocalDate.now()
+    val bookings = bookingService.getAllForApplication(application)
+    bookings.forEach { booking ->
+      if(booking.isInCancellableStateCas1()) {
+        val bookingCancellationResult = bookingService.createCas1Cancellation(
+          booking = booking,
+          cancelledAt = now,
+          userProvidedReason = null,
+          notes = "Automatically withdrawn as placement request was withdrawn",
+          withdrawalContext = withdrawalContext
+        )
+
+        when (bookingCancellationResult) {
+          is ValidatableActionResult.Success -> Unit
+          else -> log.error(
+            "Failed to automatically withdraw booking ${booking.id} " +
+              "when withdrawing application ${application.id} " +
+              "with message ${extractMessage(bookingCancellationResult)}",
           )
         }
       }

@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
@@ -1141,6 +1142,8 @@ class BookingService(
     bookingRepository.findAllByApplication(application).filter { booking ->
       booking.isInCancellableStateCas1() && userAccessService.userMayCancelBooking(user, booking)
     }
+
+  fun getAllForApplication(applicationEntity: ApplicationEntity) = bookingRepository.findAllByApplication(applicationEntity)
 
   @Transactional
   fun createCas1Cancellation(
