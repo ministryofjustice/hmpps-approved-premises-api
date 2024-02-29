@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsReportData
@@ -11,6 +12,7 @@ import java.time.LocalDate
 fun List<BookingEntity>.toBookingsReportData(): List<BookingsReportData> = this
   .map {
     val application = it.application as? TemporaryAccommodationApplicationEntity
+    val temporaryAccommodationPremises = it.premises as? TemporaryAccommodationPremisesEntity
     object : BookingsReportData {
       override val bookingId: String
         get() = it.id.toString()
@@ -56,6 +58,8 @@ fun List<BookingEntity>.toBookingsReportData(): List<BookingsReportData> = this
         get() = it.departure?.moveOnCategory?.name
       override val dutyToReferLocalAuthorityAreaName: String?
         get() = application?.dutyToReferLocalAuthorityAreaName
+      override val pdu: String?
+        get() = temporaryAccommodationPremises?.probationDeliveryUnit?.name
     }
   }
   .sortedBy { it.bookingId }

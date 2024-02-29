@@ -39,12 +39,14 @@ class BedUsageReportGenerator(
     val voids = lostBedsRepository.findAllByOverlappingDateForBed(startOfMonth, endOfMonth, this)
 
     val premises = this.room.premises
-
+    val temporaryAccommodationPremisesEntity = premises as? TemporaryAccommodationPremisesEntity
     val resultRows = mutableListOf<BedUsageReportRow>()
 
     bookings.forEach { booking ->
       resultRows += BedUsageReportRow(
-        pdu = if (premises is TemporaryAccommodationPremisesEntity) premises.probationDeliveryUnit?.name else null,
+        probationRegion = temporaryAccommodationPremisesEntity?.probationRegion?.name,
+        pdu = temporaryAccommodationPremisesEntity?.probationDeliveryUnit?.name,
+        localAuthority = temporaryAccommodationPremisesEntity?.localAuthorityArea?.name,
         propertyRef = premises.name,
         addressLine1 = premises.addressLine1,
         bedspaceRef = this.room.name,
@@ -66,7 +68,9 @@ class BedUsageReportGenerator(
         val endDate = workingDayCountService.addWorkingDays(booking.departureDate, turnaround.workingDayCount)
 
         resultRows += BedUsageReportRow(
-          pdu = (premises as? TemporaryAccommodationPremisesEntity)?.probationDeliveryUnit?.name,
+          probationRegion = temporaryAccommodationPremisesEntity?.probationRegion?.name,
+          pdu = temporaryAccommodationPremisesEntity?.probationDeliveryUnit?.name,
+          localAuthority = temporaryAccommodationPremisesEntity?.localAuthorityArea?.name,
           propertyRef = premises.name,
           addressLine1 = premises.addressLine1,
           bedspaceRef = this.room.name,
@@ -86,7 +90,9 @@ class BedUsageReportGenerator(
 
     voids.forEach { lostBed ->
       resultRows += BedUsageReportRow(
-        pdu = if (premises is TemporaryAccommodationPremisesEntity) premises.probationDeliveryUnit?.name else null,
+        probationRegion = temporaryAccommodationPremisesEntity?.probationRegion?.name,
+        pdu = temporaryAccommodationPremisesEntity?.probationDeliveryUnit?.name,
+        localAuthority = temporaryAccommodationPremisesEntity?.localAuthorityArea?.name,
         propertyRef = premises.name,
         addressLine1 = premises.addressLine1,
         bedspaceRef = this.room.name,

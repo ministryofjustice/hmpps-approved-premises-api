@@ -85,9 +85,12 @@ class BedUtilisationReportGenerator(
     val totalBookedDays = bookedDaysActiveAndClosed
     val daysInMonth = YearMonth.of(properties.year, properties.month).lengthOfMonth()
 
+    val temporaryAccommodationPremisesEntity = premises as? TemporaryAccommodationPremisesEntity
     listOf(
       BedUtilisationReportRow(
-        pdu = (premises as? TemporaryAccommodationPremisesEntity)?.probationDeliveryUnit?.name,
+        probationRegion = temporaryAccommodationPremisesEntity?.probationRegion?.name,
+        pdu = temporaryAccommodationPremisesEntity?.probationDeliveryUnit?.name,
+        localAuthority = temporaryAccommodationPremisesEntity?.localAuthorityArea?.name,
         propertyRef = premises.name,
         addressLine1 = premises.addressLine1,
         bedspaceRef = this.room.name,
