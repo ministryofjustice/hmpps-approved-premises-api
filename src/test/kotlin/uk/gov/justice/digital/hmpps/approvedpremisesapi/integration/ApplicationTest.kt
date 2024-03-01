@@ -1908,21 +1908,24 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Update existing AP application returns 200 with correct body`() {
-    `Given a User` { submittingUser, jwt ->
-      `Given a User`(
-        roles = listOf(UserRole.CAS1_ASSESSOR),
-        qualifications = listOf(UserQualification.PIPE),
-      ) { _, _ ->
-        `Given an Offender` { offenderDetails, _ ->
-          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+  @Nested
+  inner class UpdateApplicationCas1 {
 
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-            withSchema(
-              """
+    @Test
+    fun `Update existing AP application returns 200 with correct body`() {
+      `Given a User` { submittingUser, jwt ->
+        `Given a User`(
+          roles = listOf(UserRole.CAS1_ASSESSOR),
+          qualifications = listOf(UserQualification.PIPE),
+        ) { _, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(
+                """
               {
                 "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
                 "${"\$id"}": "https://example.com/product.schema.json",
@@ -1938,40 +1941,42 @@ class ApplicationTest : IntegrationTestBase() {
                 "required": [ "thingId" ]
               }
             """,
-            )
+              )
+            }
+
+            approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withId(applicationId)
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(submittingUser)
+            }
+
+            val resultBody = webTestClient.put()
+              .uri("/applications/$applicationId")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                UpdateApprovedPremisesApplication(
+                  data = mapOf("thingId" to 123),
+                  isWomensApplication = false,
+                  isPipeApplication = true,
+                  type = UpdateApplicationType.CAS1,
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult(String::class.java)
+              .responseBody
+              .blockFirst()
+
+            val result = objectMapper.readValue(resultBody, Application::class.java)
+
+            assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
           }
-
-          approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withId(applicationId)
-            withApplicationSchema(applicationSchema)
-            withCreatedByUser(submittingUser)
-          }
-
-          val resultBody = webTestClient.put()
-            .uri("/applications/$applicationId")
-            .header("Authorization", "Bearer $jwt")
-            .bodyValue(
-              UpdateApprovedPremisesApplication(
-                data = mapOf("thingId" to 123),
-                isWomensApplication = false,
-                isPipeApplication = true,
-                type = UpdateApplicationType.CAS1,
-              ),
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult(String::class.java)
-            .responseBody
-            .blockFirst()
-
-          val result = objectMapper.readValue(resultBody, Application::class.java)
-
-          assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
         }
       }
     }
+
   }
 
   @Test
@@ -3178,7 +3183,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class TimelineNotesForApplication {
+  inner class PostTimelineNotesForApplication {
     @Test
     fun `post ApplicationTimelineNote without JWT returns 401`() {
       webTestClient.post()
@@ -3324,7 +3329,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class ApplicationsAll {
+  inner class GetApplicationsAll {
     @Test
     fun `Get applications all without JWT returns 401`() {
       webTestClient.get()
