@@ -609,6 +609,13 @@ class ApplicationService(
   fun isWithdrawableForUser(user: UserEntity, application: ApplicationEntity) =
     userAccessService.userMayWithdrawApplication(user, application)
 
+  fun getWithdrawableState(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableState {
+    return WithdrawableState(
+      withdrawable = !application.isWithdrawn,
+      userMayDirectlyWithdraw = isWithdrawableForUser(user, application),
+    )
+  }
+
   fun sendEmailApplicationWithdrawn(user: UserEntity, application: ApplicationEntity, premisesName: String?) {
     user.email?.let { email ->
       emailNotificationService.sendEmail(

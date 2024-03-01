@@ -307,6 +307,13 @@ class PlacementRequestService(
           userAccessService.userMayWithdrawPlacementRequest(user, it)
       }
 
+  fun getWithdrawableState(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableState {
+    return WithdrawableState(
+      withdrawable = placementRequest.isInWithdrawableState(),
+      userMayDirectlyWithdraw = placementRequest.isForApplicationsArrivalDate() && userAccessService.userMayWithdrawPlacementRequest(user, placementRequest),
+    )
+  }
+
   @Transactional
   fun withdrawPlacementRequest(
     placementRequestId: UUID,
@@ -481,5 +488,4 @@ class PlacementRequestService(
     val placementRequest: PlacementRequestEntity,
     val cancellations: List<CancellationEntity>,
   )
-
 }
