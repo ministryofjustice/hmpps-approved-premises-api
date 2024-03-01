@@ -44,7 +44,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.extractMessage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -68,13 +67,13 @@ class PlacementRequestService(
   private val placementDateRepository: PlacementDateRepository,
   private val cancellationRepository: CancellationRepository,
   private val userAllocator: UserAllocator,
-  @Lazy private val bookingService: BookingService,
   private val userAccessService: UserAccessService,
   @Lazy private val applicationService: ApplicationService,
   private val cas1PlacementRequestEmailService: Cas1PlacementRequestEmailService,
   private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   private val taskDeadlineService: TaskDeadlineService,
+  private val withdrawableService: WithdrawableService,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -349,24 +348,7 @@ class PlacementRequestService(
     cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest)
     cas1PlacementRequestDomainEventService.placementRequestWithdrawn(placementRequest, withdrawalContext)
 
-    placementRequest.booking?.let { booking ->
-      val bookingCancellationResult = bookingService.createCas1Cancellation(
-        booking = booking,
-        cancelledAt = LocalDate.now(),
-        userProvidedReason = null,
-        notes = "Automatically withdrawn as placement request was withdrawn",
-        withdrawalContext = withdrawalContext,
-      )
-
-      when (bookingCancellationResult) {
-        is ValidatableActionResult.Success -> Unit
-        else -> log.error(
-          "Failed to automatically withdraw booking ${booking.id} " +
-            "when withdrawing placement request ${placementRequest.id} " +
-            "with message ${extractMessage(bookingCancellationResult)}",
-        )
-      }
-    }
+    withdrawableService.withdrawDescendants(placementRequest, withdrawalContext)
 
     return AuthorisableActionResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }

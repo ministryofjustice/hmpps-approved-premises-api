@@ -63,7 +63,7 @@ class WithdrawableTreeBuilder(
     )
   }
 
-  private fun treeForPlacementReq(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableTreeNode {
+  fun treeForPlacementReq(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableTreeNode {
     val children = listOfNotNull(
       placementRequest.booking?.let {
         treeForBooking(it, user)
@@ -101,7 +101,7 @@ data class WithdrawableTreeNode(
     return listOf(this) + collectDescendants()
   }
 
-  private fun collectDescendants(): List<WithdrawableTreeNode> {
+  fun collectDescendants(): List<WithdrawableTreeNode> {
     val result = mutableListOf<WithdrawableTreeNode>()
     children.forEach {
       result.add(it)
