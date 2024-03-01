@@ -6,6 +6,8 @@ data class BedUtilisationReportRow(
   val localAuthority: String?,
   val propertyRef: String,
   val addressLine1: String,
+  val town: String?,
+  val postCode: String,
   val bedspaceRef: String,
   val bookedDaysActiveAndClosed: Int,
   val confirmedDays: Int,

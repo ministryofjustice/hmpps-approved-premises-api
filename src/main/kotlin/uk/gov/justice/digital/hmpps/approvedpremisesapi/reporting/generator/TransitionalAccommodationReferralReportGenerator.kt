@@ -38,6 +38,8 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
         dutyToReferMade = referralData.dutyToReferMade,
         dateDutyToReferMade = referralData.dateDutyToReferMade,
         dutyToReferLocalAuthorityAreaName = referralData.dutyToReferLocalAuthorityAreaName,
+        town = referralData.town,
+        postCode = referralData.postCode,
         probationRegion = referralData.probationRegionName,
         referralSubmittedDate = referralData.referralSubmittedDate,
         referralRejected = AssessmentDecision.REJECTED.name == referralData.assessmentDecision,

@@ -323,6 +323,8 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
             assertThat(actual.size).isEqualTo(1)
             assertCorrectPersonDetail(caseSummary, actual[0])
             assertThat(actual[0].bookingOffered).isTrue()
+            assertThat(actual[0].town).isEqualTo(premises.town)
+            assertThat(actual[0].postCode).isEqualTo(premises.postcode)
           }
       }
     }

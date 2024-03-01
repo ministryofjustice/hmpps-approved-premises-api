@@ -93,6 +93,8 @@ class BedUtilisationReportGenerator(
         localAuthority = temporaryAccommodationPremisesEntity?.localAuthorityArea?.name,
         propertyRef = premises.name,
         addressLine1 = premises.addressLine1,
+        town = premises.town,
+        postCode = premises.postcode,
         bedspaceRef = this.room.name,
         bookedDaysActiveAndClosed = bookedDaysActiveAndClosed,
         confirmedDays = confirmedDays,
