@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import org.springframework.data.repository.findByIdOrNull
@@ -2500,7 +2501,54 @@ class ApplicationServiceTest {
   }
 
   @Nested
-  inner class IsWithdrawable
+  inner class GetWithdrawableState {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    @Test
+    fun `getWithdrawableState withdrawable if application not withdrawn`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withIsWithdrawn(false)
+        .produce()
+
+      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
+
+      val result = applicationService.getWithdrawableState(application, user)
+
+      assertThat(result.withdrawable).isTrue()
+    }
+
+    @Test
+    fun `getWithdrawableState not withdrawable if application already withdrawn `() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withIsWithdrawn(true)
+        .produce()
+
+      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
+
+      val result = applicationService.getWithdrawableState(application, user)
+
+      assertThat(result.withdrawable).isFalse()
+    }
+
+    @ParameterizedTest
+    @CsvSource("true", "false")
+    fun `getWithdrawableState userMayDirectlyWithdraw delegates to user access service`(canWithdraw: Boolean) {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withIsWithdrawn(false)
+        .produce()
+
+      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns canWithdraw
+
+      val result = applicationService.getWithdrawableState(application, user)
+
+      assertThat(result.userMayDirectlyWithdraw).isEqualTo(canWithdraw)
+    }
+  }
 
   private fun userWithUsername(username: String) = UserEntityFactory()
     .withDeliusUsername(username)

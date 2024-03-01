@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import org.slf4j.Logger
@@ -676,6 +677,84 @@ class PlacementRequestServiceTest {
       val result = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
 
       assertThat(result).isEqualTo(listOf(placementRequestWithoutBooking, placementRequestWithBooking))
+    }
+  }
+
+  @Nested
+  inner class GetWithdrawableState {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
+      .produce()
+
+    @Test
+    fun `getWithdrawableState not withdrawable if reallocated`() {
+      val placementRequest = createValidPlacementRequest(application, user)
+      placementRequest.reallocatedAt = OffsetDateTime.now()
+
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
+
+      val result = placementRequestService.getWithdrawableState(placementRequest, user)
+
+      assertThat(result.withdrawable).isFalse()
+    }
+
+    @Test
+    fun `getWithdrawableState not withdrawable if already withdrawn`() {
+      val placementRequest = createValidPlacementRequest(application, user)
+      placementRequest.isWithdrawn = true
+
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
+
+      val result = placementRequestService.getWithdrawableState(placementRequest, user)
+
+      assertThat(result.withdrawable).isFalse()
+    }
+
+    @Test
+    fun `getWithdrawableState withdrawable if not already withdrawn and not reallocated`() {
+      val placementRequest = createValidPlacementRequest(application, user)
+      placementRequest.isWithdrawn = false
+      placementRequest.reallocatedAt = null
+
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
+
+      val result = placementRequestService.getWithdrawableState(placementRequest, user)
+
+      assertThat(result.withdrawable).isTrue()
+    }
+
+    @ParameterizedTest
+    @CsvSource("true", "false")
+    fun `getWithdrawableState userMayDirectlyWithdraw delegates to user access service`(canWithdraw: Boolean) {
+      val placementRequest = createValidPlacementRequest(application, user)
+
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns canWithdraw
+
+      val result = placementRequestService.getWithdrawableState(placementRequest, user)
+
+      assertThat(result.userMayDirectlyWithdraw).isEqualTo(canWithdraw)
+    }
+
+    @Test
+    fun `getWithdrawableState userMayDirectlyWithdraw returns false if not for original app dates`() {
+      val placementRequest = createValidPlacementRequest(
+        application,
+        user,
+        placementApplication = PlacementApplicationEntityFactory()
+          .withCreatedByUser(user)
+          .withApplication(application)
+          .produce(),
+      )
+
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
+
+      val result = placementRequestService.getWithdrawableState(placementRequest, user)
+
+      assertThat(result.userMayDirectlyWithdraw).isFalse()
     }
   }
 

@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSum
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Assessment
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
@@ -28,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -50,14 +52,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AppealTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import java.net.URI
 import java.util.UUID
@@ -78,8 +79,6 @@ class ApplicationsController(
   private val documentTransformer: DocumentTransformer,
   private val assessmentService: AssessmentService,
   private val userService: UserService,
-  private val placementRequestTransformer: PlacementRequestTransformer,
-  private val bookingTransformer: BookingTransformer,
   private val withdrawableService: WithdrawableService,
   private val appealService: AppealService,
   private val appealTransformer: AppealTransformer,
@@ -542,17 +541,20 @@ class ApplicationsController(
 
     val withdrawables = withdrawableService.allWithdrawables(application, user)
 
-    val allWithdrawables =
-      if (withdrawables.application) {
-        listOf(applicationsTransformer.transformToWithdrawable(application))
-      } else {
-        emptyList()
-      } +
-        withdrawables.placementApplications.map { placementApplicationTransformer.transformToWithdrawable(it) } +
-        withdrawables.placementRequests.map { placementRequestTransformer.transformToWithdrawable(it) } +
-        withdrawables.bookings.map { bookingTransformer.transformToWithdrawable(it) }
-
-    return ResponseEntity.ok(allWithdrawables)
+    return ResponseEntity.ok(
+      withdrawables.map { entity ->
+        Withdrawable(
+          entity.id,
+          when (entity.type) {
+            WithdrawableEntityType.Application -> WithdrawableType.application
+            WithdrawableEntityType.PlacementRequest -> WithdrawableType.placementRequest
+            WithdrawableEntityType.PlacementApplication -> WithdrawableType.placementApplication
+            WithdrawableEntityType.Booking -> WithdrawableType.booking
+          },
+          entity.dates.map { DatePeriod(it.startDate, it.endDate) },
+        )
+      },
+    )
   }
 
   private fun getPersonDetailAndTransform(application: ApplicationEntity, user: UserEntity): Application {

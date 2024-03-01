@@ -65,8 +65,10 @@ class PlacementApplicationService(
   @PostConstruct
   fun init() {
     if (!useNewWithdrawalLogic) {
-      log.warn("Old withdrawal logic is being used. This will add multiple dates to the same placement application " +
-        "on submission which limits potential withdrawal options. This behaviour is deprecated.")
+      log.warn(
+        "Old withdrawal logic is being used. This will add multiple dates to the same placement application " +
+          "on submission which limits potential withdrawal options. This behaviour is deprecated.",
+      )
     }
   }
 
@@ -198,6 +200,13 @@ class PlacementApplicationService(
     placementApplicationRepository
       .findByApplication(application)
       .filter { it.isInWithdrawableState() && userAccessService.userMayWithdrawPlacementApplication(user, it) }
+
+  fun getWithdrawableState(placementApplication: PlacementApplicationEntity, user: UserEntity): WithdrawableState {
+    return WithdrawableState(
+      withdrawable = placementApplication.isInWithdrawableState(),
+      userMayDirectlyWithdraw = userAccessService.userMayWithdrawPlacementApplication(user, placementApplication),
+    )
+  }
 
   @Transactional
   fun withdrawPlacementApplication(

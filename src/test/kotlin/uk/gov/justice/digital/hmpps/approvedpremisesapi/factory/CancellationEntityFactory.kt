@@ -20,6 +20,10 @@ class CancellationEntityFactory : Factory<CancellationEntity> {
   private var booking: Yielded<BookingEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
 
+  fun withDefaults() = apply {
+    withReason(CancellationReasonEntityFactory().produce())
+  }
+
   fun withId(id: UUID) = apply {
     this.id = { id }
   }

@@ -6,11 +6,11 @@ import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Withdrawables
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.extractMessage
 import java.time.LocalDate
+import java.util.UUID
 
 @Service
 class WithdrawableService(
@@ -18,31 +18,37 @@ class WithdrawableService(
   @Lazy private val placementRequestService: PlacementRequestService,
   @Lazy private val bookingService: BookingService,
   @Lazy private val placementApplicationService: PlacementApplicationService,
-  @Lazy private val applicationService: ApplicationService,
+  private val withdrawableTreeBuilder: WithdrawableTreeBuilder,
 ) {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
   fun allWithdrawables(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
-  ): Withdrawables {
-    val placementRequests = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
-    val bookings = bookingService.getCancelleableCas1BookingsForUser(user, application)
-    val placementApplications = placementApplicationService.getWithdrawablePlacementApplicationsForUser(user, application)
+  ): Set<WithdrawableEntity> {
+    val rootNode = withdrawableTreeBuilder.treeForApp(application, user)
 
-    return Withdrawables(
-      applicationService.isWithdrawableForUser(user, application),
-      placementRequests = placementRequests,
-      bookings = bookings,
-      placementApplications = placementApplications,
-    )
+    if (log.isDebugEnabled) {
+      log.debug("Withdrawables tree is $rootNode")
+    }
+
+    return rootNode.flatten()
+      .filter { it.status.withdrawable }
+      .filter { it.status.userMayDirectlyWithdraw }
+      .map {
+        WithdrawableEntity(
+          it.entityType,
+          it.entityId,
+          it.dates,
+        )
+      }
+      .toSet()
   }
 
   fun withdrawAllForApplication(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
   ) {
-
     val withdrawalContext = WithdrawalContext(
       user,
       WithdrawableEntityType.Application,
@@ -93,13 +99,13 @@ class WithdrawableService(
     val now = LocalDate.now()
     val bookings = bookingService.getAllForApplication(application)
     bookings.forEach { booking ->
-      if(booking.isInCancellableStateCas1()) {
+      if (booking.isInCancellableStateCas1()) {
         val bookingCancellationResult = bookingService.createCas1Cancellation(
           booking = booking,
           cancelledAt = now,
           userProvidedReason = null,
           notes = "Automatically withdrawn as placement request was withdrawn",
-          withdrawalContext = withdrawalContext
+          withdrawalContext = withdrawalContext,
         )
 
         when (bookingCancellationResult) {
@@ -120,9 +126,33 @@ data class WithdrawalContext(
   val triggeringEntityType: WithdrawableEntityType,
 )
 
+data class WithdrawableEntity(
+  val type: WithdrawableEntityType,
+  val id: UUID,
+  val dates: List<WithdrawableDatePeriod>,
+)
+
 enum class WithdrawableEntityType {
   Application,
   PlacementRequest,
   PlacementApplication,
   Booking,
 }
+
+data class WithdrawableState(
+  /**
+   * If the entity is in a withdrawable state.
+   * This doesn't consider if the given user can directly withdraw it.
+   */
+  val withdrawable: Boolean,
+  /**
+   * If the user can directly withdraw this entity (as apposed to cascading).
+   * This doesn't consider if the entity itself is in a withdrawable state.
+   */
+  val userMayDirectlyWithdraw: Boolean,
+)
+
+data class WithdrawableDatePeriod(
+  val startDate: LocalDate,
+  val endDate: LocalDate,
+)

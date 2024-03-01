@@ -6,8 +6,6 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
 import org.slf4j.Logger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -24,26 +22,31 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableDatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableState
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableTreeBuilder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableTreeNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
+import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.UUID
 
 class WithdrawableServiceTest {
   private val mockPlacementRequestService = mockk<PlacementRequestService>()
   private val mockBookingService = mockk<BookingService>()
   private val mockPlacementApplicationService = mockk<PlacementApplicationService>()
-  private val mockApplicationService = mockk<ApplicationService>()
+  private val mockWithdrawableTreeBuilder = mockk<WithdrawableTreeBuilder>()
 
   private val withdrawableService = WithdrawableService(
     mockPlacementRequestService,
     mockBookingService,
     mockPlacementApplicationService,
-    mockApplicationService,
+    mockWithdrawableTreeBuilder,
   )
 
   val probationRegion = ProbationRegionEntityFactory()
@@ -112,23 +115,106 @@ class WithdrawableServiceTest {
   }
 
   @Test
-  fun `allWithdrawables returns all withdrawable information`() {
-    every { mockApplicationService.isWithdrawableForUser(user, application) } returns true
+  fun `allWithdrawables correctly maps information`() {
+    val appId = UUID.randomUUID()
+
+    every {
+      mockWithdrawableTreeBuilder.treeForApp(application, user)
+    } returns
+      WithdrawableTreeNode(
+        entityType = WithdrawableEntityType.PlacementApplication,
+        entityId = appId,
+        status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+        dates = listOf(
+          WithdrawableDatePeriod(LocalDate.of(2021, 1, 2), LocalDate.of(2021, 2, 3)),
+          WithdrawableDatePeriod(LocalDate.of(2021, 3, 4), LocalDate.of(2021, 4, 5)),
+        ),
+      )
+
     val result = withdrawableService.allWithdrawables(application, user)
 
-    assertThat(result.application).isEqualTo(true)
-    assertThat(result.bookings).isEqualTo(bookings)
-    assertThat(result.placementRequests).isEqualTo(placementRequests)
-    assertThat(result.placementApplications).isEqualTo(placementApplications)
+    assertThat(result).hasSize(1)
+
+    val withdrawableEntity = result.first()
+    assertThat(withdrawableEntity.id).isEqualTo(appId)
+    assertThat(withdrawableEntity.type).isEqualTo(WithdrawableEntityType.PlacementApplication)
+    assertThat(withdrawableEntity.dates).isEqualTo(
+      listOf(
+        WithdrawableDatePeriod(LocalDate.of(2021, 1, 2), LocalDate.of(2021, 2, 3)),
+        WithdrawableDatePeriod(LocalDate.of(2021, 3, 4), LocalDate.of(2021, 4, 5)),
+      ),
+    )
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = [true, false])
-  fun `allWithdrawables returns if application can't be withdrawn`(canBeWithdrawn: Boolean) {
-    every { mockApplicationService.isWithdrawableForUser(user, application) } returns canBeWithdrawn
+  @Test
+  fun `allWithdrawables only returns entities the user can withdraw`() {
+    val appWithdrawableId = UUID.randomUUID()
+    val placementRequest1WithdrawableId = UUID.randomUUID()
+    val placementRequestWithdrawableButNotPermittedId = UUID.randomUUID()
+    val placementRequest2WithdrawableId = UUID.randomUUID()
+    val placementApplication1WithdrawableId = UUID.randomUUID()
+    val placementApplication2NotWithdrawableId = UUID.randomUUID()
+    val placementWithdrawableId = UUID.randomUUID()
+    val placementNotWithdrawableId = UUID.randomUUID()
+
+    every {
+      mockWithdrawableTreeBuilder.treeForApp(application, user)
+    } returns
+      WithdrawableTreeNode(
+        entityType = WithdrawableEntityType.Application,
+        entityId = appWithdrawableId,
+        status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+        children = listOf(
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.PlacementRequest,
+            entityId = placementRequest1WithdrawableId,
+            status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+            children = listOf(
+              WithdrawableTreeNode(
+                entityType = WithdrawableEntityType.Booking,
+                entityId = placementWithdrawableId,
+                status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+              ),
+            ),
+          ),
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.PlacementRequest,
+            entityId = placementRequestWithdrawableButNotPermittedId,
+            status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+          ),
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.PlacementApplication,
+            entityId = placementApplication1WithdrawableId,
+            status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+            children = listOf(
+              WithdrawableTreeNode(
+                entityType = WithdrawableEntityType.PlacementRequest,
+                entityId = placementRequest2WithdrawableId,
+                status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+              ),
+            ),
+          ),
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.PlacementApplication,
+            entityId = placementApplication2NotWithdrawableId,
+            status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+          ),
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.Booking,
+            entityId = placementNotWithdrawableId,
+            status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+          ),
+        ),
+      )
+
     val result = withdrawableService.allWithdrawables(application, user)
 
-    assertThat(result.application).isEqualTo(canBeWithdrawn)
+    assertThat(result).hasSize(5)
+    assertThat(result).anyMatch { it.id == appWithdrawableId }
+    assertThat(result).anyMatch { it.id == placementRequest1WithdrawableId }
+    assertThat(result).anyMatch { it.id == placementRequest2WithdrawableId }
+    assertThat(result).anyMatch { it.id == placementApplication1WithdrawableId }
+    assertThat(result).anyMatch { it.id == placementWithdrawableId }
   }
 
   @Test

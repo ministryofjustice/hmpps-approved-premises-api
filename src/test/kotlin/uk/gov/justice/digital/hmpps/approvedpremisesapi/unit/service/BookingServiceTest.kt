@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpMethod
@@ -6587,6 +6588,79 @@ class BookingServiceTest {
     result as ValidatableActionResult.Success
     assertThat(result.entity.booking).isEqualTo(booking)
     assertThat(result.entity.workingDayCount).isEqualTo(2)
+  }
+
+  @Nested
+  inner class GetWithdrawableState {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val premises = ApprovedPremisesEntityFactory()
+      .withDefaultProbationRegion()
+      .withDefaultLocalAuthorityArea()
+      .produce()
+
+    @Test
+    fun `getWithdrawableState not withdrawable if has arrivals`() {
+      val booking = BookingEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      booking.arrivals.add(
+        ArrivalEntityFactory().withBooking(booking).produce(),
+      )
+
+      every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
+
+      val result = bookingService.getWithdrawableState(booking, user)
+
+      assertThat(result.withdrawable).isFalse()
+    }
+
+    @Test
+    fun `getWithdrawableState not withdrawable if already cancelled`() {
+      val booking = BookingEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      booking.cancellations.add(
+        CancellationEntityFactory().withBooking(booking).withDefaults().produce(),
+      )
+
+      every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
+
+      val result = bookingService.getWithdrawableState(booking, user)
+
+      assertThat(result.withdrawable).isFalse()
+    }
+
+    @Test
+    fun `getWithdrawableState withdrawable if has not arrivals and not already cancelled`() {
+      val booking = BookingEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
+
+      val result = bookingService.getWithdrawableState(booking, user)
+
+      assertThat(result.withdrawable).isTrue()
+    }
+
+    @ParameterizedTest
+    @CsvSource("true", "false")
+    fun `getWithdrawableState userMayDirectlyWithdraw delegates to user access service`(canWithdraw: Boolean) {
+      val booking = BookingEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      every { mockUserAccessService.userMayCancelBooking(user, booking) } returns canWithdraw
+
+      val result = bookingService.getWithdrawableState(booking, user)
+
+      assertThat(result.userMayDirectlyWithdraw).isEqualTo(canWithdraw)
+    }
   }
 
   @Nested

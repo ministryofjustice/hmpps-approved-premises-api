@@ -1143,7 +1143,18 @@ class BookingService(
       booking.isInCancellableStateCas1() && userAccessService.userMayCancelBooking(user, booking)
     }
 
-  fun getAllForApplication(applicationEntity: ApplicationEntity) = bookingRepository.findAllByApplication(applicationEntity)
+  fun getWithdrawableState(booking: BookingEntity, user: UserEntity): WithdrawableState {
+    return WithdrawableState(
+      withdrawable = booking.isInCancellableStateCas1(),
+      userMayDirectlyWithdraw = userAccessService.userMayCancelBooking(user, booking),
+    )
+  }
+
+  fun getAllAdhocForApplication(applicationEntity: ApplicationEntity) =
+    bookingRepository.findAllByApplicationAndPlacementRequestIsNull(applicationEntity)
+
+  fun getAllForApplication(applicationEntity: ApplicationEntity) =
+    bookingRepository.findAllByApplication(applicationEntity)
 
   @Transactional
   fun createCas1Cancellation(
