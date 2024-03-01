@@ -130,6 +130,8 @@ class ReportServiceTest {
     accommodationRequiredDate = Timestamp.valueOf(LocalDateTime.now()),
     prisonNameOnCreation = null,
     personReleaseDate = null,
+    town = null,
+    postCode = null,
   )
 
   @Suppress("LongParameterList")
@@ -156,5 +158,7 @@ class ReportServiceTest {
     override val accommodationRequiredDate: Timestamp?,
     override val prisonNameOnCreation: String?,
     override val personReleaseDate: LocalDate?,
+    override val town: String?,
+    override val postCode: String?,
   ) : TransitionalAccommodationReferralReportData
 }

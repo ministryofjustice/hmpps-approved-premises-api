@@ -33,7 +33,9 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
       departure.date_time AS actualEndDate,
       move_on_category.name AS accommodationOutcome,
       cas3_app.duty_to_refer_local_authority_area_name AS dutyToReferLocalAuthorityAreaName,
-      pdu.name as pdu
+      pdu.name as pdu,
+      premises.town as town,
+      premises.postcode as postCode
     FROM
       bookings booking
     LEFT JOIN
@@ -103,4 +105,6 @@ interface BookingsReportData {
   val accommodationOutcome: String?
   val dutyToReferLocalAuthorityAreaName: String?
   val pdu: String?
+  val town: String?
+  val postCode: String?
 }

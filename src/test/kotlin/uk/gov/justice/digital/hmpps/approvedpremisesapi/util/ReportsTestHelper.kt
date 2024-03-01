@@ -60,6 +60,10 @@ fun List<BookingEntity>.toBookingsReportData(): List<BookingsReportData> = this
         get() = application?.dutyToReferLocalAuthorityAreaName
       override val pdu: String?
         get() = temporaryAccommodationPremises?.probationDeliveryUnit?.name
+      override val town: String?
+        get() = it.premises.town
+      override val postCode: String?
+        get() = it.premises.postcode
     }
   }
   .sortedBy { it.bookingId }
