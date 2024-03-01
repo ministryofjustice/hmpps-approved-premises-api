@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CaseManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OfflineApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
@@ -93,6 +94,7 @@ class ApplicationsTransformer(
         ),
         type = "CAS1",
         apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) },
+        caseManager = toCaseManager(jpa),
       )
 
       is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(
@@ -120,6 +122,17 @@ class ApplicationsTransformer(
       )
 
       else -> throw RuntimeException("Unrecognised application type when transforming: ${jpa::class.qualifiedName}")
+    }
+  }
+
+  fun toCaseManager(application: ApprovedPremisesApplicationEntity): CaseManager? {
+    val name = application.caseManagerName
+    val email = application.caseManagerEmail
+    val telephoneNumber = application.caseManagerTelephoneNumber
+    return if (name != null && email != null && telephoneNumber != null) {
+      CaseManager(name,email,telephoneNumber)
+    } else {
+      return null
     }
   }
 

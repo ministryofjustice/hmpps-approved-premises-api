@@ -193,6 +193,18 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.apArea = { apArea }
   }
 
+  fun withCaseManagerName(name: String?) = apply {
+    this.caseManagerName = { name }
+  }
+
+  fun withCaseManagerEmail(email: String?) = apply {
+    this.caseManagerEmail = { email }
+  }
+
+  fun withCaseManagerTelephoneNumber(telephoneNumber: String?) = apply {
+    this.caseManagerTelephoneNumber = { telephoneNumber }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),

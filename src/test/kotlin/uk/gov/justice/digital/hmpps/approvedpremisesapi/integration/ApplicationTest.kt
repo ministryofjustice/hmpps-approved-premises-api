@@ -666,6 +666,9 @@ class ApplicationTest : IntegrationTestBase() {
           }
           """,
           )
+          withCaseManagerName("theCaseManagerName")
+          withCaseManagerEmail("theCaseManagerEmail")
+          withCaseManagerTelephoneNumber("theCaseManagerTelephoneNo")
         }
 
         CommunityAPI_mockOffenderUserAccessCall(
@@ -693,7 +696,10 @@ class ApplicationTest : IntegrationTestBase() {
             applicationEntity.createdByUser.id == it.createdByUserId &&
             applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
             serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-            newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+            newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema &&
+            applicationEntity.caseManagerName == it.caseManager?.name &&
+            applicationEntity.caseManagerEmail == it.caseManager?.email &&
+            applicationEntity.caseManagerTelephoneNumber == it.caseManager?.telephoneNumber
         }
       }
     }
@@ -3381,7 +3387,7 @@ class ApplicationTest : IntegrationTestBase() {
             )
           }
 
-          val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
+          approvedPremisesApplicationEntityFactory.produceAndPersist {
             withApplicationSchema(newestJsonSchema)
             withId(applicationId1)
             withCrn(offenderDetails.otherIds.crn)

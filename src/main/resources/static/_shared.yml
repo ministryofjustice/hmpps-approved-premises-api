@@ -1638,6 +1638,8 @@ components:
               $ref: '#/components/schemas/PersonStatus'
             apArea:
               $ref: '#/components/schemas/ApArea'
+            caseManager:
+              $ref: '#/components/schemas/CaseManager'
           required:
             - createdByUserId
             - schemaVersion

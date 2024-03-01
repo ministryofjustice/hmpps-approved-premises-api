@@ -110,7 +110,13 @@ class ApplicationsTransformerTest {
   fun `transformJpaToApi transforms an Approved Premises application correctly`(args: Pair<ApiApprovedPremisesApplicationStatus, ApprovedPremisesApplicationStatus>) {
     val (apiStatus, jpaStatus) = args
 
-    val application = approvedPremisesApplicationFactory.withStatus(jpaStatus).withApArea(null).produce()
+    val application = approvedPremisesApplicationFactory
+      .withStatus(jpaStatus)
+      .withApArea(null)
+      .withCaseManagerName("caseManagerName")
+      .withCaseManagerEmail("caseManagerEmail")
+      .withCaseManagerTelephoneNumber("caseManagerTelephoneNumber")
+      .produce()
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
 
@@ -118,6 +124,9 @@ class ApplicationsTransformerTest {
     assertThat(result.createdByUserId).isEqualTo(user.id)
     assertThat(result.status).isEqualTo(apiStatus)
     assertThat(result.apArea).isNull()
+    assertThat(result.caseManager?.name).isEqualTo("caseManagerName")
+    assertThat(result.caseManager?.email).isEqualTo("caseManagerEmail")
+    assertThat(result.caseManager?.telephoneNumber).isEqualTo("caseManagerTelephoneNumber")
   }
 
   @Test
@@ -133,6 +142,24 @@ class ApplicationsTransformerTest {
 
     assertThat(result.apArea).isEqualTo(mockApArea)
     verify { mockApAreaTransformer.transformJpaToApi(apArea) }
+  }
+
+  @Test
+  fun `transformJpaToApi doesnt return case manager if not defined`() {
+    val apArea = ApAreaEntityFactory().produce()
+    val application = approvedPremisesApplicationFactory
+      .withCaseManagerName(null)
+      .withCaseManagerEmail(null)
+      .withCaseManagerTelephoneNumber(null)
+      .produce()
+
+    val mockApArea = mockk<ApArea>()
+
+    every { mockApAreaTransformer.transformJpaToApi(apArea) } returns mockApArea
+
+    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
+
+    assertThat(result.caseManager).isNull()
   }
 
   @Test
