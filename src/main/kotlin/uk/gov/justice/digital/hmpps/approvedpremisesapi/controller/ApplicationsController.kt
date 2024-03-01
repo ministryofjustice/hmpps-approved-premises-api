@@ -264,6 +264,9 @@ class ApplicationsController(
           releaseType = body.releaseType?.name,
           arrivalDate = body.arrivalDate,
           isInapplicable = body.isInapplicable,
+          caseManagerName = body.caseManager?.name,
+          caseManagerEmail = body.caseManager?.email,
+          caseManagerTelephoneNumber = body.caseManager?.telephoneNumber,
         ),
       )
 

@@ -1138,6 +1138,9 @@ class ApplicationServiceTest {
         arrivalDate = LocalDate.parse("2023-04-17"),
         data = updatedData,
         isInapplicable = false,
+        caseManagerName = "theCaseManagerName",
+        caseManagerEmail = "theCaseManagerEmail",
+        caseManagerTelephoneNumber = "theCaseManagerPhoneNo",
       ),
     )
 
@@ -1155,6 +1158,9 @@ class ApplicationServiceTest {
     assertThat(approvedPremisesApplication.releaseType).isEqualTo("rotl")
     assertThat(approvedPremisesApplication.isInapplicable).isEqualTo(false)
     assertThat(approvedPremisesApplication.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
+    assertThat(approvedPremisesApplication.caseManagerName).isEqualTo("theCaseManagerName")
+    assertThat(approvedPremisesApplication.caseManagerEmail).isEqualTo("theCaseManagerEmail")
+    assertThat(approvedPremisesApplication.caseManagerTelephoneNumber).isEqualTo("theCaseManagerPhoneNo")
   }
 
   @Test

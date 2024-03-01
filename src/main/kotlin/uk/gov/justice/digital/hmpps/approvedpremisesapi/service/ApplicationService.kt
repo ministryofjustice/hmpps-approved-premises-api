@@ -15,7 +15,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CaseManager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
@@ -487,6 +486,9 @@ class ApplicationService(
     val arrivalDate: LocalDate?,
     val data: String,
     val isInapplicable: Boolean?,
+    val caseManagerName: String? = null,
+    val caseManagerEmail: String? = null,
+    val caseManagerTelephoneNumber: String? = null,
   )
 
   fun updateApprovedPremisesApplication(
@@ -533,6 +535,9 @@ class ApplicationService(
         null
       }
       this.data = updateFields.data
+      this.caseManagerName = updateFields.caseManagerName
+      this.caseManagerEmail = updateFields.caseManagerEmail
+      this.caseManagerTelephoneNumber = updateFields.caseManagerTelephoneNumber
     }
 
     val savedApplication = applicationRepository.save(application)

@@ -1976,7 +1976,6 @@ class ApplicationTest : IntegrationTestBase() {
         }
       }
     }
-
   }
 
   @Test
