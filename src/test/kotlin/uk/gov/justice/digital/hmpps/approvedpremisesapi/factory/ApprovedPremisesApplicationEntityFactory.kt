@@ -53,6 +53,9 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var status: Yielded<ApprovedPremisesApplicationStatus> = { ApprovedPremisesApplicationStatus.STARTED }
   private var inmateInOutStatusOnSubmission: Yielded<String?> = { null }
   private var apArea: Yielded<ApAreaEntity?> = { null }
+  private var caseManagerName: Yielded<String?> = { null }
+  private var caseManagerEmail: Yielded<String?> = { null }
+  private var caseManagerTelephoneNumber: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -225,5 +228,8 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     situation = this.situation(),
     inmateInOutStatusOnSubmission = this.inmateInOutStatusOnSubmission(),
     apArea = this.apArea(),
+    caseManagerName = this.caseManagerName(),
+    caseManagerEmail = this.caseManagerEmail(),
+    caseManagerTelephoneNumber = this.caseManagerTelephoneNumber(),
   )
 }

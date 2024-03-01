@@ -316,6 +316,9 @@ class ApprovedPremisesApplicationEntity(
   @ManyToOne
   @JoinColumn(name = "ap_area_id")
   var apArea: ApAreaEntity?,
+  var caseManagerName: String?,
+  var caseManagerEmail: String?,
+  var caseManagerTelephoneNumber: String?,
 ) : ApplicationEntity(
   id,
   crn,
