@@ -108,7 +108,7 @@ class Cas2ApplicationsSeedJob(
 
   private fun createAssessment(application: Cas2ApplicationEntity) {
     val id = UUID.randomUUID()
-    log.info("Seeding status update $id for application ${application.id}")
+    log.info("Seeding assessment $id for application ${application.id}")
     assessmentRepository.save(
       Cas2AssessmentEntity(
         id = id,
