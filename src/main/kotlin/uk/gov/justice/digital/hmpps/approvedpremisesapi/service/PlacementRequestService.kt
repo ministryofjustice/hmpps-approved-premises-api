@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
@@ -75,6 +74,7 @@ class PlacementRequestService(
   private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   private val taskDeadlineService: TaskDeadlineService,
+  private val withdrawableService: WithdrawableService,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -307,6 +307,13 @@ class PlacementRequestService(
           userAccessService.userMayWithdrawPlacementRequest(user, it)
       }
 
+  fun getWithdrawableState(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableState {
+    return WithdrawableState(
+      withdrawable = placementRequest.isInWithdrawableState(),
+      userMayDirectlyWithdraw = placementRequest.isForApplicationsArrivalDate() && userAccessService.userMayWithdrawPlacementRequest(user, placementRequest),
+    )
+  }
+
   @Transactional
   fun withdrawPlacementRequest(
     placementRequestId: UUID,
@@ -322,6 +329,7 @@ class PlacementRequestService(
       return AuthorisableActionResult.Success(toPlacementRequestAndCancellations(placementRequest))
     }
 
+    // TODO: firm this up and put id on the context?
     val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementRequest
     if (isUserRequestedWithdrawal && !userAccessService.userMayWithdrawPlacementRequest(user, placementRequest)) {
       return AuthorisableActionResult.Unauthorised()
@@ -342,24 +350,31 @@ class PlacementRequestService(
     cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest)
     cas1PlacementRequestDomainEventService.placementRequestWithdrawn(placementRequest, withdrawalContext)
 
-    placementRequest.booking?.let { booking ->
-      val bookingCancellationResult = bookingService.createCas1Cancellation(
-        booking = booking,
-        cancelledAt = LocalDate.now(),
-        userProvidedReason = null,
-        notes = "Automatically withdrawn as placement request was withdrawn",
-        withdrawalContext = withdrawalContext,
+    if(isUserRequestedWithdrawal) {
+      withdrawableService.cascadePlacementRequest(
+        placementRequest,
+        withdrawalContext
       )
-
-      when (bookingCancellationResult) {
-        is ValidatableActionResult.Success -> Unit
-        else -> log.error(
-          "Failed to automatically withdraw booking ${booking.id} " +
-            "when withdrawing placement request ${placementRequest.id} " +
-            "with message ${extractMessage(bookingCancellationResult)}",
-        )
-      }
     }
+
+//    placementRequest.booking?.let { booking ->
+//      val bookingCancellationResult = bookingService.createCas1Cancellation(
+//        booking = booking,
+//        cancelledAt = LocalDate.now(),
+//        userProvidedReason = null,
+//        notes = "Automatically withdrawn as placement request was withdrawn",
+//        withdrawalContext = withdrawalContext,
+//      )
+//
+//      when (bookingCancellationResult) {
+//        is ValidatableActionResult.Success -> Unit
+//        else -> log.error(
+//          "Failed to automatically withdraw booking ${booking.id} " +
+//            "when withdrawing placement request ${placementRequest.id} " +
+//            "with message ${extractMessage(bookingCancellationResult)}",
+//        )
+//      }
+//    }
 
     return AuthorisableActionResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }

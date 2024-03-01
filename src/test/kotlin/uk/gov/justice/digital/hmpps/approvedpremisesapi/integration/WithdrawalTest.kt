@@ -342,6 +342,8 @@ class WithdrawalTest : IntegrationTestBase() {
 
             val (application, _) = createApplicationAndAssessment(applicant, allocatedTo, offenderDetails)
 
+            // TODO: this fails beacause these are (not deliberately) adhoc bookings
+            // new branch shoudl make this more realistic, and it should start working
             val booking1expectedArrival = LocalDate.now().plusDays(1)
             val booking1expectedDeparture = LocalDate.now().plusDays(6)
             val booking1 = createBooking(

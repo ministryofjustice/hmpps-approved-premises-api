@@ -66,6 +66,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalReasonRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
@@ -1135,6 +1137,14 @@ class BookingService(
     }
 
     return success(nonArrivalEntity)
+  }
+
+  fun getWithdrawableState(booking: BookingEntity, user: UserEntity): WithdrawableState {
+    return WithdrawableState(
+      withdrawable = booking.isInCancellableStateCas1(),
+      userMayDirectlyWithdraw = userAccessService.userMayCancelBooking(user, booking),
+      blocking = booking.isActive() && booking.hasArrivals()
+    )
   }
 
   fun getCancelleableCas1BookingsForUser(user: UserEntity, application: ApprovedPremisesApplicationEntity): List<BookingEntity> =

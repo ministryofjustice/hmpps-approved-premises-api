@@ -540,17 +540,17 @@ class ApplicationsController(
       throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
     }
 
-    val withdrawables = withdrawableService.allWithdrawables(application, user)
-
-    val allWithdrawables =
-      if (withdrawables.application) {
-        listOf(applicationsTransformer.transformToWithdrawable(application))
-      } else {
-        emptyList()
-      } +
-        withdrawables.placementApplications.map { placementApplicationTransformer.transformToWithdrawable(it) } +
-        withdrawables.placementRequests.map { placementRequestTransformer.transformToWithdrawable(it) } +
-        withdrawables.bookings.map { bookingTransformer.transformToWithdrawable(it) }
+    val allWithdrawables = withdrawableService.allWithdrawablesNew(application, user)
+//
+//    val allWithdrawables =
+//      if (withdrawables.application) {
+//        listOf(applicationsTransformer.transformToWithdrawable(application))
+//      } else {
+//        emptyList()
+//      } +
+//        withdrawables.placementApplications.map { placementApplicationTransformer.transformToWithdrawable(it) } +
+//        withdrawables.placementRequests.map { placementRequestTransformer.transformToWithdrawable(it) } +
+//        withdrawables.bookings.map { bookingTransformer.transformToWithdrawable(it) }
 
     return ResponseEntity.ok(allWithdrawables)
   }

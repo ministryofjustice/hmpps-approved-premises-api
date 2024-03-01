@@ -599,12 +599,26 @@ class ApplicationService(
           assessmentService.updateCas1AssessmentWithdrawn(it.id)
         }
 
-        withdrawableService.withdrawAllForApplication(application, user)
+        withdrawableService.cascadeWithdrawalApplication(
+          application,
+          user,
+          WithdrawalContext(user, WithdrawableEntityType.Application)
+        )
+
+        //withdrawableService.withdrawAllForApplication(application, user)
 
         return@validated success(Unit)
       },
     )
   }
+
+  fun getWithdrawableState(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableState {
+    return WithdrawableState(
+      withdrawable = !application.isWithdrawn,
+      userMayDirectlyWithdraw = isWithdrawableForUser(user, application),
+    )
+  }
+
 
   fun isWithdrawableForUser(user: UserEntity, application: ApplicationEntity) =
     userAccessService.userMayWithdrawApplication(user, application)

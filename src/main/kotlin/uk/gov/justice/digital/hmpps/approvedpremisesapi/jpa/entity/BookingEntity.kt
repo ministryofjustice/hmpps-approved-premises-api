@@ -251,6 +251,8 @@ data class BookingEntity(
 
   fun isInCancellableStateCas1() = !isCancelled && arrivals.isEmpty()
 
+  fun hasArrivals() = arrivals.isNotEmpty()
+
   fun isActive() = !isCancelled
 
   override fun equals(other: Any?): Boolean {
