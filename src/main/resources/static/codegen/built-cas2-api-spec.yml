@@ -2615,6 +2615,21 @@ components:
             arrivalDate:
               type: string
               format: date
+            caseManager:
+              $ref: '#/components/schemas/CaseManager'
+    CaseManager:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        telephoneNumber:
+          type: string
+      required:
+        - name
+        - email
+        - telephoneNumber
     UpdateTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'
