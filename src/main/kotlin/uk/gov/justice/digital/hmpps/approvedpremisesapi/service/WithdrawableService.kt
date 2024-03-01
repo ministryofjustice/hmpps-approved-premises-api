@@ -52,6 +52,7 @@ class WithdrawableService(
     val withdrawalContext = WithdrawalContext(
       user,
       WithdrawableEntityType.Application,
+      application.id,
     )
 
     val placementRequests = application.placementRequests
@@ -124,6 +125,7 @@ class WithdrawableService(
 data class WithdrawalContext(
   val triggeringUser: UserEntity?,
   val triggeringEntityType: WithdrawableEntityType,
+  val triggeringEntityId: UUID,
 )
 
 data class WithdrawableEntity(

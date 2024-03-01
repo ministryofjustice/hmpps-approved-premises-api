@@ -235,6 +235,7 @@ class WithdrawableServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.Application,
+          any(),
         ),
       )
     } returns mockk<AuthorisableActionResult<PlacementRequestService.PlacementRequestAndCancellations>>()
@@ -246,6 +247,7 @@ class WithdrawableServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.Application,
+          any(),
         ),
       )
     } returns mockk<AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>>>()
@@ -259,6 +261,7 @@ class WithdrawableServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.Application,
+          any(),
         ),
       )
     } returns mockk<ValidatableActionResult.Success<CancellationEntity>>()
@@ -273,6 +276,7 @@ class WithdrawableServiceTest {
           WithdrawalContext(
             user,
             WithdrawableEntityType.Application,
+            any(),
           ),
         )
       }
@@ -286,6 +290,7 @@ class WithdrawableServiceTest {
           WithdrawalContext(
             user,
             WithdrawableEntityType.Application,
+            any(),
           ),
         )
       }
@@ -301,6 +306,7 @@ class WithdrawableServiceTest {
           WithdrawalContext(
             user,
             WithdrawableEntityType.Application,
+            any(),
           ),
         )
       }
@@ -332,6 +338,7 @@ class WithdrawableServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.Application,
+          any(),
         ),
       )
     } returns AuthorisableActionResult.Unauthorised()
@@ -343,6 +350,7 @@ class WithdrawableServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.Application,
+          any(),
         ),
       )
     } returns AuthorisableActionResult.Unauthorised()
@@ -356,6 +364,7 @@ class WithdrawableServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.Application,
+          any(),
         ),
       )
     } returns ValidatableActionResult.GeneralValidationError("oh dear")

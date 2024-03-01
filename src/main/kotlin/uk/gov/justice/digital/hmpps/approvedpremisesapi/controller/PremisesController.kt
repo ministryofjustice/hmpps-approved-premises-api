@@ -539,6 +539,7 @@ class PremisesController(
         withdrawalContext = WithdrawalContext(
           triggeringUser = user,
           triggeringEntityType = WithdrawableEntityType.Booking,
+          triggeringEntityId = booking.id,
         ),
       )
 

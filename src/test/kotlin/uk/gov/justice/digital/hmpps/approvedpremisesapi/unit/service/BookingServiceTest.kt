@@ -2145,6 +2145,7 @@ class BookingServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
+          bookingEntity.id,
         ),
       )
 
@@ -2176,6 +2177,7 @@ class BookingServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
+          bookingEntity.id,
         ),
       )
 
@@ -2200,6 +2202,7 @@ class BookingServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
+          bookingEntity.id,
         ),
       )
 
@@ -2231,6 +2234,7 @@ class BookingServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
+          bookingEntity.id,
         ),
       )
 
@@ -2258,6 +2262,7 @@ class BookingServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
+          bookingEntity.id,
         ),
       )
 
@@ -2319,6 +2324,7 @@ class BookingServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
+          bookingEntity.id,
         ),
       )
 
@@ -2406,6 +2412,7 @@ class BookingServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
+          bookingEntity.id,
         ),
       )
 
@@ -2454,6 +2461,7 @@ class BookingServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
+          bookingEntity.id,
         ),
       )
 
@@ -2535,6 +2543,7 @@ class BookingServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
+          bookingEntity.id,
         ),
       )
 
@@ -2621,6 +2630,7 @@ class BookingServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
+          bookingEntity.id,
         ),
       )
 
@@ -2674,6 +2684,7 @@ class BookingServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           triggeringEntity,
+          bookingEntity.id,
         ),
       )
 
@@ -2765,6 +2776,7 @@ class BookingServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
+          bookingEntity.id,
         ),
       )
 
@@ -2846,6 +2858,7 @@ class BookingServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Booking,
+          bookingEntity.id,
         ),
       )
 
@@ -2898,6 +2911,7 @@ class BookingServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementApplication,
+          bookingEntity.id,
         ),
       )
 

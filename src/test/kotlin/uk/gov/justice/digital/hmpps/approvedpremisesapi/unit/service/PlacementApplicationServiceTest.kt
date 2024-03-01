@@ -818,6 +818,7 @@ class PlacementApplicationServiceTest {
       val withdrawalContext = WithdrawalContext(
         user,
         WithdrawableEntityType.PlacementApplication,
+        placementApplication.id,
       )
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
@@ -868,6 +869,7 @@ class PlacementApplicationServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Application,
+          placementApplication.id,
         ),
       )
 
@@ -906,6 +908,7 @@ class PlacementApplicationServiceTest {
           withdrawalContext = WithdrawalContext(
             user,
             triggeringEntity,
+            placementApplication.id,
           ),
         )
       }.hasMessage("Internal Server Error: Withdrawing a ${triggeringEntity.name} should not cascade to PlacementApplications")
@@ -943,6 +946,7 @@ class PlacementApplicationServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementApplication,
+          placementApplication.id,
         ),
       )
 
@@ -955,6 +959,7 @@ class PlacementApplicationServiceTest {
           WithdrawalContext(
             user,
             WithdrawableEntityType.PlacementApplication,
+            placementApplication.id,
           ),
         )
       }
@@ -966,6 +971,7 @@ class PlacementApplicationServiceTest {
           WithdrawalContext(
             user,
             WithdrawableEntityType.PlacementApplication,
+            placementApplication.id,
           ),
         )
       }
@@ -1004,6 +1010,7 @@ class PlacementApplicationServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementApplication,
+          placementApplication.id,
         ),
       )
 
@@ -1062,6 +1069,7 @@ class PlacementApplicationServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementApplication,
+          placementApplication.id,
         ),
       )
 
@@ -1088,6 +1096,7 @@ class PlacementApplicationServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementApplication,
+          placementApplication.id,
         ),
       )
 

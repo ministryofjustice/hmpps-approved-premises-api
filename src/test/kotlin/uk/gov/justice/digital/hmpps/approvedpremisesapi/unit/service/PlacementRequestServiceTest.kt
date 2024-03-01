@@ -781,6 +781,7 @@ class PlacementRequestServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
+          placementRequestId,
         ),
       )
 
@@ -807,6 +808,7 @@ class PlacementRequestServiceTest {
       val withdrawalContext = WithdrawalContext(
         user,
         WithdrawableEntityType.PlacementRequest,
+        placementRequestId,
       )
 
       val result = placementRequestService.withdrawPlacementRequest(
@@ -864,6 +866,7 @@ class PlacementRequestServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
+          placementRequestId,
         ),
       )
 
@@ -908,6 +911,7 @@ class PlacementRequestServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
+          placementRequestId,
         ),
       )
 
@@ -944,6 +948,7 @@ class PlacementRequestServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.Application,
+          placementRequestId,
         ),
       )
 
@@ -968,6 +973,7 @@ class PlacementRequestServiceTest {
         WithdrawalContext(
           user,
           triggeringEntity,
+          placementRequestId,
         ),
       )
 
@@ -1019,6 +1025,7 @@ class PlacementRequestServiceTest {
           WithdrawalContext(
             user,
             triggeringEntity,
+            placementRequestId,
           ),
         )
       }.hasMessage("Internal Server Error: Withdrawing a ${triggeringEntity.name} should not cascade to PlacementRequests")
@@ -1038,6 +1045,7 @@ class PlacementRequestServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
+          placementRequestId,
         ),
       )
 
@@ -1073,6 +1081,7 @@ class PlacementRequestServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
+          placementRequestId,
         ),
       )
 
@@ -1097,6 +1106,7 @@ class PlacementRequestServiceTest {
           withdrawalContext = WithdrawalContext(
             user,
             WithdrawableEntityType.PlacementRequest,
+            placementRequestId,
           ),
         )
       }
@@ -1134,6 +1144,7 @@ class PlacementRequestServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
+          placementRequestId,
         ),
       )
 
@@ -1169,6 +1180,7 @@ class PlacementRequestServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
+          placementRequestId,
         ),
       )
 
@@ -1194,6 +1206,7 @@ class PlacementRequestServiceTest {
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
+          placementRequestId,
         ),
       )
 
