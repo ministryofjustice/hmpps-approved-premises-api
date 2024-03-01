@@ -224,6 +224,233 @@ class WithdrawableServiceTest {
   }
 
   @Test
+  fun `withdrawDescendants for application success`() {
+    val placementApplication = PlacementApplicationEntityFactory()
+      .withApplication(application)
+      .withCreatedByUser(user)
+      .produce()
+
+    val placementRequestWithdrawable = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withAssessment(assessment)
+      .withPlacementRequirements(placementRequirements)
+      .withPlacementApplication(placementApplication)
+      .produce()
+
+    val placementRequestNotWithdrawable = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withAssessment(assessment)
+      .withPlacementRequirements(placementRequirements)
+      .withPlacementApplication(placementApplication)
+      .produce()
+
+    val bookingWithdrawable = BookingEntityFactory().withPremises(approvedPremises).produce()
+    val bookingNotWithdrawable = BookingEntityFactory().withPremises(approvedPremises).produce()
+
+    every {
+      mockWithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user)
+    } returns
+      WithdrawableTreeNode(
+        entityType = WithdrawableEntityType.Application,
+        entityId = application.id,
+        status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+        children = listOf(
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.PlacementApplication,
+            entityId = placementApplication.id,
+            status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+            children = listOf(
+              WithdrawableTreeNode(
+                entityType = WithdrawableEntityType.PlacementRequest,
+                entityId = placementRequestWithdrawable.id,
+                status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+              ),
+              WithdrawableTreeNode(
+                entityType = WithdrawableEntityType.PlacementRequest,
+                entityId = placementRequestNotWithdrawable.id,
+                status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+              ),
+            ),
+          ),
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.Booking,
+            entityId = bookingWithdrawable.id,
+            status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+          ),
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.Booking,
+            entityId = bookingNotWithdrawable.id,
+            status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false),
+          ),
+        ),
+      )
+
+    val context = WithdrawalContext(
+      triggeringUser = user,
+      triggeringEntityType = WithdrawableEntityType.Application,
+      triggeringEntityId = application.id,
+    )
+
+    every {
+      mockPlacementApplicationService.withdrawPlacementApplication(any(), any(), any())
+    } returns mockk<AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>>>()
+
+    every {
+      mockPlacementRequestService.withdrawPlacementRequest(any(), any(), any())
+    } returns AuthorisableActionResult.Success(mockk<PlacementRequestService.PlacementRequestAndCancellations>())
+
+    every {
+      mockBookingService.createCas1Cancellation(any(), any(), null, any(), any())
+    } returns mockk<ValidatableActionResult.Success<CancellationEntity>>()
+
+    every { mockBookingRepository.findByIdOrNull(bookingWithdrawable.id) } returns bookingWithdrawable
+
+    withdrawableService.withdrawPlacementApplicationDescendants(placementApplication, context)
+
+    verify {
+      mockPlacementApplicationService.withdrawPlacementApplication(
+        placementApplication.id,
+        null,
+        context,
+      )
+    }
+
+    verify {
+      mockPlacementRequestService.withdrawPlacementRequest(
+        placementRequestWithdrawable.id,
+        null,
+        context,
+      )
+    }
+
+    verify {
+      mockBookingService.createCas1Cancellation(
+        bookingWithdrawable,
+        any(),
+        null,
+        "Automatically withdrawn as Application was withdrawn",
+        context,
+      )
+    }
+  }
+
+  @Test
+  fun `withdrawDescendants for application reports errors if can't withdrawn children`() {
+    val logger = mockk<Logger>()
+    withdrawableService.log = logger
+
+    every { logger.isDebugEnabled() } returns true
+    every { logger.debug(any<String>()) } returns Unit
+    every { logger.error(any<String>()) } returns Unit
+
+    val placementApplication = PlacementApplicationEntityFactory()
+      .withApplication(application)
+      .withCreatedByUser(user)
+      .produce()
+
+    val placementRequestWithdrawable = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withAssessment(assessment)
+      .withPlacementRequirements(placementRequirements)
+      .withPlacementApplication(placementApplication)
+      .produce()
+
+    val placementRequestNotWithdrawable = PlacementRequestEntityFactory()
+      .withApplication(application)
+      .withAssessment(assessment)
+      .withPlacementRequirements(placementRequirements)
+      .withPlacementApplication(placementApplication)
+      .produce()
+
+    val bookingWithdrawable = BookingEntityFactory().withPremises(approvedPremises).produce()
+    val bookingNotWithdrawable = BookingEntityFactory().withPremises(approvedPremises).produce()
+
+    every {
+      mockWithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user)
+    } returns
+      WithdrawableTreeNode(
+        entityType = WithdrawableEntityType.Application,
+        entityId = application.id,
+        status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+        children = listOf(
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.PlacementApplication,
+            entityId = placementApplication.id,
+            status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+            children = listOf(
+              WithdrawableTreeNode(
+                entityType = WithdrawableEntityType.PlacementRequest,
+                entityId = placementRequestWithdrawable.id,
+                status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+              ),
+              WithdrawableTreeNode(
+                entityType = WithdrawableEntityType.PlacementRequest,
+                entityId = placementRequestNotWithdrawable.id,
+                status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+              ),
+            ),
+          ),
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.Booking,
+            entityId = bookingWithdrawable.id,
+            status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+          ),
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.Booking,
+            entityId = bookingNotWithdrawable.id,
+            status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false),
+          ),
+        ),
+      )
+
+    val context = WithdrawalContext(
+      triggeringUser = user,
+      triggeringEntityType = WithdrawableEntityType.Application,
+      triggeringEntityId = application.id,
+    )
+
+    every {
+      mockPlacementApplicationService.withdrawPlacementApplication(any(), any(), any())
+    } returns AuthorisableActionResult.Unauthorised()
+
+    every {
+      mockPlacementRequestService.withdrawPlacementRequest(any(), any(), any())
+    } returns AuthorisableActionResult.Unauthorised()
+
+    every {
+      mockBookingService.createCas1Cancellation(any(), any(), null, any(), any())
+    } returns ValidatableActionResult.GeneralValidationError("oh dear")
+
+    every { mockBookingRepository.findByIdOrNull(bookingWithdrawable.id) } returns bookingWithdrawable
+
+    withdrawableService.withdrawPlacementApplicationDescendants(placementApplication, context)
+
+    verify {
+      logger.error(
+        "Failed to automatically withdraw PlacementApplication ${placementApplication.id} " +
+          "when withdrawing Application ${application.id} " +
+          "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult\$Unauthorised",
+      )
+    }
+
+    verify {
+      logger.error(
+        "Failed to automatically withdraw PlacementRequest ${placementRequestWithdrawable.id} " +
+          "when withdrawing Application ${application.id} " +
+          "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult\$Unauthorised",
+      )
+    }
+
+    verify {
+      logger.error(
+        "Failed to automatically withdraw Booking ${bookingWithdrawable.id} " +
+          "when withdrawing Application ${application.id} " +
+          "with message oh dear",
+      )
+    }
+  }
+
+  @Test
   fun `withdrawDescendants for placement application success`() {
     val placementApplication = PlacementApplicationEntityFactory()
       .withApplication(application)
@@ -282,8 +509,8 @@ class WithdrawableServiceTest {
 
     val context = WithdrawalContext(
       triggeringUser = user,
-      triggeringEntityType = WithdrawableEntityType.PlacementRequest,
-      triggeringEntityId = placementRequestWithdrawable.id,
+      triggeringEntityType = WithdrawableEntityType.PlacementApplication,
+      triggeringEntityId = placementApplication.id,
     )
 
     every {
@@ -506,187 +733,6 @@ class WithdrawableServiceTest {
       logger.error(
         "Failed to automatically withdraw Booking ${bookingWithdrawable.id} " +
           "when withdrawing PlacementRequest ${placementRequest.id} " +
-          "with message oh dear",
-      )
-    }
-  }
-
-  @Test
-  fun `withdrawAllForApplication cascades to placement requests, placement applications and adhoc bookings`() {
-    application.placementRequests.addAll(placementRequests)
-    every {
-      mockPlacementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(application.id)
-    } returns placementApplications
-
-    every {
-      mockBookingService.getAllForApplication(application)
-    } returns bookings
-
-    every {
-      mockPlacementRequestService.withdrawPlacementRequest(
-        any(),
-        userProvidedReason = null,
-        WithdrawalContext(
-          user,
-          WithdrawableEntityType.Application,
-          application.id,
-        ),
-      )
-    } returns mockk<AuthorisableActionResult<PlacementRequestService.PlacementRequestAndCancellations>>()
-
-    every {
-      mockPlacementApplicationService.withdrawPlacementApplication(
-        any(),
-        userProvidedReason = null,
-        WithdrawalContext(
-          user,
-          WithdrawableEntityType.Application,
-          application.id,
-        ),
-      )
-    } returns mockk<AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>>>()
-
-    every {
-      mockBookingService.createCas1Cancellation(
-        booking = any(),
-        cancelledAt = any(),
-        userProvidedReason = null,
-        notes = any(),
-        WithdrawalContext(
-          user,
-          WithdrawableEntityType.Application,
-          application.id,
-        ),
-      )
-    } returns mockk<ValidatableActionResult.Success<CancellationEntity>>()
-
-    withdrawableService.withdrawAllForApplication(application, user)
-
-    placementRequests.forEach {
-      verify {
-        mockPlacementRequestService.withdrawPlacementRequest(
-          it.id,
-          userProvidedReason = null,
-          WithdrawalContext(
-            user,
-            WithdrawableEntityType.Application,
-            application.id,
-          ),
-        )
-      }
-    }
-
-    placementApplications.forEach {
-      verify {
-        mockPlacementApplicationService.withdrawPlacementApplication(
-          it.id,
-          userProvidedReason = null,
-          WithdrawalContext(
-            user,
-            WithdrawableEntityType.Application,
-            application.id,
-          ),
-        )
-      }
-    }
-
-    bookings.forEach {
-      verify {
-        mockBookingService.createCas1Cancellation(
-          booking = it,
-          cancelledAt = any(),
-          userProvidedReason = null,
-          notes = "Automatically withdrawn as placement request was withdrawn",
-          WithdrawalContext(
-            user,
-            WithdrawableEntityType.Application,
-            application.id,
-          ),
-        )
-      }
-    }
-  }
-
-  @Test
-  fun `withdrawAllForApplication reports errors if can't withdraw children`() {
-    val logger = mockk<Logger>()
-    withdrawableService.log = logger
-
-    val placementRequest = placementRequests[0]
-    application.placementRequests.add(placementRequest)
-
-    val placementApplication = placementApplications[0]
-    every {
-      mockPlacementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(application.id)
-    } returns listOf(placementApplication)
-
-    val booking = bookings[0]
-    every {
-      mockBookingService.getAllForApplication(application)
-    } returns listOf(booking)
-
-    every {
-      mockPlacementRequestService.withdrawPlacementRequest(
-        any(),
-        userProvidedReason = null,
-        WithdrawalContext(
-          user,
-          WithdrawableEntityType.Application,
-          application.id,
-        ),
-      )
-    } returns AuthorisableActionResult.Unauthorised()
-
-    every {
-      mockPlacementApplicationService.withdrawPlacementApplication(
-        any(),
-        userProvidedReason = null,
-        WithdrawalContext(
-          user,
-          WithdrawableEntityType.Application,
-          application.id,
-        ),
-      )
-    } returns AuthorisableActionResult.Unauthorised()
-
-    every {
-      mockBookingService.createCas1Cancellation(
-        booking = any(),
-        cancelledAt = any(),
-        userProvidedReason = null,
-        notes = any(),
-        WithdrawalContext(
-          user,
-          WithdrawableEntityType.Application,
-          application.id,
-        ),
-      )
-    } returns ValidatableActionResult.GeneralValidationError("oh dear")
-
-    every { logger.error(any<String>()) } returns Unit
-
-    withdrawableService.withdrawAllForApplication(application, user)
-
-    verify {
-      logger.error(
-        "Failed to automatically withdraw placement request ${placementRequest.id} " +
-          "when withdrawing application ${application.id} " +
-          "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult\$Unauthorised",
-      )
-    }
-
-    verify {
-      logger.error(
-        "Failed to automatically withdraw placement application ${placementApplication.id} " +
-          "when withdrawing application ${application.id} " +
-          "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult\$Unauthorised",
-      )
-    }
-
-    verify {
-      logger.error(
-        "Failed to automatically withdraw booking ${booking.id} " +
-          "when withdrawing application ${application.id} " +
           "with message oh dear",
       )
     }

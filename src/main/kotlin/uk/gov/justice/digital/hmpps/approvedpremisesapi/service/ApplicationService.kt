@@ -599,7 +599,14 @@ class ApplicationService(
           assessmentService.updateCas1AssessmentWithdrawn(it.id)
         }
 
-        withdrawableService.withdrawAllForApplication(application, user)
+        withdrawableService.withdrawApplicationDescendants(
+          application,
+          WithdrawalContext(
+            user,
+            WithdrawableEntityType.Application,
+            application.id,
+          ),
+        )
 
         return@validated success(Unit)
       },
