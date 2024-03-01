@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.StatusDetailItem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateEntityFactory
@@ -167,9 +168,10 @@ class StatusUpdateServiceTest {
                 noms = "NOMSABC",
               ) &&
                 it.data.eventDetails.newStatus == Cas2Status(
-                name = "moreInfoRequested",
-                label = "More information requested",
-                description = "The prison offender manager (POM) must provide information requested for the application to progress.",
+                  name = "moreInfoRequested",
+                  label = "More information requested",
+                  description = "The prison offender manager (POM) must provide information requested for the application to progress.",
+                  statusDetails = emptyList(),
               )
             },
           )
@@ -284,10 +286,13 @@ class StatusUpdateServiceTest {
                   noms = "NOMSABC",
                 ) &&
                   it.data.eventDetails.newStatus == Cas2Status(
-                  name = "offerDeclined",
-                  label = "Offer declined or withdrawn",
-                  description = "The accommodation offered has been declined or withdrawn.",
-                )
+                    name = "offerDeclined",
+                    label = "Offer declined or withdrawn",
+                    description = "The accommodation offered has been declined or withdrawn.",
+                    statusDetails = listOf(
+                      StatusDetailItem("exampleStatusDetail", ""),
+                    )
+                  )
               },
             )
           }
