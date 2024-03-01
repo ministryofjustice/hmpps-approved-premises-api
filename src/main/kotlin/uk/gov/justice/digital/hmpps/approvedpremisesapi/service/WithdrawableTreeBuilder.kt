@@ -51,7 +51,7 @@ class WithdrawableTreeBuilder(
     )
   }
 
-  private fun treeForPlacementApp(placementApplication: PlacementApplicationEntity, user: UserEntity): WithdrawableTreeNode {
+  fun treeForPlacementApp(placementApplication: PlacementApplicationEntity, user: UserEntity): WithdrawableTreeNode {
     val children = placementApplication.placementRequests.map { treeForPlacementReq(it, user) }
 
     return WithdrawableTreeNode(

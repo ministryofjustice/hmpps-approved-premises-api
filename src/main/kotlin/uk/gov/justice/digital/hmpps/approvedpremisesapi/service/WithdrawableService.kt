@@ -7,6 +7,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -49,7 +50,17 @@ class WithdrawableService(
       .toSet()
   }
 
-  fun withdrawDescendants(
+  fun withdrawPlacementApplicationDescendants(
+    placementApplication: PlacementApplicationEntity,
+    context: WithdrawalContext,
+  ) {
+    withdrawDescendantsOfRootNode(
+      withdrawableTreeBuilder.treeForPlacementApp(placementApplication, context.triggeringUser!!),
+      context,
+    )
+  }
+
+  fun withdrawPlacementRequestDescendants(
     placementRequest: PlacementRequestEntity,
     context: WithdrawalContext,
   ) {
@@ -80,7 +91,22 @@ class WithdrawableService(
   ) {
     when (node.entityType) {
       WithdrawableEntityType.Application -> Unit
-      WithdrawableEntityType.PlacementRequest -> Unit
+      WithdrawableEntityType.PlacementRequest -> {
+        val result = placementRequestService.withdrawPlacementRequest(
+          placementRequestId = node.entityId,
+          userProvidedReason = null,
+          context,
+        )
+
+        when (result) {
+          is AuthorisableActionResult.Success -> Unit
+          else -> log.error(
+            "Failed to automatically withdraw PlacementRequest ${node.entityId} " +
+              "when withdrawing ${context.triggeringEntityType} ${context.triggeringEntityId} " +
+              "with error type ${result::class}",
+          )
+        }
+      }
       WithdrawableEntityType.PlacementApplication -> Unit
       WithdrawableEntityType.Booking -> {
         val booking = bookingRepository.findByIdOrNull(node.entityId)!!
@@ -96,8 +122,8 @@ class WithdrawableService(
         when (bookingCancellationResult) {
           is ValidatableActionResult.Success -> Unit
           else -> log.error(
-            "Failed to automatically withdraw booking ${booking.id} " +
-              "when withdrawing ${context.triggeringEntityType.label} ${context.triggeringEntityId} " +
+            "Failed to automatically withdraw Booking ${booking.id} " +
+              "when withdrawing ${context.triggeringEntityType} ${context.triggeringEntityId} " +
               "with message ${extractMessage(bookingCancellationResult)}",
           )
         }

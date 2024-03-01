@@ -64,7 +64,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -804,7 +803,7 @@ class PlacementRequestServiceTest {
         applicationService.updateApprovedPremisesApplicationStatus(application.id, PENDING_PLACEMENT_REQUEST)
       } returns Unit
       every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
-      every { withdrawalService.withdrawDescendants(any(), any()) } returns Unit
+      every { withdrawalService.withdrawPlacementRequestDescendants(any(), any()) } returns Unit
 
       val withdrawalContext = WithdrawalContext(
         user,
@@ -832,7 +831,7 @@ class PlacementRequestServiceTest {
 
       verify { cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest) }
       verify { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(placementRequest, withdrawalContext) }
-      verify { withdrawalService.withdrawDescendants(placementRequest, withdrawalContext) }
+      verify { withdrawalService.withdrawPlacementRequestDescendants(placementRequest, withdrawalContext) }
     }
 
     @Test
@@ -843,7 +842,7 @@ class PlacementRequestServiceTest {
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
-      every { withdrawalService.withdrawDescendants(any(),any()) } returns Unit
+      every { withdrawalService.withdrawPlacementRequestDescendants(any(), any()) } returns Unit
 
       val withdrawnPlacementRequest = createValidPlacementRequest(application, user)
       withdrawnPlacementRequest.isWithdrawn = true
@@ -889,7 +888,7 @@ class PlacementRequestServiceTest {
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
-      every { withdrawalService.withdrawDescendants(any(),any()) } returns Unit
+      every { withdrawalService.withdrawPlacementRequestDescendants(any(), any()) } returns Unit
 
       val withdrawnPlacementRequest = createValidPlacementRequest(application, user)
       withdrawnPlacementRequest.isWithdrawn = true
@@ -930,7 +929,7 @@ class PlacementRequestServiceTest {
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
-      every { withdrawalService.withdrawDescendants(any(),any()) } returns Unit
+      every { withdrawalService.withdrawPlacementRequestDescendants(any(), any()) } returns Unit
 
       val withdrawnPlacementRequest = createValidPlacementRequest(application, user)
       withdrawnPlacementRequest.isWithdrawn = true
@@ -968,7 +967,7 @@ class PlacementRequestServiceTest {
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
-      every { withdrawalService.withdrawDescendants(any(),any()) } returns Unit
+      every { withdrawalService.withdrawPlacementRequestDescendants(any(), any()) } returns Unit
 
       val providedReason = PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST
       val result = placementRequestService.withdrawPlacementRequest(
@@ -1088,7 +1087,7 @@ class PlacementRequestServiceTest {
       every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
-      every { withdrawalService.withdrawDescendants(any(),any()) } returns Unit
+      every { withdrawalService.withdrawPlacementRequestDescendants(any(), any()) } returns Unit
 
       val result = placementRequestService.withdrawPlacementRequest(
         placementRequestId,

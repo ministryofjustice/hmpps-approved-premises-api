@@ -348,7 +348,7 @@ class PlacementRequestService(
     cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest)
     cas1PlacementRequestDomainEventService.placementRequestWithdrawn(placementRequest, withdrawalContext)
 
-    withdrawableService.withdrawDescendants(placementRequest, withdrawalContext)
+    withdrawableService.withdrawPlacementRequestDescendants(placementRequest, withdrawalContext)
 
     return AuthorisableActionResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }
