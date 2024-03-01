@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AppealService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService.Cas1ApplicationUpdateFields
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -254,14 +255,16 @@ class ApplicationsController(
     val applicationResult = when (body) {
       is UpdateApprovedPremisesApplication -> applicationService.updateApprovedPremisesApplication(
         applicationId = applicationId,
-        data = serializedData,
-        isWomensApplication = body.isWomensApplication,
-        isPipeApplication = body.isPipeApplication,
-        isEmergencyApplication = body.isEmergencyApplication,
-        isEsapApplication = body.isEsapApplication,
-        releaseType = body.releaseType?.name,
-        arrivalDate = body.arrivalDate,
-        isInapplicable = body.isInapplicable,
+        Cas1ApplicationUpdateFields(
+          data = serializedData,
+          isWomensApplication = body.isWomensApplication,
+          isPipeApplication = body.isPipeApplication,
+          isEmergencyApplication = body.isEmergencyApplication,
+          isEsapApplication = body.isEsapApplication,
+          releaseType = body.releaseType?.name,
+          arrivalDate = body.arrivalDate,
+          isInapplicable = body.isInapplicable,
+        ),
       )
 
       is UpdateTemporaryAccommodationApplication -> applicationService.updateTemporaryAccommodationApplication(
