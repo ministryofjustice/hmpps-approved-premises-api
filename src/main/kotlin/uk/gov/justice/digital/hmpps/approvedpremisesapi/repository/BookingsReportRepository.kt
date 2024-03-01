@@ -32,7 +32,8 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
       arr.expected_departure_date AS endDate,
       departure.date_time AS actualEndDate,
       move_on_category.name AS accommodationOutcome,
-      cas3_app.duty_to_refer_local_authority_area_name AS dutyToReferLocalAuthorityAreaName
+      cas3_app.duty_to_refer_local_authority_area_name AS dutyToReferLocalAuthorityAreaName,
+      pdu.name as pdu
     FROM
       bookings booking
     LEFT JOIN
@@ -57,6 +58,10 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
       cancellation_reasons cancellation_reason ON cancellation_reason.id = cancellation.cancellation_reason_id
     LEFT JOIN
       move_on_categories move_on_category ON move_on_category.id = departure.move_on_category_id
+    LEFT JOIN 
+      temporary_accommodation_premises tap ON tap.premises_id = premises.id  
+    LEFT JOIN 
+      probation_delivery_units pdu on pdu.id = tap.probation_delivery_unit_id  
     WHERE
       booking.arrival_date <= :endDate
       AND booking.departure_date >= :startDate
@@ -97,4 +102,5 @@ interface BookingsReportData {
   val actualEndDate: Timestamp?
   val accommodationOutcome: String?
   val dutyToReferLocalAuthorityAreaName: String?
+  val pdu: String?
 }
