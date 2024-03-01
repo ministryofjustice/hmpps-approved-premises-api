@@ -18,9 +18,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -92,7 +94,7 @@ class StatusUpdateService(
       )
     }
 
-    createStatusUpdatedDomainEvent(createdStatusUpdate)
+    createStatusUpdatedDomainEvent(createdStatusUpdate, statusDetails)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(createdStatusUpdate),
@@ -104,12 +106,13 @@ class StatusUpdateService(
       .find { status -> status.name == statusName }
   }
 
-  fun createStatusUpdatedDomainEvent(statusUpdate: Cas2StatusUpdateEntity) {
+  fun createStatusUpdatedDomainEvent(statusUpdate: Cas2StatusUpdateEntity, statusDetails: List<Cas2PersistedApplicationStatusDetail> = emptyList()) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = statusUpdate.createdAt ?: OffsetDateTime.now()
     val application = statusUpdate.application
     val newStatus = statusUpdate.status()
     val assessor = statusUpdate.assessor
+    val transformer = ApplicationStatusTransformer()
 
     domainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(
       DomainEvent(
@@ -132,6 +135,7 @@ class StatusUpdateService(
               name = newStatus.name,
               description = newStatus.description,
               label = newStatus.label,
+              statusDetails = transformer.transformStatusDetailListToDetailItemList(statusDetails),
             ),
             updatedBy = ExternalUser(
               username = assessor.username,
