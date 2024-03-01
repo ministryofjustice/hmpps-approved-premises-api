@@ -7,6 +7,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserRepository
@@ -42,6 +44,7 @@ class Cas2AutoScript(
   private val applicationRepository: Cas2ApplicationRepository,
   private val externalUserRepository: ExternalUserRepository,
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
+  private val assessmentRepository: Cas2AssessmentRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val applicationService: ApplicationService,
   private val statusUpdateService: StatusUpdateService,
@@ -83,6 +86,7 @@ class Cas2AutoScript(
     if (listOf("SUBMITTED", "IN_REVIEW").contains(state)) {
       val appWithPromotedProperties = applyFirstClassProperties(application)
       applicationService.createCas2ApplicationSubmittedEvent(appWithPromotedProperties)
+      createAssessment((application))
     }
 
     if (state == "IN_REVIEW") {
@@ -125,6 +129,18 @@ class Cas2AutoScript(
 
   private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus {
     return statusFinder.active()[idx]
+  }
+
+  private fun createAssessment(application: Cas2ApplicationEntity) {
+    val id = UUID.randomUUID()
+    seedLogger.info("Auto-scripting assessment $id for application ${application.id}")
+    assessmentRepository.save(
+      Cas2AssessmentEntity(
+        id = id,
+        createdAt = OffsetDateTime.now(),
+        application = application,
+      ),
+    )
   }
 
   private fun randomDateTime(minDays: Int = LATEST_CREATION, maxDays: Int = EARLIEST_CREATION): OffsetDateTime {
