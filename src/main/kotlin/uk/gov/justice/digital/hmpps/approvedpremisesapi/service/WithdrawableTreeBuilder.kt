@@ -118,7 +118,7 @@ data class WithdrawableTreeNode(
   private fun render(depth: Int): String {
     val padding = "  " + if (depth > 0) { "-".repeat(3 * depth) + "> " } else { "" }
     val abbreviatedId = entityId.toString().substring(0, 3)
-    return padding + "$entityType($abbreviatedId), withdrawable:${status.withdrawable}\n" +
+    return padding + "$entityType($abbreviatedId), withdrawable:${status.withdrawable}, mayDirectlyWithdraw:${status.userMayDirectlyWithdraw}\n" +
       children.joinToString(separator = "") { it.render(depth + 1) }
   }
 }

@@ -74,7 +74,6 @@ class PlacementRequestService(
   private val cas1PlacementRequestDomainEventService: Cas1PlacementRequestDomainEventService,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   private val taskDeadlineService: TaskDeadlineService,
-  private val withdrawableService: WithdrawableService,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -124,6 +123,8 @@ class PlacementRequestService(
 
     return Pair(response.content, getMetadata(response, pageCriteria))
   }
+
+  fun getPlacementRequestOrNull(id: UUID) = placementRequestRepository.findByIdOrNull(id)
 
   fun getPlacementRequestForUser(
     user: UserEntity,
@@ -314,24 +315,25 @@ class PlacementRequestService(
     )
   }
 
+  /**
+   * This function should not be called directly. Instead, use [WithdrawableService.withdrawPlacementRequest] that
+   * will indirectly invoke this function. It will also ensure that:
+   *
+   * 1. The entity is withdrawable, and error if not
+   * 2. The user is allowed to withdraw it, and error if not
+   * 3. If withdrawn, all descdents entities are withdrawn, where applicable
+   */
   @Transactional
   fun withdrawPlacementRequest(
     placementRequestId: UUID,
     userProvidedReason: PlacementRequestWithdrawalReason?,
     withdrawalContext: WithdrawalContext,
   ): CasResult<PlacementRequestAndCancellations> {
-    val user = requireNotNull(withdrawalContext.triggeringUser)
-
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
       ?: return CasResult.NotFound("PlacementRequest", placementRequestId.toString())
 
     if (placementRequest.isWithdrawn) {
       return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))
-    }
-
-    val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementRequest
-    if (isUserRequestedWithdrawal && !userAccessService.userMayWithdrawPlacementRequest(user, placementRequest)) {
-      return CasResult.Unauthorised()
     }
 
     placementRequest.isWithdrawn = true
@@ -344,12 +346,11 @@ class PlacementRequestService(
 
     placementRequestRepository.save(placementRequest)
 
+    val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementRequest
     updateApplicationStatusOnWithdrawal(placementRequest, isUserRequestedWithdrawal)
 
     cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest)
     cas1PlacementRequestDomainEventService.placementRequestWithdrawn(placementRequest, withdrawalContext)
-
-    withdrawableService.withdrawPlacementRequestDescendants(placementRequest, withdrawalContext)
 
     return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }

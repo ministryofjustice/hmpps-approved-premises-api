@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
@@ -10,19 +9,21 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.time.LocalDate
 import java.util.UUID
+import javax.transaction.Transactional
 
 @Service
 class WithdrawableService(
-  // Added Lazy annotations here to prevent circular dependency issues
-  @Lazy private val applicationService: ApplicationService,
-  @Lazy private val placementApplicationService: PlacementApplicationService,
-  @Lazy private val bookingService: BookingService,
+  private val applicationService: ApplicationService,
+  private val placementRequestService: PlacementRequestService,
+  private val placementApplicationService: PlacementApplicationService,
+  private val bookingService: BookingService,
   private val withdrawableTreeBuilder: WithdrawableTreeBuilder,
-  @Lazy private val withdrawableTreeOperations: WithdrawableTreeOperations,
+  private val withdrawableTreeOperations: WithdrawableTreeOperations,
 ) {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -49,6 +50,7 @@ class WithdrawableService(
       .toSet()
   }
 
+  @Transactional
   fun withdrawApplication(
     applicationId: UUID,
     user: UserEntity,
@@ -74,6 +76,30 @@ class WithdrawableService(
     }
   }
 
+  @Transactional
+  fun withdrawPlacementRequest(
+    placementRequestId: UUID,
+    user: UserEntity,
+    userProvidedReason: PlacementRequestWithdrawalReason?,
+  ): CasResult<PlacementRequestService.PlacementRequestAndCancellations> {
+    val placementRequest = placementRequestService.getPlacementRequestOrNull(placementRequestId)
+      ?: return CasResult.NotFound()
+
+    val withdrawalContext = WithdrawalContext(
+      triggeringUser = user,
+      triggeringEntityType = WithdrawableEntityType.PlacementRequest,
+      triggeringEntityId = placementRequestId,
+    )
+
+    return withdraw(
+      withdrawableTreeBuilder.treeForPlacementReq(placementRequest, user),
+      withdrawalContext,
+    ) {
+      placementRequestService.withdrawPlacementRequest(placementRequestId, userProvidedReason, withdrawalContext)
+    }
+  }
+
+  @Transactional
   fun withdrawPlacementApplication(
     placementApplicationId: UUID,
     user: UserEntity,
@@ -96,6 +122,7 @@ class WithdrawableService(
     }
   }
 
+  @Transactional
   fun withdrawBooking(
     booking: BookingEntity,
     user: UserEntity,
@@ -145,16 +172,6 @@ class WithdrawableService(
       withdrawableTreeOperations.withdrawDescendantsOfRootNode(rootNode, context)
     }
     return withdrawalResult
-  }
-
-  fun withdrawPlacementRequestDescendants(
-    placementRequest: PlacementRequestEntity,
-    context: WithdrawalContext,
-  ) {
-    withdrawableTreeOperations.withdrawDescendantsOfRootNode(
-      withdrawableTreeBuilder.treeForPlacementReq(placementRequest, context.triggeringUser!!),
-      context,
-    )
   }
 }
 

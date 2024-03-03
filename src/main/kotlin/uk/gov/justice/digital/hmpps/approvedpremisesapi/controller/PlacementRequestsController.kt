@@ -36,8 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService.PlacementRequestAndCancellations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMadeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NewPlacementRequestBookingConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
@@ -57,6 +56,7 @@ class PlacementRequestsController(
   private val bookingService: BookingService,
   private val bookingConfirmationTransformer: NewPlacementRequestBookingConfirmationTransformer,
   private val bookingNotMadeTransformer: BookingNotMadeTransformer,
+  private val withdrawableService: WithdrawableService,
 ) : PlacementRequestsApiDelegate {
 
   override fun placementRequestsGet(): ResponseEntity<List<PlacementRequest>> {
@@ -197,14 +197,10 @@ class PlacementRequestsController(
     }
 
     val placementRequestAndCancellations = extractEntityFromCasResult(
-      placementRequestService.withdrawPlacementRequest(
+      withdrawableService.withdrawPlacementRequest(
         id,
+        user,
         reason,
-        WithdrawalContext(
-          user,
-          WithdrawableEntityType.PlacementRequest,
-          id,
-        ),
       ),
     )
 

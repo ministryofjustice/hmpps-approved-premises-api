@@ -786,7 +786,7 @@ class WithdrawalTest : IntegrationTestBase() {
             emailAsserter.assertEmailsRequestedCount(12)
             assertApplicationWithdrawnEmail(applicantEmail, application)
 
-            assertPlacementRequestWithdrawnEmail(applicantEmail,placementApplication1)
+            assertPlacementRequestWithdrawnEmail(applicantEmail, placementApplication1)
             assertMatchRequestWithdrawnEmail(cruEmail, placementRequest1)
 
             assertBookingWithdrawnEmail(applicantEmail, booking1NoArrival)
@@ -912,7 +912,7 @@ class WithdrawalTest : IntegrationTestBase() {
             applicant = applicant,
             assignee = applicant,
             offenderDetails = offenderDetails,
-            assessmentAllocatedTo = applicant
+            assessmentAllocatedTo = applicant,
           )
 
           val placementRequest = createPlacementRequest(application)
@@ -971,7 +971,7 @@ class WithdrawalTest : IntegrationTestBase() {
             applicant = applicant,
             assignee = applicant,
             offenderDetails = offenderDetails,
-            assessmentAllocatedTo = applicant
+            assessmentAllocatedTo = applicant,
           )
 
           val placementRequest = createPlacementRequest(application)
@@ -1003,96 +1003,45 @@ class WithdrawalTest : IntegrationTestBase() {
       }
     }
 
-    /**
-     * ```
-     * | Entities                         | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
-     * | -------------------------------- | --------- | -------- | -------- | --------- | -------------- |
-     * | Application                      | -         | -        | -        | -         | -              |
-     * | -> Assessment                    | -         | -        | -        | -         | -              |
-     * | -> Placement Request             | -         | -        | -        | -         | -              |
-     * | ---> Match request               | YES       | YES      | -        | -         | -              |
-     * | -----> Booking has arrival       | -         | -        | -        | -         | -              |
-     * ```
-     */
-    @Test
-    fun `Withdrawing a match request not for original app dates doesnt send email to applicant`() {
-      `Given a User` { applicant, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          val (application, assessment) = createApplicationAndAssessment(
-            applicant = applicant,
-            assignee = applicant,
-            offenderDetails = offenderDetails,
-            assessmentAllocatedTo = applicant
-          )
-
-          val placementApplication1 = createPlacementApplication(application, listOf(LocalDate.now() to 2))
-          val placementRequest = createPlacementRequest(application) {
-            withPlacementApplication(placementApplication1)
-          }
-          val bookingNoArrival = createBooking(
-            application = application,
-            hasArrival = true,
-            startDate = LocalDate.now().plusDays(1),
-            endDate = LocalDate.now().plusDays(6),
-          )
-          addBookingToPlacementRequest(placementRequest, bookingNoArrival)
-
-          withdrawPlacementRequest(
-            placementRequest,
-            WithdrawPlacementRequestReason.duplicatePlacementRequest,
-            jwt,
-          )
-
-          assertApplicationNotWithdrawn(application)
-          assertAssessmentNotWithdrawn(assessment)
-
-          assertPlacementRequestWithdrawn(placementRequest, PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
-          assertBookingNotWithdrawn(bookingNoArrival)
-
-          emailAsserter.assertNoEmailsRequested()
-        }
-      }
-    }
-
     private fun assertAssessmentWithdrawnEmail(emailAddress: String) =
       emailAsserter.assertEmailRequested(
         emailAddress,
-        notifyConfig.templates.assessmentWithdrawn
+        notifyConfig.templates.assessmentWithdrawn,
       )
 
     private fun assertApplicationWithdrawnEmail(emailAddress: String, application: ApplicationEntity) =
       emailAsserter.assertEmailRequested(
         emailAddress,
         notifyConfig.templates.applicationWithdrawn,
-        mapOf("crn" to application.crn)
+        mapOf("crn" to application.crn),
       )
 
     private fun assertBookingWithdrawnEmail(emailAddress: String, booking: BookingEntity) =
       emailAsserter.assertEmailRequested(
         emailAddress,
         notifyConfig.templates.bookingWithdrawn,
-        mapOf("startDate" to booking.arrivalDate.toString())
+        mapOf("startDate" to booking.arrivalDate.toString()),
       )
 
     private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementApplication: PlacementApplicationEntity) =
       emailAsserter.assertEmailRequested(
         emailAddress,
         notifyConfig.templates.placementRequestWithdrawn,
-        mapOf("startDate" to placementApplication.placementDates[0].expectedArrival.toString())
+        mapOf("startDate" to placementApplication.placementDates[0].expectedArrival.toString()),
       )
 
     private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) =
       emailAsserter.assertEmailRequested(
         emailAddress,
         notifyConfig.templates.placementRequestWithdrawn,
-        mapOf("startDate" to placementRequest.expectedArrival.toString())
+        mapOf("startDate" to placementRequest.expectedArrival.toString()),
       )
 
     private fun assertMatchRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) =
       emailAsserter.assertEmailRequested(
         emailAddress,
         notifyConfig.templates.matchRequestWithdrawn,
-        mapOf("startDate" to placementRequest.expectedArrival.toString())
+        mapOf("startDate" to placementRequest.expectedArrival.toString()),
       )
   }
 

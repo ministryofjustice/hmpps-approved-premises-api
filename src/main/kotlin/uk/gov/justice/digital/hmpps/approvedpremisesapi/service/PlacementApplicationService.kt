@@ -211,7 +211,7 @@ class PlacementApplicationService(
   }
 
   /**
-   * This function should not be called directly. Instead, use [WithdrawableService.withdrawApplication] that
+   * This function should not be called directly. Instead, use [WithdrawableService.withdrawPlacementApplication] that
    * will indirectly invoke this function. It will also ensure that:
    *
    * 1. The entity is withdrawable, and error if not
