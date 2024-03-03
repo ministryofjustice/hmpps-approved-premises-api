@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -16,6 +17,7 @@ import java.util.UUID
 class WithdrawableService(
   // Added Lazy annotations here to prevent circular dependency issues
   @Lazy private val applicationService: ApplicationService,
+  @Lazy private val placementApplicationService: PlacementApplicationService,
   private val withdrawableTreeBuilder: WithdrawableTreeBuilder,
   @Lazy private val withdrawableTreeOperations: WithdrawableTreeOperations,
 ) {
@@ -69,11 +71,33 @@ class WithdrawableService(
     }
   }
 
-  private fun withdraw(
+  fun withdrawPlacementApplication(
+    placementApplicationId: UUID,
+    user: UserEntity,
+    userProvidedReason: PlacementApplicationWithdrawalReason?,
+  ): CasResult<PlacementApplicationEntity> {
+    val placementApplication = placementApplicationService.getApplicationOrNull(placementApplicationId)
+      ?: return CasResult.NotFound()
+
+    val withdrawalContext = WithdrawalContext(
+      triggeringUser = user,
+      triggeringEntityType = WithdrawableEntityType.PlacementApplication,
+      triggeringEntityId = placementApplicationId,
+    )
+
+    return withdraw(
+      withdrawableTreeBuilder.treeForPlacementApp(placementApplication, user),
+      withdrawalContext,
+    ) {
+      placementApplicationService.withdrawPlacementApplication(placementApplicationId, userProvidedReason, withdrawalContext)
+    }
+  }
+
+  private fun <T> withdraw(
     rootNode: WithdrawableTreeNode,
     context: WithdrawalContext,
-    withdrawRootEntityFunction: () -> CasResult<Unit>,
-  ): CasResult<Unit> {
+    withdrawRootEntityFunction: () -> CasResult<T>,
+  ): CasResult<T> {
     if (!rootNode.status.userMayDirectlyWithdraw) {
       return CasResult.Unauthorised()
     }
@@ -87,16 +111,6 @@ class WithdrawableService(
       withdrawableTreeOperations.withdrawDescendantsOfRootNode(rootNode, context)
     }
     return withdrawalResult
-  }
-
-  fun withdrawPlacementApplicationDescendants(
-    placementApplication: PlacementApplicationEntity,
-    context: WithdrawalContext,
-  ) {
-    withdrawableTreeOperations.withdrawDescendantsOfRootNode(
-      withdrawableTreeBuilder.treeForPlacementApp(placementApplication, context.triggeringUser!!),
-      context,
-    )
   }
 
   fun withdrawPlacementRequestDescendants(

@@ -72,7 +72,6 @@ class PlacementApplicationServiceTest {
   private val cas1PlacementApplicationEmailService = mockk<Cas1PlacementApplicationEmailService>()
   private val cas1PlacementApplicationDomainEventService = mockk<Cas1PlacementApplicationDomainEventService>()
   private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
-  private val withdrawableService = mockk<WithdrawableService>()
 
   private val placementApplicationService = buildService(useNewWithdrawalLogic = true)
   private val placementApplicationServiceLegacyWithdrawalLogic = buildService(useNewWithdrawalLogic = false)
@@ -92,7 +91,6 @@ class PlacementApplicationServiceTest {
     sendPlacementRequestNotifications = true,
     taskDeadlineServiceMock,
     useNewWithdrawalLogic = useNewWithdrawalLogic,
-    withdrawableService,
   )
 
   @Nested
@@ -796,8 +794,6 @@ class PlacementApplicationServiceTest {
       application.assessments = mutableListOf(
         assessment,
       )
-
-      every { userService.getUserForRequest() } returns user
     }
 
     @Test
@@ -819,12 +815,10 @@ class PlacementApplicationServiceTest {
       )
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { userAccessService.userMayWithdrawPlacementApplication(any(), any()) } returns true
       every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(placementApplication, withdrawalContext) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any()) } returns Unit
-      every { withdrawableService.withdrawPlacementApplicationDescendants(any(), any()) } returns Unit
 
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
@@ -838,11 +832,10 @@ class PlacementApplicationServiceTest {
       assertThat(entity.decision).isEqualTo(PlacementApplicationDecision.WITHDRAW)
 
       verify { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(placementApplication, allocatedTo) }
-      verify { withdrawableService.withdrawPlacementApplicationDescendants(placementApplication, withdrawalContext) }
     }
 
     @Test
-    fun `if withdraw was triggered by application, set correct withdrawal reason and user permissions not checked`() {
+    fun `if withdraw was triggered by application, set correct withdrawal reason`() {
       val placementApplication = PlacementApplicationEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
@@ -856,7 +849,6 @@ class PlacementApplicationServiceTest {
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(any(), any()) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any()) } returns Unit
-      every { withdrawableService.withdrawPlacementApplicationDescendants(any(), any()) } returns Unit
 
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
@@ -872,8 +864,6 @@ class PlacementApplicationServiceTest {
       val entity = (result as CasResult.Success).value
 
       assertThat(entity.withdrawalReason).isEqualTo(PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN)
-
-      verify { userAccessService wasNot Called }
     }
 
     @ParameterizedTest
@@ -926,33 +916,6 @@ class PlacementApplicationServiceTest {
       )
 
       assertThat(result is CasResult.Success).isTrue
-    }
-
-    @Test
-    fun `it returns unauthorised if user directly requested withdrawal and user does not have permission`() {
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
-        .withDecision(null)
-        .withCreatedByUser(user)
-        .produce()
-
-      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { userAccessService.userMayWithdrawPlacementApplication(user, placementApplication) } returns false
-      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
-      every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
-
-      val result = placementApplicationService.withdrawPlacementApplication(
-        placementApplication.id,
-        PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
-        withdrawalContext = WithdrawalContext(
-          user,
-          WithdrawableEntityType.PlacementApplication,
-          placementApplication.id,
-        ),
-      )
-
-      assertThat(result is CasResult.Unauthorised).isTrue
     }
   }
 }

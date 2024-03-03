@@ -58,7 +58,6 @@ class PlacementApplicationService(
   private val sendPlacementRequestNotifications: Boolean,
   private val taskDeadlineService: TaskDeadlineService,
   @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val useNewWithdrawalLogic: Boolean,
-  private val withdrawableService: WithdrawableService,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -129,6 +128,8 @@ class PlacementApplicationService(
 
     return AuthorisableActionResult.Success(setSchemaUpToDate(placementApplication))
   }
+
+  fun getApplicationOrNull(id: UUID) = placementApplicationRepository.findByIdOrNull(id)
 
   fun reallocateApplication(
     assigneeUser: UserEntity,
@@ -209,28 +210,25 @@ class PlacementApplicationService(
     )
   }
 
+  /**
+   * This function should not be called directly. Instead, use [WithdrawableService.withdrawApplication] that
+   * will indirectly invoke this function. It will also ensure that:
+   *
+   * 1. The entity is withdrawable, and error if not
+   * 2. The user is allowed to withdraw it, and error if not
+   * 3. If withdrawn, all descdents entities are withdrawn, where applicable
+   */
   @Transactional
   fun withdrawPlacementApplication(
     id: UUID,
     userProvidedReason: PlacementApplicationWithdrawalReason?,
     withdrawalContext: WithdrawalContext,
   ): CasResult<PlacementApplicationEntity> {
-    val user = requireNotNull(withdrawalContext.triggeringUser)
-
     val placementApplication =
       placementApplicationRepository.findByIdOrNull(id) ?: return CasResult.NotFound()
 
     if (placementApplication.isWithdrawn()) {
       return CasResult.Success(placementApplication)
-    }
-
-    val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementApplication
-    if (isUserRequestedWithdrawal && !userAccessService.userMayWithdrawPlacementApplication(user, placementApplication)) {
-      return CasResult.Unauthorised()
-    }
-
-    if (!placementApplication.isInWithdrawableState()) {
-      return CasResult.GeneralValidationError("The Placement Application cannot be withdrawn as it's not in a withdrawable state")
     }
 
     val wasBeingAssessedBy = if (placementApplication.isBeingAssessed()) { placementApplication.allocatedToUser } else null
@@ -248,8 +246,6 @@ class PlacementApplicationService(
 
     cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(placementApplication, withdrawalContext)
     cas1PlacementApplicationEmailService.placementApplicationWithdrawn(placementApplication, wasBeingAssessedBy)
-
-    withdrawableService.withdrawPlacementApplicationDescendants(placementApplication, withdrawalContext)
 
     return CasResult.Success(savedApplication)
   }
