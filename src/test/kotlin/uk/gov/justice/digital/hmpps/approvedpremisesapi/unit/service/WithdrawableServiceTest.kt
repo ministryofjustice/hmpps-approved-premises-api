@@ -2,12 +2,17 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableDatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
@@ -15,16 +20,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableStat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableTreeBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableTreeNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableTreeOperations
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import java.time.LocalDate
 import java.util.UUID
 
 class WithdrawableServiceTest {
+  private val applicationService = mockk<ApplicationService>()
   private val withdrawableTreeBuilder = mockk<WithdrawableTreeBuilder>()
-  private val withdrawableTreeOperationsBuilder = mockk<WithdrawableTreeOperations>()
+  private val withdrawableTreeOperations = mockk<WithdrawableTreeOperations>()
 
   private val withdrawableService = WithdrawableService(
+    applicationService,
     withdrawableTreeBuilder,
-    withdrawableTreeOperationsBuilder,
+    withdrawableTreeOperations,
   )
 
   val probationRegion = ProbationRegionEntityFactory()
@@ -140,4 +148,102 @@ class WithdrawableServiceTest {
     assertThat(result).anyMatch { it.id == placementWithdrawableId }
   }
 
+  @Nested
+  inner class WithdrawApplication {
+
+    val withdrawalReason = "the reason"
+    val withdrawalOtherReason = "the other reason"
+
+    @Test
+    fun `success`() {
+      every { applicationService.getApplication(application.id) } returns application
+
+      val tree = WithdrawableTreeNode(
+        WithdrawableEntityType.Application,
+        application.id,
+        WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+      )
+
+      every { withdrawableTreeBuilder.treeForApp(application, user) } returns tree
+
+      every {
+        applicationService.withdrawApprovedPremisesApplication(any(), any(), any(), any())
+      } returns CasResult.Success(Unit)
+
+      every {
+        withdrawableTreeOperations.withdrawDescendantsOfRootNode(
+          tree,
+          WithdrawalContext(user, WithdrawableEntityType.Application, application.id),
+        )
+      } returns Unit
+
+      val result = withdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
+
+      assertThat(result is CasResult.Success)
+
+      verify {
+        applicationService.withdrawApprovedPremisesApplication(
+          application.id,
+          user,
+          withdrawalReason,
+          withdrawalOtherReason,
+        )
+      }
+
+      verify {
+        withdrawableTreeOperations.withdrawDescendantsOfRootNode(
+          tree,
+          WithdrawalContext(user, WithdrawableEntityType.Application, application.id),
+        )
+      }
+    }
+
+    @Test
+    fun `fails if not CAS1 application()`() {
+      every { applicationService.getApplication(application.id) } returns
+        TemporaryAccommodationApplicationEntityFactory()
+          .withProbationRegion(ProbationRegionEntityFactory().withDefaults().produce())
+          .withCreatedByUser(user)
+          .produce()
+
+      val result = withdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
+
+      assertThat(result is CasResult.GeneralValidationError)
+    }
+
+    @Test
+    fun `fails if not user may not directly withdraw()`() {
+      every { applicationService.getApplication(application.id) } returns application
+
+      val tree = WithdrawableTreeNode(
+        WithdrawableEntityType.Application,
+        application.id,
+        WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+      )
+
+      every { withdrawableTreeBuilder.treeForApp(application, user) } returns tree
+
+      val result = withdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
+
+      assertThat(result is CasResult.Unauthorised)
+    }
+
+    @Test
+    fun `fails if not withdrawable()`() {
+      every { applicationService.getApplication(application.id) } returns application
+
+      val tree = WithdrawableTreeNode(
+        WithdrawableEntityType.Application,
+        application.id,
+        WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+      )
+
+      every { withdrawableTreeBuilder.treeForApp(application, user) } returns tree
+
+      val result = withdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
+
+      assertThat(result is CasResult.GeneralValidationError)
+      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Application is not in a withdrawable state")
+    }
+  }
 }

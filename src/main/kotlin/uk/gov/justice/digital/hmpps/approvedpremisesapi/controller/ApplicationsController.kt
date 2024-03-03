@@ -307,7 +307,7 @@ class ApplicationsController(
 
     return ResponseEntity.ok(
       extractEntityFromCasResult(
-        applicationService.withdrawApprovedPremisesApplication(
+        withdrawableService.withdrawApplication(
           applicationId = applicationId,
           user = user,
           withdrawalReason = body.reason.value,

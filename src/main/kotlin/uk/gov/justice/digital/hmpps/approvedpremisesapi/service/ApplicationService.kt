@@ -102,7 +102,6 @@ class ApplicationService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   private val apAreaRepository: ApAreaRepository,
   private val applicationTimelineTransformer: ApplicationTimelineTransformer,
-  private val withdrawableService: WithdrawableService,
   private val domainEventTransformer: DomainEventTransformer,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
@@ -541,6 +540,14 @@ class ApplicationService(
     applicationRepository.updateStatus(applicationId, status)
   }
 
+  /**
+   * This function should not be called directly. Instead, use [WithdrawableService.withdrawApplication] that
+   * will indirectly invoke this function. It will also ensure that:
+   *
+   * 1. The entity is withdrawable, and error if not
+   * 2. The user is allowed to withdraw it, and error if not
+   * 3. If withdrawn, all descdents entities are withdrawn, where applicable
+   */
   @Transactional
   fun withdrawApprovedPremisesApplication(
     applicationId: UUID,
@@ -550,10 +557,6 @@ class ApplicationService(
   ): CasResult<Unit> {
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return CasResult.NotFound()
-
-    if (!isWithdrawableForUser(user, application)) {
-      return CasResult.Unauthorised()
-    }
 
     if (application !is ApprovedPremisesApplicationEntity) {
       return CasResult.GeneralValidationError("onlyCas1Supported")
@@ -599,15 +602,6 @@ class ApplicationService(
     application.assessments.map {
       assessmentService.updateCas1AssessmentWithdrawn(it.id)
     }
-
-    withdrawableService.withdrawApplicationDescendants(
-      application,
-      WithdrawalContext(
-        user,
-        WithdrawableEntityType.Application,
-        application.id,
-      ),
-    )
 
     return CasResult.Success(Unit)
   }

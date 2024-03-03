@@ -96,9 +96,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
@@ -134,7 +131,6 @@ class ApplicationServiceTest {
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockApAreaRepository = mockk<ApAreaRepository>()
   private val applicationTimelineTransformerMock = mockk<ApplicationTimelineTransformer>()
-  private val mockWithdrawableService = mockk<WithdrawableService>()
   private val mockDomainEventTransformer = mockk<DomainEventTransformer>()
 
   private val applicationService = ApplicationService(
@@ -160,7 +156,6 @@ class ApplicationServiceTest {
     "http://frontend/applications/#id",
     mockApAreaRepository,
     applicationTimelineTransformerMock,
-    mockWithdrawableService,
     mockDomainEventTransformer,
   )
 
@@ -2218,33 +2213,6 @@ class ApplicationServiceTest {
     }
 
     @Test
-    fun `withdrawApprovedPremisesApplication returns Unauthorised if user access service denies withdrawal`() {
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val differentUser = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(differentUser)
-        .produce()
-
-      every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
-      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns false
-
-      val result = applicationService.withdrawApprovedPremisesApplication(
-        application.id,
-        user,
-        "alternative_identified_placement_no_longer_required",
-        null,
-      )
-
-      assertThat(result is CasResult.Unauthorised).isTrue
-    }
-
-    @Test
     fun `withdrawApprovedPremisesApplication returns GeneralValidationError if Application is not AP Application`() {
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
@@ -2309,7 +2277,6 @@ class ApplicationServiceTest {
       every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
       every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
       every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
-      every { mockWithdrawableService.withdrawApplicationDescendants(application, any()) } returns Unit
 
       val result = applicationService.withdrawApprovedPremisesApplication(
         application.id,
@@ -2349,13 +2316,6 @@ class ApplicationServiceTest {
           },
         )
       }
-
-      verify(exactly = 1) {
-        mockWithdrawableService.withdrawApplicationDescendants(
-          application,
-          WithdrawalContext(user, WithdrawableEntityType.Application, application.id),
-        )
-      }
     }
 
     @Test
@@ -2376,8 +2336,6 @@ class ApplicationServiceTest {
       every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
       every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
       every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
-
-      every { mockWithdrawableService.withdrawApplicationDescendants(application, any()) } returns Unit
 
       val result =
         applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", "Some other reason")
@@ -2415,13 +2373,6 @@ class ApplicationServiceTest {
           },
         )
       }
-
-      verify(exactly = 1) {
-        mockWithdrawableService.withdrawApplicationDescendants(
-          application,
-          WithdrawalContext(user, WithdrawableEntityType.Application, application.id),
-        )
-      }
     }
 
     @Test
@@ -2443,7 +2394,6 @@ class ApplicationServiceTest {
       val domainEventWithdrawnBy = WithdrawnByFactory().produce()
       every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
       every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
-      every { mockWithdrawableService.withdrawApplicationDescendants(application, any()) } returns Unit
 
       applicationService.withdrawApprovedPremisesApplication(
         application.id,
@@ -2482,13 +2432,6 @@ class ApplicationServiceTest {
               data.otherWithdrawalReason == null &&
               data.withdrawnBy == domainEventWithdrawnBy
           },
-        )
-      }
-
-      verify(exactly = 1) {
-        mockWithdrawableService.withdrawApplicationDescendants(
-          application,
-          WithdrawalContext(user, WithdrawableEntityType.Application, application.id),
         )
       }
     }

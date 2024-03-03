@@ -8,12 +8,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import java.time.LocalDate
 import java.util.UUID
 
 @Service
 class WithdrawableService(
   // Added Lazy annotations here to prevent circular dependency issues
+  @Lazy private val applicationService: ApplicationService,
   private val withdrawableTreeBuilder: WithdrawableTreeBuilder,
   @Lazy private val withdrawableTreeOperations: WithdrawableTreeOperations,
 ) {
@@ -42,14 +44,49 @@ class WithdrawableService(
       .toSet()
   }
 
-  fun withdrawApplicationDescendants(
-    application: ApprovedPremisesApplicationEntity,
-    context: WithdrawalContext,
-  ) {
-    withdrawableTreeOperations.withdrawDescendantsOfRootNode(
-      withdrawableTreeBuilder.treeForApp(application, context.triggeringUser!!),
-      context,
+  fun withdrawApplication(
+    applicationId: UUID,
+    user: UserEntity,
+    withdrawalReason: String,
+    otherReason: String?,
+  ): CasResult<Unit> {
+    val application = applicationService.getApplication(applicationId) ?: return CasResult.NotFound()
+    if (application !is ApprovedPremisesApplicationEntity) {
+      return CasResult.GeneralValidationError("Only CAS1 Apps are supported")
+    }
+
+    val withdrawalContext = WithdrawalContext(
+      triggeringUser = user,
+      triggeringEntityType = WithdrawableEntityType.Application,
+      triggeringEntityId = applicationId,
     )
+
+    return withdraw(
+      withdrawableTreeBuilder.treeForApp(application, user),
+      withdrawalContext,
+    ) {
+      applicationService.withdrawApprovedPremisesApplication(applicationId, user, withdrawalReason, otherReason)
+    }
+  }
+
+  private fun withdraw(
+    rootNode: WithdrawableTreeNode,
+    context: WithdrawalContext,
+    withdrawRootEntityFunction: () -> CasResult<Unit>,
+  ): CasResult<Unit> {
+    if (!rootNode.status.userMayDirectlyWithdraw) {
+      return CasResult.Unauthorised()
+    }
+
+    if (!rootNode.status.withdrawable) {
+      return CasResult.GeneralValidationError("${context.triggeringEntityType.label} is not in a withdrawable state")
+    }
+
+    val withdrawalResult = withdrawRootEntityFunction.invoke()
+    if (withdrawalResult is CasResult.Success) {
+      withdrawableTreeOperations.withdrawDescendantsOfRootNode(rootNode, context)
+    }
+    return withdrawalResult
   }
 
   fun withdrawPlacementApplicationDescendants(
