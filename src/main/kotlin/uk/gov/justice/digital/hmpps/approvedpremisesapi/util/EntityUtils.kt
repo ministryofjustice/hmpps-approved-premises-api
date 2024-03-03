@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 
 fun <EntityType> extractEntityFromAuthorisableActionResult(result: AuthorisableActionResult<EntityType>) = when (result) {
@@ -23,4 +24,13 @@ fun <EntityType> extractEntityFromValidatableActionResult(result: ValidatableAct
 fun <EntityType> extractEntityFromNestedAuthorisableValidatableActionResult(result: AuthorisableActionResult<ValidatableActionResult<EntityType>>): EntityType {
   val validatableResult = extractEntityFromAuthorisableActionResult(result)
   return extractEntityFromValidatableActionResult(validatableResult)
+}
+
+fun <EntityType> extractEntityFromCasResult(result: CasResult<EntityType>) = when (result) {
+  is CasResult.Success -> result.value
+  is CasResult.NotFound -> throw NotFoundProblem(result.id.toString(), result.entityType.toString())
+  is CasResult.Unauthorised -> throw ForbiddenProblem()
+  is CasResult.GeneralValidationError -> throw BadRequestProblem(errorDetail = result.message)
+  is CasResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
+  is CasResult.ConflictError -> throw ConflictProblem(id = result.conflictingEntityId, conflictReason = result.message)
 }

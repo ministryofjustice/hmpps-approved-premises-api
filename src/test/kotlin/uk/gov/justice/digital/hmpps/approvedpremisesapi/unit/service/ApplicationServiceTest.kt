@@ -84,6 +84,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Assigne
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
@@ -2213,7 +2214,7 @@ class ApplicationServiceTest {
         null,
       )
 
-      assertThat(result is AuthorisableActionResult.NotFound).isTrue
+      assertThat(result is CasResult.NotFound).isTrue
     }
 
     @Test
@@ -2240,7 +2241,7 @@ class ApplicationServiceTest {
         null,
       )
 
-      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(result is CasResult.Unauthorised).isTrue
     }
 
     @Test
@@ -2257,20 +2258,15 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
       every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
 
-      val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(
+      val result = applicationService.withdrawApprovedPremisesApplication(
         application.id,
         user,
         "alternative_identified_placement_no_longer_required",
         null,
       )
 
-      assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
-
-      val validatableActionResult = (authorisableActionResult as AuthorisableActionResult.Success).entity
-
-      assertThat(validatableActionResult is ValidatableActionResult.GeneralValidationError).isTrue
-
-      val generalValidationError = (validatableActionResult as ValidatableActionResult.GeneralValidationError).message
+      assertThat(result is CasResult.GeneralValidationError).isTrue
+      val generalValidationError = (result as CasResult.GeneralValidationError).message
 
       assertThat(generalValidationError).isEqualTo("onlyCas1Supported")
     }
@@ -2289,14 +2285,10 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
       every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
 
-      val authorisableActionResult =
+      val result =
         applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", null)
 
-      assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
-
-      val validatableActionResult = (authorisableActionResult as AuthorisableActionResult.Success).entity
-
-      assertThat(validatableActionResult is ValidatableActionResult.Success).isTrue
+      assertThat(result is CasResult.Success).isTrue
     }
 
     @Test
@@ -2319,18 +2311,14 @@ class ApplicationServiceTest {
       every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
       every { mockWithdrawableService.withdrawApplicationDescendants(application, any()) } returns Unit
 
-      val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(
+      val result = applicationService.withdrawApprovedPremisesApplication(
         application.id,
         user,
         "alternative_identified_placement_no_longer_required",
         null,
       )
 
-      assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
-
-      val validatableActionResult = (authorisableActionResult as AuthorisableActionResult.Success).entity
-
-      assertThat(validatableActionResult is ValidatableActionResult.Success).isTrue
+      assertThat(result is CasResult.Success).isTrue
 
       verify {
         mockApplicationRepository.save(
@@ -2391,14 +2379,10 @@ class ApplicationServiceTest {
 
       every { mockWithdrawableService.withdrawApplicationDescendants(application, any()) } returns Unit
 
-      val authorisableActionResult =
+      val result =
         applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", "Some other reason")
 
-      assertThat(authorisableActionResult is AuthorisableActionResult.Success).isTrue
-
-      val validatableActionResult = (authorisableActionResult as AuthorisableActionResult.Success).entity
-
-      assertThat(validatableActionResult is ValidatableActionResult.Success).isTrue
+      assertThat(result is CasResult.Success).isTrue
 
       verify {
         mockApplicationRepository.save(

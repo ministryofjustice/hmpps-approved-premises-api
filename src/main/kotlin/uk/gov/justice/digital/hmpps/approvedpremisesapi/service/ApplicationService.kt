@@ -53,6 +53,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Case
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
@@ -544,73 +545,69 @@ class ApplicationService(
     user: UserEntity,
     withdrawalReason: String,
     otherReason: String?,
-  ): AuthorisableActionResult<ValidatableActionResult<Unit>> {
+  ): CasResult<Unit> {
     val application = applicationRepository.findByIdOrNull(applicationId)
-      ?: return AuthorisableActionResult.NotFound()
+      ?: return CasResult.NotFound()
 
     if (!isWithdrawableForUser(user, application)) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
 
-    return AuthorisableActionResult.Success(
-      validated {
-        if (application !is ApprovedPremisesApplicationEntity) {
-          return@validated generalError("onlyCas1Supported")
+    if (application !is ApprovedPremisesApplicationEntity) {
+      return CasResult.GeneralValidationError("onlyCas1Supported")
+    }
+
+    if (application.isWithdrawn) {
+      return CasResult.Success(Unit)
+    }
+
+    applicationRepository.save(
+      application.apply {
+        this.isWithdrawn = true
+        this.withdrawalReason = withdrawalReason
+        this.otherWithdrawalReason = if (withdrawalReason == WithdrawalReason.other.value) {
+          otherReason
+        } else {
+          null
         }
-
-        if (application.isWithdrawn) {
-          return@validated success(Unit)
-        }
-
-        applicationRepository.save(
-          application.apply {
-            this.isWithdrawn = true
-            this.withdrawalReason = withdrawalReason
-            this.otherWithdrawalReason = if (withdrawalReason == WithdrawalReason.other.value) {
-              otherReason
-            } else {
-              null
-            }
-          },
-        )
-
-        val domainEventId = UUID.randomUUID()
-        val eventOccurredAt = Instant.now()
-
-        domainEventService.saveApplicationWithdrawnEvent(
-          DomainEvent(
-            id = domainEventId,
-            applicationId = application.id,
-            crn = application.crn,
-            occurredAt = eventOccurredAt,
-            data = ApplicationWithdrawnEnvelope(
-              id = domainEventId,
-              timestamp = eventOccurredAt,
-              eventType = "approved-premises.application.withdrawn",
-              eventDetails = getApplicationWithdrawn(application, user, eventOccurredAt),
-            ),
-          ),
-        )
-
-        val premisesName = application.getLatestBooking()?.premises?.name
-        sendEmailApplicationWithdrawn(user, application, premisesName)
-
-        application.assessments.map {
-          assessmentService.updateCas1AssessmentWithdrawn(it.id)
-        }
-
-        withdrawableService.withdrawApplicationDescendants(
-          application,
-          WithdrawalContext(
-            user,
-            WithdrawableEntityType.Application,
-            application.id,
-          ),
-        )
-
-        return@validated success(Unit)
       },
     )
+
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = Instant.now()
+
+    domainEventService.saveApplicationWithdrawnEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = eventOccurredAt,
+        data = ApplicationWithdrawnEnvelope(
+          id = domainEventId,
+          timestamp = eventOccurredAt,
+          eventType = "approved-premises.application.withdrawn",
+          eventDetails = getApplicationWithdrawn(application, user, eventOccurredAt),
+        ),
+      ),
+    )
+
+    val premisesName = application.getLatestBooking()?.premises?.name
+    sendEmailApplicationWithdrawn(user, application, premisesName)
+
+    application.assessments.map {
+      assessmentService.updateCas1AssessmentWithdrawn(it.id)
+    }
+
+    withdrawableService.withdrawApplicationDescendants(
+      application,
+      WithdrawalContext(
+        user,
+        WithdrawableEntityType.Application,
+        application.id,
+      ),
+    )
+
+    return CasResult.Success(Unit)
   }
 
   fun isWithdrawableForUser(user: UserEntity, application: ApplicationEntity) =
