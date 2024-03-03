@@ -62,6 +62,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
@@ -784,7 +785,7 @@ class PlacementRequestServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.NotFound).isTrue
+      assertThat(result is CasResult.NotFound).isTrue
     }
 
     @ParameterizedTest
@@ -817,7 +818,7 @@ class PlacementRequestServiceTest {
         withdrawalContext,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
+      assertThat(result is CasResult.Success).isTrue
 
       verify {
         placementRequestRepository.save(
@@ -870,7 +871,7 @@ class PlacementRequestServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
+      assertThat(result is CasResult.Success).isTrue
 
       verify {
         applicationService.updateApprovedPremisesApplicationStatus(
@@ -916,7 +917,7 @@ class PlacementRequestServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
+      assertThat(result is CasResult.Success).isTrue
 
       verify { applicationService wasNot Called }
     }
@@ -954,7 +955,7 @@ class PlacementRequestServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
+      assertThat(result is CasResult.Success).isTrue
 
       verify { applicationService wasNot Called }
     }
@@ -980,7 +981,7 @@ class PlacementRequestServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
+      assertThat(result is CasResult.Success).isTrue
 
       val expectedWithdrawalReason = when (triggeringEntity) {
         WithdrawableEntityType.Application -> PlacementRequestWithdrawalReason.RELATED_APPLICATION_WITHDRAWN
@@ -1052,7 +1053,7 @@ class PlacementRequestServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
+      assertThat(result is CasResult.Success).isTrue
 
       verify { placementRequestRepository.save(any()) wasNot called }
     }
@@ -1072,7 +1073,7 @@ class PlacementRequestServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(result is CasResult.Unauthorised).isTrue
     }
 
     @Test
@@ -1099,7 +1100,7 @@ class PlacementRequestServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
+      assertThat(result is CasResult.Success).isTrue
 
       verify {
         placementRequestRepository.save(

@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
@@ -318,19 +319,19 @@ class PlacementRequestService(
     placementRequestId: UUID,
     userProvidedReason: PlacementRequestWithdrawalReason?,
     withdrawalContext: WithdrawalContext,
-  ): AuthorisableActionResult<PlacementRequestAndCancellations> {
+  ): CasResult<PlacementRequestAndCancellations> {
     val user = requireNotNull(withdrawalContext.triggeringUser)
 
     val placementRequest = placementRequestRepository.findByIdOrNull(placementRequestId)
-      ?: return AuthorisableActionResult.NotFound("PlacementRequest", placementRequestId.toString())
+      ?: return CasResult.NotFound("PlacementRequest", placementRequestId.toString())
 
     if (placementRequest.isWithdrawn) {
-      return AuthorisableActionResult.Success(toPlacementRequestAndCancellations(placementRequest))
+      return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))
     }
 
     val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementRequest
     if (isUserRequestedWithdrawal && !userAccessService.userMayWithdrawPlacementRequest(user, placementRequest)) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
 
     placementRequest.isWithdrawn = true
@@ -350,7 +351,7 @@ class PlacementRequestService(
 
     withdrawableService.withdrawPlacementRequestDescendants(placementRequest, withdrawalContext)
 
-    return AuthorisableActionResult.Success(toPlacementRequestAndCancellations(placementRequest))
+    return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }
 
   fun getPlacementRequestForInitialApplicationDates(applicationId: UUID) =

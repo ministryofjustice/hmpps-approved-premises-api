@@ -2,22 +2,19 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.context.annotation.Lazy
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractMessageFromCasResult
 import java.time.LocalDate
 
 @Service
 class WithdrawableTreeOperations(
-  // Added Lazy annotations here to prevent circular dependency issues
-  @Lazy private val placementRequestService: PlacementRequestService,
-  @Lazy private val bookingService: BookingService,
+  private val placementRequestService: PlacementRequestService,
+  private val bookingService: BookingService,
   private val bookingRepository: BookingRepository,
-  @Lazy private val placementApplicationService: PlacementApplicationService,
+  private val placementApplicationService: PlacementApplicationService,
 ) {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -46,7 +43,7 @@ class WithdrawableTreeOperations(
         )
 
         when (result) {
-          is AuthorisableActionResult.Success -> Unit
+          is CasResult.Success -> Unit
           else -> log.error(
             "Failed to automatically withdraw PlacementRequest ${node.entityId} " +
               "when withdrawing ${context.triggeringEntityType} ${context.triggeringEntityId} " +
