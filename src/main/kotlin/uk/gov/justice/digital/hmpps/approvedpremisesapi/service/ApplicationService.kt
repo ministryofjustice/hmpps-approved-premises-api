@@ -105,6 +105,8 @@ class ApplicationService(
   private val withdrawableService: WithdrawableService,
   private val domainEventTransformer: DomainEventTransformer,
 ) {
+  fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
+
   fun getAllApplicationsForUsername(userDistinguishedName: String, serviceName: ServiceName): List<ApplicationSummary> {
     val userEntity = userRepository.findByDeliusUsername(userDistinguishedName)
       ?: return emptyList()
