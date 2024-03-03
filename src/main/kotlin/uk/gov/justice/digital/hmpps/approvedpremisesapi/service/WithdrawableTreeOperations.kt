@@ -8,8 +8,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.extractMessage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractMessageFromCasResult
 import java.time.LocalDate
 
 @Service
@@ -87,11 +86,11 @@ class WithdrawableTreeOperations(
         )
 
         when (bookingCancellationResult) {
-          is ValidatableActionResult.Success -> Unit
+          is CasResult.Success -> Unit
           else -> log.error(
             "Failed to automatically withdraw Booking ${booking.id} " +
               "when withdrawing ${context.triggeringEntityType} ${context.triggeringEntityId} " +
-              "with message ${extractMessage(bookingCancellationResult)}",
+              "with message ${extractMessageFromCasResult(bookingCancellationResult)}",
           )
         }
       }

@@ -34,3 +34,12 @@ fun <EntityType> extractEntityFromCasResult(result: CasResult<EntityType>) = whe
   is CasResult.FieldValidationError -> throw BadRequestProblem(invalidParams = result.validationMessages)
   is CasResult.ConflictError -> throw ConflictProblem(id = result.conflictingEntityId, conflictReason = result.message)
 }
+
+fun extractMessageFromCasResult(result: CasResult<*>): String? = when (result) {
+  is CasResult.Success -> null
+  is CasResult.FieldValidationError -> result.validationMessages.toString()
+  is CasResult.GeneralValidationError -> result.message
+  is CasResult.ConflictError -> result.message
+  is CasResult.NotFound -> "${result.entityType} ${result.id} not found"
+  is CasResult.Unauthorised -> "Unauthorised"
+}

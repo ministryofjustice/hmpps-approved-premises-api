@@ -82,6 +82,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
@@ -1153,9 +1154,7 @@ class BookingService(
   fun getAllAdhocForApplication(applicationEntity: ApplicationEntity) =
     bookingRepository.findAllByApplicationAndPlacementRequestIsNull(applicationEntity)
 
-  fun getAllForApplication(applicationEntity: ApplicationEntity) =
-    bookingRepository.findAllByApplication(applicationEntity)
-
+  @SuppressWarnings("ReturnCount")
   @Transactional
   fun createCas1Cancellation(
     booking: BookingEntity,
@@ -1163,38 +1162,34 @@ class BookingService(
     userProvidedReason: UUID?,
     notes: String?,
     withdrawalContext: WithdrawalContext,
-  ) = validated<CancellationEntity> {
+  ): CasResult<CancellationEntity> {
     if (booking.application != null && booking.application !is ApprovedPremisesApplicationEntity) {
-      return generalError("Application is not for CAS1")
+      return CasResult.GeneralValidationError("Application is not for CAS1")
     }
 
     val existingCancellation = booking.cancellation
     if (booking.premises is ApprovedPremisesEntity && existingCancellation != null) {
-      return success(existingCancellation)
+      return CasResult.Success(existingCancellation)
     }
 
     if (!booking.isInCancellableStateCas1()) {
-      return generalError("The Booking is not in a state that can be cancelled")
+      return CasResult.GeneralValidationError("The Booking is not in a state that can be cancelled")
     }
 
     val resolvedReasonId = toCas1CancellationReason(withdrawalContext, userProvidedReason)
 
     val reason = cancellationReasonRepository.findByIdOrNull(resolvedReasonId)
     if (reason == null) {
-      "$.reason" hasValidationError "doesNotExist"
+      return CasResult.FieldValidationError(mapOf("$.reason" to "doesNotExist"))
     } else if (!serviceScopeMatches(reason.serviceScope, booking)) {
-      "$.reason" hasValidationError "incorrectCancellationReasonServiceScope"
-    }
-
-    if (validationErrors.any()) {
-      return fieldValidationError
+      return CasResult.FieldValidationError(mapOf("$.reason" to "incorrectCancellationReasonServiceScope"))
     }
 
     val cancellationEntity = cancellationRepository.save(
       CancellationEntity(
         id = UUID.randomUUID(),
         date = cancelledAt,
-        reason = reason!!,
+        reason = reason,
         notes = notes,
         booking = booking,
         createdAt = OffsetDateTime.now(),
@@ -1219,7 +1214,7 @@ class BookingService(
     val application = booking.application as ApprovedPremisesApplicationEntity?
     application?.let { cas1BookingEmailService.bookingWithdrawn(it, booking) }
 
-    return success(cancellationEntity)
+    return CasResult.Success(cancellationEntity)
   }
 
   private fun toCas1CancellationReason(

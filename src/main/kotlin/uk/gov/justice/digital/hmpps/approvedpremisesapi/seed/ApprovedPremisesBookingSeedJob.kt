@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractResultFromClientResultOrThrow
@@ -236,7 +237,7 @@ class ApprovedPremisesBookingSeedJob(
     if (row.cancellationDate != null) {
       if (cancellationReason == null) throw RuntimeException("If cancellationDate is provided, cancellationReason must also be provided")
 
-      val createdCancellation = extractEntityFromValidatableActionResult(
+      val createdCancellation = extractEntityFromCasResult(
         bookingService.createCas1Cancellation(
           booking = createdBooking,
           cancelledAt = row.cancellationDate,

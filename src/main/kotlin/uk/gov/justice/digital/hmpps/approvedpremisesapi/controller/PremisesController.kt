@@ -95,6 +95,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TurnaroundTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -530,33 +531,37 @@ class PremisesController(
       throw ForbiddenProblem()
     }
 
-    val result = when (booking.premises) {
-      is ApprovedPremisesEntity -> bookingService.createCas1Cancellation(
-        booking = booking,
-        cancelledAt = body.date,
-        userProvidedReason = body.reason,
-        notes = body.notes,
-        withdrawalContext = WithdrawalContext(
-          triggeringUser = user,
-          triggeringEntityType = WithdrawableEntityType.Booking,
-          triggeringEntityId = booking.id,
-        ),
-      )
+    when (booking.premises) {
+      is ApprovedPremisesEntity -> {
+        val result = bookingService.createCas1Cancellation(
+          booking = booking,
+          cancelledAt = body.date,
+          userProvidedReason = body.reason,
+          notes = body.notes,
+          withdrawalContext = WithdrawalContext(
+            triggeringUser = user,
+            triggeringEntityType = WithdrawableEntityType.Booking,
+            triggeringEntityId = booking.id,
+          ),
+        )
+        val cancellation = extractEntityFromCasResult(result)
+        return ResponseEntity.ok(cancellationTransformer.transformJpaToApi(cancellation))
+      }
 
-      is TemporaryAccommodationPremisesEntity -> bookingService.createCas3Cancellation(
-        booking = booking,
-        cancelledAt = body.date,
-        reasonId = body.reason,
-        notes = body.notes,
-        user = user,
-      )
+      is TemporaryAccommodationPremisesEntity -> {
+        val result = bookingService.createCas3Cancellation(
+          booking = booking,
+          cancelledAt = body.date,
+          reasonId = body.reason,
+          notes = body.notes,
+          user = user,
+        )
+        val cancellation = extractResultEntityOrThrow(result)
+        return ResponseEntity.ok(cancellationTransformer.transformJpaToApi(cancellation))
+      }
 
       else -> throw NotImplementedProblem("Unsupported premises type ${booking.premises::class.qualifiedName}")
     }
-
-    val cancellation = extractResultEntityOrThrow(result)
-
-    return ResponseEntity.ok(cancellationTransformer.transformJpaToApi(cancellation))
   }
 
   override fun premisesPremisesIdBookingsBookingIdConfirmationsPost(

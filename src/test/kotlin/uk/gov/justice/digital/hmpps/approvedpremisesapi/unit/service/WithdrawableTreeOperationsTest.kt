@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
@@ -204,7 +203,7 @@ class WithdrawableTreeOperationsTest {
 
     every {
       mockBookingService.createCas1Cancellation(any(), any(), null, any(), any())
-    } returns mockk<ValidatableActionResult.Success<CancellationEntity>>()
+    } returns mockk<CasResult.Success<CancellationEntity>>()
 
     every { mockBookingRepository.findByIdOrNull(bookingWithdrawable.id) } returns bookingWithdrawable
     every { mockBookingRepository.findByIdOrNull(adhocBookingWithdrawable.id) } returns adhocBookingWithdrawable
@@ -345,7 +344,7 @@ class WithdrawableTreeOperationsTest {
 
     every {
       mockBookingService.createCas1Cancellation(any(), any(), null, any(), any())
-    } returns ValidatableActionResult.GeneralValidationError("oh dear")
+    } returns CasResult.GeneralValidationError("oh dear")
 
     every { mockBookingRepository.findByIdOrNull(bookingWithdrawable.id) } returns bookingWithdrawable
     every { mockBookingRepository.findByIdOrNull(adhocBookingWithdrawable.id) } returns adhocBookingWithdrawable

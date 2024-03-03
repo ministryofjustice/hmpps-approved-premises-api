@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
@@ -27,6 +27,7 @@ class ApprovedPremisesBookingCancelSeedJob(
     id = UUID.fromString(columns["id"]!!),
   )
 
+  @SuppressWarnings("TooGenericExceptionThrown")
   override fun processRow(row: CancelBookingSeedCsvRow) {
     val errorInBookingDetailsCancellationReason = UUID.fromString("7c310cfd-3952-456d-b0ee-0f7817afe64a")
 
@@ -50,10 +51,12 @@ class ApprovedPremisesBookingCancelSeedJob(
     )
 
     when (validationResult) {
-      is ValidatableActionResult.ConflictError -> throw RuntimeException("Conflict trying to create Cancellation: ${validationResult.message}")
-      is ValidatableActionResult.FieldValidationError -> throw RuntimeException("Field error trying to create Cancellation: ${validationResult.validationMessages}")
-      is ValidatableActionResult.GeneralValidationError -> throw RuntimeException("General error trying to create Cancellation: ${validationResult.message}")
-      is ValidatableActionResult.Success -> log.info("Cancelled Booking ${row.id}")
+      is CasResult.ConflictError -> throw RuntimeException("Conflict trying to create Cancellation: ${validationResult.message}")
+      is CasResult.FieldValidationError -> throw RuntimeException("Field error trying to create Cancellation: ${validationResult.validationMessages}")
+      is CasResult.GeneralValidationError -> throw RuntimeException("General error trying to create Cancellation: ${validationResult.message}")
+      is CasResult.Success -> log.info("Cancelled Booking ${row.id}")
+      is CasResult.NotFound -> throw RuntimeException("Not found error trying to create Cancellation: ${validationResult.id} ${validationResult.entityType}")
+      is CasResult.Unauthorised -> throw RuntimeException("Unauthorised trying to create Cancellation")
     }
   }
 }
