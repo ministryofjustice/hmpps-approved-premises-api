@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
@@ -15,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableDatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
@@ -31,12 +34,14 @@ import java.util.UUID
 class WithdrawableServiceTest {
   private val applicationService = mockk<ApplicationService>()
   private val placementApplicationService = mockk<PlacementApplicationService>()
+  private val bookingService = mockk<BookingService>()
   private val withdrawableTreeBuilder = mockk<WithdrawableTreeBuilder>()
   private val withdrawableTreeOperations = mockk<WithdrawableTreeOperations>()
 
   private val withdrawableService = WithdrawableService(
     applicationService,
     placementApplicationService,
+    bookingService,
     withdrawableTreeBuilder,
     withdrawableTreeOperations,
   )
@@ -218,7 +223,7 @@ class WithdrawableServiceTest {
     }
 
     @Test
-    fun `fails if not user may not directly withdraw()`() {
+    fun `fails if user may not directly withdraw()`() {
       every { applicationService.getApplication(application.id) } returns application
 
       val tree = WithdrawableTreeNode(
@@ -304,7 +309,7 @@ class WithdrawableServiceTest {
     }
 
     @Test
-    fun `fails if not user may not directly withdraw()`() {
+    fun `fails if user may not directly withdraw()`() {
       every { placementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
 
       val tree = WithdrawableTreeNode(
@@ -336,6 +341,89 @@ class WithdrawableServiceTest {
 
       assertThat(result is CasResult.GeneralValidationError)
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Request for Placement is not in a withdrawable state")
+    }
+  }
+
+  @Nested
+  inner class WithdrawBooking {
+
+    val cancelledAt = LocalDate.now()
+    val userProvidedReason = UUID.randomUUID()
+    val notes = "The Notes"
+
+    val booking = BookingEntityFactory()
+      .withApplication(application)
+      .withDefaultPremises()
+      .produce()
+
+    @Test
+    fun success() {
+      val tree = WithdrawableTreeNode(
+        WithdrawableEntityType.Booking,
+        booking.id,
+        WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+      )
+
+      every { withdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
+
+      every {
+        bookingService.createCas1Cancellation(any(), any(), any(), any(), any())
+      } returns CasResult.Success(CancellationEntityFactory().withDefaults().withBooking(booking).produce())
+
+      val context = WithdrawalContext(user, WithdrawableEntityType.Booking, booking.id)
+
+      every {
+        withdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
+      } returns Unit
+
+      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes)
+
+      assertThat(result is CasResult.Success)
+
+      verify {
+        bookingService.createCas1Cancellation(
+          booking,
+          cancelledAt,
+          userProvidedReason,
+          notes,
+          context,
+        )
+      }
+
+      verify {
+        withdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
+      }
+    }
+
+    @Test
+    fun `fails if user may not directly withdraw()`() {
+      val tree = WithdrawableTreeNode(
+        WithdrawableEntityType.Booking,
+        booking.id,
+        WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+      )
+
+      every { withdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
+
+      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes)
+
+      assertThat(result is CasResult.Unauthorised)
+    }
+
+    @Test
+    fun `fails if not withdrawable()`() {
+      val tree = WithdrawableTreeNode(
+        WithdrawableEntityType.Booking,
+        booking.id,
+        WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+      )
+
+      every { withdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
+
+      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes)
+
+      assertThat(result is CasResult.GeneralValidationError)
+      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Placement is not in a withdrawable state")
     }
   }
 }

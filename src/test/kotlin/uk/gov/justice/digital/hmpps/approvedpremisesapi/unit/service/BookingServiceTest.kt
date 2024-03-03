@@ -2158,35 +2158,6 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `createCancellation returns GeneralError if booking is not in a cancellable state`() {
-      val bookingEntity = BookingEntityFactory()
-        .withPremises(premises)
-        .withArrivals(mutableListOf())
-        .produce()
-
-      bookingEntity.arrivals.add(ArrivalEntityFactory().withBooking(bookingEntity).produce())
-
-      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
-      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
-      val result = bookingService.createCas1Cancellation(
-        booking = bookingEntity,
-        cancelledAt = LocalDate.parse("2022-08-25"),
-        userProvidedReason = reasonId,
-        notes = "notes",
-        withdrawalContext = WithdrawalContext(
-          user,
-          WithdrawableEntityType.Booking,
-          bookingEntity.id,
-        ),
-      )
-
-      assertThat(result).isInstanceOf(CasResult.GeneralValidationError::class.java)
-      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("The Booking is not in a state that can be cancelled")
-    }
-
-    @Test
     fun `createCancellation returns FieldValidationError with correct param to message map when invalid parameters supplied`() {
       val bookingEntity = BookingEntityFactory()
         .withArrivalDate(LocalDate.parse("2022-08-26"))

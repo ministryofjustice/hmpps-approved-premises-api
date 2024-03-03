@@ -1154,6 +1154,14 @@ class BookingService(
   fun getAllAdhocForApplication(applicationEntity: ApplicationEntity) =
     bookingRepository.findAllByApplicationAndPlacementRequestIsNull(applicationEntity)
 
+  /**
+   * This function should not be called directly. Instead, use [WithdrawableService.withdrawApplication] that
+   * will indirectly invoke this function. It will also ensure that:
+   *
+   * 1. The entity is withdrawable, and error if not
+   * 2. The user is allowed to withdraw it, and error if not
+   * 3. If withdrawn, all descdents entities are withdrawn, where applicable
+   */
   @SuppressWarnings("ReturnCount")
   @Transactional
   fun createCas1Cancellation(
@@ -1170,10 +1178,6 @@ class BookingService(
     val existingCancellation = booking.cancellation
     if (booking.premises is ApprovedPremisesEntity && existingCancellation != null) {
       return CasResult.Success(existingCancellation)
-    }
-
-    if (!booking.isInCancellableStateCas1()) {
-      return CasResult.GeneralValidationError("The Booking is not in a state that can be cancelled")
     }
 
     val resolvedReasonId = toCas1CancellationReason(withdrawalContext, userProvidedReason)

@@ -25,10 +25,6 @@ class WithdrawableTreeOperations(
     rootNode: WithdrawableTreeNode,
     withdrawalContext: WithdrawalContext,
   ) {
-    if (log.isDebugEnabled) {
-      log.debug("Tree for withdrawing descendants of ${withdrawalContext.triggeringEntityType} is $rootNode")
-    }
-
     rootNode.collectDescendants().forEach {
       if (it.status.withdrawable) {
         withdraw(it, withdrawalContext)

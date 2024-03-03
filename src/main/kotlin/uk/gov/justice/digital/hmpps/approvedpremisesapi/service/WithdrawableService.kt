@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
@@ -18,6 +20,7 @@ class WithdrawableService(
   // Added Lazy annotations here to prevent circular dependency issues
   @Lazy private val applicationService: ApplicationService,
   @Lazy private val placementApplicationService: PlacementApplicationService,
+  @Lazy private val bookingService: BookingService,
   private val withdrawableTreeBuilder: WithdrawableTreeBuilder,
   @Lazy private val withdrawableTreeOperations: WithdrawableTreeOperations,
 ) {
@@ -93,11 +96,42 @@ class WithdrawableService(
     }
   }
 
+  fun withdrawBooking(
+    booking: BookingEntity,
+    user: UserEntity,
+    cancelledAt: LocalDate,
+    userProvidedReason: UUID?,
+    notes: String?,
+  ): CasResult<CancellationEntity> {
+    val withdrawalContext = WithdrawalContext(
+      triggeringUser = user,
+      triggeringEntityType = WithdrawableEntityType.Booking,
+      triggeringEntityId = booking.id,
+    )
+
+    return withdraw(
+      withdrawableTreeBuilder.treeForBooking(booking, user),
+      withdrawalContext,
+    ) {
+      bookingService.createCas1Cancellation(
+        booking,
+        cancelledAt,
+        userProvidedReason,
+        notes,
+        withdrawalContext,
+      )
+    }
+  }
+
   private fun <T> withdraw(
     rootNode: WithdrawableTreeNode,
     context: WithdrawalContext,
     withdrawRootEntityFunction: () -> CasResult<T>,
   ): CasResult<T> {
+    if (log.isDebugEnabled) {
+      log.debug("Tree for withdrawing ${context.triggeringEntityType} with id ${context.triggeringEntityId} is $rootNode")
+    }
+
     if (!rootNode.status.userMayDirectlyWithdraw) {
       return CasResult.Unauthorised()
     }

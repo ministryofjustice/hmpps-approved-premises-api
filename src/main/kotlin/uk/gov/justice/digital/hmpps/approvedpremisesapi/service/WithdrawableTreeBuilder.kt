@@ -79,7 +79,7 @@ class WithdrawableTreeBuilder(
     )
   }
 
-  private fun treeForBooking(booking: BookingEntity, user: UserEntity): WithdrawableTreeNode {
+  fun treeForBooking(booking: BookingEntity, user: UserEntity): WithdrawableTreeNode {
     return WithdrawableTreeNode(
       entityType = WithdrawableEntityType.Booking,
       entityId = booking.id,

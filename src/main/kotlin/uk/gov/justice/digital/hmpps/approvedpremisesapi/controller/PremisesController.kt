@@ -74,8 +74,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedSummaryTransformer
@@ -133,6 +132,7 @@ class PremisesController(
   private val bedDetailTransformer: BedDetailTransformer,
   private val calendarTransformer: CalendarTransformer,
   private val dateChangeTransformer: DateChangeTransformer,
+  private val withdrawableService: WithdrawableService,
 ) : PremisesApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -533,16 +533,12 @@ class PremisesController(
 
     when (booking.premises) {
       is ApprovedPremisesEntity -> {
-        val result = bookingService.createCas1Cancellation(
+        val result = withdrawableService.withdrawBooking(
           booking = booking,
+          user = user,
           cancelledAt = body.date,
           userProvidedReason = body.reason,
           notes = body.notes,
-          withdrawalContext = WithdrawalContext(
-            triggeringUser = user,
-            triggeringEntityType = WithdrawableEntityType.Booking,
-            triggeringEntityId = booking.id,
-          ),
         )
         val cancellation = extractEntityFromCasResult(result)
         return ResponseEntity.ok(cancellationTransformer.transformJpaToApi(cancellation))
