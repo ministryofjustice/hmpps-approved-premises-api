@@ -7,6 +7,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.extractMessage
 import java.time.LocalDate
@@ -66,7 +67,7 @@ class WithdrawableTreeOperations(
         )
 
         when (result) {
-          is AuthorisableActionResult.Success -> Unit
+          is CasResult.Success -> Unit
           else -> log.error(
             "Failed to automatically withdraw PlacementApplication ${node.entityId} " +
               "when withdrawing ${context.triggeringEntityType} ${context.triggeringEntityId} " +

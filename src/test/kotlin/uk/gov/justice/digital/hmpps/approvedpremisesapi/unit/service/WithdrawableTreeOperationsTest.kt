@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
@@ -195,7 +196,7 @@ class WithdrawableTreeOperationsTest {
 
     every {
       mockPlacementApplicationService.withdrawPlacementApplication(any(), any(), any())
-    } returns mockk<AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>>>()
+    } returns mockk<CasResult<PlacementApplicationEntity>>()
 
     every {
       mockPlacementRequestService.withdrawPlacementRequest(any(), any(), any())
@@ -336,7 +337,7 @@ class WithdrawableTreeOperationsTest {
 
     every {
       mockPlacementApplicationService.withdrawPlacementApplication(any(), any(), any())
-    } returns AuthorisableActionResult.Unauthorised()
+    } returns CasResult.Unauthorised()
 
     every {
       mockPlacementRequestService.withdrawPlacementRequest(any(), any(), any())
@@ -355,7 +356,7 @@ class WithdrawableTreeOperationsTest {
       logger.error(
         "Failed to automatically withdraw PlacementApplication ${placementApplication.id} " +
           "when withdrawing Application ${application.id} " +
-          "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult\$Unauthorised",
+          "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult\$Unauthorised",
       )
     }
 

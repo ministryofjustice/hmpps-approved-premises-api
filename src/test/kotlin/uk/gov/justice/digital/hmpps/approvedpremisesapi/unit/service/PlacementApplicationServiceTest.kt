@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
@@ -831,13 +832,8 @@ class PlacementApplicationServiceTest {
         withdrawalContext = withdrawalContext,
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(validationResult is ValidatableActionResult.Success).isTrue
-      validationResult as ValidatableActionResult.Success
-
-      val entity = validationResult.entity
+      assertThat(result is CasResult.Success).isTrue
+      val entity = (result as CasResult.Success).value
 
       assertThat(entity.decision).isEqualTo(PlacementApplicationDecision.WITHDRAW)
 
@@ -872,13 +868,8 @@ class PlacementApplicationServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-
-      assertThat(validationResult is ValidatableActionResult.Success).isTrue
-      validationResult as ValidatableActionResult.Success
-
-      val entity = validationResult.entity
+      assertThat(result is CasResult.Success).isTrue
+      val entity = (result as CasResult.Success).value
 
       assertThat(entity.withdrawalReason).isEqualTo(PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN)
 
@@ -934,7 +925,7 @@ class PlacementApplicationServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
+      assertThat(result is CasResult.Success).isTrue
     }
 
     @Test
@@ -961,7 +952,7 @@ class PlacementApplicationServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(result is CasResult.Unauthorised).isTrue
     }
   }
 }

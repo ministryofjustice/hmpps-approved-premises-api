@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult.ValidatableActionResultError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
@@ -213,27 +214,23 @@ class PlacementApplicationService(
     id: UUID,
     userProvidedReason: PlacementApplicationWithdrawalReason?,
     withdrawalContext: WithdrawalContext,
-  ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+  ): CasResult<PlacementApplicationEntity> {
     val user = requireNotNull(withdrawalContext.triggeringUser)
 
     val placementApplication =
-      placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+      placementApplicationRepository.findByIdOrNull(id) ?: return CasResult.NotFound()
 
     if (placementApplication.isWithdrawn()) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.Success(placementApplication),
-      )
+      return CasResult.Success(placementApplication)
     }
 
     val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementApplication
     if (isUserRequestedWithdrawal && !userAccessService.userMayWithdrawPlacementApplication(user, placementApplication)) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
 
     if (!placementApplication.isInWithdrawableState()) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The Placement Application cannot be withdrawn as it's not in a withdrawable state"),
-      )
+      return CasResult.GeneralValidationError("The Placement Application cannot be withdrawn as it's not in a withdrawable state")
     }
 
     val wasBeingAssessedBy = if (placementApplication.isBeingAssessed()) { placementApplication.allocatedToUser } else null
@@ -254,9 +251,7 @@ class PlacementApplicationService(
 
     withdrawableService.withdrawPlacementApplicationDescendants(placementApplication, withdrawalContext)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedApplication),
-    )
+    return CasResult.Success(savedApplication)
   }
 
   fun updateApplication(
