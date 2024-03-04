@@ -225,5 +225,8 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     situation = this.situation(),
     inmateInOutStatusOnSubmission = this.inmateInOutStatusOnSubmission(),
     apArea = this.apArea(),
+    applicantUserDetails = null,
+    caseManagerNotApplicant = null,
+    casManagerUserDetails = null,
   )
 }

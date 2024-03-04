@@ -2160,6 +2160,12 @@ components:
               $ref: '#/components/schemas/PersonStatus'
             apArea:
               $ref: '#/components/schemas/ApArea'
+            applicantUserDetails:
+              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
+            applicantIsCaseManager:
+              type: boolean
+            caseManagerUserDetails:
+              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
           required:
             - createdByUserId
             - schemaVersion
@@ -2654,6 +2660,12 @@ components:
             arrivalDate:
               type: string
               format: date
+            applicantUserDetails:
+              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
+            applicantIsCaseManager:
+              type: boolean
+            caseManagerUserDetails:
+              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
     UpdateTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'
@@ -2700,6 +2712,12 @@ components:
             apAreaId:
               type: string
               format: uuid
+            applicantUserDetails:
+              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
+            applicantIsCaseManager:
+              type: boolean
+            caseManagerUserDetails:
+              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
           required:
             - isPipeApplication
             - isWomensApplication
@@ -4911,3 +4929,16 @@ components:
       enum:
         - accepted
         - rejected
+    Cas1ApplicationUserDetails:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        telephoneNumber:
+          type: string
+      required:
+        - name
+        - email
+        - telephoneNumber
