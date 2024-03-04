@@ -61,6 +61,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTran
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
+import java.time.LocalDate
 import java.util.UUID
 import javax.transaction.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary as JPAApplicationSummary
@@ -253,14 +254,16 @@ class ApplicationsController(
     val applicationResult = when (body) {
       is UpdateApprovedPremisesApplication -> applicationService.updateApprovedPremisesApplication(
         applicationId = applicationId,
-        data = serializedData,
-        isWomensApplication = body.isWomensApplication,
-        isPipeApplication = body.isPipeApplication,
-        isEmergencyApplication = body.isEmergencyApplication,
-        isEsapApplication = body.isEsapApplication,
-        releaseType = body.releaseType?.name,
-        arrivalDate = body.arrivalDate,
-        isInapplicable = body.isInapplicable,
+        ApplicationService.Cas1ApplicationUpdateFields(
+          data = serializedData,
+          isWomensApplication = body.isWomensApplication,
+          isPipeApplication = body.isPipeApplication,
+          isEmergencyApplication = body.isEmergencyApplication,
+          isEsapApplication = body.isEsapApplication,
+          releaseType = body.releaseType?.name,
+          arrivalDate = body.arrivalDate,
+          isInapplicable = body.isInapplicable,
+        ),
       )
 
       is UpdateTemporaryAccommodationApplication -> applicationService.updateTemporaryAccommodationApplication(

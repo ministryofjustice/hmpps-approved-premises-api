@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
@@ -480,16 +481,20 @@ class ApplicationService(
     )
   }
 
+  data class Cas1ApplicationUpdateFields(
+    val isWomensApplication: Boolean?,
+    val isPipeApplication: Boolean?,
+    val isEmergencyApplication: Boolean?,
+    val isEsapApplication: Boolean?,
+    val releaseType: String?,
+    val arrivalDate: LocalDate?,
+    val data: String,
+    val isInapplicable: Boolean?,
+  )
+
   fun updateApprovedPremisesApplication(
     applicationId: UUID,
-    isWomensApplication: Boolean?,
-    isPipeApplication: Boolean?,
-    isEmergencyApplication: Boolean?,
-    isEsapApplication: Boolean?,
-    releaseType: String?,
-    arrivalDate: LocalDate?,
-    data: String,
-    isInapplicable: Boolean?,
+    updateFields: Cas1ApplicationUpdateFields,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
@@ -519,18 +524,18 @@ class ApplicationService(
     }
 
     application.apply {
-      this.isInapplicable = isInapplicable
-      this.isWomensApplication = isWomensApplication
-      this.isPipeApplication = isPipeApplication
-      this.isEmergencyApplication = isEmergencyApplication
-      this.isEsapApplication = isEsapApplication
-      this.releaseType = releaseType
-      this.arrivalDate = if (arrivalDate !== null) {
-        OffsetDateTime.of(arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
+      this.isInapplicable = updateFields.isInapplicable
+      this.isWomensApplication = updateFields.isWomensApplication
+      this.isPipeApplication = updateFields.isPipeApplication
+      this.isEmergencyApplication = updateFields.isEmergencyApplication
+      this.isEsapApplication = updateFields.isEsapApplication
+      this.releaseType = updateFields.releaseType
+      this.arrivalDate = if (updateFields.arrivalDate !== null) {
+        OffsetDateTime.of(updateFields.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
       } else {
         null
       }
-      this.data = data
+      this.data = updateFields.data
     }
 
     val savedApplication = applicationRepository.save(application)
