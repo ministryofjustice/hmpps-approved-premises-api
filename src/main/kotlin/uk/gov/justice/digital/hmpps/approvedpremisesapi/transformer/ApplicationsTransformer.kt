@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationUserDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary as ApiApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary as ApiApprovedPremisesApplicationSummary
@@ -35,6 +36,7 @@ class ApplicationsTransformer(
   private val personTransformer: PersonTransformer,
   private val risksTransformer: RisksTransformer,
   private val apAreaTransformer: ApAreaTransformer,
+  private val cas1ApplicationUserDetailsTransformer: Cas1ApplicationUserDetailsTransformer,
 ) {
 
   final val applicationStatuses = mapOf(
@@ -93,6 +95,9 @@ class ApplicationsTransformer(
         ),
         type = "CAS1",
         apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) },
+        applicantUserDetails = jpa.applicantUserDetails?.let { cas1ApplicationUserDetailsTransformer.transformJpaToApi(it) },
+        applicantIsCaseManager = jpa.applicantIsCaseManager,
+        caseManagerUserDetails = jpa.caseManagerUserDetails?.let { cas1ApplicationUserDetailsTransformer.transformJpaToApi(it) },
       )
 
       is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(

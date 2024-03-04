@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -53,6 +54,9 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var status: Yielded<ApprovedPremisesApplicationStatus> = { ApprovedPremisesApplicationStatus.STARTED }
   private var inmateInOutStatusOnSubmission: Yielded<String?> = { null }
   private var apArea: Yielded<ApAreaEntity?> = { null }
+  private var applicantUserDetails: Yielded<Cas1ApplicationUserDetailsEntity?> = { null }
+  private var applicantIsCaseManager: Yielded<Boolean?> = { null }
+  private var caseManagerUserDetails: Yielded<Cas1ApplicationUserDetailsEntity?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -190,6 +194,18 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.apArea = { apArea }
   }
 
+  fun withApplicantUserDetails(applicantUserDetails: Cas1ApplicationUserDetailsEntity?) = apply {
+    this.applicantUserDetails = { applicantUserDetails }
+  }
+
+  fun withApplicantIsCaseManager(applicantIsCaseManager: Boolean?) = apply {
+    this.applicantIsCaseManager = { applicantIsCaseManager }
+  }
+
+  fun withCaseManagerUserDetails(casManagerUserDetails: Cas1ApplicationUserDetailsEntity?) = apply {
+    this.caseManagerUserDetails = { casManagerUserDetails }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -225,8 +241,8 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     situation = this.situation(),
     inmateInOutStatusOnSubmission = this.inmateInOutStatusOnSubmission(),
     apArea = this.apArea(),
-    applicantUserDetails = null,
-    caseManagerNotApplicant = null,
-    casManagerUserDetails = null,
+    applicantUserDetails = this.applicantUserDetails(),
+    applicantIsCaseManager = this.applicantIsCaseManager(),
+    caseManagerUserDetails = this.caseManagerUserDetails(),
   )
 }

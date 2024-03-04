@@ -31,6 +31,7 @@ import javax.persistence.JoinColumn
 import javax.persistence.LockModeType
 import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
+import javax.persistence.OneToOne
 import javax.persistence.PrimaryKeyJoinColumn
 import javax.persistence.Table
 import kotlin.time.Duration.Companion.days
@@ -316,6 +317,13 @@ class ApprovedPremisesApplicationEntity(
   @ManyToOne
   @JoinColumn(name = "ap_area_id")
   var apArea: ApAreaEntity?,
+  @OneToOne
+  @JoinColumn(name = "applicant_cas1_application_user_details_id")
+  var applicantUserDetails: Cas1ApplicationUserDetailsEntity?,
+  var applicantIsCaseManager: Boolean?,
+  @OneToOne
+  @JoinColumn(name = "case_manager_cas1_application_user_details_id")
+  var caseManagerUserDetails: Cas1ApplicationUserDetailsEntity?,
 ) : ApplicationEntity(
   id,
   crn,

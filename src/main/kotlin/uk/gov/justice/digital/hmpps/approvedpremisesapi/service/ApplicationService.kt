@@ -350,8 +350,8 @@ class ApplicationService(
       inmateInOutStatusOnSubmission = null,
       apArea = null,
       applicantUserDetails = null,
-      caseManagerNotApplicant = null,
-      casManagerUserDetails = null,
+      applicantIsCaseManager = null,
+      caseManagerUserDetails = null,
     )
   }
 
