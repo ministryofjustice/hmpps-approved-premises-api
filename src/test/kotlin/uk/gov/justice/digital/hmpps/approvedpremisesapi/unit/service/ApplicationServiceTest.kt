@@ -916,181 +916,9 @@ class ApplicationServiceTest {
     assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
   }
 
-  @Test
-  fun `updateApprovedPremisesApplication returns NotFound when application doesn't exist`() {
-    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
+  @Nested
+  inner class UpdateApplicationCas1 {
 
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
-
-    assertThat(
-      applicationService.updateApprovedPremisesApplication(
-        applicationId = applicationId,
-        Cas1ApplicationUpdateFields(
-          isWomensApplication = false,
-          isPipeApplication = null,
-          isEmergencyApplication = false,
-          isEsapApplication = false,
-          releaseType = null,
-          arrivalDate = null,
-          data = "{}",
-          isInapplicable = null,
-        ),
-      ) is AuthorisableActionResult.NotFound,
-    ).isTrue
-  }
-
-  @Test
-  fun `updateApprovedPremisesApplication returns Unauthorised when application doesn't belong to request user`() {
-    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withId(applicationId)
-      .withYieldedCreatedByUser {
-        UserEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .produce()
-      }
-      .produce()
-
-    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
-      .withDeliusUsername(username)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-    assertThat(
-      applicationService.updateApprovedPremisesApplication(
-        applicationId = applicationId,
-        Cas1ApplicationUpdateFields(
-          isWomensApplication = false,
-          isPipeApplication = null,
-          isEmergencyApplication = false,
-          isEsapApplication = false,
-          releaseType = null,
-          arrivalDate = null,
-          data = "{}",
-          isInapplicable = null,
-        ),
-      ) is AuthorisableActionResult.Unauthorised,
-    ).isTrue
-  }
-
-  @Test
-  fun `updateApprovedPremisesApplication returns GeneralValidationError when application schema is outdated`() {
-    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
-
-    val user = UserEntityFactory()
-      .withDeliusUsername(username)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withId(applicationId)
-      .withCreatedByUser(user)
-      .withSubmittedAt(null)
-      .produce()
-      .apply {
-        schemaUpToDate = false
-      }
-
-    every { mockUserService.getUserForRequest() } returns user
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-    val result = applicationService.updateApprovedPremisesApplication(
-      applicationId = applicationId,
-      Cas1ApplicationUpdateFields(
-        isWomensApplication = false,
-        isPipeApplication = null,
-        isEmergencyApplication = false,
-        isEsapApplication = false,
-        releaseType = null,
-        arrivalDate = null,
-        data = "{}",
-        isInapplicable = null,
-      ),
-    )
-
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-
-    assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-    val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-    assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
-  }
-
-  @Test
-  fun `updateApprovedPremisesApplication returns GeneralValidationError when application has already been submitted`() {
-    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
-
-    val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-
-    val user = UserEntityFactory()
-      .withDeliusUsername(username)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withApplicationSchema(newestSchema)
-      .withId(applicationId)
-      .withCreatedByUser(user)
-      .withSubmittedAt(OffsetDateTime.now())
-      .produce()
-      .apply {
-        schemaUpToDate = true
-      }
-
-    every { mockUserService.getUserForRequest() } returns user
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-    val result = applicationService.updateApprovedPremisesApplication(
-      applicationId = applicationId,
-      Cas1ApplicationUpdateFields(
-        isWomensApplication = false,
-        isPipeApplication = null,
-        isEmergencyApplication = false,
-        isEsapApplication = false,
-        releaseType = null,
-        arrivalDate = null,
-        data = "{}",
-        isInapplicable = null,
-      ),
-    )
-
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-
-    assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-    val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-    assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
-  }
-
-  @Test
-  fun `updateApprovedPremisesApplication returns Success with updated Application`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
@@ -1119,41 +947,157 @@ class ApplicationServiceTest {
         schemaUpToDate = true
       }
 
-    every { mockUserService.getUserForRequest() } returns user
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-    every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns newestSchema
-    every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
-    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+    @Test
+    fun `updateApprovedPremisesApplication returns NotFound when application doesn't exist`() {
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-    val result = applicationService.updateApprovedPremisesApplication(
-      applicationId = applicationId,
-      Cas1ApplicationUpdateFields(
-        isWomensApplication = false,
-        isPipeApplication = true,
-        isEmergencyApplication = false,
-        isEsapApplication = false,
-        releaseType = "rotl",
-        arrivalDate = LocalDate.parse("2023-04-17"),
-        data = updatedData,
-        isInapplicable = false,
-      ),
-    )
+      assertThat(
+        applicationService.updateApprovedPremisesApplication(
+          applicationId = applicationId,
+          Cas1ApplicationUpdateFields(
+            isWomensApplication = false,
+            isPipeApplication = null,
+            isEmergencyApplication = false,
+            isEsapApplication = false,
+            releaseType = null,
+            arrivalDate = null,
+            data = "{}",
+            isInapplicable = null,
+          ),
+        ) is AuthorisableActionResult.NotFound,
+      ).isTrue
+    }
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
+    @Test
+    fun `updateApprovedPremisesApplication returns Unauthorised when application doesn't belong to request user`() {
+      every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+        .withDeliusUsername(username)
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-    assertThat(result.entity is ValidatableActionResult.Success).isTrue
-    val validatableActionResult = result.entity as ValidatableActionResult.Success
+      assertThat(
+        applicationService.updateApprovedPremisesApplication(
+          applicationId = applicationId,
+          Cas1ApplicationUpdateFields(
+            isWomensApplication = false,
+            isPipeApplication = null,
+            isEmergencyApplication = false,
+            isEsapApplication = false,
+            releaseType = null,
+            arrivalDate = null,
+            data = "{}",
+            isInapplicable = null,
+          ),
+        ) is AuthorisableActionResult.Unauthorised,
+      ).isTrue
+    }
 
-    val approvedPremisesApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+    @Test
+    fun `updateApprovedPremisesApplication returns GeneralValidationError when application schema is outdated`() {
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-    assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
-    assertThat(approvedPremisesApplication.isWomensApplication).isEqualTo(false)
-    assertThat(approvedPremisesApplication.isPipeApplication).isEqualTo(true)
-    assertThat(approvedPremisesApplication.releaseType).isEqualTo("rotl")
-    assertThat(approvedPremisesApplication.isInapplicable).isEqualTo(false)
-    assertThat(approvedPremisesApplication.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
+      application.schemaUpToDate = false
+
+      val result = applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = null,
+          isEmergencyApplication = false,
+          isEsapApplication = false,
+          releaseType = null,
+          arrivalDate = null,
+          data = "{}",
+          isInapplicable = null,
+        ),
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
+    }
+
+    @Test
+    fun `updateApprovedPremisesApplication returns GeneralValidationError when application has already been submitted`() {
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      application.submittedAt = OffsetDateTime.now()
+
+      val result = applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = null,
+          isEmergencyApplication = false,
+          isEsapApplication = false,
+          releaseType = null,
+          arrivalDate = null,
+          data = "{}",
+          isInapplicable = null,
+        ),
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+    }
+
+    @Test
+    fun `updateApprovedPremisesApplication returns Success with updated Application`() {
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+      every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns newestSchema
+      every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
+      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+
+      val result = applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = true,
+          isEmergencyApplication = false,
+          isEsapApplication = false,
+          releaseType = "rotl",
+          arrivalDate = LocalDate.parse("2023-04-17"),
+          data = updatedData,
+          isInapplicable = false,
+        ),
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.Success).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+
+      val approvedPremisesApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+
+      assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
+      assertThat(approvedPremisesApplication.isWomensApplication).isEqualTo(false)
+      assertThat(approvedPremisesApplication.isPipeApplication).isEqualTo(true)
+      assertThat(approvedPremisesApplication.releaseType).isEqualTo("rotl")
+      assertThat(approvedPremisesApplication.isInapplicable).isEqualTo(false)
+      assertThat(approvedPremisesApplication.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
+    }
   }
 
   @Test
