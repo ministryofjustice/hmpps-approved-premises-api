@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSum
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FlagsEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MappaEnvelope
@@ -1959,6 +1960,17 @@ class ApplicationTest : IntegrationTestBase() {
                   isWomensApplication = false,
                   isPipeApplication = true,
                   type = UpdateApplicationType.CAS1,
+                  applicantUserDetails = Cas1ApplicationUserDetails(
+                    "applicantName",
+                    "applicantEmail",
+                    "applicationTelephone",
+                  ),
+                  applicantIsCaseManager = false,
+                  caseManagerUserDetails = Cas1ApplicationUserDetails(
+                    "cmName",
+                    "cmEmail",
+                    "cmTelephone",
+                  ),
                 ),
               )
               .exchange()
@@ -1976,7 +1988,6 @@ class ApplicationTest : IntegrationTestBase() {
       }
     }
   }
-
 
   @Nested
   inner class SubmitApplicationCas1 {
@@ -2411,7 +2422,6 @@ class ApplicationTest : IntegrationTestBase() {
         }
       }
     }
-
   }
 
   @Test
