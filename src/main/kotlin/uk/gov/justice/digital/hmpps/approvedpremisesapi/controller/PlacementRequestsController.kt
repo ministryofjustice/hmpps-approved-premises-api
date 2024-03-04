@@ -203,6 +203,7 @@ class PlacementRequestsController(
         WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementRequest,
+          id,
         ),
       ),
     )

@@ -132,6 +132,8 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
 
   fun findAllByCrn(crn: String): List<BookingEntity>
 
+  fun findAllByApplicationAndPlacementRequestIsNull(application: ApplicationEntity): List<BookingEntity>
+
   fun findAllByApplication(application: ApplicationEntity): List<BookingEntity>
 
   @Query(

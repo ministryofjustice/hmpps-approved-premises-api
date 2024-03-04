@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -58,6 +57,7 @@ class PlacementApplicationService(
   private val sendPlacementRequestNotifications: Boolean,
   private val taskDeadlineService: TaskDeadlineService,
   @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val useNewWithdrawalLogic: Boolean,
+  private val withdrawableService: WithdrawableService,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -65,8 +65,10 @@ class PlacementApplicationService(
   @PostConstruct
   fun init() {
     if (!useNewWithdrawalLogic) {
-      log.warn("Old withdrawal logic is being used. This will add multiple dates to the same placement application " +
-        "on submission which limits potential withdrawal options. This behaviour is deprecated.")
+      log.warn(
+        "Old withdrawal logic is being used. This will add multiple dates to the same placement application " +
+          "on submission which limits potential withdrawal options. This behaviour is deprecated.",
+      )
     }
   }
 
@@ -199,6 +201,13 @@ class PlacementApplicationService(
       .findByApplication(application)
       .filter { it.isInWithdrawableState() && userAccessService.userMayWithdrawPlacementApplication(user, it) }
 
+  fun getWithdrawableState(placementApplication: PlacementApplicationEntity, user: UserEntity): WithdrawableState {
+    return WithdrawableState(
+      withdrawable = placementApplication.isInWithdrawableState(),
+      userMayDirectlyWithdraw = userAccessService.userMayWithdrawPlacementApplication(user, placementApplication),
+    )
+  }
+
   @Transactional
   fun withdrawPlacementApplication(
     id: UUID,
@@ -243,35 +252,11 @@ class PlacementApplicationService(
     cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(placementApplication, withdrawalContext)
     cas1PlacementApplicationEmailService.placementApplicationWithdrawn(placementApplication, wasBeingAssessedBy)
 
-    withdrawPlacementRequests(placementApplication, withdrawalContext)
+    withdrawableService.withdrawPlacementApplicationDescendants(placementApplication, withdrawalContext)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedApplication),
     )
-  }
-
-  private fun withdrawPlacementRequests(
-    placementApplication: PlacementApplicationEntity,
-    withdrawalContext: WithdrawalContext,
-  ) {
-    placementApplication.placementRequests.forEach { placementRequest ->
-      if (placementRequest.isInWithdrawableState()) {
-        val placementRequestWithdrawalResult = placementRequestService.withdrawPlacementRequest(
-          placementRequest.id,
-          PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
-          withdrawalContext,
-        )
-
-        when (placementRequestWithdrawalResult) {
-          is AuthorisableActionResult.Success -> Unit
-          else -> log.error(
-            "Failed to automatically withdraw placement request ${placementRequest.id} " +
-              "when withdrawing placement application ${placementApplication.id} " +
-              "with error type ${placementRequestWithdrawalResult::class}",
-          )
-        }
-      }
-    }
   }
 
   fun updateApplication(

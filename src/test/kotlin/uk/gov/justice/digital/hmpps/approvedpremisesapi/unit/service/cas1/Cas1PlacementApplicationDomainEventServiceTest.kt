@@ -81,6 +81,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementApplication,
+          placementApplication.id,
         ),
       )
 

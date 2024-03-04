@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import org.springframework.data.repository.findByIdOrNull
@@ -94,7 +95,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
@@ -2314,8 +2317,7 @@ class ApplicationServiceTest {
       every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
       every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
       every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
-
-      every { mockWithdrawableService.withdrawAllForApplication(application, user) } returns Unit
+      every { mockWithdrawableService.withdrawApplicationDescendants(application, any()) } returns Unit
 
       val authorisableActionResult = applicationService.withdrawApprovedPremisesApplication(
         application.id,
@@ -2361,7 +2363,10 @@ class ApplicationServiceTest {
       }
 
       verify(exactly = 1) {
-        mockWithdrawableService.withdrawAllForApplication(application, user)
+        mockWithdrawableService.withdrawApplicationDescendants(
+          application,
+          WithdrawalContext(user, WithdrawableEntityType.Application, application.id),
+        )
       }
     }
 
@@ -2384,7 +2389,7 @@ class ApplicationServiceTest {
       every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
       every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
-      every { mockWithdrawableService.withdrawAllForApplication(application, user) } returns Unit
+      every { mockWithdrawableService.withdrawApplicationDescendants(application, any()) } returns Unit
 
       val authorisableActionResult =
         applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", "Some other reason")
@@ -2428,7 +2433,10 @@ class ApplicationServiceTest {
       }
 
       verify(exactly = 1) {
-        mockWithdrawableService.withdrawAllForApplication(application, user)
+        mockWithdrawableService.withdrawApplicationDescendants(
+          application,
+          WithdrawalContext(user, WithdrawableEntityType.Application, application.id),
+        )
       }
     }
 
@@ -2451,7 +2459,7 @@ class ApplicationServiceTest {
       val domainEventWithdrawnBy = WithdrawnByFactory().produce()
       every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
       every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
-      every { mockWithdrawableService.withdrawAllForApplication(application, user) } returns Unit
+      every { mockWithdrawableService.withdrawApplicationDescendants(application, any()) } returns Unit
 
       applicationService.withdrawApprovedPremisesApplication(
         application.id,
@@ -2494,13 +2502,63 @@ class ApplicationServiceTest {
       }
 
       verify(exactly = 1) {
-        mockWithdrawableService.withdrawAllForApplication(application, user)
+        mockWithdrawableService.withdrawApplicationDescendants(
+          application,
+          WithdrawalContext(user, WithdrawableEntityType.Application, application.id),
+        )
       }
     }
   }
 
   @Nested
-  inner class IsWithdrawable
+  inner class GetWithdrawableState {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    @Test
+    fun `getWithdrawableState withdrawable if application not withdrawn`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withIsWithdrawn(false)
+        .produce()
+
+      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
+
+      val result = applicationService.getWithdrawableState(application, user)
+
+      assertThat(result.withdrawable).isTrue()
+    }
+
+    @Test
+    fun `getWithdrawableState not withdrawable if application already withdrawn `() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withIsWithdrawn(true)
+        .produce()
+
+      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
+
+      val result = applicationService.getWithdrawableState(application, user)
+
+      assertThat(result.withdrawable).isFalse()
+    }
+
+    @ParameterizedTest
+    @CsvSource("true", "false")
+    fun `getWithdrawableState userMayDirectlyWithdraw delegates to user access service`(canWithdraw: Boolean) {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withIsWithdrawn(false)
+        .produce()
+
+      every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns canWithdraw
+
+      val result = applicationService.getWithdrawableState(application, user)
+
+      assertThat(result.userMayDirectlyWithdraw).isEqualTo(canWithdraw)
+    }
+  }
 
   private fun userWithUsername(username: String) = UserEntityFactory()
     .withDeliusUsername(username)

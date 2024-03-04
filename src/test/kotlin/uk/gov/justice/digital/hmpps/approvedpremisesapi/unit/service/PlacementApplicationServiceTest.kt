@@ -6,16 +6,14 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
-import org.slf4j.Logger
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
@@ -24,8 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
@@ -39,8 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -54,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineServ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
@@ -76,6 +71,7 @@ class PlacementApplicationServiceTest {
   private val cas1PlacementApplicationEmailService = mockk<Cas1PlacementApplicationEmailService>()
   private val cas1PlacementApplicationDomainEventService = mockk<Cas1PlacementApplicationDomainEventService>()
   private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
+  private val withdrawableService = mockk<WithdrawableService>()
 
   private val placementApplicationService = buildService(useNewWithdrawalLogic = true)
   private val placementApplicationServiceLegacyWithdrawalLogic = buildService(useNewWithdrawalLogic = false)
@@ -95,6 +91,7 @@ class PlacementApplicationServiceTest {
     sendPlacementRequestNotifications = true,
     taskDeadlineServiceMock,
     useNewWithdrawalLogic = useNewWithdrawalLogic,
+    withdrawableService,
   )
 
   @Nested
@@ -673,6 +670,108 @@ class PlacementApplicationServiceTest {
   }
 
   @Nested
+  inner class GetWithdrawableState {
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .produce()
+
+    @Test
+    fun `getWithdrawableState not withdrawable if not submitted`() {
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(user)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .withDecision(null)
+        .withReallocatedAt(null)
+        .produce()
+
+      every { userAccessService.userMayWithdrawPlacementApplication(user, placementApplication) } returns true
+
+      val result = placementApplicationService.getWithdrawableState(placementApplication, user)
+
+      assertThat(result.withdrawable).isFalse()
+    }
+
+    @Test
+    fun `getWithdrawableState not withdrawable if already withdrawn`() {
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(user)
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withDecision(PlacementApplicationDecision.WITHDRAW)
+        .withReallocatedAt(null)
+        .produce()
+
+      every { userAccessService.userMayWithdrawPlacementApplication(user, placementApplication) } returns true
+
+      val result = placementApplicationService.getWithdrawableState(placementApplication, user)
+
+      assertThat(result.withdrawable).isFalse()
+    }
+
+    @Test
+    fun `getWithdrawableState not withdrawable if reallocated`() {
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(user)
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .withReallocatedAt(OffsetDateTime.now())
+        .produce()
+
+      every { userAccessService.userMayWithdrawPlacementApplication(user, placementApplication) } returns true
+
+      val result = placementApplicationService.getWithdrawableState(placementApplication, user)
+
+      assertThat(result.withdrawable).isFalse()
+    }
+
+    @Test
+    fun `getWithdrawableState withdrawable if is submitted, not reallocated and not withdrawn`() {
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(user)
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .withReallocatedAt(null)
+        .produce()
+
+      every { userAccessService.userMayWithdrawPlacementApplication(user, placementApplication) } returns true
+
+      val result = placementApplicationService.getWithdrawableState(placementApplication, user)
+
+      assertThat(result.withdrawable).isTrue()
+    }
+
+    @ParameterizedTest
+    @CsvSource("true", "false")
+    fun `getWithdrawableState userMayDirectlyWithdraw delegates to user access service`(canWithdraw: Boolean) {
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(user)
+        .withDecision(null)
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      every { userAccessService.userMayWithdrawPlacementApplication(user, placementApplication) } returns canWithdraw
+
+      val result = placementApplicationService.getWithdrawableState(placementApplication, user)
+
+      assertThat(result.userMayDirectlyWithdraw).isEqualTo(canWithdraw)
+    }
+  }
+
+  @Nested
   inner class WithdrawPlacementApplication {
     lateinit var user: UserEntity
     lateinit var application: ApprovedPremisesApplicationEntity
@@ -701,7 +800,7 @@ class PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `it withdraws a placement application and triggers emails and domain events`() {
+    fun `it withdraws a placement application and triggers emails and domain events and cascades to descendants`() {
       val allocatedTo = UserEntityFactory().withDefaultProbationRegion().produce()
 
       val placementApplication = PlacementApplicationEntityFactory()
@@ -715,6 +814,7 @@ class PlacementApplicationServiceTest {
       val withdrawalContext = WithdrawalContext(
         user,
         WithdrawableEntityType.PlacementApplication,
+        placementApplication.id,
       )
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
@@ -723,6 +823,7 @@ class PlacementApplicationServiceTest {
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(placementApplication, withdrawalContext) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any()) } returns Unit
+      every { withdrawableService.withdrawPlacementApplicationDescendants(any(), any()) } returns Unit
 
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
@@ -741,6 +842,7 @@ class PlacementApplicationServiceTest {
       assertThat(entity.decision).isEqualTo(PlacementApplicationDecision.WITHDRAW)
 
       verify { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(placementApplication, allocatedTo) }
+      verify { withdrawableService.withdrawPlacementApplicationDescendants(placementApplication, withdrawalContext) }
     }
 
     @Test
@@ -758,6 +860,7 @@ class PlacementApplicationServiceTest {
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(any(), any()) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any()) } returns Unit
+      every { withdrawableService.withdrawPlacementApplicationDescendants(any(), any()) } returns Unit
 
       val result = placementApplicationService.withdrawPlacementApplication(
         placementApplication.id,
@@ -765,6 +868,7 @@ class PlacementApplicationServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.Application,
+          placementApplication.id,
         ),
       )
 
@@ -803,143 +907,10 @@ class PlacementApplicationServiceTest {
           withdrawalContext = WithdrawalContext(
             user,
             triggeringEntity,
+            placementApplication.id,
           ),
         )
       }.hasMessage("Internal Server Error: Withdrawing a ${triggeringEntity.name} should not cascade to PlacementApplications")
-    }
-
-    @Test
-    fun `it cascades to withdrawable placement requests`() {
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
-        .withDecision(null)
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      val placementRequest1 = createValidPlacementRequest(application, user)
-      placementApplication.placementRequests.add(placementRequest1)
-
-      val placementRequest2 = createValidPlacementRequest(application, user)
-      placementApplication.placementRequests.add(placementRequest2)
-
-      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { userAccessService.userMayWithdrawPlacementApplication(any(), any()) } returns true
-      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
-      every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
-      every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(any(), any()) } returns Unit
-      every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any()) } returns Unit
-      every {
-        placementRequestService.withdrawPlacementRequest(any(), any(), any())
-      } returns AuthorisableActionResult.Success(mockk<PlacementRequestService.PlacementRequestAndCancellations>())
-
-      val result = placementApplicationService.withdrawPlacementApplication(
-        placementApplication.id,
-        PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
-        withdrawalContext = WithdrawalContext(
-          user,
-          WithdrawableEntityType.PlacementApplication,
-        ),
-      )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-
-      verify {
-        placementRequestService.withdrawPlacementRequest(
-          placementRequest1.id,
-          PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
-          WithdrawalContext(
-            user,
-            WithdrawableEntityType.PlacementApplication,
-          ),
-        )
-      }
-
-      verify {
-        placementRequestService.withdrawPlacementRequest(
-          placementRequest2.id,
-          PlacementRequestWithdrawalReason.RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
-          WithdrawalContext(
-            user,
-            WithdrawableEntityType.PlacementApplication,
-          ),
-        )
-      }
-    }
-
-    @Test
-    fun `it cascades to withdrawable placement requests and logs error if fails`() {
-      val logger = mockk<Logger>()
-      placementApplicationService.log = logger
-
-      val placementApplication = PlacementApplicationEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
-        .withDecision(null)
-        .withCreatedByUser(user)
-        .withSubmittedAt(OffsetDateTime.now())
-        .produce()
-
-      val placementRequest1 = createValidPlacementRequest(application, user)
-      placementApplication.placementRequests.add(placementRequest1)
-
-      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { userAccessService.userMayWithdrawPlacementApplication(any(), any()) } returns true
-      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
-      every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
-      every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(any(), any()) } returns Unit
-      every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any()) } returns Unit
-      every {
-        placementRequestService.withdrawPlacementRequest(any(), any(), any())
-      } returns AuthorisableActionResult.Unauthorised()
-      every { logger.error(any<String>()) } returns Unit
-
-      val result = placementApplicationService.withdrawPlacementApplication(
-        placementApplication.id,
-        PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
-        withdrawalContext = WithdrawalContext(
-          user,
-          WithdrawableEntityType.PlacementApplication,
-        ),
-      )
-
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-
-      verify {
-        logger.error(
-          "Failed to automatically withdraw placement request ${placementRequest1.id} " +
-            "when withdrawing placement application ${placementApplication.id} " +
-            "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult\$Unauthorised",
-        )
-      }
-    }
-
-    private fun createValidPlacementRequest(
-      application: ApprovedPremisesApplicationEntity,
-      user: UserEntity,
-    ): PlacementRequestEntity {
-      val placementRequestId = UUID.fromString("49f3eef9-4770-4f00-8f31-8e6f4cb4fd9e")
-
-      val assessment = ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(user)
-        .produce()
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withId(placementRequestId)
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withAllocatedToUser(user)
-        .produce()
-
-      return placementRequest
     }
 
     @Test
@@ -959,6 +930,7 @@ class PlacementApplicationServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementApplication,
+          placementApplication.id,
         ),
       )
 
@@ -985,6 +957,7 @@ class PlacementApplicationServiceTest {
         withdrawalContext = WithdrawalContext(
           user,
           WithdrawableEntityType.PlacementApplication,
+          placementApplication.id,
         ),
       )
 

@@ -599,7 +599,14 @@ class ApplicationService(
           assessmentService.updateCas1AssessmentWithdrawn(it.id)
         }
 
-        withdrawableService.withdrawAllForApplication(application, user)
+        withdrawableService.withdrawApplicationDescendants(
+          application,
+          WithdrawalContext(
+            user,
+            WithdrawableEntityType.Application,
+            application.id,
+          ),
+        )
 
         return@validated success(Unit)
       },
@@ -608,6 +615,13 @@ class ApplicationService(
 
   fun isWithdrawableForUser(user: UserEntity, application: ApplicationEntity) =
     userAccessService.userMayWithdrawApplication(user, application)
+
+  fun getWithdrawableState(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableState {
+    return WithdrawableState(
+      withdrawable = !application.isWithdrawn,
+      userMayDirectlyWithdraw = isWithdrawableForUser(user, application),
+    )
+  }
 
   fun sendEmailApplicationWithdrawn(user: UserEntity, application: ApplicationEntity, premisesName: String?) {
     user.email?.let { email ->
