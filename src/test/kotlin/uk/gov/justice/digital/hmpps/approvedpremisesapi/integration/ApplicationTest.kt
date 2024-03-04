@@ -1908,21 +1908,23 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Update existing AP application returns 200 with correct body`() {
-    `Given a User` { submittingUser, jwt ->
-      `Given a User`(
-        roles = listOf(UserRole.CAS1_ASSESSOR),
-        qualifications = listOf(UserQualification.PIPE),
-      ) { _, _ ->
-        `Given an Offender` { offenderDetails, _ ->
-          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+  @Nested
+  inner class UpdateApplicationCas1 {
+    @Test
+    fun `Update existing AP application returns 200 with correct body`() {
+      `Given a User` { submittingUser, jwt ->
+        `Given a User`(
+          roles = listOf(UserRole.CAS1_ASSESSOR),
+          qualifications = listOf(UserQualification.PIPE),
+        ) { _, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-            withSchema(
-              """
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(
+                """
               {
                 "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
                 "${"\$id"}": "https://example.com/product.schema.json",
@@ -1938,471 +1940,478 @@ class ApplicationTest : IntegrationTestBase() {
                 "required": [ "thingId" ]
               }
             """,
-            )
-          }
-
-          approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withId(applicationId)
-            withApplicationSchema(applicationSchema)
-            withCreatedByUser(submittingUser)
-          }
-
-          val resultBody = webTestClient.put()
-            .uri("/applications/$applicationId")
-            .header("Authorization", "Bearer $jwt")
-            .bodyValue(
-              UpdateApprovedPremisesApplication(
-                data = mapOf("thingId" to 123),
-                isWomensApplication = false,
-                isPipeApplication = true,
-                type = UpdateApplicationType.CAS1,
-              ),
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult(String::class.java)
-            .responseBody
-            .blockFirst()
-
-          val result = objectMapper.readValue(resultBody, Application::class.java)
-
-          assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
-        }
-      }
-    }
-  }
-
-  @Test
-  fun `Submit application returns 200, creates and allocates an assessment, saves a domain event, emits an SNS event`() {
-    `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory().produce(),
-          ),
-        )
-      },
-    ) { submittingUser, jwt ->
-      `Given a User`(
-        roles = listOf(UserRole.CAS1_ASSESSOR),
-        qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
-      ) { assessorUser, _ ->
-        `Given an Offender` { offenderDetails, _ ->
-          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
-
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-            withSchema(
-              """
-              {
-                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                "${"\$id"}": "https://example.com/product.schema.json",
-                "title": "Thing",
-                "description": "A thing",
-                "type": "object",
-                "properties": {
-                  "isWomensApplication": {
-                    "description": "whether this is a womens application",
-                    "type": "boolean"
-                  },
-                  "isPipeApplication": {
-                    "description": "whether this is a PIPE application",
-                    "type": "boolean"
-                  }
-                },
-                "required": [ "isWomensApplication", "isPipeApplication" ]
-              }
-            """,
-            )
-          }
-
-          approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withId(applicationId)
-            withApplicationSchema(applicationSchema)
-            withCreatedByUser(submittingUser)
-            withData(
-              """
-              {
-                 "isWomensApplication": true,
-                 "isPipeApplication": true
-              }
-            """,
-            )
-          }
-
-          CommunityAPI_mockSuccessfulRegistrationsCall(
-            offenderDetails.otherIds.crn,
-            Registrations(
-              registrations = listOf(
-                RegistrationClientResponseFactory()
-                  .withType(
-                    RegistrationKeyValue(
-                      code = "MAPP",
-                      description = "MAPPA",
-                    ),
-                  )
-                  .withRegisterCategory(
-                    RegistrationKeyValue(
-                      code = "A",
-                      description = "A",
-                    ),
-                  )
-                  .withRegisterLevel(
-                    RegistrationKeyValue(
-                      code = "1",
-                      description = "1",
-                    ),
-                  )
-                  .produce(),
-              ),
-            ),
-          )
-
-          APDeliusContext_mockSuccessfulCaseDetailCall(
-            offenderDetails.otherIds.crn,
-            CaseDetailFactory().produce(),
-          )
-
-          GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
-
-          webTestClient.post()
-            .uri("/applications/$applicationId/submission")
-            .header("Authorization", "Bearer $jwt")
-            .bodyValue(
-              SubmitApprovedPremisesApplication(
-                translatedDocument = {},
-                isPipeApplication = true,
-                isWomensApplication = true,
-                isEmergencyApplication = true,
-                isEsapApplication = true,
-                targetLocation = "SW1A 1AA",
-                releaseType = ReleaseTypeOption.licence,
-                sentenceType = SentenceTypeOption.nonStatutory,
-                type = "CAS1",
-              ),
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
-
-          val persistedApplication =
-            approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
-
-          assertThat(persistedApplication?.isWomensApplication).isTrue
-          assertThat(persistedApplication?.isPipeApplication).isTrue
-          assertThat(persistedApplication?.targetLocation).isEqualTo("SW1A 1AA")
-          assertThat(persistedApplication?.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
-          assertThat(persistedApplication?.apArea?.id).isEqualTo(submittingUser.probationRegion.apArea.id)
-
-          val createdAssessment =
-            approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
-          assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(assessorUser.id)
-          assertThat(createdAssessment.createdFromAppeal).isFalse()
-
-          val persistedDomainEvent = domainEventRepository.findAll().firstOrNull { it.applicationId == applicationId }
-
-          assertThat(persistedDomainEvent).isNotNull
-          assertThat(persistedDomainEvent!!.crn).isEqualTo(offenderDetails.otherIds.crn)
-          assertThat(persistedDomainEvent.type).isEqualTo(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
-
-          val emittedMessage = snsDomainEventListener.blockForMessage()
-
-          assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.submitted")
-          val emittedMessageDescription = "An application has been submitted for an Approved Premises placement"
-          assertThat(emittedMessage.description).isEqualTo(emittedMessageDescription)
-          assertThat(emittedMessage.detailUrl).matches("http://api/events/application-submitted/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
-          assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(applicationId)
-          assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
-            SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
-            SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
-          )
-        }
-      }
-    }
-  }
-
-  @Test
-  fun `Submit application returns 200, creates and allocates an assessment, has given probation region id`() {
-    `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory().produce(),
-          ),
-        )
-      },
-    ) { submittingUser, jwt ->
-      `Given a User`(
-        roles = listOf(UserRole.CAS1_ASSESSOR),
-        qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
-      ) { assessorUser, _ ->
-        `Given an Offender` { offenderDetails, _ ->
-          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
-
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-            withSchema(
-              """
-              {
-                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                "${"\$id"}": "https://example.com/product.schema.json",
-                "title": "Thing",
-                "description": "A thing",
-                "type": "object",
-                "properties": {
-                  "isWomensApplication": {
-                    "description": "whether this is a womens application",
-                    "type": "boolean"
-                  },
-                  "isPipeApplication": {
-                    "description": "whether this is a PIPE application",
-                    "type": "boolean"
-                  }
-                },
-                "required": [ "isWomensApplication", "isPipeApplication" ]
-              }
-            """,
-            )
-          }
-
-          approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withId(applicationId)
-            withApplicationSchema(applicationSchema)
-            withCreatedByUser(submittingUser)
-            withData(
-              """
-              {
-                 "isWomensApplication": true,
-                 "isPipeApplication": true
-              }
-            """,
-            )
-          }
-
-          CommunityAPI_mockSuccessfulRegistrationsCall(
-            offenderDetails.otherIds.crn,
-            Registrations(
-              registrations = listOf(
-                RegistrationClientResponseFactory()
-                  .withType(
-                    RegistrationKeyValue(
-                      code = "MAPP",
-                      description = "MAPPA",
-                    ),
-                  )
-                  .withRegisterCategory(
-                    RegistrationKeyValue(
-                      code = "A",
-                      description = "A",
-                    ),
-                  )
-                  .withRegisterLevel(
-                    RegistrationKeyValue(
-                      code = "1",
-                      description = "1",
-                    ),
-                  )
-                  .produce(),
-              ),
-            ),
-          )
-
-          APDeliusContext_mockSuccessfulCaseDetailCall(
-            offenderDetails.otherIds.crn,
-            CaseDetailFactory().produce(),
-          )
-
-          GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
-
-          val apArea = apAreaEntityFactory.produceAndPersist {
-          }
-
-          val probationRegion = probationRegionEntityFactory.produceAndPersist {
-            withApArea(apArea)
-          }
-
-          webTestClient.post()
-            .uri("/applications/$applicationId/submission")
-            .header("Authorization", "Bearer $jwt")
-            .bodyValue(
-              SubmitApprovedPremisesApplication(
-                translatedDocument = {},
-                isPipeApplication = true,
-                isWomensApplication = true,
-                isEmergencyApplication = true,
-                isEsapApplication = true,
-                targetLocation = "SW1A 1AA",
-                releaseType = ReleaseTypeOption.licence,
-                sentenceType = SentenceTypeOption.nonStatutory,
-                type = "CAS1",
-                apAreaId = apArea.id,
-              ),
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
-
-          val persistedApplication =
-            approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
-
-          assertThat(persistedApplication?.isWomensApplication).isTrue
-          assertThat(persistedApplication?.isPipeApplication).isTrue
-          assertThat(persistedApplication?.targetLocation).isEqualTo("SW1A 1AA")
-          assertThat(persistedApplication?.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
-          assertThat(persistedApplication?.apArea?.id).isEqualTo(apArea.id)
-        }
-      }
-    }
-  }
-
-  @Test
-  fun `When several concurrent submit application requests occur, only one is successful, all others return 400 without persisting domain events`() {
-    `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory().produce(),
-          ),
-        )
-      },
-    ) { submittingUser, jwt ->
-      `Given a User`(
-        roles = listOf(UserRole.CAS1_ASSESSOR),
-        qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
-      ) { _, _ ->
-        `Given an Offender` { offenderDetails, _ ->
-          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
-
-          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-            withSchema(
-              """
-              {
-                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-                "${"\$id"}": "https://example.com/product.schema.json",
-                "title": "Thing",
-                "description": "A thing",
-                "type": "object",
-                "properties": {
-                  "isWomensApplication": {
-                    "description": "whether this is a womens application",
-                    "type": "boolean"
-                  },
-                  "isPipeApplication": {
-                    "description": "whether this is a PIPE application",
-                    "type": "boolean"
-                  }
-                },
-                "required": [ "isWomensApplication", "isPipeApplication" ]
-              }
-            """,
-            )
-          }
-
-          approvedPremisesApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withId(applicationId)
-            withApplicationSchema(applicationSchema)
-            withCreatedByUser(submittingUser)
-            withData(
-              """
-              {
-                 "isWomensApplication": true,
-                 "isPipeApplication": true
-              }
-            """,
-            )
-          }
-
-          CommunityAPI_mockSuccessfulRegistrationsCall(
-            offenderDetails.otherIds.crn,
-            Registrations(
-              registrations = listOf(
-                RegistrationClientResponseFactory()
-                  .withType(
-                    RegistrationKeyValue(
-                      code = "MAPP",
-                      description = "MAPPA",
-                    ),
-                  )
-                  .withRegisterCategory(
-                    RegistrationKeyValue(
-                      code = "A",
-                      description = "A",
-                    ),
-                  )
-                  .withRegisterLevel(
-                    RegistrationKeyValue(
-                      code = "1",
-                      description = "1",
-                    ),
-                  )
-                  .produce(),
-              ),
-            ),
-          )
-
-          every { realApplicationRepository.save(any()) } answers {
-            Thread.sleep(1000)
-            it.invocation.args[0] as ApplicationEntity
-          }
-
-          APDeliusContext_mockSuccessfulCaseDetailCall(
-            offenderDetails.otherIds.crn,
-            CaseDetailFactory().produce(),
-          )
-
-          val responseStatuses = mutableListOf<HttpStatus>()
-
-          GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
-
-          (1..10).map {
-            val thread = Thread {
-              webTestClient.post()
-                .uri("/applications/$applicationId/submission")
-                .header("Authorization", "Bearer $jwt")
-                .bodyValue(
-                  SubmitApprovedPremisesApplication(
-                    translatedDocument = {},
-                    isPipeApplication = true,
-                    isWomensApplication = true,
-                    isEmergencyApplication = true,
-                    isEsapApplication = true,
-                    targetLocation = "SW1A 1AA",
-                    releaseType = ReleaseTypeOption.licence,
-                    sentenceType = SentenceTypeOption.nonStatutory,
-                    type = "CAS1",
-                  ),
-                )
-                .exchange()
-                .returnResult<String>()
-                .consumeWith {
-                  synchronized(responseStatuses) {
-                    responseStatuses += it.status
-                  }
-                }
+              )
             }
 
-            thread.start()
+            approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withId(applicationId)
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(submittingUser)
+            }
 
-            thread
-          }.forEach(Thread::join)
+            val resultBody = webTestClient.put()
+              .uri("/applications/$applicationId")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                UpdateApprovedPremisesApplication(
+                  data = mapOf("thingId" to 123),
+                  isWomensApplication = false,
+                  isPipeApplication = true,
+                  type = UpdateApplicationType.CAS1,
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult(String::class.java)
+              .responseBody
+              .blockFirst()
 
-          val persistedDomainEvents = domainEventRepository.findAll().filter { it.applicationId == applicationId }
+            val result = objectMapper.readValue(resultBody, Application::class.java)
 
-          assertThat(persistedDomainEvents).singleElement()
-          assertThat(responseStatuses.count { it.value() == 200 }).isEqualTo(1)
-          assertThat(responseStatuses.count { it.value() == 400 }).isEqualTo(9)
+            assertThat(result.person.crn).isEqualTo(offenderDetails.otherIds.crn)
+          }
         }
       }
     }
+  }
+
+
+  @Nested
+  inner class SubmitApplicationCas1 {
+
+    @Test
+    fun `Submit application returns 200, creates and allocates an assessment, saves a domain event, emits an SNS event`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withTeams(
+            listOf(
+              StaffUserTeamMembershipFactory().produce(),
+            ),
+          )
+        },
+      ) { submittingUser, jwt ->
+        `Given a User`(
+          roles = listOf(UserRole.CAS1_ASSESSOR),
+          qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+        ) { assessorUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(
+                """
+                {
+                  "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                  "${"\$id"}": "https://example.com/product.schema.json",
+                  "title": "Thing",
+                  "description": "A thing",
+                  "type": "object",
+                  "properties": {
+                    "isWomensApplication": {
+                      "description": "whether this is a womens application",
+                      "type": "boolean"
+                    },
+                    "isPipeApplication": {
+                      "description": "whether this is a PIPE application",
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [ "isWomensApplication", "isPipeApplication" ]
+                }
+              """,
+              )
+            }
+
+            approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withId(applicationId)
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(submittingUser)
+              withData(
+                """
+                {
+                   "isWomensApplication": true,
+                   "isPipeApplication": true
+                }
+              """,
+              )
+            }
+
+            CommunityAPI_mockSuccessfulRegistrationsCall(
+              offenderDetails.otherIds.crn,
+              Registrations(
+                registrations = listOf(
+                  RegistrationClientResponseFactory()
+                    .withType(
+                      RegistrationKeyValue(
+                        code = "MAPP",
+                        description = "MAPPA",
+                      ),
+                    )
+                    .withRegisterCategory(
+                      RegistrationKeyValue(
+                        code = "A",
+                        description = "A",
+                      ),
+                    )
+                    .withRegisterLevel(
+                      RegistrationKeyValue(
+                        code = "1",
+                        description = "1",
+                      ),
+                    )
+                    .produce(),
+                ),
+              ),
+            )
+
+            APDeliusContext_mockSuccessfulCaseDetailCall(
+              offenderDetails.otherIds.crn,
+              CaseDetailFactory().produce(),
+            )
+
+            GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+            webTestClient.post()
+              .uri("/applications/$applicationId/submission")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                SubmitApprovedPremisesApplication(
+                  translatedDocument = {},
+                  isPipeApplication = true,
+                  isWomensApplication = true,
+                  isEmergencyApplication = true,
+                  isEsapApplication = true,
+                  targetLocation = "SW1A 1AA",
+                  releaseType = ReleaseTypeOption.licence,
+                  sentenceType = SentenceTypeOption.nonStatutory,
+                  type = "CAS1",
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+
+            val persistedApplication =
+              approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
+
+            assertThat(persistedApplication?.isWomensApplication).isTrue
+            assertThat(persistedApplication?.isPipeApplication).isTrue
+            assertThat(persistedApplication?.targetLocation).isEqualTo("SW1A 1AA")
+            assertThat(persistedApplication?.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
+            assertThat(persistedApplication?.apArea?.id).isEqualTo(submittingUser.probationRegion.apArea.id)
+
+            val createdAssessment =
+              approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }
+            assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(assessorUser.id)
+            assertThat(createdAssessment.createdFromAppeal).isFalse()
+
+            val persistedDomainEvent = domainEventRepository.findAll().firstOrNull { it.applicationId == applicationId }
+
+            assertThat(persistedDomainEvent).isNotNull
+            assertThat(persistedDomainEvent!!.crn).isEqualTo(offenderDetails.otherIds.crn)
+            assertThat(persistedDomainEvent.type).isEqualTo(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
+
+            val emittedMessage = snsDomainEventListener.blockForMessage()
+
+            assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.submitted")
+            val emittedMessageDescription = "An application has been submitted for an Approved Premises placement"
+            assertThat(emittedMessage.description).isEqualTo(emittedMessageDescription)
+            assertThat(emittedMessage.detailUrl).matches("http://api/events/application-submitted/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
+            assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(applicationId)
+            assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+              SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
+              SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
+            )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Submit application returns 200, creates and allocates an assessment, has given probation region id`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withTeams(
+            listOf(
+              StaffUserTeamMembershipFactory().produce(),
+            ),
+          )
+        },
+      ) { submittingUser, jwt ->
+        `Given a User`(
+          roles = listOf(UserRole.CAS1_ASSESSOR),
+          qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+        ) { assessorUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(
+                """
+              {
+                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                "${"\$id"}": "https://example.com/product.schema.json",
+                "title": "Thing",
+                "description": "A thing",
+                "type": "object",
+                "properties": {
+                  "isWomensApplication": {
+                    "description": "whether this is a womens application",
+                    "type": "boolean"
+                  },
+                  "isPipeApplication": {
+                    "description": "whether this is a PIPE application",
+                    "type": "boolean"
+                  }
+                },
+                "required": [ "isWomensApplication", "isPipeApplication" ]
+              }
+            """,
+              )
+            }
+
+            approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withId(applicationId)
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(submittingUser)
+              withData(
+                """
+              {
+                 "isWomensApplication": true,
+                 "isPipeApplication": true
+              }
+            """,
+              )
+            }
+
+            CommunityAPI_mockSuccessfulRegistrationsCall(
+              offenderDetails.otherIds.crn,
+              Registrations(
+                registrations = listOf(
+                  RegistrationClientResponseFactory()
+                    .withType(
+                      RegistrationKeyValue(
+                        code = "MAPP",
+                        description = "MAPPA",
+                      ),
+                    )
+                    .withRegisterCategory(
+                      RegistrationKeyValue(
+                        code = "A",
+                        description = "A",
+                      ),
+                    )
+                    .withRegisterLevel(
+                      RegistrationKeyValue(
+                        code = "1",
+                        description = "1",
+                      ),
+                    )
+                    .produce(),
+                ),
+              ),
+            )
+
+            APDeliusContext_mockSuccessfulCaseDetailCall(
+              offenderDetails.otherIds.crn,
+              CaseDetailFactory().produce(),
+            )
+
+            GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+            val apArea = apAreaEntityFactory.produceAndPersist {
+            }
+
+            val probationRegion = probationRegionEntityFactory.produceAndPersist {
+              withApArea(apArea)
+            }
+
+            webTestClient.post()
+              .uri("/applications/$applicationId/submission")
+              .header("Authorization", "Bearer $jwt")
+              .bodyValue(
+                SubmitApprovedPremisesApplication(
+                  translatedDocument = {},
+                  isPipeApplication = true,
+                  isWomensApplication = true,
+                  isEmergencyApplication = true,
+                  isEsapApplication = true,
+                  targetLocation = "SW1A 1AA",
+                  releaseType = ReleaseTypeOption.licence,
+                  sentenceType = SentenceTypeOption.nonStatutory,
+                  type = "CAS1",
+                  apAreaId = apArea.id,
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+
+            val persistedApplication =
+              approvedPremisesApplicationRepository.findByIdOrNull(applicationId)
+
+            assertThat(persistedApplication?.isWomensApplication).isTrue
+            assertThat(persistedApplication?.isPipeApplication).isTrue
+            assertThat(persistedApplication?.targetLocation).isEqualTo("SW1A 1AA")
+            assertThat(persistedApplication?.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
+            assertThat(persistedApplication?.apArea?.id).isEqualTo(apArea.id)
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `When several concurrent submit application requests occur, only one is successful, all others return 400 without persisting domain events`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withTeams(
+            listOf(
+              StaffUserTeamMembershipFactory().produce(),
+            ),
+          )
+        },
+      ) { submittingUser, jwt ->
+        `Given a User`(
+          roles = listOf(UserRole.CAS1_ASSESSOR),
+          qualifications = listOf(UserQualification.PIPE, UserQualification.WOMENS),
+        ) { _, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+            val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(
+                """
+              {
+                "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+                "${"\$id"}": "https://example.com/product.schema.json",
+                "title": "Thing",
+                "description": "A thing",
+                "type": "object",
+                "properties": {
+                  "isWomensApplication": {
+                    "description": "whether this is a womens application",
+                    "type": "boolean"
+                  },
+                  "isPipeApplication": {
+                    "description": "whether this is a PIPE application",
+                    "type": "boolean"
+                  }
+                },
+                "required": [ "isWomensApplication", "isPipeApplication" ]
+              }
+            """,
+              )
+            }
+
+            approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withId(applicationId)
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(submittingUser)
+              withData(
+                """
+              {
+                 "isWomensApplication": true,
+                 "isPipeApplication": true
+              }
+            """,
+              )
+            }
+
+            CommunityAPI_mockSuccessfulRegistrationsCall(
+              offenderDetails.otherIds.crn,
+              Registrations(
+                registrations = listOf(
+                  RegistrationClientResponseFactory()
+                    .withType(
+                      RegistrationKeyValue(
+                        code = "MAPP",
+                        description = "MAPPA",
+                      ),
+                    )
+                    .withRegisterCategory(
+                      RegistrationKeyValue(
+                        code = "A",
+                        description = "A",
+                      ),
+                    )
+                    .withRegisterLevel(
+                      RegistrationKeyValue(
+                        code = "1",
+                        description = "1",
+                      ),
+                    )
+                    .produce(),
+                ),
+              ),
+            )
+
+            every { realApplicationRepository.save(any()) } answers {
+              Thread.sleep(1000)
+              it.invocation.args[0] as ApplicationEntity
+            }
+
+            APDeliusContext_mockSuccessfulCaseDetailCall(
+              offenderDetails.otherIds.crn,
+              CaseDetailFactory().produce(),
+            )
+
+            val responseStatuses = mutableListOf<HttpStatus>()
+
+            GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+            (1..10).map {
+              val thread = Thread {
+                webTestClient.post()
+                  .uri("/applications/$applicationId/submission")
+                  .header("Authorization", "Bearer $jwt")
+                  .bodyValue(
+                    SubmitApprovedPremisesApplication(
+                      translatedDocument = {},
+                      isPipeApplication = true,
+                      isWomensApplication = true,
+                      isEmergencyApplication = true,
+                      isEsapApplication = true,
+                      targetLocation = "SW1A 1AA",
+                      releaseType = ReleaseTypeOption.licence,
+                      sentenceType = SentenceTypeOption.nonStatutory,
+                      type = "CAS1",
+                    ),
+                  )
+                  .exchange()
+                  .returnResult<String>()
+                  .consumeWith {
+                    synchronized(responseStatuses) {
+                      responseStatuses += it.status
+                    }
+                  }
+              }
+
+              thread.start()
+
+              thread
+            }.forEach(Thread::join)
+
+            val persistedDomainEvents = domainEventRepository.findAll().filter { it.applicationId == applicationId }
+
+            assertThat(persistedDomainEvents).singleElement()
+            assertThat(responseStatuses.count { it.value() == 200 }).isEqualTo(1)
+            assertThat(responseStatuses.count { it.value() == 400 }).isEqualTo(9)
+          }
+        }
+      }
+    }
+
   }
 
   @Test
@@ -3178,7 +3187,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class TimelineNotesForApplication {
+  inner class PostTimelineNotesForApplication {
     @Test
     fun `post ApplicationTimelineNote without JWT returns 401`() {
       webTestClient.post()
@@ -3324,7 +3333,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class ApplicationsAll {
+  inner class GetApplicationsAll {
     @Test
     fun `Get applications all without JWT returns 401`() {
       webTestClient.get()
