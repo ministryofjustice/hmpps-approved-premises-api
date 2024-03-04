@@ -17,14 +17,8 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
@@ -35,29 +29,23 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ProbationAreaFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -76,7 +64,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -101,6 +88,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
@@ -110,7 +98,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
-import java.time.Period
 import java.time.ZoneOffset
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService as Cas3DomainEventService
@@ -127,7 +114,6 @@ class ApplicationServiceTest {
   private val mockApplicationTimelineNoteTransformer = mockk<ApplicationTimelineNoteTransformer>()
   private val mockDomainEventService = mockk<DomainEventService>()
   private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
-  private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApplicationTeamCodeRepository = mockk<ApplicationTeamCodeRepository>()
   private val mockUserAccessService = mockk<UserAccessService>()
@@ -138,6 +124,7 @@ class ApplicationServiceTest {
   private val applicationTimelineTransformerMock = mockk<ApplicationTimelineTransformer>()
   private val mockDomainEventTransformer = mockk<DomainEventTransformer>()
   private val mockCas1ApplicationUserDetailsRepository = mockk<Cas1ApplicationUserDetailsRepository>()
+  private val mockCas1ApplicationDomainEventService = mockk<Cas1ApplicationDomainEventService>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -151,7 +138,6 @@ class ApplicationServiceTest {
     mockApplicationTimelineNoteTransformer,
     mockDomainEventService,
     mockCas3DomainEventService,
-    mockCommunityApiClient,
     mockApDeliusContextApiClient,
     mockApplicationTeamCodeRepository,
     mockEmailNotificationService,
@@ -164,6 +150,7 @@ class ApplicationServiceTest {
     applicationTimelineTransformerMock,
     mockDomainEventTransformer,
     mockCas1ApplicationUserDetailsRepository,
+    mockCas1ApplicationDomainEventService,
   )
 
   @Test
@@ -210,19 +197,6 @@ class ApplicationServiceTest {
         override fun getStatus(): String = ApprovedPremisesApplicationStatus.started.toString()
         override fun getIsWithdrawn(): Boolean = false
       },
-    )
-
-    every { mockCommunityApiClient.getStaffUserDetails(distinguishedName) } returns ClientResult.Success(
-      HttpStatus.OK,
-      StaffUserDetailsFactory()
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce(),
-          ),
-        )
-        .produce(),
     )
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
@@ -1449,6 +1423,8 @@ class ApplicationServiceTest {
       sentenceType = SentenceTypeOption.nonStatutory,
     )
 
+    private val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
     @BeforeEach
     fun setup() {
       every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
@@ -1568,8 +1544,6 @@ class ApplicationServiceTest {
     fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event, sends confirmation email`(
       situation: SituationOption?,
     ) {
-      val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-
       submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
         translatedDocument = {},
         isPipeApplication = true,
@@ -1611,71 +1585,15 @@ class ApplicationServiceTest {
         .withAllocatedToUser(user)
         .produce()
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withGender("male")
-        .withCrn(application.crn)
-        .produce()
-
       every {
-        mockOffenderService.getOffenderByCrn(
-          application.crn,
-          user.deliusUsername,
-          true,
+        mockCas1ApplicationDomainEventService.applicationSubmitted(
+          application,
+          submitApprovedPremisesApplication,
+          username,
+          "jwt",
         )
-      } returns AuthorisableActionResult.Success(
-        offenderDetails,
-      )
+      } returns Unit
 
-      val risks = PersonRisksFactory()
-        .withMappa(
-          RiskWithStatus(
-            status = RiskStatus.Retrieved,
-            value = Mappa(
-              level = "CAT C1/LEVEL L1",
-              lastUpdated = LocalDate.now(),
-            ),
-          ),
-        )
-        .produce()
-
-      every {
-        mockOffenderService.getRiskByCrn(
-          application.crn,
-          any(),
-          user.deliusUsername,
-        )
-      } returns AuthorisableActionResult.Success(
-        risks,
-      )
-
-      val staffUserDetails = StaffUserDetailsFactory()
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .produce(),
-          ),
-        )
-        .produce()
-
-      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
-        status = HttpStatus.OK,
-        body = staffUserDetails,
-      )
-
-      val caseDetails = CaseDetailFactory().produce()
-
-      every { mockApDeliusContextApiClient.getCaseDetail(application.crn) } returns ClientResult.Success(
-        status = HttpStatus.OK,
-        body = caseDetails,
-      )
-
-      val domainEventStaffMember = StaffMemberFactory().produce()
-      every { mockDomainEventTransformer.toStaffMember(staffUserDetails) } returns domainEventStaffMember
-
-      val domainEventProbationArea = ProbationAreaFactory().produce()
-      every { mockDomainEventTransformer.toProbationArea(staffUserDetails) } returns domainEventProbationArea
-
-      every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
       every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
 
       val result =
@@ -1708,42 +1626,11 @@ class ApplicationServiceTest {
       verify(exactly = 1) { mockAssessmentService.createApprovedPremisesAssessment(application) }
 
       verify(exactly = 1) {
-        mockDomainEventService.saveApplicationSubmittedDomainEvent(
-          match {
-            val data = (it.data as ApplicationSubmittedEnvelope).eventDetails
-
-            it.applicationId == application.id &&
-              it.crn == application.crn &&
-              data.applicationId == application.id &&
-              data.applicationUrl == "http://frontend/applications/${application.id}" &&
-              data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
-              data.deliusEventNumber == application.eventNumber &&
-              data.releaseType == submitApprovedPremisesApplication.releaseType.toString() &&
-              data.age == Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years &&
-              data.gender == ApplicationSubmitted.Gender.male &&
-              data.submittedBy == ApplicationSubmittedSubmittedBy(
-              staffMember = domainEventStaffMember,
-              probationArea = domainEventProbationArea,
-              team = Team(
-                code = caseDetails.case.manager.team.code,
-                name = caseDetails.case.manager.team.name,
-              ),
-              ldu = Ldu(
-                code = caseDetails.case.manager.team.ldu.code,
-                name = caseDetails.case.manager.team.ldu.name,
-              ),
-              region = Region(
-                code = staffUserDetails.probationArea.code,
-                name = staffUserDetails.probationArea.description,
-              ),
-            ) &&
-              data.mappa == risks.mappa.value!!.level &&
-              data.sentenceLengthInMonths == null &&
-              data.offenceId == application.offenceId
-          },
+        mockCas1ApplicationDomainEventService.applicationSubmitted(
+          application,
+          submitApprovedPremisesApplication,
+          username,
+          "jwt",
         )
       }
 
@@ -1758,9 +1645,9 @@ class ApplicationServiceTest {
         )
       }
     }
-
   }
 
+  @SuppressWarnings("UnusedPrivateProperty")
   @Nested
   inner class SubmitApplicationCas3 {
     val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
