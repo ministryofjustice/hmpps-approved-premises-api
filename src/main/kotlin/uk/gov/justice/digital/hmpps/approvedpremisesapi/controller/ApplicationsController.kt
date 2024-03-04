@@ -52,14 +52,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AppealTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
@@ -305,16 +305,16 @@ class ApplicationsController(
   override fun applicationsApplicationIdWithdrawalPost(applicationId: UUID, body: NewWithdrawal): ResponseEntity<Unit> {
     val user = userService.getUserForRequest()
 
-    extractEntityFromNestedAuthorisableValidatableActionResult(
-      applicationService.withdrawApprovedPremisesApplication(
-        applicationId = applicationId,
-        user = user,
-        withdrawalReason = body.reason.value,
-        otherReason = body.otherReason,
+    return ResponseEntity.ok(
+      extractEntityFromCasResult(
+        withdrawableService.withdrawApplication(
+          applicationId = applicationId,
+          user = user,
+          withdrawalReason = body.reason.value,
+          otherReason = body.otherReason,
+        ),
       ),
     )
-
-    return ResponseEntity.ok(Unit)
   }
 
   override fun applicationsApplicationIdTimelineGet(applicationId: UUID, xServiceName: ServiceName):

@@ -36,14 +36,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService.PlacementRequestAndCancellations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingNotMadeTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NewPlacementRequestBookingConfirmationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestDetailTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.time.LocalDate
 import java.util.UUID
 
@@ -57,6 +56,7 @@ class PlacementRequestsController(
   private val bookingService: BookingService,
   private val bookingConfirmationTransformer: NewPlacementRequestBookingConfirmationTransformer,
   private val bookingNotMadeTransformer: BookingNotMadeTransformer,
+  private val withdrawableService: WithdrawableService,
 ) : PlacementRequestsApiDelegate {
 
   override fun placementRequestsGet(): ResponseEntity<List<PlacementRequest>> {
@@ -196,23 +196,21 @@ class PlacementRequestsController(
       null -> null
     }
 
-    val placementRequestAndCancellations = extractEntityFromAuthorisableActionResult(
-      placementRequestService.withdrawPlacementRequest(
+    val placementRequestAndCancellations = extractEntityFromCasResult(
+      withdrawableService.withdrawPlacementRequest(
         id,
+        user,
         reason,
-        WithdrawalContext(
-          user,
-          WithdrawableEntityType.PlacementRequest,
-          id,
-        ),
       ),
     )
 
     return ResponseEntity.ok(toPlacementRequestDetail(user, placementRequestAndCancellations))
   }
 
-  private fun toPlacementRequestDetail(forUser: UserEntity,
-                                       placementRequestAndCancellations: PlacementRequestAndCancellations): PlacementRequestDetail {
+  private fun toPlacementRequestDetail(
+    forUser: UserEntity,
+    placementRequestAndCancellations: PlacementRequestAndCancellations,
+  ): PlacementRequestDetail {
     val personInfo = offenderService.getInfoForPerson(
       placementRequestAndCancellations.placementRequest.application.crn,
       forUser.deliusUsername,
@@ -222,10 +220,10 @@ class PlacementRequestsController(
     return placementRequestDetailTransformer.transformJpaToApi(
       placementRequestAndCancellations.placementRequest,
       personInfo,
-      placementRequestAndCancellations.cancellations
+      placementRequestAndCancellations.cancellations,
     )
   }
-  
+
   private fun mapPersonDetailOntoPlacementRequests(placementRequests: List<PlacementRequestEntity>, user: UserEntity): List<PlacementRequest> {
     return placementRequests.mapNotNull {
       val personInfo = offenderService.getInfoForPerson(it.application.crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))

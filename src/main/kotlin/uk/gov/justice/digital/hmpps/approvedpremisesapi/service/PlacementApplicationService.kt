@@ -26,10 +26,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult.ValidatableActionResultError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.annotation.PostConstruct
@@ -57,7 +61,6 @@ class PlacementApplicationService(
   private val sendPlacementRequestNotifications: Boolean,
   private val taskDeadlineService: TaskDeadlineService,
   @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val useNewWithdrawalLogic: Boolean,
-  private val withdrawableService: WithdrawableService,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -128,6 +131,8 @@ class PlacementApplicationService(
 
     return AuthorisableActionResult.Success(setSchemaUpToDate(placementApplication))
   }
+
+  fun getApplicationOrNull(id: UUID) = placementApplicationRepository.findByIdOrNull(id)
 
   fun reallocateApplication(
     assigneeUser: UserEntity,
@@ -208,32 +213,25 @@ class PlacementApplicationService(
     )
   }
 
+  /**
+   * This function should not be called directly. Instead, use [WithdrawableService.withdrawPlacementApplication] that
+   * will indirectly invoke this function. It will also ensure that:
+   *
+   * 1. The entity is withdrawable, and error if not
+   * 2. The user is allowed to withdraw it, and error if not
+   * 3. If withdrawn, all descdents entities are withdrawn, where applicable
+   */
   @Transactional
   fun withdrawPlacementApplication(
     id: UUID,
     userProvidedReason: PlacementApplicationWithdrawalReason?,
     withdrawalContext: WithdrawalContext,
-  ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
-    val user = requireNotNull(withdrawalContext.triggeringUser)
-
+  ): CasResult<PlacementApplicationEntity> {
     val placementApplication =
-      placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+      placementApplicationRepository.findByIdOrNull(id) ?: return CasResult.NotFound()
 
     if (placementApplication.isWithdrawn()) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.Success(placementApplication),
-      )
-    }
-
-    val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementApplication
-    if (isUserRequestedWithdrawal && !userAccessService.userMayWithdrawPlacementApplication(user, placementApplication)) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
-    if (!placementApplication.isInWithdrawableState()) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("The Placement Application cannot be withdrawn as it's not in a withdrawable state"),
-      )
+      return CasResult.Success(placementApplication)
     }
 
     val wasBeingAssessedBy = if (placementApplication.isBeingAssessed()) { placementApplication.allocatedToUser } else null
@@ -252,11 +250,7 @@ class PlacementApplicationService(
     cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(placementApplication, withdrawalContext)
     cas1PlacementApplicationEmailService.placementApplicationWithdrawn(placementApplication, wasBeingAssessedBy)
 
-    withdrawableService.withdrawPlacementApplicationDescendants(placementApplication, withdrawalContext)
-
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedApplication),
-    )
+    return CasResult.Success(savedApplication)
   }
 
   fun updateApplication(

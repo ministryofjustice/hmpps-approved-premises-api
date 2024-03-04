@@ -21,10 +21,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import java.util.UUID
@@ -37,6 +37,7 @@ class PlacementApplicationsController(
   private val placementApplicationService: PlacementApplicationService,
   private val placementApplicationTransformer: PlacementApplicationTransformer,
   private val objectMapper: ObjectMapper,
+  private val withdrawalService: WithdrawableService,
 ) : PlacementApplicationsApiDelegate {
   override fun placementApplicationsPost(newPlacementApplication: NewPlacementApplication): ResponseEntity<PlacementApplication> {
     val user = userService.getUserForRequest()
@@ -130,19 +131,14 @@ class PlacementApplicationsController(
       null -> null
     }
 
-    val result = placementApplicationService.withdrawPlacementApplication(
+    val result = withdrawalService.withdrawPlacementApplication(
       id,
+      userService.getUserForRequest(),
       withdrawalReason,
-      withdrawalContext = WithdrawalContext(
-        userService.getUserForRequest(),
-        WithdrawableEntityType.PlacementApplication,
-        id,
-      ),
     )
 
-    val validationResult = extractEntityFromAuthorisableActionResult(result)
-    val placementApplication = extractEntityFromValidatableActionResult(validationResult)
-
-    return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
+    return ResponseEntity.ok(
+      placementApplicationTransformer.transformJpaToApi(extractEntityFromCasResult(result)),
+    )
   }
 }

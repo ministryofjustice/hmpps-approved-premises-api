@@ -116,6 +116,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -129,8 +130,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
@@ -2149,40 +2150,11 @@ class BookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
 
-      assertThat(result.entity).isEqualTo(cancellationEntity)
+      assertThat(result.value).isEqualTo(cancellationEntity)
       verify { mockBookingRepository.save(any()) wasNot called }
-    }
-
-    @Test
-    fun `createCancellation returns GeneralError if booking is not in a cancellable state`() {
-      val bookingEntity = BookingEntityFactory()
-        .withPremises(premises)
-        .withArrivals(mutableListOf())
-        .produce()
-
-      bookingEntity.arrivals.add(ArrivalEntityFactory().withBooking(bookingEntity).produce())
-
-      every { mockCancellationReasonRepository.findByIdOrNull(reasonId) } returns reason
-      every { mockCancellationRepository.save(any()) } answers { it.invocation.args[0] as CancellationEntity }
-      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
-
-      val result = bookingService.createCas1Cancellation(
-        booking = bookingEntity,
-        cancelledAt = LocalDate.parse("2022-08-25"),
-        userProvidedReason = reasonId,
-        notes = "notes",
-        withdrawalContext = WithdrawalContext(
-          user,
-          WithdrawableEntityType.Booking,
-          bookingEntity.id,
-        ),
-      )
-
-      assertThat(result).isInstanceOf(ValidatableActionResult.GeneralValidationError::class.java)
-      assertThat((result as ValidatableActionResult.GeneralValidationError).message).isEqualTo("The Booking is not in a state that can be cancelled")
     }
 
     @Test
@@ -2206,8 +2178,8 @@ class BookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
         entry("$.reason", "doesNotExist"),
       )
     }
@@ -2238,8 +2210,8 @@ class BookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-      assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
+      assertThat(result).isInstanceOf(CasResult.FieldValidationError::class.java)
+      assertThat((result as CasResult.FieldValidationError).validationMessages).contains(
         entry("$.reason", "incorrectCancellationReasonServiceScope"),
       )
     }
@@ -2266,12 +2238,12 @@ class BookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.reason).isEqualTo(reason)
-      assertThat(result.entity.notes).isEqualTo("notes")
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+      assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.value.reason).isEqualTo(reason)
+      assertThat(result.value.notes).isEqualTo("notes")
+      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 1) {
         mockBookingRepository.save(bookingEntity)
@@ -2328,12 +2300,12 @@ class BookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.reason).isEqualTo(reason)
-      assertThat(result.entity.notes).isEqualTo("notes")
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+      assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.value.reason).isEqualTo(reason)
+      assertThat(result.value.notes).isEqualTo("notes")
+      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 1) {
         mockDomainEventService.saveBookingCancelledEvent(
@@ -2416,7 +2388,7 @@ class BookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
 
       verify(exactly = 1) { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity) }
     }
@@ -2465,12 +2437,12 @@ class BookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.reason).isEqualTo(reason)
-      assertThat(result.entity.notes).isEqualTo("notes")
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+      assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.value.reason).isEqualTo(reason)
+      assertThat(result.value.notes).isEqualTo("notes")
+      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 1) {
         mockDomainEventService.saveBookingCancelledEvent(
@@ -2547,12 +2519,12 @@ class BookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.reason).isEqualTo(reason)
-      assertThat(result.entity.notes).isEqualTo("notes")
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+      assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.value.reason).isEqualTo(reason)
+      assertThat(result.value.notes).isEqualTo("notes")
+      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 0) {
         mockDomainEventService.saveBookingCancelledEvent(any())
@@ -2634,12 +2606,12 @@ class BookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.date).isEqualTo(LocalDate.parse("2022-08-25"))
-      assertThat(result.entity.reason).isEqualTo(bookingSuccessfullyAppealedReason)
-      assertThat(result.entity.notes).isEqualTo("notes")
-      assertThat(result.entity.booking.status).isEqualTo(BookingStatus.cancelled)
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+      assertThat(result.value.date).isEqualTo(LocalDate.parse("2022-08-25"))
+      assertThat(result.value.reason).isEqualTo(bookingSuccessfullyAppealedReason)
+      assertThat(result.value.notes).isEqualTo("notes")
+      assertThat(result.value.booking.status).isEqualTo(BookingStatus.cancelled)
 
       verify(exactly = 1) {
         mockPlacementRequestService.createPlacementRequest(
@@ -2688,9 +2660,9 @@ class BookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
-      assertThat(result.entity.reason).isEqualTo(reason)
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
+      assertThat(result.value.reason).isEqualTo(reason)
 
       verify(exactly = 1) {
         mockBookingRepository.save(bookingEntity)
@@ -2780,8 +2752,8 @@ class BookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
 
       verify {
         mockApplicationService.updateApprovedPremisesApplicationStatus(
@@ -2862,8 +2834,8 @@ class BookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
 
       verify { mockApplicationService wasNot Called }
     }
@@ -2915,8 +2887,8 @@ class BookingServiceTest {
         ),
       )
 
-      assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
-      result as ValidatableActionResult.Success
+      assertThat(result).isInstanceOf(CasResult.Success::class.java)
+      result as CasResult.Success
 
       verify { mockApplicationService wasNot Called }
     }
