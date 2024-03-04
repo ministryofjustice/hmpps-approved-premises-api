@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.SeedConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
@@ -44,6 +46,9 @@ class Cas2AutoScriptTest {
   private val mockStatusUpdateRepository = mockk<Cas2StatusUpdateRepository>()
   private val mockStatusUpdateEntity = mockk<Cas2StatusUpdateEntity>()
 
+  private val mockAssessmentRepository = mockk<Cas2AssessmentRepository>()
+  private val mockAssessmentEntity = mockk<Cas2AssessmentEntity>()
+
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockJsonSchemaEntity = mockk<JsonSchemaEntity>()
 
@@ -58,6 +63,7 @@ class Cas2AutoScriptTest {
     mockApplicationRepository,
     mockExternalUserRepository,
     mockStatusUpdateRepository,
+    mockAssessmentRepository,
     mockJsonSchemaService,
     mockApplicationService,
     mockStatusUpdateService,
@@ -90,6 +96,8 @@ class Cas2AutoScriptTest {
 
     every { mockStatusUpdateRepository.save(any()) } answers { mockStatusUpdateEntity }
     every { mockStatusUpdateEntity.createdAt = (any()) } answers { mockStatusUpdateEntity }
+
+    every { mockAssessmentRepository.save(any()) } answers { mockAssessmentEntity }
 
     every { mockApplicationService.createCas2ApplicationSubmittedEvent(any()) } answers { }
     every { mockStatusUpdateService.createStatusUpdatedDomainEvent(any()) } answers { }
@@ -128,5 +136,12 @@ class Cas2AutoScriptTest {
     autoScript.script()
 
     verify(atLeast = 1) { mockStatusUpdateService.createStatusUpdatedDomainEvent(any()) }
+  }
+
+  @Test
+  fun `creates at least 1 assessment for an application`() {
+    autoScript.script()
+
+    verify(atLeast = 1) { mockAssessmentRepository.save(any()) }
   }
 }
