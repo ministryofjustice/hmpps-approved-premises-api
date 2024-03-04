@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -12,6 +12,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import java.time.LocalDate
 import java.util.UUID
 import javax.transaction.Transactional
@@ -23,7 +27,7 @@ class WithdrawableService(
   private val placementApplicationService: PlacementApplicationService,
   private val bookingService: BookingService,
   private val withdrawableTreeBuilder: WithdrawableTreeBuilder,
-  private val withdrawableTreeOperations: WithdrawableTreeOperations,
+  private val cas1WithdrawableTreeOperations: Cas1WithdrawableTreeOperations,
 ) {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -169,7 +173,7 @@ class WithdrawableService(
 
     val withdrawalResult = withdrawRootEntityFunction.invoke()
     if (withdrawalResult is CasResult.Success) {
-      withdrawableTreeOperations.withdrawDescendantsOfRootNode(rootNode, context)
+      cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(rootNode, context)
     }
     return withdrawalResult
   }

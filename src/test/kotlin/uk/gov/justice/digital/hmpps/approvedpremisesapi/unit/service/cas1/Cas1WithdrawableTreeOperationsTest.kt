@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import io.mockk.every
 import io.mockk.mockk
@@ -25,20 +25,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableState
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableTreeNode
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableTreeOperations
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableTreeNode
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import java.time.OffsetDateTime
 
-class WithdrawableTreeOperationsTest {
+class Cas1WithdrawableTreeOperationsTest {
   private val mockPlacementRequestService = mockk<PlacementRequestService>()
   private val mockBookingService = mockk<BookingService>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockPlacementApplicationService = mockk<PlacementApplicationService>()
 
-  private val service = WithdrawableTreeOperations(
+  private val service = Cas1WithdrawableTreeOperations(
     mockPlacementRequestService,
     mockBookingService,
     mockBookingRepository,

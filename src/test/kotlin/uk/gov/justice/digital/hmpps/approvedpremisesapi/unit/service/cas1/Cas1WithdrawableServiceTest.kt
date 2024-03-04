@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import io.mockk.every
 import io.mockk.mockk
@@ -24,25 +24,25 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableDatePeriod
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableState
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableTreeBuilder
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableTreeNode
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawableTreeOperations
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableDatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableTreeBuilder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableTreeNode
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class WithdrawableServiceTest {
+class Cas1WithdrawableServiceTest {
   private val applicationService = mockk<ApplicationService>()
   private val placementRequestService = mockk<PlacementRequestService>()
   private val placementApplicationService = mockk<PlacementApplicationService>()
   private val bookingService = mockk<BookingService>()
   private val withdrawableTreeBuilder = mockk<WithdrawableTreeBuilder>()
-  private val withdrawableTreeOperations = mockk<WithdrawableTreeOperations>()
+  private val cas1WithdrawableTreeOperations = mockk<Cas1WithdrawableTreeOperations>()
 
   private val withdrawableService = WithdrawableService(
     applicationService,
@@ -50,7 +50,7 @@ class WithdrawableServiceTest {
     placementApplicationService,
     bookingService,
     withdrawableTreeBuilder,
-    withdrawableTreeOperations,
+    cas1WithdrawableTreeOperations,
   )
 
   val probationRegion = ProbationRegionEntityFactory()
@@ -189,7 +189,7 @@ class WithdrawableServiceTest {
       } returns CasResult.Success(Unit)
 
       every {
-        withdrawableTreeOperations.withdrawDescendantsOfRootNode(
+        cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(
           tree,
           WithdrawalContext(user, WithdrawableEntityType.Application, application.id),
         )
@@ -209,7 +209,7 @@ class WithdrawableServiceTest {
       }
 
       verify {
-        withdrawableTreeOperations.withdrawDescendantsOfRootNode(
+        cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(
           tree,
           WithdrawalContext(user, WithdrawableEntityType.Application, application.id),
         )
@@ -309,7 +309,7 @@ class WithdrawableServiceTest {
       val context = WithdrawalContext(user, WithdrawableEntityType.PlacementRequest, placementRequest.id)
 
       every {
-        withdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
+        cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
       } returns Unit
 
       val result = withdrawableService.withdrawPlacementRequest(placementRequest.id, user, withdrawalReason)
@@ -325,7 +325,7 @@ class WithdrawableServiceTest {
       }
 
       verify {
-        withdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
+        cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
       }
     }
 
@@ -395,7 +395,7 @@ class WithdrawableServiceTest {
       val context = WithdrawalContext(user, WithdrawableEntityType.PlacementApplication, placementApplication.id)
 
       every {
-        withdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
+        cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
       } returns Unit
 
       val result = withdrawableService.withdrawPlacementApplication(placementApplication.id, user, withdrawalReason)
@@ -411,7 +411,7 @@ class WithdrawableServiceTest {
       }
 
       verify {
-        withdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
+        cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
       }
     }
 
@@ -480,7 +480,7 @@ class WithdrawableServiceTest {
       val context = WithdrawalContext(user, WithdrawableEntityType.Booking, booking.id)
 
       every {
-        withdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
+        cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
       } returns Unit
 
       val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes)
@@ -498,7 +498,7 @@ class WithdrawableServiceTest {
       }
 
       verify {
-        withdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
+        cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
       }
     }
 
