@@ -358,6 +358,13 @@ class WithdrawalTest : IntegrationTestBase() {
               booking2expectedDeparture,
             )
 
+            val adhocBooking = createBooking(
+              application = application,
+              hasArrival = false,
+              startDate = LocalDate.now().plusDays(20),
+              endDate = LocalDate.now().plusDays(26),
+            )
+
             val cancelledBooking = createBooking(
               application,
               LocalDate.now(),
@@ -373,8 +380,18 @@ class WithdrawalTest : IntegrationTestBase() {
               LocalDate.now(),
               LocalDate.now().plusDays(1),
             )
-            arrivalEntityFactory.produceAndPersist() {
+            arrivalEntityFactory.produceAndPersist {
               withBooking(bookingWithArrival)
+            }
+
+            val adhocBookingWithArrival = createBooking(
+              application = application,
+              hasArrival = false,
+              startDate = LocalDate.now().plusDays(30),
+              endDate = LocalDate.now().plusDays(36),
+            )
+            arrivalEntityFactory.produceAndPersist {
+              withBooking(adhocBookingWithArrival)
             }
 
             val expected = listOf(
@@ -392,6 +409,11 @@ class WithdrawalTest : IntegrationTestBase() {
                 booking2.id,
                 WithdrawableType.booking,
                 listOf(DatePeriod(booking2expectedArrival, booking2expectedDeparture)),
+              ),
+              Withdrawable(
+                adhocBooking.id,
+                WithdrawableType.booking,
+                listOf(DatePeriod(adhocBooking.arrivalDate, adhocBooking.departureDate)),
               ),
             )
 
@@ -421,6 +443,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * | -> Request for placement 2       | YES          |
      * | -> Match request 3               | YES          |
      * | ---> Booking 2 has arrival       | -            |
+     * | -> Adhoc Booking                 | YES          |
      * ```
      */
     @Test
@@ -461,6 +484,13 @@ class WithdrawalTest : IntegrationTestBase() {
               )
               addBookingToPlacementRequest(placementRequest3, booking2HasArrival)
 
+              val adhocBooking = createBooking(
+                application = application,
+                hasArrival = false,
+                startDate = LocalDate.now().plusDays(20),
+                endDate = LocalDate.now().plusDays(26),
+              )
+
               val expected = listOf(
                 Withdrawable(
                   application.id,
@@ -486,6 +516,11 @@ class WithdrawalTest : IntegrationTestBase() {
                   placementRequest3.id,
                   WithdrawableType.placementRequest,
                   listOf(DatePeriod(placementRequest3.expectedArrival, placementRequest3.expectedDeparture())),
+                ),
+                Withdrawable(
+                  adhocBooking.id,
+                  WithdrawableType.booking,
+                  listOf(DatePeriod(adhocBooking.arrivalDate, adhocBooking.departureDate)),
                 ),
               )
 
@@ -516,6 +551,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * | -> Request for placement 2       | YES          |
      * | -> Match request 3               | YES          |
      * | ---> Booking 2 has arrival       | -            |
+     * | -> Adhoc Booking                 | -            |
      * ```
      */
     @Test
@@ -554,6 +590,13 @@ class WithdrawalTest : IntegrationTestBase() {
               endDate = LocalDate.now().plusDays(1),
             )
             addBookingToPlacementRequest(placementRequest3, booking2HasArrival)
+
+            val adhocBooking = createBooking(
+              application = application,
+              hasArrival = false,
+              startDate = LocalDate.now().plusDays(20),
+              endDate = LocalDate.now().plusDays(26),
+            )
 
             val expected = listOf(
               Withdrawable(
@@ -596,8 +639,6 @@ class WithdrawalTest : IntegrationTestBase() {
   @Nested
   inner class WithdrawalCascading {
 
-    val templates = notifyConfig.templates
-
     /**
      * ```
      * | Entities                         | Withdrawn | Email PP | Email Assessor |
@@ -628,8 +669,8 @@ class WithdrawalTest : IntegrationTestBase() {
             val assessorEmail = assessment.allocatedToUser!!.email!!
 
             emailAsserter.assertEmailsRequestedCount(2)
-            emailAsserter.assertEmailRequested(applicantEmail, templates.applicationWithdrawn)
-            emailAsserter.assertEmailRequested(assessorEmail, templates.assessmentWithdrawn)
+            assertApplicationWithdrawnEmail(applicantEmail, application)
+            assertAssessmentWithdrawnEmail(assessorEmail)
           }
         }
       }
@@ -637,17 +678,19 @@ class WithdrawalTest : IntegrationTestBase() {
 
     /**
      * ```
-     * | Entities                         | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
-     * | -------------------------------- | --------- | -------- | -------- | --------- | -------------- |
-     * | Application                      | YES       | YES      | -        | -         | -              |
-     * | -> Assessment                    | YES       | -        | -        | -         | -              |
-     * | -> Request for placement 1       | YES       | YES      | -        | -         | -              |
-     * | ---> Match request 1             | YES       | -        | -        | -         | -              |
-     * | -----> Booking 1 arrival pending | YES       | YES      | YES      | YES       | -              |
-     * | ---> Match request 2             | YES       | -        | -        | YES       | -              |
-     * | -> Request for placement 2       | YES       | YES      | -        | -         | YES            |
-     * | -> Match request 3               | YES       | YES      | -        | -         | -              |
-     * | ---> Booking 2 has arrival       | -         | -        | -        | -         | -              |
+     * | Entities                           | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
+     * | ---------------------------------- | --------- | -------- | -------- | --------- | -------------- |
+     * | Application                        | YES       | YES      | -        | -         | -              |
+     * | -> Assessment                      | YES       | -        | -        | -         | -              |
+     * | -> Request for placement 1         | YES       | YES      | -        | -         | -              |
+     * | ---> Match request 1               | YES       | -        | -        | -         | -              |
+     * | -----> Booking 1 arrival pending   | YES       | YES      | YES      | YES       | -              |
+     * | ---> Match request 2               | YES       | -        | -        | YES       | -              |
+     * | -> Request for placement 2         | YES       | YES      | -        | -         | YES            |
+     * | -> Match request 3                 | YES       | YES      | -        | -         | -              |
+     * | ---> Booking 2 has arrival         | -         | -        | -        | -         | -              |
+     * | -> Adhoc Booking 1 arrival pending | YES       | YES      | YES      | YES       | -              |
+     * | -> Adhoc Booking 2 has arrival     | -         | -        | -        | -         | -              |
      * ```
      */
     @Test
@@ -687,6 +730,20 @@ class WithdrawalTest : IntegrationTestBase() {
             )
             addBookingToPlacementRequest(placementRequest3, booking2HasArrival)
 
+            val adhocBooking1NoArrival = createBooking(
+              application = application,
+              hasArrival = false,
+              startDate = LocalDate.now().plusDays(1),
+              endDate = LocalDate.now().plusDays(6),
+            )
+
+            createBooking(
+              application = application,
+              hasArrival = true,
+              startDate = LocalDate.now().plusDays(10),
+              endDate = LocalDate.now().plusDays(6),
+            )
+
             withdrawApplication(application, jwt)
 
             assertApplicationWithdrawn(application)
@@ -719,21 +776,31 @@ class WithdrawalTest : IntegrationTestBase() {
             )
             assertBookingNotWithdrawn(booking2HasArrival)
 
+            assertBookingWithdrawn(adhocBooking1NoArrival, "Related application withdrawn")
+
             val applicantEmail = applicant.email!!
             val cruEmail = application.apArea!!.emailAddress!!
             val apEmail = booking1NoArrival.premises.emailAddress!!
             val requestForPlacementAssessorEmail = requestForPlacementAssessor.email!!
 
-            emailAsserter.assertEmailsRequestedCount(9)
-            emailAsserter.assertEmailRequested(applicantEmail, templates.applicationWithdrawn)
-            emailAsserter.assertEmailRequested(applicantEmail, templates.placementRequestWithdrawn)
-            emailAsserter.assertEmailRequested(cruEmail, templates.matchRequestWithdrawn)
-            emailAsserter.assertEmailRequested(applicantEmail, templates.bookingWithdrawn)
-            emailAsserter.assertEmailRequested(apEmail, templates.bookingWithdrawn)
-            emailAsserter.assertEmailRequested(cruEmail, templates.bookingWithdrawn)
-            emailAsserter.assertEmailRequested(applicantEmail, templates.placementRequestWithdrawn)
-            emailAsserter.assertEmailRequested(applicantEmail, templates.placementRequestWithdrawn)
-            emailAsserter.assertEmailRequested(requestForPlacementAssessorEmail, templates.placementRequestWithdrawn)
+            emailAsserter.assertEmailsRequestedCount(12)
+            assertApplicationWithdrawnEmail(applicantEmail, application)
+
+            assertPlacementRequestWithdrawnEmail(applicantEmail,placementApplication1)
+            assertMatchRequestWithdrawnEmail(cruEmail, placementRequest1)
+
+            assertBookingWithdrawnEmail(applicantEmail, booking1NoArrival)
+            assertBookingWithdrawnEmail(apEmail, booking1NoArrival)
+            assertBookingWithdrawnEmail(cruEmail, booking1NoArrival)
+
+            assertPlacementRequestWithdrawnEmail(applicantEmail, placementApplication2)
+            assertPlacementRequestWithdrawnEmail(requestForPlacementAssessorEmail, placementApplication2)
+
+            assertPlacementRequestWithdrawnEmail(applicantEmail, placementRequest3)
+
+            assertBookingWithdrawnEmail(applicantEmail, adhocBooking1NoArrival)
+            assertBookingWithdrawnEmail(apEmail, adhocBooking1NoArrival)
+            assertBookingWithdrawnEmail(cruEmail, adhocBooking1NoArrival)
           }
         }
       }
@@ -818,10 +885,10 @@ class WithdrawalTest : IntegrationTestBase() {
             val apEmail = booking1NoArrival.premises.emailAddress!!
 
             emailAsserter.assertEmailsRequestedCount(4)
-            emailAsserter.assertEmailRequested(applicantEmail, templates.placementRequestWithdrawn)
-            emailAsserter.assertEmailRequested(applicantEmail, templates.bookingWithdrawn)
-            emailAsserter.assertEmailRequested(apEmail, templates.bookingWithdrawn)
-            emailAsserter.assertEmailRequested(cruEmail, templates.bookingWithdrawn)
+            assertPlacementRequestWithdrawnEmail(applicantEmail, placementRequest1)
+            assertBookingWithdrawnEmail(applicantEmail, booking1NoArrival)
+            assertBookingWithdrawnEmail(apEmail, booking1NoArrival)
+            assertBookingWithdrawnEmail(cruEmail, booking1NoArrival)
           }
         }
       }
@@ -878,10 +945,10 @@ class WithdrawalTest : IntegrationTestBase() {
           val apEmail = bookingNoArrival.premises.emailAddress!!
 
           emailAsserter.assertEmailsRequestedCount(4)
-          emailAsserter.assertEmailRequested(applicantEmail, templates.placementRequestWithdrawn)
-          emailAsserter.assertEmailRequested(applicantEmail, templates.bookingWithdrawn)
-          emailAsserter.assertEmailRequested(apEmail, templates.bookingWithdrawn)
-          emailAsserter.assertEmailRequested(cruEmail, templates.bookingWithdrawn)
+          assertPlacementRequestWithdrawnEmail(applicantEmail, placementRequest)
+          assertBookingWithdrawnEmail(applicantEmail, bookingNoArrival)
+          assertBookingWithdrawnEmail(apEmail, bookingNoArrival)
+          assertBookingWithdrawnEmail(cruEmail, bookingNoArrival)
         }
       }
     }
@@ -931,7 +998,7 @@ class WithdrawalTest : IntegrationTestBase() {
           val applicantEmail = applicant.email!!
 
           emailAsserter.assertEmailsRequestedCount(1)
-          emailAsserter.assertEmailRequested(applicantEmail, templates.placementRequestWithdrawn)
+          assertPlacementRequestWithdrawnEmail(applicantEmail, placementRequest)
         }
       }
     }
@@ -986,6 +1053,47 @@ class WithdrawalTest : IntegrationTestBase() {
         }
       }
     }
+
+    private fun assertAssessmentWithdrawnEmail(emailAddress: String) =
+      emailAsserter.assertEmailRequested(
+        emailAddress,
+        notifyConfig.templates.assessmentWithdrawn
+      )
+
+    private fun assertApplicationWithdrawnEmail(emailAddress: String, application: ApplicationEntity) =
+      emailAsserter.assertEmailRequested(
+        emailAddress,
+        notifyConfig.templates.applicationWithdrawn,
+        mapOf("crn" to application.crn)
+      )
+
+    private fun assertBookingWithdrawnEmail(emailAddress: String, booking: BookingEntity) =
+      emailAsserter.assertEmailRequested(
+        emailAddress,
+        notifyConfig.templates.bookingWithdrawn,
+        mapOf("startDate" to booking.arrivalDate.toString())
+      )
+
+    private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementApplication: PlacementApplicationEntity) =
+      emailAsserter.assertEmailRequested(
+        emailAddress,
+        notifyConfig.templates.placementRequestWithdrawn,
+        mapOf("startDate" to placementApplication.placementDates[0].expectedArrival.toString())
+      )
+
+    private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) =
+      emailAsserter.assertEmailRequested(
+        emailAddress,
+        notifyConfig.templates.placementRequestWithdrawn,
+        mapOf("startDate" to placementRequest.expectedArrival.toString())
+      )
+
+    private fun assertMatchRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) =
+      emailAsserter.assertEmailRequested(
+        emailAddress,
+        notifyConfig.templates.matchRequestWithdrawn,
+        mapOf("startDate" to placementRequest.expectedArrival.toString())
+      )
   }
 
   private fun addBookingToPlacementRequest(placementRequest: PlacementRequestEntity, booking: BookingEntity) {

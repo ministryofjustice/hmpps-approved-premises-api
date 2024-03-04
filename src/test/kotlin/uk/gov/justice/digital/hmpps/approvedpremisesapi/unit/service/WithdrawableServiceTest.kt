@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -131,11 +132,15 @@ class WithdrawableServiceTest {
   }
 
   @Test
-  fun `withdrawAllForApplication cascades to placement requests and placement applications`() {
+  fun `withdrawAllForApplication cascades to placement requests, placement applications and adhoc bookings`() {
     application.placementRequests.addAll(placementRequests)
     every {
       mockPlacementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(application.id)
     } returns placementApplications
+
+    every {
+      mockBookingService.getAllForApplication(application)
+    } returns bookings
 
     every {
       mockPlacementRequestService.withdrawPlacementRequest(
@@ -158,6 +163,19 @@ class WithdrawableServiceTest {
         ),
       )
     } returns mockk<AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>>>()
+
+    every {
+      mockBookingService.createCas1Cancellation(
+        booking = any(),
+        cancelledAt = any(),
+        userProvidedReason = null,
+        notes = any(),
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.Application,
+        ),
+      )
+    } returns mockk<ValidatableActionResult.Success<CancellationEntity>>()
 
     withdrawableService.withdrawAllForApplication(application, user)
 
@@ -186,6 +204,21 @@ class WithdrawableServiceTest {
         )
       }
     }
+
+    bookings.forEach {
+      verify {
+        mockBookingService.createCas1Cancellation(
+          booking = it,
+          cancelledAt = any(),
+          userProvidedReason = null,
+          notes = "Automatically withdrawn as placement request was withdrawn",
+          WithdrawalContext(
+            user,
+            WithdrawableEntityType.Application,
+          ),
+        )
+      }
+    }
   }
 
   @Test
@@ -200,6 +233,11 @@ class WithdrawableServiceTest {
     every {
       mockPlacementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(application.id)
     } returns listOf(placementApplication)
+
+    val booking = bookings[0]
+    every {
+      mockBookingService.getAllForApplication(application)
+    } returns listOf(booking)
 
     every {
       mockPlacementRequestService.withdrawPlacementRequest(
@@ -223,6 +261,19 @@ class WithdrawableServiceTest {
       )
     } returns AuthorisableActionResult.Unauthorised()
 
+    every {
+      mockBookingService.createCas1Cancellation(
+        booking = any(),
+        cancelledAt = any(),
+        userProvidedReason = null,
+        notes = any(),
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.Application,
+        ),
+      )
+    } returns ValidatableActionResult.GeneralValidationError("oh dear")
+
     every { logger.error(any<String>()) } returns Unit
 
     withdrawableService.withdrawAllForApplication(application, user)
@@ -240,6 +291,14 @@ class WithdrawableServiceTest {
         "Failed to automatically withdraw placement application ${placementApplication.id} " +
           "when withdrawing application ${application.id} " +
           "with error type class uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult\$Unauthorised",
+      )
+    }
+
+    verify {
+      logger.error(
+        "Failed to automatically withdraw booking ${booking.id} " +
+          "when withdrawing application ${application.id} " +
+          "with message oh dear",
       )
     }
   }
