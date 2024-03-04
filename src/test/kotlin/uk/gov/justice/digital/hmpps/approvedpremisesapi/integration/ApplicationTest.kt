@@ -2101,6 +2101,17 @@ class ApplicationTest : IntegrationTestBase() {
                   releaseType = ReleaseTypeOption.licence,
                   sentenceType = SentenceTypeOption.nonStatutory,
                   type = "CAS1",
+                  applicantUserDetails = Cas1ApplicationUserDetails(
+                    "applicantName",
+                    "applicantEmail",
+                    "applicationTelephone",
+                  ),
+                  applicantIsCaseManager = false,
+                  caseManagerUserDetails = Cas1ApplicationUserDetails(
+                    "cmName",
+                    "cmEmail",
+                    "cmTelephone",
+                  ),
                 ),
               )
               .exchange()

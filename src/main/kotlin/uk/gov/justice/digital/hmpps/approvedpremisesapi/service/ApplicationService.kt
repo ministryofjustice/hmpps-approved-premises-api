@@ -799,6 +799,9 @@ class ApplicationService(
       situation = submitApplication.situation?.toString()
       inmateInOutStatusOnSubmission = inmateDetails?.inOutStatus?.name
       apArea = apAreaRepository.findByIdOrNull(apAreaId)
+      this.applicantUserDetails = upsertCas1ApplicationUserDetails(this.applicantUserDetails, submitApplication.applicantUserDetails)
+      this.applicantIsCaseManager = submitApplication.applicantIsCaseManager
+      this.caseManagerUserDetails = upsertCas1ApplicationUserDetails(this.caseManagerUserDetails, submitApplication.caseManagerUserDetails)
     }
 
     assessmentService.createApprovedPremisesAssessment(application)
