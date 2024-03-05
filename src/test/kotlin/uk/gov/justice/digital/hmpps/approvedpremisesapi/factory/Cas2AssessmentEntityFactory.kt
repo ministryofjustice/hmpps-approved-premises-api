@@ -15,8 +15,8 @@ class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
       .withCreatedByUser(NomisUserEntityFactory().produce())
       .produce()
   }
-  private var nacroReferralId: Yielded<String?> = { null }
-  private var assessorName: Yielded<String?> = { null }
+  private var nacroReferralId: String? = null
+  private var assessorName: String? = null
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -27,18 +27,18 @@ class Cas2AssessmentEntityFactory : Factory<Cas2AssessmentEntity> {
   }
 
   fun withNacroReferralId(id: String) = apply {
-    this.nacroReferralId = { id }
+    this.nacroReferralId = id
   }
 
   fun withAssessorName(name: String) = apply {
-    this.assessorName = { name }
+    this.assessorName = name
   }
 
   override fun produce(): Cas2AssessmentEntity = Cas2AssessmentEntity(
     id = this.id(),
     createdAt = this.createdAt(),
     application = this.application(),
-    nacroReferralId = this.nacroReferralId(),
-    assessorName = this.assessorName(),
+    nacroReferralId = this.nacroReferralId,
+    assessorName = this.assessorName,
   )
 }
