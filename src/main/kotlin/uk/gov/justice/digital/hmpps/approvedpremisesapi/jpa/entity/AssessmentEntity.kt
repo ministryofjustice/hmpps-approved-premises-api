@@ -130,7 +130,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
        where taa.probation_region_id = ?1
              and (?2 is null OR ap.crn = ?2)
              and a.reallocated_at is null
-             and (?3 is null OR
+             and ((?3) is null OR
                                 (
                                   CASE
                                     WHEN a.decision='REJECTED' THEN 'REJECTED'
