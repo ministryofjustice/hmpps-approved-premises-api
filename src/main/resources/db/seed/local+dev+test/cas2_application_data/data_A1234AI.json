@@ -300,7 +300,7 @@
   },
   "offending-history": {
     "any-previous-convictions": {
-      "hasAnyPreviousConvictions": "yes"
+      "hasAnyPreviousConvictions": "yesRelevantRisk"
     },
     "offence-history-data": [
       {
