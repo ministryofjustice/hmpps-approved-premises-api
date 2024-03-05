@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.apache.commons.collections4.ListUtils
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.jetbrains.kotlinx.dataframe.io.writeExcel
 import org.springframework.beans.factory.annotation.Value
@@ -43,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTrans
 import java.io.OutputStream
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
+import java.util.stream.Collectors
 
 @Service
 class ReportService(
@@ -62,6 +64,7 @@ class ReportService(
   private val placementApplicationEntityReportRowRepository: PlacementApplicationEntityReportRowRepository,
   private val objectMapper: ObjectMapper,
   @Value("\${cas3-report.end-date-override:0}") private val cas3EndDateOverride: Int,
+  @Value("\${cas3-report.crn-search-limit:400}") private val numberOfCrn: Int,
 ) {
   fun createBookingsReport(properties: BookingsReportProperties, outputStream: OutputStream) {
     val startOfMonth = LocalDate.of(properties.year, properties.month, 1)
@@ -79,8 +82,7 @@ class ReportService(
     )
 
     val crns = bookingsInScope.map { it.crn }.distinct().sorted()
-    val personInfos = offenderService.getOffenderSummariesByCrns(crns, userService.getUserForRequest().deliusUsername)
-      .associateBy { it.crn }
+    val personInfos = splitAndRetrievePersonInfo(crns.toSet())
 
     val reportData = bookingsInScope.map {
       val personInfo = personInfos[it.crn] ?: PersonSummaryInfoResult.Unknown(it.crn)
@@ -194,5 +196,16 @@ class ReportService(
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
       }
+  }
+
+  private fun splitAndRetrievePersonInfo(crns: Set<String>): Map<String, PersonSummaryInfoResult> {
+    val deliusUsername = userService.getUserForRequest().deliusUsername
+
+    val crnMap = ListUtils.partition(crns.toList(), numberOfCrn)
+      .stream().map { crns ->
+        offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername).associateBy { it.crn }
+      }.collect(Collectors.toList())
+
+    return crnMap.flatMap { it.toList() }.toMap()
   }
 }

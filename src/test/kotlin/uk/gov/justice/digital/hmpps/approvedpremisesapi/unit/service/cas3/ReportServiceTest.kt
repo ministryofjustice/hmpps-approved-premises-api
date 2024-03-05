@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas3
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
@@ -31,6 +32,7 @@ class ReportServiceTest {
     mockUserService,
     mockTransitionalAccommodationReferralReportRowRepository,
     0,
+    2,
   )
 
   @Test
@@ -55,7 +57,7 @@ class ReportServiceTest {
       )
     }
     verify { mockUserService.getUserForRequest() }
-    verify { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
+    verify(exactly = 1) { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
   }
 
   @Test
@@ -75,6 +77,7 @@ class ReportServiceTest {
       mockUserService,
       mockTransitionalAccommodationReferralReportRowRepository,
       3,
+      2,
     )
 
     reportServiceWithThreeMonths.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
@@ -87,7 +90,7 @@ class ReportServiceTest {
       )
     }
     verify { mockUserService.getUserForRequest() }
-    verify { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
+    verify(exactly = 1) { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
   }
 
   @Test
@@ -109,12 +112,87 @@ class ReportServiceTest {
       )
     }
     verify(exactly = 1) { mockUserService.getUserForRequest() }
-    verify(exactly = 1) { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
+    verify(exactly = 0) { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
   }
 
-  private fun createDBReferralReportData() = TestTransitionalAccommodationReferralReportData(
+  @Test
+  fun `createCas3ApplicationReferralsReport successfully generate report and call offender service 2 times when crn search limit exceed`() {
+    val probationRegionId = UUID.randomUUID()
+    val properties = TransitionalAccommodationReferralReportProperties(ServiceName.temporaryAccommodation, probationRegionId, 2024, 1)
+
+    every {
+      mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+        any(),
+        any(),
+        any(),
+      )
+    } returns listOf(
+      createDBReferralReportData("crn1"),
+      createDBReferralReportData("crn2"),
+      createDBReferralReportData("crn3"),
+    )
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
+    every { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) } returns listOf(
+      PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
+    )
+
+    reportService.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
+
+    verify {
+      mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+        LocalDate.of(2024, 1, 1),
+        LocalDate.of(2024, 1, 31),
+        probationRegionId,
+      )
+    }
+    verify { mockUserService.getUserForRequest() }
+    verify(exactly = 2) { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
+  }
+
+  @Test
+  fun `createCas3ApplicationReferralsReport successfully generate report fail when offender service call fails`() {
+    val probationRegionId = UUID.randomUUID()
+    val properties = TransitionalAccommodationReferralReportProperties(ServiceName.temporaryAccommodation, probationRegionId, 2024, 1)
+
+    every {
+      mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+        any(),
+        any(),
+        any(),
+      )
+    } returns listOf(
+      createDBReferralReportData("crn1"),
+      createDBReferralReportData("crn2"),
+      createDBReferralReportData("crn3"),
+    )
+    every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
+    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn1", "crn2"), any()) } returns listOf(
+      PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
+    )
+    every { mockOffenderService.getOffenderSummariesByCrns(setOf("crn3"), any()) } throws RuntimeException("some exception")
+
+    Assertions.assertThatExceptionOfType(RuntimeException::class.java)
+      .isThrownBy {
+        reportService.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
+      }
+
+    verify {
+      mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
+        LocalDate.of(2024, 1, 1),
+        LocalDate.of(2024, 1, 31),
+        probationRegionId,
+      )
+    }
+    verify { mockUserService.getUserForRequest() }
+    verify(exactly = 2) { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) }
+  }
+
+  private fun createDBReferralReportData(): TestTransitionalAccommodationReferralReportData {
+    return createDBReferralReportData("crn")
+  }
+  private fun createDBReferralReportData(crn: String) = TestTransitionalAccommodationReferralReportData(
     UUID.randomUUID().toString(), UUID.randomUUID().toString(), UUID.randomUUID().toString(),
-    LocalDate.now(), "crn", LocalDate.now(), "riskOfSeriousHarm",
+    LocalDate.now(), crn, LocalDate.now(), "riskOfSeriousHarm",
     sexOffender = false,
     needForAccessibleProperty = true,
     historyOfArsonOffence = false,
