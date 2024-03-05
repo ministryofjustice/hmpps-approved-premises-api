@@ -5,8 +5,8 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.StatusDetailItem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationStatusUpdatedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationSubmittedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2StatusFactory
@@ -148,9 +148,9 @@ class Cas2DomainEventTest : IntegrationTestBase() {
       val eventId = UUID.randomUUID()
 
       val statusDetails = listOf(
-        StatusDetailItem("exclusionZonesAndAreas", "Exclusion zones and preferred areas"),
-        StatusDetailItem("riskOfSeriousHarm", "Risk of serious harm"),
-        StatusDetailItem("hdcAndCpp", "HDC licence and CPP details"),
+        Cas2StatusDetail("exclusionZonesAndAreas", "Exclusion zones and preferred areas"),
+        Cas2StatusDetail("riskOfSeriousHarm", "Risk of serious harm"),
+        Cas2StatusDetail("hdcAndCpp", "HDC licence and CPP details"),
       )
 
       val eventStatus = Cas2StatusFactory()
