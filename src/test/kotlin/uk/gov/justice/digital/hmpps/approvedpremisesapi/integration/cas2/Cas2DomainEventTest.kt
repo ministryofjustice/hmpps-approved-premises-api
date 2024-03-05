@@ -6,8 +6,10 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.StatusDetailItem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationStatusUpdatedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationSubmittedEventDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2StatusFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import java.time.Instant
@@ -145,11 +147,25 @@ class Cas2DomainEventTest : IntegrationTestBase() {
 
       val eventId = UUID.randomUUID()
 
+      val statusDetails = listOf(
+        StatusDetailItem("exclusionZonesAndAreas", "Exclusion zones and preferred areas"),
+        StatusDetailItem("riskOfSeriousHarm", "Risk of serious harm"),
+        StatusDetailItem("hdcAndCpp", "HDC licence and CPP details"),
+      )
+
+      val eventStatus = Cas2StatusFactory()
+        .withStatusDetails(statusDetails)
+        .produce()
+
+      val eventDetails = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+        .withStatus(eventStatus)
+        .produce()
+
       val eventToSave = Cas2ApplicationStatusUpdatedEvent(
         id = eventId,
         timestamp = Instant.now(),
         eventType = EventType.applicationStatusUpdated,
-        eventDetails = Cas2ApplicationStatusUpdatedEventDetailsFactory().produce(),
+        eventDetails = eventDetails,
       )
 
       val event = domainEventFactory.produceAndPersist {
