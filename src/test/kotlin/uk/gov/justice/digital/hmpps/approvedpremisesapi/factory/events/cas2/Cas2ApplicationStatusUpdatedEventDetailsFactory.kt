@@ -36,6 +36,10 @@ class Cas2ApplicationStatusUpdatedEventDetailsFactory : Factory<Cas2ApplicationS
     this.updatedAt = { updatedAt }
   }
 
+  fun withStatus(newStatus: Cas2Status) = apply {
+    this.newStatus = { newStatus }
+  }
+
   fun withUpdatedBy(externalUser: ExternalUser) = apply {
     this.updatedBy = { externalUser }
   }

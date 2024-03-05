@@ -9,14 +9,14 @@ class Cas2StatusFactory : Factory<Cas2Status> {
   private var name: Yielded<String> = { "moreInfoRequested" }
   private var label: Yielded<String> = { "More information requested" }
   private var description: Yielded<String> = { "More information about the application has been requested" }
-  private var statusDetails = listOf(
-    StatusDetailItem("exclusionZonesAndAreas", "Exclusion zones and preferred areas"),
-    StatusDetailItem("riskOfSeriousHarm", "Risk of serious harm"),
-    StatusDetailItem("hdcAndCpp", "HDC licence and CPP details"),
-  )
+  private var statusDetails = emptyList<StatusDetailItem>()
 
   fun withName(name: String) = apply {
     this.name = { name }
+  }
+
+  fun withStatusDetails(statusDetails: List<StatusDetailItem>) = apply {
+    this.statusDetails = statusDetails
   }
 
   override fun produce(): Cas2Status = Cas2Status(
