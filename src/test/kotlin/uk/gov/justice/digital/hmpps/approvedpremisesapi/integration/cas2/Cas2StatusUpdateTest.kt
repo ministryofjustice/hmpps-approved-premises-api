@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
 import org.springframework.beans.factory.annotation.Value
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.StatusDetailItem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
@@ -222,7 +222,7 @@ class Cas2StatusUpdateTest(
             .isEqualTo(expectedFrontEndUrl)
 
           // verify that the persisted domain event contains the expected status details
-          val expected = listOf(StatusDetailItem("changeOfCircumstances", "Change of circumstances"))
+          val expected = listOf(Cas2StatusDetail("changeOfCircumstances", "Change of circumstances"))
           Assertions.assertThat(domainEventFromJson.eventDetails.newStatus.statusDetails).isEqualTo(expected)
         }
       }

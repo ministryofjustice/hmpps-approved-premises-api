@@ -188,12 +188,12 @@ components:
         statusDetails:
           type: array
           items:
-            $ref: '#/components/schemas/StatusDetailItem'
+            $ref: '#/components/schemas/Cas2StatusDetail'
       required:
         - name
         - label
         - description
-    StatusDetailItem:
+    Cas2StatusDetail:
       type: object
       properties:
         name:
