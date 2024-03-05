@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromAuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
 import java.util.UUID
 
@@ -80,8 +79,7 @@ class PlacementApplicationsController(
 
     val result = placementApplicationService.updateApplication(id, serializedData)
 
-    val validationResult = extractEntityFromAuthorisableActionResult(result)
-    val placementApplication = extractEntityFromValidatableActionResult(validationResult)
+    val placementApplication = extractEntityFromCasResult(result)
 
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
   }
@@ -94,7 +92,7 @@ class PlacementApplicationsController(
 
     val result = placementApplicationService.submitApplication(id, serializedData, submitPlacementApplication.placementType, submitPlacementApplication.placementDates)
 
-    val placementApplications = extractEntityFromNestedAuthorisableValidatableActionResult(result)
+    val placementApplications = extractEntityFromCasResult(result)
 
     return ResponseEntity.ok(placementApplications.map { placementApplicationTransformer.transformJpaToApi(it) })
   }
