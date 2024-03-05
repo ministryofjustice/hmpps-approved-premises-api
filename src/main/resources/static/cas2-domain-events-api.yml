@@ -193,6 +193,7 @@ components:
         - name
         - label
         - description
+        - statusDetails
     Cas2StatusDetail:
       type: object
       properties:
