@@ -91,6 +91,7 @@ class AssessmentTransformer(
         decision = transformDomainSummaryDecisionToApi(ase.decision),
         risks = ase.riskRatings?.let { risksTransformer.transformDomainToApi(objectMapper.readValue<PersonRisks>(it), ase.crn) },
         person = personTransformer.transformModelToPersonApi(personInfo),
+        dueAt = ase.dueAt!!.toInstant(),
       )
       "temporary-accommodation" -> TemporaryAccommodationAssessmentSummary(
         type = "CAS3",

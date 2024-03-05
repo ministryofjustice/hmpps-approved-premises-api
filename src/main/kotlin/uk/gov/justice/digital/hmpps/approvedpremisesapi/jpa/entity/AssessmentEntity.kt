@@ -50,6 +50,7 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
            a.allocated_to_user_id is not null as allocated,
            ap.crn as crn,
            apa.name as personName,
+           a.due_at as dueAt,
            CASE
              WHEN (a.decision is not null) THEN 'COMPLETED'
              WHEN (open_acn.id IS NOT NULL) THEN 'AWAITING_RESPONSE'
@@ -370,6 +371,7 @@ interface DomainAssessmentSummary {
   val decision: String?
   val crn: String
   val status: DomainAssessmentSummaryStatus?
+  val dueAt: Timestamp?
 }
 
 enum class DomainAssessmentSummaryStatus {

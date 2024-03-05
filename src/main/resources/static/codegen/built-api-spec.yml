@@ -7091,8 +7091,12 @@ components:
           properties:
             status:
               $ref: '#/components/schemas/ApprovedPremisesAssessmentStatus'
+            dueAt:
+              type: string
+              format: date-time
           required:
             - status
+            - dueAt
     TemporaryAccommodationAssessmentSummary:
       allOf:
         - $ref: '#/components/schemas/AssessmentSummary'
