@@ -364,6 +364,7 @@ class AssessmentTransformerTest {
       crn = randomStringMultiCaseWithNumbers(6),
       allocated = true,
       status = null,
+      dueAt = null,
     )
 
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
@@ -395,6 +396,7 @@ class AssessmentTransformerTest {
       crn = randomStringMultiCaseWithNumbers(6),
       allocated = true,
       status = DomainAssessmentSummaryStatus.AWAITING_RESPONSE,
+      dueAt = Timestamp.from(Instant.now()),
     )
 
     every { mockPersonTransformer.transformModelToPersonApi(any()) } returns mockk<Person>()
@@ -424,5 +426,6 @@ class AssessmentTransformerTest {
     override val decision: String?,
     override val crn: String,
     override val status: DomainAssessmentSummaryStatus?,
+    override val dueAt: Timestamp?,
   ) : DomainAssessmentSummary
 }

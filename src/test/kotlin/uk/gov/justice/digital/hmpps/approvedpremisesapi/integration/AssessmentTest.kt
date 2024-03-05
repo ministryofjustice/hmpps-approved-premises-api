@@ -2397,6 +2397,7 @@ class AssessmentTest : IntegrationTestBase() {
         crn = assessment.application.crn,
         allocated = assessment.allocatedToUser != null,
         status = status,
+        dueAt = assessment.dueAt?.toTimestamp(),
       )
   }
 
@@ -2413,5 +2414,6 @@ class AssessmentTest : IntegrationTestBase() {
     override val decision: String?,
     override val crn: String,
     override val status: DomainAssessmentSummaryStatus?,
+    override val dueAt: Timestamp?,
   ) : DomainAssessmentSummary
 }
