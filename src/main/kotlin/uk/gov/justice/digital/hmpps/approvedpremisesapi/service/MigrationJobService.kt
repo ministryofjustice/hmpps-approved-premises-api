@@ -12,14 +12,16 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaReposit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApAreaMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApAreaMigrationJobApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.BookingStatusMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1UserDetailsMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2AssessmentMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.InmateStatusOnSubmissionMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
@@ -86,6 +88,14 @@ class MigrationJobService(
         MigrationJobType.cas2ApplicationsWithAssessments -> Cas2AssessmentMigrationJob(
           applicationContext.getBean(Cas2AssessmentRepository::class.java),
           applicationContext.getBean(Cas2ApplicationRepository::class.java),
+          transactionTemplate,
+        )
+
+        MigrationJobType.cas1UserDetails -> Cas1UserDetailsMigrationJob(
+          applicationContext.getBean(ApplicationRepository::class.java),
+          applicationContext.getBean(Cas1ApplicationUserDetailsRepository::class.java),
+          applicationContext.getBean(EntityManager::class.java),
+          pageSize,
           transactionTemplate,
         )
       }
