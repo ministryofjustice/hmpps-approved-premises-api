@@ -4418,5 +4418,3 @@ components:
           type: string
       required:
         - name
-        - email
-        - telephoneNumber

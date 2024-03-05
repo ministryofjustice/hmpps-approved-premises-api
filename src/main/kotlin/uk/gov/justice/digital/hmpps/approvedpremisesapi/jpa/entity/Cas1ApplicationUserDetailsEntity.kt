@@ -16,6 +16,6 @@ class Cas1ApplicationUserDetailsEntity(
   @Id
   val id: UUID,
   val name: String,
-  val email: String,
-  val telephoneNumber: String,
+  val email: String?,
+  val telephoneNumber: String?,
 )
