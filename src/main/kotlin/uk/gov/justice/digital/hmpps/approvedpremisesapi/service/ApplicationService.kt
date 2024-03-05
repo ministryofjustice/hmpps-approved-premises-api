@@ -631,13 +631,10 @@ class ApplicationService(
     return CasResult.Success(Unit)
   }
 
-  fun isWithdrawableForUser(user: UserEntity, application: ApplicationEntity) =
-    userAccessService.userMayWithdrawApplication(user, application)
-
   fun getWithdrawableState(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableState {
     return WithdrawableState(
       withdrawable = !application.isWithdrawn,
-      userMayDirectlyWithdraw = isWithdrawableForUser(user, application),
+      userMayDirectlyWithdraw = userAccessService.userMayWithdrawApplication(user, application),
     )
   }
 

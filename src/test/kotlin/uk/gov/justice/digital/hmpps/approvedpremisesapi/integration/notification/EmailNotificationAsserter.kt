@@ -31,19 +31,20 @@ class EmailNotificationAsserter {
     assertEmailsRequestedCount(0)
   }
 
-  fun assertEmailRequested(toEmailAddress: String, templateId: String, personalisation: Map<String,Any> = emptyMap()) {
+  fun assertEmailRequested(toEmailAddress: String, templateId: String, personalisation: Map<String, Any> = emptyMap()) {
     val anyMatch = requestedEmails.any {
       toEmailAddress == it.email &&
-      templateId == it.templateId &&
-      it.personalisation.entries.containsAll(personalisation.entries)
+        templateId == it.templateId &&
+        it.personalisation.entries.containsAll(personalisation.entries)
     }
 
     assertThat(anyMatch)
       .withFailMessage {
-        "Could not find email request. Provided email requests are $requestedEmails"
+        "Could not find email request for template $templateId to $toEmailAddress with personalisation $personalisation. Provided email requests are ${formatRequestedEmails()}"
       }.isTrue
-
   }
+
+  fun formatRequestedEmails() = "\n" + requestedEmails.map { "\n $it" }
 
   fun assertEmailsRequestedCount(expectedCount: Int) {
     assertThat(requestedEmails.size).isEqualTo(expectedCount)

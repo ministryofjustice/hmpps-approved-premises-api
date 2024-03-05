@@ -130,10 +130,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.time.Instant
 import java.time.LocalDate
@@ -6647,93 +6647,38 @@ class BookingServiceTest {
 
       assertThat(result.userMayDirectlyWithdraw).isEqualTo(canWithdraw)
     }
-  }
-
-  @Nested
-  inner class GetCancellableCas1Bookings {
-
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withSubmittedAt(OffsetDateTime.now())
-      .produce()
-
-    val premises = ApprovedPremisesEntityFactory()
-      .withDefaultProbationRegion()
-      .withDefaultLocalAuthorityArea()
-      .produce()
-
-    val cancellableBooking = BookingEntityFactory()
-      .withPremises(premises)
-      .produce()
 
     @Test
-    fun `getCancellableCas1Bookings returns cancellable bookings`() {
-      every { mockUserAccessService.userMayCancelBooking(user, any()) } returns true
-      every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking)
+    fun `getWithdrawableState doesn't block ancestor withdrawals if no arrivals`() {
+      val booking = BookingEntityFactory()
+        .withPremises(premises)
+        .withArrivals(mutableListOf())
+        .produce()
 
-      val result = bookingService.getCancelleableCas1BookingsForUser(user, application)
+      every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
 
-      assertThat(result).isEqualTo(listOf(cancellableBooking))
+      val result = bookingService.getWithdrawableState(booking, user)
+
+      assertThat(result.blockAncestorWithdrawals).isEqualTo(false)
     }
 
     @Test
-    fun `getCancellableCas1Bookings doesn't return cancelled bookings`() {
-      val cancelledBooking = BookingEntityFactory()
+    fun `getWithdrawableState block ancestor withdrawals if have arrivals`() {
+      val booking = BookingEntityFactory()
         .withPremises(premises)
         .produce()
 
-      cancelledBooking.cancellations.add(
-        CancellationEntityFactory()
-          .withBooking(cancelledBooking)
-          .withDefaultReason()
-          .produce(),
-      )
-
-      every { mockUserAccessService.userMayCancelBooking(user, any()) } returns true
-      every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking, cancelledBooking)
-
-      val result = bookingService.getCancelleableCas1BookingsForUser(user, application)
-
-      assertThat(result).isEqualTo(listOf(cancellableBooking))
-    }
-
-    @Test
-    fun `getCancellableCas1Bookings doesn't return bookings with arrivals`() {
-      val bookingWithArrival = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      bookingWithArrival.arrivals.add(
+      booking.arrivals.add(
         ArrivalEntityFactory()
-          .withBooking(bookingWithArrival)
+          .withBooking(booking)
           .produce(),
       )
 
-      every { mockUserAccessService.userMayCancelBooking(user, any()) } returns true
-      every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking, bookingWithArrival)
+      every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
 
-      val result = bookingService.getCancelleableCas1BookingsForUser(user, application)
+      val result = bookingService.getWithdrawableState(booking, user)
 
-      assertThat(result).isEqualTo(listOf(cancellableBooking))
-    }
-
-    @Test
-    fun `getCancellableCas1Bookings doesn't return bookings if user can't cancel them`() {
-      val bookingUserCantCancel = BookingEntityFactory()
-        .withPremises(premises)
-        .produce()
-
-      every { mockUserAccessService.userMayCancelBooking(user, cancellableBooking) } returns true
-      every { mockUserAccessService.userMayCancelBooking(user, bookingUserCantCancel) } returns false
-      every { mockBookingRepository.findAllByApplication(application) } returns listOf(cancellableBooking, bookingUserCantCancel)
-
-      val result = bookingService.getCancelleableCas1BookingsForUser(user, application)
-
-      assertThat(result).isEqualTo(listOf(cancellableBooking))
+      assertThat(result.blockAncestorWithdrawals).isEqualTo(true)
     }
   }
 

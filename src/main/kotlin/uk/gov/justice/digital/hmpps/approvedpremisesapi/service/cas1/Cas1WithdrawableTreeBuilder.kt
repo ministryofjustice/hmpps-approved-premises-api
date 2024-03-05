@@ -114,6 +114,8 @@ data class WithdrawableTreeNode(
     return result
   }
 
+  fun isBlocked(): Boolean = status.blockAncestorWithdrawals || children.any { it.isBlocked() }
+
   override fun toString(): String {
     return "\n\n${render(0)}\n"
   }
@@ -122,7 +124,15 @@ data class WithdrawableTreeNode(
   private fun render(depth: Int): String {
     val padding = "  " + if (depth > 0) { "-".repeat(3 * depth) + "> " } else { "" }
     val abbreviatedId = entityId.toString().substring(0, 3)
-    return padding + "$entityType($abbreviatedId), withdrawable:${status.withdrawable}, mayDirectlyWithdraw:${status.userMayDirectlyWithdraw}\n" +
+    return padding + "$entityType($abbreviatedId), withdrawable:${status.withdrawable}, mayDirectlyWithdraw:${status.userMayDirectlyWithdraw}, ${blockingDescription()}\n" +
       children.joinToString(separator = "") { it.render(depth + 1) }
+  }
+
+  private fun blockingDescription() = if (status.blockAncestorWithdrawals) {
+    "BLOCKING"
+  } else if (isBlocked()) {
+    "BLOCKED"
+  } else {
+    ""
   }
 }

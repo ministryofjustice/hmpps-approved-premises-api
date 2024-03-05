@@ -201,11 +201,6 @@ class PlacementApplicationService(
     )
   }
 
-  fun getWithdrawablePlacementApplicationsForUser(user: UserEntity, application: ApprovedPremisesApplicationEntity) =
-    placementApplicationRepository
-      .findByApplication(application)
-      .filter { it.isInWithdrawableState() && userAccessService.userMayWithdrawPlacementApplication(user, it) }
-
   fun getWithdrawableState(placementApplication: PlacementApplicationEntity, user: UserEntity): WithdrawableState {
     return WithdrawableState(
       withdrawable = placementApplication.isInWithdrawableState(),

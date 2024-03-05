@@ -43,6 +43,7 @@ class WithdrawableService(
 
     return rootNode.flatten()
       .filter { it.status.withdrawable }
+      .filter { !it.isBlocked() }
       .filter { it.status.userMayDirectlyWithdraw }
       .map {
         WithdrawableEntity(
@@ -171,6 +172,10 @@ class WithdrawableService(
       return CasResult.GeneralValidationError("${context.triggeringEntityType.label} is not in a withdrawable state")
     }
 
+    if (rootNode.isBlocked()) {
+      return CasResult.GeneralValidationError("${context.triggeringEntityType.label} withdrawal is blocked")
+    }
+
     val withdrawalResult = withdrawRootEntityFunction.invoke()
     if (withdrawalResult is CasResult.Success) {
       cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(rootNode, context)
@@ -219,6 +224,13 @@ data class WithdrawableState(
    * This doesn't consider if the entity itself is in a withdrawable state.
    */
   val userMayDirectlyWithdraw: Boolean,
+  /**
+   * If true, not only is this entity not withdrawable, but any ancestor
+   * of this entity is also not withdrawable. For example, bookings with
+   * arrivals will block the withdrawal of any associated request for
+   * placement and application
+   */
+  val blockAncestorWithdrawals: Boolean = false,
 )
 
 data class WithdrawableDatePeriod(
