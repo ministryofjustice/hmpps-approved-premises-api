@@ -42,4 +42,11 @@ class AssessmentService(
       ValidatableActionResult.Success(savedAssessment),
     )
   }
+
+  fun getAssessment(assessmentId: UUID): AuthorisableActionResult<Cas2AssessmentEntity> {
+    val assessmentEntity = assessmentRepository.findByIdOrNull(assessmentId)
+      ?: return AuthorisableActionResult.NotFound()
+
+    return AuthorisableActionResult.Success(assessmentEntity)
+  }
 }
