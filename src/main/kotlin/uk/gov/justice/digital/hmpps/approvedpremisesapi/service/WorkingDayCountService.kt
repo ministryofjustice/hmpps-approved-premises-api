@@ -12,6 +12,7 @@ import java.time.LocalDate
 @Service
 class WorkingDayCountService(
   private val govUKBankHolidaysApiClient: GovUKBankHolidaysApiClient,
+  private val timeService: TimeService,
 ) {
 
   val bankHolidays: List<LocalDate> by lazy {
@@ -26,7 +27,7 @@ class WorkingDayCountService(
   }
 
   fun getCompleteWorkingDaysFromNowUntil(to: LocalDate): Int {
-    return LocalDate.now().getDaysUntilExclusiveEnd(to).filter { it.isWorkingDay(bankHolidays) }.size
+    return timeService.nowAsLocalDate().getDaysUntilExclusiveEnd(to).filter { it.isWorkingDay(bankHolidays) }.size
   }
 
   fun addWorkingDays(date: LocalDate, count: Int): LocalDate {
