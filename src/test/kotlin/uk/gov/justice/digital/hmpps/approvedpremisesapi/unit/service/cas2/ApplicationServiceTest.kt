@@ -671,7 +671,8 @@ class ApplicationServiceTest {
 
       every { mockNotifyConfig.templates.cas2ApplicationSubmitted } returns "abc123"
       every { mockNotifyConfig.emailAddresses.cas2Assessors } returns "exampleAssessorInbox@example.com"
-      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+      every { mockNotifyConfig.emailAddresses.cas2ReplyToId } returns "def456"
+      every { mockEmailNotificationService.sendEmail(any(), any(), any(), any()) } just Runs
 
       every { mockApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
@@ -736,6 +737,7 @@ class ApplicationServiceTest {
               it["telephoneNumber"] == application.telephoneNumber &&
               it["applicationUrl"] == "http://frontend/assess/applications/$applicationId/overview"
           },
+          "def456",
         )
       }
 
