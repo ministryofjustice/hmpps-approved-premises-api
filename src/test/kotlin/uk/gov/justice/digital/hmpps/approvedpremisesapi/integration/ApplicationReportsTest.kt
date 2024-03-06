@@ -410,8 +410,8 @@ class ApplicationReportsTest : IntegrationTestBase() {
       assertThat(reportRow.assessmentDecisionRationale).isEqualTo(assessment.rejectionRationale)
 
       if (applicationFacets.isShortNotice) {
-        assertThat(reportRow.agreeWithShortNoticeReason).isEqualTo("yes")
-        assertThat(reportRow.reasonForLateApplication).isEqualTo("thisIsTheReasonForLateApplication")
+        assertThat(reportRow.assessorAgreeWithShortNoticeReason).isEqualTo("yes")
+        assertThat(reportRow.assessorReasonForLateApplication).isEqualTo("thisIsTheReasonForLateApplication")
       }
     }
 

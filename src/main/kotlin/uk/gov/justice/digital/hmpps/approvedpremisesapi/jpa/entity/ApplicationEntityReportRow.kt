@@ -19,8 +19,8 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'cru' ->> 'name' as assessorCru,
       assessment_event.data -> 'eventDetails' ->> 'decision' as assessmentDecision,
       assessment_event.data -> 'eventDetails' ->> 'decisionRationale' as assessmentDecisionRationale,
-      assessments.data -> 'suitability-assessment' -> 'application-timeliness' ->> 'agreeWithShortNoticeReason' as agreeWithShortNoticeReason,
-      assessments.data -> 'suitability-assessment' -> 'application-timeliness' ->> 'reasonForLateApplication' as reasonForLateApplication,
+      assessments.data -> 'suitability-assessment' -> 'application-timeliness' ->> 'agreeWithShortNoticeReason' as assessorAgreeWithShortNoticeReason,
+      assessments.data -> 'suitability-assessment' -> 'application-timeliness' ->> 'reasonForLateApplication' as assessorReasonForLateApplication,
       submission_event.data -> 'eventDetails' ->> 'age' as ageInYears,
       submission_event.data -> 'eventDetails' ->> 'gender' as gender,
       submission_event.data -> 'eventDetails' ->> 'mappa' as mappa,
@@ -128,8 +128,8 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'cru' ->> 'name' as assessorCru,
       assessment_event.data -> 'eventDetails' ->> 'decision' as assessmentDecision,
       assessment_event.data -> 'eventDetails' ->> 'decisionRationale' as assessmentDecisionRationale,
-      assessments.data -> 'suitability-assessment' -> 'application-timeliness' ->> 'agreeWithShortNoticeReason' as agreeWithShortNoticeReason,
-      assessments.data -> 'suitability-assessment' -> 'application-timeliness' ->> 'reasonForLateApplication' as reasonForLateApplication,
+      assessments.data -> 'suitability-assessment' -> 'application-timeliness' ->> 'agreeWithShortNoticeReason' as assessorAgreeWithShortNoticeReason,
+      assessments.data -> 'suitability-assessment' -> 'application-timeliness' ->> 'reasonForLateApplication' as assessorReasonForLateApplication,
       submission_event.data -> 'eventDetails' ->> 'age' as ageInYears,
       submission_event.data -> 'eventDetails' ->> 'gender' as gender,
       submission_event.data -> 'eventDetails' ->> 'mappa' as mappa,
@@ -243,8 +243,8 @@ interface ApplicationEntityReportRow {
   fun getAssessorCru(): String?
   fun getAssessmentDecision(): String?
   fun getAssessmentDecisionRationale(): String?
-  fun getAgreeWithShortNoticeReason(): String?
-  fun getReasonForLateApplication(): String?
+  fun getAssessorAgreeWithShortNoticeReason(): String?
+  fun getAssessorReasonForLateApplication(): String?
   fun getAgeInYears(): String?
   fun getGender(): String?
   fun getMappa(): String?
