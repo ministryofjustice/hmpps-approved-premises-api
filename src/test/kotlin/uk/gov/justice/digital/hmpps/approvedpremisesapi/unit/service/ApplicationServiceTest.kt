@@ -87,6 +87,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService.Cas1ApplicationUpdateFields
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -925,14 +926,16 @@ class ApplicationServiceTest {
     assertThat(
       applicationService.updateApprovedPremisesApplication(
         applicationId = applicationId,
-        isWomensApplication = false,
-        isPipeApplication = null,
-        isEmergencyApplication = false,
-        isEsapApplication = false,
-        releaseType = null,
-        arrivalDate = null,
-        data = "{}",
-        isInapplicable = null,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = null,
+          isEmergencyApplication = false,
+          isEsapApplication = false,
+          releaseType = null,
+          arrivalDate = null,
+          data = "{}",
+          isInapplicable = null,
+        ),
       ) is AuthorisableActionResult.NotFound,
     ).isTrue
   }
@@ -969,14 +972,16 @@ class ApplicationServiceTest {
     assertThat(
       applicationService.updateApprovedPremisesApplication(
         applicationId = applicationId,
-        isWomensApplication = false,
-        isPipeApplication = null,
-        isEmergencyApplication = false,
-        isEsapApplication = false,
-        releaseType = null,
-        arrivalDate = null,
-        data = "{}",
-        isInapplicable = null,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = null,
+          isEmergencyApplication = false,
+          isEsapApplication = false,
+          releaseType = null,
+          arrivalDate = null,
+          data = "{}",
+          isInapplicable = null,
+        ),
       ) is AuthorisableActionResult.Unauthorised,
     ).isTrue
   }
@@ -1010,14 +1015,16 @@ class ApplicationServiceTest {
 
     val result = applicationService.updateApprovedPremisesApplication(
       applicationId = applicationId,
-      isWomensApplication = false,
-      isPipeApplication = null,
-      isEmergencyApplication = false,
-      isEsapApplication = false,
-      releaseType = null,
-      arrivalDate = null,
-      data = "{}",
-      isInapplicable = null,
+      Cas1ApplicationUpdateFields(
+        isWomensApplication = false,
+        isPipeApplication = null,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        releaseType = null,
+        arrivalDate = null,
+        data = "{}",
+        isInapplicable = null,
+      ),
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1061,14 +1068,16 @@ class ApplicationServiceTest {
 
     val result = applicationService.updateApprovedPremisesApplication(
       applicationId = applicationId,
-      isWomensApplication = false,
-      isPipeApplication = null,
-      isEmergencyApplication = false,
-      isEsapApplication = false,
-      releaseType = null,
-      arrivalDate = null,
-      data = "{}",
-      isInapplicable = null,
+      Cas1ApplicationUpdateFields(
+        isWomensApplication = false,
+        isPipeApplication = null,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        releaseType = null,
+        arrivalDate = null,
+        data = "{}",
+        isInapplicable = null,
+      ),
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -1119,14 +1128,16 @@ class ApplicationServiceTest {
 
     val result = applicationService.updateApprovedPremisesApplication(
       applicationId = applicationId,
-      isWomensApplication = false,
-      isPipeApplication = true,
-      isEmergencyApplication = false,
-      isEsapApplication = false,
-      releaseType = "rotl",
-      arrivalDate = LocalDate.parse("2023-04-17"),
-      data = updatedData,
-      isInapplicable = false,
+      Cas1ApplicationUpdateFields(
+        isWomensApplication = false,
+        isPipeApplication = true,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        releaseType = "rotl",
+        arrivalDate = LocalDate.parse("2023-04-17"),
+        data = updatedData,
+        isInapplicable = false,
+      ),
     )
 
     assertThat(result is AuthorisableActionResult.Success).isTrue
