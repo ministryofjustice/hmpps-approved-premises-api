@@ -844,7 +844,7 @@ class PremisesController(
     }
 
     val room = extractResultEntityOrThrow(
-      roomService.createRoom(premises, newRoom.name, newRoom.notes, newRoom.characteristicIds),
+      roomService.createRoom(premises, newRoom.name, newRoom.notes, newRoom.characteristicIds, newRoom.bedEndDate),
     )
 
     return ResponseEntity(roomTransformer.transformJpaToApi(room), HttpStatus.CREATED)

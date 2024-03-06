@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 import java.util.UUID
 import javax.persistence.ColumnResult
 import javax.persistence.ConstructorResult
@@ -102,6 +103,7 @@ data class BedEntity(
   @ManyToOne
   @JoinColumn(name = "room_id")
   val room: RoomEntity,
+  var endDate: LocalDate?,
 ) {
 
   override fun toString() = "BedEntity: $id"

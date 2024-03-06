@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import java.time.LocalDate
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -32,6 +33,7 @@ class RoomService(
     roomName: String,
     notes: String?,
     characteristicIds: List<UUID>,
+    bedEndDate: LocalDate?,
   ): ValidatableActionResult<RoomEntity> = validated {
     // RoomEntity needs to be created before the validation so that the CharacteristicService can match the
     // model and service scopes against it.
@@ -80,7 +82,7 @@ class RoomService(
     }
 
     if (automaticallyCreateBed) {
-      val bed = createBedInternal(room, "default-bed")
+      val bed = createBedInternal(room, "default-bed", bedEndDate)
       room.beds.add(bed)
     }
 
@@ -175,30 +177,17 @@ class RoomService(
     )
   }
 
-  fun createBed(
-    room: RoomEntity,
-    bedName: String,
-  ): ValidatableActionResult<BedEntity> = validated {
-    if (bedName.isEmpty()) {
-      "$.name" hasValidationError "empty"
-    }
-
-    if (validationErrors.any()) {
-      return fieldValidationError
-    }
-
-    return success(createBedInternal(room, bedName))
-  }
-
   private fun createBedInternal(
     room: RoomEntity,
     bedName: String,
+    bedEndDate: LocalDate?,
   ): BedEntity = bedRepository.save(
     BedEntity(
       id = UUID.randomUUID(),
       name = bedName,
       code = null,
       room = room,
+      endDate = bedEndDate,
     ),
   )
 

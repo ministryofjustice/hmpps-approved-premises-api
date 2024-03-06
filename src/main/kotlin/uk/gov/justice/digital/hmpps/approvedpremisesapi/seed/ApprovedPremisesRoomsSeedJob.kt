@@ -145,6 +145,7 @@ class ApprovedPremisesRoomsSeedJob(
         name = "${row.roomNumber} - ${row.bedCount}",
         code = row.bedCode,
         room = room,
+        null,
       ),
     )
     log.info("New bed created: ${row.bedCode} (AP: ${row.apCode} | Room: ${room.code})")
