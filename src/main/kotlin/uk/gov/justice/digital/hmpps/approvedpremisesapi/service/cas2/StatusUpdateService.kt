@@ -18,11 +18,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.transaction.Transactional
 
 @Service("Cas2StatusUpdateService")
 class StatusUpdateService(
@@ -31,6 +34,7 @@ class StatusUpdateService(
   private val statusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
   private val domainEventService: DomainEventService,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
+  private val statusTransformer: ApplicationStatusTransformer,
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
 ) {
 
@@ -39,6 +43,7 @@ class StatusUpdateService(
   }
 
   @SuppressWarnings("ReturnCount")
+  @Transactional
   fun create(
     applicationId: UUID,
     statusUpdate: Cas2ApplicationStatusUpdate,
@@ -92,7 +97,7 @@ class StatusUpdateService(
       )
     }
 
-    createStatusUpdatedDomainEvent(createdStatusUpdate)
+    createStatusUpdatedDomainEvent(createdStatusUpdate, statusDetails)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(createdStatusUpdate),
@@ -104,7 +109,7 @@ class StatusUpdateService(
       .find { status -> status.name == statusName }
   }
 
-  fun createStatusUpdatedDomainEvent(statusUpdate: Cas2StatusUpdateEntity) {
+  fun createStatusUpdatedDomainEvent(statusUpdate: Cas2StatusUpdateEntity, statusDetails: List<Cas2PersistedApplicationStatusDetail> = emptyList()) {
     val domainEventId = UUID.randomUUID()
     val eventOccurredAt = statusUpdate.createdAt ?: OffsetDateTime.now()
     val application = statusUpdate.application
@@ -132,6 +137,7 @@ class StatusUpdateService(
               name = newStatus.name,
               description = newStatus.description,
               label = newStatus.label,
+              statusDetails = statusTransformer.transformStatusDetailListToDetailItemList(statusDetails),
             ),
             updatedBy = ExternalUser(
               username = assessor.username,

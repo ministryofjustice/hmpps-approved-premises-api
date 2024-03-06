@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Status
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
 import java.util.UUID
 
 class StatusUpdateServiceTest {
@@ -39,6 +41,7 @@ class StatusUpdateServiceTest {
     .produce()
 
   private val mockDomainEventService = mockk<DomainEventService>()
+  private val mockStatusTransformer = mockk<ApplicationStatusTransformer>()
 
   private val applicant = NomisUserEntityFactory().produce()
   private val application = Cas2ApplicationEntityFactory()
@@ -56,6 +59,7 @@ class StatusUpdateServiceTest {
     mockStatusUpdateDetailRepository,
     mockDomainEventService,
     mockStatusFinder,
+    mockStatusTransformer,
     applicationUrlTemplate,
   )
 
@@ -93,6 +97,7 @@ class StatusUpdateServiceTest {
   @BeforeEach
   fun setup() {
     every { mockStatusFinder.active() } returns activeStatusList
+    every { mockStatusTransformer.transformStatusDetailListToDetailItemList(any()) } returns emptyList()
   }
 
   @Nested
@@ -170,6 +175,7 @@ class StatusUpdateServiceTest {
                 name = "moreInfoRequested",
                 label = "More information requested",
                 description = "The prison offender manager (POM) must provide information requested for the application to progress.",
+                statusDetails = emptyList(),
               )
             },
           )
@@ -242,6 +248,10 @@ class StatusUpdateServiceTest {
 
         @Test
         fun `saves a status update entity with detail and emits a domain event`() {
+          every { mockStatusTransformer.transformStatusDetailListToDetailItemList(listOf(statusDetail)) } returns listOf(
+            Cas2StatusDetail("exampleStatusDetail", ""),
+          )
+
           statusUpdateService.create(
             applicationId = applicationId,
             statusUpdate = applicationStatusUpdateWithDetail,
@@ -287,6 +297,9 @@ class StatusUpdateServiceTest {
                   name = "offerDeclined",
                   label = "Offer declined or withdrawn",
                   description = "The accommodation offered has been declined or withdrawn.",
+                  statusDetails = listOf(
+                    Cas2StatusDetail("exampleStatusDetail", ""),
+                  ),
                 )
               },
             )

@@ -185,10 +185,27 @@ components:
         description:
           type: string
           example: 'More information about the application has been requested from the POM (Prison Offender Manager).'
+        statusDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cas2StatusDetail'
       required:
         - name
         - label
         - description
+        - statusDetails
+    Cas2StatusDetail:
+      type: object
+      properties:
+        name:
+          type: string
+          example: 'changeOfCircumstances'
+        label:
+          type: string
+          example: 'Change of Circumstances'
+      required:
+        - name
+        - label
     ExternalUser:
       type: object
       properties:
