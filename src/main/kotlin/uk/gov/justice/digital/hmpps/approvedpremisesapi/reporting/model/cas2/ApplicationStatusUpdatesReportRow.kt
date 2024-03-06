@@ -8,4 +8,5 @@ class ApplicationStatusUpdatesReportRow(
   val newStatus: String,
   val updatedAt: String,
   val updatedBy: String,
+  val statusDetails: String,
 )

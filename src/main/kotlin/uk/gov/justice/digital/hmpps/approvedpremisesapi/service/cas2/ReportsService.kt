@@ -62,6 +62,7 @@ class ReportsService(
         newStatus = row.getNewStatus(),
         updatedBy = row.getUpdatedBy(),
         updatedAt = row.getUpdatedAt(),
+        statusDetails = row.getStatusDetails(),
       )
     }
 
