@@ -1,0 +1,1 @@
+ALTER TABLE beds ADD COLUMN end_date DATE NULL;
