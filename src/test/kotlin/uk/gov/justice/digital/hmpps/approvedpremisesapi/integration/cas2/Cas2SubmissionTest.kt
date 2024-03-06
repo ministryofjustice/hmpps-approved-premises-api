@@ -44,6 +44,7 @@ import java.util.UUID
 
 class Cas2SubmissionTest(
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) : IntegrationTestBase() {
   @SpykBean
   lateinit var realApplicationRepository: ApplicationRepository
@@ -638,6 +639,7 @@ class Cas2SubmissionTest(
     @Test
     fun `Submit Cas2 application returns 200`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+      val telephoneNumber = "123 456 7891"
 
       `Given a CAS2 User`() { submittingUser, jwt ->
         `Given a CAS2 User` { userEntity, _ ->
@@ -685,7 +687,7 @@ class Cas2SubmissionTest(
                   preferredAreas = "Leeds | Bradford",
                   hdcEligibilityDate = LocalDate.parse("2023-03-30"),
                   conditionalReleaseDate = LocalDate.parse("2023-04-29"),
-                  telephoneNumber = "123 456 7891",
+                  telephoneNumber = telephoneNumber,
                 ),
               )
               .exchange()
@@ -705,6 +707,21 @@ class Cas2SubmissionTest(
 
           val persistedAssessment = realAssessmentRepository.findAll().first()
           Assertions.assertThat(persistedAssessment!!.application.id).isEqualTo(applicationId)
+
+          val expectedEmailUrl = submittedApplicationUrlTemplate.replace("#applicationId", applicationId.toString())
+          emailAsserter.assertEmailsRequestedCount(1)
+          emailAsserter.assertEmailRequested(
+            notifyConfig.emailAddresses.cas2Assessors,
+            notifyConfig.templates.cas2ApplicationSubmitted,
+            personalisation = mapOf(
+              "name" to submittingUser.name,
+              "email" to submittingUser.email!!,
+              "prisonNumber" to persistedAssessment.application.nomsNumber!!,
+              "telephoneNumber" to telephoneNumber,
+              "applicationUrl" to expectedEmailUrl,
+            ),
+            replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
+          )
         }
       }
     }

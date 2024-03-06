@@ -31,11 +31,17 @@ class EmailNotificationAsserter {
     assertEmailsRequestedCount(0)
   }
 
-  fun assertEmailRequested(toEmailAddress: String, templateId: String, personalisation: Map<String, Any> = emptyMap()) {
+  fun assertEmailRequested(
+    toEmailAddress: String,
+    templateId: String,
+    personalisation: Map<String, Any> = emptyMap(),
+    replyToEmailId: String? = null,
+  ) {
     val anyMatch = requestedEmails.any {
       toEmailAddress == it.email &&
         templateId == it.templateId &&
-        it.personalisation.entries.containsAll(personalisation.entries)
+          it.personalisation.entries.containsAll(personalisation.entries) &&
+          it.replyToEmailId == replyToEmailId
     }
 
     assertThat(anyMatch)
