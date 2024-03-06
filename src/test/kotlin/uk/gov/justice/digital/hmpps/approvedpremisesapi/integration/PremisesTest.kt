@@ -31,6 +31,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockCaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -1592,12 +1594,12 @@ class PremisesTest : IntegrationTestBase() {
       }
 
       bookings.forEach {
-        ApDeliusContext_addCaseSummaryToBulkResponse(
+        ApDeliusContext_mockCaseSummary(
           CaseSummaryFactory()
             .withCrn(it.crn)
             .produce(),
         )
-        ApDeliusContext_addResponseToUserAccessCall(
+        ApDeliusContext_mockUserAccess(
           CaseAccessFactory()
             .withCrn(it.crn)
             .produce(),
@@ -1610,18 +1612,6 @@ class PremisesTest : IntegrationTestBase() {
         withPremises(premises)
         withBed(null)
       }
-
-      ApDeliusContext_addCaseSummaryToBulkResponse(
-        CaseSummaryFactory()
-          .withCrn(cancelledBooking.crn)
-          .produce(),
-      )
-      ApDeliusContext_addResponseToUserAccessCall(
-        CaseAccessFactory()
-          .withCrn(cancelledBooking.crn)
-          .produce(),
-        user.deliusUsername,
-      )
 
       cancellationEntityFactory.produceAndPersist {
         withBooking(cancelledBooking)

@@ -65,9 +65,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
@@ -88,12 +88,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulTeamsManagingCaseCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulNeedsDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockOffenderUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
@@ -480,6 +479,13 @@ class ApplicationTest : IntegrationTestBase() {
 
       CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, crn, inclusion = false, exclusion = false)
 
+      ApDeliusContext_mockUserAccess(
+        CaseAccessFactory()
+          .withCrn(crn)
+          .produce(),
+        userEntity.deliusUsername,
+      )
+
       webTestClient.get()
         .uri("/applications")
         .header("Authorization", "Bearer $jwt")
@@ -575,46 +581,36 @@ class ApplicationTest : IntegrationTestBase() {
     ) { userEntity, jwt ->
       val crn = "X1234"
 
-      val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+      `Given an Offender`(
+        offenderDetailsConfigBlock = {
+          withCrn(crn)
+          withNomsNumber("ABC123")
+        },
+      ) { _, _ ->
+        val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(crn)
-        .withNomsNumber("ABC123")
-        .produce()
+        val rawResponseBody = webTestClient.get()
+          .uri("/applications")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
 
-      CommunityAPI_mockOffenderUserAccessCall(
-        userEntity.deliusUsername,
-        offenderDetails.otherIds.crn,
-        inclusion = false,
-        exclusion = false,
-      )
+        val responseBody =
+          objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
-      loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
-      PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
-      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
+        assertThat(responseBody).matches {
+          val person = it[0].person as FullPerson
 
-      val rawResponseBody = webTestClient.get()
-        .uri("/applications")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .returnResult<String>()
-        .responseBody
-        .blockFirst()
-
-      val responseBody =
-        objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
-
-      assertThat(responseBody).matches {
-        val person = it[0].person as FullPerson
-
-        application.id == it[0].id &&
-          application.crn == person.crn &&
-          person.nomsNumber == null &&
-          person.status == PersonStatus.unknown &&
-          person.prisonName == null
+          application.id == it[0].id &&
+            application.crn == person.crn &&
+            person.nomsNumber == null &&
+            person.status == PersonStatus.unknown &&
+            person.prisonName == null
+        }
       }
     }
   }
@@ -785,47 +781,37 @@ class ApplicationTest : IntegrationTestBase() {
     ) { userEntity, jwt ->
       val crn = "X1234"
 
-      val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+      `Given an Offender`(
+        offenderDetailsConfigBlock = {
+          withCrn(crn)
+          withNomsNumber("ABC123")
+        },
+      ) { _, _ ->
+        val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withCrn(crn)
-        .withNomsNumber("ABC123")
-        .produce()
+        val rawResponseBody = webTestClient.get()
+          .uri("/applications/${application.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
 
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
-      loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
-      PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
-      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
+        val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
-      CommunityAPI_mockOffenderUserAccessCall(
-        userEntity.deliusUsername,
-        offenderDetails.otherIds.crn,
-        inclusion = false,
-        exclusion = false,
-      )
+        assertThat(responseBody.person is FullPerson).isTrue
 
-      val rawResponseBody = webTestClient.get()
-        .uri("/applications/${application.id}")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .returnResult<String>()
-        .responseBody
-        .blockFirst()
+        assertThat(responseBody).matches {
+          val person = it.person as FullPerson
 
-      val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
-
-      assertThat(responseBody.person is FullPerson).isTrue
-
-      assertThat(responseBody).matches {
-        val person = it.person as FullPerson
-
-        application.id == it.id &&
-          application.crn == person.crn &&
-          person.nomsNumber == null &&
-          person.status == PersonStatus.unknown &&
-          person.prisonName == null
+          application.id == it.id &&
+            application.crn == person.crn &&
+            person.nomsNumber == null &&
+            person.status == PersonStatus.unknown &&
+            person.prisonName == null
+        }
       }
     }
   }
@@ -1662,44 +1648,42 @@ class ApplicationTest : IntegrationTestBase() {
 
   @Test
   fun `Create new application returns successfully when the person cannot be fetched from the prisons API`() {
-    `Given a User` { _, jwt ->
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withNomsNumber("ABC123")
-        .produce()
-
-      CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
-      loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
-      offenderDetails.otherIds.nomsNumber?.let { PrisonAPI_mockNotFoundInmateDetailsCall(it) }
-      loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
-      APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-        offenderDetails.otherIds.crn,
-        ManagingTeamsResponse(
-          teamCodes = listOf(offenderDetails.otherIds.crn),
-        ),
-      )
-
-      val result = webTestClient.post()
-        .uri("/applications")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewApplication(
-            crn = offenderDetails.otherIds.crn,
-            convictionId = 123,
-            deliusEventNumber = "1",
-            offenceId = "789",
+    `Given a User` { userEntity, jwt ->
+      `Given an Offender`(
+        offenderDetailsConfigBlock = {
+          withNomsNumber("ABC123")
+        },
+      ) { offenderDetails, _ ->
+        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+          offenderDetails.otherIds.crn,
+          ManagingTeamsResponse(
+            teamCodes = listOf(offenderDetails.otherIds.crn),
           ),
         )
-        .exchange()
-        .expectStatus()
-        .isCreated
-        .returnResult(ApprovedPremisesApplication::class.java)
 
-      assertThat(result.responseHeaders["Location"]).anyMatch {
-        it.matches(Regex("/applications/.+"))
-      }
+        val result = webTestClient.post()
+          .uri("/applications")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewApplication(
+              crn = offenderDetails.otherIds.crn,
+              convictionId = 123,
+              deliusEventNumber = "1",
+              offenceId = "789",
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isCreated
+          .returnResult(ApprovedPremisesApplication::class.java)
 
-      assertThat(result.responseBody.blockFirst()).matches {
-        it.person.crn == offenderDetails.otherIds.crn
+        assertThat(result.responseHeaders["Location"]).anyMatch {
+          it.matches(Regex("/applications/.+"))
+        }
+
+        assertThat(result.responseBody.blockFirst()).matches {
+          it.person.crn == offenderDetails.otherIds.crn
+        }
       }
     }
   }
