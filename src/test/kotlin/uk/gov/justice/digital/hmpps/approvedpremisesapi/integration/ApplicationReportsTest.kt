@@ -222,7 +222,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
       val multipleBookings1 = createBookingForApplication(applicationWithMultipleBookings)
       val multipleBookings2 = createBookingForApplication(applicationWithMultipleBookings)
 
-      val applicationShortNotice = createApplication("applicationShortNotice")
+      val applicationShortNotice = createApplication("applicationShortNotice", shortNotice = true)
       acceptAssessmentForApplication(applicationShortNotice, shortNotice = true)
 
       val applicationWithAcceptedAppeal = createApplication("applicationWithAcceptedAppeal")
@@ -307,7 +307,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
       val multipleBookings1 = createBookingForApplication(applicationWithMultipleBookings)
       val multipleBookings2 = createBookingForApplication(applicationWithMultipleBookings)
 
-      val applicationShortNotice = createApplication("applicationShortNotice")
+      val applicationShortNotice = createApplication("applicationShortNotice", shortNotice = true)
       acceptAssessmentForApplication(applicationShortNotice, shortNotice = true)
 
       val applicationWithAcceptedAppeal = createApplication("applicationWithAcceptedAppeal")
@@ -410,8 +410,17 @@ class ApplicationReportsTest : IntegrationTestBase() {
       assertThat(reportRow.assessmentDecisionRationale).isEqualTo(assessment.rejectionRationale)
 
       if (applicationFacets.isShortNotice) {
+        assertThat(reportRow.applicantReasonForLateApplication).isEqualTo("theReasonForShortNoticeReason")
+        assertThat(reportRow.applicantReasonForLateApplicationDetail).isEqualTo("theReasonForShortNoticeOther")
         assertThat(reportRow.assessorAgreeWithShortNoticeReason).isEqualTo("yes")
-        assertThat(reportRow.assessorReasonForLateApplication).isEqualTo("thisIsTheReasonForLateApplication")
+        assertThat(reportRow.assessorReasonForLateApplication).isEqualTo("thisIsAgreeWithShortNoticeReasonComments")
+        assertThat(reportRow.assessorReasonForLateApplicationDetail).isEqualTo("thisIsTheReasonForLateApplication")
+      } else {
+        assertThat(reportRow.applicantReasonForLateApplication).isNull()
+        assertThat(reportRow.applicantReasonForLateApplicationDetail).isNull()
+        assertThat(reportRow.assessorAgreeWithShortNoticeReason).isNull()
+        assertThat(reportRow.assessorReasonForLateApplication).isNull()
+        assertThat(reportRow.assessorReasonForLateApplicationDetail).isNull()
       }
     }
 
@@ -498,8 +507,8 @@ class ApplicationReportsTest : IntegrationTestBase() {
     }
   }
 
-  private fun createApplication(crn: String, withArrivalDate: Boolean = true): ApprovedPremisesApplicationEntity {
-    return createAndSubmitApplication(ApType.normal, crn, withArrivalDate)
+  private fun createApplication(crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false): ApprovedPremisesApplicationEntity {
+    return createAndSubmitApplication(ApType.normal, crn, withArrivalDate, shortNotice)
   }
 
   private fun createApplicationWithCompletedAssessment(crn: String, withArrivalDate: Boolean = true): ApprovedPremisesApplicationEntity {
@@ -515,7 +524,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
     return Pair(application, booking)
   }
 
-  private fun createAndSubmitApplication(apType: ApType, crn: String, withArrivalDate: Boolean = true): ApprovedPremisesApplicationEntity {
+  private fun createAndSubmitApplication(apType: ApType, crn: String, withArrivalDate: Boolean = true, shortNotice: Boolean = false): ApprovedPremisesApplicationEntity {
     val (referrer, jwt) = referrerDetails
     val (offenderDetails, _) = `Given an Offender`(
       offenderDetailsConfigBlock = { withCrn(crn) },
@@ -535,24 +544,26 @@ class ApplicationReportsTest : IntegrationTestBase() {
       ),
     )
 
+    val basicInformationJson =
+      mapOf(
+        "basic-information" to
+          listOfNotNull(
+            "sentence-type" to mapOf("sentenceType" to "Some Sentence Type"),
+            if (shortNotice) {
+              "reason-for-short-notice" to mapOf(
+                "reason" to "theReasonForShortNoticeReason",
+                "other" to "theReasonForShortNoticeOther",
+              )
+            } else { null },
+          ).toMap(),
+      )
+
     val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
       withCreatedByUser(referrer)
       withCrn(offenderDetails.otherIds.crn)
       withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
       withApplicationSchema(applicationSchema)
-      withData(
-        objectMapper.writeValueAsString(
-          mapOf(
-            "basic-information" to
-              mapOf(
-                "sentence-type"
-                  to mapOf(
-                    "sentenceType" to "Some Sentence Type",
-                  ),
-              ),
-          ),
-        ),
-      )
+      withData(objectMapper.writeValueAsString(basicInformationJson))
       withRiskRatings(
         PersonRisksFactory()
           .withMappa(
@@ -609,7 +620,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
          "suitability-assessment": {
             "application-timeliness": {
                "agreeWithShortNoticeReason": "yes",
-               "agreeWithShortNoticeReasonComments": "",
+               "agreeWithShortNoticeReasonComments": "thisIsAgreeWithShortNoticeReasonComments",
                "reasonForLateApplication": "thisIsTheReasonForLateApplication"
             }
          }
