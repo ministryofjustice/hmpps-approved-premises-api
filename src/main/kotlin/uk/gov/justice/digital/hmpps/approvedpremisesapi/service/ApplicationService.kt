@@ -341,6 +341,9 @@ class ApplicationService(
       situation = null,
       inmateInOutStatusOnSubmission = null,
       apArea = null,
+      applicantUserDetails = null,
+      caseManagerIsNotApplicant = null,
+      caseManagerUserDetails = null,
     )
   }
 

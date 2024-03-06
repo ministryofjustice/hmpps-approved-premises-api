@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
@@ -35,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationUserDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.sql.Timestamp
 import java.time.Instant
@@ -48,6 +51,7 @@ class ApplicationsTransformerTest {
   private val mockPersonTransformer = mockk<PersonTransformer>()
   private val mockRisksTransformer = mockk<RisksTransformer>()
   private val mockApAreaTransformer = mockk<ApAreaTransformer>()
+  private val mockCas1ApplicationUserDetailsTransformer = mockk<Cas1ApplicationUserDetailsTransformer>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -60,6 +64,7 @@ class ApplicationsTransformerTest {
     mockPersonTransformer,
     mockRisksTransformer,
     mockApAreaTransformer,
+    mockCas1ApplicationUserDetailsTransformer,
   )
 
   private val user = UserEntityFactory()
@@ -110,7 +115,19 @@ class ApplicationsTransformerTest {
   fun `transformJpaToApi transforms an Approved Premises application correctly`(args: Pair<ApiApprovedPremisesApplicationStatus, ApprovedPremisesApplicationStatus>) {
     val (apiStatus, jpaStatus) = args
 
-    val application = approvedPremisesApplicationFactory.withStatus(jpaStatus).withApArea(null).produce()
+    val applicantUserDetails = Cas1ApplicationUserDetailsEntityFactory().produce()
+    val caseManagerUserDetails = Cas1ApplicationUserDetailsEntityFactory().produce()
+
+    val application = approvedPremisesApplicationFactory
+      .withStatus(jpaStatus)
+      .withApArea(null)
+      .withApplicantUserDetails(applicantUserDetails)
+      .withCaseManagerIsNotApplicant(true)
+      .withCaseManagerUserDetails(caseManagerUserDetails)
+      .produce()
+
+    every { mockCas1ApplicationUserDetailsTransformer.transformJpaToApi(applicantUserDetails) } returns Cas1ApplicationUserDetails("applicant", "", "")
+    every { mockCas1ApplicationUserDetailsTransformer.transformJpaToApi(caseManagerUserDetails) } returns Cas1ApplicationUserDetails("caseManager", "", "")
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
 
@@ -118,6 +135,9 @@ class ApplicationsTransformerTest {
     assertThat(result.createdByUserId).isEqualTo(user.id)
     assertThat(result.status).isEqualTo(apiStatus)
     assertThat(result.apArea).isNull()
+    assertThat(result.applicantUserDetails!!.name).isEqualTo("applicant")
+    assertThat(result.caseManagerIsNotApplicant).isTrue()
+    assertThat(result.caseManagerUserDetails!!.name).isEqualTo("caseManager")
   }
 
   @Test
@@ -128,6 +148,7 @@ class ApplicationsTransformerTest {
     val mockApArea = mockk<ApArea>()
 
     every { mockApAreaTransformer.transformJpaToApi(apArea) } returns mockApArea
+    every { mockCas1ApplicationUserDetailsTransformer.transformJpaToApi(any()) } returns Cas1ApplicationUserDetails("", "", "")
 
     val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
 
