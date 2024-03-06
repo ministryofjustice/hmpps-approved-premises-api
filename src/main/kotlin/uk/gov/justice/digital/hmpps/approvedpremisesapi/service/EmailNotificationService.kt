@@ -19,8 +19,13 @@ class EmailNotificationService(
 ) : EmailNotifier {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
-  override fun sendEmail(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>) {
-    applicationEventPublisher.publishEvent(SendEmailRequestedEvent(EmailRequest(recipientEmailAddress, templateId, personalisation)))
+  override fun sendEmail(
+    recipientEmailAddress: String,
+    templateId: String,
+    personalisation: Map<String, *>,
+    replyToEmailId: String?,
+  ) {
+    applicationEventPublisher.publishEvent(SendEmailRequestedEvent(EmailRequest(recipientEmailAddress, templateId, personalisation, replyToEmailId)))
 
     try {
       if (notifyConfig.mode == NotifyMode.DISABLED) {
@@ -29,9 +34,21 @@ class EmailNotificationService(
       }
 
       if (notifyConfig.mode == NotifyMode.TEST_AND_GUEST_LIST) {
-        guestListNotificationClient!!.sendEmail(templateId, recipientEmailAddress, personalisation, null)
+        guestListNotificationClient!!.sendEmail(
+          templateId,
+          recipientEmailAddress,
+          personalisation,
+          null,
+          replyToEmailId,
+        )
       } else {
-        normalNotificationClient!!.sendEmail(templateId, recipientEmailAddress, personalisation, null)
+        normalNotificationClient!!.sendEmail(
+          templateId,
+          recipientEmailAddress,
+          personalisation,
+          null,
+          replyToEmailId,
+        )
       }
     } catch (notificationClientException: NotificationClientException) {
       log.error("Unable to send template $templateId to user $recipientEmailAddress", notificationClientException)
@@ -40,9 +57,9 @@ class EmailNotificationService(
 }
 
 interface EmailNotifier {
-  fun sendEmail(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>)
+  fun sendEmail(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>, replyToEmailId: String? = null)
 }
 
-data class EmailRequest(val email: String, val templateId: String, val personalisation: Map<String, *>)
+data class EmailRequest(val email: String, val templateId: String, val personalisation: Map<String, *>, val replyToEmailId: String? = null)
 
 data class SendEmailRequestedEvent(val request: EmailRequest)

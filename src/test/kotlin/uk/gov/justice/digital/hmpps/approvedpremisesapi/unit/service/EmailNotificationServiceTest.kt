@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
+import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.slf4j.Logger
 import org.springframework.context.ApplicationEventPublisher
@@ -45,7 +47,7 @@ class EmailNotificationServiceTest {
       ),
     )
 
-    verify(exactly = 0) { mockGuestListNotificationClient.sendEmail(any(), any(), any(), any()) }
+    verify(exactly = 0) { mockGuestListNotificationClient.sendEmail(any(), any(), any(), any(), any()) }
     verify(exactly = 0) { mockNormalNotificationClient.sendEmail(any(), any(), any(), any()) }
   }
 
@@ -111,6 +113,7 @@ class EmailNotificationServiceTest {
         user.email,
         personalisation,
         null,
+        null,
       )
     } returns mockk()
 
@@ -127,6 +130,7 @@ class EmailNotificationServiceTest {
         "f3d78814-383f-4b5f-a681-9bd3ab912888",
         user.email,
         personalisation,
+        null,
         null,
       )
     }
@@ -157,6 +161,7 @@ class EmailNotificationServiceTest {
         user.email,
         personalisation,
         null,
+        null,
       )
     } returns mockk()
 
@@ -174,10 +179,11 @@ class EmailNotificationServiceTest {
         user.email,
         personalisation,
         null,
+        null,
       )
     }
 
-    verify(exactly = 0) { mockGuestListNotificationClient.sendEmail(any(), any(), any(), any()) }
+    verify(exactly = 0) { mockGuestListNotificationClient.sendEmail(any(), any(), any(), any(), any()) }
 
     verify(exactly = 0) { mockNotifyGuestListUserRepository.findByIdOrNull(user.id) }
   }
@@ -205,6 +211,7 @@ class EmailNotificationServiceTest {
         any(),
         personalisation,
         null,
+        null,
       )
     } returns mockk()
     if (user.email != null) {
@@ -221,11 +228,11 @@ class EmailNotificationServiceTest {
         any(),
         personalisation,
         null,
-
+        null,
       )
     }
 
-    verify(exactly = 0) { mockGuestListNotificationClient.sendEmail(any(), any(), any(), any()) }
+    verify(exactly = 0) { mockGuestListNotificationClient.sendEmail(any(), any(), any(), any(), any()) }
     verify(exactly = 0) { mockNotifyGuestListUserRepository.findByIdOrNull(user.id) }
   }
 
@@ -255,6 +262,7 @@ class EmailNotificationServiceTest {
         user.email,
         personalisation,
         null,
+        null,
       )
     } throws exception
 
@@ -268,6 +276,95 @@ class EmailNotificationServiceTest {
 
     verify {
       logger.error("Unable to send template $templateId to user ${user.email}", exception)
+    }
+  }
+
+  @Nested
+  inner class WithReplyToEmailId {
+    val templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888"
+    val replyToEmailId = "263a4a1e-a5b5-4287-9c09-64f0a236f3a9"
+    val email = "test@example.com"
+    val personalisation = mapOf(
+      "name" to "Jim",
+      "assessmentUrl" to "https://frontend/assessment/73eff3e8-d2f0-434f-a776-4f975b891444",
+    )
+
+    @Nested
+    inner class FeatureFlagNotifyEnabled {
+      @Test
+      fun `sendEmail sends replyToEmailId using the normal client`() {
+        val emailNotificationService = createServiceWithConfig {
+          mode = NotifyMode.ENABLED
+        }
+
+        every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
+        every {
+          mockNormalNotificationClient.sendEmail(
+            "f3d78814-383f-4b5f-a681-9bd3ab912888",
+            email,
+            personalisation,
+            null,
+            replyToEmailId,
+          )
+        } returns mockk()
+
+        emailNotificationService.sendEmail(
+          recipientEmailAddress = email,
+          templateId = templateId,
+          personalisation = personalisation,
+          replyToEmailId = replyToEmailId,
+        )
+
+        verify(exactly = 1) {
+          mockNormalNotificationClient.sendEmail(
+            "f3d78814-383f-4b5f-a681-9bd3ab912888",
+            email,
+            personalisation,
+            null,
+            replyToEmailId,
+          )
+        }
+      }
+    }
+
+    @Nested
+    inner class FeatureFlagTestAndGuestListEnabled {
+      @Test
+      fun `sendEmail sends replyToEmailId using the guest client`() {
+        val emailNotificationService = createServiceWithConfig {
+          mode = NotifyMode.TEST_AND_GUEST_LIST
+        }
+
+        every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
+        every {
+          mockGuestListNotificationClient.sendEmail(
+            "f3d78814-383f-4b5f-a681-9bd3ab912888",
+            email,
+            personalisation,
+            null,
+            replyToEmailId,
+          )
+        } returns mockk()
+
+        emailNotificationService.sendEmail(
+          recipientEmailAddress = email,
+          templateId = templateId,
+          personalisation = personalisation,
+          replyToEmailId = replyToEmailId,
+        )
+
+        verify(exactly = 1) {
+          mockGuestListNotificationClient.sendEmail(
+            "f3d78814-383f-4b5f-a681-9bd3ab912888",
+            email,
+            personalisation,
+            null,
+            replyToEmailId,
+          )
+        }
+
+        verify { mockGuestListNotificationClient.sendEmail(any(), any(), any(), any()) wasNot Called }
+      }
     }
   }
 
