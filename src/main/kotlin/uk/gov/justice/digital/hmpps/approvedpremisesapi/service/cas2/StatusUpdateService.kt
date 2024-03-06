@@ -33,6 +33,7 @@ class StatusUpdateService(
   private val statusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
   private val domainEventService: DomainEventService,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
+  private val statusTransformer: ApplicationStatusTransformer,
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
 ) {
 
@@ -112,7 +113,6 @@ class StatusUpdateService(
     val application = statusUpdate.application
     val newStatus = statusUpdate.status()
     val assessor = statusUpdate.assessor
-    val transformer = ApplicationStatusTransformer()
 
     domainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(
       DomainEvent(
@@ -135,7 +135,7 @@ class StatusUpdateService(
               name = newStatus.name,
               description = newStatus.description,
               label = newStatus.label,
-              statusDetails = transformer.transformStatusDetailListToDetailItemList(statusDetails),
+              statusDetails = statusTransformer.transformStatusDetailListToDetailItemList(statusDetails),
             ),
             updatedBy = ExternalUser(
               username = assessor.username,
