@@ -79,7 +79,7 @@ class Cas1AssessmentEmailServiceTest {
 
     @Test
     fun `assessmentAllocated sends an email to a user if they have an email address and an emergency assessment with a deadline of next working day`() {
-      every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 2
+      every { mockWorkingDayCountService.getCompleteWorkingDaysFromNowUntil(any()) } returns 2
       val deadline = OffsetDateTime.now().plusDays(2)
 
       service.assessmentAllocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN, deadline, true)
@@ -96,7 +96,7 @@ class Cas1AssessmentEmailServiceTest {
 
     @Test
     fun `assessmentAllocated sends an email to a user if they have an email address and a standard deadline`() {
-      every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 10
+      every { mockWorkingDayCountService.getCompleteWorkingDaysFromNowUntil(any()) } returns 10
       val deadline = OffsetDateTime.now().plusDays(10)
 
       service.assessmentAllocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN, deadline, false)

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.GovUKBankHolidaysApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNextWorkingDay
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWorkingDay
@@ -22,6 +23,10 @@ class WorkingDayCountService(
 
   fun getWorkingDaysCount(from: LocalDate, to: LocalDate): Int {
     return from.getDaysUntilInclusive(to).filter { it.isWorkingDay(bankHolidays) }.size
+  }
+
+  fun getCompleteWorkingDaysFromNowUntil(to: LocalDate): Int {
+    return LocalDate.now().getDaysUntilExclusiveEnd(to).filter { it.isWorkingDay(bankHolidays) }.size
   }
 
   fun addWorkingDays(date: LocalDate, count: Int): LocalDate {

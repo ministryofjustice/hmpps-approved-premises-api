@@ -79,7 +79,7 @@ class Cas1AssessmentEmailService(
     }
 
     return STANDARD_DEADLINE_COPY.format(
-      workingDayCountService.getWorkingDaysCount(LocalDate.now(), deadline.toLocalDate()).toString(),
+      workingDayCountService.getCompleteWorkingDaysFromNowUntil(deadline.toLocalDate()).toString(),
     )
   }
 

@@ -2,7 +2,10 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -238,5 +241,131 @@ class WorkingDayCountServiceTest {
     ).isEqualTo(
       date.getNextWorkingDay(workingDayCountService.bankHolidays),
     )
+  }
+
+  @Nested
+  inner class GetCompleteWorkingDaysFromNowUntil {
+
+    @BeforeEach
+    fun mockLocalDate() {
+      mockkStatic(LocalDate::class)
+    }
+
+    @Test
+    fun `getCompleteWorkingDaysFromNowUntil returns the number of days between two working days with no holidays in between`() {
+      every {
+        mockGovUKBankHolidaysApiClient.getUKBankHolidays()
+      } returns emptyBankHolidays
+
+      val aMonday = LocalDate.of(2023, 4, 27).with(TemporalAdjusters.next(DayOfWeek.MONDAY))
+      val aFriday = aMonday.with(TemporalAdjusters.next(DayOfWeek.FRIDAY))
+
+      every { LocalDate.now() } returns aMonday
+
+      assertThat(workingDayCountService.getCompleteWorkingDaysFromNowUntil(aFriday)).isEqualTo(4)
+    }
+
+    @Test
+    fun `getDifferenceInWorkingDays returns the number of days between two working days with a weekend in between`() {
+      every {
+        mockGovUKBankHolidaysApiClient.getUKBankHolidays()
+      } returns emptyBankHolidays
+
+      val aMonday = LocalDate.of(2023, 4, 27).with(TemporalAdjusters.next(DayOfWeek.MONDAY))
+      val nextMonday = aMonday.with(TemporalAdjusters.next(DayOfWeek.MONDAY))
+
+      every { LocalDate.now() } returns aMonday
+
+      assertThat(workingDayCountService.getCompleteWorkingDaysFromNowUntil(nextMonday)).isEqualTo(5)
+    }
+
+    @Test
+    fun `getDifferenceInWorkingDays returns the number of days between two working days with a bank holiday in between`() {
+      val aThursday = LocalDate.of(2023, 4, 27).with(TemporalAdjusters.next(DayOfWeek.THURSDAY))
+      val nextTuesday = aThursday.with(TemporalAdjusters.next(DayOfWeek.TUESDAY))
+
+      val aMondayBankHoliday = aThursday.with(TemporalAdjusters.next(DayOfWeek.MONDAY))
+
+      val bankHolidays = ClientResult.Success(
+        HttpStatus.OK,
+        UKBankHolidays(
+          englandAndWales = CountryBankHolidays(
+            division = "england-and-wales",
+            events = listOf(
+              BankHolidayEvent(
+                title = "bank holiday monday",
+                date = aMondayBankHoliday,
+                notes = "",
+                bunting = true,
+              ),
+            ),
+          ),
+          scotland = CountryBankHolidays(
+            division = "scotland",
+            events = listOf(),
+          ),
+          northernIreland = CountryBankHolidays(
+            division = "northern-ireland",
+            events = listOf(),
+          ),
+        ),
+      )
+
+      every {
+        mockGovUKBankHolidaysApiClient.getUKBankHolidays()
+      } returns bankHolidays
+
+      every { LocalDate.now() } returns aThursday
+
+      assertThat(workingDayCountService.getCompleteWorkingDaysFromNowUntil(nextTuesday)).isEqualTo(2)
+    }
+
+    @Test
+    fun `getDifferenceInWorkingDays returns the number of days between two working days with two bank holidays in between`() {
+      val aThursday = LocalDate.of(2023, 4, 27).with(TemporalAdjusters.next(DayOfWeek.THURSDAY))
+      val nextTuesday = aThursday.with(TemporalAdjusters.next(DayOfWeek.TUESDAY))
+
+      val aFridayBankHoliday = aThursday.with(TemporalAdjusters.next(DayOfWeek.FRIDAY))
+      val aMondayBankHoliday = aThursday.with(TemporalAdjusters.next(DayOfWeek.MONDAY))
+
+      val bankHolidays = ClientResult.Success(
+        HttpStatus.OK,
+        UKBankHolidays(
+          englandAndWales = CountryBankHolidays(
+            division = "england-and-wales",
+            events = listOf(
+              BankHolidayEvent(
+                title = "good friday",
+                date = aFridayBankHoliday,
+                notes = "",
+                bunting = true,
+              ),
+              BankHolidayEvent(
+                title = "bank holiday monday",
+                date = aMondayBankHoliday,
+                notes = "",
+                bunting = true,
+              ),
+            ),
+          ),
+          scotland = CountryBankHolidays(
+            division = "scotland",
+            events = listOf(),
+          ),
+          northernIreland = CountryBankHolidays(
+            division = "northern-ireland",
+            events = listOf(),
+          ),
+        ),
+      )
+
+      every {
+        mockGovUKBankHolidaysApiClient.getUKBankHolidays()
+      } returns bankHolidays
+
+      every { LocalDate.now() } returns aThursday
+
+      assertThat(workingDayCountService.getCompleteWorkingDaysFromNowUntil(nextTuesday)).isEqualTo(1)
+    }
   }
 }
