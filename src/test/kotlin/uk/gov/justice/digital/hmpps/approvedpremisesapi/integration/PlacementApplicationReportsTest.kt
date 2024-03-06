@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentAcceptance
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentRejection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
@@ -519,7 +520,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     val applicationId = expectedRow.application.id
     val booking = expectedRow.booking
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
-    val placementApplication =  placementApplicationTestRepository.findById(expectedRow.placementApplicationId).get()
+    val placementApplication = placementApplicationTestRepository.findById(expectedRow.placementApplicationId).get()
     val assessment = application.getAppropriateAssessment(expectedRow.hasAppeal)!!
     val offenderDetailSummary = getOffenderDetailForApplication(application, userEntity.deliusUsername)
 
@@ -722,6 +723,8 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
           releaseType = ReleaseTypeOption.licence,
           type = "CAS1",
           sentenceType = SentenceTypeOption.nonStatutory,
+          applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
+          caseManagerIsNotApplicant = false,
         ),
       )
       .exchange()

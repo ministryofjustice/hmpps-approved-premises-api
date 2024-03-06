@@ -17,15 +17,10 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Team
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -34,28 +29,23 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OfflineApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ProbationAreaFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
@@ -65,6 +55,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationJsonSchemaEntity
@@ -72,7 +64,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -87,6 +78,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService.Cas1ApplicationUpdateFields
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimelineNoteService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -96,6 +88,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
@@ -105,7 +98,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
-import java.time.Period
 import java.time.ZoneOffset
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.DomainEventService as Cas3DomainEventService
@@ -122,7 +114,6 @@ class ApplicationServiceTest {
   private val mockApplicationTimelineNoteTransformer = mockk<ApplicationTimelineNoteTransformer>()
   private val mockDomainEventService = mockk<DomainEventService>()
   private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
-  private val mockCommunityApiClient = mockk<CommunityApiClient>()
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApplicationTeamCodeRepository = mockk<ApplicationTeamCodeRepository>()
   private val mockUserAccessService = mockk<UserAccessService>()
@@ -132,6 +123,8 @@ class ApplicationServiceTest {
   private val mockApAreaRepository = mockk<ApAreaRepository>()
   private val applicationTimelineTransformerMock = mockk<ApplicationTimelineTransformer>()
   private val mockDomainEventTransformer = mockk<DomainEventTransformer>()
+  private val mockCas1ApplicationDomainEventService = mockk<Cas1ApplicationDomainEventService>()
+  private val mockCas1ApplicationUserDetailsRepository = mockk<Cas1ApplicationUserDetailsRepository>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -145,7 +138,6 @@ class ApplicationServiceTest {
     mockApplicationTimelineNoteTransformer,
     mockDomainEventService,
     mockCas3DomainEventService,
-    mockCommunityApiClient,
     mockApDeliusContextApiClient,
     mockApplicationTeamCodeRepository,
     mockEmailNotificationService,
@@ -157,6 +149,8 @@ class ApplicationServiceTest {
     mockApAreaRepository,
     applicationTimelineTransformerMock,
     mockDomainEventTransformer,
+    mockCas1ApplicationDomainEventService,
+    mockCas1ApplicationUserDetailsRepository,
   )
 
   @Test
@@ -203,19 +197,6 @@ class ApplicationServiceTest {
         override fun getStatus(): String = ApprovedPremisesApplicationStatus.started.toString()
         override fun getIsWithdrawn(): Boolean = false
       },
-    )
-
-    every { mockCommunityApiClient.getStaffUserDetails(distinguishedName) } returns ClientResult.Success(
-      HttpStatus.OK,
-      StaffUserDetailsFactory()
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .withCode("TEAM1")
-              .produce(),
-          ),
-        )
-        .produce(),
     )
 
     every { mockUserRepository.findByDeliusUsername(distinguishedName) } returns userEntity
@@ -915,173 +896,9 @@ class ApplicationServiceTest {
     assertThat(temporaryAccommodationApplication.prisonNameOnCreation).isNull()
   }
 
-  @Test
-  fun `updateApprovedPremisesApplication returns NotFound when application doesn't exist`() {
-    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
+  @Nested
+  inner class UpdateApplicationCas1 {
 
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
-
-    assertThat(
-      applicationService.updateApprovedPremisesApplication(
-        applicationId = applicationId,
-        isWomensApplication = false,
-        isPipeApplication = null,
-        isEmergencyApplication = false,
-        isEsapApplication = false,
-        releaseType = null,
-        arrivalDate = null,
-        data = "{}",
-        isInapplicable = null,
-      ) is AuthorisableActionResult.NotFound,
-    ).isTrue
-  }
-
-  @Test
-  fun `updateApprovedPremisesApplication returns Unauthorised when application doesn't belong to request user`() {
-    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withId(applicationId)
-      .withYieldedCreatedByUser {
-        UserEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .produce()
-      }
-      .produce()
-
-    every { mockUserService.getUserForRequest() } returns UserEntityFactory()
-      .withDeliusUsername(username)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-    assertThat(
-      applicationService.updateApprovedPremisesApplication(
-        applicationId = applicationId,
-        isWomensApplication = false,
-        isPipeApplication = null,
-        isEmergencyApplication = false,
-        isEsapApplication = false,
-        releaseType = null,
-        arrivalDate = null,
-        data = "{}",
-        isInapplicable = null,
-      ) is AuthorisableActionResult.Unauthorised,
-    ).isTrue
-  }
-
-  @Test
-  fun `updateApprovedPremisesApplication returns GeneralValidationError when application schema is outdated`() {
-    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
-
-    val user = UserEntityFactory()
-      .withDeliusUsername(username)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withId(applicationId)
-      .withCreatedByUser(user)
-      .withSubmittedAt(null)
-      .produce()
-      .apply {
-        schemaUpToDate = false
-      }
-
-    every { mockUserService.getUserForRequest() } returns user
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-    val result = applicationService.updateApprovedPremisesApplication(
-      applicationId = applicationId,
-      isWomensApplication = false,
-      isPipeApplication = null,
-      isEmergencyApplication = false,
-      isEsapApplication = false,
-      releaseType = null,
-      arrivalDate = null,
-      data = "{}",
-      isInapplicable = null,
-    )
-
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-
-    assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-    val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-    assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
-  }
-
-  @Test
-  fun `updateApprovedPremisesApplication returns GeneralValidationError when application has already been submitted`() {
-    val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-    val username = "SOMEPERSON"
-
-    val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-
-    val user = UserEntityFactory()
-      .withDeliusUsername(username)
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withApplicationSchema(newestSchema)
-      .withId(applicationId)
-      .withCreatedByUser(user)
-      .withSubmittedAt(OffsetDateTime.now())
-      .produce()
-      .apply {
-        schemaUpToDate = true
-      }
-
-    every { mockUserService.getUserForRequest() } returns user
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-
-    val result = applicationService.updateApprovedPremisesApplication(
-      applicationId = applicationId,
-      isWomensApplication = false,
-      isPipeApplication = null,
-      isEmergencyApplication = false,
-      isEsapApplication = false,
-      releaseType = null,
-      arrivalDate = null,
-      data = "{}",
-      isInapplicable = null,
-    )
-
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
-
-    assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-    val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-    assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
-  }
-
-  @Test
-  fun `updateApprovedPremisesApplication returns Success with updated Application`() {
     val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
 
@@ -1110,39 +927,283 @@ class ApplicationServiceTest {
         schemaUpToDate = true
       }
 
-    every { mockUserService.getUserForRequest() } returns user
-    every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
-    every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-    every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns newestSchema
-    every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
-    every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+    @Test
+    fun `updateApprovedPremisesApplication returns NotFound when application doesn't exist`() {
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-    val result = applicationService.updateApprovedPremisesApplication(
-      applicationId = applicationId,
-      isWomensApplication = false,
-      isPipeApplication = true,
-      isEmergencyApplication = false,
-      isEsapApplication = false,
-      releaseType = "rotl",
-      arrivalDate = LocalDate.parse("2023-04-17"),
-      data = updatedData,
-      isInapplicable = false,
-    )
+      assertThat(
+        applicationService.updateApprovedPremisesApplication(
+          applicationId = applicationId,
+          Cas1ApplicationUpdateFields(
+            isWomensApplication = false,
+            isPipeApplication = null,
+            isEmergencyApplication = false,
+            isEsapApplication = false,
+            releaseType = null,
+            arrivalDate = null,
+            data = "{}",
+            isInapplicable = null,
+            applicantUserDetails = null,
+            caseManagerIsNotApplicant = null,
+            caseManagerUserDetails = null,
+          ),
+        ) is AuthorisableActionResult.NotFound,
+      ).isTrue
+    }
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    result as AuthorisableActionResult.Success
+    @Test
+    fun `updateApprovedPremisesApplication returns Unauthorised when application doesn't belong to request user`() {
+      every { mockUserService.getUserForRequest() } returns UserEntityFactory()
+        .withDeliusUsername(username)
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-    assertThat(result.entity is ValidatableActionResult.Success).isTrue
-    val validatableActionResult = result.entity as ValidatableActionResult.Success
+      assertThat(
+        applicationService.updateApprovedPremisesApplication(
+          applicationId = applicationId,
+          Cas1ApplicationUpdateFields(
+            isWomensApplication = false,
+            isPipeApplication = null,
+            isEmergencyApplication = false,
+            isEsapApplication = false,
+            releaseType = null,
+            arrivalDate = null,
+            data = "{}",
+            isInapplicable = null,
+            applicantUserDetails = null,
+            caseManagerIsNotApplicant = null,
+            caseManagerUserDetails = null,
+          ),
+        ) is AuthorisableActionResult.Unauthorised,
+      ).isTrue
+    }
 
-    val approvedPremisesApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+    @Test
+    fun `updateApprovedPremisesApplication returns GeneralValidationError when application schema is outdated`() {
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-    assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
-    assertThat(approvedPremisesApplication.isWomensApplication).isEqualTo(false)
-    assertThat(approvedPremisesApplication.isPipeApplication).isEqualTo(true)
-    assertThat(approvedPremisesApplication.releaseType).isEqualTo("rotl")
-    assertThat(approvedPremisesApplication.isInapplicable).isEqualTo(false)
-    assertThat(approvedPremisesApplication.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
+      application.schemaUpToDate = false
+
+      val result = applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = null,
+          isEmergencyApplication = false,
+          isEsapApplication = false,
+          releaseType = null,
+          arrivalDate = null,
+          data = "{}",
+          isInapplicable = null,
+          applicantUserDetails = null,
+          caseManagerIsNotApplicant = null,
+          caseManagerUserDetails = null,
+        ),
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("The schema version is outdated")
+    }
+
+    @Test
+    fun `updateApprovedPremisesApplication returns GeneralValidationError when application has already been submitted`() {
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      application.submittedAt = OffsetDateTime.now()
+
+      val result = applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = null,
+          isEmergencyApplication = false,
+          isEsapApplication = false,
+          releaseType = null,
+          arrivalDate = null,
+          data = "{}",
+          isInapplicable = null,
+          applicantUserDetails = null,
+          caseManagerIsNotApplicant = null,
+          caseManagerUserDetails = null,
+        ),
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+    }
+
+    @Test
+    fun `updateApprovedPremisesApplication returns Success with updated Application`() {
+      setupMocksForSuccess()
+
+      val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match { it.name == "applicantName" && it.email == "applicantEmail" && it.telephoneNumber == "applicantPhone" },
+        )
+      } returns theApplicantUserDetailsEntity
+
+      val theCaseManagerUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match { it.name == "caseManagerName" && it.email == "caseManagerEmail" && it.telephoneNumber == "caseManagerPhone" },
+        )
+      } returns theCaseManagerUserDetailsEntity
+
+      val result = applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = true,
+          isEmergencyApplication = false,
+          isEsapApplication = false,
+          releaseType = "rotl",
+          arrivalDate = LocalDate.parse("2023-04-17"),
+          data = updatedData,
+          isInapplicable = false,
+          applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+          caseManagerIsNotApplicant = true,
+          caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
+        ),
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.Success).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+
+      val approvedPremisesApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+
+      assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
+      assertThat(approvedPremisesApplication.isWomensApplication).isEqualTo(false)
+      assertThat(approvedPremisesApplication.isPipeApplication).isEqualTo(true)
+      assertThat(approvedPremisesApplication.releaseType).isEqualTo("rotl")
+      assertThat(approvedPremisesApplication.isInapplicable).isEqualTo(false)
+      assertThat(approvedPremisesApplication.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
+      assertThat(approvedPremisesApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
+      assertThat(approvedPremisesApplication.caseManagerIsNotApplicant).isEqualTo(true)
+      assertThat(approvedPremisesApplication.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
+    }
+
+    @Test
+    fun `updateApprovedPremisesApplication updates existing application user details`() {
+      setupMocksForSuccess()
+
+      val existingApplicantUserDetails = Cas1ApplicationUserDetailsEntity(UUID.randomUUID(), "oldApplicantEmail", "oldApplicantName", "oldApplicantPhone")
+      val existingCaseManagerUserDetails = Cas1ApplicationUserDetailsEntity(UUID.randomUUID(), "oldApplicantEmail", "oldApplicantName", "oldApplicantPhone")
+
+      val theUpdatedApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match {
+            it.id == existingApplicantUserDetails.id &&
+              it.name == "applicantName" &&
+              it.email == "applicantEmail" &&
+              it.telephoneNumber == "applicantPhone"
+          },
+        )
+      } returns theUpdatedApplicantUserDetailsEntity
+
+      val theUpdatedCaseManagerUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match {
+            it.id == existingCaseManagerUserDetails.id &&
+              it.name == "caseManagerName" &&
+              it.email == "caseManagerEmail" &&
+              it.telephoneNumber == "caseManagerPhone"
+          },
+        )
+      } returns theUpdatedCaseManagerUserDetailsEntity
+
+      application.applicantUserDetails = existingApplicantUserDetails
+      application.caseManagerUserDetails = existingCaseManagerUserDetails
+
+      val result = applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = true,
+          isEmergencyApplication = false,
+          isEsapApplication = false,
+          releaseType = "rotl",
+          arrivalDate = LocalDate.parse("2023-04-17"),
+          data = updatedData,
+          isInapplicable = false,
+          applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+          caseManagerIsNotApplicant = true,
+          caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
+        ),
+      )
+
+      result as AuthorisableActionResult.Success
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+      val approvedPremisesApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+
+      assertThat(approvedPremisesApplication.applicantUserDetails).isEqualTo(theUpdatedApplicantUserDetailsEntity)
+      assertThat(approvedPremisesApplication.caseManagerIsNotApplicant).isEqualTo(true)
+      assertThat(approvedPremisesApplication.caseManagerUserDetails).isEqualTo(theUpdatedCaseManagerUserDetailsEntity)
+    }
+
+    @Test
+    fun `updateApprovedPremisesApplication removes existing case manager user details if subsequently nulled`() {
+      setupMocksForSuccess()
+
+      val existingCaseManagerUserDetails = Cas1ApplicationUserDetailsEntity(UUID.randomUUID(), "oldApplicantEmail", "oldApplicantName", "oldApplicantPhone")
+
+      every { mockCas1ApplicationUserDetailsRepository.delete(existingCaseManagerUserDetails) } returns Unit
+
+      application.caseManagerUserDetails = existingCaseManagerUserDetails
+
+      applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = true,
+          isEmergencyApplication = false,
+          isEsapApplication = false,
+          releaseType = "rotl",
+          arrivalDate = LocalDate.parse("2023-04-17"),
+          data = updatedData,
+          isInapplicable = false,
+          applicantUserDetails = null,
+          caseManagerIsNotApplicant = false,
+          caseManagerUserDetails = null,
+        ),
+      )
+
+      verify { mockCas1ApplicationUserDetailsRepository.delete(existingCaseManagerUserDetails) }
+    }
+
+    private fun setupMocksForSuccess() {
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+      every { mockJsonSchemaService.getNewestSchema(ApprovedPremisesApplicationJsonSchemaEntity::class.java) } returns newestSchema
+      every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
+      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+    }
   }
 
   @Test
@@ -1338,7 +1399,7 @@ class ApplicationServiceTest {
   }
 
   @Nested
-  inner class SubmitApplication {
+  inner class SubmitApplicationCas1 {
     val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
     val user = UserEntityFactory()
@@ -1360,49 +1421,19 @@ class ApplicationServiceTest {
       releaseType = ReleaseTypeOption.licence,
       type = "CAS1",
       sentenceType = SentenceTypeOption.nonStatutory,
+      applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+      caseManagerIsNotApplicant = false,
     )
 
-    private val submitTemporaryAccommodationApplication = SubmitTemporaryAccommodationApplication(
-      translatedDocument = {},
-      type = "CAS3",
-      arrivalDate = LocalDate.now(),
-      summaryData = {
-        val num = 50
-        val text = "Hello world!"
-      },
-    )
-
-    private val submitTemporaryAccommodationApplicationWithMiReportingData = SubmitTemporaryAccommodationApplication(
-      translatedDocument = {},
-      type = "CAS3",
-      arrivalDate = LocalDate.now(),
-      summaryData = {
-        val num = 50
-        val text = "Hello world!"
-      },
-      isRegisteredSexOffender = true,
-      needsAccessibleProperty = true,
-      hasHistoryOfArson = true,
-      isDutyToReferSubmitted = true,
-      dutyToReferSubmissionDate = LocalDate.now().minusDays(7),
-      isApplicationEligible = true,
-      eligibilityReason = "homelessFromApprovedPremises",
-      dutyToReferLocalAuthorityAreaName = "Aberdeen City",
-      personReleaseDate = LocalDate.now().plusDays(1),
-    )
+    private val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
     @BeforeEach
     fun setup() {
       every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
-      every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplication.translatedDocument) } returns "{}"
-      every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplicationWithMiReportingData.translatedDocument) } returns "{}"
     }
 
     @Test
     fun `submitApprovedPremisesApplication returns NotFound when application doesn't exist`() {
-      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-      val username = "SOMEPERSON"
-
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns null
 
       assertThat(
@@ -1420,24 +1451,12 @@ class ApplicationServiceTest {
     fun `submitApprovedPremisesApplication returns Unauthorised when application doesn't belong to request user`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withId(applicationId)
-        .withYieldedCreatedByUser {
-          UserEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .produce()
-        }
+        .withYieldedCreatedByUser { UserEntityFactory().withDefaultProbationRegion().produce() }
         .produce()
 
       every { mockUserService.getUserForRequest() } returns UserEntityFactory()
         .withDeliusUsername(username)
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
+        .withDefaultProbationRegion()
         .produce()
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
@@ -1520,29 +1539,9 @@ class ApplicationServiceTest {
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
     }
 
-    @ParameterizedTest
-    @EnumSource(value = SituationOption::class)
-    @NullSource
-    @Suppress("CyclomaticComplexMethod")
-    fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event, sends confirmation email`(
-      situation: SituationOption?,
-    ) {
+    @Test
+    fun `submitApprovedPremisesApplication returns GeneralValidationError when applicantIsNotCaseManager is true and no case manager details are provided`() {
       val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-
-      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
-        translatedDocument = {},
-        isPipeApplication = true,
-        isWomensApplication = false,
-        isEmergencyApplication = false,
-        isEsapApplication = false,
-        targetLocation = "SW1A 1AA",
-        releaseType = ReleaseTypeOption.licence,
-        type = "CAS1",
-        sentenceType = SentenceTypeOption.nonStatutory,
-        situation = situation,
-      )
-
-      every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
 
       val application = ApprovedPremisesApplicationEntityFactory()
         .withApplicationSchema(newestSchema)
@@ -1557,85 +1556,87 @@ class ApplicationServiceTest {
       every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-      every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
-      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-      every { mockOffenderService.getInmateDetailByNomsNumber(any(), any()) } returns AuthorisableActionResult.Success(
-        InmateDetailFactory().withInOutStatus(InOutStatus.OUT).produce(),
+
+      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        isPipeApplication = true,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        caseManagerIsNotApplicant = true,
       )
 
-      every { mockApAreaRepository.findByIdOrNull(any()) } returns null
+      every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
 
-      every { mockAssessmentService.createApprovedPremisesAssessment(application) } returns ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(user)
+      val result = applicationService.submitApprovedPremisesApplication(
+        applicationId,
+        submitApprovedPremisesApplication,
+        username,
+        "jwt",
+        null,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true")
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SituationOption::class)
+    @NullSource
+    @Suppress("CyclomaticComplexMethod")
+    fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event, sends confirmation email`(
+      situation: SituationOption?,
+    ) {
+      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        isPipeApplication = true,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        situation = situation,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        caseManagerIsNotApplicant = true,
+        caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
+      )
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
         .produce()
+        .apply {
+          schemaUpToDate = true
+        }
 
-      val offenderDetails = OffenderDetailsSummaryFactory()
-        .withGender("male")
-        .withCrn(application.crn)
-        .produce()
+      setupMocksForSuccess(application)
 
+      val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
       every {
-        mockOffenderService.getOffenderByCrn(
-          application.crn,
-          user.deliusUsername,
-          true,
+        mockCas1ApplicationUserDetailsRepository.save(
+          match { it.name == "applicantName" && it.email == "applicantEmail" && it.telephoneNumber == "applicantPhone" },
         )
-      } returns AuthorisableActionResult.Success(
-        offenderDetails,
-      )
+      } returns theApplicantUserDetailsEntity
 
-      val risks = PersonRisksFactory()
-        .withMappa(
-          RiskWithStatus(
-            status = RiskStatus.Retrieved,
-            value = Mappa(
-              level = "CAT C1/LEVEL L1",
-              lastUpdated = LocalDate.now(),
-            ),
-          ),
-        )
-        .produce()
-
+      val theCaseManagerUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
       every {
-        mockOffenderService.getRiskByCrn(
-          application.crn,
-          any(),
-          user.deliusUsername,
+        mockCas1ApplicationUserDetailsRepository.save(
+          match { it.name == "caseManagerName" && it.email == "caseManagerEmail" && it.telephoneNumber == "caseManagerPhone" },
         )
-      } returns AuthorisableActionResult.Success(
-        risks,
-      )
-
-      val staffUserDetails = StaffUserDetailsFactory()
-        .withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory()
-              .produce(),
-          ),
-        )
-        .produce()
-
-      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
-        status = HttpStatus.OK,
-        body = staffUserDetails,
-      )
-
-      val caseDetails = CaseDetailFactory().produce()
-
-      every { mockApDeliusContextApiClient.getCaseDetail(application.crn) } returns ClientResult.Success(
-        status = HttpStatus.OK,
-        body = caseDetails,
-      )
-
-      val domainEventStaffMember = StaffMemberFactory().produce()
-      every { mockDomainEventTransformer.toStaffMember(staffUserDetails) } returns domainEventStaffMember
-
-      val domainEventProbationArea = ProbationAreaFactory().produce()
-      every { mockDomainEventTransformer.toProbationArea(staffUserDetails) } returns domainEventProbationArea
-
-      every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
-      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+      } returns theCaseManagerUserDetailsEntity
 
       val result =
         applicationService.submitApprovedPremisesApplication(
@@ -1662,47 +1663,19 @@ class ApplicationServiceTest {
       }
       assertThat(persistedApplication.targetLocation).isEqualTo(submitApprovedPremisesApplication.targetLocation)
       assertThat(persistedApplication.inmateInOutStatusOnSubmission).isEqualTo("OUT")
+      assertThat(persistedApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
+      assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
+      assertThat(persistedApplication.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) { mockAssessmentService.createApprovedPremisesAssessment(application) }
 
       verify(exactly = 1) {
-        mockDomainEventService.saveApplicationSubmittedDomainEvent(
-          match {
-            val data = (it.data as ApplicationSubmittedEnvelope).eventDetails
-
-            it.applicationId == application.id &&
-              it.crn == application.crn &&
-              data.applicationId == application.id &&
-              data.applicationUrl == "http://frontend/applications/${application.id}" &&
-              data.personReference == PersonReference(
-              crn = offenderDetails.otherIds.crn,
-              noms = offenderDetails.otherIds.nomsNumber!!,
-            ) &&
-              data.deliusEventNumber == application.eventNumber &&
-              data.releaseType == submitApprovedPremisesApplication.releaseType.toString() &&
-              data.age == Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years &&
-              data.gender == ApplicationSubmitted.Gender.male &&
-              data.submittedBy == ApplicationSubmittedSubmittedBy(
-              staffMember = domainEventStaffMember,
-              probationArea = domainEventProbationArea,
-              team = Team(
-                code = caseDetails.case.manager.team.code,
-                name = caseDetails.case.manager.team.name,
-              ),
-              ldu = Ldu(
-                code = caseDetails.case.manager.team.ldu.code,
-                name = caseDetails.case.manager.team.ldu.name,
-              ),
-              region = Region(
-                code = staffUserDetails.probationArea.code,
-                name = staffUserDetails.probationArea.description,
-              ),
-            ) &&
-              data.mappa == risks.mappa.value!!.level &&
-              data.sentenceLengthInMonths == null &&
-              data.offenceId == application.offenceId
-          },
+        mockCas1ApplicationDomainEventService.applicationSubmitted(
+          application,
+          submitApprovedPremisesApplication,
+          username,
+          "jwt",
         )
       }
 
@@ -1716,6 +1689,228 @@ class ApplicationServiceTest {
           },
         )
       }
+    }
+
+    @Test
+    fun `submitApprovedPremisesApplication updates existing application user details`() {
+      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        isPipeApplication = true,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        situation = SituationOption.bailSentence,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        caseManagerIsNotApplicant = true,
+        caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
+      )
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      setupMocksForSuccess(application)
+
+      val existingApplicantUserDetails = Cas1ApplicationUserDetailsEntity(
+        UUID.randomUUID(),
+        "oldApplicantEmail",
+        "oldApplicantName",
+        "oldApplicantPhone",
+      )
+      val existingCaseManagerUserDetails = Cas1ApplicationUserDetailsEntity(
+        UUID.randomUUID(),
+        "oldApplicantEmail",
+        "oldApplicantName",
+        "oldApplicantPhone",
+      )
+
+      val theUpdatedApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match {
+            it.id == existingApplicantUserDetails.id &&
+              it.name == "applicantName" &&
+              it.email == "applicantEmail" &&
+              it.telephoneNumber == "applicantPhone"
+          },
+        )
+      } returns theUpdatedApplicantUserDetailsEntity
+
+      val theUpdatedCaseManagerUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match {
+            it.id == existingCaseManagerUserDetails.id &&
+              it.name == "caseManagerName" &&
+              it.email == "caseManagerEmail" &&
+              it.telephoneNumber == "caseManagerPhone"
+          },
+        )
+      } returns theUpdatedCaseManagerUserDetailsEntity
+
+      application.applicantUserDetails = existingApplicantUserDetails
+      application.caseManagerUserDetails = existingCaseManagerUserDetails
+
+      val result =
+        applicationService.submitApprovedPremisesApplication(
+          applicationId,
+          submitApprovedPremisesApplication,
+          username,
+          "jwt",
+          user.probationRegion.id,
+        )
+
+      result as AuthorisableActionResult.Success
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+      val persistedApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+
+      assertThat(persistedApplication.applicantUserDetails).isEqualTo(theUpdatedApplicantUserDetailsEntity)
+      assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
+      assertThat(persistedApplication.caseManagerUserDetails).isEqualTo(theUpdatedCaseManagerUserDetailsEntity)
+    }
+
+    @Test
+    fun `updateApprovedPremisesApplication if applicant is now case manager, removes existing case manager user details`() {
+      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        isPipeApplication = true,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        situation = SituationOption.bailSentence,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        caseManagerIsNotApplicant = false,
+        caseManagerUserDetails = null,
+      )
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .withApplicantUserDetails(Cas1ApplicationUserDetailsEntity(UUID.randomUUID(), "applicantName", "applicantEmail", "applicantPhone"))
+        .withCaseManagerUserDetails(Cas1ApplicationUserDetailsEntity(UUID.randomUUID(), "oldCaseManEmail", "oldCaseManName", "oldCaseManPhone"))
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      setupMocksForSuccess(application)
+
+      val existingApplicantUserDetails = application.applicantUserDetails!!
+      val existingCaseManagerUserDetails = application.caseManagerUserDetails!!
+
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(match { it.id == existingApplicantUserDetails.id })
+      } answers { it.invocation.args[0] as Cas1ApplicationUserDetailsEntity }
+
+      every { mockCas1ApplicationUserDetailsRepository.delete(existingCaseManagerUserDetails) } returns Unit
+
+      val result = applicationService.submitApprovedPremisesApplication(
+        applicationId,
+        submitApprovedPremisesApplication,
+        username,
+        "jwt",
+        user.probationRegion.id,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+
+      verify { mockCas1ApplicationUserDetailsRepository.delete(existingCaseManagerUserDetails) }
+    }
+
+    private fun setupMocksForSuccess(application: ApprovedPremisesApplicationEntity) {
+      every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+      every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
+      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+      every { mockOffenderService.getInmateDetailByNomsNumber(any(), any()) } returns AuthorisableActionResult.Success(
+        InmateDetailFactory().withInOutStatus(InOutStatus.OUT).produce(),
+      )
+
+      every { mockApAreaRepository.findByIdOrNull(any()) } returns null
+
+      every { mockAssessmentService.createApprovedPremisesAssessment(application) } returns ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(user)
+        .produce()
+
+      every {
+        mockCas1ApplicationDomainEventService.applicationSubmitted(
+          application,
+          submitApprovedPremisesApplication,
+          username,
+          "jwt",
+        )
+      } returns Unit
+
+      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+    }
+  }
+
+  @SuppressWarnings("UnusedPrivateProperty")
+  @Nested
+  inner class SubmitApplicationCas3 {
+    val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+    val user = UserEntityFactory()
+      .withDeliusUsername(this.username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    private val submitTemporaryAccommodationApplication = SubmitTemporaryAccommodationApplication(
+      translatedDocument = {},
+      type = "CAS3",
+      arrivalDate = LocalDate.now(),
+      summaryData = {
+        val num = 50
+        val text = "Hello world!"
+      },
+    )
+
+    private val submitTemporaryAccommodationApplicationWithMiReportingData = SubmitTemporaryAccommodationApplication(
+      translatedDocument = {},
+      type = "CAS3",
+      arrivalDate = LocalDate.now(),
+      summaryData = {
+        val num = 50
+        val text = "Hello world!"
+      },
+      isRegisteredSexOffender = true,
+      needsAccessibleProperty = true,
+      hasHistoryOfArson = true,
+      isDutyToReferSubmitted = true,
+      dutyToReferSubmissionDate = LocalDate.now().minusDays(7),
+      isApplicationEligible = true,
+      eligibilityReason = "homelessFromApprovedPremises",
+      dutyToReferLocalAuthorityAreaName = "Aberdeen City",
+      personReleaseDate = LocalDate.now().plusDays(1),
+    )
+
+    @BeforeEach
+    fun setup() {
+      every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplication.translatedDocument) } returns "{}"
+      every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplicationWithMiReportingData.translatedDocument) } returns "{}"
     }
 
     @Test

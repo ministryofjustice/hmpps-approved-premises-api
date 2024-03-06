@@ -31,6 +31,7 @@ import javax.persistence.JoinColumn
 import javax.persistence.LockModeType
 import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
+import javax.persistence.OneToOne
 import javax.persistence.PrimaryKeyJoinColumn
 import javax.persistence.Table
 import kotlin.time.Duration.Companion.days
@@ -223,6 +224,9 @@ WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NUL
   @Query("SELECT DISTINCT(a.nomsNumber) FROM ApplicationEntity a WHERE a.nomsNumber IS NOT NULL")
   fun getDistinctNomsNumbers(): List<String>
 
+  @Query("SELECT ap FROM ApprovedPremisesApplicationEntity ap WHERE ap.submittedAt IS NOT NULL")
+  fun getSubmittedApprovedPremisesApplications(pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
+
   @Query("SELECT ap FROM ApprovedPremisesApplicationEntity ap WHERE ap.submittedAt IS NOT NULL AND ap.inmateInOutStatusOnSubmission IS NULL")
   fun getSubmittedApprovedPremisesApplicationsWithoutInOutStatus(pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
 
@@ -316,6 +320,13 @@ class ApprovedPremisesApplicationEntity(
   @ManyToOne
   @JoinColumn(name = "ap_area_id")
   var apArea: ApAreaEntity?,
+  @OneToOne
+  @JoinColumn(name = "applicant_cas1_application_user_details_id")
+  var applicantUserDetails: Cas1ApplicationUserDetailsEntity?,
+  var caseManagerIsNotApplicant: Boolean?,
+  @OneToOne
+  @JoinColumn(name = "case_manager_cas1_application_user_details_id")
+  var caseManagerUserDetails: Cas1ApplicationUserDetailsEntity?,
 ) : ApplicationEntity(
   id,
   crn,

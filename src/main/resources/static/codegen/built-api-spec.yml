@@ -6213,6 +6213,13 @@ components:
               $ref: '#/components/schemas/PersonStatus'
             apArea:
               $ref: '#/components/schemas/ApArea'
+            applicantUserDetails:
+              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
+            caseManagerIsNotApplicant:
+              description: "If true, caseManagerUserDetails will provide case manager details. Otherwise, applicantUserDetails can be used for case manager details"
+              type: boolean
+            caseManagerUserDetails:
+              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
           required:
             - createdByUserId
             - schemaVersion
@@ -6707,6 +6714,12 @@ components:
             arrivalDate:
               type: string
               format: date
+            applicantUserDetails:
+              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
+            caseManagerIsNotApplicant:
+              type: boolean
+            caseManagerUserDetails:
+              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
     UpdateTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'
@@ -6753,6 +6766,12 @@ components:
             apAreaId:
               type: string
               format: uuid
+            applicantUserDetails:
+              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
+            caseManagerIsNotApplicant:
+              type: boolean
+            caseManagerUserDetails:
+              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
           required:
             - isPipeApplication
             - isWomensApplication
@@ -8041,6 +8060,7 @@ components:
         - update_application_ap_areas
         - update_task_due_dates
         - update_cas2_applications_with_assessments
+        - update_cas1_user_details
     PlacementDates:
       type: object
       properties:
@@ -8968,3 +8988,14 @@ components:
       enum:
         - accepted
         - rejected
+    Cas1ApplicationUserDetails:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        telephoneNumber:
+          type: string
+      required:
+        - name

@@ -253,14 +253,19 @@ class ApplicationsController(
     val applicationResult = when (body) {
       is UpdateApprovedPremisesApplication -> applicationService.updateApprovedPremisesApplication(
         applicationId = applicationId,
-        data = serializedData,
-        isWomensApplication = body.isWomensApplication,
-        isPipeApplication = body.isPipeApplication,
-        isEmergencyApplication = body.isEmergencyApplication,
-        isEsapApplication = body.isEsapApplication,
-        releaseType = body.releaseType?.name,
-        arrivalDate = body.arrivalDate,
-        isInapplicable = body.isInapplicable,
+        ApplicationService.Cas1ApplicationUpdateFields(
+          data = serializedData,
+          isWomensApplication = body.isWomensApplication,
+          isPipeApplication = body.isPipeApplication,
+          isEmergencyApplication = body.isEmergencyApplication,
+          isEsapApplication = body.isEsapApplication,
+          releaseType = body.releaseType?.name,
+          arrivalDate = body.arrivalDate,
+          isInapplicable = body.isInapplicable,
+          applicantUserDetails = body.applicantUserDetails,
+          caseManagerIsNotApplicant = body.caseManagerIsNotApplicant,
+          caseManagerUserDetails = body.caseManagerUserDetails,
+        ),
       )
 
       is UpdateTemporaryAccommodationApplication -> applicationService.updateTemporaryAccommodationApplication(
