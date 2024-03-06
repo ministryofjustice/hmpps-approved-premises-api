@@ -10,9 +10,11 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationStatusUpdatedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationSubmittedEventDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2StatusFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Cas2ExampleMetricsRow
@@ -296,10 +298,29 @@ class Cas2ReportsTest : IntegrationTestBase() {
       val newer = Instant.now().minusSeconds(daysInSeconds(100))
       val tooOld = Instant.now().minusSeconds(daysInSeconds(366))
 
+      val event1StatusDetails = listOf(
+        Cas2StatusDetail("personalInformation", "Personal information"),
+        Cas2StatusDetail("riskOfSeriousHarm", "Risk of serious harm"),
+        Cas2StatusDetail("hdcAndCpp", "HDC licence and CPP details"),
+      )
+
+      val event1Status = Cas2StatusFactory()
+        .withStatusDetails(event1StatusDetails)
+        .produce()
+
       val event1Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+        .withStatus(event1Status)
         .withUpdatedAt(old)
         .produce()
+
+      val event2StatusDetails = emptyList<Cas2StatusDetail>()
+
+      val event2Status = Cas2StatusFactory()
+        .withStatusDetails(event2StatusDetails)
+        .produce()
+
       val event2Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+        .withStatus(event2Status)
         .withUpdatedAt(newer)
         .produce()
       val event3Details = Cas2ApplicationStatusUpdatedEventDetailsFactory()
@@ -359,6 +380,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           newStatus = event2Details.newStatus.name,
           updatedAt = event2Details.updatedAt.toString().split(".").first(),
           updatedBy = event2Details.updatedBy.username,
+          statusDetails = "",
         ),
         ApplicationStatusUpdatesReportRow(
           eventId = event1Id.toString(),
@@ -368,6 +390,7 @@ class Cas2ReportsTest : IntegrationTestBase() {
           newStatus = event1Details.newStatus.name,
           updatedAt = event1Details.updatedAt.toString().split(".").first(),
           updatedBy = event1Details.updatedBy.username,
+          statusDetails = "personalInformation|riskOfSeriousHarm|hdcAndCpp",
         ),
       )
         .toDataFrame()
