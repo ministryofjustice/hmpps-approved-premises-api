@@ -690,8 +690,6 @@ class ApplicationServiceTest {
 
       every { mockAssessmentService.createCas2Assessment(any()) } returns any()
 
-      val _schema = application.schemaVersion as Cas2ApplicationJsonSchemaEntity
-
       val result = applicationService.submitApplication(submitCas2Application)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
