@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.transaction.Transactional
 
 @Service("Cas2StatusUpdateService")
 class StatusUpdateService(
@@ -42,6 +43,7 @@ class StatusUpdateService(
   }
 
   @SuppressWarnings("ReturnCount")
+  @Transactional
   fun create(
     applicationId: UUID,
     statusUpdate: Cas2ApplicationStatusUpdate,
