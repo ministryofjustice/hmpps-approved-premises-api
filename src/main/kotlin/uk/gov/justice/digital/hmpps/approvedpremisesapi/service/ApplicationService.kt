@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
@@ -10,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApprovedPremisesApplication
@@ -28,6 +28,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
@@ -96,6 +98,7 @@ class ApplicationService(
   private val applicationTimelineTransformer: ApplicationTimelineTransformer,
   private val domainEventTransformer: DomainEventTransformer,
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
+  private val cas1ApplicationUserDetailsRepository: Cas1ApplicationUserDetailsRepository,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
@@ -481,8 +484,12 @@ class ApplicationService(
     val arrivalDate: LocalDate?,
     val data: String,
     val isInapplicable: Boolean?,
+    val applicantUserDetails: Cas1ApplicationUserDetails?,
+    val caseManagerIsNotApplicant: Boolean?,
+    val caseManagerUserDetails: Cas1ApplicationUserDetails?,
   )
 
+  @Transactional
   fun updateApprovedPremisesApplication(
     applicationId: UUID,
     updateFields: Cas1ApplicationUpdateFields,
@@ -527,12 +534,36 @@ class ApplicationService(
         null
       }
       this.data = updateFields.data
+      this.applicantUserDetails = upsertCas1ApplicationUserDetails(this.applicantUserDetails, updateFields.applicantUserDetails)
+      this.caseManagerIsNotApplicant = updateFields.caseManagerIsNotApplicant
+      this.caseManagerUserDetails = upsertCas1ApplicationUserDetails(this.caseManagerUserDetails, updateFields.caseManagerUserDetails)
     }
 
     val savedApplication = applicationRepository.save(application)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(savedApplication),
+    )
+  }
+
+  private fun upsertCas1ApplicationUserDetails(
+    existingEntry: Cas1ApplicationUserDetailsEntity?,
+    updatedValues: Cas1ApplicationUserDetails?,
+  ): Cas1ApplicationUserDetailsEntity? {
+    if (updatedValues == null) {
+      existingEntry?.let {
+        cas1ApplicationUserDetailsRepository.delete(it)
+      }
+      return null
+    }
+
+    return cas1ApplicationUserDetailsRepository.save(
+      Cas1ApplicationUserDetailsEntity(
+        id = existingEntry?.id ?: UUID.randomUUID(),
+        name = updatedValues.name,
+        email = updatedValues.email,
+        telephoneNumber = updatedValues.telephoneNumber,
+      ),
     )
   }
 

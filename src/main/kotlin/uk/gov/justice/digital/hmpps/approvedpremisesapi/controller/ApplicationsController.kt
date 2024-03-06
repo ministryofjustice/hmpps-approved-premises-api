@@ -61,7 +61,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTran
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementApplicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import java.net.URI
-import java.time.LocalDate
 import java.util.UUID
 import javax.transaction.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary as JPAApplicationSummary
@@ -263,6 +262,9 @@ class ApplicationsController(
           releaseType = body.releaseType?.name,
           arrivalDate = body.arrivalDate,
           isInapplicable = body.isInapplicable,
+          applicantUserDetails = body.applicantUserDetails,
+          caseManagerIsNotApplicant = body.caseManagerIsNotApplicant,
+          caseManagerUserDetails = body.caseManagerUserDetails,
         ),
       )
 
