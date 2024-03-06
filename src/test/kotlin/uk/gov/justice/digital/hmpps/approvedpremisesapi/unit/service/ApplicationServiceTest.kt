@@ -35,7 +35,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NeedsDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
@@ -1422,6 +1421,8 @@ class ApplicationServiceTest {
       releaseType = ReleaseTypeOption.licence,
       type = "CAS1",
       sentenceType = SentenceTypeOption.nonStatutory,
+      applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+      caseManagerIsNotApplicant = false,
     )
 
     private val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
@@ -1538,6 +1539,56 @@ class ApplicationServiceTest {
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
     }
 
+    @Test
+    fun `submitApprovedPremisesApplication returns GeneralValidationError when applicantIsNotCaseManager is true and no case manager details are provided`() {
+      val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        isPipeApplication = true,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        caseManagerIsNotApplicant = true,
+      )
+
+      every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
+
+      val result = applicationService.submitApprovedPremisesApplication(
+        applicationId,
+        submitApprovedPremisesApplication,
+        username,
+        "jwt",
+        null,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true")
+    }
+
     @ParameterizedTest
     @EnumSource(value = SituationOption::class)
     @NullSource
@@ -1556,9 +1607,10 @@ class ApplicationServiceTest {
         type = "CAS1",
         sentenceType = SentenceTypeOption.nonStatutory,
         situation = situation,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        caseManagerIsNotApplicant = true,
+        caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
       )
-
-      every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
 
       val application = ApprovedPremisesApplicationEntityFactory()
         .withApplicationSchema(newestSchema)
@@ -1570,32 +1622,21 @@ class ApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockUserService.getUserForRequest() } returns user
-      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
-      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
-      every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
-      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-      every { mockOffenderService.getInmateDetailByNomsNumber(any(), any()) } returns AuthorisableActionResult.Success(
-        InmateDetailFactory().withInOutStatus(InOutStatus.OUT).produce(),
-      )
+      setupMocksForSuccess(application)
 
-      every { mockApAreaRepository.findByIdOrNull(any()) } returns null
-
-      every { mockAssessmentService.createApprovedPremisesAssessment(application) } returns ApprovedPremisesAssessmentEntityFactory()
-        .withApplication(application)
-        .withAllocatedToUser(user)
-        .produce()
-
+      val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
       every {
-        mockCas1ApplicationDomainEventService.applicationSubmitted(
-          application,
-          submitApprovedPremisesApplication,
-          username,
-          "jwt",
+        mockCas1ApplicationUserDetailsRepository.save(
+          match { it.name == "applicantName" && it.email == "applicantEmail" && it.telephoneNumber == "applicantPhone" },
         )
-      } returns Unit
+      } returns theApplicantUserDetailsEntity
 
-      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+      val theCaseManagerUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match { it.name == "caseManagerName" && it.email == "caseManagerEmail" && it.telephoneNumber == "caseManagerPhone" },
+        )
+      } returns theCaseManagerUserDetailsEntity
 
       val result =
         applicationService.submitApprovedPremisesApplication(
@@ -1622,6 +1663,9 @@ class ApplicationServiceTest {
       }
       assertThat(persistedApplication.targetLocation).isEqualTo(submitApprovedPremisesApplication.targetLocation)
       assertThat(persistedApplication.inmateInOutStatusOnSubmission).isEqualTo("OUT")
+      assertThat(persistedApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
+      assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
+      assertThat(persistedApplication.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) { mockAssessmentService.createApprovedPremisesAssessment(application) }
@@ -1645,6 +1689,178 @@ class ApplicationServiceTest {
           },
         )
       }
+    }
+
+    @Test
+    fun `submitApprovedPremisesApplication updates existing application user details`() {
+      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        isPipeApplication = true,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        situation = SituationOption.bailSentence,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        caseManagerIsNotApplicant = true,
+        caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
+      )
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      setupMocksForSuccess(application)
+
+      val existingApplicantUserDetails = Cas1ApplicationUserDetailsEntity(
+        UUID.randomUUID(),
+        "oldApplicantEmail",
+        "oldApplicantName",
+        "oldApplicantPhone",
+      )
+      val existingCaseManagerUserDetails = Cas1ApplicationUserDetailsEntity(
+        UUID.randomUUID(),
+        "oldApplicantEmail",
+        "oldApplicantName",
+        "oldApplicantPhone",
+      )
+
+      val theUpdatedApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match {
+            it.id == existingApplicantUserDetails.id &&
+              it.name == "applicantName" &&
+              it.email == "applicantEmail" &&
+              it.telephoneNumber == "applicantPhone"
+          },
+        )
+      } returns theUpdatedApplicantUserDetailsEntity
+
+      val theUpdatedCaseManagerUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match {
+            it.id == existingCaseManagerUserDetails.id &&
+              it.name == "caseManagerName" &&
+              it.email == "caseManagerEmail" &&
+              it.telephoneNumber == "caseManagerPhone"
+          },
+        )
+      } returns theUpdatedCaseManagerUserDetailsEntity
+
+      application.applicantUserDetails = existingApplicantUserDetails
+      application.caseManagerUserDetails = existingCaseManagerUserDetails
+
+      val result =
+        applicationService.submitApprovedPremisesApplication(
+          applicationId,
+          submitApprovedPremisesApplication,
+          username,
+          "jwt",
+          user.probationRegion.id,
+        )
+
+      result as AuthorisableActionResult.Success
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+      val persistedApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+
+      assertThat(persistedApplication.applicantUserDetails).isEqualTo(theUpdatedApplicantUserDetailsEntity)
+      assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
+      assertThat(persistedApplication.caseManagerUserDetails).isEqualTo(theUpdatedCaseManagerUserDetailsEntity)
+    }
+
+    @Test
+    fun `updateApprovedPremisesApplication if applicant is now case manager, removes existing case manager user details`() {
+      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        isPipeApplication = true,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        situation = SituationOption.bailSentence,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        caseManagerIsNotApplicant = false,
+        caseManagerUserDetails = null,
+      )
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .withApplicantUserDetails(Cas1ApplicationUserDetailsEntity(UUID.randomUUID(), "applicantName", "applicantEmail", "applicantPhone"))
+        .withCaseManagerUserDetails(Cas1ApplicationUserDetailsEntity(UUID.randomUUID(), "oldCaseManEmail", "oldCaseManName", "oldCaseManPhone"))
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      setupMocksForSuccess(application)
+
+      val existingApplicantUserDetails = application.applicantUserDetails!!
+      val existingCaseManagerUserDetails = application.caseManagerUserDetails!!
+
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(match { it.id == existingApplicantUserDetails.id })
+      } answers { it.invocation.args[0] as Cas1ApplicationUserDetailsEntity }
+
+      every { mockCas1ApplicationUserDetailsRepository.delete(existingCaseManagerUserDetails) } returns Unit
+
+      val result = applicationService.submitApprovedPremisesApplication(
+        applicationId,
+        submitApprovedPremisesApplication,
+        username,
+        "jwt",
+        user.probationRegion.id,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+
+      verify { mockCas1ApplicationUserDetailsRepository.delete(existingCaseManagerUserDetails) }
+    }
+
+    private fun setupMocksForSuccess(application: ApprovedPremisesApplicationEntity) {
+      every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+      every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
+      every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
+      every { mockOffenderService.getInmateDetailByNomsNumber(any(), any()) } returns AuthorisableActionResult.Success(
+        InmateDetailFactory().withInOutStatus(InOutStatus.OUT).produce(),
+      )
+
+      every { mockApAreaRepository.findByIdOrNull(any()) } returns null
+
+      every { mockAssessmentService.createApprovedPremisesAssessment(application) } returns ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(user)
+        .produce()
+
+      every {
+        mockCas1ApplicationDomainEventService.applicationSubmitted(
+          application,
+          submitApprovedPremisesApplication,
+          username,
+          "jwt",
+        )
+      } returns Unit
+
+      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
     }
   }
 

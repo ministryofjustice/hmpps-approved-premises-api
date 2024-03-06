@@ -2101,6 +2101,17 @@ class ApplicationTest : IntegrationTestBase() {
                   releaseType = ReleaseTypeOption.licence,
                   sentenceType = SentenceTypeOption.nonStatutory,
                   type = "CAS1",
+                  applicantUserDetails = Cas1ApplicationUserDetails(
+                    "applicantName",
+                    "applicantEmail",
+                    "applicationTelephone",
+                  ),
+                  caseManagerIsNotApplicant = false,
+                  caseManagerUserDetails = Cas1ApplicationUserDetails(
+                    "cmName",
+                    "cmEmail",
+                    "cmTelephone",
+                  ),
                 ),
               )
               .exchange()
@@ -2260,6 +2271,8 @@ class ApplicationTest : IntegrationTestBase() {
                   sentenceType = SentenceTypeOption.nonStatutory,
                   type = "CAS1",
                   apAreaId = apArea.id,
+                  applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
+                  caseManagerIsNotApplicant = false,
                 ),
               )
               .exchange()
@@ -2397,6 +2410,8 @@ class ApplicationTest : IntegrationTestBase() {
                       releaseType = ReleaseTypeOption.licence,
                       sentenceType = SentenceTypeOption.nonStatutory,
                       type = "CAS1",
+                      applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
+                      caseManagerIsNotApplicant = false,
                     ),
                   )
                   .exchange()

@@ -49,8 +49,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
@@ -724,6 +724,7 @@ class ApplicationService(
     )
   }
 
+  @SuppressWarnings("CyclomaticComplexMethod")
   @Transactional
   fun submitApprovedPremisesApplication(
     applicationId: UUID,
@@ -754,6 +755,12 @@ class ApplicationService(
     if (application.submittedAt != null) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
+      )
+    }
+
+    if (submitApplication.caseManagerIsNotApplicant == true && submitApplication.caseManagerUserDetails == null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true"),
       )
     }
 
@@ -799,6 +806,12 @@ class ApplicationService(
       situation = submitApplication.situation?.toString()
       inmateInOutStatusOnSubmission = inmateDetails?.inOutStatus?.name
       apArea = apAreaRepository.findByIdOrNull(apAreaId)
+      this.applicantUserDetails = upsertCas1ApplicationUserDetails(this.applicantUserDetails, submitApplication.applicantUserDetails)
+      this.caseManagerIsNotApplicant = submitApplication.caseManagerIsNotApplicant
+      this.caseManagerUserDetails = upsertCas1ApplicationUserDetails(
+        existingEntry = this.caseManagerUserDetails,
+        updatedValues = if (submitApplication.caseManagerIsNotApplicant == true) { submitApplication.caseManagerUserDetails } else null,
+      )
     }
 
     assessmentService.createApprovedPremisesAssessment(application)
