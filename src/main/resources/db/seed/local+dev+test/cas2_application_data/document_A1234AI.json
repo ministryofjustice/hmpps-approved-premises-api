@@ -26,6 +26,19 @@
           ]
         },
         {
+          "title": "Add HDC licence dates",
+          "questionsAndAnswers": [
+            {
+              "question": "HDC eligibility date",
+              "answer": "22 February 2024"
+            },
+            {
+              "question": "Conditional release date",
+              "answer": "28 February 2024"
+            }
+          ]
+        },
+        {
           "title": "Add your details",
           "questionsAndAnswers": [
             {
@@ -522,16 +535,8 @@
           ]
         },
         {
-          "title": "Add HDC licence and CPP details",
+          "title": "Add CPP details and HDC licence conditions",
           "questionsAndAnswers": [
-            {
-              "question": "HDC eligibility date",
-              "answer": "28 February 2024"
-            },
-            {
-              "question": "Conditional release date",
-              "answer": "22 February 2024"
-            },
             {
               "question": "Who is Aadland Bertrand's Community Probation Practitioner (CPP)?",
               "answer": "Roger Smith\r\nLeeds\r\ncpp@justice.example.com\r\n01234 777 099"
