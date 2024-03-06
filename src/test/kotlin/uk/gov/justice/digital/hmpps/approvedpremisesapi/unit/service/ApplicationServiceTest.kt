@@ -1349,7 +1349,7 @@ class ApplicationServiceTest {
   }
 
   @Nested
-  inner class SubmitApplication {
+  inner class SubmitApplicationCas1 {
     val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
     val username = "SOMEPERSON"
     val user = UserEntityFactory()
@@ -1373,47 +1373,13 @@ class ApplicationServiceTest {
       sentenceType = SentenceTypeOption.nonStatutory,
     )
 
-    private val submitTemporaryAccommodationApplication = SubmitTemporaryAccommodationApplication(
-      translatedDocument = {},
-      type = "CAS3",
-      arrivalDate = LocalDate.now(),
-      summaryData = {
-        val num = 50
-        val text = "Hello world!"
-      },
-    )
-
-    private val submitTemporaryAccommodationApplicationWithMiReportingData = SubmitTemporaryAccommodationApplication(
-      translatedDocument = {},
-      type = "CAS3",
-      arrivalDate = LocalDate.now(),
-      summaryData = {
-        val num = 50
-        val text = "Hello world!"
-      },
-      isRegisteredSexOffender = true,
-      needsAccessibleProperty = true,
-      hasHistoryOfArson = true,
-      isDutyToReferSubmitted = true,
-      dutyToReferSubmissionDate = LocalDate.now().minusDays(7),
-      isApplicationEligible = true,
-      eligibilityReason = "homelessFromApprovedPremises",
-      dutyToReferLocalAuthorityAreaName = "Aberdeen City",
-      personReleaseDate = LocalDate.now().plusDays(1),
-    )
-
     @BeforeEach
     fun setup() {
       every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
-      every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplication.translatedDocument) } returns "{}"
-      every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplicationWithMiReportingData.translatedDocument) } returns "{}"
     }
 
     @Test
     fun `submitApprovedPremisesApplication returns NotFound when application doesn't exist`() {
-      val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-      val username = "SOMEPERSON"
-
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns null
 
       assertThat(
@@ -1431,24 +1397,12 @@ class ApplicationServiceTest {
     fun `submitApprovedPremisesApplication returns Unauthorised when application doesn't belong to request user`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withId(applicationId)
-        .withYieldedCreatedByUser {
-          UserEntityFactory()
-            .withYieldedProbationRegion {
-              ProbationRegionEntityFactory()
-                .withYieldedApArea { ApAreaEntityFactory().produce() }
-                .produce()
-            }
-            .produce()
-        }
+        .withYieldedCreatedByUser { UserEntityFactory().withDefaultProbationRegion().produce() }
         .produce()
 
       every { mockUserService.getUserForRequest() } returns UserEntityFactory()
         .withDeliusUsername(username)
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
+        .withDefaultProbationRegion()
         .produce()
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
@@ -1727,6 +1681,56 @@ class ApplicationServiceTest {
           },
         )
       }
+    }
+
+  }
+
+  @Nested
+  inner class SubmitApplicationCas3 {
+    val applicationId: UUID = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
+    val username = "SOMEPERSON"
+    val user = UserEntityFactory()
+      .withDeliusUsername(this.username)
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+
+    private val submitTemporaryAccommodationApplication = SubmitTemporaryAccommodationApplication(
+      translatedDocument = {},
+      type = "CAS3",
+      arrivalDate = LocalDate.now(),
+      summaryData = {
+        val num = 50
+        val text = "Hello world!"
+      },
+    )
+
+    private val submitTemporaryAccommodationApplicationWithMiReportingData = SubmitTemporaryAccommodationApplication(
+      translatedDocument = {},
+      type = "CAS3",
+      arrivalDate = LocalDate.now(),
+      summaryData = {
+        val num = 50
+        val text = "Hello world!"
+      },
+      isRegisteredSexOffender = true,
+      needsAccessibleProperty = true,
+      hasHistoryOfArson = true,
+      isDutyToReferSubmitted = true,
+      dutyToReferSubmissionDate = LocalDate.now().minusDays(7),
+      isApplicationEligible = true,
+      eligibilityReason = "homelessFromApprovedPremises",
+      dutyToReferLocalAuthorityAreaName = "Aberdeen City",
+      personReleaseDate = LocalDate.now().plusDays(1),
+    )
+
+    @BeforeEach
+    fun setup() {
+      every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplication.translatedDocument) } returns "{}"
+      every { mockObjectMapper.writeValueAsString(submitTemporaryAccommodationApplicationWithMiReportingData.translatedDocument) } returns "{}"
     }
 
     @Test
