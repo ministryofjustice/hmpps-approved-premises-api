@@ -3492,6 +3492,11 @@ components:
           items:
             type: string
             format: uuid
+        endDate:
+          type: string
+          format: date
+          example: 2024-03-30
+          description: End date of the room availability, open for availability if not specified.
       required:
         - name
         - characteristicIds
@@ -3545,6 +3550,11 @@ components:
         code:
           type: string
           example: NEABC04
+        endDate:
+          type: string
+          format: date
+          example: 2024-03-30
+          description: End date of the room availability, open for availability if not specified
       required:
         - id
         - name
