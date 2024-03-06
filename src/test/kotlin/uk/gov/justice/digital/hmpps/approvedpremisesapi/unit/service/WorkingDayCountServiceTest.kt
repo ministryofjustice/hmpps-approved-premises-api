@@ -2,9 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -16,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.GovUKBankHolidays
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.BankHolidayEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.CountryBankHolidays
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.UKBankHolidays
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TimeService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNextWorkingDay
 import java.time.DayOfWeek
@@ -26,8 +25,9 @@ import java.util.stream.Stream
 class WorkingDayCountServiceTest {
 
   private val mockGovUKBankHolidaysApiClient = mockk<GovUKBankHolidaysApiClient>()
+  private val mockTimeService = mockk<TimeService>()
 
-  private val workingDayCountService = WorkingDayCountService(mockGovUKBankHolidaysApiClient)
+  private val workingDayCountService = WorkingDayCountService(mockGovUKBankHolidaysApiClient,mockTimeService)
 
   private val emptyBankHolidays = ClientResult.Success(
     HttpStatus.OK,
@@ -246,11 +246,6 @@ class WorkingDayCountServiceTest {
   @Nested
   inner class GetCompleteWorkingDaysFromNowUntil {
 
-    @BeforeEach
-    fun mockLocalDate() {
-      mockkStatic(LocalDate::class)
-    }
-
     @Test
     fun `getCompleteWorkingDaysFromNowUntil returns the number of days between two working days with no holidays in between`() {
       every {
@@ -260,7 +255,7 @@ class WorkingDayCountServiceTest {
       val aMonday = LocalDate.of(2023, 4, 27).with(TemporalAdjusters.next(DayOfWeek.MONDAY))
       val aFriday = aMonday.with(TemporalAdjusters.next(DayOfWeek.FRIDAY))
 
-      every { LocalDate.now() } returns aMonday
+      every { mockTimeService.nowAsLocalDate() } returns aMonday
 
       assertThat(workingDayCountService.getCompleteWorkingDaysFromNowUntil(aFriday)).isEqualTo(4)
     }
@@ -274,7 +269,7 @@ class WorkingDayCountServiceTest {
       val aMonday = LocalDate.of(2023, 4, 27).with(TemporalAdjusters.next(DayOfWeek.MONDAY))
       val nextMonday = aMonday.with(TemporalAdjusters.next(DayOfWeek.MONDAY))
 
-      every { LocalDate.now() } returns aMonday
+      every { mockTimeService.nowAsLocalDate() } returns aMonday
 
       assertThat(workingDayCountService.getCompleteWorkingDaysFromNowUntil(nextMonday)).isEqualTo(5)
     }
@@ -315,7 +310,7 @@ class WorkingDayCountServiceTest {
         mockGovUKBankHolidaysApiClient.getUKBankHolidays()
       } returns bankHolidays
 
-      every { LocalDate.now() } returns aThursday
+      every { mockTimeService.nowAsLocalDate() } returns aThursday
 
       assertThat(workingDayCountService.getCompleteWorkingDaysFromNowUntil(nextTuesday)).isEqualTo(2)
     }
@@ -363,7 +358,7 @@ class WorkingDayCountServiceTest {
         mockGovUKBankHolidaysApiClient.getUKBankHolidays()
       } returns bankHolidays
 
-      every { LocalDate.now() } returns aThursday
+      every { mockTimeService.nowAsLocalDate() } returns aThursday
 
       assertThat(workingDayCountService.getCompleteWorkingDaysFromNowUntil(nextTuesday)).isEqualTo(1)
     }
