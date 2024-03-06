@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCa
 class StaffUserDetailsFactory : Factory<StaffUserDetails> {
   private var username: Yielded<String> = { randomStringUpperCase(10) }
   private var email: Yielded<String?> = { randomStringUpperCase(8) }
-  private var telephoneNumber: Yielded<String> = { randomStringUpperCase(8) }
+  private var telephoneNumber: Yielded<String?> = { randomStringUpperCase(8) }
   private var staffCode: Yielded<String> = { randomStringUpperCase(8) }
   private var staffIdentifier: Yielded<Long> = { randomInt(1000, 10000).toLong() }
   private var forenames: Yielded<String> = { randomStringUpperCase(8) }
@@ -26,7 +26,7 @@ class StaffUserDetailsFactory : Factory<StaffUserDetails> {
     this.username = { username }
   }
 
-  fun withEmail(email: String) = apply {
+  fun withEmail(email: String?) = apply {
     this.email = { email }
   }
 
@@ -34,7 +34,7 @@ class StaffUserDetailsFactory : Factory<StaffUserDetails> {
     this.email = { null }
   }
 
-  fun withTelephoneNumber(telephoneNumber: String) = apply {
+  fun withTelephoneNumber(telephoneNumber: String?) = apply {
     this.telephoneNumber = { telephoneNumber }
   }
 
