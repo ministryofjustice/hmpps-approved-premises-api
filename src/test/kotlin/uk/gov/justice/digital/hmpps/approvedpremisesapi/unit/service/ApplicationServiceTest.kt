@@ -943,9 +943,6 @@ class ApplicationServiceTest {
             arrivalDate = null,
             data = "{}",
             isInapplicable = null,
-            applicantUserDetails = null,
-            caseManagerIsNotApplicant = null,
-            caseManagerUserDetails = null,
           ),
         ) is AuthorisableActionResult.NotFound,
       ).isTrue
@@ -976,9 +973,6 @@ class ApplicationServiceTest {
             arrivalDate = null,
             data = "{}",
             isInapplicable = null,
-            applicantUserDetails = null,
-            caseManagerIsNotApplicant = null,
-            caseManagerUserDetails = null,
           ),
         ) is AuthorisableActionResult.Unauthorised,
       ).isTrue
@@ -1003,9 +997,6 @@ class ApplicationServiceTest {
           arrivalDate = null,
           data = "{}",
           isInapplicable = null,
-          applicantUserDetails = null,
-          caseManagerIsNotApplicant = null,
-          caseManagerUserDetails = null,
         ),
       )
 
@@ -1037,9 +1028,6 @@ class ApplicationServiceTest {
           arrivalDate = null,
           data = "{}",
           isInapplicable = null,
-          applicantUserDetails = null,
-          caseManagerIsNotApplicant = null,
-          caseManagerUserDetails = null,
         ),
       )
 
@@ -1081,9 +1069,6 @@ class ApplicationServiceTest {
           arrivalDate = LocalDate.parse("2023-04-17"),
           data = updatedData,
           isInapplicable = false,
-          applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
-          caseManagerIsNotApplicant = true,
-          caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
         ),
       )
 
@@ -1101,99 +1086,9 @@ class ApplicationServiceTest {
       assertThat(approvedPremisesApplication.releaseType).isEqualTo("rotl")
       assertThat(approvedPremisesApplication.isInapplicable).isEqualTo(false)
       assertThat(approvedPremisesApplication.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
-      assertThat(approvedPremisesApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
-      assertThat(approvedPremisesApplication.caseManagerIsNotApplicant).isEqualTo(true)
-      assertThat(approvedPremisesApplication.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
-    }
-
-    @Test
-    fun `updateApprovedPremisesApplication updates existing application user details`() {
-      setupMocksForSuccess()
-
-      val existingApplicantUserDetails = Cas1ApplicationUserDetailsEntity(UUID.randomUUID(), "oldApplicantEmail", "oldApplicantName", "oldApplicantPhone")
-      val existingCaseManagerUserDetails = Cas1ApplicationUserDetailsEntity(UUID.randomUUID(), "oldApplicantEmail", "oldApplicantName", "oldApplicantPhone")
-
-      val theUpdatedApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
-      every {
-        mockCas1ApplicationUserDetailsRepository.save(
-          match {
-            it.id == existingApplicantUserDetails.id &&
-              it.name == "applicantName" &&
-              it.email == "applicantEmail" &&
-              it.telephoneNumber == "applicantPhone"
-          },
-        )
-      } returns theUpdatedApplicantUserDetailsEntity
-
-      val theUpdatedCaseManagerUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
-      every {
-        mockCas1ApplicationUserDetailsRepository.save(
-          match {
-            it.id == existingCaseManagerUserDetails.id &&
-              it.name == "caseManagerName" &&
-              it.email == "caseManagerEmail" &&
-              it.telephoneNumber == "caseManagerPhone"
-          },
-        )
-      } returns theUpdatedCaseManagerUserDetailsEntity
-
-      application.applicantUserDetails = existingApplicantUserDetails
-      application.caseManagerUserDetails = existingCaseManagerUserDetails
-
-      val result = applicationService.updateApprovedPremisesApplication(
-        applicationId = applicationId,
-        Cas1ApplicationUpdateFields(
-          isWomensApplication = false,
-          isPipeApplication = true,
-          isEmergencyApplication = false,
-          isEsapApplication = false,
-          releaseType = "rotl",
-          arrivalDate = LocalDate.parse("2023-04-17"),
-          data = updatedData,
-          isInapplicable = false,
-          applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
-          caseManagerIsNotApplicant = true,
-          caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
-        ),
-      )
-
-      result as AuthorisableActionResult.Success
-      val validatableActionResult = result.entity as ValidatableActionResult.Success
-      val approvedPremisesApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
-
-      assertThat(approvedPremisesApplication.applicantUserDetails).isEqualTo(theUpdatedApplicantUserDetailsEntity)
-      assertThat(approvedPremisesApplication.caseManagerIsNotApplicant).isEqualTo(true)
-      assertThat(approvedPremisesApplication.caseManagerUserDetails).isEqualTo(theUpdatedCaseManagerUserDetailsEntity)
-    }
-
-    @Test
-    fun `updateApprovedPremisesApplication removes existing case manager user details if subsequently nulled`() {
-      setupMocksForSuccess()
-
-      val existingCaseManagerUserDetails = Cas1ApplicationUserDetailsEntity(UUID.randomUUID(), "oldApplicantEmail", "oldApplicantName", "oldApplicantPhone")
-
-      every { mockCas1ApplicationUserDetailsRepository.delete(existingCaseManagerUserDetails) } returns Unit
-
-      application.caseManagerUserDetails = existingCaseManagerUserDetails
-
-      applicationService.updateApprovedPremisesApplication(
-        applicationId = applicationId,
-        Cas1ApplicationUpdateFields(
-          isWomensApplication = false,
-          isPipeApplication = true,
-          isEmergencyApplication = false,
-          isEsapApplication = false,
-          releaseType = "rotl",
-          arrivalDate = LocalDate.parse("2023-04-17"),
-          data = updatedData,
-          isInapplicable = false,
-          applicantUserDetails = null,
-          caseManagerIsNotApplicant = false,
-          caseManagerUserDetails = null,
-        ),
-      )
-
-      verify { mockCas1ApplicationUserDetailsRepository.delete(existingCaseManagerUserDetails) }
+      assertThat(approvedPremisesApplication.applicantUserDetails).isNull()
+      assertThat(approvedPremisesApplication.caseManagerIsNotApplicant).isNull()
+      assertThat(approvedPremisesApplication.caseManagerUserDetails).isNull()
     }
 
     private fun setupMocksForSuccess() {

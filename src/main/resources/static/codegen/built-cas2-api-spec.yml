@@ -2692,12 +2692,6 @@ components:
             arrivalDate:
               type: string
               format: date
-            applicantUserDetails:
-              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
-            caseManagerIsNotApplicant:
-              type: boolean
-            caseManagerUserDetails:
-              $ref: '#/components/schemas/Cas1ApplicationUserDetails'
     UpdateTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'

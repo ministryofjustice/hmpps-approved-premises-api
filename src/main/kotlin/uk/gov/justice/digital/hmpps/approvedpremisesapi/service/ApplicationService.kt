@@ -484,9 +484,6 @@ class ApplicationService(
     val arrivalDate: LocalDate?,
     val data: String,
     val isInapplicable: Boolean?,
-    val applicantUserDetails: Cas1ApplicationUserDetails?,
-    val caseManagerIsNotApplicant: Boolean?,
-    val caseManagerUserDetails: Cas1ApplicationUserDetails?,
   )
 
   @Transactional
@@ -534,9 +531,6 @@ class ApplicationService(
         null
       }
       this.data = updateFields.data
-      this.applicantUserDetails = upsertCas1ApplicationUserDetails(this.applicantUserDetails, updateFields.applicantUserDetails)
-      this.caseManagerIsNotApplicant = updateFields.caseManagerIsNotApplicant
-      this.caseManagerUserDetails = upsertCas1ApplicationUserDetails(this.caseManagerUserDetails, updateFields.caseManagerUserDetails)
     }
 
     val savedApplication = applicationRepository.save(application)

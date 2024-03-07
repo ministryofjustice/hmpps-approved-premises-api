@@ -1960,17 +1960,6 @@ class ApplicationTest : IntegrationTestBase() {
                   isWomensApplication = false,
                   isPipeApplication = true,
                   type = UpdateApplicationType.CAS1,
-                  applicantUserDetails = Cas1ApplicationUserDetails(
-                    "applicantName",
-                    "applicantEmail",
-                    "applicationTelephone",
-                  ),
-                  caseManagerIsNotApplicant = false,
-                  caseManagerUserDetails = Cas1ApplicationUserDetails(
-                    "cmName",
-                    "cmEmail",
-                    "cmTelephone",
-                  ),
                 ),
               )
               .exchange()
