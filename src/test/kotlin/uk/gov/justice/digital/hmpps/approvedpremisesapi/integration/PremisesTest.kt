@@ -2074,6 +2074,48 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get all Rooms for Premises returns OK with correct body with end-date`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+      val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
+        withYieldedPremises { premises }
+      }
+
+      val bedEntityWithEndDate = bedEntityFactory.produceAndPersist {
+        withRoom(rooms[0])
+        withEndDate { LocalDate.now() }
+      }
+
+      val bedEntityWithoutEndDate = bedEntityFactory.produceAndPersist {
+        withRoom(rooms[1])
+      }
+
+      rooms[0].beds += bedEntityWithEndDate
+      rooms[1].beds += bedEntityWithoutEndDate
+
+      val expectedJson = objectMapper.writeValueAsString(
+        rooms.map {
+          roomTransformer.transformJpaToApi(it)
+        },
+      )
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/rooms")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
+    }
+  }
+
+  @Test
   fun `The total bedspaces on a Temporary Accommodation Premises is equal to the sum of the bedspaces in all Rooms attached to the Premises`() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
       val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist() {
@@ -2158,6 +2200,47 @@ class PremisesTest : IntegrationTestBase() {
         .isCreated
         .expectBody()
         .jsonPath("notes").isEqualTo("")
+    }
+  }
+
+  @Test
+  fun `Create new Room with end date for temporary accommodation Premises returns 201 Created with correct body when given valid data`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
+        withModelScope("room")
+        withServiceScope("temporary-accommodation")
+        withName("Floor level access")
+      }.map { it.id }
+
+      webTestClient.post()
+        .uri("/premises/${premises.id}/rooms")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewRoom(
+            notes = "test notes",
+            name = "test-room",
+            characteristicIds = characteristicIds,
+            bedEndDate = LocalDate.now(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isCreated
+        .expectBody()
+        .jsonPath("name").isEqualTo("test-room")
+        .jsonPath("notes").isEqualTo("test notes")
+        .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
+        .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
+        .jsonPath("characteristics[*].serviceScope").isEqualTo(MutableList(5) { "temporary-accommodation" })
+        .jsonPath("characteristics[*].name").isEqualTo(MutableList(5) { "Floor level access" })
+        .jsonPath("beds[*].bedEndDate").isEqualTo(LocalDate.now().toString())
     }
   }
 
@@ -2823,6 +2906,74 @@ class PremisesTest : IntegrationTestBase() {
         .exchange()
         .expectStatus()
         .isForbidden
+    }
+  }
+
+  @Test
+  fun `Get Room by ID for temporary accommodation returns OK with correct body`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withId(UUID.randomUUID())
+            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          }
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises }
+        withName("test-room")
+        withNotes("test notes")
+      }
+
+      val expectedJson = objectMapper.writeValueAsString(roomTransformer.transformJpaToApi(room))
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/rooms/${room.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
+    }
+  }
+
+  @Test
+  fun `Get Room by ID for temporary accommodation returns OK with correct body with end date`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist {
+            withId(UUID.randomUUID())
+            withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+          }
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises }
+        withName("test-room")
+        withNotes("test notes")
+      }
+      val bedEntity = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+        withEndDate { LocalDate.now() }
+      }
+
+      val expectedJson = objectMapper.writeValueAsString(roomTransformer.transformJpaToApi(bedEntity.room))
+
+      webTestClient.get()
+        .uri("/premises/${premises.id}/rooms/${room.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
     }
   }
 

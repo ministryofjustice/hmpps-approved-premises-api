@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
+import java.time.LocalDate
 import java.util.UUID
 
 class RoomServiceTest {
@@ -45,30 +46,7 @@ class RoomServiceTest {
       .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
       .produce()
 
-    val result = roomService.createRoom(premises, "", "test-notes", mutableListOf())
-
-    assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-    assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
-      entry("$.name", "empty"),
-    )
-  }
-
-  @Test
-  fun `An empty bed name results in a validation error`() {
-    val room = RoomEntityFactory()
-      .withYieldedPremises {
-        TemporaryAccommodationPremisesEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    val result = roomService.createBed(room, "")
+    val result = roomService.createRoom(premises, "", "test-notes", mutableListOf(), null)
 
     assertThat(result).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     assertThat((result as ValidatableActionResult.FieldValidationError).validationMessages).contains(
@@ -89,7 +67,7 @@ class RoomServiceTest {
 
     every { roomRepository.save(any()) } answers { it.invocation.args[0] as RoomEntity }
 
-    val result = roomService.createRoom(premises, "test-room", "test-notes", mutableListOf())
+    val result = roomService.createRoom(premises, "test-room", "test-notes", mutableListOf(), null)
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
     result as ValidatableActionResult.Success
@@ -113,7 +91,7 @@ class RoomServiceTest {
     every { roomRepository.save(any()) } answers { it.invocation.args[0] as RoomEntity }
     every { bedRepository.save(any()) } answers { it.invocation.args[0] as BedEntity }
 
-    val result = roomService.createRoom(premises, "test-room", "test-notes", mutableListOf())
+    val result = roomService.createRoom(premises, "test-room", "test-notes", mutableListOf(), null)
 
     assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
     result as ValidatableActionResult.Success
@@ -123,6 +101,33 @@ class RoomServiceTest {
     assertThat(result.entity.beds).hasSize(1)
     assertThat(result.entity.beds[0].room).isEqualTo(result.entity)
     assertThat(result.entity.beds[0].name).isEqualTo("default-bed")
+  }
+
+  @Test
+  fun `A Temporary Accommodation Premises automatically creates a bed for the new room with bedspace end date`() {
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    every { roomRepository.save(any()) } answers { it.invocation.args[0] as RoomEntity }
+    every { bedRepository.save(any()) } answers { it.invocation.args[0] as BedEntity }
+
+    val result = roomService.createRoom(premises, "test-room", "test-notes", mutableListOf(), LocalDate.now())
+
+    assertThat(result).isInstanceOf(ValidatableActionResult.Success::class.java)
+    result as ValidatableActionResult.Success
+    assertThat(result.entity.premises).isEqualTo(premises)
+    assertThat(result.entity.name).isEqualTo("test-room")
+    assertThat(result.entity.notes).isEqualTo("test-notes")
+    assertThat(result.entity.beds).hasSize(1)
+    assertThat(result.entity.beds[0].room).isEqualTo(result.entity)
+    assertThat(result.entity.beds[0].name).isEqualTo("default-bed")
+    assertThat(result.entity.beds[0].endDate).isEqualTo(LocalDate.now())
   }
 
   @Test

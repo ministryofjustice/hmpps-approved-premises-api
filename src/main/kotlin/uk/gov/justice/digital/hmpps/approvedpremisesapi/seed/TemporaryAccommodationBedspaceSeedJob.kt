@@ -55,7 +55,7 @@ class TemporaryAccommodationBedspaceSeedJob(
   ) {
     log.info("Creating new Temporary Accommodation bedspace '${row.bedspaceName}' on premises '${row.premisesName}'")
 
-    roomService.createRoom(premises, row.bedspaceName, row.notes, characteristics.map { it.id })
+    roomService.createRoom(premises, row.bedspaceName, row.notes, characteristics.map { it.id }, null)
   }
 
   private fun updateExistingRoom(

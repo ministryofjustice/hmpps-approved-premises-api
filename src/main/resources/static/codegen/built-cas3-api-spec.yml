@@ -2987,6 +2987,11 @@ components:
           items:
             type: string
             format: uuid
+        bedEndDate:
+          type: string
+          format: date
+          example: 2024-03-30
+          description: End date of the bed availability, open for availability if not specified.
       required:
         - name
         - characteristicIds
@@ -3040,6 +3045,11 @@ components:
         code:
           type: string
           example: NEABC04
+        bedEndDate:
+          type: string
+          format: date
+          example: 2024-03-30
+          description: End date of the bed availability, open for availability if not specified
       required:
         - id
         - name

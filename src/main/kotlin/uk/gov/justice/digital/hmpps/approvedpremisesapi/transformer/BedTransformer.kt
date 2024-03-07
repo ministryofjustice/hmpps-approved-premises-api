@@ -10,5 +10,6 @@ class BedTransformer {
     id = jpa.id,
     name = jpa.name,
     code = jpa.code,
+    bedEndDate = jpa.endDate,
   )
 }

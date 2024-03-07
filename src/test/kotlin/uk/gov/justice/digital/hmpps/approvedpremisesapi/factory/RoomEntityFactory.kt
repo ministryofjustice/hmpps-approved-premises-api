@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Characteristi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
+import java.time.LocalDate
 import java.util.UUID
 
 class RoomEntityFactory : Factory<RoomEntity> {
@@ -63,6 +64,7 @@ class BedEntityFactory : Factory<BedEntity> {
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var code: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
   private var room: Yielded<RoomEntity>? = null
+  private var endDate: Yielded<LocalDate>? = null
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -83,11 +85,15 @@ class BedEntityFactory : Factory<BedEntity> {
   fun withYieldedRoom(room: Yielded<RoomEntity>) = apply {
     this.room = room
   }
+  fun withEndDate(endDate: Yielded<LocalDate>) = apply {
+    this.endDate = endDate
+  }
 
   override fun produce() = BedEntity(
     id = this.id(),
     name = this.name(),
     code = this.code(),
     room = this.room?.invoke() ?: throw java.lang.RuntimeException("Must provide a room"),
+    endDate = this.endDate?.invoke(),
   )
 }
