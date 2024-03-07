@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementReque
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
@@ -291,24 +290,6 @@ class PlacementRequestService(
       bookingNotMadeRepository.save(bookingNotMade),
     )
   }
-
-  /**
-   * This should return a maximum of one placement request, representing the dates known
-   * at the point of application submission.
-   *
-   * For more information on why we do this, see [PlacementRequestEntity.isForApplicationsArrivalDate]
-   */
-  fun getWithdrawablePlacementRequestsForUser(
-    user: UserEntity,
-    application: ApprovedPremisesApplicationEntity,
-  ): List<PlacementRequestEntity> =
-    placementRequestRepository
-      .findByApplication(application)
-      .filter {
-        it.isInWithdrawableState() &&
-          it.isForApplicationsArrivalDate() &&
-          userAccessService.userMayWithdrawPlacementRequest(user, it)
-      }
 
   fun getWithdrawableState(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableState {
     return WithdrawableState(

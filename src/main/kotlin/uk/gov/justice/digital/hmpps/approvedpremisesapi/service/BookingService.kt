@@ -1142,15 +1142,11 @@ class BookingService(
     return success(nonArrivalEntity)
   }
 
-  fun getCancelleableCas1BookingsForUser(user: UserEntity, application: ApprovedPremisesApplicationEntity): List<BookingEntity> =
-    bookingRepository.findAllByApplication(application).filter { booking ->
-      booking.isInCancellableStateCas1() && userAccessService.userMayCancelBooking(user, booking)
-    }
-
   fun getWithdrawableState(booking: BookingEntity, user: UserEntity): WithdrawableState {
     return WithdrawableState(
       withdrawable = booking.isInCancellableStateCas1(),
       userMayDirectlyWithdraw = userAccessService.userMayCancelBooking(user, booking),
+      blockAncestorWithdrawals = booking.hasArrivals(),
     )
   }
 

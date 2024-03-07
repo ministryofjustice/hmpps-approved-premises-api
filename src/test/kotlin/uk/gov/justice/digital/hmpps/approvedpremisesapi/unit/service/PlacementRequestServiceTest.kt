@@ -71,10 +71,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.LocalDate
@@ -574,106 +574,6 @@ class PlacementRequestServiceTest {
             data.failureDescription == "some notes"
         },
       )
-    }
-  }
-
-  @Nested
-  inner class GetWithdrawablePlacementRequestsForUser {
-
-    @Test
-    fun `getWithdrawablePlacementRequestsForUser doesn't return reallocated placement requests`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
-        .produce()
-
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val placementRequestWithdrawable = createValidPlacementRequest(application, user)
-
-      val placementRequestReallocated = createValidPlacementRequest(application, user)
-      placementRequestReallocated.reallocatedAt = OffsetDateTime.now()
-
-      every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithdrawable, placementRequestReallocated)
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequestWithdrawable) } returns true
-
-      val result = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
-
-      assertThat(result).isEqualTo(listOf(placementRequestWithdrawable))
-    }
-
-    @Test
-    fun `getWithdrawablePlacementRequestsForUser doesn't return withdrawn placement requests`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
-        .produce()
-
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val placementRequestWithdrawable = createValidPlacementRequest(application, user)
-
-      val placementRequestWithdrawn = createValidPlacementRequest(application, user)
-      placementRequestWithdrawn.isWithdrawn = true
-
-      every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithdrawable, placementRequestWithdrawn)
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequestWithdrawable) } returns true
-
-      val result = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
-
-      assertThat(result).isEqualTo(listOf(placementRequestWithdrawable))
-    }
-
-    @Test
-    fun `getWithdrawablePlacementRequestsForUser doesn't return placement requests not from original application dates`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
-        .produce()
-
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val placementRequestNotWithdrawable = createValidPlacementRequest(
-        application,
-        user,
-        placementApplication = PlacementApplicationEntityFactory()
-          .withCreatedByUser(user)
-          .withApplication(application)
-          .produce(),
-      )
-
-      every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestNotWithdrawable)
-
-      val result = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
-
-      assertThat(result).isEmpty()
-    }
-
-    @Test
-    fun `getWithdrawablePlacementRequestsForUser returns placement requests with bookings`() {
-      val application = ApprovedPremisesApplicationEntityFactory()
-        .withCreatedByUser(UserEntityFactory().withUnitTestControlProbationRegion().produce())
-        .produce()
-
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val placementRequestWithoutBooking = createValidPlacementRequest(application, user)
-
-      val placementRequestWithBooking = createValidPlacementRequest(application, user)
-      placementRequestWithBooking.booking = BookingEntityFactory().withDefaultPremises().produce()
-
-      every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequestWithoutBooking, placementRequestWithBooking)
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequestWithoutBooking) } returns true
-      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequestWithBooking) } returns true
-
-      val result = placementRequestService.getWithdrawablePlacementRequestsForUser(user, application)
-
-      assertThat(result).isEqualTo(listOf(placementRequestWithoutBooking, placementRequestWithBooking))
     }
   }
 

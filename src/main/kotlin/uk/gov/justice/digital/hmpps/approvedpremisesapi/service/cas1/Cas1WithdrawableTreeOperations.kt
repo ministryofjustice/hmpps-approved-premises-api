@@ -25,9 +25,9 @@ class Cas1WithdrawableTreeOperations(
     rootNode: WithdrawableTreeNode,
     withdrawalContext: WithdrawalContext,
   ) {
-    rootNode.collectDescendants().forEach {
-      if (it.status.withdrawable) {
-        withdraw(it, withdrawalContext)
+    rootNode.collectDescendants().forEach { descendant ->
+      if (descendant.status.withdrawable && !descendant.isBlocked()) {
+        withdraw(descendant, withdrawalContext)
       }
     }
   }

@@ -24,13 +24,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableDatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableTreeBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableTreeNode
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -64,7 +64,7 @@ class Cas1WithdrawableServiceTest {
     .produce()
 
   @Test
-  fun `allWithdrawables correctly maps information`() {
+  fun `allWithdrawables correctly maps for given tree node`() {
     val appId = UUID.randomUUID()
 
     every {
@@ -166,11 +166,79 @@ class Cas1WithdrawableServiceTest {
     assertThat(result).anyMatch { it.id == placementWithdrawableId }
   }
 
+  @Test
+  fun `allWithdrawables doesn't return entities that are blocking, or ancestors of blocking`() {
+    val appWithdrawableButBlockedId = UUID.randomUUID()
+    val placementRequest1WithdrawableButBlockedId = UUID.randomUUID()
+    val placementRequestWithdrawableButNotPermittedId = UUID.randomUUID()
+    val placementRequest2WithdrawableId = UUID.randomUUID()
+    val placementApplication1WithdrawableId = UUID.randomUUID()
+    val placementApplication2NotWithdrawableId = UUID.randomUUID()
+    val placementWithdrawableButBlockingId = UUID.randomUUID()
+    val placementNotWithdrawableId = UUID.randomUUID()
+
+    every {
+      withdrawableTreeBuilder.treeForApp(application, user)
+    } returns
+      WithdrawableTreeNode(
+        entityType = WithdrawableEntityType.Application,
+        entityId = appWithdrawableButBlockedId,
+        status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+        children = listOf(
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.PlacementRequest,
+            entityId = placementRequest1WithdrawableButBlockedId,
+            status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+            children = listOf(
+              WithdrawableTreeNode(
+                entityType = WithdrawableEntityType.Booking,
+                entityId = placementWithdrawableButBlockingId,
+                status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
+              ),
+            ),
+          ),
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.PlacementRequest,
+            entityId = placementRequestWithdrawableButNotPermittedId,
+            status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
+          ),
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.PlacementApplication,
+            entityId = placementApplication1WithdrawableId,
+            status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+            children = listOf(
+              WithdrawableTreeNode(
+                entityType = WithdrawableEntityType.PlacementRequest,
+                entityId = placementRequest2WithdrawableId,
+                status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = false),
+              ),
+            ),
+          ),
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.PlacementApplication,
+            entityId = placementApplication2NotWithdrawableId,
+            status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+          ),
+          WithdrawableTreeNode(
+            entityType = WithdrawableEntityType.Booking,
+            entityId = placementNotWithdrawableId,
+            status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
+          ),
+        ),
+      )
+
+    val result = withdrawableService.allWithdrawables(application, user)
+
+    assertThat(result).hasSize(2)
+    assertThat(result).anyMatch { it.id == placementRequest2WithdrawableId }
+    assertThat(result).anyMatch { it.id == placementApplication1WithdrawableId }
+  }
+
   @Nested
   inner class WithdrawApplication {
 
-    val withdrawalReason = "the reason"
-    val withdrawalOtherReason = "the other reason"
+    private val withdrawalReason = "the reason"
+    private val withdrawalOtherReason = "the other reason"
 
     @Test
     fun success() {
@@ -262,6 +330,31 @@ class Cas1WithdrawableServiceTest {
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Application is not in a withdrawable state")
+    }
+
+    @Test
+    fun `fails if blocked()`() {
+      every { applicationService.getApplication(application.id) } returns application
+
+      val tree = WithdrawableTreeNode(
+        WithdrawableEntityType.Application,
+        application.id,
+        WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+        children = listOf(
+          WithdrawableTreeNode(
+            WithdrawableEntityType.Booking,
+            UUID.randomUUID(),
+            WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
+          ),
+        ),
+      )
+
+      every { withdrawableTreeBuilder.treeForApp(application, user) } returns tree
+
+      val result = withdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
+
+      assertThat(result is CasResult.GeneralValidationError).isTrue()
+      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Application withdrawal is blocked")
     }
   }
 
@@ -363,6 +456,31 @@ class Cas1WithdrawableServiceTest {
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Request for Placement is not in a withdrawable state")
     }
+
+    @Test
+    fun `fails if blocked()`() {
+      every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
+
+      val tree = WithdrawableTreeNode(
+        WithdrawableEntityType.PlacementRequest,
+        placementRequest.id,
+        WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+        children = listOf(
+          WithdrawableTreeNode(
+            WithdrawableEntityType.Booking,
+            UUID.randomUUID(),
+            WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
+          ),
+        ),
+      )
+
+      every { withdrawableTreeBuilder.treeForPlacementReq(placementRequest, user) } returns tree
+
+      val result = withdrawableService.withdrawPlacementRequest(placementRequest.id, user, withdrawalReason)
+
+      assertThat(result is CasResult.GeneralValidationError).isTrue()
+      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Request for Placement withdrawal is blocked")
+    }
   }
 
   @Nested
@@ -449,6 +567,31 @@ class Cas1WithdrawableServiceTest {
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Request for Placement is not in a withdrawable state")
     }
+
+    @Test
+    fun `fails if blocked()`() {
+      every { placementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
+
+      val tree = WithdrawableTreeNode(
+        WithdrawableEntityType.PlacementApplication,
+        placementApplication.id,
+        WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+        children = listOf(
+          WithdrawableTreeNode(
+            WithdrawableEntityType.PlacementApplication,
+            placementApplication.id,
+            WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
+          ),
+        ),
+      )
+
+      every { withdrawableTreeBuilder.treeForPlacementApp(placementApplication, user) } returns tree
+
+      val result = withdrawableService.withdrawPlacementApplication(placementApplication.id, user, withdrawalReason)
+
+      assertThat(result is CasResult.GeneralValidationError).isTrue()
+      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Request for Placement withdrawal is blocked")
+    }
   }
 
   @Nested
@@ -531,6 +674,22 @@ class Cas1WithdrawableServiceTest {
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Placement is not in a withdrawable state")
+    }
+
+    @Test
+    fun `fails if blocked()`() {
+      val tree = WithdrawableTreeNode(
+        WithdrawableEntityType.Booking,
+        booking.id,
+        WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
+      )
+
+      every { withdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
+
+      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes)
+
+      assertThat(result is CasResult.GeneralValidationError).isTrue()
+      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Placement withdrawal is blocked")
     }
   }
 }
