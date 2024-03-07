@@ -29,8 +29,8 @@ class Cas1UserDetailsMigrationJob(
     var slice: Slice<ApprovedPremisesApplicationEntity>
 
     while (hasNext) {
-      log.info("Getting page $page")
-      slice = applicationRepository.getSubmittedApprovedPremisesApplications(PageRequest.of(0, pageSize))
+      log.info("Getting page $page for max page size $pageSize")
+      slice = applicationRepository.getSubmittedApprovedPremisesApplicationsWithoutApplicantUserDetails(PageRequest.of(0, pageSize))
       slice.content.forEach { application ->
         transactionTemplate.executeWithoutResult {
           try {
