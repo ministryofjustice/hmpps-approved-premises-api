@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 
+import com.amazonaws.services.sns.model.NotFoundException
+import io.sentry.Sentry
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -33,6 +36,8 @@ class ApplicationNoteService(
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
 ) {
+
+  private val log = LoggerFactory.getLogger(this::class.java)
   fun createApplicationNote(applicationId: UUID, note: NewCas2ApplicationNote):
     AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationNoteEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)
@@ -65,18 +70,27 @@ class ApplicationNoteService(
   }
 
   private fun sendEmailToReferrer(application: Cas2ApplicationEntity, savedNote: Cas2ApplicationNoteEntity) {
-    emailNotificationService.sendEmail(
-      // TODO should we check if email exists? Throw error if it doesn't
-      recipientEmailAddress = application.createdByUser.email!!,
-      templateId = notifyConfig.templates.cas2NoteAddedForReferrer,
-      personalisation = mapOf(
-        "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
-        "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
-        "nomsNumber" to application.nomsNumber,
-        "applicationType" to "Home Detention Curfew (HDC)",
-        "applicationURl" to applicationUrlTemplate.replace("#id", application.id.toString()),
-      ),
-    )
+    if (application.createdByUser.email != null) {
+      emailNotificationService.sendEmail(
+        recipientEmailAddress = application.createdByUser.email!!,
+        templateId = notifyConfig.templates.cas2NoteAddedForReferrer,
+        personalisation = mapOf(
+          "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
+          "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
+          "nomsNumber" to application.nomsNumber,
+          "applicationType" to "Home Detention Curfew (HDC)",
+          "applicationURl" to applicationUrlTemplate.replace("#id", application.id.toString()),
+        ),
+      )
+    } else {
+      log.error("Email not found for User ${application.createdByUser.id}. Unable to send email for Note ${savedNote.id} on Application ${application.id}")
+      Sentry.captureException(
+        RuntimeException(
+          "Email not found for User ${application.createdByUser.id}. Unable to send email for Note ${savedNote.id} on Application ${application.id}",
+          NotFoundException("Email not found for User ${application.createdByUser.id}"),
+        ),
+      )
+    }
   }
 
   private fun getCas2User(isExternalUser: Boolean): Cas2User {

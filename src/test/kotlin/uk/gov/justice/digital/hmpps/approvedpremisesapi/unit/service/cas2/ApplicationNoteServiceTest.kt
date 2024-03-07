@@ -1,10 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
+import com.amazonaws.services.sns.model.NotFoundException
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verify
+import io.sentry.Sentry
+import io.sentry.protocol.SentryId
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -257,6 +261,48 @@ class ApplicationNoteServiceTest {
           val createdNote = validatableActionResult.entity
 
           Assertions.assertThat(createdNote).isEqualTo(noteEntity)
+        }
+
+        @Test
+        fun `alerts Sentry when the Referrer does not have an email`() {
+          val submittedApplicationWithNoReferrerEmail = Cas2ApplicationEntityFactory()
+            .withCreatedByUser(NomisUserEntityFactory().withEmail(null).produce())
+            .withCrn("CRN123")
+            .withNomsNumber("NOMSABC")
+            .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
+            .produce()
+
+          every { mockApplicationRepository.findByIdOrNull(applicationId) } answers
+            {
+              submittedApplicationWithNoReferrerEmail
+            }
+          every { mockExternalUserService.getUserForRequest() } returns externalUser
+          every { mockApplicationNoteRepository.save(any()) } answers
+            {
+              noteEntity
+            }
+          mockkStatic(Sentry::class)
+
+          every {
+            Sentry.captureException(
+              RuntimeException(
+                "Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}. " +
+                  "Unable to send email for Note ${noteEntity.id} on Application ${submittedApplicationWithNoReferrerEmail.id}",
+                NotFoundException("Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}"),
+              ),
+            )
+          } returns SentryId.EMPTY_ID
+
+          applicationNoteService.createApplicationNote(
+            applicationId = applicationId,
+            NewCas2ApplicationNote(note = "new note"),
+          )
+
+          verify(exactly = 1) {
+            Sentry.captureException(
+              any(),
+            )
+          }
         }
       }
 
