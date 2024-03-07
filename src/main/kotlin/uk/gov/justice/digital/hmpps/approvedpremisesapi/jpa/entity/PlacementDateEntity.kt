@@ -66,5 +66,4 @@ data class PlacementDateEntity(
     result = 31 * result + duration
     return result
   }
-
 }

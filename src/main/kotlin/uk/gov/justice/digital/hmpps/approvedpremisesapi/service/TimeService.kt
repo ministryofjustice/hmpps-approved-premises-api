@@ -7,5 +7,4 @@ import java.time.LocalDate
 class TimeService {
 
   fun nowAsLocalDate(): LocalDate = LocalDate.now()
-
 }

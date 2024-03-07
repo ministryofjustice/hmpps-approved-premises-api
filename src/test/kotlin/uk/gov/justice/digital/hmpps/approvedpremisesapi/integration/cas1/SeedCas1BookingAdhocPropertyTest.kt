@@ -18,7 +18,7 @@ class SeedCas1BookingAdhocPropertyTest : SeedTestBase() {
 
     withCsv(
       "invalid-booking-id",
-      bookingIdListToCsvRows(listOf(invalidId))
+      bookingIdListToCsvRows(listOf(invalidId)),
     )
 
     seedService.seedData(SeedFileType.approvedPremisesBookingAdhocProperty, "invalid-booking-id")
@@ -55,10 +55,12 @@ class SeedCas1BookingAdhocPropertyTest : SeedTestBase() {
 
     withCsv(
       "valid-booking-ids",
-      bookingIdListToCsvRows(listOf(
-        booking1.id,
-        booking3.id,
-      ))
+      bookingIdListToCsvRows(
+        listOf(
+          booking1.id,
+          booking3.id,
+        ),
+      ),
     )
 
     seedService.seedData(SeedFileType.approvedPremisesBookingAdhocProperty, "valid-booking-ids")
@@ -81,5 +83,4 @@ class SeedCas1BookingAdhocPropertyTest : SeedTestBase() {
 
     return builder.build()
   }
-
 }

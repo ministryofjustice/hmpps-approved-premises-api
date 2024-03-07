@@ -40,8 +40,8 @@ class EmailNotificationAsserter {
     val anyMatch = requestedEmails.any {
       toEmailAddress == it.email &&
         templateId == it.templateId &&
-          it.personalisation.entries.containsAll(personalisation.entries) &&
-          it.replyToEmailId == replyToEmailId
+        it.personalisation.entries.containsAll(personalisation.entries) &&
+        it.replyToEmailId == replyToEmailId
     }
 
     assertThat(anyMatch)

@@ -22,7 +22,7 @@ class Cas1PlacementApplicationEmailService(
       return
     }
 
-    val templateId = if(sendNewWithdrawalNotifications) {
+    val templateId = if (sendNewWithdrawalNotifications) {
       notifyConfig.templates.placementRequestSubmittedV2
     } else {
       notifyConfig.templates.placementRequestSubmitted
@@ -79,7 +79,7 @@ class Cas1PlacementApplicationEmailService(
     }
   }
 
-  private fun getPersonalisation(placementApplication: PlacementApplicationEntity): Map<String,String?> {
+  private fun getPersonalisation(placementApplication: PlacementApplicationEntity): Map<String, String?> {
     val application = placementApplication.application
     val dates = placementApplication.placementDates
 
