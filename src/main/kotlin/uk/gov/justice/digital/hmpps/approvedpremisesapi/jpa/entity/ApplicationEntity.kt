@@ -224,8 +224,8 @@ WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NUL
   @Query("SELECT DISTINCT(a.nomsNumber) FROM ApplicationEntity a WHERE a.nomsNumber IS NOT NULL")
   fun getDistinctNomsNumbers(): List<String>
 
-  @Query("SELECT ap FROM ApprovedPremisesApplicationEntity ap WHERE ap.submittedAt IS NOT NULL")
-  fun getSubmittedApprovedPremisesApplications(pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
+  @Query("SELECT ap FROM ApprovedPremisesApplicationEntity ap WHERE ap.submittedAt IS NOT NULL and ap.applicantUserDetails IS NULL")
+  fun getSubmittedApprovedPremisesApplicationsWithoutApplicantUserDetails(pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>
 
   @Query("SELECT ap FROM ApprovedPremisesApplicationEntity ap WHERE ap.submittedAt IS NOT NULL AND ap.inmateInOutStatusOnSubmission IS NULL")
   fun getSubmittedApprovedPremisesApplicationsWithoutInOutStatus(pageable: Pageable?): Slice<ApprovedPremisesApplicationEntity>

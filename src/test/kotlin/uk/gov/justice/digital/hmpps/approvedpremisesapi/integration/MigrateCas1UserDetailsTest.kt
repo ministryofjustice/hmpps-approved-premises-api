@@ -313,4 +313,55 @@ class MigrateCas1UserDetailsTest : MigrationJobTestBase() {
       }
     }
   }
+
+  @Test
+  fun `Use paging`() {
+    `Given a User`(
+      staffUserDetailsConfigBlock = {
+        withForenames("user entity")
+        withSurname("name")
+        withEmail("user entity email")
+        withTelephoneNumber("user entity phone")
+      },
+    ) { userEntity, _ ->
+      `Given an Offender` { offenderDetails, _ ->
+
+        val applications = approvedPremisesApplicationEntityFactory.produceAndPersistMultiple(amount = 5) {
+          withCreatedByUser(userEntity)
+          withApplicationSchema(approvedPremisesApplicationJsonSchemaRepository.findAll().first())
+          withSubmittedAt(OffsetDateTime.now())
+          withData(
+            """
+            {
+                "basic-information": {
+                    "confirm-your-details": {
+                      "detailsToUpdate": [
+                          "name",
+                          "emailAddress",
+                          "phoneNumber"
+                      ],
+                      "emailAddress": "overridden email",
+                      "name": "overridden name",
+                      "phoneNumber": "overridden phone",                    
+                      "caseManagementResponsibility": "yes"
+                    }
+                }
+            }
+            """.trimIndent(),
+          )
+        }
+
+        migrationJobService.runMigrationJob(MigrationJobType.cas1UserDetails, pageSize = 2)
+
+        applications.forEach { application ->
+          val updatedApplication = approvedPremisesApplicationRepository.findById(application.id).get()
+          assertThat(updatedApplication.applicantUserDetails!!.name).isEqualTo("overridden name")
+          assertThat(updatedApplication.applicantUserDetails!!.email).isEqualTo("overridden email")
+          assertThat(updatedApplication.applicantUserDetails!!.telephoneNumber).isEqualTo("overridden phone")
+          assertThat(updatedApplication.caseManagerIsNotApplicant).isFalse()
+          assertThat(updatedApplication.caseManagerUserDetails).isNull()
+        }
+      }
+    }
+  }
 }
