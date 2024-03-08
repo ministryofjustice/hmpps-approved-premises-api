@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshRatings
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
@@ -332,7 +331,6 @@ class OffenderServiceTest {
         HttpStatus.OK,
         InmateDetail(
           offenderNo = nomsNumber,
-          inOutStatus = InOutStatus.IN,
           status = InmateStatus.IN,
           assignedLivingUnit = AssignedLivingUnit(
             agencyId = "AGY",
@@ -349,7 +347,7 @@ class OffenderServiceTest {
       result as AuthorisableActionResult.Success
       assertThat(result.entity).isNotNull
       assertThat(result.entity!!.offenderNo).isEqualTo(nomsNumber)
-      assertThat(result.entity!!.inOutStatus).isEqualTo(InOutStatus.IN)
+      assertThat(result.entity!!.status).isEqualTo(InmateStatus.IN)
       assertThat(result.entity!!.assignedLivingUnit).isEqualTo(
         AssignedLivingUnit(
           agencyId = "AGY",

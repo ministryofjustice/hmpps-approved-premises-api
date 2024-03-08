@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
@@ -203,7 +202,6 @@ class PersonTransformerTest {
 
     val inmateDetail = InmateDetail(
       offenderNo = "NOMS321",
-      inOutStatus = InOutStatus.OUT,
       assignedLivingUnit = AssignedLivingUnit(
         agencyId = "BRI",
         locationId = 5,
@@ -297,7 +295,6 @@ class PersonTransformerTest {
 
     val inmateDetail = InmateDetail(
       offenderNo = "NOMS321",
-      inOutStatus = InOutStatus.OUT,
       assignedLivingUnit = AssignedLivingUnit(
         agencyId = "BRI",
         locationId = 5,
@@ -513,7 +510,6 @@ class PersonTransformerTest {
       val crn = "CRN"
       val pncNumber = "PNC"
       val inmateDetail = InmateDetailFactory()
-        .withInOutStatus(inOutStatus = InOutStatus.OUT)
         .withStatus(status = InmateStatus.IN)
         .withAssignedLivingUnit(assignedLivingUnit = AssignedLivingUnit(agencyId = "1", locationId = 1, description = "description", agencyName = "HMPS Sheffield"))
         .produce()
@@ -550,7 +546,6 @@ class PersonTransformerTest {
       val nomsNumber = "NOMS"
       val crn = "CRN"
       val inmateDetail = InmateDetailFactory()
-        .withInOutStatus(inOutStatus = InOutStatus.OUT)
         .withStatus(status = InmateStatus.IN)
         .produce()
       val probationOffenderDetail = ProbationOffenderDetailFactory()

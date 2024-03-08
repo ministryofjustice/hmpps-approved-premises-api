@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import java.time.LocalDate
 
 class PersonSearchTest : IntegrationTestBase() {
@@ -125,7 +125,7 @@ class PersonSearchTest : IntegrationTestBase() {
         },
         inmateDetailsConfigBlock = {
           withOffenderNo("NOMS321")
-          withInOutStatus(InOutStatus.IN)
+          withStatus(InmateStatus.IN)
           withAssignedLivingUnit(
             AssignedLivingUnit(
               agencyId = "BRI",

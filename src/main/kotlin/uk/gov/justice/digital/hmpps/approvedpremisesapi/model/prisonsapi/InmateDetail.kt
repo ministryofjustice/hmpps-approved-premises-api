@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class InmateDetail(
   val offenderNo: String,
-  val inOutStatus: InOutStatus,
   val status: InmateStatus,
   val assignedLivingUnit: AssignedLivingUnit?,
 )
@@ -16,12 +15,6 @@ data class AssignedLivingUnit(
   val description: String?,
   val agencyName: String,
 )
-
-enum class InOutStatus {
-  IN,
-  OUT,
-  TRN,
-}
 
 enum class InmateStatus {
   @JsonProperty("ACTIVE IN")
