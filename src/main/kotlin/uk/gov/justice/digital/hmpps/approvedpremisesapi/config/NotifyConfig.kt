@@ -19,6 +19,7 @@ class NotifyConfig {
 
 class EmailAddressConfig {
   var cas2Assessors: String = "example@example.com"
+  var cas2ReplyToId: String = "cbe00c2d-387b-4283-9b9c-13c8b7a61444"
 }
 
 class NotifyTemplates {

@@ -316,6 +316,7 @@ class ApplicationService(
         "telephoneNumber" to application.telephoneNumber,
         "applicationUrl" to submittedApplicationUrlTemplate.replace("#applicationId", application.id.toString()),
       ),
+      replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
     )
   }
 }

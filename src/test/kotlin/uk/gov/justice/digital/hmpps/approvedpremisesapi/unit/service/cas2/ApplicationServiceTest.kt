@@ -671,7 +671,8 @@ class ApplicationServiceTest {
 
       every { mockNotifyConfig.templates.cas2ApplicationSubmitted } returns "abc123"
       every { mockNotifyConfig.emailAddresses.cas2Assessors } returns "exampleAssessorInbox@example.com"
-      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+      every { mockNotifyConfig.emailAddresses.cas2ReplyToId } returns "def456"
+      every { mockEmailNotificationService.sendEmail(any(), any(), any(), any()) } just Runs
 
       every { mockApplicationRepository.save(any()) } answers {
         it.invocation.args[0]
@@ -688,8 +689,6 @@ class ApplicationServiceTest {
       )
 
       every { mockAssessmentService.createCas2Assessment(any()) } returns any()
-
-      val _schema = application.schemaVersion as Cas2ApplicationJsonSchemaEntity
 
       val result = applicationService.submitApplication(submitCas2Application)
 
@@ -736,6 +735,7 @@ class ApplicationServiceTest {
               it["telephoneNumber"] == application.telephoneNumber &&
               it["applicationUrl"] == "http://frontend/assess/applications/$applicationId/overview"
           },
+          "def456",
         )
       }
 
