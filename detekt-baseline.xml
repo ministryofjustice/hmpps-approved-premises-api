@@ -31,6 +31,7 @@
     <ID>LongParameterList:GivenAPlacementApplication.kt$( assessmentDecision: AssessmentDecision = AssessmentDecision.ACCEPTED, createdByUser: UserEntity, schema: ApprovedPremisesPlacementApplicationJsonSchemaEntity, crn: String = randomStringMultiCaseWithNumbers(8), allocatedToUser: UserEntity? = null, submittedAt: OffsetDateTime? = null, decision: PlacementApplicationDecision? = null, reallocated: Boolean = false, placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT, dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(), block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit, )</ID>
     <ID>TooManyFunctions:Dates.kt$uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Dates.kt</ID>
     <ID>MaxLineLength:AssessmentServiceTest.kt$AssessmentServiceTest$fun</ID>
+    <ID>UnusedPrivateProperty:MigrationJobService.kt$MigrationJobService$@Value("\${migration-job.throttle-enabled}") private val throttle: Boolean</ID>
   </ManuallySuppressedIssues>
   <CurrentIssues>
     <ID>ComplexCondition:BookingService.kt$BookingService$booking.service == ServiceName.approvedPremises.value &amp;&amp; booking.application != null &amp;&amp; user != null &amp;&amp; !arrivedAndDepartedDomainEventsDisabled</ID>

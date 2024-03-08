@@ -4037,7 +4037,6 @@ components:
     MigrationJobType:
       type: string
       enum:
-        - update_inmate_status_on_submission
         - update_all_users_from_community_api
         - update_sentence_type_and_situation
         - update_booking_status
