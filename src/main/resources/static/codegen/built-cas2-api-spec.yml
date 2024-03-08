@@ -3035,9 +3035,6 @@ components:
           type: string
         assessorName:
           type: string
-      required:
-        - nacroReferralId
-        - assessorName
     AssessmentSummary:
       type: object
       properties:
