@@ -54,10 +54,25 @@ class EmailNotificationService(
       log.error("Unable to send template $templateId to user $recipientEmailAddress", notificationClientException)
     }
   }
+
+  override fun sendCas2Email(
+    recipientEmailAddress: String,
+    templateId: String,
+    personalisation: Map<String, *>,
+  ) {
+    sendEmail(
+      recipientEmailAddress,
+      templateId,
+      personalisation,
+      notifyConfig.emailAddresses.cas2ReplyToId,
+    )
+  }
 }
 
 interface EmailNotifier {
   fun sendEmail(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>, replyToEmailId: String? = null)
+
+  fun sendCas2Email(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>)
 }
 
 data class EmailRequest(val email: String, val templateId: String, val personalisation: Map<String, *>, val replyToEmailId: String? = null)
