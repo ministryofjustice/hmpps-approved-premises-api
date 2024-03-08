@@ -203,6 +203,8 @@ user-allocations:
 
 notify:
   send-placement-request-notifications: true
+  emailaddresses:
+    cas2assessors: "assessors@example.com"
 
 feature-flags:
   cas1-use-new-withdrawal-logic: true
