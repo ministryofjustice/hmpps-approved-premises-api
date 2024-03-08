@@ -203,7 +203,7 @@ class PersonTransformerTest {
 
     val inmateDetail = InmateDetail(
       offenderNo = "NOMS321",
-      inOutStatus = InOutStatus.IN,
+      inOutStatus = InOutStatus.OUT,
       assignedLivingUnit = AssignedLivingUnit(
         agencyId = "BRI",
         locationId = 5,
@@ -297,7 +297,7 @@ class PersonTransformerTest {
 
     val inmateDetail = InmateDetail(
       offenderNo = "NOMS321",
-      inOutStatus = InOutStatus.IN,
+      inOutStatus = InOutStatus.OUT,
       assignedLivingUnit = AssignedLivingUnit(
         agencyId = "BRI",
         locationId = 5,
@@ -513,7 +513,8 @@ class PersonTransformerTest {
       val crn = "CRN"
       val pncNumber = "PNC"
       val inmateDetail = InmateDetailFactory()
-        .withInOutStatus(inOutStatus = InOutStatus.IN)
+        .withInOutStatus(inOutStatus = InOutStatus.OUT)
+        .withStatus(status = InmateStatus.IN)
         .withAssignedLivingUnit(assignedLivingUnit = AssignedLivingUnit(agencyId = "1", locationId = 1, description = "description", agencyName = "HMPS Sheffield"))
         .produce()
       val probationOffenderDetail = ProbationOffenderDetailFactory()
@@ -549,7 +550,8 @@ class PersonTransformerTest {
       val nomsNumber = "NOMS"
       val crn = "CRN"
       val inmateDetail = InmateDetailFactory()
-        .withInOutStatus(inOutStatus = InOutStatus.IN)
+        .withInOutStatus(inOutStatus = InOutStatus.OUT)
+        .withStatus(status = InmateStatus.IN)
         .produce()
       val probationOffenderDetail = ProbationOffenderDetailFactory()
         .withGender(null)

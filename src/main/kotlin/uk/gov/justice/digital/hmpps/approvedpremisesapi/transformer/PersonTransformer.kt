@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ProbationOffenderSearchResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 
 @Component
 class PersonTransformer {
@@ -21,7 +21,7 @@ class PersonTransformer {
       name = "${personInfoResult.offenderDetailSummary.firstName} ${personInfoResult.offenderDetailSummary.surname}",
       dateOfBirth = personInfoResult.offenderDetailSummary.dateOfBirth,
       sex = personInfoResult.offenderDetailSummary.gender,
-      status = inOutStatusToPersonInfoApiStatus(personInfoResult.inmateDetail?.inOutStatus),
+      status = inmateStatusToPersonInfoApiStatus(personInfoResult.inmateDetail?.status),
       nomsNumber = personInfoResult.inmateDetail?.offenderNo,
       ethnicity = personInfoResult.offenderDetailSummary.offenderProfile.ethnicity,
       nationality = personInfoResult.offenderDetailSummary.offenderProfile.nationality,
@@ -30,7 +30,7 @@ class PersonTransformer {
         "Prefer to self-describe" -> personInfoResult.offenderDetailSummary.offenderProfile.selfDescribedGender
         else -> personInfoResult.offenderDetailSummary.offenderProfile.genderIdentity
       },
-      prisonName = inOutStatusToPersonInfoApiStatus(personInfoResult.inmateDetail?.inOutStatus).takeIf { it == PersonStatus.inCustody }?.let {
+      prisonName = inmateStatusToPersonInfoApiStatus(personInfoResult.inmateDetail?.status).takeIf { it == PersonStatus.inCustody }?.let {
         personInfoResult.inmateDetail?.assignedLivingUnit?.agencyName ?: personInfoResult.inmateDetail?.assignedLivingUnit?.agencyId
       },
       isRestricted = (personInfoResult.offenderDetailSummary.currentExclusion || personInfoResult.offenderDetailSummary.currentRestriction),
@@ -78,21 +78,21 @@ class PersonTransformer {
       name = "${probationOffenderResult.probationOffenderDetail.firstName} ${probationOffenderResult.probationOffenderDetail.surname}",
       dateOfBirth = probationOffenderResult.probationOffenderDetail.dateOfBirth!!,
       sex = probationOffenderResult.probationOffenderDetail.gender ?: "Not found",
-      status = inOutStatusToPersonInfoApiStatus(probationOffenderResult.inmateDetail?.inOutStatus),
+      status = inmateStatusToPersonInfoApiStatus(probationOffenderResult.inmateDetail?.status),
       nomsNumber = probationOffenderResult.probationOffenderDetail.otherIds.nomsNumber,
       pncNumber = probationOffenderResult.probationOffenderDetail.otherIds.pncNumber ?: "Not found",
       nationality = probationOffenderResult.probationOffenderDetail.offenderProfile?.nationality ?: "Not found",
-      prisonName = inOutStatusToPersonInfoApiStatus(probationOffenderResult.inmateDetail?.inOutStatus).takeIf { it == PersonStatus.inCustody }?.let {
+      prisonName = inmateStatusToPersonInfoApiStatus(probationOffenderResult.inmateDetail?.status).takeIf { it == PersonStatus.inCustody }?.let {
         probationOffenderResult.inmateDetail?.assignedLivingUnit?.agencyName
           ?: probationOffenderResult.inmateDetail?.assignedLivingUnit?.agencyId
       },
       isRestricted = (probationOffenderResult.probationOffenderDetail.currentExclusion ?: false || probationOffenderResult.probationOffenderDetail.currentRestriction ?: false),
     )
 
-  fun inOutStatusToPersonInfoApiStatus(inOutStatus: InOutStatus?) = when (inOutStatus) {
-    InOutStatus.IN -> PersonStatus.inCustody
-    InOutStatus.OUT -> PersonStatus.inCommunity
-    InOutStatus.TRN -> PersonStatus.inCustody
+  fun inmateStatusToPersonInfoApiStatus(status: InmateStatus?) = when (status) {
+    InmateStatus.IN -> PersonStatus.inCustody
+    InmateStatus.OUT -> PersonStatus.inCommunity
+    InmateStatus.TRN -> PersonStatus.inCustody
     null -> PersonStatus.unknown
   }
 }

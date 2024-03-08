@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationUserDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary as ApiApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus as ApiApprovedPremisesApplicationStatus
@@ -90,8 +90,8 @@ class ApplicationsTransformer(
         assessmentDecision = transformJpaDecisionToApi(latestAssessment?.decision),
         assessmentId = latestAssessment?.id,
         assessmentDecisionDate = latestAssessment?.submittedAt?.toLocalDate(),
-        personStatusOnSubmission = personTransformer.inOutStatusToPersonInfoApiStatus(
-          InOutStatus.entries.firstOrNull { it.name == jpa.inmateInOutStatusOnSubmission },
+        personStatusOnSubmission = personTransformer.inmateStatusToPersonInfoApiStatus(
+          InmateStatus.entries.firstOrNull { it.name == jpa.inmateInOutStatusOnSubmission },
         ),
         type = "CAS1",
         apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) },
