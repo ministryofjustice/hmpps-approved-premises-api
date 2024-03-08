@@ -24,6 +24,7 @@ import java.util.UUID
 
 class Cas2ApplicationNotesTest(
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val assessmentUrlTemplate: String,
 ) : IntegrationTestBase() {
 
   @SpykBean
@@ -114,11 +115,17 @@ class Cas2ApplicationNotesTest(
             )
           }
 
-        cas2ApplicationEntityFactory.produceAndPersist {
+        val application = cas2ApplicationEntityFactory.produceAndPersist {
           withId(applicationId)
           withCreatedByUser(referrer)
           withApplicationSchema(applicationSchema)
           withSubmittedAt(OffsetDateTime.now())
+        }
+
+        cas2AssessmentEntityFactory.produceAndPersist {
+          withApplication(application)
+          withNacroReferralId("OH123")
+          withAssessorName("Anne Assessor")
         }
 
         Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
@@ -143,6 +150,22 @@ class Cas2ApplicationNotesTest(
           objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
 
         Assertions.assertThat(responseBody.body).isEqualTo("New note content")
+
+        emailAsserter.assertEmailsRequestedCount(1)
+        emailAsserter.assertEmailRequested(
+          toEmailAddress = "assessors@example.com",
+          templateId = "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1",
+          personalisation = mapOf(
+            "nacroReferenceId" to "OH123",
+            "nacroReferenceIdInSubject" to "(OH123)",
+            "dateNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toLocalDate().toCas2UiFormat(),
+            "timeNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toCas2UiFormattedHourOfDay(),
+            "assessorName" to "Anne Assessor",
+            "applicationType" to "Home Detention Curfew (HDC)",
+            "applicationUrl" to assessmentUrlTemplate.replace("#id", application.id.toString()),
+          ),
+          replyToEmailId = "cbe00c2d-387b-4283-9b9c-13c8b7a61444",
+        )
       }
     }
 
@@ -209,6 +232,12 @@ class Cas2ApplicationNotesTest(
             withNomsNumber("123NOMS")
           }
 
+          cas2AssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withNacroReferralId("OH123")
+            withAssessorName("Anne Assessor")
+          }
+
           Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
 
           val rawResponseBody = webTestClient.post()
@@ -241,8 +270,9 @@ class Cas2ApplicationNotesTest(
               "timeNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toCas2UiFormattedHourOfDay(),
               "nomsNumber" to "123NOMS",
               "applicationType" to "Home Detention Curfew (HDC)",
-              "applicationURl" to applicationUrlTemplate.replace("#id", application.id.toString()),
+              "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
             ),
+            replyToEmailId = "cbe00c2d-387b-4283-9b9c-13c8b7a61444",
           )
         }
       }
