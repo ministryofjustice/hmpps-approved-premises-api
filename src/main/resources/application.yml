@@ -236,6 +236,7 @@ url-templates:
     booking: http://localhost:3000/premises/#premisesId/bookings/#bookingId
     cas2:
       application: http://localhost:3000/applications/#id
+      application-overview: http://localhost:3000/applications/#id/overview
       submitted-application-overview: http://localhost:3000/assess/applications/#applicationId/overview
 
 preemptive-cache-key-prefix: ""

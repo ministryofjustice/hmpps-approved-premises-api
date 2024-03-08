@@ -9,7 +9,9 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 val cas1UiExtendedDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("EEEE d MMMM yyyy")
+val cas2UiExtendedDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM y")
 val cas1UiTimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("ha")
+val cas2UiTimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mma")
 
 fun LocalDate.getDaysUntilInclusive(end: LocalDate): List<LocalDate> {
   val result = mutableListOf<LocalDate>()
@@ -87,7 +89,11 @@ fun LocalDate.getNextWorkingDay(bankHolidays: List<LocalDate>): LocalDate {
 
 fun LocalDate.toUiFormat(): String = this.format(cas1UiExtendedDateFormat)
 
+fun LocalDate.toCas2UiFormat(): String = this.format(cas2UiExtendedDateFormat)
+
 fun OffsetDateTime.toUiFormattedHourOfDay(): String = this.format(cas1UiTimeFormat).lowercase()
+
+fun OffsetDateTime.toCas2UiFormattedHourOfDay(): String = this.format(cas2UiTimeFormat).lowercase()
 
 fun earliestDateOf(date1: LocalDate, date2: LocalDate): LocalDate {
   if (date1.isBefore(date2)) return date1

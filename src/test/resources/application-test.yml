@@ -154,6 +154,7 @@ url-templates:
     booking: http://frontend/premises/#premisesId/bookings/#bookingId
     cas2:
       application: http://cas2.frontend/applications/#id
+      application-overview: http://cas2.frontend/applications/#id/overview
       submitted-application-overview: http://cas2.frontend/assess/applications/#applicationId/overview
 
 preemptive-cache-delay-ms: 250

@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2ApplicationNote
@@ -15,10 +16,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
-class Cas2ApplicationNotesTest : IntegrationTestBase() {
+class Cas2ApplicationNotesTest(
+  @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
+) : IntegrationTestBase() {
 
   @SpykBean
   lateinit var realNotesRepository: Cas2ApplicationNoteRepository
@@ -195,11 +201,12 @@ class Cas2ApplicationNotesTest : IntegrationTestBase() {
               )
             }
 
-          cas2ApplicationEntityFactory.produceAndPersist {
+          val application = cas2ApplicationEntityFactory.produceAndPersist {
             withId(applicationId)
             withCreatedByUser(referrer)
             withApplicationSchema(applicationSchema)
             withSubmittedAt(OffsetDateTime.now())
+            withNomsNumber("123NOMS")
           }
 
           Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
@@ -224,6 +231,19 @@ class Cas2ApplicationNotesTest : IntegrationTestBase() {
             objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
 
           Assertions.assertThat(responseBody.body).isEqualTo("New note content")
+
+          emailAsserter.assertEmailsRequestedCount(1)
+          emailAsserter.assertEmailRequested(
+            toEmailAddress = referrer.email!!,
+            templateId = "debe17a2-9f79-4d26-88a0-690dd73e2a5b",
+            personalisation = mapOf(
+              "dateNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toLocalDate().toCas2UiFormat(),
+              "timeNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toCas2UiFormattedHourOfDay(),
+              "nomsNumber" to "123NOMS",
+              "applicationType" to "Home Detention Curfew (HDC)",
+              "applicationURl" to applicationUrlTemplate.replace("#id", application.id.toString()),
+            ),
+          )
         }
       }
     }
