@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.time.LocalDate
@@ -209,6 +210,7 @@ class PersonTransformerTest {
         description = "B-2F-004",
         agencyName = "HMP Bristol",
       ),
+      status = InmateStatus.IN,
     )
 
     val personInfoResult = PersonInfoResult.Success.Full(
@@ -302,6 +304,7 @@ class PersonTransformerTest {
         description = "B-2F-004",
         agencyName = "HMP Bristol",
       ),
+      status = InmateStatus.IN,
     )
 
     val personInfoResult = PersonInfoResult.Success.Full(

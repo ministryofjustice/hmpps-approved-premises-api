@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RoshR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
@@ -332,6 +333,7 @@ class OffenderServiceTest {
         InmateDetail(
           offenderNo = nomsNumber,
           inOutStatus = InOutStatus.IN,
+          status = InmateStatus.IN,
           assignedLivingUnit = AssignedLivingUnit(
             agencyId = "AGY",
             locationId = 89,

@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Assigne
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
@@ -350,6 +351,7 @@ class OffenderServiceTest {
       InmateDetail(
         offenderNo = nomsNumber,
         inOutStatus = InOutStatus.IN,
+        status = InmateStatus.IN,
         assignedLivingUnit = AssignedLivingUnit(
           agencyId = "AGY",
           locationId = 89,
