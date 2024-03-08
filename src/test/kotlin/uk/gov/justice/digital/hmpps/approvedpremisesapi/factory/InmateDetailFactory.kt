@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCa
 class InmateDetailFactory : Factory<InmateDetail> {
   private var offenderNo: Yielded<String> = { randomStringUpperCase(8) }
   private var assignedLivingUnit: Yielded<AssignedLivingUnit?> = { null }
-  private var status: Yielded<InmateStatus> = { InmateStatus.OUT }
+  private var custodyStatus: Yielded<InmateStatus> = { InmateStatus.OUT }
 
   fun withOffenderNo(offenderNo: String) = apply {
     this.offenderNo = { offenderNo }
@@ -20,13 +20,13 @@ class InmateDetailFactory : Factory<InmateDetail> {
     this.assignedLivingUnit = { assignedLivingUnit }
   }
 
-  fun withStatus(status: InmateStatus) = apply {
-    this.status = { status }
+  fun withCustodyStatus(status: InmateStatus) = apply {
+    this.custodyStatus = { status }
   }
 
   override fun produce(): InmateDetail = InmateDetail(
     offenderNo = this.offenderNo(),
     assignedLivingUnit = this.assignedLivingUnit(),
-    status = this.status(),
+    custodyStatus = this.custodyStatus(),
   )
 }

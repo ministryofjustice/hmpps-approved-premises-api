@@ -21,7 +21,7 @@ class PersonTransformer {
       name = "${personInfoResult.offenderDetailSummary.firstName} ${personInfoResult.offenderDetailSummary.surname}",
       dateOfBirth = personInfoResult.offenderDetailSummary.dateOfBirth,
       sex = personInfoResult.offenderDetailSummary.gender,
-      status = inmateStatusToPersonInfoApiStatus(personInfoResult.inmateDetail?.status),
+      status = inmateStatusToPersonInfoApiStatus(personInfoResult.inmateDetail?.custodyStatus),
       nomsNumber = personInfoResult.inmateDetail?.offenderNo,
       ethnicity = personInfoResult.offenderDetailSummary.offenderProfile.ethnicity,
       nationality = personInfoResult.offenderDetailSummary.offenderProfile.nationality,
@@ -30,7 +30,7 @@ class PersonTransformer {
         "Prefer to self-describe" -> personInfoResult.offenderDetailSummary.offenderProfile.selfDescribedGender
         else -> personInfoResult.offenderDetailSummary.offenderProfile.genderIdentity
       },
-      prisonName = inmateStatusToPersonInfoApiStatus(personInfoResult.inmateDetail?.status).takeIf { it == PersonStatus.inCustody }?.let {
+      prisonName = inmateStatusToPersonInfoApiStatus(personInfoResult.inmateDetail?.custodyStatus).takeIf { it == PersonStatus.inCustody }?.let {
         personInfoResult.inmateDetail?.assignedLivingUnit?.agencyName ?: personInfoResult.inmateDetail?.assignedLivingUnit?.agencyId
       },
       isRestricted = (personInfoResult.offenderDetailSummary.currentExclusion || personInfoResult.offenderDetailSummary.currentRestriction),
@@ -78,11 +78,11 @@ class PersonTransformer {
       name = "${probationOffenderResult.probationOffenderDetail.firstName} ${probationOffenderResult.probationOffenderDetail.surname}",
       dateOfBirth = probationOffenderResult.probationOffenderDetail.dateOfBirth!!,
       sex = probationOffenderResult.probationOffenderDetail.gender ?: "Not found",
-      status = inmateStatusToPersonInfoApiStatus(probationOffenderResult.inmateDetail?.status),
+      status = inmateStatusToPersonInfoApiStatus(probationOffenderResult.inmateDetail?.custodyStatus),
       nomsNumber = probationOffenderResult.probationOffenderDetail.otherIds.nomsNumber,
       pncNumber = probationOffenderResult.probationOffenderDetail.otherIds.pncNumber ?: "Not found",
       nationality = probationOffenderResult.probationOffenderDetail.offenderProfile?.nationality ?: "Not found",
-      prisonName = inmateStatusToPersonInfoApiStatus(probationOffenderResult.inmateDetail?.status).takeIf { it == PersonStatus.inCustody }?.let {
+      prisonName = inmateStatusToPersonInfoApiStatus(probationOffenderResult.inmateDetail?.custodyStatus).takeIf { it == PersonStatus.inCustody }?.let {
         probationOffenderResult.inmateDetail?.assignedLivingUnit?.agencyName
           ?: probationOffenderResult.inmateDetail?.assignedLivingUnit?.agencyId
       },

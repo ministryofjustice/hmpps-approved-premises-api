@@ -795,7 +795,7 @@ class ApplicationService(
       arrivalDate = getArrivalDate(submitApplication.arrivalDate)
       sentenceType = submitApplication.sentenceType.toString()
       situation = submitApplication.situation?.toString()
-      inmateInOutStatusOnSubmission = inmateDetails?.status?.name
+      inmateInOutStatusOnSubmission = inmateDetails?.custodyStatus?.name
       apArea = apAreaRepository.findByIdOrNull(apAreaId)
       this.applicantUserDetails = upsertCas1ApplicationUserDetails(this.applicantUserDetails, submitApplication.applicantUserDetails)
       this.caseManagerIsNotApplicant = submitApplication.caseManagerIsNotApplicant
@@ -965,7 +965,7 @@ class ApplicationService(
   }
 
   private fun getPrisonName(personInfo: PersonInfoResult.Success.Full): String? {
-    val prisonName = when (personInfo.inmateDetail?.status) {
+    val prisonName = when (personInfo.inmateDetail?.custodyStatus) {
       InmateStatus.IN,
       InmateStatus.TRN,
       -> {

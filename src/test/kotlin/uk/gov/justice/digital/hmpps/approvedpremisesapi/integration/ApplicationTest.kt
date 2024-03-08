@@ -1855,7 +1855,7 @@ class ApplicationTest : IntegrationTestBase() {
         },
         inmateDetailsConfigBlock = {
           withOffenderNo("NOMS321")
-          withStatus(InmateStatus.IN)
+          withCustodyStatus(InmateStatus.IN)
           withAssignedLivingUnit(
             AssignedLivingUnit(
               agencyId = "BRI",

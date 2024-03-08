@@ -5,7 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 data class InmateDetail(
   val offenderNo: String,
-  val status: InmateStatus,
+  @JsonProperty("status")
+  val custodyStatus: InmateStatus,
   val assignedLivingUnit: AssignedLivingUnit?,
 )
 

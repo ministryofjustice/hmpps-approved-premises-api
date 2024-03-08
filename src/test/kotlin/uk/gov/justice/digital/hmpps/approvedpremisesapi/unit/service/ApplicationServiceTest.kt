@@ -1736,7 +1736,7 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockOffenderService.getInmateDetailByNomsNumber(any(), any()) } returns AuthorisableActionResult.Success(
-        InmateDetailFactory().withStatus(InmateStatus.OUT).produce(),
+        InmateDetailFactory().withCustodyStatus(InmateStatus.OUT).produce(),
       )
 
       every { mockApAreaRepository.findByIdOrNull(any()) } returns null
@@ -2599,7 +2599,7 @@ class ApplicationServiceTest {
         agencyName = it,
       )
     },
-    status = status,
+    custodyStatus = status,
   )
 
   private fun createOffenderDetailsSummary(crn: String) = OffenderDetailSummary(

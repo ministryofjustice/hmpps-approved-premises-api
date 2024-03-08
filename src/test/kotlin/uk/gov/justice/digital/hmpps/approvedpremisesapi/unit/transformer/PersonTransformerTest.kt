@@ -208,7 +208,7 @@ class PersonTransformerTest {
         description = "B-2F-004",
         agencyName = "HMP Bristol",
       ),
-      status = InmateStatus.IN,
+      custodyStatus = InmateStatus.IN,
     )
 
     val personInfoResult = PersonInfoResult.Success.Full(
@@ -301,7 +301,7 @@ class PersonTransformerTest {
         description = "B-2F-004",
         agencyName = "HMP Bristol",
       ),
-      status = InmateStatus.IN,
+      custodyStatus = InmateStatus.IN,
     )
 
     val personInfoResult = PersonInfoResult.Success.Full(
@@ -510,7 +510,7 @@ class PersonTransformerTest {
       val crn = "CRN"
       val pncNumber = "PNC"
       val inmateDetail = InmateDetailFactory()
-        .withStatus(status = InmateStatus.IN)
+        .withCustodyStatus(InmateStatus.IN)
         .withAssignedLivingUnit(assignedLivingUnit = AssignedLivingUnit(agencyId = "1", locationId = 1, description = "description", agencyName = "HMPS Sheffield"))
         .produce()
       val probationOffenderDetail = ProbationOffenderDetailFactory()
@@ -546,7 +546,7 @@ class PersonTransformerTest {
       val nomsNumber = "NOMS"
       val crn = "CRN"
       val inmateDetail = InmateDetailFactory()
-        .withStatus(status = InmateStatus.IN)
+        .withCustodyStatus(InmateStatus.IN)
         .produce()
       val probationOffenderDetail = ProbationOffenderDetailFactory()
         .withGender(null)

@@ -331,7 +331,7 @@ class OffenderServiceTest {
         HttpStatus.OK,
         InmateDetail(
           offenderNo = nomsNumber,
-          status = InmateStatus.IN,
+          custodyStatus = InmateStatus.IN,
           assignedLivingUnit = AssignedLivingUnit(
             agencyId = "AGY",
             locationId = 89,
@@ -347,7 +347,7 @@ class OffenderServiceTest {
       result as AuthorisableActionResult.Success
       assertThat(result.entity).isNotNull
       assertThat(result.entity!!.offenderNo).isEqualTo(nomsNumber)
-      assertThat(result.entity!!.status).isEqualTo(InmateStatus.IN)
+      assertThat(result.entity!!.custodyStatus).isEqualTo(InmateStatus.IN)
       assertThat(result.entity!!.assignedLivingUnit).isEqualTo(
         AssignedLivingUnit(
           agencyId = "AGY",
