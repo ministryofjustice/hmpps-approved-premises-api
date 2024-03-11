@@ -66,7 +66,7 @@ const val bedSummaryQuery =
   query =
   """
     $bedSummaryQuery
-    where r.premises_id = cast(?1 as UUID)
+    where r.premises_id = cast(?1 as UUID) and (b.end_date is null or b.end_date > CURRENT_DATE)
   """,
   resultSetMapping = "DomainBedSummaryMapping",
 )
