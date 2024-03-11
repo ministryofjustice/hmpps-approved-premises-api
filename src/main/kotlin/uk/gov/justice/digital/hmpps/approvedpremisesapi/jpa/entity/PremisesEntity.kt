@@ -26,18 +26,24 @@ import javax.persistence.Table
 
 @Repository
 interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
+  companion object {
+    private const val BED_COUNT_QUERY = """
+     (
+        SELECT CAST(COUNT(b.id) as int) 
+        FROM BedEntity b
+          JOIN b.room r
+        WHERE 
+            r.premises = p 
+            AND b.endDate IS NULL OR b.endDate >= CURRENT_DATE
+    )
+    """
+  }
 
-  @Query("SELECT p as premises, (SELECT CAST(COUNT(b) as int) FROM p.rooms r JOIN r.beds b WHERE r.premises = p GROUP BY p) as roomCount FROM PremisesEntity p")
+  @Query("SELECT p as premises, $BED_COUNT_QUERY as roomCount  FROM PremisesEntity p")
   fun findAllWithRoomCount(): List<PremisesWithRoomCount>
 
   @Query(
-    """
-        SELECT 
-          p as premises, 
-          (SELECT CAST(COUNT(b) as int) FROM p.rooms r JOIN r.beds b WHERE r.premises = p GROUP BY p) as roomCount 
-        FROM PremisesEntity p
-        WHERE p.probationRegion.id = :probationRegionId
-    """,
+    "SELECT p as premises, $BED_COUNT_QUERY as roomCount FROM PremisesEntity p WHERE p.probationRegion.id = :probationRegionId",
   )
   fun findAllByProbationRegion(probationRegionId: UUID): List<PremisesWithRoomCount>
 
@@ -69,14 +75,14 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
             p.addressLine2, 
             p.postcode, 
             p.status, 
-            CAST(COUNT(b) as int), 
+            CAST(COUNT(b) as int),
             p.apCode, 
             region.name,
             apArea.name
         ) 
         FROM ApprovedPremisesEntity p 
         LEFT JOIN p.rooms r 
-        LEFT JOIN r.beds b 
+        LEFT JOIN r.beds b on (b.endDate IS NULL OR b.endDate >= CURRENT_DATE) 
         LEFT JOIN p.probationRegion region
         LEFT JOIN region.apArea apArea
         WHERE(cast(:probationRegionId as text) IS NULL OR region.id = :probationRegionId)
@@ -86,14 +92,14 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   )
   fun findAllApprovedPremisesSummary(probationRegionId: UUID?, apAreaId: UUID?): List<ApprovedPremisesSummary>
 
-  @Query("SELECT p as premises, (SELECT CAST(COUNT(b) as int) FROM p.rooms r JOIN r.beds b WHERE r.premises = p GROUP BY p) as roomCount FROM PremisesEntity p WHERE TYPE(p) = :type")
+  @Query("SELECT p as premises, $BED_COUNT_QUERY as roomCount FROM PremisesEntity p WHERE TYPE(p) = :type")
   fun <T : PremisesEntity> findAllByType(type: Class<T>): List<PremisesWithRoomCount>
 
   @Query(
     """
         SELECT 
           p as premises, 
-          (SELECT CAST(COUNT(b) as int) FROM p.rooms r LEFT JOIN r.beds b WHERE r.premises = p GROUP BY p) as roomCount 
+          $BED_COUNT_QUERY as roomCount 
         FROM PremisesEntity p 
         WHERE p.probationRegion.id = :probationRegionId AND TYPE(p) = :type
     """,
@@ -109,7 +115,7 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   @Query("SELECT p FROM PremisesEntity p WHERE ap_code = :apCode AND TYPE(p) = :type")
   fun <T : PremisesEntity> findByApCode(apCode: String, type: Class<T>): PremisesEntity?
 
-  @Query("SELECT CAST(COUNT(b) as int) FROM PremisesEntity p JOIN p.rooms r JOIN r.beds b WHERE r.premises = :premises")
+  @Query("SELECT CAST(COUNT(b) as int) FROM PremisesEntity p JOIN p.rooms r JOIN r.beds b on (b.endDate IS NULL OR b.endDate >= CURRENT_DATE) WHERE r.premises = :premises")
   fun getBedCount(premises: PremisesEntity): Int
 
   @Query(
