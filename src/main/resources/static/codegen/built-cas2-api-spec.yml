@@ -4320,6 +4320,8 @@ components:
       enum:
         - isPIPE
         - isESAP
+        - isMHAPStJosephs
+        - isMHAPElliottHouse
         - isSemiSpecialistMentalHealth
         - isRecoveryFocussed
         - hasBrailleSignage
@@ -4351,6 +4353,8 @@ components:
         - pipe
         - esap
         - rfap
+        - mhapStJosephs
+        - mhapElliottHouse
     BedSearchParameters:
       type: object
       properties:
