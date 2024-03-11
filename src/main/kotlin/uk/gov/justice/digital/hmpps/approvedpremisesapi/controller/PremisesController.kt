@@ -882,11 +882,12 @@ class PremisesController(
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
     }
 
-    if (updateRoom.name != null && premises is TemporaryAccommodationPremisesEntity) {
-      validationResult = when (val renameRoomResult = roomService.renameRoom(premises, roomId, updateRoom.name)) {
-        is AuthorisableActionResult.NotFound -> throw NotFoundProblem(roomId, "Room")
-        is AuthorisableActionResult.Success -> renameRoomResult.entity
-        is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+    if (premises is TemporaryAccommodationPremisesEntity) {
+      if (updateRoom.name != null) {
+        validationResult = extractEntityFromAuthorisableActionResult(roomService.renameRoom(premises, roomId, updateRoom.name))
+      }
+      if (updateRoom.bedEndDate != null) {
+        validationResult = extractEntityFromAuthorisableActionResult(roomService.updateBedEndDate(premises, roomId, updateRoom.bedEndDate))
       }
     }
 

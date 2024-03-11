@@ -6,9 +6,12 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BedEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoomEntityFactory
@@ -24,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RoomService
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class RoomServiceTest {
@@ -245,6 +249,328 @@ class RoomServiceTest {
             it.name == "renamed-room"
         },
       )
+    }
+  }
+
+  @Test
+  fun `updateBedEndDate returns Success containing updated bed end-date`() {
+    val bedEndDate = LocalDate.now()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory().withRoom(room).produce()
+    room.beds.add(bed)
+
+    every { roomRepository.findByIdOrNull(any()) } returns room
+    every { bookingRepository.findActiveOverlappingBookingByBed(any(), any()) } returns emptyList()
+    every { bedRepository.save(any()) } returnsArgument 0
+
+    val result = roomService.updateBedEndDate(premises, room.id, bedEndDate)
+
+    assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
+    val resultEntity = result.entity as ValidatableActionResult.Success
+    assertThat(resultEntity.entity).matches {
+      it.id == room.id &&
+        it.beds.first().endDate == bedEndDate
+    }
+
+    verify(exactly = 1) {
+      roomRepository.findByIdOrNull(any())
+    }
+
+    verify(exactly = 1) {
+      bookingRepository.findActiveOverlappingBookingByBed(any(), any())
+    }
+
+    verify(exactly = 1) {
+      bedRepository.save(
+        match {
+          it.endDate == bedEndDate
+        },
+      )
+    }
+  }
+
+  @Test
+  fun `updateBedEndDate returns NotFound error when given rooms is not exists`() {
+    val bedEndDate = LocalDate.now()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory().withRoom(room).produce()
+    room.beds.add(bed)
+
+    every { roomRepository.findByIdOrNull(any()) } returns null
+
+    val result = roomService.updateBedEndDate(premises, room.id, bedEndDate)
+
+    assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
+    verify(exactly = 1) {
+      roomRepository.findByIdOrNull(any())
+    }
+    verify(exactly = 0) {
+      bedRepository.save(any())
+    }
+  }
+
+  @Test
+  fun `updateBedEndDate returns NotFound error when given rooms is not exists in given premises`() {
+    val bedEndDate = LocalDate.now()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val anotherPremises = TemporaryAccommodationPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(anotherPremises)
+      .produce()
+
+    val bed = BedEntityFactory().withRoom(room).produce()
+    room.beds.add(bed)
+
+    every { roomRepository.findByIdOrNull(any()) } returns room
+
+    val result = roomService.updateBedEndDate(premises, room.id, bedEndDate)
+
+    assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
+    verify(exactly = 1) {
+      roomRepository.findByIdOrNull(any())
+    }
+    verify(exactly = 0) {
+      bedRepository.save(any())
+    }
+  }
+
+  @Test
+  fun `updateBedEndDate returns NotFound error when given rooms don't have bed`() {
+    val bedEndDate = LocalDate.now()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    every { roomRepository.findByIdOrNull(any()) } returns room
+
+    val result = roomService.updateBedEndDate(premises, room.id, bedEndDate)
+
+    assertThat(result).isInstanceOf(AuthorisableActionResult.NotFound::class.java)
+    verify(exactly = 1) {
+      roomRepository.findByIdOrNull(any())
+    }
+    verify(exactly = 0) {
+      bedRepository.save(any())
+    }
+  }
+
+  @Test
+  fun `updateBedEndDate returns bedEndDateCantBeModified error when given rooms has already got end-date`() {
+    val bedEndDate = LocalDate.now()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .withEndDate { LocalDate.now() }
+      .produce()
+    room.beds.add(bed)
+
+    every { roomRepository.findByIdOrNull(any()) } returns room
+    every { bookingRepository.findActiveOverlappingBookingByBed(any(), any()) } returns emptyList()
+
+    val result = roomService.updateBedEndDate(premises, room.id, bedEndDate)
+
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    val resultEntity = result.entity as ValidatableActionResult.FieldValidationError
+    assertThat(resultEntity.validationMessages).contains(
+      entry("$.roomId", "bedEndDateCantBeModified"),
+    )
+
+    verify(exactly = 1) {
+      roomRepository.findByIdOrNull(any())
+    }
+    verify(exactly = 1) {
+      bookingRepository.findActiveOverlappingBookingByBed(any(), any())
+    }
+    verify(exactly = 0) {
+      bedRepository.save(any())
+    }
+  }
+
+  @Test
+  fun `updateBedEndDate returns afterBedspaceEndDate error when given rooms creation date is before end-date`() {
+    val bedEndDate = LocalDate.now()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .withCreatedAt { OffsetDateTime.now().plusDays(2) }
+      .produce()
+    room.beds.add(bed)
+
+    every { roomRepository.findByIdOrNull(any()) } returns room
+    every { bookingRepository.findActiveOverlappingBookingByBed(any(), any()) } returns emptyList()
+
+    val result = roomService.updateBedEndDate(premises, room.id, bedEndDate)
+
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
+    val resultEntity = result.entity as ValidatableActionResult.FieldValidationError
+    assertThat(resultEntity.validationMessages).contains(
+      entry("${bed.createdAt.toLocalDate()}", "afterBedspaceEndDate"),
+    )
+
+    verify(exactly = 1) {
+      roomRepository.findByIdOrNull(any())
+    }
+    verify(exactly = 1) {
+      bookingRepository.findActiveOverlappingBookingByBed(any(), any())
+    }
+    verify(exactly = 0) {
+      bedRepository.save(any())
+    }
+  }
+
+  @Test
+  fun `updateBedEndDate throws Runtime exception when save bedEntity failed with DB exception`() {
+    val bedEndDate = LocalDate.now()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+    room.beds.add(bed)
+
+    every { roomRepository.findByIdOrNull(any()) } returns room
+    every { bookingRepository.findActiveOverlappingBookingByBed(any(), any()) } returns emptyList()
+    every { bedRepository.save(any()) } throws RuntimeException("DB Exception")
+
+    assertThrows<RuntimeException> { roomService.updateBedEndDate(premises, room.id, bedEndDate) }
+
+    verify(exactly = 1) {
+      roomRepository.findByIdOrNull(any())
+    }
+    verify(exactly = 1) {
+      bookingRepository.findActiveOverlappingBookingByBed(any(), any())
+    }
+    verify(exactly = 1) {
+      bedRepository.save(any())
+    }
+  }
+
+  @Test
+  fun `updateBedEndDate returns bookingExistsForBedEndDate error when given rooms has got overlapping bookings`() {
+    val bedEndDate = LocalDate.now()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val booking = BookingEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .produce()
+    room.beds.add(bed)
+
+    every { roomRepository.findByIdOrNull(any()) } returns room
+    every { bookingRepository.findActiveOverlappingBookingByBed(any(), any()) } returns listOf(booking)
+
+    val result = roomService.updateBedEndDate(premises, room.id, bedEndDate)
+
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity is ValidatableActionResult.ConflictError).isTrue
+    val validationError = result.entity as ValidatableActionResult.ConflictError
+    assertThat(validationError.message).isEqualTo("Conflict booking exists for the room with end date $bedEndDate")
+    verify(exactly = 1) {
+      roomRepository.findByIdOrNull(any())
+    }
+    verify(exactly = 1) {
+      bookingRepository.findActiveOverlappingBookingByBed(any(), any())
+    }
+    verify(exactly = 0) {
+      bedRepository.save(any())
     }
   }
 }
