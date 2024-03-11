@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PropertyStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import java.time.LocalDate
 import java.util.UUID
 class PremisesSummaryTest : IntegrationTestBase() {
   @Test
@@ -108,6 +109,18 @@ class PremisesSummaryTest : IntegrationTestBase() {
         withYieldedRoom { room }
       }
 
+      // Removed beds
+      bedEntityFactory.produceAndPersistMultiple(2) {
+        withYieldedRoom { room }
+        withEndDate { LocalDate.now().minusDays(5) }
+      }
+
+      // Bed scheduled for removal
+      bedEntityFactory.produceAndPersist {
+        withYieldedRoom { room }
+        withEndDate { LocalDate.now().plusDays(5) }
+      }
+
       webTestClient.get()
         .uri("/premises/summary")
         .header("Authorization", "Bearer $jwt")
@@ -122,7 +135,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
         .jsonPath("$[0].status").isEqualTo("active")
         .jsonPath("$[0].apCode").isEqualTo("APCODE")
-        .jsonPath("$[0].bedCount").isEqualTo(5)
+        .jsonPath("$[0].bedCount").isEqualTo(6)
         .jsonPath("$[0].probationRegion").isEqualTo(probationRegion.name)
         .jsonPath("$[0].apArea").isEqualTo(apArea.name)
     }

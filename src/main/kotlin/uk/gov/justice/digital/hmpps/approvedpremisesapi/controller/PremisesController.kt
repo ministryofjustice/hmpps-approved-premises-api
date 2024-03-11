@@ -220,7 +220,7 @@ class PremisesController(
     return ResponseEntity.ok(
       premisesWithRoomCounts.map {
         val premises = it.getPremises()
-        val totalBeds = it.getRoomCount()
+        val totalBeds = it.getBedCount()
         val availableBedsForToday = premisesService.getAvailabilityForRange(premises, LocalDate.now(), LocalDate.now().plusDays(1))
           .values.first().getFreeCapacity(totalBeds)
 

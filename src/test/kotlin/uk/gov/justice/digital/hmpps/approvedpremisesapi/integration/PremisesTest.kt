@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberT
 import java.time.LocalDate
 import java.util.UUID
 import java.util.stream.Stream
+import kotlin.random.Random
 
 class PremisesTest : IntegrationTestBase() {
   @Autowired
@@ -1176,7 +1177,10 @@ class PremisesTest : IntegrationTestBase() {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
         withService("CAS3")
-      }.onEach { addRoomsAndBeds(it, roomCount = 4, bedsPerRoom = 5) }
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 4, bedsPerRoom = 5)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
 
       val premises = cas1Premises + cas3Premises
 
@@ -1206,7 +1210,10 @@ class PremisesTest : IntegrationTestBase() {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
         withService("CAS1")
-      }.onEach { addRoomsAndBeds(it, roomCount = 5, bedsPerRoom = 4) }
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 5, bedsPerRoom = 4)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
 
       // Add some extra premises for the other service that shouldn't be returned
       temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
@@ -1215,7 +1222,10 @@ class PremisesTest : IntegrationTestBase() {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
         withService("CAS3")
-      }.onEach { addRoomsAndBeds(it, roomCount = 6, bedsPerRoom = 4) }
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 6, bedsPerRoom = 4)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
 
       val expectedJson = objectMapper.writeValueAsString(
         premises.map {
@@ -1281,13 +1291,19 @@ class PremisesTest : IntegrationTestBase() {
             withProbationRegion(region)
           }
         }
-      }.onEach { addRoomsAndBeds(it, roomCount = 2, bedsPerRoom = 10) }
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 2, bedsPerRoom = 10)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
 
       val cas1Premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion { region }
         withService("CAS1")
-      }.onEach { addRoomsAndBeds(it, roomCount = 2, 10) }
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 2, 10)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
 
       // Add some extra premises in both services for other regions that shouldn't be returned
       val otherRegion = probationRegionEntityFactory.produceAndPersist {
@@ -1305,13 +1321,19 @@ class PremisesTest : IntegrationTestBase() {
             withProbationRegion(otherRegion)
           }
         }
-      }.onEach { addRoomsAndBeds(it, roomCount = 2, 10) }
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 2, 10)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
 
       approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withYieldedProbationRegion { otherRegion }
         withService("CAS1")
-      }.onEach { addRoomsAndBeds(it, roomCount = 1, 20) }
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 1, 20)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
 
       val expectedPremises = cas1Premises + cas3Premises
 
@@ -1345,14 +1367,20 @@ class PremisesTest : IntegrationTestBase() {
             withProbationRegion(user.probationRegion)
           }
         }
-      }.onEach { addRoomsAndBeds(it, roomCount = 20, 1) }
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 20, 1)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
 
       // Add some extra premises in the same region but in Approved Premises that shouldn't be returned
       approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withProbationRegion(user.probationRegion)
         withService("CAS1")
-      }.onEach { addRoomsAndBeds(it, roomCount = 5, 4) }
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 5, 4)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
 
       // Add some extra premises in both services for other regions that shouldn't be returned
       val otherProbationRegion = probationRegionEntityFactory.produceAndPersist {
@@ -1370,13 +1398,19 @@ class PremisesTest : IntegrationTestBase() {
             withProbationRegion(otherProbationRegion)
           }
         }
-      }.onEach { addRoomsAndBeds(it, roomCount = 4, 5) }
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 4, 5)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
 
       approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
         withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
         withProbationRegion(otherProbationRegion)
         withService("CAS1")
-      }.onEach { addRoomsAndBeds(it, roomCount = 4, 5) }
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 4, 5)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
 
       val expectedJson = objectMapper.writeValueAsString(
         premises.map {
@@ -1405,7 +1439,10 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-      }.onEach { addRoomsAndBeds(it, roomCount = 4, 5) }
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 4, 5)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
 
       val premisesToGet = premises[2]
       val expectedJson = objectMapper.writeValueAsString(premisesTransformer.transformJpaToApi(premises[2], 20, 20))
@@ -1429,7 +1466,10 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-      }.onEach { addRoomsAndBeds(it, roomCount = 4, 5) }
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 4, 5)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
 
       val keyWorker = ContextStaffMemberFactory().produce()
       premises.forEach {
@@ -1543,6 +1583,7 @@ class PremisesTest : IntegrationTestBase() {
       }
 
       val rooms = addRoomsAndBeds(premises, roomCount = 4, 5)
+      addRoomsAndBeds(premises, roomCount = 1, bedsPerRoom = 1, isActive = false)
 
       val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
         withNomsNumber("26")
@@ -1676,6 +1717,7 @@ class PremisesTest : IntegrationTestBase() {
 
       val totalBeds = 20
       val rooms = addRoomsAndBeds(premises, roomCount = 4, 5)
+      addRoomsAndBeds(premises, roomCount = 1, bedsPerRoom = 1, isActive = false)
 
       val startDate = LocalDate.now()
 
@@ -2123,7 +2165,10 @@ class PremisesTest : IntegrationTestBase() {
         withYieldedProbationRegion {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-      }.also { addRoomsAndBeds(it, roomCount = 2, bedsPerRoom = 5) }
+      }.also {
+        addRoomsAndBeds(it, roomCount = 2, bedsPerRoom = 5)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
 
       webTestClient.get()
         .uri("/premises/${premises.id}")
@@ -3637,12 +3682,15 @@ class PremisesTest : IntegrationTestBase() {
     )
   }
 
-  fun addRoomsAndBeds(premises: PremisesEntity, roomCount: Int, bedsPerRoom: Int): List<RoomEntity> {
+  fun addRoomsAndBeds(premises: PremisesEntity, roomCount: Int, bedsPerRoom: Int, isActive: Boolean = true): List<RoomEntity> {
     return roomEntityFactory.produceAndPersistMultiple(roomCount) {
       withYieldedPremises { premises }
     }.onEach {
       bedEntityFactory.produceAndPersistMultiple(bedsPerRoom) {
         withYieldedRoom { it }
+        if (!isActive) {
+          withEndDate { LocalDate.now().minusDays(Random.nextLong(1, 10)) }
+        }
       }
     }.map {
       roomTestRepository.getReferenceById(it.id)
