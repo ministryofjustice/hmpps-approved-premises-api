@@ -21,11 +21,14 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         cast(assessment.id as TEXT) AS id,
         assessment.created_at AS created_at,
         assessment.due_at AS due_at,
-        'ASSESSMENT' AS type
+        'ASSESSMENT' AS type,
+        application.name as person,
+        u.name as allocated_to
       FROM
         assessments assessment
         INNER JOIN approved_premises_applications application ON assessment.application_id = application.id
         LEFT JOIN ap_areas area ON area.id = application.ap_area_id
+        LEFT JOIN users u ON u.id = assessment.allocated_to_user_id
       WHERE
         'ASSESSMENT' in :taskTypes AND
         assessment.is_withdrawn IS NOT TRUE
@@ -51,11 +54,14 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         cast(placement_application.id as TEXT) AS id,
         placement_application.created_at AS created_at,
         placement_application.due_at AS due_at,
-        'PLACEMENT_APPLICATION' AS type
+        'PLACEMENT_APPLICATION' AS type,
+        application.name as person,
+        u.name as allocated_to
       from
         placement_applications placement_application
         INNER JOIN approved_premises_applications application ON placement_application.application_id = application.id
         LEFT JOIN ap_areas area ON area.id = application.ap_area_id
+        LEFT JOIN users u ON u.id = placement_application.allocated_to_user_id
       WHERE
         'PLACEMENT_APPLICATION' in :taskTypes AND
         placement_application.submitted_at IS NOT NULL
@@ -81,12 +87,15 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         cast(placement_request.id as TEXT) AS id,
         placement_request.created_at AS created_at,
         placement_request.due_at AS due_at,
-        'PLACEMENT_REQUEST' AS type
+        'PLACEMENT_REQUEST' AS type,
+        application.name as person,
+        u.name as allocated_to
       FROM
         placement_requests placement_request
         INNER JOIN approved_premises_applications application ON placement_request.application_id = application.id
         LEFT JOIN booking_not_mades booking_not_made ON booking_not_made.placement_request_id = placement_request.id
         LEFT JOIN ap_areas area ON area.id = application.ap_area_id
+        LEFT JOIN users u ON u.id = placement_request.allocated_to_user_id
       WHERE
         'PLACEMENT_REQUEST' IN :taskTypes AND
         placement_request.booking_id IS NULL
@@ -177,6 +186,8 @@ data class Task(
   val createdAt: LocalDateTime,
   @Enumerated(EnumType.STRING)
   val type: TaskEntityType,
+  val person: String,
+  val allocatedTo: String?,
 )
 
 enum class TaskEntityType {

@@ -26,6 +26,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   isWithdrawn: Boolean = false,
   apArea: ApAreaEntity? = null,
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+  name: String? = null,
 ): Pair<AssessmentEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -44,6 +45,9 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     withReleaseType("licence")
     withIsWithdrawn(isWithdrawn)
     withApArea(apArea)
+    if (name !== null) {
+      withName(name)
+    }
   }
 
   val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
@@ -81,6 +85,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   data: String? = "{ \"some\": \"data\"}",
   decision: AssessmentDecision? = null,
   submittedAt: OffsetDateTime? = null,
+  dueAt: OffsetDateTime? = null,
   block: (assessment: AssessmentEntity, application: ApprovedPremisesApplicationEntity) -> Unit,
 ) {
   val (assessment, application) = `Given an Assessment for Approved Premises`(
@@ -91,6 +96,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     data,
     decision,
     submittedAt,
+    dueAt,
   )
 
   block(assessment, application)

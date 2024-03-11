@@ -106,6 +106,8 @@ class TaskService(
         when (pageCriteria.sortBy) {
           TaskSortField.createdAt -> "created_at"
           TaskSortField.dueAt -> "due_at"
+          TaskSortField.allocatedTo -> "allocated_to"
+          TaskSortField.person -> "person"
         },
       ),
     )

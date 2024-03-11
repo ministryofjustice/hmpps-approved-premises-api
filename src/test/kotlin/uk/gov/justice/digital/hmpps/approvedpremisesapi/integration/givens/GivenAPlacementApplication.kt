@@ -25,6 +25,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
   placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
   apArea: ApAreaEntity? = null,
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+  name: String? = null,
 ): PlacementApplicationEntity {
   val (_, application) = `Given an Assessment for Approved Premises`(
     decision = assessmentDecision,
@@ -45,6 +46,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
       }
     },
     apArea = apArea,
+    name = name,
   )
 
   return placementApplicationFactory.produceAndPersist {

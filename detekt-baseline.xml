@@ -32,6 +32,9 @@
     <ID>TooManyFunctions:Dates.kt$uk.gov.justice.digital.hmpps.approvedpremisesapi.util.Dates.kt</ID>
     <ID>MaxLineLength:AssessmentServiceTest.kt$AssessmentServiceTest$fun</ID>
     <ID>UnusedPrivateProperty:MigrationJobService.kt$MigrationJobService$@Value("\${migration-job.throttle-enabled}") private val throttle: Boolean</ID>
+    <ID>CyclomaticComplexMethod:TasksTest.kt$TasksTest.GetAllReallocatableTest$@ParameterizedTest @CsvSource(value = ["createdAt,asc", "createdAt,desc", "dueAt,asc", "dueAt,desc", "person,asc", "person,desc", "allocatedTo,asc", "allocatedTo,desc"]) fun `Get all reallocatable tasks returns 200 when no type retains original sort order`(sortBy: String, sortDirection: String)</ID>
+    <ID>ThrowsCount:TasksTest.kt$TasksTest.GetAllReallocatableTest$@ParameterizedTest @CsvSource(value = ["createdAt,asc", "createdAt,desc", "dueAt,asc", "dueAt,desc", "person,asc", "person,desc", "allocatedTo,asc", "allocatedTo,desc"]) fun `Get all reallocatable tasks returns 200 when no type retains original sort order`(sortBy: String, sortDirection: String)</ID>
+    <ID>TooGenericExceptionThrown:TasksTest.kt$TasksTest.GetAllReallocatableTest$throw RuntimeException("Unexpected sortField $sortBy")</ID>
   </ManuallySuppressedIssues>
   <CurrentIssues>
     <ID>ComplexCondition:BookingService.kt$BookingService$booking.service == ServiceName.approvedPremises.value &amp;&amp; booking.application != null &amp;&amp; user != null &amp;&amp; !arrivedAndDepartedDomainEventsDisabled</ID>
