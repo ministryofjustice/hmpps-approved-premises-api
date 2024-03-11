@@ -39,13 +39,13 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
     """
   }
 
-  @Query("SELECT p as premises, $BED_COUNT_QUERY as roomCount  FROM PremisesEntity p")
-  fun findAllWithRoomCount(): List<PremisesWithRoomCount>
+  @Query("SELECT p as premises, $BED_COUNT_QUERY as bedCount FROM PremisesEntity p")
+  fun findAllWithBedCount(): List<PremisesWithBedCount>
 
   @Query(
-    "SELECT p as premises, $BED_COUNT_QUERY as roomCount FROM PremisesEntity p WHERE p.probationRegion.id = :probationRegionId",
+    "SELECT p as premises, $BED_COUNT_QUERY as bedCount FROM PremisesEntity p WHERE p.probationRegion.id = :probationRegionId",
   )
-  fun findAllByProbationRegion(probationRegionId: UUID): List<PremisesWithRoomCount>
+  fun findAllByProbationRegion(probationRegionId: UUID): List<PremisesWithBedCount>
 
   @Query(
     """
@@ -92,19 +92,19 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
   )
   fun findAllApprovedPremisesSummary(probationRegionId: UUID?, apAreaId: UUID?): List<ApprovedPremisesSummary>
 
-  @Query("SELECT p as premises, $BED_COUNT_QUERY as roomCount FROM PremisesEntity p WHERE TYPE(p) = :type")
-  fun <T : PremisesEntity> findAllByType(type: Class<T>): List<PremisesWithRoomCount>
+  @Query("SELECT p as premises, $BED_COUNT_QUERY as bedCount FROM PremisesEntity p WHERE TYPE(p) = :type")
+  fun <T : PremisesEntity> findAllByType(type: Class<T>): List<PremisesWithBedCount>
 
   @Query(
     """
         SELECT 
           p as premises, 
-          $BED_COUNT_QUERY as roomCount 
+          $BED_COUNT_QUERY as bedCount 
         FROM PremisesEntity p 
         WHERE p.probationRegion.id = :probationRegionId AND TYPE(p) = :type
     """,
   )
-  fun <T : PremisesEntity> findAllByProbationRegionAndType(probationRegionId: UUID, type: Class<T>): List<PremisesWithRoomCount>
+  fun <T : PremisesEntity> findAllByProbationRegionAndType(probationRegionId: UUID, type: Class<T>): List<PremisesWithBedCount>
 
   @Query("SELECT COUNT(p) = 0 FROM PremisesEntity p WHERE name = :name AND TYPE(p) = :type")
   fun <T : PremisesEntity> nameIsUniqueForType(name: String, type: Class<T>): Boolean
@@ -324,7 +324,7 @@ interface BookingSummary {
   fun getStatus(): BookingStatus
 }
 
-interface PremisesWithRoomCount {
+interface PremisesWithBedCount {
   fun getPremises(): PremisesEntity
-  fun getRoomCount(): Int
+  fun getBedCount(): Int
 }

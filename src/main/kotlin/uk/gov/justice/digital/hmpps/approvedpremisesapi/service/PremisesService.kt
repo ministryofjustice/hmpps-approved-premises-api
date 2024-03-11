@@ -19,7 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesWithRoomCount
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesWithBedCount
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
@@ -57,7 +57,7 @@ class PremisesService(
     ServiceName.temporaryAccommodation to TemporaryAccommodationPremisesEntity::class.java,
   )
 
-  fun getAllPremises(): List<PremisesWithRoomCount> = premisesRepository.findAllWithRoomCount()
+  fun getAllPremises(): List<PremisesWithBedCount> = premisesRepository.findAllWithBedCount()
 
   fun getAllTemporaryAccommodationPremisesSummaries(regionId: UUID): List<TemporaryAccommodationPremisesSummary> {
     return premisesRepository.findAllTemporaryAccommodationSummary(regionId)
@@ -67,16 +67,16 @@ class PremisesService(
     return premisesRepository.findAllApprovedPremisesSummary(probationRegionId, apAreaId)
   }
 
-  fun getAllPremisesInRegion(probationRegionId: UUID): List<PremisesWithRoomCount> = premisesRepository.findAllByProbationRegion(probationRegionId)
+  fun getAllPremisesInRegion(probationRegionId: UUID): List<PremisesWithBedCount> = premisesRepository.findAllByProbationRegion(probationRegionId)
 
-  fun getAllPremisesForService(service: ServiceName): List<PremisesWithRoomCount> = serviceNameToEntityType[service]?.let {
+  fun getAllPremisesForService(service: ServiceName): List<PremisesWithBedCount> = serviceNameToEntityType[service]?.let {
     premisesRepository.findAllByType(it)
   } ?: listOf()
 
   fun getAllPremisesInRegionForService(
     probationRegionId: UUID,
     service: ServiceName,
-  ): List<PremisesWithRoomCount> = serviceNameToEntityType[service]?.let {
+  ): List<PremisesWithBedCount> = serviceNameToEntityType[service]?.let {
     premisesRepository.findAllByProbationRegionAndType(probationRegionId, it)
   } ?: listOf()
 
