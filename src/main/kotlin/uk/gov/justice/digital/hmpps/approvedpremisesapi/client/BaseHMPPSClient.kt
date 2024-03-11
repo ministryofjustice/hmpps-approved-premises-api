@@ -4,11 +4,16 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import org.springframework.core.io.buffer.DataBuffer
+import org.springframework.core.io.buffer.DataBufferUtils
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
 import java.util.concurrent.atomic.AtomicInteger
 
 abstract class BaseHMPPSClient(
@@ -55,23 +60,13 @@ abstract class BaseHMPPSClient(
         }
       }
 
-      val request = webClient.method(method)
-        .uri(requestBuilder.path ?: "")
-        .headers { it.addAll(requestBuilder.headers) }
-
-      if (requestBuilder.body != null) {
-        request.bodyValue(requestBuilder.body!!)
-      }
-
-      val result = request.retrieve().toEntity(String::class.java).block()!!
-
-      val deserialized = objectMapper.readValue(result.body, typeReference)
+      val (statusCode, body) = performRequest(typeReference, method, requestBuilder)
 
       if (cacheConfig != null && requestBuilder.isPreemptiveCall) {
-        webClientCache.cacheSuccessfulWebClientResponse(requestBuilder, cacheConfig, result)
+        webClientCache.cacheSuccessfulWebClientResponse(requestBuilder, cacheConfig, statusCode, body)
       }
 
-      return ClientResult.Success(result.statusCode, deserialized, false)
+      return ClientResult.Success(statusCode, body, false)
     } catch (exception: WebClientResponseException) {
       if (cacheConfig != null && requestBuilder.isPreemptiveCall) {
         webClientCache.cacheFailedWebClientResponse(requestBuilder, cacheConfig, exception, attempt.get(), method)
@@ -85,6 +80,37 @@ abstract class BaseHMPPSClient(
     } catch (exception: Exception) {
       return ClientResult.Failure.Other(method, requestBuilder.path ?: "", exception)
     }
+  }
+
+  private fun <ResponseType : Any> performRequest(typeReference: TypeReference<ResponseType>, method: HttpMethod, requestBuilder: HMPPSRequestConfiguration): Pair<HttpStatus, ResponseType> {
+    val request = webClient.method(method)
+      .uri(requestBuilder.path ?: "")
+      .headers { it.addAll(requestBuilder.headers) }
+
+    if (requestBuilder.body != null) {
+      request.bodyValue(requestBuilder.body!!)
+    }
+
+    val result = request
+      .retrieve()
+      .toEntityFlux(DataBuffer::class.java)
+      .block()!!
+
+    val pipedOutputStream = PipedOutputStream()
+    val pipedInputStream = PipedInputStream(pipedOutputStream)
+
+    val body = result
+      .body
+      ?.doOnError { pipedInputStream.close() }
+      ?.doFinally { pipedOutputStream.close() }
+
+    DataBufferUtils
+      .write(body, pipedOutputStream)
+      .subscribe(DataBufferUtils.releaseConsumer())
+
+    val deserialized = objectMapper.readValue(pipedInputStream, typeReference)
+
+    return result.statusCode to deserialized
   }
 
   class HMPPSRequestConfiguration {
