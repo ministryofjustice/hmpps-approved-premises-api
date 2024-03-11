@@ -105,9 +105,16 @@ class PremisesSummaryTest : IntegrationTestBase() {
         withYieldedPremises { cas1Premises }
       }
 
-      bedEntityFactory.produceAndPersistMultiple(5) {
-        withYieldedRoom { room }
-      }
+      val liveBeds = listOf(
+        bedEntityFactory.produceAndPersistMultiple(5) {
+          withYieldedRoom { room }
+        },
+        // Beds scheduled for removal in the future
+        bedEntityFactory.produceAndPersistMultiple(2) {
+          withYieldedRoom { room }
+          withEndDate { LocalDate.now().plusDays(5) }
+        },
+      ).flatten()
 
       // Removed beds
       bedEntityFactory.produceAndPersistMultiple(2) {
@@ -115,10 +122,10 @@ class PremisesSummaryTest : IntegrationTestBase() {
         withEndDate { LocalDate.now().minusDays(5) }
       }
 
-      // Bed scheduled for removal
-      bedEntityFactory.produceAndPersist {
+      // Beds scheduled for removal today
+      bedEntityFactory.produceAndPersistMultiple(3) {
         withYieldedRoom { room }
-        withEndDate { LocalDate.now().plusDays(5) }
+        withEndDate { LocalDate.now() }
       }
 
       webTestClient.get()
@@ -135,7 +142,7 @@ class PremisesSummaryTest : IntegrationTestBase() {
         .jsonPath("$[0].postcode").isEqualTo("NW1 6XE")
         .jsonPath("$[0].status").isEqualTo("active")
         .jsonPath("$[0].apCode").isEqualTo("APCODE")
-        .jsonPath("$[0].bedCount").isEqualTo(6)
+        .jsonPath("$[0].bedCount").isEqualTo(liveBeds.count())
         .jsonPath("$[0].probationRegion").isEqualTo(probationRegion.name)
         .jsonPath("$[0].apArea").isEqualTo(apArea.name)
     }

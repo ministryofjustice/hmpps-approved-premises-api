@@ -83,6 +83,15 @@ class BedSummaryQueryTest : IntegrationTestBase() {
       )
     }
 
+    bedEntityFactory.produceAndPersist {
+      withRoom(
+        roomEntityFactory.produceAndPersist {
+          withPremises(premises)
+        },
+      )
+      withEndDate { LocalDate.now().minusDays(7) }
+    }
+
     bookingEntityFactory.produceAndPersist {
       withPremises(premises)
       withBed(bedWithBooking)
