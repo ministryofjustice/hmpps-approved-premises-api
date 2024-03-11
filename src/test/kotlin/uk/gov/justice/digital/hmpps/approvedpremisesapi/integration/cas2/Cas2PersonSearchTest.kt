@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Pr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ProbationOffenderSearchAPI_mockServerErrorSearchCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ProbationOffenderSearchAPI_mockSuccessfulOffenderSearchCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.OffenderProfile
 import java.time.LocalDate
@@ -103,7 +103,7 @@ class Cas2PersonSearchTest : IntegrationTestBase() {
           .produce()
 
         val inmateDetail = InmateDetailFactory().withOffenderNo("NOMS321")
-          .withInOutStatus(InOutStatus.IN)
+          .withCustodyStatus(InmateStatus.IN)
           .withAssignedLivingUnit(
             AssignedLivingUnit(
               agencyId = "BRI",

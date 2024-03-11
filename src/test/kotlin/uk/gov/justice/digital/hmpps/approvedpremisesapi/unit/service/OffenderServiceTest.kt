@@ -41,8 +41,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Case
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.UserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNotesPage
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
@@ -349,7 +349,7 @@ class OffenderServiceTest {
       HttpStatus.OK,
       InmateDetail(
         offenderNo = nomsNumber,
-        inOutStatus = InOutStatus.IN,
+        custodyStatus = InmateStatus.IN,
         assignedLivingUnit = AssignedLivingUnit(
           agencyId = "AGY",
           locationId = 89,
@@ -365,7 +365,7 @@ class OffenderServiceTest {
     result as AuthorisableActionResult.Success
     assertThat(result.entity).isNotNull
     assertThat(result.entity!!.offenderNo).isEqualTo(nomsNumber)
-    assertThat(result.entity!!.inOutStatus).isEqualTo(InOutStatus.IN)
+    assertThat(result.entity!!.custodyStatus).isEqualTo(InmateStatus.IN)
     assertThat(result.entity!!.assignedLivingUnit).isEqualTo(
       AssignedLivingUnit(
         agencyId = "AGY",

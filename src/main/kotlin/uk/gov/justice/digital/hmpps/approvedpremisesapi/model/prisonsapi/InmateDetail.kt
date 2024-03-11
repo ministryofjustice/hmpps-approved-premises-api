@@ -1,8 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi
 
+import com.fasterxml.jackson.annotation.JsonAlias
+import com.fasterxml.jackson.annotation.JsonProperty
+
 data class InmateDetail(
   val offenderNo: String,
-  val inOutStatus: InOutStatus,
+  @JsonProperty("status")
+  val custodyStatus: InmateStatus,
   val assignedLivingUnit: AssignedLivingUnit?,
 )
 
@@ -13,8 +17,14 @@ data class AssignedLivingUnit(
   val agencyName: String,
 )
 
-enum class InOutStatus {
+enum class InmateStatus {
+  @JsonProperty("ACTIVE IN")
   IN,
+
+  @JsonProperty("ACTIVE OUT")
+  @JsonAlias("INACTIVE OUT")
   OUT,
+
+  @JsonProperty("INACTIVE TRN")
   TRN,
 }

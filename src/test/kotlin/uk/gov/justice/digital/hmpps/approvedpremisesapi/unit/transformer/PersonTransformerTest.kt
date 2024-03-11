@@ -20,8 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import java.time.LocalDate
@@ -202,13 +202,13 @@ class PersonTransformerTest {
 
     val inmateDetail = InmateDetail(
       offenderNo = "NOMS321",
-      inOutStatus = InOutStatus.IN,
       assignedLivingUnit = AssignedLivingUnit(
         agencyId = "BRI",
         locationId = 5,
         description = "B-2F-004",
         agencyName = "HMP Bristol",
       ),
+      custodyStatus = InmateStatus.IN,
     )
 
     val personInfoResult = PersonInfoResult.Success.Full(
@@ -295,13 +295,13 @@ class PersonTransformerTest {
 
     val inmateDetail = InmateDetail(
       offenderNo = "NOMS321",
-      inOutStatus = InOutStatus.IN,
       assignedLivingUnit = AssignedLivingUnit(
         agencyId = "BRI",
         locationId = 5,
         description = "B-2F-004",
         agencyName = "HMP Bristol",
       ),
+      custodyStatus = InmateStatus.IN,
     )
 
     val personInfoResult = PersonInfoResult.Success.Full(
@@ -510,7 +510,7 @@ class PersonTransformerTest {
       val crn = "CRN"
       val pncNumber = "PNC"
       val inmateDetail = InmateDetailFactory()
-        .withInOutStatus(inOutStatus = InOutStatus.IN)
+        .withCustodyStatus(InmateStatus.IN)
         .withAssignedLivingUnit(assignedLivingUnit = AssignedLivingUnit(agencyId = "1", locationId = 1, description = "description", agencyName = "HMPS Sheffield"))
         .produce()
       val probationOffenderDetail = ProbationOffenderDetailFactory()
@@ -546,7 +546,7 @@ class PersonTransformerTest {
       val nomsNumber = "NOMS"
       val crn = "CRN"
       val inmateDetail = InmateDetailFactory()
-        .withInOutStatus(inOutStatus = InOutStatus.IN)
+        .withCustodyStatus(InmateStatus.IN)
         .produce()
       val probationOffenderDetail = ProbationOffenderDetailFactory()
         .withGender(null)

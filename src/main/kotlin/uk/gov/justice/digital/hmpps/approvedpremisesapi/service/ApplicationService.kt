@@ -44,7 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
@@ -795,7 +795,7 @@ class ApplicationService(
       arrivalDate = getArrivalDate(submitApplication.arrivalDate)
       sentenceType = submitApplication.sentenceType.toString()
       situation = submitApplication.situation?.toString()
-      inmateInOutStatusOnSubmission = inmateDetails?.inOutStatus?.name
+      inmateInOutStatusOnSubmission = inmateDetails?.custodyStatus?.name
       apArea = apAreaRepository.findByIdOrNull(apAreaId)
       this.applicantUserDetails = upsertCas1ApplicationUserDetails(this.applicantUserDetails, submitApplication.applicantUserDetails)
       this.caseManagerIsNotApplicant = submitApplication.caseManagerIsNotApplicant
@@ -965,9 +965,9 @@ class ApplicationService(
   }
 
   private fun getPrisonName(personInfo: PersonInfoResult.Success.Full): String? {
-    val prisonName = when (personInfo.inmateDetail?.inOutStatus) {
-      InOutStatus.IN,
-      InOutStatus.TRN,
+    val prisonName = when (personInfo.inmateDetail?.custodyStatus) {
+      InmateStatus.IN,
+      InmateStatus.TRN,
       -> {
         personInfo.inmateDetail?.assignedLivingUnit?.agencyName ?: personInfo.inmateDetail?.assignedLivingUnit?.agencyId
       }

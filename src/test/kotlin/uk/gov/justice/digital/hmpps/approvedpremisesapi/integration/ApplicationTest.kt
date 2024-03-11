@@ -122,7 +122,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registra
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
@@ -1855,7 +1855,7 @@ class ApplicationTest : IntegrationTestBase() {
         },
         inmateDetailsConfigBlock = {
           withOffenderNo("NOMS321")
-          withInOutStatus(InOutStatus.IN)
+          withCustodyStatus(InmateStatus.IN)
           withAssignedLivingUnit(
             AssignedLivingUnit(
               agencyId = "BRI",

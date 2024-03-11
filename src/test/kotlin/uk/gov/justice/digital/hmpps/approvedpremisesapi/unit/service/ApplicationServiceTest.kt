@@ -72,8 +72,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderProfile
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.ManagingTeamsResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InOutStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -412,7 +412,7 @@ class ApplicationServiceTest {
     val crn = "CRN345"
     val username = "SOMEPERSON"
     val offenderDetailSummary = createOffenderDetailsSummary(crn)
-    val inmateDetail = createInmateDetail(InOutStatus.IN, "Bristol Prison")
+    val inmateDetail = createInmateDetail(InmateStatus.IN, "Bristol Prison")
     val personInfo = PersonInfoResult.Success.Full(
       crn = crn,
       offenderDetailSummary = offenderDetailSummary,
@@ -445,7 +445,7 @@ class ApplicationServiceTest {
     val crn = "CRN345"
     val username = "SOMEPERSON"
     val offenderDetailSummary = createOffenderDetailsSummary(crn)
-    val inmateDetail = createInmateDetail(InOutStatus.IN, "Bristol Prison")
+    val inmateDetail = createInmateDetail(InmateStatus.IN, "Bristol Prison")
     val personInfo = PersonInfoResult.Success.Full(
       crn = crn,
       offenderDetailSummary = offenderDetailSummary,
@@ -484,7 +484,7 @@ class ApplicationServiceTest {
     val crn = "CRN345"
     val username = "SOMEPERSON"
     val offenderDetailSummary = createOffenderDetailsSummary(crn)
-    val inmateDetail = createInmateDetail(InOutStatus.IN, "Bristol Prison")
+    val inmateDetail = createInmateDetail(InmateStatus.IN, "Bristol Prison")
     val personInfo = PersonInfoResult.Success.Full(
       crn = crn,
       offenderDetailSummary = offenderDetailSummary,
@@ -523,7 +523,7 @@ class ApplicationServiceTest {
     val crn = "CRN345"
     val username = "SOMEPERSON"
     val offenderDetailSummary = createOffenderDetailsSummary(crn)
-    val inmateDetail = createInmateDetail(InOutStatus.IN, "HMP Bristol")
+    val inmateDetail = createInmateDetail(InmateStatus.IN, "HMP Bristol")
     val personInfo = PersonInfoResult.Success.Full(
       crn = crn,
       offenderDetailSummary = offenderDetailSummary,
@@ -568,7 +568,7 @@ class ApplicationServiceTest {
     val username = "SOMEPERSON"
     val offenderDetailSummary = createOffenderDetailsSummary(crn)
     val agencyName = "HMP Bristol"
-    val inmateDetail = createInmateDetail(InOutStatus.IN, agencyName)
+    val inmateDetail = createInmateDetail(InmateStatus.IN, agencyName)
     val personInfo = PersonInfoResult.Success.Full(
       crn = crn,
       offenderDetailSummary = offenderDetailSummary,
@@ -652,7 +652,7 @@ class ApplicationServiceTest {
     val username = "SOMEPERSON"
     val offenderDetailSummary = createOffenderDetailsSummary(crn)
     val agencyName = "HMP Bristol"
-    val inmateDetail = createInmateDetail(InOutStatus.TRN, agencyName)
+    val inmateDetail = createInmateDetail(InmateStatus.TRN, agencyName)
     val personInfo = PersonInfoResult.Success.Full(
       crn = crn,
       offenderDetailSummary = offenderDetailSummary,
@@ -735,7 +735,7 @@ class ApplicationServiceTest {
     val crn = "CRN345"
     val username = "SOMEPERSON"
     val offenderDetailSummary = createOffenderDetailsSummary(crn)
-    val inmateDetail = createInmateDetail(InOutStatus.OUT, "HMP Bristol")
+    val inmateDetail = createInmateDetail(InmateStatus.OUT, "HMP Bristol")
     val personInfo = PersonInfoResult.Success.Full(
       crn = crn,
       offenderDetailSummary = offenderDetailSummary,
@@ -818,7 +818,7 @@ class ApplicationServiceTest {
     val crn = "CRN345"
     val username = "SOMEPERSON"
     val offenderDetailSummary = createOffenderDetailsSummary(crn)
-    val inmateDetail = createInmateDetail(InOutStatus.IN, null)
+    val inmateDetail = createInmateDetail(InmateStatus.IN, null)
     val personInfo = PersonInfoResult.Success.Full(
       crn = crn,
       offenderDetailSummary = offenderDetailSummary,
@@ -1736,7 +1736,7 @@ class ApplicationServiceTest {
       every { mockJsonSchemaService.validate(newestSchema, application.data!!) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockOffenderService.getInmateDetailByNomsNumber(any(), any()) } returns AuthorisableActionResult.Success(
-        InmateDetailFactory().withInOutStatus(InOutStatus.OUT).produce(),
+        InmateDetailFactory().withCustodyStatus(InmateStatus.OUT).produce(),
       )
 
       every { mockApAreaRepository.findByIdOrNull(any()) } returns null
@@ -2587,11 +2587,10 @@ class ApplicationServiceTest {
     .produce()
 
   private fun createInmateDetail(
-    inOutStatus: InOutStatus,
+    status: InmateStatus,
     agencyName: String?,
   ) = InmateDetail(
     offenderNo = "NOMS321",
-    inOutStatus = inOutStatus,
     assignedLivingUnit = agencyName?.let {
       AssignedLivingUnit(
         agencyId = "BRI",
@@ -2600,6 +2599,7 @@ class ApplicationServiceTest {
         agencyName = it,
       )
     },
+    custodyStatus = status,
   )
 
   private fun createOffenderDetailsSummary(crn: String) = OffenderDetailSummary(
