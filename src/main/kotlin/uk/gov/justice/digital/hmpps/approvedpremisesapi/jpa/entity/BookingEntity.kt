@@ -186,6 +186,15 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
     nativeQuery = true,
   )
   fun findAllCas3bookingsWithNullStatus(pageable: Pageable?): Slice<BookingEntity>
+
+  @Query(
+    "SELECT b FROM BookingEntity b " +
+      "WHERE b.bed.id = :bedId " +
+      "AND NOT EXISTS (SELECT na FROM NonArrivalEntity na WHERE na.booking = b ) " +
+      "AND b.departureDate >= :date " +
+      "AND SIZE(b.cancellations) = 0 ",
+  )
+  fun findActiveOverlappingBookingByBed(bedId: UUID, date: LocalDate): List<BookingEntity>
 }
 
 @EntityListeners(BookingListener::class)
