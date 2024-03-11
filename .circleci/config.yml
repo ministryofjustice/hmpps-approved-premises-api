@@ -158,6 +158,21 @@ jobs:
       - run:
           name: Run detekt
           command: ./gradlew detekt
+  performance_tests:
+    environment:
+      GATLING_BASE_URL: "https://approved-premises-api-dev.hmpps.service.justice.gov.uk"
+      GATLING_HMPPS_AUTH_BASE_URL: "https://sign-in-dev.hmpps.service.justice.gov.uk"
+    docker:
+      - image: cimg/openjdk:17.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run Gatling performance tests
+          command: ./gradlew gatlingRun
+      - store_artifacts:
+          path: build/reports/gatling
   unit_test:
     parallelism: 6
     environment:
@@ -336,6 +351,9 @@ workflows:
   build-test-and-deploy:
     jobs:
       - build
+      - performance_tests:
+          requires:
+            - build
       - static_code_analysis_with_detekt:
           requires:
             - build
