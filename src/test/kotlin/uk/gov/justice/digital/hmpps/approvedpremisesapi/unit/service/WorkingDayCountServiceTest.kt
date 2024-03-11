@@ -27,7 +27,7 @@ class WorkingDayCountServiceTest {
   private val mockGovUKBankHolidaysApiClient = mockk<GovUKBankHolidaysApiClient>()
   private val mockTimeService = mockk<TimeService>()
 
-  private val workingDayCountService = WorkingDayCountService(mockGovUKBankHolidaysApiClient,mockTimeService)
+  private val workingDayCountService = WorkingDayCountService(mockGovUKBankHolidaysApiClient, mockTimeService)
 
   private val emptyBankHolidays = ClientResult.Success(
     HttpStatus.OK,
