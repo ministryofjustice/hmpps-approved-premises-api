@@ -34,7 +34,7 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
           JOIN b.room r
         WHERE 
             r.premises = p 
-            AND b.endDate IS NULL OR b.endDate >= CURRENT_DATE
+            AND b.endDate IS NULL OR b.endDate > CURRENT_DATE
     )
     """
   }
@@ -82,7 +82,7 @@ interface PremisesRepository : JpaRepository<PremisesEntity, UUID> {
         ) 
         FROM ApprovedPremisesEntity p 
         LEFT JOIN p.rooms r 
-        LEFT JOIN r.beds b on (b.endDate IS NULL OR b.endDate >= CURRENT_DATE) 
+        LEFT JOIN r.beds b on (b.endDate IS NULL OR b.endDate > CURRENT_DATE) 
         LEFT JOIN p.probationRegion region
         LEFT JOIN region.apArea apArea
         WHERE(cast(:probationRegionId as text) IS NULL OR region.id = :probationRegionId)
