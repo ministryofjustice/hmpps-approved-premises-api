@@ -1,9 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.ColumnResult
 import javax.persistence.ConstructorResult
@@ -104,6 +106,8 @@ data class BedEntity(
   @JoinColumn(name = "room_id")
   val room: RoomEntity,
   var endDate: LocalDate?,
+  @CreationTimestamp
+  var createdAt: OffsetDateTime,
 ) {
 
   override fun toString() = "BedEntity: $id"
