@@ -16,6 +16,7 @@ insert into "premises" ("address_line1", "id", "local_authority_area_id", "name"
 insert into "premises" ("address_line1", "id", "local_authority_area_id", "name", "notes", "postcode", "probation_region_id", "service", "status") values ('13 Pavilion Rise', '773431cd-f560-4be8-9e6f-b582a4ebf204', '0dd9476c-4058-4574-a35d-f846588b047c', 'PAVILION13', NULL, 'SS18 3PK', 'ca979718-b15d-4318-9944-69aaff281cad', 'temporary-accommodation', 'active') ON CONFLICT (id) DO NOTHING; -- East of England
 
 INSERT INTO temporary_accommodation_premises (premises_id, probation_delivery_unit_id) VALUES
+    ('6970895f-028b-4de3-b542-33ac695a47cf', 'ba31df91-b4b2-4f15-8a1e-8a137c4c22a7'), -- Bristol and South Gloucestershire
     ('d33006b7-55d9-4a8e-b722-5e18093dbcdf', '18ac2803-6d81-455c-9211-c459f03a8db7'), -- Cumbria
     ('ada106c7-e1fb-409a-a38e-0002ea8e7e45', '876d7b90-ffb0-4281-96e2-49dd5937a654'), -- Camden and Islington
     ('36c7b1f2-5a4b-467b-838c-2970c9c253cf', 'f017624d-b939-47d1-89a8-f83435eddf68'), -- Swansea, Neath Port Talbot
