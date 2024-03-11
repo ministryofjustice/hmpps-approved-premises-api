@@ -311,9 +311,33 @@ class TaskServiceTest {
     val placementApplications = List(4) { generatePlacementApplication() }
     val placementRequests = List(4) { generatePlacementRequest() }
 
-    val assessmentTasks = assessments.map { Task(it.id, it.createdAt.toLocalDateTime(), TaskEntityType.ASSESSMENT) }
-    val placementApplicationTasks = placementApplications.map { Task(it.id, it.createdAt.toLocalDateTime(), TaskEntityType.PLACEMENT_APPLICATION) }
-    val placementRequestTasks = placementRequests.map { Task(it.id, it.createdAt.toLocalDateTime(), TaskEntityType.PLACEMENT_REQUEST) }
+    val assessmentTasks = assessments.map {
+      Task(
+        it.id,
+        it.createdAt.toLocalDateTime(),
+        TaskEntityType.ASSESSMENT,
+        (it.application as ApprovedPremisesApplicationEntity).name,
+        it.allocatedToUser?.name,
+      )
+    }
+    val placementApplicationTasks = placementApplications.map {
+      Task(
+        it.id,
+        it.createdAt.toLocalDateTime(),
+        TaskEntityType.PLACEMENT_APPLICATION,
+        it.application.name,
+        it.allocatedToUser?.name,
+      )
+    }
+    val placementRequestTasks = placementRequests.map {
+      Task(
+        it.id,
+        it.createdAt.toLocalDateTime(),
+        TaskEntityType.PLACEMENT_REQUEST,
+        it.application.name,
+        it.allocatedToUser?.name,
+      )
+    }
 
     val tasks = listOf(
       assessmentTasks,

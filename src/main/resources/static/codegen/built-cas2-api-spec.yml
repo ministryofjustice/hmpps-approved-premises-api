@@ -852,6 +852,8 @@ components:
       enum:
         - createdAt
         - dueAt
+        - person
+        - allocatedTo
     AssessmentTask:
       allOf:
         - $ref: '#/components/schemas/Task'

@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -901,114 +902,141 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @CsvSource(value = ["createdAt,asc", "createdAt,desc", "dueAt,asc", "dueAt,desc"])
+    @CsvSource(value = ["createdAt,asc", "createdAt,desc", "dueAt,asc", "dueAt,desc", "person,asc", "person,desc", "allocatedTo,asc", "allocatedTo,desc"])
     fun `Get all reallocatable tasks returns 200 when no type retains original sort order`(sortBy: String, sortDirection: String) {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            val (task1, _) = `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-              dueAt = OffsetDateTime.parse("2023-01-01T00:00:00Z"),
-            )
+        `Given a User` { user1, _ ->
+          `Given a User` { user2, _ ->
 
-            val (task2, _) = `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-              dueAt = OffsetDateTime.parse("2023-01-03T00:00:00Z"),
-            )
-
-            val (task3, _) = `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-              dueAt = OffsetDateTime.parse("2023-02-01T00:00:00Z"),
-            )
-
-            val task4 = `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-              submittedAt = OffsetDateTime.now(),
-              dueAt = OffsetDateTime.parse("2023-01-06T00:00:00Z"),
-            )
-
-            val (task5) = `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-              dueAt = OffsetDateTime.parse("2022-09-06T00:00:00Z"),
-            )
-
-            val tasks = listOf(
-              task1,
-              task2,
-              task3,
-              task4,
-              task5,
-            )
-
-            var sortedTasks = if (sortBy == "createdAt") {
-              tasks.sortedBy {
-                when (it) {
-                  is PlacementApplicationEntity -> it.createdAt
-                  is PlacementRequestEntity -> it.createdAt
-                  is ApprovedPremisesAssessmentEntity -> it.createdAt
-                  else -> throw RuntimeException("Unexpected type $it")
-                }
-              }
-            } else {
-              tasks.sortedBy {
-                when (it) {
-                  is PlacementApplicationEntity -> it.dueAt
-                  is PlacementRequestEntity -> it.dueAt
-                  is ApprovedPremisesAssessmentEntity -> it.dueAt
-                  else -> throw RuntimeException("Unexpected type $it")
-                }
-              }
-            }
-
-            if (sortBy == "desc") {
-              sortedTasks = sortedTasks.reversed()
-            }
-
-            val expectedTasks = sortedTasks.map {
-              when (it) {
-                is PlacementApplicationEntity -> taskTransformer.transformPlacementApplicationToTask(
-                  it,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                )
-                is PlacementRequestEntity -> taskTransformer.transformPlacementRequestToTask(
-                  it,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                )
-                is ApprovedPremisesAssessmentEntity -> taskTransformer.transformAssessmentToTask(
-                  it,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                )
-                else -> throw RuntimeException("Unexpected type $it")
-              }
-            }
-
-            webTestClient.get()
-              .uri("/tasks/reallocatable?page=1&sortBy=$sortBy&sortDirection=$sortDirection")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  expectedTasks,
-                ),
+            `Given an Offender` { offenderDetails, _ ->
+              val (task1, _) = `Given a Placement Request`(
+                placementRequestAllocatedTo = user1,
+                assessmentAllocatedTo = user1,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+                dueAt = OffsetDateTime.parse("2023-01-01T00:00:00Z"),
+                name = "Zoella Zumba",
               )
+
+              val (task2, _) = `Given an Assessment for Approved Premises`(
+                allocatedToUser = user2,
+                createdByUser = user2,
+                crn = offenderDetails.otherIds.crn,
+                dueAt = OffsetDateTime.parse("2023-01-03T00:00:00Z"),
+                name = "Aaron Appleseed",
+              )
+
+              val (task3, _) = `Given a Placement Request`(
+                placementRequestAllocatedTo = user1,
+                assessmentAllocatedTo = user1,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+                dueAt = OffsetDateTime.parse("2023-02-01T00:00:00Z"),
+                name = "Tristan Tremond",
+              )
+
+              val task4 = `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+                dueAt = OffsetDateTime.parse("2023-01-06T00:00:00Z"),
+                name = "Bryan Boom",
+              )
+
+              val (task5) = `Given an Assessment for Approved Premises`(
+                allocatedToUser = user2,
+                createdByUser = user2,
+                crn = offenderDetails.otherIds.crn,
+                dueAt = OffsetDateTime.parse("2022-09-06T00:00:00Z"),
+                name = "Zoe Zebra",
+              )
+
+              val tasks = listOf(
+                task1,
+                task2,
+                task3,
+                task4,
+                task5,
+              )
+
+              var sortedTasks = when (sortBy) {
+                "createdAt" -> tasks.sortedBy {
+                  when (it) {
+                    is PlacementApplicationEntity -> it.createdAt
+                    is PlacementRequestEntity -> it.createdAt
+                    is ApprovedPremisesAssessmentEntity -> it.createdAt
+                    else -> throw RuntimeException("Unexpected type $it")
+                  }
+                }
+                "dueAt" -> tasks.sortedBy {
+                  when (it) {
+                    is PlacementApplicationEntity -> it.dueAt
+                    is PlacementRequestEntity -> it.dueAt
+                    is ApprovedPremisesAssessmentEntity -> it.dueAt
+                    else -> throw RuntimeException("Unexpected type $it")
+                  }
+                }
+                "person" -> tasks.sortedBy {
+                  when (it) {
+                    is PlacementApplicationEntity -> it.application.name
+                    is PlacementRequestEntity -> it.application.name
+                    is ApprovedPremisesAssessmentEntity -> (it.application as ApprovedPremisesApplicationEntity).name
+                    else -> throw RuntimeException("Unexpected type $it")
+                  }
+                }
+                "allocatedTo" -> tasks.sortedBy {
+                  when (it) {
+                    is PlacementApplicationEntity -> it.allocatedToUser?.name
+                    is PlacementRequestEntity -> it.allocatedToUser?.name
+                    is ApprovedPremisesAssessmentEntity -> it.allocatedToUser?.name
+                    else -> throw RuntimeException("Unexpected type $it")
+                  }
+                }
+                else -> throw RuntimeException("Unexpected sortField $sortBy")
+              }
+
+              if (sortBy == "desc") {
+                sortedTasks = sortedTasks.reversed()
+              }
+
+              val expectedTasks = sortedTasks.map {
+                when (it) {
+                  is PlacementApplicationEntity -> taskTransformer.transformPlacementApplicationToTask(
+                    it,
+                    "${offenderDetails.firstName} ${offenderDetails.surname}",
+                  )
+
+                  is PlacementRequestEntity -> taskTransformer.transformPlacementRequestToTask(
+                    it,
+                    "${offenderDetails.firstName} ${offenderDetails.surname}",
+                  )
+
+                  is ApprovedPremisesAssessmentEntity -> taskTransformer.transformAssessmentToTask(
+                    it,
+                    "${offenderDetails.firstName} ${offenderDetails.surname}",
+                  )
+
+                  else -> throw RuntimeException("Unexpected type $it")
+                }
+              }
+
+              webTestClient.get()
+                .uri("/tasks/reallocatable?page=1&sortBy=$sortBy&sortDirection=$sortDirection")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .expectBody()
+                .json(
+                  objectMapper.writeValueAsString(
+                    expectedTasks,
+                  ),
+                )
+            }
           }
         }
       }
