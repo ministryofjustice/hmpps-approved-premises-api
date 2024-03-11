@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 
+import com.amazonaws.services.sns.model.NotFoundException
+import io.sentry.Sentry
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
@@ -51,6 +54,8 @@ class StatusUpdateService(
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationOverviewUrlTemplate: String,
 ) {
+
+  private val log = LoggerFactory.getLogger(this::class.java)
 
   fun isValidStatus(statusUpdate: Cas2ApplicationStatusUpdate): Boolean {
     return findActiveStatusByName(statusUpdate.newStatus) != null
@@ -169,17 +174,27 @@ class StatusUpdateService(
   }
 
   private fun sendEmailStatusUpdated(user: NomisUserEntity, application: Cas2ApplicationEntity, status: Cas2StatusUpdateEntity) {
-    emailNotificationService.sendCas2Email(
-      recipientEmailAddress = user.email!!, // TODO: when will users not have an email? Do we need to handle this?
-      templateId = notifyConfig.templates.cas2ApplicationStatusUpdated,
-      personalisation = mapOf(
-        "applicationStatus" to status.label,
-        "dateStatusChanged" to status.createdAt.toLocalDate().toCas2UiFormat(),
-        "timeStatusChanged" to status.createdAt.toCas2UiFormattedHourOfDay(),
-        "applicationType" to HDC_APPLICATION_TYPE,
-        "nomsNumber" to application.nomsNumber,
-        "applicationUrl" to applicationOverviewUrlTemplate.replace("#id", application.id.toString()),
-      ),
-    )
+    if (application.createdByUser.email != null) {
+      emailNotificationService.sendCas2Email(
+        recipientEmailAddress = user.email!!,
+        templateId = notifyConfig.templates.cas2ApplicationStatusUpdated,
+        personalisation = mapOf(
+          "applicationStatus" to status.label,
+          "dateStatusChanged" to status.createdAt.toLocalDate().toCas2UiFormat(),
+          "timeStatusChanged" to status.createdAt.toCas2UiFormattedHourOfDay(),
+          "applicationType" to HDC_APPLICATION_TYPE,
+          "nomsNumber" to application.nomsNumber,
+          "applicationUrl" to applicationOverviewUrlTemplate.replace("#id", application.id.toString()),
+        ),
+      )
+    } else {
+      log.error("Email not found for User ${application.createdByUser.id}. Unable to send email when updating status of Application ${application.id}")
+      Sentry.captureException(
+        RuntimeException(
+          "Email not found for User ${application.createdByUser.id}. Unable to send email when updating status of Application ${application.id}",
+          NotFoundException("Email not found for User ${application.createdByUser.id}"),
+        ),
+      )
+    }
   }
 }

@@ -1,10 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
+import com.amazonaws.services.sns.model.NotFoundException
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verify
+import io.sentry.Sentry
+import io.sentry.protocol.SentryId
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
@@ -31,8 +35,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class StatusUpdateServiceTest {
@@ -351,6 +357,45 @@ class StatusUpdateServiceTest {
                   ),
                 )
               },
+            )
+          }
+        }
+
+        @Test
+        fun `alerts Sentry when the Referrer does not have an email`() {
+          val submittedApplicationWithNoReferrerEmail = Cas2ApplicationEntityFactory()
+            .withCreatedByUser(NomisUserEntityFactory().withEmail(null).produce())
+            .withCrn("CRN123")
+            .withNomsNumber("NOMSABC")
+            .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
+            .produce()
+
+          every { mockApplicationRepository.findSubmittedApplicationById(applicationId) } answers
+            {
+              submittedApplicationWithNoReferrerEmail
+            }
+
+          mockkStatic(Sentry::class)
+
+          every {
+            Sentry.captureException(
+              RuntimeException(
+                "Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}. " +
+                  "Unable to send email when updating status of Application ${submittedApplicationWithNoReferrerEmail.id}",
+                NotFoundException("Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}"),
+              ),
+            )
+          } returns SentryId.EMPTY_ID
+
+          statusUpdateService.create(
+            applicationId = applicationId,
+            statusUpdate = applicationStatusUpdateWithDetail,
+            assessor = assessor,
+          )
+
+          verify(exactly = 1) {
+            Sentry.captureException(
+              any(),
             )
           }
         }
