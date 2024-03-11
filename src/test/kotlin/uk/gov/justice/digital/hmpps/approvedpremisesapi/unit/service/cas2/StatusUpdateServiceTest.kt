@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas2
 
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
@@ -13,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserEntityFactory
@@ -24,9 +27,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpd
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.util.UUID
 
 class StatusUpdateServiceTest {
@@ -42,6 +48,8 @@ class StatusUpdateServiceTest {
 
   private val mockDomainEventService = mockk<DomainEventService>()
   private val mockStatusTransformer = mockk<ApplicationStatusTransformer>()
+  private val mockEmailNotificationService = mockk<EmailNotificationService>()
+  private val mockNotifyConfig = mockk<NotifyConfig>()
 
   private val applicant = NomisUserEntityFactory().produce()
   private val application = Cas2ApplicationEntityFactory()
@@ -52,15 +60,19 @@ class StatusUpdateServiceTest {
   private val applicationId = application.id
   private val mockStatusFinder = mockk<Cas2PersistedApplicationStatusFinder>()
   private val applicationUrlTemplate = "http://example.com/application-status-updated/#eventId"
+  private val applicationOverviewUrlTemplate = "http://example.com/application/#id/overview"
 
   private val statusUpdateService = StatusUpdateService(
     mockApplicationRepository,
     mockStatusUpdateRepository,
     mockStatusUpdateDetailRepository,
     mockDomainEventService,
+    mockEmailNotificationService,
+    mockNotifyConfig,
     mockStatusFinder,
     mockStatusTransformer,
     applicationUrlTemplate,
+    applicationOverviewUrlTemplate,
   )
 
   val activeStatus = Cas2PersistedApplicationStatus(
@@ -98,6 +110,7 @@ class StatusUpdateServiceTest {
   fun setup() {
     every { mockStatusFinder.active() } returns activeStatusList
     every { mockStatusTransformer.transformStatusDetailListToDetailItemList(any()) } returns emptyList()
+    every { mockNotifyConfig.emailAddresses.cas2ReplyToId } returns "fakeReplyToId"
   }
 
   @Nested
@@ -143,6 +156,23 @@ class StatusUpdateServiceTest {
           }
 
         every { mockDomainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(any()) } answers { }
+
+        every { mockNotifyConfig.templates.cas2ApplicationStatusUpdated } returns "abc123"
+
+        every {
+          mockEmailNotificationService.sendCas2Email(
+            recipientEmailAddress = applicant.email!!,
+            templateId = "abc123",
+            personalisation = mapOf(
+              "applicationStatus" to cas2StatusUpdateEntity.label,
+              "dateStatusChanged" to cas2StatusUpdateEntity.createdAt.toLocalDate().toCas2UiFormat(),
+              "timeStatusChanged" to cas2StatusUpdateEntity.createdAt.toCas2UiFormattedHourOfDay(),
+              "nomsNumber" to "NOMSABC",
+              "applicationType" to "Home Detention Curfew (HDC)",
+              "applicationUrl" to "http://example.com/application/$applicationId/overview",
+            ),
+          )
+        } just Runs
       }
 
       @Test
@@ -205,6 +235,8 @@ class StatusUpdateServiceTest {
         verify(exactly = 0) {
           mockDomainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(any())
         }
+
+        verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
       }
     }
 
@@ -244,6 +276,23 @@ class StatusUpdateServiceTest {
             }
 
           every { mockDomainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(any()) } answers { }
+
+          every { mockNotifyConfig.templates.cas2ApplicationStatusUpdated } returns "abc123"
+
+          every {
+            mockEmailNotificationService.sendCas2Email(
+              recipientEmailAddress = applicant.email!!,
+              templateId = "abc123",
+              personalisation = mapOf(
+                "applicationStatus" to cas2StatusUpdateEntity.label,
+                "dateStatusChanged" to cas2StatusUpdateEntity.createdAt.toLocalDate().toCas2UiFormat(),
+                "timeStatusChanged" to cas2StatusUpdateEntity.createdAt.toCas2UiFormattedHourOfDay(),
+                "applicationType" to "Home Detention Curfew (HDC)",
+                "nomsNumber" to "NOMSABC",
+                "applicationUrl" to "http://example.com/application/$applicationId/overview",
+              ),
+            )
+          } just Runs
         }
 
         @Test
@@ -329,6 +378,8 @@ class StatusUpdateServiceTest {
           verify(exactly = 0) {
             mockDomainEventService.saveCas2ApplicationStatusUpdatedDomainEvent(any())
           }
+
+          verify(exactly = 0) { mockEmailNotificationService.sendEmail(any(), any(), any()) }
         }
       }
     }
