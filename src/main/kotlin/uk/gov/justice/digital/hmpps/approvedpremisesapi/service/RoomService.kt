@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
 
@@ -188,6 +189,7 @@ class RoomService(
       code = null,
       room = room,
       endDate = bedEndDate,
+      createdAt = OffsetDateTime.now(),
     ),
   )
 
@@ -209,5 +211,43 @@ class RoomService(
     roomRepository.delete(room)
 
     success(Unit)
+  }
+
+  fun updateBedEndDate(
+    premises: PremisesEntity,
+    roomId: UUID,
+    bedEndDate: LocalDate,
+  ): AuthorisableActionResult<ValidatableActionResult<RoomEntity>> {
+    val room = roomRepository.findByIdOrNull(roomId) ?: return AuthorisableActionResult.NotFound()
+
+    if (room.premises.id != premises.id) {
+      return AuthorisableActionResult.NotFound()
+    }
+
+    var bed = room.beds.firstOrNull() ?: return AuthorisableActionResult.NotFound()
+
+    return AuthorisableActionResult.Success(
+      validated {
+        if (bed.endDate != null) {
+          "$.roomId" hasValidationError "bedEndDateCantBeModified"
+        }
+        if (bedEndDate.isBefore(bed.createdAt.toLocalDate())) {
+          "${bed.createdAt.toLocalDate()}" hasValidationError "afterBedspaceEndDate"
+        }
+
+        if (bookingRepository.findActiveOverlappingBookingByBed(bed.id, bedEndDate).isNotEmpty()) {
+          return@validated roomId hasConflictError "Conflict booking exists for the room with end date $bedEndDate"
+        }
+
+        if (validationErrors.any()) {
+          return@validated fieldValidationError
+        }
+
+        bed.endDate = bedEndDate
+        bedRepository.save(bed)
+
+        return@validated success(room)
+      },
+    )
   }
 }

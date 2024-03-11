@@ -2794,6 +2794,571 @@ class PremisesTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Updating a Temporary Accommodation room with bedpace end-date when it's provided and no booking exists for the room`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises }
+        withName("old-room-name")
+      }
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+      }
+      room.beds.add(bed)
+
+      val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
+        withModelScope("room")
+        withServiceScope("temporary-accommodation")
+        withName("Floor level access")
+      }.map { it.id }
+
+      webTestClient.put()
+        .uri("/premises/${premises.id}/rooms/${room.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdateRoom(
+            notes = "test notes",
+            characteristicIds = characteristicIds,
+            name = "new-room-name",
+            bedEndDate = LocalDate.now(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("name").isEqualTo("new-room-name")
+        .jsonPath("notes").isEqualTo("test notes")
+        .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
+        .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
+        .jsonPath("characteristics[*].serviceScope").isEqualTo(MutableList(5) { "temporary-accommodation" })
+        .jsonPath("characteristics[*].name").isEqualTo(MutableList(5) { "Floor level access" })
+        .jsonPath("beds[*].bedEndDate").isEqualTo(LocalDate.now().toString())
+    }
+  }
+
+  @Test
+  fun `Updating a Temporary Accommodation room with bedspace end-date throw conflict error when active booking's arrival and departure date overlap with bedspace end-date`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      val bedEndDate = LocalDate.now()
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises }
+        withName("old-room-name")
+      }
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+      }
+      room.beds.add(bed)
+
+      val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
+        withModelScope("room")
+        withServiceScope("temporary-accommodation")
+        withName("Floor level access")
+      }.map { it.id }
+
+      bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(bedEndDate.minusDays(1))
+        withDepartureDate(bedEndDate.plusDays(2))
+        withBed(bed)
+      }
+
+      webTestClient.put()
+        .uri("/premises/${premises.id}/rooms/${room.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdateRoom(
+            notes = "test notes",
+            characteristicIds = characteristicIds,
+            name = "new-room-name",
+            bedEndDate = bedEndDate,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isEqualTo(HttpStatus.CONFLICT)
+        .expectBody()
+        .jsonPath("title").isEqualTo("Conflict")
+        .jsonPath("status").isEqualTo(409)
+        .jsonPath("detail").isEqualTo("Conflict booking exists for the room with end date $bedEndDate: ${room.id}")
+    }
+  }
+
+  @Test
+  fun `Updating a Temporary Accommodation room with bedspace end-date throw conflict error when active booking starts in the future date compare to bedpace end-date`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      val bedEndDate = LocalDate.now()
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises }
+        withName("old-room-name")
+      }
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+      }
+      room.beds.add(bed)
+
+      val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
+        withModelScope("room")
+        withServiceScope("temporary-accommodation")
+        withName("Floor level access")
+      }.map { it.id }
+
+      bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(bedEndDate.plusDays(1))
+        withDepartureDate(bedEndDate.plusDays(2))
+        withBed(bed)
+      }
+
+      webTestClient.put()
+        .uri("/premises/${premises.id}/rooms/${room.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdateRoom(
+            notes = "test notes",
+            characteristicIds = characteristicIds,
+            name = "new-room-name",
+            bedEndDate = bedEndDate,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isEqualTo(HttpStatus.CONFLICT)
+        .expectBody()
+        .jsonPath("title").isEqualTo("Conflict")
+        .jsonPath("status").isEqualTo(409)
+        .jsonPath("detail").isEqualTo("Conflict booking exists for the room with end date $bedEndDate: ${room.id}")
+    }
+  }
+
+  @Test
+  fun `Updating a Temporary Accommodation room with bedspace end-date throw conflict error when active booking exists with departure date is equal to bedspace end-date`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      val bedEndDate = LocalDate.now()
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises }
+        withName("old-room-name")
+      }
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+      }
+      room.beds.add(bed)
+
+      val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
+        withModelScope("room")
+        withServiceScope("temporary-accommodation")
+        withName("Floor level access")
+      }.map { it.id }
+
+      bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(bedEndDate.minusDays(1))
+        withDepartureDate(bedEndDate)
+        withBed(bed)
+      }
+
+      webTestClient.put()
+        .uri("/premises/${premises.id}/rooms/${room.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdateRoom(
+            notes = "test notes",
+            characteristicIds = characteristicIds,
+            name = "new-room-name",
+            bedEndDate = bedEndDate,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isEqualTo(HttpStatus.CONFLICT)
+        .expectBody()
+        .jsonPath("title").isEqualTo("Conflict")
+        .jsonPath("status").isEqualTo(409)
+        .jsonPath("detail").isEqualTo("Conflict booking exists for the room with end date $bedEndDate: ${room.id}")
+    }
+  }
+
+  @Test
+  fun `Updating a Temporary Accommodation room with bedspace end-date throw conflict error when active booking exists with arrival date is equal to bedspace end-date`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      val bedEndDate = LocalDate.now()
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises }
+        withName("old-room-name")
+      }
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+      }
+      room.beds.add(bed)
+
+      val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
+        withModelScope("room")
+        withServiceScope("temporary-accommodation")
+        withName("Floor level access")
+      }.map { it.id }
+
+      bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(bedEndDate)
+        withDepartureDate(bedEndDate.plusDays(1))
+        withBed(bed)
+      }
+
+      webTestClient.put()
+        .uri("/premises/${premises.id}/rooms/${room.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdateRoom(
+            notes = "test notes",
+            characteristicIds = characteristicIds,
+            name = "new-room-name",
+            bedEndDate = bedEndDate,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isEqualTo(HttpStatus.CONFLICT)
+        .expectBody()
+        .jsonPath("title").isEqualTo("Conflict")
+        .jsonPath("status").isEqualTo(409)
+        .jsonPath("detail").isEqualTo("Conflict booking exists for the room with end date $bedEndDate: ${room.id}")
+    }
+  }
+
+  @Test
+  fun `Updating a Temporary Accommodation room with bedspace end-date is successful when booking exists but ended before bedspace end-date `() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      val bedEndDate = LocalDate.now()
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises }
+        withName("old-room-name")
+      }
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+      }
+      room.beds.add(bed)
+
+      val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
+        withModelScope("room")
+        withServiceScope("temporary-accommodation")
+        withName("Floor level access")
+      }.map { it.id }
+
+      bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(bedEndDate.minusDays(3))
+        withDepartureDate(bedEndDate.minusDays(1))
+        withBed(bed)
+      }
+
+      webTestClient.put()
+        .uri("/premises/${premises.id}/rooms/${room.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdateRoom(
+            notes = "test notes",
+            characteristicIds = characteristicIds,
+            name = "new-room-name",
+            bedEndDate = bedEndDate,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("name").isEqualTo("new-room-name")
+        .jsonPath("notes").isEqualTo("test notes")
+        .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
+        .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
+        .jsonPath("characteristics[*].serviceScope").isEqualTo(MutableList(5) { "temporary-accommodation" })
+        .jsonPath("characteristics[*].name").isEqualTo(MutableList(5) { "Floor level access" })
+        .jsonPath("beds[*].bedEndDate").isEqualTo(LocalDate.now().toString())
+    }
+  }
+
+  @Test
+  fun `Updating a Temporary Accommodation room with bedspace end-date is successful when active booking exists for different room`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      val bedEndDate = LocalDate.now()
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises }
+        withName("old-room-name")
+      }
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+      }
+      room.beds.add(bed)
+
+      val anotherRoom = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises }
+        withName("old-room-name")
+      }
+      val anotherBed = bedEntityFactory.produceAndPersist {
+        withRoom(anotherRoom)
+      }
+      anotherRoom.beds.add(anotherBed)
+
+      val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
+        withModelScope("room")
+        withServiceScope("temporary-accommodation")
+        withName("Floor level access")
+      }.map { it.id }
+
+      bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(bedEndDate.minusDays(1))
+        withDepartureDate(bedEndDate.plusDays(2))
+        withBed(anotherBed)
+      }
+
+      webTestClient.put()
+        .uri("/premises/${premises.id}/rooms/${room.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdateRoom(
+            notes = "test notes",
+            characteristicIds = characteristicIds,
+            name = "new-room-name",
+            bedEndDate = bedEndDate,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("name").isEqualTo("new-room-name")
+        .jsonPath("notes").isEqualTo("test notes")
+        .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
+        .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
+        .jsonPath("characteristics[*].serviceScope").isEqualTo(MutableList(5) { "temporary-accommodation" })
+        .jsonPath("characteristics[*].name").isEqualTo(MutableList(5) { "Floor level access" })
+        .jsonPath("beds[*].bedEndDate").isEqualTo(LocalDate.now().toString())
+    }
+  }
+
+  @Test
+  fun `Updating a Temporary Accommodation room with bedspace end-date is successful when booking exists for given bed but its been cancelled`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      val bedEndDate = LocalDate.now()
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises }
+        withName("old-room-name")
+      }
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+      }
+      room.beds.add(bed)
+
+      val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
+        withModelScope("room")
+        withServiceScope("temporary-accommodation")
+        withName("Floor level access")
+      }.map { it.id }
+
+      val bookingEntity = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(bedEndDate.minusDays(1))
+        withDepartureDate(bedEndDate.plusDays(2))
+        withBed(bed)
+      }
+
+      val cancellationEntity = cancellationEntityFactory.produceAndPersist {
+        withBooking(bookingEntity)
+        withReason(cancellationReasonEntityFactory.produceAndPersist())
+      }
+      bookingEntity.cancellations += cancellationEntity
+
+      webTestClient.put()
+        .uri("/premises/${premises.id}/rooms/${room.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdateRoom(
+            notes = "test notes",
+            characteristicIds = characteristicIds,
+            name = "new-room-name",
+            bedEndDate = bedEndDate,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("name").isEqualTo("new-room-name")
+        .jsonPath("notes").isEqualTo("test notes")
+        .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
+        .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
+        .jsonPath("characteristics[*].serviceScope").isEqualTo(MutableList(5) { "temporary-accommodation" })
+        .jsonPath("characteristics[*].name").isEqualTo(MutableList(5) { "Floor level access" })
+        .jsonPath("beds[*].bedEndDate").isEqualTo(LocalDate.now().toString())
+    }
+  }
+
+  @Test
+  fun `Updating a Temporary Accommodation room with bedspace end-date is successful when booking exists but non-arrival`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      val bedEndDate = LocalDate.now()
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises }
+        withName("old-room-name")
+      }
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+      }
+      room.beds.add(bed)
+
+      val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
+        withModelScope("room")
+        withServiceScope("temporary-accommodation")
+        withName("Floor level access")
+      }.map { it.id }
+
+      val bookingEntity = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(bedEndDate.minusDays(1))
+        withDepartureDate(bedEndDate.plusDays(2))
+        withBed(bed)
+      }
+
+      val nonArrivalEntity = nonArrivalEntityFactory.produceAndPersist {
+        withReason(nonArrivalReasonEntityFactory.produceAndPersist())
+        withBooking(bookingEntity)
+      }
+      bookingEntity.nonArrival = nonArrivalEntity
+
+      webTestClient.put()
+        .uri("/premises/${premises.id}/rooms/${room.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdateRoom(
+            notes = "test notes",
+            characteristicIds = characteristicIds,
+            name = "new-room-name",
+            bedEndDate = bedEndDate,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("name").isEqualTo("new-room-name")
+        .jsonPath("notes").isEqualTo("test notes")
+        .jsonPath("characteristics[*].id").isEqualTo(characteristicIds.map { it.toString() })
+        .jsonPath("characteristics[*].modelScope").isEqualTo(MutableList(5) { "room" })
+        .jsonPath("characteristics[*].serviceScope").isEqualTo(MutableList(5) { "temporary-accommodation" })
+        .jsonPath("characteristics[*].name").isEqualTo(MutableList(5) { "Floor level access" })
+        .jsonPath("beds[*].bedEndDate").isEqualTo(LocalDate.now().toString())
+    }
+  }
+
+  @Test
+  fun `Updating a Temporary Accommodation room with bedspace is not successful when end-date is already exists for the given bed`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises }
+        withName("old-room-name")
+      }
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+        withEndDate { LocalDate.now().plusDays(1) }
+      }
+      room.beds.add(bed)
+
+      val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
+        withModelScope("room")
+        withServiceScope("temporary-accommodation")
+        withName("Floor level access")
+      }.map { it.id }
+
+      webTestClient.put()
+        .uri("/premises/${premises.id}/rooms/${room.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdateRoom(
+            notes = "test notes",
+            characteristicIds = characteristicIds,
+            name = "new-room-name",
+            bedEndDate = LocalDate.now(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("bedEndDateCantBeModified")
+    }
+  }
+
+  @Test
   fun `Get Room by ID returns OK with correct body`() {
     `Given a User` { _, jwt ->
       val premises = approvedPremisesEntityFactory.produceAndPersist {

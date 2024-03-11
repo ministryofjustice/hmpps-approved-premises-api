@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApprovedPremisesRoomsSeedJob(
@@ -146,6 +147,7 @@ class ApprovedPremisesRoomsSeedJob(
         code = row.bedCode,
         room = room,
         null,
+        createdAt = OffsetDateTime.now(),
       ),
     )
     log.info("New bed created: ${row.bedCode} (AP: ${row.apCode} | Room: ${room.code})")
