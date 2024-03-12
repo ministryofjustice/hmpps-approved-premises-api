@@ -16,14 +16,17 @@ interface Cas2ApplicationStatusUpdatesReportRepository : JpaRepository<DomainEve
         events.data -> 'eventDetails' -> 'personReference' ->> 'crn' AS personCrn,
         events.data -> 'eventDetails' -> 'newStatus' ->> 'name' AS newStatus,
         events.data -> 'eventDetails' -> 'updatedBy' ->> 'username' AS updatedBy,
+        COALESCE(string_agg(details ->> 'name', '|'), '') as statusDetails,
         TO_CHAR(
           CAST(events.data -> 'eventDetails' ->> 'updatedAt' AS TIMESTAMP),
           'YYYY-MM-DD"T"HH24:MI:SS'
          ) AS updatedAt
 
       FROM domain_events events
+      LEFT JOIN LATERAL json_array_elements(events.data -> 'eventDetails' -> 'newStatus' -> 'statusDetails') as details ON true
       WHERE events.type = 'CAS2_APPLICATION_STATUS_UPDATED'
         AND events.occurred_at  > CURRENT_DATE - 365
+      GROUP BY events.id  
       ORDER BY updatedAt DESC;
     """,
     nativeQuery = true,
@@ -39,4 +42,5 @@ interface Cas2ApplicationStatusUpdatedReportRow {
   fun getPersonNoms(): String
   fun getPersonCrn(): String
   fun getNewStatus(): String
+  fun getStatusDetails(): String
 }

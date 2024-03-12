@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2
 
+@Suppress("LongParameterList")
 class ApplicationStatusUpdatesReportRow(
   val eventId: String,
   val applicationId: String,
@@ -8,4 +9,5 @@ class ApplicationStatusUpdatesReportRow(
   val newStatus: String,
   val updatedAt: String,
   val updatedBy: String,
+  val statusDetails: String,
 )
