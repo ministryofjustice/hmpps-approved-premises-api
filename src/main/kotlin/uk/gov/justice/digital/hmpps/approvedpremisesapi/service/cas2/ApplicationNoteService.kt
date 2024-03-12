@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -35,6 +36,7 @@ class ApplicationNoteService(
   private val emailNotificationService: EmailNotificationService,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val assessmentUrlTemplate: String,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -58,9 +60,7 @@ class ApplicationNoteService(
 
     val savedNote = saveNote(application, note.note, user)
 
-    if (isExternalUser) {
-      sendEmailToReferrer(application, savedNote)
-    }
+    sendEmail(isExternalUser, application, savedNote)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(
@@ -69,9 +69,21 @@ class ApplicationNoteService(
     )
   }
 
+  private fun sendEmail(
+    isExternalUser: Boolean,
+    application: Cas2ApplicationEntity,
+    savedNote: Cas2ApplicationNoteEntity,
+  ) {
+    if (isExternalUser) {
+      sendEmailToReferrer(application, savedNote)
+    } else {
+      sendEmailToAssessors(application, savedNote)
+    }
+  }
+
   private fun sendEmailToReferrer(application: Cas2ApplicationEntity, savedNote: Cas2ApplicationNoteEntity) {
     if (application.createdByUser.email != null) {
-      emailNotificationService.sendEmail(
+      emailNotificationService.sendCas2Email(
         recipientEmailAddress = application.createdByUser.email!!,
         templateId = notifyConfig.templates.cas2NoteAddedForReferrer,
         personalisation = mapOf(
@@ -79,7 +91,7 @@ class ApplicationNoteService(
           "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
           "nomsNumber" to application.nomsNumber,
           "applicationType" to "Home Detention Curfew (HDC)",
-          "applicationURl" to applicationUrlTemplate.replace("#id", application.id.toString()),
+          "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
         ),
       )
     } else {
@@ -91,6 +103,48 @@ class ApplicationNoteService(
         ),
       )
     }
+  }
+
+  private fun sendEmailToAssessors(
+    application: Cas2ApplicationEntity,
+    savedNote: Cas2ApplicationNoteEntity,
+  ) {
+    emailNotificationService.sendCas2Email(
+      recipientEmailAddress = notifyConfig.emailAddresses.cas2Assessors,
+      templateId = notifyConfig.templates.cas2NoteAddedForAssessor,
+      personalisation = mapOf(
+        "nacroReferenceId" to getNacroReferenceIdOrPlaceholder(application.assessment!!),
+        "nacroReferenceIdInSubject" to getSubjectLineReferenceIdOrPlaceholder(application.assessment!!),
+        "dateNoteAdded" to savedNote.createdAt.toLocalDate().toCas2UiFormat(),
+        "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
+        "assessorName" to getAssessorNameOrPlaceholder(application.assessment!!),
+        "applicationType" to "Home Detention Curfew (HDC)",
+        "applicationUrl" to assessmentUrlTemplate.replace("#id", application.id.toString()),
+      ),
+    )
+  }
+
+  private fun getSubjectLineReferenceIdOrPlaceholder(assessment: Cas2AssessmentEntity): String {
+    if (assessment.nacroReferralId != null) {
+      return "(${assessment.nacroReferralId!!})"
+    }
+    return ""
+  }
+
+  private fun getNacroReferenceIdOrPlaceholder(assessment: Cas2AssessmentEntity): String {
+    if (assessment.nacroReferralId != null) {
+      return assessment.nacroReferralId!!
+    }
+    return "Unknown. " +
+      "The Nacro CAS-2 reference number has not been added to the application yet."
+  }
+
+  private fun getAssessorNameOrPlaceholder(assessment: Cas2AssessmentEntity): String {
+    if (assessment.assessorName != null) {
+      return assessment.assessorName!!
+    }
+    return "Unknown. " +
+      "The assessor has not added their name to the application yet."
   }
 
   private fun getCas2User(isExternalUser: Boolean): Cas2User {
