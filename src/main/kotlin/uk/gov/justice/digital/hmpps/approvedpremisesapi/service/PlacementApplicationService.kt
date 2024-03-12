@@ -27,7 +27,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerEr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult.ValidatableActionResultError
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
@@ -277,6 +276,10 @@ class PlacementApplicationService(
 
     if (placementApplicationAuthorisationResult is Either.Left) {
       return placementApplicationAuthorisationResult.value
+    }
+
+    if (apiPlacementDates.isEmpty()) {
+      return CasResult.GeneralValidationError("At least one placement date is required")
     }
 
     val submittedPlacementApplication = (placementApplicationAuthorisationResult as Either.Right).value

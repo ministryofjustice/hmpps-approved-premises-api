@@ -48,10 +48,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -156,21 +155,40 @@ class PlacementApplicationServiceTest {
     }
 
     @Test
+    fun `Submitting an application returns validation error if no dates defined`() {
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java) } returns placementApplication.schemaVersion
+
+      val result = placementApplicationService.submitApplication(
+        placementApplication.id,
+        "translatedDocument",
+        PlacementType.releaseFollowingDecision,
+        emptyList(),
+      )
+
+      assertThat(result is CasResult.GeneralValidationError).isTrue
+      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("At least one placement date is required")
+    }
+
+    @Test
     fun `Submitting an application triggers allocation and sets a due date`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java) } returns placementApplication.schemaVersion
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { placementDateRepository.saveAll(any<List<PlacementDateEntity>>()) } answers { emptyList() }
+      every { placementDateRepository.save(any()) } answers { it.invocation.args[0] as PlacementDateEntity }
 
       every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } returns Unit
 
-      val result = placementApplicationServiceLegacyWithdrawalLogic.submitApplication(
+      val result = placementApplicationService.submitApplication(
         placementApplication.id,
         "translatedDocument",
         PlacementType.releaseFollowingDecision,
-        emptyList(),
+        listOf(
+          PlacementDates(expectedArrival = LocalDate.of(2024, 4, 1), duration = 5),
+        ),
       )
 
       assertThat(result is CasResult.Success).isTrue
