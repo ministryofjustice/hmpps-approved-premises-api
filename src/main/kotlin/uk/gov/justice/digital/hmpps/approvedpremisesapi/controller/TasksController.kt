@@ -64,9 +64,9 @@ class TasksController(
   private val taskService: TaskService,
 ) : TasksApiDelegate {
 
-  @Deprecated("Use tasksGet")
-  override fun tasksReallocatableGet(
-    type: String?,
+  override fun tasksGet(
+    type: TaskType?,
+    types: List<TaskType>?,
     page: Int?,
     sortBy: TaskSortField?,
     sortDirection: SortDirection?,
@@ -80,33 +80,19 @@ class TasksController(
       throw ForbiddenProblem()
     }
 
-    return getAll(
-      types = determineTaskEntityTypes(type),
-      page = page,
-      sortBy = sortBy,
-      sortDirection = sortDirection,
-      allocatedFilter = allocatedFilter,
-      apAreaId = apAreaId,
-      allocatedToUserId = allocatedToUserId,
-    )
-  }
-
-  private fun getAll(
-    types: List<TaskEntityType>,
-    page: Int?,
-    sortBy: TaskSortField?,
-    sortDirection: SortDirection?,
-    allocatedFilter: AllocatedFilter?,
-    apAreaId: UUID?,
-    allocatedToUserId: UUID?,
-  ): ResponseEntity<List<Task>> {
-    val user = userService.getUserForRequest()
+    val taskEntityTypes = if (types != null) {
+      types.map { toTaskEntityType(it) }
+    } else if (type != null) {
+      listOf(toTaskEntityType(type))
+    } else {
+      TaskEntityType.entries
+    }
 
     val (typedTasks, metadata) = taskService.getAll(
       TaskService.TaskFilterCriteria(
         allocatedFilter = allocatedFilter,
         apAreaId = apAreaId,
-        types = types,
+        types = taskEntityTypes,
         allocatedToUserId = allocatedToUserId,
       ),
       PageCriteria(
@@ -132,71 +118,11 @@ class TasksController(
     )
   }
 
-  override fun tasksGet(
-    type: TaskType?,
-    types: List<TaskType>?,
-    page: Int?,
-    sortBy: TaskSortField?,
-    sortDirection: SortDirection?,
-    allocatedFilter: AllocatedFilter?,
-    apAreaId: UUID?,
-    allocatedToUserId: UUID?,
-  ): ResponseEntity<List<Task>> {
-    val user = userService.getUserForRequest()
-
-    if (!user.hasAnyRole(UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_MATCHER)) {
-      throw ForbiddenProblem()
-    }
-
-    val taskEntityTypes = if (types != null) {
-      types.map { toTaskEntityType(it) }
-    } else if (type != null) {
-      listOf(toTaskEntityType(type))
-    } else {
-      TaskEntityType.entries
-    }
-
-    return getAll(
-      types = taskEntityTypes,
-      page = page,
-      sortBy = sortBy,
-      sortDirection = sortDirection,
-      allocatedFilter = allocatedFilter,
-      apAreaId = apAreaId,
-      allocatedToUserId = allocatedToUserId,
-    )
-  }
-
   private fun toTaskEntityType(taskType: TaskType) = when (taskType) {
     TaskType.assessment -> TaskEntityType.ASSESSMENT
     TaskType.placementRequest -> TaskEntityType.PLACEMENT_REQUEST
     TaskType.placementApplication -> TaskEntityType.PLACEMENT_APPLICATION
     TaskType.bookingAppeal -> throw BadRequestProblem()
-  }
-
-  @Deprecated("Use tasksGet, specifying the allocatedToUserId")
-  override fun tasksTaskTypeGet(
-    taskType: String,
-    page: Int?,
-    sortDirection: SortDirection?,
-    apAreaId: UUID?,
-  ): ResponseEntity<List<Task>> {
-    val user = userService.getUserForRequest()
-    val type = toTaskEntityType(taskType)
-
-    if (type != TaskEntityType.PLACEMENT_REQUEST && type != TaskEntityType.PLACEMENT_APPLICATION) {
-      throw BadRequestProblem()
-    }
-
-    return getAll(
-      types = listOf(type),
-      page = page,
-      sortBy = null,
-      sortDirection = sortDirection,
-      allocatedFilter = null,
-      apAreaId = apAreaId,
-      allocatedToUserId = user.id,
-    )
   }
 
   override fun tasksTaskTypeIdGet(id: UUID, taskType: String): ResponseEntity<TaskWrapper> {
@@ -397,14 +323,6 @@ class TasksController(
       user.hasQualification(UserQualification.LAO),
       false,
     )
-  }
-
-  private fun determineTaskEntityTypes(type: String?): List<TaskEntityType> {
-    return if (type == null) {
-      TaskEntityType.entries
-    } else {
-      listOf(toTaskEntityType(type))
-    }
   }
 
   private fun toTaskEntityType(type: String): TaskEntityType = when (toTaskType(type)) {
