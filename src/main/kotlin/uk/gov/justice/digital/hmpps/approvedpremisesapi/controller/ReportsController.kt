@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.App
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Cas1PlacementMatchingOutcomesReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementApplicationReportProperties
@@ -207,6 +208,27 @@ class ReportsController(
     val outputStream = ByteArrayOutputStream()
 
     reportService.createReferralsMetricsReport(properties, outputStream, categories)
+
+    return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
+  }
+
+  override fun reportsPlacementMatchingOutcomesGet(
+    xServiceName: ServiceName,
+    year: Int,
+    month: Int,
+  ): ResponseEntity<Resource> {
+    if (!userAccessService.currentUserCanViewReport()) {
+      throw ForbiddenProblem()
+    }
+
+    if (xServiceName !== ServiceName.approvedPremises) {
+      throw NotAllowedProblem("This endpoint only supports CAS1")
+    }
+
+    val properties = Cas1PlacementMatchingOutcomesReportProperties(year, month)
+    val outputStream = ByteArrayOutputStream()
+
+    reportService.createCas1PlacementMatchingOutcomesReport(properties, outputStream)
 
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }

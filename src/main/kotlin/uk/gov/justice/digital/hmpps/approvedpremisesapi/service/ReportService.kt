@@ -16,11 +16,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingReposi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntityReportRowRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementMatchingOutcomesEntityReportRowRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.ApplicationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUsageReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedUtilisationReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BookingsReportGenerator
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Cas1PlacementMatchingOutcomesReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.DailyMetricsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.LostBedsReportGenerator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.PlacementApplicationReportGenerator
@@ -34,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.App
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Cas1PlacementMatchingOutcomesReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.DailyMetricReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementApplicationReportProperties
@@ -62,6 +65,7 @@ class ReportService(
   private val timelinessEntityRepository: ApplicationTimelinessEntityRepository,
   private val bookingsReportRepository: BookingsReportRepository,
   private val placementApplicationEntityReportRowRepository: PlacementApplicationEntityReportRowRepository,
+  private val placementMatchingOutcomesEntityReportRowRepository: PlacementMatchingOutcomesEntityReportRowRepository,
   private val objectMapper: ObjectMapper,
   @Value("\${cas3-report.end-date-override:0}") private val cas3EndDateOverride: Int,
   @Value("\${cas3-report.crn-search-limit:400}") private val numberOfCrn: Int,
@@ -193,6 +197,14 @@ class ReportService(
   fun createCas1PlacementApplicationReport(properties: PlacementApplicationReportProperties, outputStream: OutputStream) {
     PlacementApplicationReportGenerator()
       .createReport(placementApplicationEntityReportRowRepository.generatePlacementApplicationEntityReportRowsForCalendarMonth(properties.month, properties.year), properties)
+      .writeExcel(outputStream) {
+        WorkbookFactory.create(true)
+      }
+  }
+
+  fun createCas1PlacementMatchingOutcomesReport(properties: Cas1PlacementMatchingOutcomesReportProperties, outputStream: OutputStream) {
+    Cas1PlacementMatchingOutcomesReportGenerator()
+      .createReport(placementMatchingOutcomesEntityReportRowRepository.generateReportRowsForExpectedArrivalMonth(properties.month, properties.year), properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
       }

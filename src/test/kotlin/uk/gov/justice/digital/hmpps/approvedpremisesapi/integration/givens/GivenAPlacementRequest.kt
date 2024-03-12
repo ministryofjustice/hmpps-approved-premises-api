@@ -6,7 +6,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -28,6 +30,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   name: String? = null,
   reallocated: Boolean = false,
   isWithdrawn: Boolean = false,
+  withdrawalReason: PlacementRequestWithdrawalReason? = null,
   isParole: Boolean = false,
   expectedArrival: LocalDate? = null,
   tier: String? = null,
@@ -36,6 +39,9 @@ fun IntegrationTestBase.`Given a Placement Request`(
   booking: BookingEntity? = null,
   apArea: ApAreaEntity? = null,
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+  duration: Int? = null,
+  assessmentSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
+  placementApplication: PlacementApplicationEntity? = null,
 ): Pair<PlacementRequestEntity, ApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -83,7 +89,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
     withAssessmentSchema(assessmentSchema)
     withApplication(application)
-    withSubmittedAt(OffsetDateTime.now())
+    withSubmittedAt(assessmentSubmittedAt)
     withAllocatedToUser(assessmentAllocatedTo)
     withDecision(AssessmentDecision.ACCEPTED)
   }
@@ -112,6 +118,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
       withReallocatedAt(OffsetDateTime.now())
     }
     withIsWithdrawn(isWithdrawn)
+    withWithdrawalReason(withdrawalReason)
     withIsParole(isParole)
     withPlacementRequirements(placementRequirements)
     if (booking != null) {
@@ -120,7 +127,13 @@ fun IntegrationTestBase.`Given a Placement Request`(
     if (expectedArrival != null) {
       withExpectedArrival(expectedArrival)
     }
+    if (duration != null) {
+      withDuration(duration)
+    }
     withDueAt(dueAt)
+    if (placementApplication != null) {
+      withPlacementApplication(placementApplication)
+    }
   }
 
   return Pair(placementRequest, application)
@@ -138,8 +151,12 @@ fun IntegrationTestBase.`Given a Placement Request`(
   expectedArrival: LocalDate? = null,
   tier: String? = null,
   isWithdrawn: Boolean = false,
+  withdrawalReason: PlacementRequestWithdrawalReason? = null,
   apArea: ApAreaEntity? = null,
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
+  duration: Int? = null,
+  applicationSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
+  assessmentSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
   block: (placementRequest: PlacementRequestEntity, application: ApplicationEntity) -> Unit,
 ) {
   val result = `Given a Placement Request`(
@@ -151,8 +168,12 @@ fun IntegrationTestBase.`Given a Placement Request`(
     expectedArrival = expectedArrival,
     tier = tier,
     isWithdrawn = isWithdrawn,
+    withdrawalReason = withdrawalReason,
     apArea = apArea,
     dueAt = dueAt,
+    duration = duration,
+    applicationSubmittedAt = applicationSubmittedAt,
+    assessmentSubmittedAt = assessmentSubmittedAt,
   )
 
   block(result.first, result.second)

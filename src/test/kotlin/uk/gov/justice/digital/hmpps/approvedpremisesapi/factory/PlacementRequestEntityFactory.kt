@@ -95,7 +95,7 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.placementApplication = { placementApplication }
   }
 
-  fun withWithdrawalReason(withdrawalReason: PlacementRequestWithdrawalReason) = apply {
+  fun withWithdrawalReason(withdrawalReason: PlacementRequestWithdrawalReason?) = apply {
     this.withdrawalReason = { withdrawalReason }
   }
 

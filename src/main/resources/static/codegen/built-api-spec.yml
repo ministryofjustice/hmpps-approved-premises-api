@@ -4573,6 +4573,35 @@ paths:
               schema:
                 type: string
                 format: binary
+  /reports/placement-matching-outcomes:
+    get:
+      tags:
+        - Reports
+      summary: Returns a spreadsheet of placement applications for a given expected arrival month/year.
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+        - name: year
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: month
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: Successfully retrieved the report
+          content:
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+              schema:
+                type: string
+                format: binary
 components:
   responses:
     401Response:
