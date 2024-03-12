@@ -134,6 +134,7 @@ class WithdrawableService(
     cancelledAt: LocalDate,
     userProvidedReason: UUID?,
     notes: String?,
+    otherReason: String?,
   ): CasResult<CancellationEntity> {
     val withdrawalContext = WithdrawalContext(
       triggeringUser = user,
@@ -150,6 +151,7 @@ class WithdrawableService(
         cancelledAt,
         userProvidedReason,
         notes,
+        otherReason,
         withdrawalContext,
       )
     }

@@ -243,6 +243,7 @@ class ApprovedPremisesBookingSeedJob(
           cancelledAt = row.cancellationDate,
           userProvidedReason = cancellationReason.id,
           notes = row.cancellationNotes,
+          otherReason = null,
           withdrawalContext = WithdrawalContext(
             triggeringUser = null,
             triggeringEntityType = WithdrawableEntityType.Booking,

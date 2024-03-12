@@ -539,6 +539,7 @@ class PremisesController(
           cancelledAt = body.date,
           userProvidedReason = body.reason,
           notes = body.notes,
+          otherReason = body.otherReason,
         )
         val cancellation = extractEntityFromCasResult(result)
         return ResponseEntity.ok(cancellationTransformer.transformJpaToApi(cancellation))

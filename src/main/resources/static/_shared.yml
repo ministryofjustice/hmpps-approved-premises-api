@@ -899,6 +899,8 @@ components:
           format: uuid
         notes:
           type: string
+        otherReason:
+          type: string
       required:
         - bookingId
         - date
