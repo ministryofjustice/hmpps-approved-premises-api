@@ -52,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
@@ -179,10 +180,9 @@ class PlacementApplicationServiceTest {
         emptyList(),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
+      assertThat(result is CasResult.Success).isTrue
 
-      val validatableActionResult = (result as AuthorisableActionResult.Success).entity
-      val updatedApplication = (validatableActionResult as ValidatableActionResult.Success).entity
+      val updatedApplication = (result as CasResult.Success).value
 
       assertThat(updatedApplication[0].dueAt).isEqualTo(dueAt)
     }
@@ -207,8 +207,8 @@ class PlacementApplicationServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val updatedPlacementApplications = extractEntityFromNestedAuthorisableValidatableActionResult(result)
+      assertThat(result is CasResult.Success).isTrue
+      val updatedPlacementApplications = extractEntityFromCasResult(result)
 
       assertThat(updatedPlacementApplications).hasSize(1)
 
@@ -244,8 +244,8 @@ class PlacementApplicationServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val updatedPlacementApplications = extractEntityFromNestedAuthorisableValidatableActionResult(result)
+      assertThat(result is CasResult.Success).isTrue
+      val updatedPlacementApplications = extractEntityFromCasResult(result)
 
       assertThat(updatedPlacementApplications).hasSize(3)
 
@@ -295,8 +295,8 @@ class PlacementApplicationServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val updatedPlacementApplications = extractEntityFromNestedAuthorisableValidatableActionResult(result)
+      assertThat(result is CasResult.Success).isTrue
+      val updatedPlacementApplications = extractEntityFromCasResult(result)
 
       assertThat(updatedPlacementApplications).hasSize(1)
 
