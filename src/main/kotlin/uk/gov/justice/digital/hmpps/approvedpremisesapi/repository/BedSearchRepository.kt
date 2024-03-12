@@ -178,7 +178,7 @@ SELECT p.id as premises_id,
        r.id as room_id,
        r.name as room_name,
        c2.property_name as room_characteristic_property_name,
-       (SELECT count(1) FROM beds b2 WHERE b2.room_id IN (SELECT id FROM rooms r2 WHERE r2.premises_id = p.id)) as premises_bed_count,
+       (SELECT count(1) FROM beds b2 WHERE b2.room_id IN (SELECT id FROM rooms r2 WHERE r2.premises_id = p.id) AND ( b2.end_date IS NULL OR b2.end_date > :end_date ) ) as premises_bed_count,
        c2.name as room_characteristic_name,
        b.id as bed_id,
        b.name as bed_name
@@ -209,7 +209,8 @@ WHERE
     pdu.name = :probation_delivery_unit AND
     p.probation_region_id = :probation_region_id AND 
     p.status = 'active' AND 
-    p.service = 'temporary-accommodation';
+    p.service = 'temporary-accommodation' AND
+    b.end_date IS NULL OR b.end_date > :end_date;
 """
 
   fun findTemporaryAccommodationBeds(
