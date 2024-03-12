@@ -162,7 +162,7 @@ class Cas2ApplicationNotesTest(
             "timeNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toCas2UiFormattedHourOfDay(),
             "assessorName" to "Anne Assessor",
             "applicationType" to "Home Detention Curfew (HDC)",
-            "applicationUrl" to assessmentUrlTemplate.replace("#id", application.id.toString()),
+            "applicationUrl" to assessmentUrlTemplate.replace("#applicationId", application.id.toString()),
           ),
           replyToEmailId = "cbe00c2d-387b-4283-9b9c-13c8b7a61444",
         )
