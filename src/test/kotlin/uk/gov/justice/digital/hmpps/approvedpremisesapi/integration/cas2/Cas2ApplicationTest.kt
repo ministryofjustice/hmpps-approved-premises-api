@@ -20,12 +20,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
@@ -246,46 +244,46 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get list of applications returns successfully when the person cannot be fetched from the prisons API`() {
-      `Given a CAS2 User`() { userEntity, jwt ->
+      `Given a CAS2 User` { userEntity, jwt ->
         val crn = "X1234"
 
-        val application = produceAndPersistBasicApplication(crn, userEntity)
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withCrn(crn)
+            withNomsNumber("ABC123")
+          },
+        ) { offenderDetails, _ ->
+          val application = produceAndPersistBasicApplication(crn, userEntity)
 
-        val offenderDetails = OffenderDetailsSummaryFactory()
-          .withCrn(crn)
-          .withNomsNumber("ABC123")
-          .produce()
+          PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
+          loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
 
-        CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
-        loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
-        PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
-        loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
+          val rawResponseBody = webTestClient.get()
+            .uri("/cas2/applications")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
 
-        val rawResponseBody = webTestClient.get()
-          .uri("/cas2/applications")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
+          val responseBody =
+            objectMapper.readValue(
+              rawResponseBody,
+              object :
+                TypeReference<List<Cas2ApplicationSummary>>() {},
+            )
 
-        val responseBody =
-          objectMapper.readValue(
-            rawResponseBody,
-            object :
-              TypeReference<List<Cas2ApplicationSummary>>() {},
-          )
+          Assertions.assertThat(responseBody).matches {
+            val person = it[0].person as FullPerson
 
-        Assertions.assertThat(responseBody).matches {
-          val person = it[0].person as FullPerson
-
-          application.id == it[0].id &&
-            application.crn == person.crn &&
-            person.nomsNumber == null &&
-            person.status == PersonStatus.unknown &&
-            person.prisonName == null
+            application.id == it[0].id &&
+              application.crn == person.crn &&
+              person.nomsNumber == null &&
+              person.status == PersonStatus.unknown &&
+              person.prisonName == null
+          }
         }
       }
     }
@@ -347,46 +345,46 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get single application returns successfully when the person cannot be fetched from the prisons API`() {
-      `Given a CAS2 User`() { userEntity, jwt ->
+      `Given a CAS2 User` { userEntity, jwt ->
         val crn = "X1234"
 
-        val application = produceAndPersistBasicApplication(crn, userEntity)
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withCrn(crn)
+            withNomsNumber("ABC123")
+          },
+        ) { offenderDetails, _ ->
+          val application = produceAndPersistBasicApplication(crn, userEntity)
 
-        val offenderDetails = OffenderDetailsSummaryFactory()
-          .withCrn(crn)
-          .withNomsNumber("ABC123")
-          .produce()
+          PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
+          loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
 
-        CommunityAPI_mockSuccessfulOffenderDetailsCall(offenderDetails)
-        loadPreemptiveCacheForOffenderDetails(offenderDetails.otherIds.crn)
-        PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
-        loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
+          val rawResponseBody = webTestClient.get()
+            .uri("/cas2/applications/${application.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
 
-        val rawResponseBody = webTestClient.get()
-          .uri("/cas2/applications/${application.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
+          val responseBody = objectMapper.readValue(
+            rawResponseBody,
+            Cas2Application::class.java,
+          )
 
-        val responseBody = objectMapper.readValue(
-          rawResponseBody,
-          Cas2Application::class.java,
-        )
+          Assertions.assertThat(responseBody.person is FullPerson).isTrue
 
-        Assertions.assertThat(responseBody.person is FullPerson).isTrue
+          Assertions.assertThat(responseBody).matches {
+            val person = it.person as FullPerson
 
-        Assertions.assertThat(responseBody).matches {
-          val person = it.person as FullPerson
-
-          application.id == it.id &&
-            application.crn == person.crn &&
-            person.nomsNumber == null &&
-            person.status == PersonStatus.unknown &&
-            person.prisonName == null
+            application.id == it.id &&
+              application.crn == person.crn &&
+              person.nomsNumber == null &&
+              person.status == PersonStatus.unknown &&
+              person.prisonName == null
+          }
         }
       }
     }

@@ -10,21 +10,28 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RoshRisksEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRoshRatingsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.HMPPSTier_mockSuccessfulTierCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Registrations
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Registration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.hmppstier.Tier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZonedDateTime
 import java.util.UUID
 
 class PersonRisksTest : IntegrationTestBase() {
@@ -124,6 +131,28 @@ class PersonRisksTest : IntegrationTestBase() {
                 .produce(),
             ),
           ),
+        )
+
+        APDeliusContext_mockSuccessfulCaseDetailCall(
+          offenderDetails.otherIds.crn,
+          CaseDetailFactory()
+            .from(offenderDetails.asCaseDetail())
+            .withRegistrations(
+              listOf(
+                Registration("FLAG", "RISK FLAG", LocalDate.now()),
+              ),
+            )
+            .withMappaDetail(
+              MappaDetail(
+                1,
+                "L1",
+                1,
+                "C1",
+                LocalDate.parse("2022-09-06"),
+                ZonedDateTime.parse("2022-09-06T00:00:00Z"),
+              ),
+            )
+            .produce(),
         )
 
         webTestClient.get()
