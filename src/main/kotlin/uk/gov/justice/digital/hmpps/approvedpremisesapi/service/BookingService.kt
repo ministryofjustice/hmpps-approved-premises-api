@@ -1196,6 +1196,7 @@ class BookingService(
         notes = notes,
         booking = booking,
         createdAt = OffsetDateTime.now(),
+        otherReason = null,
       ),
     )
     booking.status = BookingStatus.cancelled
@@ -1370,6 +1371,7 @@ class BookingService(
         notes = notes,
         booking = booking,
         createdAt = OffsetDateTime.now(),
+        otherReason = null,
       ),
     )
     booking.status = BookingStatus.cancelled

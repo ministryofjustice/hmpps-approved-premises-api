@@ -19,6 +19,7 @@ class CancellationEntityFactory : Factory<CancellationEntity> {
   private var notes: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var booking: Yielded<BookingEntity>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().minusDays(14L).randomDateTimeBefore() }
+  private var otherReason: Yielded<String?> = { null }
 
   fun withDefaults() = apply {
     withReason(CancellationReasonEntityFactory().produce())
@@ -58,6 +59,10 @@ class CancellationEntityFactory : Factory<CancellationEntity> {
     this.createdAt = { createdAt }
   }
 
+  fun withOtherReason(otherReason: String?) = apply {
+    this.otherReason = { otherReason }
+  }
+
   override fun produce(): CancellationEntity = CancellationEntity(
     id = this.id(),
     notes = this.notes(),
@@ -65,5 +70,6 @@ class CancellationEntityFactory : Factory<CancellationEntity> {
     reason = this.reason?.invoke() ?: throw RuntimeException("Reason must be provided"),
     booking = this.booking?.invoke() ?: throw RuntimeException("Booking must be provided"),
     createdAt = this.createdAt(),
+    otherReason = this.otherReason(),
   )
 }

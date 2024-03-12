@@ -40,6 +40,7 @@ data class CancellationEntity(
   @ManyToOne
   @JoinColumn(name = "booking_id")
   var booking: BookingEntity,
+  val otherReason: String?,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

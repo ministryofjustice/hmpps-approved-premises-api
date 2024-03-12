@@ -548,6 +548,7 @@ class BookingTransformerTest {
           notes = null,
           booking = this,
           createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+          otherReason = null,
         ),
       )
     }
@@ -630,6 +631,7 @@ class BookingTransformerTest {
           notes = null,
           booking = this,
           createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
+          otherReason = null,
         ),
         CancellationEntity(
           id = UUID.fromString("d34415c3-d128-45a0-9950-b84491ab8d11"),
@@ -638,6 +640,7 @@ class BookingTransformerTest {
           notes = "Original reason chosen in error",
           booking = this,
           createdAt = OffsetDateTime.parse("2022-07-02T12:34:56.789Z"),
+          otherReason = null,
         ),
       )
     }
