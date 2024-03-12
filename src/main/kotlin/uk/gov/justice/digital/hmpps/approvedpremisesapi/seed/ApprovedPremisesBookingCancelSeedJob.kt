@@ -43,6 +43,7 @@ class ApprovedPremisesBookingCancelSeedJob(
       cancelledAt = LocalDate.now(),
       userProvidedReason = errorInBookingDetailsCancellationReason,
       notes = null,
+      otherReason = null,
       withdrawalContext = WithdrawalContext(
         triggeringUser = null,
         triggeringEntityType = WithdrawableEntityType.Booking,

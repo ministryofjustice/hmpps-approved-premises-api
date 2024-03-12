@@ -79,6 +79,7 @@ class Cas1WithdrawableTreeOperations(
           userProvidedReason = null,
           notes = "Automatically withdrawn as ${context.triggeringEntityType.label} was withdrawn",
           withdrawalContext = context,
+          otherReason = null,
         )
 
         when (bookingCancellationResult) {

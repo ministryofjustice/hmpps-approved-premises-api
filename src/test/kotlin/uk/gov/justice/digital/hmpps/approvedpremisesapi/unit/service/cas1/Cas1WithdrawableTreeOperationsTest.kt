@@ -163,7 +163,7 @@ class Cas1WithdrawableTreeOperationsTest {
     } returns CasResult.Success(mockk<PlacementRequestService.PlacementRequestAndCancellations>())
 
     every {
-      mockBookingService.createCas1Cancellation(any(), any(), null, any(), any())
+      mockBookingService.createCas1Cancellation(any(), any(), null, any(), any(), any())
     } returns mockk<CasResult.Success<CancellationEntity>>()
 
     every { mockBookingRepository.findByIdOrNull(bookingWithdrawable.id) } returns bookingWithdrawable
@@ -193,6 +193,7 @@ class Cas1WithdrawableTreeOperationsTest {
         any(),
         null,
         "Automatically withdrawn as Application was withdrawn",
+        null,
         context,
       )
     }
@@ -203,6 +204,7 @@ class Cas1WithdrawableTreeOperationsTest {
         any(),
         null,
         "Automatically withdrawn as Application was withdrawn",
+        null,
         context,
       )
     }
@@ -325,7 +327,7 @@ class Cas1WithdrawableTreeOperationsTest {
     } returns CasResult.Success(mockk<PlacementRequestService.PlacementRequestAndCancellations>())
 
     every {
-      mockBookingService.createCas1Cancellation(any(), any(), null, any(), any())
+      mockBookingService.createCas1Cancellation(any(), any(), null, any(), any(), any())
     } returns mockk<CasResult.Success<CancellationEntity>>()
 
     every { mockBookingRepository.findByIdOrNull(bookingWithdrawableButBlocking.id) } returns bookingWithdrawableButBlocking
@@ -355,6 +357,7 @@ class Cas1WithdrawableTreeOperationsTest {
         any(),
         null,
         "Automatically withdrawn as Application was withdrawn",
+        null,
         context,
       )
     }
@@ -460,7 +463,7 @@ class Cas1WithdrawableTreeOperationsTest {
     } returns CasResult.Unauthorised()
 
     every {
-      mockBookingService.createCas1Cancellation(any(), any(), null, any(), any())
+      mockBookingService.createCas1Cancellation(any(), any(), null, any(), any(), any())
     } returns CasResult.GeneralValidationError("oh dear")
 
     every { mockBookingRepository.findByIdOrNull(bookingWithdrawable.id) } returns bookingWithdrawable

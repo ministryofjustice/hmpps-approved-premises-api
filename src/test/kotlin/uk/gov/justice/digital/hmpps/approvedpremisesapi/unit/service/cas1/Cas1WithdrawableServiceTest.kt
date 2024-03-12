@@ -600,6 +600,7 @@ class Cas1WithdrawableServiceTest {
     val cancelledAt = LocalDate.now()
     val userProvidedReason = UUID.randomUUID()
     val notes = "The Notes"
+    val otherReason = "Other reason"
 
     val booking = BookingEntityFactory()
       .withApplication(application)
@@ -617,7 +618,7 @@ class Cas1WithdrawableServiceTest {
       every { withdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
 
       every {
-        bookingService.createCas1Cancellation(any(), any(), any(), any(), any())
+        bookingService.createCas1Cancellation(any(), any(), any(), any(), any(), any())
       } returns CasResult.Success(CancellationEntityFactory().withDefaults().withBooking(booking).produce())
 
       val context = WithdrawalContext(user, WithdrawableEntityType.Booking, booking.id)
@@ -626,7 +627,7 @@ class Cas1WithdrawableServiceTest {
         cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
       } returns Unit
 
-      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes)
+      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes, otherReason)
 
       assertThat(result is CasResult.Success)
 
@@ -636,6 +637,7 @@ class Cas1WithdrawableServiceTest {
           cancelledAt,
           userProvidedReason,
           notes,
+          otherReason,
           context,
         )
       }
@@ -655,7 +657,7 @@ class Cas1WithdrawableServiceTest {
 
       every { withdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
 
-      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes)
+      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes, otherReason)
 
       assertThat(result is CasResult.Unauthorised).isTrue()
     }
@@ -670,7 +672,7 @@ class Cas1WithdrawableServiceTest {
 
       every { withdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
 
-      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes)
+      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes, otherReason)
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Placement is not in a withdrawable state")
@@ -686,7 +688,7 @@ class Cas1WithdrawableServiceTest {
 
       every { withdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
 
-      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes)
+      val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes, otherReason)
 
       assertThat(result is CasResult.GeneralValidationError).isTrue()
       assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("Placement withdrawal is blocked")

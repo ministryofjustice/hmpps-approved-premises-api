@@ -1168,6 +1168,7 @@ class BookingService(
     cancelledAt: LocalDate,
     userProvidedReason: UUID?,
     notes: String?,
+    otherReason: String?,
     withdrawalContext: WithdrawalContext,
   ): CasResult<CancellationEntity> {
     if (booking.application != null && booking.application !is ApprovedPremisesApplicationEntity) {
@@ -1188,6 +1189,10 @@ class BookingService(
       return CasResult.FieldValidationError(mapOf("$.reason" to "incorrectCancellationReasonServiceScope"))
     }
 
+    if (reason.name == "Other" && otherReason.isNullOrEmpty()) {
+      return CasResult.FieldValidationError(mapOf("$.otherReason" to "empty"))
+    }
+
     val cancellationEntity = cancellationRepository.save(
       CancellationEntity(
         id = UUID.randomUUID(),
@@ -1196,6 +1201,7 @@ class BookingService(
         notes = notes,
         booking = booking,
         createdAt = OffsetDateTime.now(),
+        otherReason = otherReason,
       ),
     )
     booking.status = BookingStatus.cancelled
@@ -1370,6 +1376,7 @@ class BookingService(
         notes = notes,
         booking = booking,
         createdAt = OffsetDateTime.now(),
+        otherReason = null,
       ),
     )
     booking.status = BookingStatus.cancelled
