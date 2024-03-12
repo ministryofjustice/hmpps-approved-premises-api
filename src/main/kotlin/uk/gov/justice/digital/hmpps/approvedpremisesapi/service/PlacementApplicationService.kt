@@ -280,6 +280,10 @@ class PlacementApplicationService(
       return placementApplicationAuthorisationResult.value
     }
 
+    if(apiPlacementDates.isEmpty()) {
+      return CasResult.GeneralValidationError("At least one placement date is required")
+    }
+
     val submittedPlacementApplication = (placementApplicationAuthorisationResult as Either.Right).value
 
     val allocatedUser = userAllocator.getUserForPlacementApplicationAllocation(submittedPlacementApplication)
