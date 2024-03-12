@@ -250,7 +250,7 @@ class PlacementApplicationService(
   fun updateApplication(
     id: UUID,
     data: String,
-  ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+  ): CasResult<PlacementApplicationEntity> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit<PlacementApplicationEntity>(id)
 
     if (placementApplicationAuthorisationResult is Either.Left) {
@@ -263,9 +263,7 @@ class PlacementApplicationService(
 
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedApplication),
-    )
+    return CasResult.Success(savedApplication)
   }
 
   @Transactional
@@ -274,7 +272,7 @@ class PlacementApplicationService(
     translatedDocument: String,
     apiPlacementType: ApiPlacementType,
     apiPlacementDates: List<ApiPlacementDates>,
-  ): AuthorisableActionResult<ValidatableActionResult<List<PlacementApplicationEntity>>> {
+  ): CasResult<List<PlacementApplicationEntity>> {
     val placementApplicationAuthorisationResult = getApplicationForUpdateOrSubmit<List<PlacementApplicationEntity>>(id)
 
     if (placementApplicationAuthorisationResult is Either.Left) {
@@ -311,9 +309,7 @@ class PlacementApplicationService(
       }
     }
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(placementApplicationsWithDates),
-    )
+    return CasResult.Success(placementApplicationsWithDates)
   }
 
   @Deprecated("This is legacy behaviour that will be removed once the new withdrawals functionality has been released")
@@ -436,18 +432,18 @@ class PlacementApplicationService(
     return placementApplicationEntity
   }
 
-  private fun <T> getApplicationForUpdateOrSubmit(id: UUID): Either<AuthorisableActionResult<ValidatableActionResult<T>>, PlacementApplicationEntity> {
+  private fun <T> getApplicationForUpdateOrSubmit(id: UUID): Either<CasResult<T>, PlacementApplicationEntity> {
     val placementApplication = placementApplicationRepository.findByIdOrNull(id)
-      ?: return Either.Left(AuthorisableActionResult.NotFound())
+      ?: return Either.Left(CasResult.NotFound())
     val user = userService.getUserForRequest()
 
     if (placementApplication.createdByUser != user) {
-      return Either.Left(AuthorisableActionResult.Unauthorised())
+      return Either.Left(CasResult.Unauthorised())
     }
 
     val validationError = confirmApplicationCanBeUpdatedOrSubmitted<T>(placementApplication)
     if (validationError != null) {
-      return Either.Left(AuthorisableActionResult.Success(validationError))
+      return Either.Left(validationError)
     }
 
     return Either.Right(placementApplication)
@@ -455,18 +451,18 @@ class PlacementApplicationService(
 
   private fun <T> confirmApplicationCanBeUpdatedOrSubmitted(
     placementApplicationEntity: PlacementApplicationEntity,
-  ): ValidatableActionResultError<T>? {
+  ): CasResult<T>? {
     val latestSchema = jsonSchemaService.getNewestSchema(
       ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java,
     )
     placementApplicationEntity.schemaUpToDate = placementApplicationEntity.schemaVersion.id == latestSchema.id
 
     if (!placementApplicationEntity.schemaUpToDate) {
-      return ValidatableActionResult.GeneralValidationError("The schema version is outdated")
+      return CasResult.GeneralValidationError("The schema version is outdated")
     }
 
     if (placementApplicationEntity.submittedAt != null) {
-      return ValidatableActionResult.GeneralValidationError("This application has already been submitted")
+      return CasResult.GeneralValidationError("This application has already been submitted")
     }
 
     return null
