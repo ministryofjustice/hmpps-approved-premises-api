@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import java.sql.Timestamp
 import java.time.Duration
@@ -54,7 +55,7 @@ SELECT
     a.created_at as createdAt,
     a.submitted_at as submittedAt,
     apa.is_womens_application as isWomensApplication,
-    apa.is_pipe_application as isPipeApplication,
+    (apa.ap_type = 'PIPE') as isPipeApplication,
     apa.arrival_date as arrivalDate,
     CAST(apa.risk_ratings AS TEXT) as riskRatings,
     apa.status as status,
@@ -160,7 +161,7 @@ SELECT
     a.created_at as createdAt,
     a.submitted_at as submittedAt,
     apa.is_womens_application as isWomensApplication,
-    apa.is_pipe_application as isPipeApplication,
+    (apa.ap_type = 'PIPE') as isPipeApplication,
     apa.arrival_date as arrivalDate,
     apa.status as status,
     CAST(apa.risk_ratings AS TEXT) as riskRatings,
@@ -291,10 +292,10 @@ class ApprovedPremisesApplicationEntity(
   schemaUpToDate: Boolean,
   assessments: MutableList<AssessmentEntity>,
   var isWomensApplication: Boolean?,
-  var isPipeApplication: Boolean?,
   @Deprecated("Use noticeType=emergency instead")
   var isEmergencyApplication: Boolean?,
-  var isEsapApplication: Boolean?,
+  @Enumerated(value = EnumType.STRING)
+  var apType: ApprovedPremisesType,
   var isInapplicable: Boolean?,
   var isWithdrawn: Boolean,
   var withdrawalReason: String?,
@@ -344,13 +345,20 @@ class ApprovedPremisesApplicationEntity(
   assessments,
   nomsNumber,
 ) {
+  val isPipeApplication: Boolean
+    get() = apType == ApprovedPremisesType.PIPE
+  val isEsapApplication: Boolean
+    get() = apType == ApprovedPremisesType.ESAP
+
   fun hasTeamCode(code: String) = teamCodes.any { it.teamCode == code }
   fun hasAnyTeamCode(codes: List<String>) = codes.any(::hasTeamCode)
   override fun getRequiredQualifications(): List<UserQualification> {
     val requiredQualifications = mutableListOf<UserQualification>()
 
-    if (isPipeApplication == true) {
-      requiredQualifications += UserQualification.PIPE
+    when (apType) {
+      ApprovedPremisesType.PIPE -> requiredQualifications += UserQualification.PIPE
+      ApprovedPremisesType.ESAP -> requiredQualifications += UserQualification.ESAP
+      else -> {}
     }
 
     if (isWomensApplication == true) {
@@ -359,10 +367,6 @@ class ApprovedPremisesApplicationEntity(
 
     if (noticeType == Cas1ApplicationTimelinessCategory.emergency || noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
       requiredQualifications += UserQualification.EMERGENCY
-    }
-
-    if (isEsapApplication == true) {
-      requiredQualifications += UserQualification.ESAP
     }
 
     return requiredQualifications

@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
@@ -322,9 +323,8 @@ class ApplicationService(
       createdAt = OffsetDateTime.now(),
       submittedAt = null,
       isWomensApplication = null,
-      isPipeApplication = null,
       isEmergencyApplication = null,
-      isEsapApplication = null,
+      apType = ApprovedPremisesType.NORMAL,
       convictionId = convictionId!!,
       eventNumber = deliusEventNumber!!,
       offenceId = offenceId!!,
@@ -528,9 +528,12 @@ class ApplicationService(
     application.apply {
       this.isInapplicable = updateFields.isInapplicable
       this.isWomensApplication = updateFields.isWomensApplication
-      this.isPipeApplication = updateFields.isPipeApplication
       this.isEmergencyApplication = updateFields.isEmergencyApplication
-      this.isEsapApplication = updateFields.isEsapApplication
+      this.apType = when {
+        updateFields.isPipeApplication == true -> ApprovedPremisesType.PIPE
+        updateFields.isEsapApplication == true -> ApprovedPremisesType.ESAP
+        else -> ApprovedPremisesType.NORMAL
+      }
       this.releaseType = updateFields.releaseType
       this.arrivalDate = if (updateFields.arrivalDate !== null) {
         OffsetDateTime.of(updateFields.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
@@ -777,9 +780,12 @@ class ApplicationService(
 
     application.apply {
       isWomensApplication = submitApplication.isWomensApplication
-      isPipeApplication = submitApplication.isPipeApplication
       this.isEmergencyApplication = isEmergencyApplication
-      this.isEsapApplication = isEsapApplication
+      apType = when {
+        submitApplication.isPipeApplication == true -> ApprovedPremisesType.PIPE
+        submitApplication.isEsapApplication == true -> ApprovedPremisesType.ESAP
+        else -> ApprovedPremisesType.NORMAL
+      }
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
       releaseType = submitApplication.releaseType.toString()

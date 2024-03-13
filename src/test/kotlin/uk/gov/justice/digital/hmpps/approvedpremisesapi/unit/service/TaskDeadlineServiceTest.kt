@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import java.time.LocalDate
@@ -195,7 +196,13 @@ class TaskDeadlineServiceTest {
       ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
         .withNoticeType(noticeType)
-        .withIsEsapApplication(isEsap)
+        .apply {
+          if (isEsap) {
+            withApType(ApprovedPremisesType.ESAP)
+          } else {
+            withApType(ApprovedPremisesType.NORMAL)
+          }
+        }
         .produce(),
     )
 

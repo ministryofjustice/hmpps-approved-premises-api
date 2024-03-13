@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import java.time.OffsetDateTime
 
 class ApplicationSummaryQueryTest : IntegrationTestBase() {
@@ -26,7 +27,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(differentUser)
             withApplicationSchema(applicationSchema)
-            withIsPipeApplication(true)
+            withApType(ApprovedPremisesType.PIPE)
             withIsWomensApplication(false)
             withReleaseType("rotl")
             withSubmittedAt(null)
@@ -36,7 +37,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(user)
             withApplicationSchema(applicationSchema)
-            withIsPipeApplication(true)
+            withApType(ApprovedPremisesType.PIPE)
             withIsWomensApplication(false)
             withReleaseType("rotl")
             withSubmittedAt(null)
@@ -48,7 +49,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(user)
             withApplicationSchema(applicationSchema)
-            withIsPipeApplication(true)
+            withApType(ApprovedPremisesType.PIPE)
             withIsWomensApplication(false)
             withReleaseType("rotl")
             withIsWithdrawn(true)
@@ -67,7 +68,7 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
             withCrn(offenderDetails.otherIds.crn)
             withCreatedByUser(user)
             withApplicationSchema(applicationSchema)
-            withIsPipeApplication(true)
+            withApType(ApprovedPremisesType.PIPE)
             withIsWomensApplication(false)
             withReleaseType("rotl")
             withSubmittedAt(OffsetDateTime.parse("2023-04-19T09:34:00+01:00"))

@@ -181,8 +181,8 @@ interface AssessmentRepository : JpaRepository<AssessmentEntity, UUID> {
     """
     SELECT
       apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
-      apa.is_esap_application as isEsapApplication,
-      apa.is_pipe_application as isPipeApplication,
+      (apa.ap_type = 'ESAP') as isEsapApplication,
+      (apa.ap_type = 'PIPE') as isPipeApplication,
       assessment.decision as decision,
       application.submitted_at as applicationSubmittedAt,
       assessment.submitted_at as assessmentSubmittedAt,

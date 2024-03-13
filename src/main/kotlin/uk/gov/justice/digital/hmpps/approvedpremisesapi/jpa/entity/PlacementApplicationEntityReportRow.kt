@@ -33,13 +33,7 @@ interface PlacementApplicationEntityReportRowRepository : JpaRepository<Placemen
         submission_event.data -> 'eventDetails' ->> 'mappa' as mappa,
         submission_event.data -> 'eventDetails' ->> 'offenceId' as offenceId,
         submission_event.data -> 'eventDetails' -> 'personReference' ->> 'noms' as noms,
-        (
-          CASE
-            WHEN apa.is_pipe_application THEN 'pipe'
-            WHEN apa.is_esap_application THEN 'esap'
-            ELSE 'normal'
-          END
-        ) as premisesType,
+        lower(apa.ap_type) as premisesType,
         application.data -> 'basic-information' -> 'sentence-type' ->> 'sentenceType' as sentenceType,
         submission_event.data -> 'eventDetails' ->> 'releaseType' as releaseType,
         submission_event.data -> 'eventDetails' -> 'submittedBy' -> 'ldu' ->> 'name' as referralLdu,

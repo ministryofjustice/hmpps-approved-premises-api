@@ -21,9 +21,9 @@ interface TaskRepository : JpaRepository<Task, UUID> {
       (
         CASE
           WHEN :requiredQualification = 'womens' THEN apa.is_womens_application = true
-          WHEN :requiredQualification = 'pipe' THEN apa.is_pipe_application = true
+          WHEN :requiredQualification = 'pipe' THEN apa.ap_type = 'PIPE'
           WHEN :requiredQualification = 'emergency' THEN (apa.notice_type = 'emergency' OR apa.notice_type = 'shortNotice')
-          WHEN :requiredQualification = 'esap' THEN apa.is_esap_application = true
+          WHEN :requiredQualification = 'esap' THEN apa.ap_type = 'ESAP'
           ELSE true
         END
       )
