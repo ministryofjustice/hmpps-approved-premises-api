@@ -51,6 +51,7 @@ class TaskService(
     val types: List<TaskEntityType>,
     val allocatedToUserId: UUID?,
     val requiredQualification: UserQualification?,
+    val crnOrName: String?,
   )
 
   fun getAll(
@@ -134,6 +135,7 @@ class TaskService(
       taskTypes.map { it.name },
       filterCriteria.allocatedToUserId,
       filterCriteria.requiredQualification?.value,
+      filterCriteria.crnOrName,
       pageable,
     )
   }

@@ -20,12 +20,21 @@ interface TaskRepository : JpaRepository<Task, UUID> {
       (:requiredQualification IS NULL) OR
       (
         CASE
-          WHEN :requiredQualification = 'womens' THEN application.is_womens_application = true
-          WHEN :requiredQualification = 'pipe' THEN application.is_pipe_application = true
-          WHEN :requiredQualification = 'emergency' THEN application.is_emergency_application = true
-          WHEN :requiredQualification = 'esap' THEN application.is_esap_application = true
+          WHEN :requiredQualification = 'womens' THEN apa.is_womens_application = true
+          WHEN :requiredQualification = 'pipe' THEN apa.is_pipe_application = true
+          WHEN :requiredQualification = 'emergency' THEN apa.is_emergency_application = true
+          WHEN :requiredQualification = 'esap' THEN apa.is_esap_application = true
           ELSE true
         END
+      )
+    """
+
+    private const val CRN_OR_NAME_QUERY = """
+      :crnOrName IS NULL OR 
+      (
+          application.crn = UPPER(:crnOrName)
+          OR
+          apa.name LIKE UPPER('%' || :crnOrName || '%')
       )
     """
 
@@ -35,12 +44,13 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         assessment.created_at AS created_at,
         assessment.due_at AS due_at,
         'ASSESSMENT' AS type,
-        application.name as person,
+        apa.name as person,
         u.name as allocated_to
       FROM
         assessments assessment
-        INNER JOIN approved_premises_applications application ON assessment.application_id = application.id
-        LEFT JOIN ap_areas area ON area.id = application.ap_area_id
+        INNER JOIN applications application ON assessment.application_id = application.id
+        LEFT JOIN approved_premises_applications apa ON application.id = apa.id
+        LEFT JOIN ap_areas area ON area.id = apa.ap_area_id
         LEFT JOIN users u ON u.id = assessment.allocated_to_user_id
       WHERE
         'ASSESSMENT' in :taskTypes AND
@@ -61,6 +71,8 @@ interface TaskRepository : JpaRepository<Task, UUID> {
           assessment.allocated_to_user_id = :allocatedToUserId
         ) AND (
           $QUALIFICATION_QUERY
+        ) AND (
+          $CRN_OR_NAME_QUERY
         )
     """
 
@@ -70,12 +82,13 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         placement_application.created_at AS created_at,
         placement_application.due_at AS due_at,
         'PLACEMENT_APPLICATION' AS type,
-        application.name as person,
+        apa.name as person,
         u.name as allocated_to
       from
         placement_applications placement_application
-        INNER JOIN approved_premises_applications application ON placement_application.application_id = application.id
-        LEFT JOIN ap_areas area ON area.id = application.ap_area_id
+        INNER JOIN applications application ON placement_application.application_id = application.id
+        LEFT JOIN approved_premises_applications apa ON application.id = apa.id
+        LEFT JOIN ap_areas area ON area.id = apa.ap_area_id
         LEFT JOIN users u ON u.id = placement_application.allocated_to_user_id
       WHERE
         'PLACEMENT_APPLICATION' in :taskTypes AND
@@ -96,6 +109,8 @@ interface TaskRepository : JpaRepository<Task, UUID> {
           placement_application.allocated_to_user_id = :allocatedToUserId
         ) AND (
           $QUALIFICATION_QUERY
+        ) AND (
+          $CRN_OR_NAME_QUERY
         )
     """
 
@@ -105,13 +120,14 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         placement_request.created_at AS created_at,
         placement_request.due_at AS due_at,
         'PLACEMENT_REQUEST' AS type,
-        application.name as person,
+        apa.name as person,
         u.name as allocated_to
       FROM
         placement_requests placement_request
-        INNER JOIN approved_premises_applications application ON placement_request.application_id = application.id
+        INNER JOIN applications application ON placement_request.application_id = application.id
+        LEFT JOIN approved_premises_applications apa ON application.id = apa.id
         LEFT JOIN booking_not_mades booking_not_made ON booking_not_made.placement_request_id = placement_request.id
-        LEFT JOIN ap_areas area ON area.id = application.ap_area_id
+        LEFT JOIN ap_areas area ON area.id = apa.ap_area_id
         LEFT JOIN users u ON u.id = placement_request.allocated_to_user_id
       WHERE
         'PLACEMENT_REQUEST' IN :taskTypes AND
@@ -133,6 +149,8 @@ interface TaskRepository : JpaRepository<Task, UUID> {
           placement_request.allocated_to_user_id = :allocatedToUserId
         ) AND (
           $QUALIFICATION_QUERY
+        ) AND (
+          $CRN_OR_NAME_QUERY
         )
         """
 
@@ -156,6 +174,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
     taskTypes: List<String>,
     allocatedToUserId: UUID?,
     requiredQualification: String?,
+    crnOrName: String?,
     pageable: Pageable?,
   ): Page<Task>
 
@@ -170,6 +189,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
     taskTypes: List<String>,
     allocatedToUserId: UUID?,
     requiredQualification: String?,
+    crnOrName: String?,
     pageable: Pageable?,
   ): Page<Task>
 
@@ -184,6 +204,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
     taskTypes: List<String>,
     allocatedToUserId: UUID?,
     requiredQualification: String?,
+    crnOrName: String?,
     pageable: Pageable?,
   ): Page<Task>
 
@@ -198,6 +219,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
     taskTypes: List<String>,
     allocatedToUserId: UUID?,
     requiredQualification: String?,
+    crnOrName: String?,
     pageable: Pageable?,
   ): Page<Task>
 }

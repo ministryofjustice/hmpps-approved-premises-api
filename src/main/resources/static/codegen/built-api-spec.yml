@@ -2844,6 +2844,11 @@ paths:
           description: Only show tasks with this required qualification
           schema:
             $ref: '#/components/schemas/UserQualification'
+        - name: crnOrName
+          in: query
+          description: search by CRN or name
+          schema:
+            type: string
       responses:
         200:
           description: successfully retrieved tasks
