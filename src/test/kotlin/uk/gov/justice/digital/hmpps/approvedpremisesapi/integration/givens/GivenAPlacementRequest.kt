@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
@@ -42,6 +43,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   duration: Int? = null,
   assessmentSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
   placementApplication: PlacementApplicationEntity? = null,
+  requiredQualification: UserQualification? = null,
 ): Pair<PlacementRequestEntity, ApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -80,6 +82,12 @@ fun IntegrationTestBase.`Given a Placement Request`(
       risksFactory.produce(),
     )
     withApArea(apArea)
+    if (requiredQualification !== null) {
+      withIsPipeApplication(requiredQualification == UserQualification.PIPE)
+      withIsEsapApplication(requiredQualification == UserQualification.ESAP)
+      withIsEmergencyApplication(requiredQualification == UserQualification.EMERGENCY)
+      withIsWomensApplication(requiredQualification == UserQualification.WOMENS)
+    }
   }
 
   val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {

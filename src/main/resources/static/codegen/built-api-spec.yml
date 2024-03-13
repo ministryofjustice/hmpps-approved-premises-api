@@ -2801,6 +2801,11 @@ paths:
           description: Page number of results to return. If not provided results will not be paged
           schema:
             type: integer
+        - name: perPage
+          in: query
+          description: Number of items to return per page (defaults to 10)
+          schema:
+            type: integer
         - name: sortBy
           in: query
           required: false
@@ -2833,6 +2838,12 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: requiredQualification
+          in: query
+          required: false
+          description: Only show tasks with this required qualification
+          schema:
+            $ref: '#/components/schemas/UserQualification'
       responses:
         200:
           description: successfully retrieved tasks

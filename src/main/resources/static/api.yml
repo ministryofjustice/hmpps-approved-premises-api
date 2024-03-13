@@ -2836,6 +2836,12 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: requiredQualification
+          in: query
+          required: false
+          description: Only show tasks with this required qualification
+          schema:
+            $ref: '_shared.yml#/components/schemas/UserQualification'
       responses:
         200:
           description: successfully retrieved tasks

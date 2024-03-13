@@ -16,6 +16,19 @@ import javax.persistence.Id
 interface TaskRepository : JpaRepository<Task, UUID> {
 
   companion object {
+    private const val QUALIFICATION_QUERY = """
+      (:requiredQualification IS NULL) OR
+      (
+        CASE
+          WHEN :requiredQualification = 'womens' THEN application.is_womens_application = true
+          WHEN :requiredQualification = 'pipe' THEN application.is_pipe_application = true
+          WHEN :requiredQualification = 'emergency' THEN application.is_emergency_application = true
+          WHEN :requiredQualification = 'esap' THEN application.is_esap_application = true
+          ELSE true
+        END
+      )
+    """
+
     private const val ASSESSMENT_QUERY = """
        SELECT
         cast(assessment.id as TEXT) AS id,
@@ -46,6 +59,8 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         ) AND (
           (cast(:allocatedToUserId as uuid) IS NULL) OR
           assessment.allocated_to_user_id = :allocatedToUserId
+        ) AND (
+          $QUALIFICATION_QUERY
         )
     """
 
@@ -79,6 +94,8 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         ) AND (
           (cast(:allocatedToUserId as uuid) IS NULL) OR
           placement_application.allocated_to_user_id = :allocatedToUserId
+        ) AND (
+          $QUALIFICATION_QUERY
         )
     """
 
@@ -114,6 +131,8 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         ) AND (
           (cast(:allocatedToUserId as uuid) IS NULL) OR
           placement_request.allocated_to_user_id = :allocatedToUserId
+        ) AND (
+          $QUALIFICATION_QUERY
         )
         """
 
@@ -136,6 +155,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
     apAreaId: UUID?,
     taskTypes: List<String>,
     allocatedToUserId: UUID?,
+    requiredQualification: String?,
     pageable: Pageable?,
   ): Page<Task>
 
@@ -149,6 +169,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
     apAreaId: UUID?,
     taskTypes: List<String>,
     allocatedToUserId: UUID?,
+    requiredQualification: String?,
     pageable: Pageable?,
   ): Page<Task>
 
@@ -162,6 +183,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
     apAreaId: UUID?,
     taskTypes: List<String>,
     allocatedToUserId: UUID?,
+    requiredQualification: String?,
     pageable: Pageable?,
   ): Page<Task>
 
@@ -175,6 +197,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
     apAreaId: UUID?,
     taskTypes: List<String>,
     allocatedToUserId: UUID?,
+    requiredQualification: String?,
     pageable: Pageable?,
   ): Page<Task>
 }

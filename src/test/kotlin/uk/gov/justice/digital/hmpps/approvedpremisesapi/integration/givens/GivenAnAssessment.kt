@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.OffsetDateTime
@@ -27,6 +28,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   apArea: ApAreaEntity? = null,
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   name: String? = null,
+  requiredQualification: UserQualification? = null,
 ): Pair<AssessmentEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -47,6 +49,12 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     withApArea(apArea)
     if (name !== null) {
       withName(name)
+    }
+    if (requiredQualification !== null) {
+      withIsPipeApplication(requiredQualification == UserQualification.PIPE)
+      withIsEsapApplication(requiredQualification == UserQualification.ESAP)
+      withIsEmergencyApplication(requiredQualification == UserQualification.EMERGENCY)
+      withIsWomensApplication(requiredQualification == UserQualification.WOMENS)
     }
   }
 

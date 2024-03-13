@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
@@ -733,6 +734,128 @@ class TasksTest : IntegrationTestBase() {
       }
 
       private fun expectedTotalPages(count: Int) = ceil(count.toDouble() / pageSize).toLong()
+    }
+
+    @Nested
+    inner class FilterQualification {
+      lateinit var jwt: String
+
+      lateinit var tasks: Map<TaskType, Map<UserQualification, Task>>
+
+      @BeforeEach
+      fun setup() {
+        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+          `Given a User` { otherUser, _ ->
+            `Given an Offender` { offenderDetails, _ ->
+              this.jwt = jwt
+
+              val assessmentTasks = mutableMapOf<UserQualification, Task>()
+              val placementRequestTasks = mutableMapOf<UserQualification, Task>()
+              val placementApplicationTasks = mutableMapOf<UserQualification, Task>()
+
+              listOf(
+                UserQualification.WOMENS,
+                UserQualification.ESAP,
+                UserQualification.EMERGENCY,
+                UserQualification.PIPE,
+              ).forEach { qualification ->
+                val (assessment) = `Given an Assessment for Approved Premises`(
+                  allocatedToUser = otherUser,
+                  createdByUser = otherUser,
+                  crn = offenderDetails.otherIds.crn,
+                  requiredQualification = qualification,
+                )
+
+                val (placementRequest, _) = `Given a Placement Request`(
+                  placementRequestAllocatedTo = otherUser,
+                  assessmentAllocatedTo = otherUser,
+                  createdByUser = user,
+                  crn = offenderDetails.otherIds.crn,
+                  requiredQualification = qualification,
+                )
+
+                val placementApplication = `Given a Placement Application`(
+                  createdByUser = user,
+                  allocatedToUser = user,
+                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                    withPermissiveSchema()
+                  },
+                  crn = offenderDetails.otherIds.crn,
+                  submittedAt = OffsetDateTime.now(),
+                  requiredQualification = qualification,
+                )
+
+                assessmentTasks[qualification] = taskTransformer.transformAssessmentToTask(
+                  assessment,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                )
+                placementRequestTasks[qualification] = taskTransformer.transformPlacementRequestToTask(
+                  placementRequest,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                )
+                placementApplicationTasks[qualification] = taskTransformer.transformPlacementApplicationToTask(
+                  placementApplication,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                )
+              }
+
+              tasks = mapOf(
+                TaskType.assessment to assessmentTasks,
+                TaskType.placementRequest to placementRequestTasks,
+                TaskType.placementApplication to placementApplicationTasks,
+              )
+            }
+          }
+        }
+      }
+
+      @ParameterizedTest
+      @CsvSource(
+        "assessment,WOMENS", "assessment,PIPE", "assessment,ESAP", "assessment,EMERGENCY",
+        "placementRequest,WOMENS", "placementRequest,PIPE", "placementRequest,ESAP", "placementRequest,EMERGENCY",
+        "placementApplication,WOMENS", "placementApplication,PIPE", "placementApplication,ESAP", "placementApplication,EMERGENCY",
+      )
+      fun `Get all tasks filters by task type and required qualification`(taskType: TaskType, qualification: UserQualification) {
+        val url = "/tasks?type=${taskType.value}&requiredQualification=${qualification.name.lowercase()}"
+        val expectedTask = tasks[taskType]!![qualification]!!
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              listOf(expectedTask),
+            ),
+          )
+      }
+
+      @ParameterizedTest
+      @EnumSource(value = UserQualification::class, names = ["WOMENS", "EMERGENCY", "ESAP", "PIPE"])
+      fun `Get all tasks required qualification`(qualification: UserQualification) {
+        val url = "/tasks?requiredQualification=${qualification.name.lowercase()}"
+        val expectedTasks = listOf(
+          tasks[TaskType.assessment]!![qualification]!!,
+          tasks[TaskType.placementRequest]!![qualification]!!,
+          tasks[TaskType.placementApplication]!![qualification]!!,
+        )
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
+      }
     }
 
     @Test

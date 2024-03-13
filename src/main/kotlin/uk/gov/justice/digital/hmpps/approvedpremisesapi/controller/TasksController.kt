@@ -50,6 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNameFromPersonSu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.kebabCaseToPascalCase
 import java.util.UUID
 import javax.transaction.Transactional
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as ApiUserQualification
 
 @Service
 class TasksController(
@@ -74,6 +75,7 @@ class TasksController(
     allocatedFilter: AllocatedFilter?,
     apAreaId: UUID?,
     allocatedToUserId: UUID?,
+    requiredQualification: ApiUserQualification?,
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
@@ -95,6 +97,7 @@ class TasksController(
         apAreaId = apAreaId,
         types = taskEntityTypes,
         allocatedToUserId = allocatedToUserId,
+        requiredQualification = requiredQualification,
       ),
       PageCriteria(
         sortBy = sortBy ?: TaskSortField.createdAt,

@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -349,6 +350,7 @@ class TaskServiceTest {
     val metadata = mockk<PaginationMetadata>()
     val taskEntityTypes = TaskEntityType.entries
     val allocatedToUserId = UUID.randomUUID()
+    val requiredQualification = UserQualification.pipe
 
     every { page.content } returns tasks
     every {
@@ -357,6 +359,7 @@ class TaskServiceTest {
         apAreaId,
         taskEntityTypes.map { it.name },
         allocatedToUserId,
+        requiredQualification.value,
         PageRequest.of(0, 10, Sort.by("created_at").ascending()),
       )
     } returns page
@@ -368,7 +371,7 @@ class TaskServiceTest {
 
     every { getMetadata(page, pageCriteria) } returns metadata
 
-    val result = taskService.getAll(TaskService.TaskFilterCriteria(AllocatedFilter.allocated, apAreaId, taskEntityTypes, allocatedToUserId), pageCriteria)
+    val result = taskService.getAll(TaskService.TaskFilterCriteria(AllocatedFilter.allocated, apAreaId, taskEntityTypes, allocatedToUserId, requiredQualification), pageCriteria)
 
     val expectedTasks = listOf(
       assessments.map { TypedTask.Assessment(it) },
