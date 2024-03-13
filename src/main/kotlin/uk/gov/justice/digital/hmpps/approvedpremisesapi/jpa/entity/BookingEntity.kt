@@ -244,6 +244,7 @@ data class BookingEntity(
   var placementRequest: PlacementRequestEntity?,
   @Enumerated(value = EnumType.STRING)
   var status: BookingStatus?,
+  val adhoc: Boolean? = null,
 ) {
   val departure: DepartureEntity?
     get() = departures.maxByOrNull { it.createdAt }

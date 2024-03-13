@@ -1,0 +1,1 @@
+ALTER TABLE bookings ADD adhoc BOOLEAN NULL;

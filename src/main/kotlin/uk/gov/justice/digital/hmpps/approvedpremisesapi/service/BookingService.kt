@@ -277,6 +277,7 @@ class BookingService(
           nomsNumber = placementRequest.application.nomsNumber,
           placementRequest = null,
           status = BookingStatus.confirmed,
+          adhoc = false,
         ),
       )
 
@@ -433,6 +434,7 @@ class BookingService(
           nomsNumber = nomsNumber,
           placementRequest = null,
           status = BookingStatus.confirmed,
+          adhoc = true,
         ),
       )
 

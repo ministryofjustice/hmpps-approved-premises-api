@@ -4342,7 +4342,8 @@ class BookingServiceTest {
             it.crn == crn &&
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
+              it.departureDate == departureDate &&
+              it.adhoc == true
           },
         )
       }
@@ -4403,7 +4404,8 @@ class BookingServiceTest {
             it.crn == crn &&
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
+              it.departureDate == departureDate &&
+              it.adhoc == true
           },
         )
       }
@@ -4463,7 +4465,8 @@ class BookingServiceTest {
             it.crn == crn &&
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
+              it.departureDate == departureDate &&
+              it.adhoc == true
           },
         )
       }
@@ -4522,7 +4525,8 @@ class BookingServiceTest {
             it.crn == crn &&
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
+              it.departureDate == departureDate &&
+              it.adhoc == true
           },
         )
       }
@@ -4557,7 +4561,8 @@ class BookingServiceTest {
             it.crn == crn &&
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
+              it.departureDate == departureDate &&
+              it.adhoc == true
           },
         )
       }
@@ -4591,7 +4596,8 @@ class BookingServiceTest {
             it.crn == crn &&
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
+              it.departureDate == departureDate &&
+              it.adhoc == true
           },
         )
       }
@@ -4624,7 +4630,8 @@ class BookingServiceTest {
             it.crn == crn &&
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
+              it.departureDate == departureDate &&
+              it.adhoc == true
           },
         )
       }
@@ -6414,7 +6421,8 @@ class BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.status == BookingStatus.confirmed
+              it.status == BookingStatus.confirmed &&
+              it.adhoc == false
           },
         )
       }
