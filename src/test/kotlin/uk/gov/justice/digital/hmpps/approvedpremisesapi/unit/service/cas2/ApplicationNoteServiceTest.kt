@@ -54,7 +54,7 @@ class ApplicationNoteServiceTest {
     mockEmailNotificationService,
     mockNotifyConfig,
     "http://frontend/applications/#id/overview",
-    "http://frontend/assess/applications/#id/overview",
+    "http://frontend/assess/applications/#applicationId/overview",
   )
 
   @Nested

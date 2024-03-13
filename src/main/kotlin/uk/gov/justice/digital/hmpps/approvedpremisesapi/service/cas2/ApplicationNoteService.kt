@@ -119,7 +119,7 @@ class ApplicationNoteService(
         "timeNoteAdded" to savedNote.createdAt.toCas2UiFormattedHourOfDay(),
         "assessorName" to getAssessorNameOrPlaceholder(application.assessment!!),
         "applicationType" to "Home Detention Curfew (HDC)",
-        "applicationUrl" to assessmentUrlTemplate.replace("#id", application.id.toString()),
+        "applicationUrl" to assessmentUrlTemplate.replace("#applicationId", application.id.toString()),
       ),
     )
   }
