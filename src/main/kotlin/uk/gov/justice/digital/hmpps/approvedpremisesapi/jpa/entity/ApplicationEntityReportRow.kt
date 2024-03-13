@@ -11,7 +11,7 @@ import java.util.UUID
 interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity, UUID> {
   @Query(
     """
-    SELECT DISTINCT on (application.id, booking_made_event.booking_id)
+    SELECT DISTINCT on (application.id)
       cast(application.id as TEXT) as id,
       submission_event.data -> 'eventDetails' -> 'personReference' ->> 'crn' as crn,
       assessments.allocated_at as lastAllocatedToAssessorDate,
@@ -46,21 +46,15 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       submission_event.data -> 'eventDetails' ->> 'targetLocation' as targetLocation,
       cast(withdrawl_event.data -> 'eventDetails' ->> 'withdrawnAt' as date) as applicationWithdrawalDate,
       withdrawl_event.data -> 'eventDetails' ->> 'withdrawalReason' as applicationWithdrawalReason,
-      cast(booking_made_event.booking_id as text) as bookingID,
-      booking_made_event.occurred_at as bookingMadeDate,
-      booking_cancelled_event.data -> 'eventDetails' ->> 'cancellationReason' as bookingCancellationReason,
-      cast(booking_cancelled_event.data -> 'eventDetails' ->> 'cancelledAt' as date) as bookingCancellationDate,
-      cast(booking_made_event.data -> 'eventDetails' ->> 'arrivalOn' as date) as expectedArrivalDate,
-      booking_made_event.data -> 'eventDetails' -> 'bookedBy' -> 'cru' ->> 'name' as matcherCru,
-      cast(booking_made_event.data -> 'eventDetails' ->> 'departureOn' as date) as expectedDepartureDate,
-      booking_made_event.data -> 'eventDetails' -> 'premises' ->> 'name' as premisesName,
-      cast(arrival_event.data -> 'eventDetails' ->> 'arrivedAt' as date) as actualArrivalDate,
-      cast(departure_event.data -> 'eventDetails' ->> 'departedAt' as date) as actualDepartureDate,
-      departure_event.data -> 'eventDetails' ->> 'reason' as departureReason,
-      departure_event.data -> 'eventDetails' -> 'destination' -> 'moveOnCategory' ->> 'description' as departureMoveOnCategory,
-      non_arrival_event.data IS NOT NULL as hasNotArrived,
-      non_arrival_event.data -> 'eventDetails' ->> 'reason' as notArrivedReason,
-      cast(placement_applications.data -> 'request-a-placement' -> 'decision-to-release' ->> 'decisionToReleaseDate' as date) as paroleDecisionDate,
+      cast(apa.arrival_date as date) as expectedArrivalDate,
+      (
+        select pr.expected_arrival + pr.duration
+        from placement_requests pr
+        where pr.application_id = application.id AND
+              pr.placement_application_id IS NULL AND
+              pr.reallocated_at IS NULL
+        limit 1       
+      ) as expectedDepartureDate,
       (
         select count(*)
         from appeals
@@ -73,13 +67,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
         select decision
         from assessments
         where assessments.id = assessment_event.assessment_id
-      ) as assessmentAppealedFromStatus,
-      (
-        CASE
-          WHEN placement_applications.id IS NULL THEN 'referral'
-          ELSE 'placement request'
-        END
-      ) as type
+      ) as assessmentAppealedFromStatus
     from
       applications application
       left join approved_premises_applications apa on application.id = apa.id
@@ -89,16 +77,6 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       and application.id = assessment_event.application_id
       left join domain_events withdrawl_event on withdrawl_event.type = 'APPROVED_PREMISES_APPLICATION_WITHDRAWN'
       and application.id = withdrawl_event.application_id
-      left join domain_events booking_made_event on booking_made_event.type = 'APPROVED_PREMISES_BOOKING_MADE'
-      and application.id = booking_made_event.application_id
-      left join domain_events booking_cancelled_event on booking_cancelled_event.type = 'APPROVED_PREMISES_BOOKING_CANCELLED'
-      and application.id = booking_cancelled_event.application_id
-      left join domain_events arrival_event on arrival_event.type = 'APPROVED_PREMISES_PERSON_ARRIVED'
-      and application.id = arrival_event.application_id
-      left join domain_events departure_event on departure_event.type = 'APPROVED_PREMISES_PERSON_DEPARTED'
-      and application.id = departure_event.application_id
-      left join domain_events non_arrival_event on non_arrival_event.type = 'APPROVED_PREMISES_PERSON_NOT_ARRIVED'
-      and application.id = non_arrival_event.application_id
       left join assessments on application.id = assessments.application_id AND assessments.reallocated_at IS NULL
       left join (
         select distinct on (appeals.application_id, appeals.assessment_id)
@@ -107,13 +85,11 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
         order by appeals.application_id, appeals.assessment_id, created_at desc
       ) latest_appeal on latest_appeal.application_id = application.id
       and latest_appeal.assessment_id = assessment_event.assessment_id
-      left join placement_requests on placement_requests.booking_id = booking_made_event.booking_id
-      left join placement_applications on placement_applications.id = placement_requests.placement_application_id
     where
       date_part('month', application.submitted_at) = :month
       AND date_part('year', application.submitted_at) = :year
       AND application.service = 'approved-premises'
-    order by application.id, booking_made_event.booking_id, latest_appeal.appeal_date desc nulls last;
+    order by application.id, latest_appeal.appeal_date desc nulls last;
     """,
     nativeQuery = true,
   )
@@ -162,30 +138,15 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
         withdrawl_event.data -> 'eventDetails' ->> 'withdrawnAt' as date
       ) as applicationWithdrawalDate,
       withdrawl_event.data -> 'eventDetails' ->> 'withdrawalReason' as applicationWithdrawalReason,
-      cast(booking_made_event.booking_id as text) as bookingID,
-      booking_made_event.occurred_at as bookingMadeDate,
-      booking_cancelled_event.data -> 'eventDetails' ->> 'cancellationReason' as bookingCancellationReason,
-      cast(
-        booking_cancelled_event.data -> 'eventDetails' ->> 'cancelledAt' as date
-      ) as bookingCancellationDate,
-      cast(
-        booking_made_event.data -> 'eventDetails' ->> 'arrivalOn' as date
-      ) as expectedArrivalDate,
-      booking_made_event.data -> 'eventDetails' -> 'bookedBy' -> 'cru' ->> 'name' as matcherCru,
-      cast(
-        booking_made_event.data -> 'eventDetails' ->> 'departureOn' as date
+      cast(apa.arrival_date as date) as expectedArrivalDate,
+      (
+        select pr.expected_arrival + pr.duration
+        from placement_requests pr
+        where pr.application_id = application.id AND
+              pr.placement_application_id IS NULL AND
+              pr.reallocated_at IS NULL
+        limit 1       
       ) as expectedDepartureDate,
-      booking_made_event.data -> 'eventDetails' -> 'premises' ->> 'name' as premisesName,
-      cast(
-        arrival_event.data -> 'eventDetails' ->> 'arrivedAt' as date
-      ) as actualArrivalDate,
-      cast(
-        departure_event.data -> 'eventDetails' ->> 'departedAt' as date
-      ) as actualDepartureDate,
-      departure_event.data -> 'eventDetails' ->> 'reason' as departureReason,
-      departure_event.data -> 'eventDetails' -> 'destination' -> 'moveOnCategory' ->> 'description' as departureMoveOnCategory,
-      non_arrival_event.data IS NOT NULL as hasNotArrived,
-      non_arrival_event.data -> 'eventDetails' ->> 'reason' as notArrivedReason,
       (
         select count(*)
         from appeals
@@ -208,16 +169,6 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
       and application.id = assessment_event.application_id
       left join domain_events withdrawl_event on withdrawl_event.type = 'APPROVED_PREMISES_APPLICATION_WITHDRAWN'
       and application.id = withdrawl_event.application_id
-      left join domain_events booking_made_event on booking_made_event.type = 'APPROVED_PREMISES_BOOKING_MADE'
-      and application.id = booking_made_event.application_id
-      left join domain_events booking_cancelled_event on booking_cancelled_event.type = 'APPROVED_PREMISES_BOOKING_CANCELLED'
-      and application.id = booking_cancelled_event.application_id
-      left join domain_events arrival_event on arrival_event.type = 'APPROVED_PREMISES_PERSON_ARRIVED'
-      and application.id = arrival_event.application_id
-      left join domain_events departure_event on departure_event.type = 'APPROVED_PREMISES_PERSON_DEPARTED'
-      and application.id = departure_event.application_id
-      left join domain_events non_arrival_event on non_arrival_event.type = 'APPROVED_PREMISES_PERSON_NOT_ARRIVED'
-      and application.id = non_arrival_event.application_id
       left join assessments on application.id = assessments.application_id
       AND assessments.reallocated_at IS NULL
       left join (
@@ -233,7 +184,6 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
     order by
       application.id,
       submission_event.occurred_at, 
-      booking_made_event.occurred_at desc,
       latest_appeal.appeal_date desc nulls last;
     """,
     nativeQuery = true,
@@ -270,24 +220,10 @@ interface ApplicationEntityReportRow {
   fun getTargetLocation(): String?
   fun getApplicationWithdrawalDate(): Date?
   fun getApplicationWithdrawalReason(): String?
-  fun getBookingID(): String?
-  fun getBookingMadeDate(): Timestamp?
-  fun getBookingCancellationReason(): String?
-  fun getBookingCancellationDate(): Date?
   fun getExpectedArrivalDate(): Date?
   fun getExpectedDepartureDate(): Date?
-  fun getMatcherCru(): String?
-  fun getPremisesName(): String?
-  fun getActualArrivalDate(): Date?
-  fun getActualDepartureDate(): Date?
-  fun getDepartureMoveOnCategory(): String?
-  fun getDepartureReason(): String?
-  fun getHasNotArrived(): Boolean?
-  fun getNotArrivedReason(): String?
-  fun getParoleDecisionDate(): Date?
   fun getAssessmentAppealCount(): Int?
   fun getLastAssessmentAppealedDecision(): String?
   fun getLastAssessmentAppealedDate(): Date?
   fun getAssessmentAppealedFromStatus(): String?
-  fun getType(): String?
 }

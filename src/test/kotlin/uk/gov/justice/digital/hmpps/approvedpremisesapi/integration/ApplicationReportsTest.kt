@@ -19,10 +19,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Gender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewAppeal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCancellation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas1Arrival
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewDeparture
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewNonarrival
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewPlacementApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
@@ -41,17 +37,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdatePlacemen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ContextStaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RegistrationClientResponseFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.from
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulRegistrationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
@@ -62,17 +54,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NonArrivalEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
@@ -88,7 +75,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Mapp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseDetail
-import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.Period
@@ -127,6 +113,10 @@ class ApplicationReportsTest : IntegrationTestBase() {
   lateinit var applicationSchema: ApprovedPremisesApplicationJsonSchemaEntity
   lateinit var assessmentSchema: ApprovedPremisesAssessmentJsonSchemaEntity
   lateinit var placementApplicationSchema: ApprovedPremisesPlacementApplicationJsonSchemaEntity
+
+  companion object Costants {
+    const val AUTHORISED_DURATION_DAYS: Int = 12
+  }
 
   @BeforeEach
   fun setup() {
@@ -203,30 +193,15 @@ class ApplicationReportsTest : IntegrationTestBase() {
 
       val applicationWithoutAssessment = createApplication("applicationWithoutAssessment")
 
-      val (applicationWithBooking, arrivedBooking) = createApplicationWithBooking("applicationWithBooking")
-      markBookingAsArrived(arrivedBooking)
-
-      val (applicationWithDepartedBooking, departedBooking) = createApplicationWithBooking("applicationWithDepartedBooking")
-      markBookingAsArrived(departedBooking)
-      markBookingAsDeparted(departedBooking)
-
-      val (applicationWithCancelledBooking, cancelledBooking) = createApplicationWithBooking("applicationWithCancelledBooking")
-      cancelBooking(cancelledBooking)
-
-      val (applicationWithNonArrivedBooking, nonArrivedBooking) = createApplicationWithBooking("applicationWithNonArrivedBooking")
-      markBookingAsNonArrived(nonArrivedBooking)
+      val (applicationWithBooking, _) = createApplicationWithBooking("applicationWithBooking")
 
       val applicationWithPlacementApplication = createApplicationWithCompletedAssessment("applicationWithPlacementApplication")
       createAndAcceptPlacementApplication(applicationWithPlacementApplication)
-      val placementBooking = createBookingForApplication(applicationWithPlacementApplication)
+      createBookingForApplication(applicationWithPlacementApplication)
 
       val applicationWithReallocatedCompleteAssessments = createApplication("applicationWithReallocatedCompleteAssessments")
       reallocateAssessment(applicationWithReallocatedCompleteAssessments)
       acceptAssessmentForApplication(applicationWithReallocatedCompleteAssessments)
-
-      val applicationWithMultipleBookings = createApplicationWithCompletedAssessment("applicationWithMultipleBookings")
-      val multipleBookings1 = createBookingForApplication(applicationWithMultipleBookings)
-      val multipleBookings2 = createBookingForApplication(applicationWithMultipleBookings)
 
       val applicationShortNotice = createApplication("applicationShortNotice", shortNotice = true)
       acceptAssessmentForApplication(applicationShortNotice, shortNotice = true)
@@ -258,21 +233,16 @@ class ApplicationReportsTest : IntegrationTestBase() {
             .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(13)
+          assertThat(actual.size).isEqualTo(8)
 
-          assertApplicationRowHasCorrectData(actual, applicationWithoutAssessment.id, booking = null, userEntity, ApplicationFacets(isAssessed = false))
-          assertApplicationRowHasCorrectData(actual, applicationWithBooking.id, arrivedBooking, userEntity)
-          assertApplicationRowHasCorrectData(actual, applicationWithDepartedBooking.id, departedBooking, userEntity, ApplicationFacets(hasDeparture = true))
-          assertApplicationRowHasCorrectData(actual, applicationWithCancelledBooking.id, cancelledBooking, userEntity, ApplicationFacets(hasCancellation = true))
-          assertApplicationRowHasCorrectData(actual, applicationWithNonArrivedBooking.id, nonArrivedBooking, userEntity, ApplicationFacets(hasNonArrival = true))
-          assertApplicationRowHasCorrectData(actual, applicationWithPlacementApplication.id, placementBooking, userEntity, ApplicationFacets(hasPlacementApplication = true))
-          assertApplicationRowHasCorrectData(actual, applicationWithReallocatedCompleteAssessments.id, booking = null, userEntity)
-          assertApplicationRowHasCorrectData(actual, applicationWithMultipleBookings.id, multipleBookings1, userEntity)
-          assertApplicationRowHasCorrectData(actual, applicationWithMultipleBookings.id, multipleBookings2, userEntity)
-          assertApplicationRowHasCorrectData(actual, applicationShortNotice.id, booking = null, userEntity, ApplicationFacets(isShortNotice = true))
-          assertApplicationRowHasCorrectData(actual, applicationWithAcceptedAppeal.id, null, userEntity, ApplicationFacets(hasAppeal = true))
-          assertApplicationRowHasCorrectData(actual, applicationWithRejectedAppeal.id, null, userEntity, ApplicationFacets(hasAppeal = true))
-          assertApplicationRowHasCorrectData(actual, applicationWithMultipleAppeals.id, null, userEntity, ApplicationFacets(hasAppeal = true))
+          assertApplicationRowHasCorrectData(actual, applicationWithoutAssessment.id, userEntity, ApplicationFacets(isAssessed = false, isAccepted = false))
+          assertApplicationRowHasCorrectData(actual, applicationWithBooking.id, userEntity)
+          assertApplicationRowHasCorrectData(actual, applicationWithPlacementApplication.id, userEntity, ApplicationFacets(hasPlacementApplication = true))
+          assertApplicationRowHasCorrectData(actual, applicationWithReallocatedCompleteAssessments.id, userEntity)
+          assertApplicationRowHasCorrectData(actual, applicationShortNotice.id, userEntity, ApplicationFacets(isShortNotice = true))
+          assertApplicationRowHasCorrectData(actual, applicationWithAcceptedAppeal.id, userEntity, ApplicationFacets(hasAppeal = true, isAccepted = false))
+          assertApplicationRowHasCorrectData(actual, applicationWithRejectedAppeal.id, userEntity, ApplicationFacets(hasAppeal = true, isAccepted = false))
+          assertApplicationRowHasCorrectData(actual, applicationWithMultipleAppeals.id, userEntity, ApplicationFacets(hasAppeal = true, isAccepted = false))
         }
     }
   }
@@ -284,18 +254,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
 
       val applicationWithoutAssessment = createApplication("applicationWithoutAssessment")
 
-      val (applicationWithBooking, arrivedBooking) = createApplicationWithBooking("applicationWithBooking")
-      markBookingAsArrived(arrivedBooking)
-
-      val (applicationWithDepartedBooking, departedBooking) = createApplicationWithBooking("applicationWithDepartedBooking")
-      markBookingAsArrived(departedBooking)
-      markBookingAsDeparted(departedBooking)
-
-      val (applicationWithCancelledBooking, cancelledBooking) = createApplicationWithBooking("applicationWithCancelledBooking")
-      cancelBooking(cancelledBooking)
-
-      val (applicationWithNonArrivedBooking, nonArrivedBooking) = createApplicationWithBooking("applicationWithNonArrivedBooking")
-      markBookingAsNonArrived(nonArrivedBooking)
+      val (applicationWithBooking, _) = createApplicationWithBooking("applicationWithBooking")
 
       val applicationWithPlacementApplication = createApplicationWithCompletedAssessment(crn = "applicationWithPlacementApplication", withArrivalDate = false)
       createAndAcceptPlacementApplication(applicationWithPlacementApplication)
@@ -305,13 +264,6 @@ class ApplicationReportsTest : IntegrationTestBase() {
       val applicationWithMultipleAssessments = createApplication("applicationWithMultipleAssessments")
       reallocateAssessment(applicationWithMultipleAssessments)
       acceptAssessmentForApplication(applicationWithMultipleAssessments)
-
-      // In very rare scenarios, an application will have multiple bookings associated
-      // without having associated Placement Application(s). In this scenario, we just
-      // return the latest booking that has been made
-      val applicationWithMultipleBookings = createApplicationWithCompletedAssessment("applicationWithMultipleBookings")
-      val multipleBookings1 = createBookingForApplication(applicationWithMultipleBookings)
-      val multipleBookings2 = createBookingForApplication(applicationWithMultipleBookings)
 
       val applicationShortNotice = createApplication("applicationShortNotice", shortNotice = true)
       acceptAssessmentForApplication(applicationShortNotice, shortNotice = true)
@@ -343,20 +295,16 @@ class ApplicationReportsTest : IntegrationTestBase() {
             .convertTo<ApplicationReportRow>(ExcessiveColumns.Remove)
             .toList()
 
-          assertThat(actual.size).isEqualTo(12)
+          assertThat(actual.size).isEqualTo(8)
 
-          assertApplicationRowHasCorrectData(actual, applicationWithoutAssessment.id, null, userEntity, ApplicationFacets(reportType = ReportType.Referrals, isAssessed = false))
-          assertApplicationRowHasCorrectData(actual, applicationWithBooking.id, arrivedBooking, userEntity, ApplicationFacets(reportType = ReportType.Referrals))
-          assertApplicationRowHasCorrectData(actual, applicationWithDepartedBooking.id, departedBooking, userEntity, ApplicationFacets(hasDeparture = true, reportType = ReportType.Referrals))
-          assertApplicationRowHasCorrectData(actual, applicationWithCancelledBooking.id, cancelledBooking, userEntity, ApplicationFacets(hasCancellation = true, reportType = ReportType.Referrals))
-          assertApplicationRowHasCorrectData(actual, applicationWithNonArrivedBooking.id, nonArrivedBooking, userEntity, ApplicationFacets(hasNonArrival = true, reportType = ReportType.Referrals))
-          assertApplicationRowHasCorrectData(actual, applicationWithPlacementApplication.id, null, userEntity, ApplicationFacets(hasPlacementApplication = true, reportType = ReportType.Referrals))
-          assertApplicationRowHasCorrectData(actual, applicationWithMultipleAssessments.id, null, userEntity, ApplicationFacets(reportType = ReportType.Referrals))
-          assertApplicationRowHasCorrectData(actual, applicationWithMultipleBookings.id, multipleBookings2, userEntity, ApplicationFacets(reportType = ReportType.Referrals))
-          assertApplicationRowHasCorrectData(actual, applicationShortNotice.id, booking = null, userEntity, ApplicationFacets(reportType = ReportType.Referrals, isShortNotice = true))
-          assertApplicationRowHasCorrectData(actual, applicationWithAcceptedAppeal.id, null, userEntity, ApplicationFacets(hasAppeal = true, reportType = ReportType.Referrals))
-          assertApplicationRowHasCorrectData(actual, applicationWithRejectedAppeal.id, null, userEntity, ApplicationFacets(hasAppeal = true, reportType = ReportType.Referrals))
-          assertApplicationRowHasCorrectData(actual, applicationWithMultipleAppeals.id, null, userEntity, ApplicationFacets(hasAppeal = true, reportType = ReportType.Referrals))
+          assertApplicationRowHasCorrectData(actual, applicationWithoutAssessment.id, userEntity, ApplicationFacets(reportType = ReportType.Referrals, isAssessed = false))
+          assertApplicationRowHasCorrectData(actual, applicationWithBooking.id, userEntity, ApplicationFacets(reportType = ReportType.Referrals))
+          assertApplicationRowHasCorrectData(actual, applicationWithPlacementApplication.id, userEntity, ApplicationFacets(hasPlacementApplication = true, reportType = ReportType.Referrals))
+          assertApplicationRowHasCorrectData(actual, applicationWithMultipleAssessments.id, userEntity, ApplicationFacets(reportType = ReportType.Referrals))
+          assertApplicationRowHasCorrectData(actual, applicationShortNotice.id, userEntity, ApplicationFacets(reportType = ReportType.Referrals, isShortNotice = true))
+          assertApplicationRowHasCorrectData(actual, applicationWithAcceptedAppeal.id, userEntity, ApplicationFacets(hasAppeal = true, isAccepted = false, reportType = ReportType.Referrals))
+          assertApplicationRowHasCorrectData(actual, applicationWithRejectedAppeal.id, userEntity, ApplicationFacets(hasAppeal = true, isAccepted = false, reportType = ReportType.Referrals))
+          assertApplicationRowHasCorrectData(actual, applicationWithMultipleAppeals.id, userEntity, ApplicationFacets(hasAppeal = true, isAccepted = false, reportType = ReportType.Referrals))
         }
     }
   }
@@ -367,10 +315,8 @@ class ApplicationReportsTest : IntegrationTestBase() {
   }
 
   data class ApplicationFacets(
-    val hasCancellation: Boolean = false,
-    val hasDeparture: Boolean = false,
-    val hasNonArrival: Boolean = false,
     val isAssessed: Boolean = true,
+    val isAccepted: Boolean = true,
     val hasPlacementApplication: Boolean = false,
     val hasAppeal: Boolean = false,
     val reportType: ReportType = ReportType.Applications,
@@ -388,15 +334,13 @@ class ApplicationReportsTest : IntegrationTestBase() {
   private fun assertApplicationRowHasCorrectData(
     report: List<ApplicationReportRow>,
     applicationId: UUID,
-    booking: BookingEntity?,
     userEntity: UserEntity,
     applicationFacets: ApplicationFacets = ApplicationFacets(),
   ) {
-    val reportRow = report.find { it.id == applicationId.toString() && (booking == null || it.bookingID == booking.id.toString()) }!!
+    val reportRow = report.find { it.id == applicationId.toString() }!!
 
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
     val assessment = application.getAppropriateAssessment(applicationFacets.hasAppeal)!!
-    val placementRequest = application.getLatestPlacementRequest()
     val offenderDetailSummary = getOffenderDetailForApplication(application, userEntity.deliusUsername)
     val caseDetail = getCaseDetailForApplication(application)
 
@@ -436,10 +380,6 @@ class ApplicationReportsTest : IntegrationTestBase() {
     assertThat(reportRow.offenceId).isEqualTo(application.offenceId)
     assertThat(reportRow.noms).isEqualTo(application.nomsNumber)
 
-    if (booking != null) {
-      assertThat(reportRow.premisesType).isEqualTo(placementRequest!!.placementRequirements.apType.name)
-    }
-
     assertThat(reportRow.releaseType).isEqualTo(application.releaseType)
     assertThat(reportRow.applicationSubmissionDate).isEqualTo(application.submittedAt!!.toLocalDate())
     assertThat(reportRow.targetLocation).isEqualTo(application.targetLocation)
@@ -450,42 +390,13 @@ class ApplicationReportsTest : IntegrationTestBase() {
     assertThat(reportRow.referralRegion).isEqualTo(referrerProbationArea)
     assertThat(reportRow.referralTeam).isEqualTo(caseDetail.case.manager.team.name)
 
-    if (booking != null) {
-      assertThat(reportRow.bookingID).isEqualTo(booking.id.toString())
-      assertThat(reportRow.bookingMadeDate).isToday()
-      assertThat(reportRow.expectedArrivalDate).isEqualTo(booking.arrivalDate)
-      assertThat(reportRow.expectedDepartureDate).isEqualTo("2022-08-30")
-      assertThat(reportRow.premisesName).isEqualTo(booking.premises.name)
-    }
+    val arrivalDate = application.arrivalDate?.toLocalDate()
 
-    if (applicationFacets.hasCancellation) {
-      val cancellation = placementRequest!!.booking!!.cancellation!!
-      assertThat(reportRow.bookingCancellationDate).isEqualTo(cancellation.date)
-    }
-
-    if (applicationFacets.hasDeparture) {
-      val booking = placementRequest!!.booking!!
-      val arrival = booking.arrival!!
-      val departure = booking.departure!!
-      assertThat(reportRow.actualArrivalDate).isEqualTo(arrival.arrivalDate)
-      assertThat(reportRow.actualDepartureDate).isEqualTo(departure.dateTime.toLocalDate())
-      assertThat(reportRow.departureMoveOnCategory).isEqualTo(departure.moveOnCategory.name)
-    }
-
-    if (applicationFacets.hasNonArrival) {
-      val nonArrival = placementRequest!!.booking!!.nonArrival!!
-      assertThat(reportRow.hasNotArrived).isEqualTo(true)
-      assertThat(reportRow.notArrivedReason).isEqualTo(nonArrival.reason.name)
-    }
-
-    if (applicationFacets.reportType == ReportType.Applications) {
-      if (applicationFacets.hasPlacementApplication) {
-        assertThat(reportRow.paroleDecisionDate).isEqualTo("2023-11-11")
-        assertThat(reportRow.type).isEqualTo("placement request")
-      } else {
-        assertThat(reportRow.paroleDecisionDate).isNull()
-        assertThat(reportRow.type).isEqualTo("referral")
-      }
+    assertThat(reportRow.expectedArrivalDate).isEqualTo(arrivalDate)
+    if (applicationFacets.isAssessed && applicationFacets.isAccepted && arrivalDate != null) {
+      assertThat(reportRow.expectedDepartureDate).isEqualTo(arrivalDate?.plusDays(AUTHORISED_DURATION_DAYS.toLong()))
+    } else {
+      assertThat(reportRow.expectedDepartureDate).isNull()
     }
 
     if (applicationFacets.hasAppeal) {
@@ -658,10 +569,14 @@ class ApplicationReportsTest : IntegrationTestBase() {
     val essentialCriteria = listOf(PlacementCriteria.isArsonSuitable, PlacementCriteria.isESAP)
     val desirableCriteria = listOf(PlacementCriteria.isRecoveryFocussed, PlacementCriteria.acceptsSexOffenders)
 
-    val placementDates = PlacementDates(
-      expectedArrival = LocalDate.now(),
-      duration = 12,
-    )
+    val placementDates = if (application.arrivalDate != null) {
+      PlacementDates(
+        expectedArrival = application.arrivalDate!!.toLocalDate(),
+        duration = AUTHORISED_DURATION_DAYS,
+      )
+    } else {
+      null
+    }
 
     val placementRequirements = PlacementRequirements(
       gender = Gender.male,
@@ -745,117 +660,6 @@ class ApplicationReportsTest : IntegrationTestBase() {
     return realBookingRepository.findAllByCrn(application.crn).maxByOrNull { it.createdAt }!!
   }
 
-  private fun markBookingAsArrived(booking: BookingEntity): ArrivalEntity {
-    val (_, jwt) = managerDetails
-    val premises = booking.premises as ApprovedPremisesEntity
-    val keyWorker = ContextStaffMemberFactory().produce()
-    val staffUserDetails = StaffUserDetailsFactory().produce()
-    APDeliusContext_mockSuccessfulStaffMembersCall(keyWorker, premises.qCode)
-    APDeliusContext_mockSuccessfulStaffDetailsCall(keyWorker.code, staffUserDetails)
-
-    webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/arrivals")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewCas1Arrival(
-          type = "CAS1",
-          arrivalDateTime = Instant.parse("2022-08-12T15:30:00Z"),
-          expectedDepartureDate = LocalDate.parse("2022-08-14"),
-          notes = "Hello",
-          keyWorkerStaffCode = keyWorker.code,
-        ),
-      )
-      .exchange()
-      .expectStatus()
-      .isOk
-
-    val persistedBookingEntity = realBookingRepository.findById(booking.id).get()
-
-    return persistedBookingEntity.arrival!!
-  }
-
-  private fun markBookingAsDeparted(booking: BookingEntity): DepartureEntity {
-    val (_, jwt) = managerDetails
-
-    val reason = departureReasonEntityFactory.produceAndPersist {
-      withServiceScope("approved-premises")
-    }
-    val moveOnCategory = moveOnCategoryEntityFactory.produceAndPersist {
-      withServiceScope("approved-premises")
-    }
-    val destinationProvider = destinationProviderEntityFactory.produceAndPersist()
-
-    webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/departures")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewDeparture(
-          dateTime = Instant.parse("2022-09-01T12:34:56.789Z"),
-          reasonId = reason.id,
-          moveOnCategoryId = moveOnCategory.id,
-          destinationProviderId = destinationProvider.id,
-          notes = "Hello",
-        ),
-      )
-      .exchange()
-      .expectStatus()
-      .isOk
-
-    val persistedBookingEntity = realBookingRepository.findById(booking.id).get()
-
-    return persistedBookingEntity.departure!!
-  }
-
-  private fun cancelBooking(booking: BookingEntity): CancellationEntity {
-    val (_, jwt) = workflowManagerDetails
-
-    val cancellationReason = cancellationReasonEntityFactory.produceAndPersist {
-      withServiceScope("*")
-    }
-
-    webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/cancellations")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewCancellation(
-          date = LocalDate.parse("2022-08-17"),
-          reason = cancellationReason.id,
-          notes = null,
-        ),
-      )
-      .exchange()
-      .expectStatus()
-      .isOk
-
-    val persistedBookingEntity = realBookingRepository.findById(booking.id).get()
-
-    return persistedBookingEntity.cancellation!!
-  }
-
-  private fun markBookingAsNonArrived(booking: BookingEntity): NonArrivalEntity {
-    val (_, jwt) = managerDetails
-
-    val nonArrivalReason = nonArrivalReasonEntityFactory.produceAndPersist()
-
-    webTestClient.post()
-      .uri("/premises/${booking.premises.id}/bookings/${booking.id}/non-arrivals")
-      .header("Authorization", "Bearer $jwt")
-      .bodyValue(
-        NewNonarrival(
-          date = booking.arrivalDate,
-          reason = nonArrivalReason.id,
-          notes = "Notes",
-        ),
-      )
-      .exchange()
-      .expectStatus()
-      .isOk
-
-    val persistedBookingEntity = realBookingRepository.findById(booking.id).get()
-
-    return persistedBookingEntity.nonArrival!!
-  }
-
   private fun reallocateAssessment(application: ApprovedPremisesApplicationEntity) {
     val (_, jwt) = workflowManagerDetails
     val (assigneeUser, _) = `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR))
@@ -911,7 +715,7 @@ class ApplicationReportsTest : IntegrationTestBase() {
     val placementDates = listOf(
       PlacementDates(
         expectedArrival = LocalDate.now(),
-        duration = 12,
+        duration = AUTHORISED_DURATION_DAYS,
       ),
     )
     webTestClient.post()
