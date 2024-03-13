@@ -80,8 +80,7 @@ class PlacementApplicationsController(
 
     val result = placementApplicationService.updateApplication(id, serializedData)
 
-    val validationResult = extractEntityFromAuthorisableActionResult(result)
-    val placementApplication = extractEntityFromValidatableActionResult(validationResult)
+    val placementApplication = extractEntityFromCasResult(result)
 
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
   }
@@ -94,7 +93,7 @@ class PlacementApplicationsController(
 
     val result = placementApplicationService.submitApplication(id, serializedData, submitPlacementApplication.placementType, submitPlacementApplication.placementDates)
 
-    val placementApplications = extractEntityFromNestedAuthorisableValidatableActionResult(result)
+    val placementApplications = extractEntityFromCasResult(result)
 
     return ResponseEntity.ok(placementApplications.map { placementApplicationTransformer.transformJpaToApi(it) })
   }
