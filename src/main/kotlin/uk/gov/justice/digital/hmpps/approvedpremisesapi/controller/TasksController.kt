@@ -68,6 +68,7 @@ class TasksController(
     type: TaskType?,
     types: List<TaskType>?,
     page: Int?,
+    perPage: Int?,
     sortBy: TaskSortField?,
     sortDirection: SortDirection?,
     allocatedFilter: AllocatedFilter?,
@@ -97,6 +98,7 @@ class TasksController(
       ),
       PageCriteria(
         sortBy = sortBy ?: TaskSortField.createdAt,
+        perPage = perPage,
         sortDirection = sortDirection ?: SortDirection.asc,
         page = page,
       ),

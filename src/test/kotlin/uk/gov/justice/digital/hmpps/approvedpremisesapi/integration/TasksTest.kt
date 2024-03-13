@@ -5,13 +5,16 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Task
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskWrapper
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a Placement Application`
@@ -23,7 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Assessment for Temporary Accommodation`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
@@ -31,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransfor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import java.time.OffsetDateTime
 import java.util.UUID
+import kotlin.math.ceil
 
 class TasksTest : IntegrationTestBase() {
   @Autowired
@@ -47,8 +51,6 @@ class TasksTest : IntegrationTestBase() {
   @SuppressWarnings("LargeClass")
   @Nested
   inner class GetTasksTest {
-    private val pageSize = 10
-
     @Test
     fun `Get all tasks without JWT returns 401`() {
       webTestClient.get()
@@ -67,160 +69,6 @@ class TasksTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isForbidden
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when types specified (all types)`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            val (task1, _) = `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            val (task2, _) = `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            val (task3, _) = `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            val task4 = `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-              submittedAt = OffsetDateTime.now(),
-            )
-
-            val (task5) = `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            val expectedTasks = listOf(
-              taskTransformer.transformPlacementRequestToTask(
-                task1,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-              taskTransformer.transformAssessmentToTask(
-                task2,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-              taskTransformer.transformPlacementRequestToTask(
-                task3,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-              taskTransformer.transformPlacementApplicationToTask(
-                task4,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-              taskTransformer.transformAssessmentToTask(
-                task5,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-            )
-
-            webTestClient.get()
-              .uri("/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=PlacementApplication&types=Assessment&types=PlacementRequest")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  expectedTasks,
-                ),
-              )
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when types specified (2 types)`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            val (assessment1, _) = `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            val placementApp1 = `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-              submittedAt = OffsetDateTime.now(),
-            )
-
-            val (assessment2, _) = `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            val expectedTasks = listOf(
-              taskTransformer.transformAssessmentToTask(
-                assessment1,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-              taskTransformer.transformPlacementApplicationToTask(
-                placementApp1,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-              taskTransformer.transformAssessmentToTask(
-                assessment2,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-            )
-
-            webTestClient.get()
-              .uri("/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=PlacementApplication&types=Assessment")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  expectedTasks,
-                ),
-              )
-          }
-        }
       }
     }
 
@@ -266,132 +114,6 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all tasks returns 200 when no type with only CAS1 assessments`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
-            `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-              reallocated = true,
-            )
-
-            `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-              isWithdrawn = true,
-            )
-
-            `Given an Assessment for Temporary Accommodation`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              decision = PlacementApplicationDecision.ACCEPTED,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              reallocated = true,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              reallocated = true,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            val (allocatablePlacementRequest) = `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            val (placementRequestMarkedAsUnableToMatch) = `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            bookingNotMadeFactory.produceAndPersist {
-              withPlacementRequest(placementRequestMarkedAsUnableToMatch)
-            }
-
-            val allocatablePlacementApplication = `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-              submittedAt = OffsetDateTime.now(),
-            )
-
-            webTestClient.get()
-              .uri("/tasks")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    taskTransformer.transformAssessmentToTask(
-                      allocatableAssessment,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
-                    ),
-                    taskTransformer.transformPlacementRequestToTask(
-                      allocatablePlacementRequest,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
-                    ),
-                    taskTransformer.transformPlacementApplicationToTask(
-                      allocatablePlacementApplication,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
-                    ),
-                  ),
-                ),
-              )
-          }
-        }
-      }
-    }
-
-    @Test
     fun `Get all tasks with taskType BookingAppeal returns 400`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
         webTestClient.get()
@@ -403,879 +125,614 @@ class TasksTest : IntegrationTestBase() {
       }
     }
 
-    @Test
-    fun `Get all tasks returns 200 when type assessment`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
+    @Nested
+    inner class FilterByType {
+      private lateinit var tasks: Map<TaskType, List<Task>>
+      lateinit var jwt: String
 
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
+      @BeforeEach
+      fun setup() {
+        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+          `Given a User` { otherUser, _ ->
+            `Given an Offender` { offenderDetails, _ ->
+              this.jwt = jwt
 
-            webTestClient.get()
-              .uri("/tasks?type=Assessment")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    taskTransformer.transformAssessmentToTask(
-                      allocatableAssessment,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
-                    ),
-                  ),
+              val (task1, _) = `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+              )
+
+              val (task2, _) = `Given an Assessment for Approved Premises`(
+                allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              )
+
+              val (task3, _) = `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+              )
+
+              val task4 = `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+              )
+
+              val (task5) = `Given an Assessment for Approved Premises`(
+                allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              )
+
+              val placementRequests = listOf(
+                taskTransformer.transformPlacementRequestToTask(
+                  task1,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+                taskTransformer.transformPlacementRequestToTask(
+                  task3,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
                 ),
               )
+
+              val placementApplications = listOf(
+                taskTransformer.transformPlacementApplicationToTask(
+                  task4,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+              )
+
+              val assessments = listOf(
+                taskTransformer.transformAssessmentToTask(
+                  task2,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+                taskTransformer.transformAssessmentToTask(
+                  task5,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+              )
+
+              tasks = mapOf(
+                TaskType.assessment to assessments,
+                TaskType.placementApplication to placementApplications,
+                TaskType.placementRequest to placementRequests,
+              )
+            }
           }
         }
       }
-    }
 
-    @Test
-    fun `Get all tasks returns 200 when types is assessment`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
+      @ParameterizedTest
+      @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
+      fun `Get all tasks filters by a single type`(taskType: TaskType) {
+        val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=${taskType.value}"
+        val expectedTasks = tasks[taskType]!!.sortedBy { it.dueDate }
 
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
+      }
 
-            webTestClient.get()
-              .uri("/tasks?types=Assessment")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    taskTransformer.transformAssessmentToTask(
-                      allocatableAssessment,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
-                    ),
-                  ),
-                ),
-              )
-          }
-        }
+      @ParameterizedTest
+      @CsvSource("assessment,placementRequest", "assessment,placementApplication", "placementRequest,placementApplication", "placementApplication,placementRequest")
+      fun `Get all tasks filters by multiple types`(taskType1: TaskType, taskType2: TaskType) {
+        val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=${taskType1.value}&types=${taskType2.value}"
+        val expectedTasks = listOf(
+          tasks[taskType1]!!,
+          tasks[taskType2]!!,
+        ).flatten().sortedBy { it.dueDate }
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
+      }
+
+      @Test
+      fun `Get all tasks returns all task types`() {
+        val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=Assessment&types=PlacementRequest&types=PlacementApplication"
+        val expectedTasks = listOf(
+          tasks[TaskType.assessment]!!,
+          tasks[TaskType.placementRequest]!!,
+          tasks[TaskType.placementApplication]!!,
+        ).flatten().sortedBy { it.dueDate }
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
+      }
+
+      @Test
+      fun `Get all tasks returns all task types by default`() {
+        val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc"
+        val expectedTasks = listOf(
+          tasks[TaskType.assessment]!!,
+          tasks[TaskType.placementRequest]!!,
+          tasks[TaskType.placementApplication]!!,
+        ).flatten().sortedBy { it.dueDate }
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
       }
     }
 
-    @Test
-    fun `Get all tasks returns 200 when type assessment and ap area defined`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+    @Nested
+    inner class FilterByApArea {
+      private lateinit var tasks: Map<TaskType, List<Task>>
 
-            val apArea1 = `Given an AP Area`()
-            val apArea2 = `Given an AP Area`()
+      lateinit var jwt: String
+      lateinit var apArea: ApAreaEntity
 
-            val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-              apArea = apArea1,
-            )
+      @BeforeEach
+      fun setup() {
+        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+          `Given a User` { otherUser, _ ->
+            `Given an Offender` { offenderDetails, _ ->
+              this.jwt = jwt
 
-            `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-              apArea = apArea2,
-            )
+              apArea = `Given an AP Area`()
+              val apArea2 = `Given an AP Area`()
 
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-              apArea = apArea1,
-            )
+              val (assessment) = `Given an Assessment for Approved Premises`(
+                allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+                apArea = apArea,
+              )
 
-            webTestClient.get()
-              .uri("/tasks?type=Assessment&apAreaId=${apArea1.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    taskTransformer.transformAssessmentToTask(
-                      allocatableAssessment,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
-                    ),
-                  ),
+              `Given an Assessment for Approved Premises`(
+                allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+                apArea = apArea2,
+              )
+
+              val placementApplication = `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+                apArea = apArea,
+              )
+
+              `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+                apArea = apArea2,
+              )
+
+              val (placementRequest) = `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+                apArea = apArea,
+              )
+
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+                apArea = apArea2,
+              )
+
+              val assessments = listOf(
+                taskTransformer.transformAssessmentToTask(
+                  assessment,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
                 ),
               )
+
+              val placementApplications = listOf(
+                taskTransformer.transformPlacementApplicationToTask(
+                  placementApplication,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+              )
+
+              val placementRequests = listOf(
+                taskTransformer.transformPlacementRequestToTask(
+                  placementRequest,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+              )
+
+              tasks = mapOf(
+                TaskType.assessment to assessments,
+                TaskType.placementApplication to placementApplications,
+                TaskType.placementRequest to placementRequests,
+              )
+            }
           }
         }
       }
-    }
 
-    @Test
-    fun `Get all tasks returns 200 when type assessment and allocated to user defined`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      @ParameterizedTest
+      @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
+      fun `it filters by Ap Area and task type`(taskType: TaskType) {
+        val expectedTasks = tasks[taskType]
+        val url = "/tasks?type=${taskType.value}&apAreaId=${apArea.id}"
 
-            val apArea1 = `Given an AP Area`()
-            val apArea2 = `Given an AP Area`()
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
+      }
 
-            val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
-              allocatedToUser = user,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-              apArea = apArea1,
-            )
+      @Test
+      fun `it filters by all areas with no task type`() {
+        val expectedTasks = listOf(
+          tasks[TaskType.assessment]!!,
+          tasks[TaskType.placementRequest]!!,
+          tasks[TaskType.placementApplication]!!,
+        ).flatten().sortedBy { it.dueDate }
 
-            `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-              apArea = apArea2,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=Assessment&allocatedToUserId=${user.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    taskTransformer.transformAssessmentToTask(
-                      allocatableAssessment,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
-                    ),
-                  ),
-                ),
-              )
-          }
-        }
+        webTestClient.get()
+          .uri("/tasks?apAreaId=${apArea.id}")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
       }
     }
 
-    @Test
-    fun `Get all tasks returns 200 when type placement request`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+    @Nested
+    inner class FilterByUser {
+      private lateinit var tasks: Map<TaskType, List<Task>>
 
-            val (allocatablePlacementRequest) = `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
+      lateinit var jwt: String
+      lateinit var user: UserEntity
 
-            `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
+      @BeforeEach
+      fun setup() {
+        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+          `Given a User` { otherUser, _ ->
+            `Given an Offender` { offenderDetails, _ ->
+              this.jwt = jwt
+              this.user = user
 
-            webTestClient.get()
-              .uri("/tasks?type=PlacementRequest")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    taskTransformer.transformPlacementRequestToTask(
-                      allocatablePlacementRequest,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
-                    ),
-                  ),
-                ),
+              val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
+                allocatedToUser = user,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
               )
-          }
-        }
-      }
-    }
 
-    @Test
-    fun `Get all tasks returns 200 when types is placement request`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val (allocatablePlacementRequest) = `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?types=PlacementRequest")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    taskTransformer.transformPlacementRequestToTask(
-                      allocatablePlacementRequest,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
-                    ),
-                  ),
-                ),
-              )
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when type placement application`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val allocatablePlacementApplication = `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-              submittedAt = OffsetDateTime.now(),
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = null,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=PlacementApplication")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    taskTransformer.transformPlacementApplicationToTask(
-                      allocatablePlacementApplication,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
-                    ),
-                  ),
-                ),
-              )
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when types is placement application`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val allocatablePlacementApplication = `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-              submittedAt = OffsetDateTime.now(),
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = null,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?types=PlacementApplication")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    taskTransformer.transformPlacementApplicationToTask(
-                      allocatablePlacementApplication,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
-                    ),
-                  ),
-                ),
-              )
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when type placement application and ap area defined`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val apArea1 = `Given an AP Area`()
-            val apArea2 = `Given an AP Area`()
-
-            val allocatablePlacementApplication = `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-              submittedAt = OffsetDateTime.now(),
-              apArea = apArea1,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-              submittedAt = OffsetDateTime.now(),
-              apArea = apArea2,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-              apArea = apArea1,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=PlacementApplication&apAreaId=${apArea1.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    taskTransformer.transformPlacementApplicationToTask(
-                      allocatablePlacementApplication,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
-                    ),
-                  ),
-                ),
-              )
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when type placement application and allocated to user defined`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val apArea1 = `Given an AP Area`()
-            val apArea2 = `Given an AP Area`()
-
-            val allocatablePlacementApplication = `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-              submittedAt = OffsetDateTime.now(),
-              apArea = apArea1,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = otherUser,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-              submittedAt = OffsetDateTime.now(),
-              apArea = apArea2,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=PlacementApplication&allocatedToUserId=${user.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    taskTransformer.transformPlacementApplicationToTask(
-                      allocatablePlacementApplication,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
-                    ),
-                  ),
-                ),
-              )
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when type assessment and page is two and no allocated filter`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            val numAllocatableAssessment = 7
-            val numUnallocatableAssessment = 5
-            val totalTasks = numAllocatableAssessment + numUnallocatableAssessment
-
-            repeat(numAllocatableAssessment) {
               `Given an Assessment for Approved Premises`(
                 allocatedToUser = otherUser,
                 createdByUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
               )
-            }
 
-            repeat(numUnallocatableAssessment) {
-              `Given an Assessment for Approved Premises`(
-                null,
-                createdByUser = otherUser,
+              val allocatablePlacementApplication = `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
                 crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
               )
-            }
 
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = null,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=Assessment&page=2")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalResults", totalTasks.toLong())
-              .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-              .expectBody()
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when type assessment and page is two and allocated filter allocated`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            val numAllocatableAssessment = 12
-            val numUnallocatableAssessment = 5
-
-            repeat(numAllocatableAssessment) {
-              `Given an Assessment for Approved Premises`(
+              `Given a Placement Application`(
+                createdByUser = user,
                 allocatedToUser = otherUser,
-                createdByUser = otherUser,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
                 crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
               )
-            }
 
-            repeat(numUnallocatableAssessment) {
-              `Given an Assessment for Approved Premises`(
-                null,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=Assessment&page=2&allocatedFilter=allocated")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalResults", numAllocatableAssessment.toLong())
-              .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-              .expectBody()
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when type assessment and page is two and allocated filter unallocated`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-            val numAllocatableAssessment = 2
-            val numUnallocatableAssessment = 15
-
-            repeat(numAllocatableAssessment) {
-              `Given an Assessment for Approved Premises`(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            repeat(numUnallocatableAssessment) {
-              `Given an Assessment for Approved Premises`(
-                null,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = null,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=Assessment&page=2&allocatedFilter=unallocated")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalResults", numUnallocatableAssessment.toLong())
-              .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-              .expectBody()
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when type placement requests and page two no allocated filter`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val numAllocatedRequests = 8
-            val numUnallocatedPlacementRequests = 6
-            val totalTasks = numAllocatedRequests + numUnallocatedPlacementRequests
-
-            repeat(numAllocatedRequests) {
               `Given a Placement Request`(
                 placementRequestAllocatedTo = otherUser,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = user,
                 crn = offenderDetails.otherIds.crn,
               )
-            }
 
-            repeat(numUnallocatedPlacementRequests) {
-              `Given a Placement Request`(
-                null,
+              val (allocatablePlacementRequest) = `Given a Placement Request`(
+                placementRequestAllocatedTo = user,
                 assessmentAllocatedTo = otherUser,
                 createdByUser = user,
                 crn = offenderDetails.otherIds.crn,
               )
-            }
 
-            `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=PlacementRequest&page=2")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalResults", totalTasks.toLong())
-              .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-              .expectBody()
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when type placement requests and ap area defined`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val apArea1 = `Given an AP Area`()
-            val apArea2 = `Given an AP Area`()
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-              apArea = apArea1,
-            )
-
-            val (allocatablePlacementRequest) = `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-              apArea = apArea2,
-            )
-
-            `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-              apArea = apArea1,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=PlacementRequest&apAreaId=${apArea2.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    taskTransformer.transformPlacementRequestToTask(
-                      allocatablePlacementRequest,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
-                    ),
-                  ),
+              val assessments = listOf(
+                taskTransformer.transformAssessmentToTask(
+                  allocatableAssessment,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
                 ),
               )
-          }
-        }
-      }
-    }
 
-    @Test
-    fun `Get all tasks returns 200 when type placement requests and allocated to user defined`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val apArea1 = `Given an AP Area`()
-            val apArea2 = `Given an AP Area`()
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-              apArea = apArea1,
-            )
-
-            val (allocatablePlacementRequest) = `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-              apArea = apArea2,
-            )
-
-            `Given an Assessment for Approved Premises`(
-              allocatedToUser = user,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=PlacementRequest&allocatedToUserId=${user.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  listOf(
-                    taskTransformer.transformPlacementRequestToTask(
-                      allocatablePlacementRequest,
-                      "${offenderDetails.firstName} ${offenderDetails.surname}",
-                    ),
-                  ),
+              val placementApplications = listOf(
+                taskTransformer.transformPlacementApplicationToTask(
+                  allocatablePlacementApplication,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
                 ),
               )
+
+              val placementRequests = listOf(
+                taskTransformer.transformPlacementRequestToTask(
+                  allocatablePlacementRequest,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+              )
+
+              tasks = mapOf(
+                TaskType.assessment to assessments,
+                TaskType.placementApplication to placementApplications,
+                TaskType.placementRequest to placementRequests,
+              )
+            }
           }
         }
+      }
+
+      @ParameterizedTest
+      @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
+      fun `it filters by user and task type`(taskType: TaskType) {
+        val expectedTasks = tasks[taskType]
+        val url = "/tasks?type=${taskType.value}&allocatedToUserId=${user.id}"
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
+      }
+
+      @Test
+      fun `it filters by user with all tasks`() {
+        val expectedTasks = listOf(
+          tasks[TaskType.assessment]!!,
+          tasks[TaskType.placementRequest]!!,
+          tasks[TaskType.placementApplication]!!,
+        ).flatten().sortedBy { it.dueDate }
+
+        val url = "/tasks?allocatedToUserId=${user.id}"
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              expectedTasks,
+            ),
+          )
       }
     }
 
-    @Test
-    fun `Get all tasks returns 200 when type placement requests and page two and allocated filter allocated`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+    @Nested
+    inner class Pagination {
+      private val pageSize = 1
+      private lateinit var counts: Map<TaskType, Map<String, Int>>
 
-            val numAllocatedRequests = 12
-            val numUnallocatedPlacementRequests = 5
+      lateinit var jwt: String
 
-            repeat(numAllocatedRequests) {
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
+      @BeforeEach
+      fun setup() {
+        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+          `Given a User` { otherUser, _ ->
+            `Given an Offender` { offenderDetails, _ ->
+              this.jwt = jwt
+
+              counts = mapOf(
+                TaskType.assessment to mapOf(
+                  "allocated" to 2,
+                  "unallocated" to 3,
+                ),
+                TaskType.placementRequest to mapOf(
+                  "allocated" to 2,
+                  "unallocated" to 4,
+                ),
+                TaskType.placementApplication to mapOf(
+                  "allocated" to 3,
+                  "unallocated" to 2,
+                ),
               )
+
+              repeat(counts[TaskType.assessment]!!["allocated"]!!) {
+                `Given an Assessment for Approved Premises`(
+                  allocatedToUser = otherUser,
+                  createdByUser = otherUser,
+                  crn = offenderDetails.otherIds.crn,
+                )
+              }
+
+              repeat(counts[TaskType.assessment]!!["unallocated"]!!) {
+                `Given an Assessment for Approved Premises`(
+                  null,
+                  createdByUser = otherUser,
+                  crn = offenderDetails.otherIds.crn,
+                )
+              }
+
+              repeat(counts[TaskType.placementRequest]!!["allocated"]!!) {
+                `Given a Placement Request`(
+                  placementRequestAllocatedTo = otherUser,
+                  assessmentAllocatedTo = otherUser,
+                  createdByUser = user,
+                  crn = offenderDetails.otherIds.crn,
+                )
+              }
+
+              repeat(counts[TaskType.placementRequest]!!["unallocated"]!!) {
+                `Given a Placement Request`(
+                  null,
+                  assessmentAllocatedTo = otherUser,
+                  createdByUser = user,
+                  crn = offenderDetails.otherIds.crn,
+                )
+              }
+
+              repeat(counts[TaskType.placementApplication]!!["allocated"]!!) {
+                `Given a Placement Application`(
+                  createdByUser = user,
+                  allocatedToUser = user,
+                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                    withPermissiveSchema()
+                  },
+                  crn = offenderDetails.otherIds.crn,
+                  submittedAt = OffsetDateTime.now(),
+                )
+              }
+
+              repeat(counts[TaskType.placementApplication]!!["unallocated"]!!) {
+                `Given a Placement Application`(
+                  createdByUser = user,
+                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                    withPermissiveSchema()
+                  },
+                  crn = offenderDetails.otherIds.crn,
+                  submittedAt = OffsetDateTime.now(),
+                )
+              }
             }
-
-            repeat(numUnallocatedPlacementRequests) {
-              `Given a Placement Request`(
-                null,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=PlacementRequest&page=2&allocatedFilter=allocated")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalResults", numAllocatedRequests.toLong())
-              .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-              .expectBody()
           }
         }
       }
-    }
 
-    @Test
-    fun `Get all tasks returns 200 when type placement requests and page two and allocated filter unallocated`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+      @ParameterizedTest
+      @CsvSource(
+        "assessment,allocated,1", "assessment,allocated,2", "assessment,unallocated,1", "assessment,unallocated,1",
+        "placementRequest,allocated,1", "placementRequest,allocated,2", "placementRequest,unallocated,1", "placementRequest,unallocated,2",
+        "placementApplication,allocated,1", "placementApplication,allocated,2", "placementApplication,unallocated,1", "placementApplication,unallocated,2",
+      )
+      fun `get all tasks returns page counts when taskType and allocated filter are set`(taskType: TaskType, allocatedFilter: String, pageNumber: String) {
+        val itemCount = counts[taskType]!![allocatedFilter]!!
+        val url = "/tasks?type=${taskType.value}&perPage=$pageSize&page=$pageNumber&allocatedFilter=$allocatedFilter"
 
-            val numAllocatedRequests = 2
-            val numUnallocatedPlacementRequests = 15
-
-            repeat(numAllocatedRequests) {
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            repeat(numUnallocatedPlacementRequests) {
-              `Given a Placement Request`(
-                null,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            `Given an Assessment for Approved Premises`(
-              allocatedToUser = null,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=PlacementRequest&page=2&allocatedFilter=unallocated")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalResults", numUnallocatedPlacementRequests.toLong())
-              .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-              .expectBody()
-          }
-        }
+        expectCountHeaders(url, pageNumber.toInt(), itemCount)
       }
+
+      @ParameterizedTest
+      @CsvSource(
+        "allocated,1",
+        "allocated,2",
+        "unallocated,1",
+        "unallocated,1",
+      )
+      fun `get all tasks returns page counts for all tasks when allocated filter is set`(allocatedFilter: String, pageNumber: String) {
+        val itemCount = listOf(
+          counts[TaskType.assessment]!![allocatedFilter]!!,
+          counts[TaskType.placementRequest]!![allocatedFilter]!!,
+          counts[TaskType.placementApplication]!![allocatedFilter]!!,
+        ).sum()
+
+        val url = "/tasks?&page=$pageNumber&perPage=$pageSize&allocatedFilter=$allocatedFilter"
+
+        expectCountHeaders(url, pageNumber.toInt(), itemCount)
+      }
+
+      @ParameterizedTest
+      @ValueSource(ints = [1, 2])
+      fun `get all tasks returns page count when no allocated filter is set`(pageNumber: Int) {
+        val itemCount = listOf(
+          counts[TaskType.assessment]!!["allocated"]!!,
+          counts[TaskType.assessment]!!["unallocated"]!!,
+          counts[TaskType.placementRequest]!!["allocated"]!!,
+          counts[TaskType.placementRequest]!!["unallocated"]!!,
+          counts[TaskType.placementApplication]!!["allocated"]!!,
+          counts[TaskType.placementApplication]!!["unallocated"]!!,
+        ).sum()
+
+        expectCountHeaders("/tasks?&page=$pageNumber&perPage=$pageSize", pageNumber, itemCount)
+      }
+
+      private fun expectCountHeaders(url: String, pageNumber: Int, itemCount: Int) {
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectHeader().valueEquals("X-Pagination-CurrentPage", pageNumber.toLong())
+          .expectHeader().valueEquals("X-Pagination-TotalPages", expectedTotalPages(itemCount))
+          .expectHeader().valueEquals("X-Pagination-TotalResults", itemCount.toLong())
+          .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
+      }
+
+      private fun expectedTotalPages(count: Int) = ceil(count.toDouble() / pageSize).toLong()
     }
 
     @Test
@@ -1367,668 +824,6 @@ class TasksTest : IntegrationTestBase() {
                   expectedTasks.reversed(),
                 ),
               )
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when no type and allocated to user defined`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { callingUser, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val (task1, _) = `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = callingUser,
-              createdByUser = callingUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = callingUser,
-              assessmentAllocatedTo = callingUser,
-              createdByUser = callingUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            val (task2, _) = `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = callingUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            `Given an Assessment for Approved Premises`(
-              allocatedToUser = callingUser,
-              createdByUser = callingUser,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            val task3 = `Given a Placement Application`(
-              createdByUser = otherUser,
-              allocatedToUser = otherUser,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-              submittedAt = OffsetDateTime.now(),
-            )
-
-            `Given a Placement Application`(
-              createdByUser = callingUser,
-              allocatedToUser = callingUser,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-              submittedAt = OffsetDateTime.now(),
-            )
-
-            val expectedTasks = listOf(
-              taskTransformer.transformPlacementRequestToTask(
-                task1,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-              taskTransformer.transformAssessmentToTask(
-                task2,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-              taskTransformer.transformPlacementApplicationToTask(
-                task3,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-            )
-
-            webTestClient.get()
-              .uri("/tasks?page=1&sortBy=createdAt&sortDirection=asc&allocatedToUserId=${otherUser.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  expectedTasks,
-                ),
-              )
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when no type and ap area defined`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val apArea1 = `Given an AP Area`()
-            val apArea2 = `Given an AP Area`()
-
-            val (task1, _) = `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-              apArea = apArea1,
-            )
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = otherUser,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-              apArea = apArea2,
-            )
-
-            val (task2, _) = `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-              apArea = apArea1,
-            )
-
-            `Given an Assessment for Approved Premises`(
-              allocatedToUser = otherUser,
-              createdByUser = otherUser,
-              crn = offenderDetails.otherIds.crn,
-              apArea = apArea2,
-            )
-
-            val task3 = `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-              submittedAt = OffsetDateTime.now(),
-              apArea = apArea1,
-            )
-
-            `Given a Placement Application`(
-              createdByUser = user,
-              allocatedToUser = user,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              crn = offenderDetails.otherIds.crn,
-              submittedAt = OffsetDateTime.now(),
-              apArea = apArea2,
-            )
-
-            val expectedTasks = listOf(
-              taskTransformer.transformPlacementRequestToTask(
-                task1,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-              taskTransformer.transformAssessmentToTask(
-                task2,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-              taskTransformer.transformPlacementApplicationToTask(
-                task3,
-                "${offenderDetails.firstName} ${offenderDetails.surname}",
-              ),
-            )
-
-            webTestClient.get()
-              .uri("/tasks?page=1&sortBy=createdAt&sortDirection=asc&apAreaId=${apArea1.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectBody()
-              .json(
-                objectMapper.writeValueAsString(
-                  expectedTasks,
-                ),
-              )
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when type placement application and page two`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val numAllocatablePlacementApplications = 12
-
-            repeat(numAllocatablePlacementApplications) {
-              `Given a Placement Application`(
-                createdByUser = user,
-                allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-            }
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = null,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=PlacementApplication&page=2")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalResults", numAllocatablePlacementApplications.toLong())
-              .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-              .expectBody()
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when type placement application and page two and no allocated filter`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val numAllocatedPlacementApplications = 6
-            val numUnallocatedPlacementApplications = 5
-            val totalTasks = numAllocatedPlacementApplications + numUnallocatedPlacementApplications
-
-            repeat(numAllocatedPlacementApplications) {
-              `Given a Placement Application`(
-                createdByUser = user,
-                allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-            }
-
-            repeat(numUnallocatedPlacementApplications) {
-              `Given a Placement Application`(
-                createdByUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-            }
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = null,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=PlacementApplication&page=2")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalResults", totalTasks.toLong())
-              .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-              .expectBody()
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when type placement application and page two and unallocated filter`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val numAllocatedPlacementApplications = 12
-            val numUnallocatedPlacementApplications = 15
-
-            repeat(numAllocatedPlacementApplications) {
-              `Given a Placement Application`(
-                createdByUser = user,
-                allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-            }
-
-            repeat(numUnallocatedPlacementApplications) {
-              `Given a Placement Application`(
-                createdByUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-            }
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = null,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=PlacementApplication&page=2&allocatedFilter=unallocated")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalResults", numUnallocatedPlacementApplications.toLong())
-              .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-              .expectBody()
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when type placement application and page two and allocated filter`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val numAllocatedPlacementApplications = 12
-            val numUnallocatedPlacementApplications = 15
-
-            repeat(numAllocatedPlacementApplications) {
-              `Given a Placement Application`(
-                createdByUser = user,
-                allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-            }
-
-            repeat(numUnallocatedPlacementApplications) {
-              `Given a Placement Application`(
-                createdByUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-            }
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = user,
-              assessmentAllocatedTo = otherUser,
-              createdByUser = user,
-              crn = offenderDetails.otherIds.crn,
-            )
-
-            webTestClient.get()
-              .uri("/tasks?type=PlacementApplication&page=2&allocatedFilter=allocated")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalResults", numAllocatedPlacementApplications.toLong())
-              .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-              .expectBody()
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when no type and page two and no allocated filter`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val numAllocatedPlacementApplications = 2
-            val numUnallocatedPlacementApplications = 3
-            val numAllocatableAssessment = 4
-            val numUnallocatableAssessment = 5
-            val numAllocatedPlacementRequests = 6
-            val numUnallocatedPlacementRequests = 7
-
-            val totalTasks = numAllocatedPlacementApplications +
-              numUnallocatedPlacementApplications +
-              numAllocatableAssessment +
-              numUnallocatableAssessment +
-              numAllocatedPlacementRequests +
-              numUnallocatedPlacementRequests
-
-            repeat(numAllocatedPlacementApplications) {
-              `Given a Placement Application`(
-                createdByUser = user,
-                allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-            }
-
-            repeat(numUnallocatedPlacementApplications) {
-              `Given a Placement Application`(
-                createdByUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-            }
-
-            repeat(numAllocatableAssessment) {
-              `Given an Assessment for Approved Premises`(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            repeat(numUnallocatableAssessment) {
-              `Given an Assessment for Approved Premises`(
-                null,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            repeat(numAllocatedPlacementRequests) {
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            repeat(numUnallocatedPlacementRequests) {
-              `Given a Placement Request`(
-                null,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            webTestClient.get()
-              .uri("/tasks?page=2")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalPages", 3)
-              .expectHeader().valueEquals("X-Pagination-TotalResults", totalTasks.toLong())
-              .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-              .expectBody()
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when no type and page two and allocated filter`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val numAllocatedPlacementApplications = 12
-            val numUnallocatedPlacementApplications = 1
-            val numAllocatableAssessment = 4
-            val numUnallocatableAssessment = 1
-            val numAllocatedPlacementRequests = 6
-            val numUnallocatedPlacementRequests = 1
-
-            val totalTasks = numAllocatedPlacementApplications +
-              numAllocatableAssessment +
-              numAllocatedPlacementRequests
-
-            repeat(numAllocatedPlacementApplications) {
-              `Given a Placement Application`(
-                createdByUser = user,
-                allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-            }
-
-            repeat(numUnallocatedPlacementApplications) {
-              `Given a Placement Application`(
-                createdByUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-            }
-
-            repeat(numAllocatableAssessment) {
-              `Given an Assessment for Approved Premises`(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            repeat(numUnallocatableAssessment) {
-              `Given an Assessment for Approved Premises`(
-                null,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            repeat(numAllocatedPlacementRequests) {
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            repeat(numUnallocatedPlacementRequests) {
-              `Given a Placement Request`(
-                null,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            webTestClient.get()
-              .uri("/tasks?page=2&allocatedFilter=allocated")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalPages", 3)
-              .expectHeader().valueEquals("X-Pagination-TotalResults", totalTasks.toLong())
-              .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-              .expectBody()
-          }
-        }
-      }
-    }
-
-    @Test
-    fun `Get all tasks returns 200 when no type and page two and unallocated filter`() {
-      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        `Given a User` { otherUser, _ ->
-          `Given an Offender` { offenderDetails, _ ->
-
-            val numAllocatedPlacementApplications = 1
-            val numAllocatedAssessments = 1
-            val numAllocatedPlacementRequests = 1
-
-            repeat(numAllocatedPlacementApplications) {
-              `Given a Placement Application`(
-                createdByUser = user,
-                allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-            }
-
-            repeat(numAllocatedAssessments) {
-              `Given an Assessment for Approved Premises`(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            repeat(numAllocatedPlacementRequests) {
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            val numUnallocatedPlacementApplications = 11
-            val numUnallocatedAssessments = 5
-            val numUnallocatedPlacementRequests = 7
-
-            repeat(numUnallocatedPlacementApplications) {
-              `Given a Placement Application`(
-                createdByUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-                reallocated = false,
-                decision = null,
-              )
-            }
-
-            repeat(numUnallocatedAssessments) {
-              `Given an Assessment for Approved Premises`(
-                null,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            repeat(numUnallocatedPlacementRequests) {
-              `Given a Placement Request`(
-                null,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-            }
-
-            val totalUnallocatedTasks = numUnallocatedPlacementApplications +
-              numUnallocatedAssessments +
-              numUnallocatedPlacementRequests
-
-            webTestClient.get()
-              .uri("/tasks?page=2&allocatedFilter=unallocated")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
-              .expectHeader().valueEquals("X-Pagination-TotalPages", 3)
-              .expectHeader().valueEquals("X-Pagination-TotalResults", totalUnallocatedTasks.toLong())
-              .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-              .expectBody()
           }
         }
       }
