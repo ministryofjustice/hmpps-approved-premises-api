@@ -119,6 +119,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
           reallocated = false,
           isWithdrawn = true,
           withdrawalReason = PlacementRequestWithdrawalReason.NO_CAPACITY,
+          tier = "C",
         )
 
         val booking = bookingEntityFactory.produceAndPersist {
@@ -143,6 +144,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
 
           val row1 = rows[0]
           assertThat(row1.crn).isEqualTo(placementRequest.application.crn)
+          assertThat(row1.tier).isEqualTo("C")
           assertThat(row1.applicationId).isEqualTo(placementRequest.application.id.toString())
           assertThat(row1.requestForPlacementId).isEqualTo("placement_request:${placementRequest.id}")
           assertThat(row1.requestForPlacementWithdrawalReason).isEqualTo("NO_CAPACITY")
@@ -231,6 +233,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
           applicationSubmittedAt = LocalDate.of(2019, 10, 11).toUtcOffsetDateTime(),
           assessmentSubmittedAt = LocalDate.of(2019, 11, 12).toUtcOffsetDateTime(),
           placementApplication = placementApplication,
+          tier = "D",
         )
 
         getReport(jwt) { rows ->
@@ -238,6 +241,7 @@ class Cas1PlacementMatchingOutcomesReportTest : IntegrationTestBase() {
 
           val row1 = rows[0]
           assertThat(row1.crn).isEqualTo(placementRequest.application.crn)
+          assertThat(row1.tier).isEqualTo("D")
           assertThat(row1.applicationId).isEqualTo(placementRequest.application.id.toString())
           assertThat(row1.requestForPlacementId).isEqualTo("placement_application:${placementApplication.id}")
           assertThat(row1.matchRequestId).isEqualTo(placementRequest.id.toString())

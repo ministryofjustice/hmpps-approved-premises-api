@@ -22,6 +22,7 @@ interface PlacementMatchingOutcomesEntityReportRowRepository : JpaRepository<Pla
     private const val INITIAL_REQUEST_FOR_PLACEMENT_QUERY = """
       SELECT 
         a.crn as crn,
+        apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
         CAST(a.id as TEXT) as applicationId,
         CONCAT('placement_request:',pr.id) AS requestForPlacementId,
         CAST(pr.id as TEXT) AS matchRequestId,
@@ -60,6 +61,7 @@ interface PlacementMatchingOutcomesEntityReportRowRepository : JpaRepository<Pla
     private const val OTHER_REQUEST_FOR_PLACEMENT_QUERY = """
       SELECT 
       a.crn as crn,
+      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
       CAST(a.id as TEXT) as applicationId,
       CONCAT('placement_application:',pa.id) AS requestForPlacementId,
       CAST(pr.id as TEXT) AS matchRequestId,
@@ -120,6 +122,7 @@ interface PlacementMatchingOutcomesEntityReportRowRepository : JpaRepository<Pla
 @SuppressWarnings("TooManyFunctions")
 interface PlacementMatchingOutcomesEntityReportRow {
   fun getCrn(): String?
+  fun getTier(): String?
   fun getApplicationId(): String?
   fun getRequestForPlacementId(): String?
   fun getMatchRequestId(): String?
