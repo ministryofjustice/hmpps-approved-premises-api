@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
@@ -49,6 +50,8 @@ class TaskService(
     val apAreaId: UUID?,
     val types: List<TaskEntityType>,
     val allocatedToUserId: UUID?,
+    val requiredQualification: UserQualification?,
+    val crnOrName: String?,
   )
 
   fun getAll(
@@ -131,6 +134,8 @@ class TaskService(
       filterCriteria.apAreaId,
       taskTypes.map { it.name },
       filterCriteria.allocatedToUserId,
+      filterCriteria.requiredQualification?.value,
+      filterCriteria.crnOrName,
       pageable,
     )
   }

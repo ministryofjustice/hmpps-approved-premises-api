@@ -2799,6 +2799,11 @@ paths:
           description: Page number of results to return. If not provided results will not be paged
           schema:
             type: integer
+        - name: perPage
+          in: query
+          description: Number of items to return per page (defaults to 10)
+          schema:
+            type: integer
         - name: sortBy
           in: query
           required: false
@@ -2831,129 +2836,17 @@ paths:
           schema:
             type: string
             format: uuid
-      responses:
-        200:
-          description: successfully retrieved tasks
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/Task'
-          headers:
-            X-Pagination-CurrentPage:
-              $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
-            X-Pagination-TotalPages:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalPages'
-            X-Pagination-TotalResults:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
-            X-Pagination-PageSize:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
-  /tasks/{taskType}:
-    get:
-      tags:
-        - Task data
-      summary: List all tasks that are not in a state of 'complete'. This endpoint is deprecated, use /tasks instead specifying the allocatedToUserId, noting that the 'type' parameter values are enumerated and capitalised.
-      deprecated: true
-      parameters:
-        - in: path
-          name: taskType
-          required: true
-          description: Task type
-          schema:
-            type: string
-        - name: page
-          in: query
-          description: Page number of results to return.
-          schema:
-            type: integer
-        - name: sortDirection
-          in: query
-          description: The direction to sort the results by. If blank, will sort by descending order
-          schema:
-            $ref: '_shared.yml#/components/schemas/SortDirection'
-        - name: apAreaId
+        - name: requiredQualification
           in: query
           required: false
-          description: If provided, only tasks for this area will be returned
+          description: Only show tasks with this required qualification
+          schema:
+            $ref: '_shared.yml#/components/schemas/UserQualification'
+        - name: crnOrName
+          in: query
+          description: search by CRN or name
           schema:
             type: string
-            format: uuid
-      responses:
-        200:
-          description: successfully retrieved tasks
-          content:
-            'application/json':
-              schema:
-                type: array
-                items:
-                  $ref: '_shared.yml#/components/schemas/Task'
-          headers:
-            X-Pagination-CurrentPage:
-              $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
-            X-Pagination-TotalPages:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalPages'
-            X-Pagination-TotalResults:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
-            X-Pagination-PageSize:
-              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
-        401:
-          $ref: '_shared.yml#/components/responses/401Response'
-        403:
-          $ref: '_shared.yml#/components/responses/403Response'
-        500:
-          $ref: '_shared.yml#/components/responses/500Response'
-  /tasks/reallocatable:
-    get:
-      tags:
-        - Task data
-      summary: List all reallocatable tasks. This endpoint is deprecated, use /tasks instead, noting that the 'type' parameter values are enumerated and capitalised.
-      deprecated: true
-      parameters:
-        - in: query
-          name: type
-          required: false
-          description: Returns tasks that match the given type. If no type given return all.
-          schema:
-            type: string
-        - name: page
-          in: query
-          description: Page number of results to return.
-          schema:
-            type: integer
-        - name: sortBy
-          in: query
-          description: Which field to sort the results by. If blank, will sort by createdAt
-          schema:
-            $ref: '_shared.yml#/components/schemas/TaskSortField'
-        - name: sortDirection
-          in: query
-          description: The direction to sort the results by. If blank will sort by descending order
-          schema:
-            $ref: '_shared.yml#/components/schemas/SortDirection'
-        - name: allocatedFilter
-          in: query
-          description: Filter by allocated or not
-          schema:
-            $ref: '_shared.yml#/components/schemas/AllocatedFilter'
-        - name: apAreaId
-          in: query
-          description: Approved Premises Area ID to filter results by
-          schema:
-            type: string
-            format: uuid
-        - name: allocatedToUserId
-          in: query
-          description: Only show tasks allocated to this user id
-          schema:
-            type: string
-            format: uuid
       responses:
         200:
           description: successfully retrieved tasks
