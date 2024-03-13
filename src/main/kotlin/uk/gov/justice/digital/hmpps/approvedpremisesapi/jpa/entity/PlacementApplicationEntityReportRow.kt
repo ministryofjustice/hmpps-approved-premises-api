@@ -15,6 +15,7 @@ interface PlacementApplicationEntityReportRowRepository : JpaRepository<Placemen
       select distinct on (pa.id, pa_dates.expected_arrival, pa_dates.duration, placement_request.booking_id)
         cast(pa.id as TEXT) as id,
         application.crn as crn,
+        apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
         pa_dates.expected_arrival as requestedArrivalDate,
         pa_dates.duration as requestedDurationDays,
         pa.decision as decision,
@@ -100,6 +101,7 @@ interface PlacementApplicationEntityReportRowRepository : JpaRepository<Placemen
 interface PlacementApplicationEntityReportRow {
   fun getId(): String
   fun getCrn(): String
+  fun getTier(): String?
   fun getRequestedArrivalDate(): Date?
   fun getRequestedDurationDays(): Int?
   fun getDecision(): String?

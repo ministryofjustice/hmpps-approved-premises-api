@@ -16,6 +16,7 @@ class PlacementApplicationReportGenerator :
       PlacementApplicationReportRow(
         placementRequestId = this.getId(),
         crn = this.getCrn(),
+        tier = this.getTier(),
         placementRequestSubmittedAt = this.getPlacementApplicationSubmittedAt()?.toLocalDateTime()?.toLocalDate(),
         requestedArrivalDate = this.getRequestedArrivalDate()?.toLocalDate(),
         requestedDurationDays = this.getRequestedDurationDays(),
