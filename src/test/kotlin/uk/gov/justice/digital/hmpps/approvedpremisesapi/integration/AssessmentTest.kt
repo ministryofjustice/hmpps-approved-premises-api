@@ -850,6 +850,55 @@ class AssessmentTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Get all assessments for Temporary Accommodation filters correctly when multiple status cas3Closed, cas3Rejected with pagination`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          val closed1 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Closed)
+          val rejected1 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Rejected)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3ReadyToPlace)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Unallocated)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
+          val closed2 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Closed)
+          val rejected2 =
+            createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3Rejected)
+          createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3ReadyToPlace)
+
+          val statusParams = listOf(AssessmentStatus.cas3Closed, cas3Rejected).map { "statuses=${it.value}" }.joinToString("&")
+
+          val page1Response = assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            "/assessments?page=1&perPage=3&sortBy=${AssessmentSortField.assessmentCreatedAt.value}&$statusParams",
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(closed1, rejected1, closed2),
+          )
+
+          val page2Response = assertUrlReturnsAssessments(
+            jwt,
+            ServiceName.temporaryAccommodation,
+            "/assessments?page=2&perPage=3&sortBy=${AssessmentSortField.assessmentCreatedAt.value}&$statusParams",
+            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(rejected2),
+          )
+
+          page1Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 4)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 3)
+
+          page2Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+            .expectHeader().valueEquals("X-Pagination-TotalResults", 4)
+            .expectHeader().valueEquals("X-Pagination-PageSize", 3)
+        }
+      }
+    }
+
+    @Test
     fun `Get all assessments for Temporary Accommodation filters correctly when status is cas3Rejected`() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
