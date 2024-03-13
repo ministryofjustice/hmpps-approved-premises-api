@@ -4342,7 +4342,8 @@ class BookingServiceTest {
             it.crn == crn &&
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
+              it.departureDate == departureDate &&
+              it.adhoc == true
           },
         )
       }
@@ -4403,7 +4404,8 @@ class BookingServiceTest {
             it.crn == crn &&
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
+              it.departureDate == departureDate &&
+              it.adhoc == true
           },
         )
       }
@@ -4463,7 +4465,8 @@ class BookingServiceTest {
             it.crn == crn &&
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
+              it.departureDate == departureDate &&
+              it.adhoc == true
           },
         )
       }
@@ -4522,7 +4525,8 @@ class BookingServiceTest {
             it.crn == crn &&
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
+              it.departureDate == departureDate &&
+              it.adhoc == true
           },
         )
       }
@@ -4557,7 +4561,8 @@ class BookingServiceTest {
             it.crn == crn &&
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
+              it.departureDate == departureDate &&
+              it.adhoc == true
           },
         )
       }
@@ -4591,7 +4596,8 @@ class BookingServiceTest {
             it.crn == crn &&
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
+              it.departureDate == departureDate &&
+              it.adhoc == true
           },
         )
       }
@@ -4624,7 +4630,8 @@ class BookingServiceTest {
             it.crn == crn &&
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
-              it.departureDate == departureDate
+              it.departureDate == departureDate &&
+              it.adhoc == true
           },
         )
       }
@@ -4639,105 +4646,6 @@ class BookingServiceTest {
         mockDomainEventService.saveBookingMadeDomainEvent(
           any(),
         )
-      }
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-    fun `createApprovedPremisesAdHocBooking saves Booking with associated placement request when manual booking is made`(role: UserRole) {
-      user.addRoleForUnitTest(role)
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withAllocatedToUser(user)
-        .produce()
-
-      every { mockPlacementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-
-      application.placementRequests = mutableListOf(placementRequest)
-
-      val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, premises, bed.id, "eventNumber")
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.Success).isTrue
-
-      verify(exactly = 1) {
-        mockPlacementRequestRepository.save(
-          match {
-            it.booking == bookingEntity && it.id == placementRequest.id
-          },
-        )
-      }
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-    fun `createApprovedPremisesAdHocBooking does not save Booking with associated placement request when manual booking is made if placement request is withdrawn`(role: UserRole) {
-      user.addRoleForUnitTest(role)
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withAllocatedToUser(user)
-        .withIsWithdrawn(true)
-        .produce()
-
-      every { mockPlacementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-
-      application.placementRequests = mutableListOf(placementRequest)
-
-      val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, premises, bed.id, "eventNumber")
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.Success).isTrue
-
-      verify(exactly = 0) {
-        mockPlacementRequestRepository.save(placementRequest)
-      }
-    }
-
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
-    fun `createApprovedPremisesAdHocBooking does not save Booking with associated placement request when manual booking is made if placement request already has a booking`(role: UserRole) {
-      user.addRoleForUnitTest(role)
-
-      val placementRequest = PlacementRequestEntityFactory()
-        .withPlacementRequirements(
-          PlacementRequirementsEntityFactory()
-            .withApplication(application)
-            .withAssessment(assessment)
-            .produce(),
-        )
-        .withApplication(application)
-        .withAssessment(assessment)
-        .withAllocatedToUser(user)
-        .withBooking(bookingEntity)
-        .produce()
-
-      every { mockPlacementRequestRepository.findByIdOrNull(placementRequest.id) } returns placementRequest
-
-      application.placementRequests = mutableListOf(placementRequest)
-
-      val authorisableResult = bookingService.createApprovedPremisesAdHocBooking(user, crn, "NOMS123", arrivalDate, departureDate, premises, bed.id, "eventNumber")
-      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
-      val validatableResult = (authorisableResult as AuthorisableActionResult.Success).entity
-      assertThat(validatableResult is ValidatableActionResult.Success).isTrue
-
-      verify(exactly = 0) {
-        mockPlacementRequestRepository.save(placementRequest)
       }
     }
   }
@@ -6513,7 +6421,8 @@ class BookingServiceTest {
               it.premises == premises &&
               it.arrivalDate == arrivalDate &&
               it.departureDate == departureDate &&
-              it.status == BookingStatus.confirmed
+              it.status == BookingStatus.confirmed &&
+              it.adhoc == false
           },
         )
       }

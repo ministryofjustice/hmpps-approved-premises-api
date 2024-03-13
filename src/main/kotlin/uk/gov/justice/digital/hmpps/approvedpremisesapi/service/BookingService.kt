@@ -277,6 +277,7 @@ class BookingService(
           nomsNumber = placementRequest.application.nomsNumber,
           placementRequest = null,
           status = BookingStatus.confirmed,
+          adhoc = false,
         ),
       )
 
@@ -433,10 +434,9 @@ class BookingService(
           nomsNumber = nomsNumber,
           placementRequest = null,
           status = BookingStatus.confirmed,
+          adhoc = true,
         ),
       )
-
-      associateBookingWithPlacementRequest(onlineApplication, booking)
 
       if (!isCalledFromSeeder) {
         createApprovedPremisesAdHocBookingDomainEvent(onlineApplication, offlineApplication, eventNumber, booking, user!!, bookingCreatedAt)
@@ -515,18 +515,6 @@ class BookingService(
     } else {
       log.info("Returning offline application with id ${newestOfflineApplication!!.id}")
       Either.Right(newestOfflineApplication)
-    }
-  }
-
-  fun associateBookingWithPlacementRequest(application: ApprovedPremisesApplicationEntity?, booking: BookingEntity) {
-    if (application == null) {
-      return
-    }
-
-    val newestPlacementRequest = application.getLatestPlacementRequest()
-    if (newestPlacementRequest != null && !newestPlacementRequest.isWithdrawn && newestPlacementRequest.booking == null) {
-      newestPlacementRequest.booking = booking
-      placementRequestRepository.save(newestPlacementRequest)
     }
   }
 

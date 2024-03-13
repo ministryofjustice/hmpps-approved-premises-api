@@ -3478,6 +3478,7 @@ components:
         - approved_premises_bookings
         - approved_premises_cancel_bookings
         - approved_premises_ap_area_email_addresses
+        - approved_premises_booking_adhoc_property
     MigrationJobRequest:
       type: object
       properties:
