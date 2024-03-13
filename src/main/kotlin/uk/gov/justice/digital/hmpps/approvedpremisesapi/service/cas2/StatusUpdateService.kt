@@ -1,5 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 
+import com.amazonaws.services.sns.model.NotFoundException
+import io.sentry.Sentry
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
@@ -9,12 +12,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ev
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatus
@@ -22,10 +28,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2Pers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.Constants.HDC_APPLICATION_TYPE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationStatusTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
+
+object Constants {
+  const val HDC_APPLICATION_TYPE = "Home Detention Curfew (HDC)"
+}
 
 @Service("Cas2StatusUpdateService")
 class StatusUpdateService(
@@ -33,10 +47,15 @@ class StatusUpdateService(
   private val statusUpdateRepository: Cas2StatusUpdateRepository,
   private val statusUpdateDetailRepository: Cas2StatusUpdateDetailRepository,
   private val domainEventService: DomainEventService,
+  private val emailNotificationService: EmailNotificationService,
+  private val notifyConfig: NotifyConfig,
   private val statusFinder: Cas2PersistedApplicationStatusFinder,
   private val statusTransformer: ApplicationStatusTransformer,
   @Value("\${url-templates.frontend.cas2.application}") private val applicationUrlTemplate: String,
+  @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationOverviewUrlTemplate: String,
 ) {
+
+  private val log = LoggerFactory.getLogger(this::class.java)
 
   fun isValidStatus(statusUpdate: Cas2ApplicationStatusUpdate): Boolean {
     return findActiveStatusByName(statusUpdate.newStatus) != null
@@ -97,6 +116,8 @@ class StatusUpdateService(
       )
     }
 
+    sendEmailStatusUpdated(application.createdByUser, application, createdStatusUpdate)
+
     createStatusUpdatedDomainEvent(createdStatusUpdate, statusDetails)
 
     return AuthorisableActionResult.Success(
@@ -150,5 +171,30 @@ class StatusUpdateService(
         ),
       ),
     )
+  }
+
+  private fun sendEmailStatusUpdated(user: NomisUserEntity, application: Cas2ApplicationEntity, status: Cas2StatusUpdateEntity) {
+    if (application.createdByUser.email != null) {
+      emailNotificationService.sendCas2Email(
+        recipientEmailAddress = user.email!!,
+        templateId = notifyConfig.templates.cas2ApplicationStatusUpdated,
+        personalisation = mapOf(
+          "applicationStatus" to status.label,
+          "dateStatusChanged" to status.createdAt.toLocalDate().toCas2UiFormat(),
+          "timeStatusChanged" to status.createdAt.toCas2UiFormattedHourOfDay(),
+          "applicationType" to HDC_APPLICATION_TYPE,
+          "nomsNumber" to application.nomsNumber,
+          "applicationUrl" to applicationOverviewUrlTemplate.replace("#id", application.id.toString()),
+        ),
+      )
+    } else {
+      log.error("Email not found for User ${application.createdByUser.id}. Unable to send email when updating status of Application ${application.id}")
+      Sentry.captureException(
+        RuntimeException(
+          "Email not found for User ${application.createdByUser.id}. Unable to send email when updating status of Application ${application.id}",
+          NotFoundException("Email not found for User ${application.createdByUser.id}"),
+        ),
+      )
+    }
   }
 }

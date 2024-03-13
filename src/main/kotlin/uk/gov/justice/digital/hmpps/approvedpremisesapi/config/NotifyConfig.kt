@@ -44,6 +44,7 @@ class NotifyTemplates {
   val cas2ApplicationSubmitted = "a0823218-91dd-4cf0-9835-4b90024f62c8"
   val cas2NoteAddedForReferrer = "debe17a2-9f79-4d26-88a0-690dd73e2a5b"
   val cas2NoteAddedForAssessor = "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1"
+  val cas2ApplicationStatusUpdated = "ef4dc5e3-b1f1-4448-a545-7a936c50fc3a"
   val appealSuccess = "ae21f3ae-3a4a-4df8-a1b8-2640ea80d101"
   val appealReject = "32c9c282-198d-4d43-960e-89c97f1bcf81"
 }
