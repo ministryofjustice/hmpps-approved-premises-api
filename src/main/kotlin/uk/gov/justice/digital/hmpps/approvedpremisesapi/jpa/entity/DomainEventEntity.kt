@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
@@ -26,6 +27,8 @@ import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
 import javax.persistence.Id
+import javax.persistence.JoinColumn
+import javax.persistence.ManyToOne
 import javax.persistence.Table
 
 @Repository
@@ -76,6 +79,7 @@ data class DomainEventEntity(
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   val data: String,
   val service: String,
+  val triggeredByUserId: UUID?,
 ) {
   final inline fun <reified T> toDomainEvent(objectMapper: ObjectMapper): DomainEvent<T> {
     val data = when {
