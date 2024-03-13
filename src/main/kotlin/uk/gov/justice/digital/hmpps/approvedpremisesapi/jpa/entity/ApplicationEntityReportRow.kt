@@ -14,6 +14,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
     SELECT DISTINCT on (application.id)
       cast(application.id as TEXT) as id,
       submission_event.data -> 'eventDetails' -> 'personReference' ->> 'crn' as crn,
+      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
       assessments.allocated_at as lastAllocatedToAssessorDate,
       cast(assessment_event.data -> 'eventDetails' ->> 'assessedAt' as date) as applicationAssessedDate,
       assessment_event.data -> 'eventDetails' -> 'assessedBy' -> 'cru' ->> 'name' as assessorCru,
@@ -100,6 +101,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
     SELECT distinct
       on (application.id) cast(application.id as TEXT) as id,
       submission_event.data -> 'eventDetails' -> 'personReference' ->> 'crn' as crn,
+      apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
       assessments.allocated_at as lastAllocatedToAssessorDate,
       cast(
         assessment_event.data -> 'eventDetails' ->> 'assessedAt' as date
@@ -194,6 +196,7 @@ interface ApplicationEntityReportRowRepository : JpaRepository<ApplicationEntity
 interface ApplicationEntityReportRow {
   fun getId(): String
   fun getCrn(): String
+  fun getTier(): String?
   fun getLastAllocatedToAssessorDate(): Timestamp?
   fun getApplicationAssessedDate(): Date?
   fun getAssessorCru(): String?

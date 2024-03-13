@@ -4,6 +4,7 @@ import java.time.LocalDate
 
 data class PlacementApplicationReportRow(
   val crn: String,
+  val tier: String?,
   val applicationSubmittedAt: LocalDate?,
   val applicationAssessedDate: LocalDate?,
   val assessorCru: String?,

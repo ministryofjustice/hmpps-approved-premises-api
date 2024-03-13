@@ -17,6 +17,7 @@ class Cas1PlacementMatchingOutcomesReportGenerator :
     listOf(
       Cas1PlacementMatchingOutcomesReportRow(
         crn = this.getCrn(),
+        tier = this.getTier(),
         applicationId = this.getApplicationId(),
         requestForPlacementId = this.getRequestForPlacementId(),
         matchRequestId = this.getMatchRequestId(),

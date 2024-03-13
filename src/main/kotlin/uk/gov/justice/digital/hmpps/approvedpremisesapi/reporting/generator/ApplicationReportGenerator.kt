@@ -14,6 +14,7 @@ class ApplicationReportGenerator : ReportGenerator<ApplicationEntityReportRow, A
       ApplicationReportRow(
         id = this.getId(),
         crn = this.getCrn(),
+        tier = this.getTier(),
         lastAllocatedToAssessorDate = this.getLastAllocatedToAssessorDate()?.toLocalDateTime()?.toLocalDate(),
         applicationAssessedDate = this.getApplicationAssessedDate()?.toLocalDate(),
         assessorCru = this.getAssessorCru(),

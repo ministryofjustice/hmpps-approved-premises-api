@@ -4,6 +4,7 @@ import java.time.LocalDate
 
 data class Cas1PlacementMatchingOutcomesReportRow(
   val crn: String?,
+  val tier: String?,
   val applicationId: String?,
   val requestForPlacementId: String?,
   val matchRequestId: String?,

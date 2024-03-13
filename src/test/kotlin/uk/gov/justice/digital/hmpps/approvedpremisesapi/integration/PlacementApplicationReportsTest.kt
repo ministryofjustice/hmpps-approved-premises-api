@@ -64,6 +64,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.RegistrationKeyValue
@@ -386,6 +387,7 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
     val (referrerEntity, _) = referrerDetails
 
     assertThat(reportRow.crn).isEqualTo(application.crn)
+    assertThat(reportRow.tier).isEqualTo("A")
 
     assertThat(reportRow.placementRequestSubmittedAt).isEqualTo(placementApplication.submittedAt!!.toLocalDate())
     assertThat(reportRow.requestedArrivalDate).isEqualTo(expectedRow.placementDate!!.expectedArrival)
@@ -529,6 +531,15 @@ class PlacementApplicationReportsTest : IntegrationTestBase() {
       )
       withRiskRatings(
         PersonRisksFactory()
+          .withTier(
+            RiskWithStatus(
+              status = RiskStatus.Retrieved,
+              value = RiskTier(
+                level = "A",
+                lastUpdated = LocalDate.now(),
+              ),
+            ),
+          )
           .withMappa(
             RiskWithStatus(
               status = RiskStatus.Retrieved,
