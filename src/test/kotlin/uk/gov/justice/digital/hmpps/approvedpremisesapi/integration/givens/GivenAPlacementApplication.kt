@@ -21,6 +21,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
   allocatedToUser: UserEntity? = null,
   submittedAt: OffsetDateTime? = null,
   decision: PlacementApplicationDecision? = null,
+  decisionMadeAt: OffsetDateTime? = null,
   reallocated: Boolean = false,
   placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
   apArea: ApAreaEntity? = null,
@@ -56,6 +57,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
     withSchemaVersion(schema)
     withSubmittedAt(submittedAt)
     withDecision(decision)
+    withDecisionMadeAt(decisionMadeAt)
     withPlacementType(placementType!!)
     if (reallocated) {
       withReallocatedAt(OffsetDateTime.now())
@@ -79,15 +81,15 @@ fun IntegrationTestBase.`Given a Placement Application`(
 ) {
   block(
     `Given a Placement Application`(
-      assessmentDecision,
-      createdByUser,
-      schema,
-      crn,
-      allocatedToUser,
-      submittedAt,
-      decision,
-      reallocated,
-      placementType,
+      assessmentDecision = assessmentDecision,
+      createdByUser = createdByUser,
+      schema = schema,
+      crn = crn,
+      allocatedToUser = allocatedToUser,
+      submittedAt = submittedAt,
+      decision = decision,
+      reallocated = reallocated,
+      placementType = placementType,
       dueAt = dueAt,
     ),
   )

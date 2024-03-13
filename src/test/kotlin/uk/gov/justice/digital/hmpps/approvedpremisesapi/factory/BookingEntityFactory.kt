@@ -141,6 +141,10 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.premises = { premises }
   }
 
+  fun withDefaults() = apply {
+    withDefaultPremises()
+  }
+
   fun withDefaultPremises() = withPremises(
     ApprovedPremisesEntityFactory()
       .withDefaultProbationRegion()
@@ -216,6 +220,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     turnarounds = this.turnarounds?.invoke() ?: mutableListOf(),
     nomsNumber = this.nomsNumber(),
     placementRequest = this.placementRequest(),
-    status = this.status?.invoke(),
+    status = this.status.invoke(),
   )
 }

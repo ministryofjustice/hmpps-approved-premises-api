@@ -91,6 +91,12 @@ fun LocalDate.toUiFormat(): String = this.format(cas1UiExtendedDateFormat)
 
 fun LocalDate.toCas2UiFormat(): String = this.format(cas2UiExtendedDateFormat)
 
+fun LocalDate.toUtcOffsetDateTime(): OffsetDateTime = OffsetDateTime.of(
+  this,
+  LocalTime.of(0, 0, 0, 0),
+  ZoneOffset.UTC,
+)
+
 fun OffsetDateTime.toUiFormattedHourOfDay(): String = this.format(cas1UiTimeFormat).lowercase()
 
 fun OffsetDateTime.toCas2UiFormattedHourOfDay(): String = this.format(cas2UiTimeFormat).lowercase()

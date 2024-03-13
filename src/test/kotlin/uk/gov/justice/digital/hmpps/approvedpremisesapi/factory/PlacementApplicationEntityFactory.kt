@@ -28,6 +28,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var decision: Yielded<PlacementApplicationDecision?> = { null }
+  private var decisionMadeAt: Yielded<OffsetDateTime?> = { null }
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   private var placementDates: Yielded<MutableList<PlacementDateEntity>?> = { null }
   private var placementType: Yielded<PlacementType?> = { null }
@@ -79,6 +80,10 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     this.decision = { decision }
   }
 
+  fun withDecisionMadeAt(decisionMadeAt: OffsetDateTime?) = apply {
+    this.decisionMadeAt = { decisionMadeAt }
+  }
+
   fun withReallocatedAt(reallocatedAt: OffsetDateTime?) = apply {
     this.reallocatedAt = { reallocatedAt }
   }
@@ -113,7 +118,7 @@ class PlacementApplicationEntityFactory : Factory<PlacementApplicationEntity> {
     allocatedAt = null,
     reallocatedAt = this.reallocatedAt(),
     decision = this.decision(),
-    decisionMadeAt = null,
+    decisionMadeAt = this.decisionMadeAt(),
     placementType = this.placementType(),
     placementDates = this.placementDates() ?: mutableListOf(),
     placementRequests = mutableListOf(),
