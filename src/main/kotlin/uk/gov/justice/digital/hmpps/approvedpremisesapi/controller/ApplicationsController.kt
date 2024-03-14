@@ -502,12 +502,10 @@ class ApplicationsController(
       throw ForbiddenProblem()
     }
 
-    val initialPlacementRequest = if (includeInitialRequestForPlacement == true) {
-      listOfNotNull(
-        placementRequestService.getPlacementRequestForInitialApplicationDates(applicationId)?.let {
-          placementApplicationTransformer.transformPlacementRequestJpaToApi(it)
-        },
-      )
+    val initialPlacementRequests = if (includeInitialRequestForPlacement == true) {
+      placementRequestService.getPlacementRequestForInitialApplicationDates(applicationId).map {
+        placementApplicationTransformer.transformPlacementRequestJpaToApi(it)
+      }
     } else { emptyList() }
 
     val placementApplicationEntities =
@@ -516,7 +514,7 @@ class ApplicationsController(
       placementApplicationTransformer.transformJpaToApi(it)
     }
 
-    return ResponseEntity.ok(initialPlacementRequest.plus(additionalPlacementRequests))
+    return ResponseEntity.ok(initialPlacementRequests.plus(additionalPlacementRequests))
   }
 
   override fun applicationsApplicationIdWithdrawablesGet(
