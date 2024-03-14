@@ -31,7 +31,7 @@ class ApplicationTimelineTransformer(
       occurredAt = domainEventSummary.occurredAt.toInstant(),
       associatedUrls = associatedUrls,
       content = domainEventDescriber.getDescription(domainEventSummary),
-      createdBy = domainEventSummary.triggeredByUser?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) }
+      createdBy = domainEventSummary.triggeredByUser?.let { userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) },
     )
   }
 

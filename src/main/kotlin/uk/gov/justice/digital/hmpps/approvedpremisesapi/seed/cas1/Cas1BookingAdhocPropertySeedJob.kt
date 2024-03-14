@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1
 
 import org.slf4j.LoggerFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
 import java.util.UUID
@@ -19,7 +18,7 @@ class Cas1BookingAdhocPropertySeedJob(
   private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun deserializeRow(columns: Map<String, String>) = Cas1BookingAdhocPropertySeedCsvRow(
-    adhocBookingId =  columns["adhoc_booking_id"]!!.trim()
+    adhocBookingId = columns["adhoc_booking_id"]!!.trim(),
   )
 
   override fun processRow(row: Cas1BookingAdhocPropertySeedCsvRow) {

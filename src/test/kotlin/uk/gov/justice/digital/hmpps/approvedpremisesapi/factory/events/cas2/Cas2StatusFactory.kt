@@ -23,6 +23,6 @@ class Cas2StatusFactory : Factory<Cas2Status> {
     name = this.name(),
     label = this.label(),
     description = this.description(),
-    statusDetails = this.statusDetails
+    statusDetails = this.statusDetails,
   )
 }

@@ -44,6 +44,20 @@ script/development_database
 Then in the "Gradle" panel (`View->Tool Windows->Gradle` if not visible), expand `approved-premises-api`, `Tasks`, 
 `application` and right click on `bootRunLocal` and select either Run or Debug.
 
+### Linting
+
+There is a linting check stage in the pipeline, so to ensure this passes run the linting check locally before pushing:
+
+```bash
+./gradlew ktlintCheck
+```
+
+And (if required) run the following to update the code automatically to follow the coding style:
+
+```bash
+./gradlew ktlintFormat
+```
+
 ## Making requests to the application
 
 Most endpoints require a JWT from HMPPS Auth - an instance of this runs in Docker locally (started alongside the database) 
