@@ -285,25 +285,6 @@ class UserService(
     )
   }
 
-  private fun updateUserFromCommunityApi(user: UserEntity): UserEntity {
-    val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)
-
-    val staffUserDetails = when (staffUserDetailsResponse) {
-      is ClientResult.Success -> staffUserDetailsResponse.body
-      is ClientResult.Failure -> staffUserDetailsResponse.throwException()
-    }
-
-    user.apply {
-      name = "${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}"
-      deliusStaffIdentifier = staffUserDetails.staffIdentifier
-      deliusStaffCode = staffUserDetails.staffCode
-      email = staffUserDetails.email
-      telephoneNumber = staffUserDetails.telephoneNumber
-    }
-
-    return userRepository.save(user)
-  }
-
   private fun findProbationRegionFromArea(probationArea: StaffProbationArea): ProbationRegionEntity? {
     return probationAreaProbationRegionMappingRepository
       .findByProbationAreaDeliusCode(probationArea.code)?.probationRegion
