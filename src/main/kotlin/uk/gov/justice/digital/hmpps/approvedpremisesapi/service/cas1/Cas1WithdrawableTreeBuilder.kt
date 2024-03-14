@@ -23,6 +23,9 @@ import java.util.UUID
  * ---> Match Request (For initial application dates)
  * ------> Placement
  * ---> Placement (For adhoc placements)
+ *
+ * Note that whilst assessments are automatically withdrawn when
+ * an application is withdrawn, that is not managed by the tree
  **/
 @Component
 class WithdrawableTreeBuilder(
@@ -124,14 +127,32 @@ data class WithdrawableTreeNode(
   private fun render(depth: Int): String {
     val padding = "  " + if (depth > 0) { "-".repeat(3 * depth) + "> " } else { "" }
     val abbreviatedId = entityId.toString().substring(0, 3)
-    return padding + "$entityType($abbreviatedId), withdrawable:${status.withdrawable}, mayDirectlyWithdraw:${status.userMayDirectlyWithdraw}, ${blockingDescription()}\n" +
+    val description = "" +
+      "$entityType($abbreviatedId), " +
+      "withdrawable:${yesOrNo(status.withdrawable)}, " +
+      "mayDirectlyWithdraw:${yesOrNo(status.userMayDirectlyWithdraw)}, " +
+      "${blockingDescription()} ${exemptFromCascadeDescription()}"
+
+    return "$padding$description\n" +
       children.joinToString(separator = "") { it.render(depth + 1) }
+  }
+
+  private fun yesOrNo(value: Boolean) = if (value) {
+    "Y"
+  } else {
+    "N"
   }
 
   private fun blockingDescription() = if (status.blockAncestorWithdrawals) {
     "BLOCKING"
   } else if (isBlocked()) {
     "BLOCKED"
+  } else {
+    ""
+  }
+
+  private fun exemptFromCascadeDescription() = if (status.exemptFromCascade) {
+    "EXEMPT FROM CASCADE"
   } else {
     ""
   }

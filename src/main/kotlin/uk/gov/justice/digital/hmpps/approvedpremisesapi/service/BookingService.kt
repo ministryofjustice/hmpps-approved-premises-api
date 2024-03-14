@@ -1135,6 +1135,14 @@ class BookingService(
       withdrawable = booking.isInCancellableStateCas1(),
       userMayDirectlyWithdraw = userAccessService.userMayCancelBooking(user, booking),
       blockAncestorWithdrawals = booking.hasArrivals(),
+      /**
+       * Several legacy adhoc bookings are linked to potentially unrelated placement requests.
+       * This behaviour was removed in commit 2d96a4d37567fde3f91a7a9172b459a91fb30625
+       *
+       * To avoid such adhoc bookings being unintentionally withdrawn when (unrelated) ancestor
+       * elements are withdrawn, we mark them as exempt from cascade
+       */
+      exemptFromCascade = booking.adhoc == true,
     )
   }
 
