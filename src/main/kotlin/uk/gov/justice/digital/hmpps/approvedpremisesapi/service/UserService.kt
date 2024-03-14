@@ -64,7 +64,7 @@ class UserService(
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
 
-    val user = getUserForUsername(username)
+    val user = getExistingUserOrCreate(username)
 
     if (currentRequest.getHeader("X-Service-Name") == ServiceName.temporaryAccommodation.value) {
       if (!user.hasAnyRole(*UserRole.getAllRolesForService(ServiceName.temporaryAccommodation).toTypedArray())) {
@@ -235,7 +235,7 @@ class UserService(
     }
   }
 
-  fun getUserForUsername(username: String, throwProblemOn404: Boolean = false): UserEntity {
+  fun getExistingUserOrCreate(username: String, throwProblemOn404: Boolean = false): UserEntity {
     val normalisedUsername = username.uppercase()
 
     val existingUser = userRepository.findByDeliusUsername(normalisedUsername)
@@ -283,25 +283,6 @@ class UserService(
         isActive = true,
       ),
     )
-  }
-
-  private fun updateUserFromCommunityApi(user: UserEntity): UserEntity {
-    val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)
-
-    val staffUserDetails = when (staffUserDetailsResponse) {
-      is ClientResult.Success -> staffUserDetailsResponse.body
-      is ClientResult.Failure -> staffUserDetailsResponse.throwException()
-    }
-
-    user.apply {
-      name = "${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}"
-      deliusStaffIdentifier = staffUserDetails.staffIdentifier
-      deliusStaffCode = staffUserDetails.staffCode
-      email = staffUserDetails.email
-      telephoneNumber = staffUserDetails.telephoneNumber
-    }
-
-    return userRepository.save(user)
   }
 
   private fun findProbationRegionFromArea(probationArea: StaffProbationArea): ProbationRegionEntity? {
