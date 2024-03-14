@@ -52,6 +52,7 @@ class BookingEntityFactory : Factory<BookingEntity> {
   private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
   private var placementRequest: Yielded<PlacementRequestEntity?> = { null }
   private var status: Yielded<BookingStatus?> = { null }
+  private var adhoc: Yielded<Boolean?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -196,6 +197,10 @@ class BookingEntityFactory : Factory<BookingEntity> {
     this.status = { departed }
   }
 
+  fun withAdhoc(adhoc: Boolean?) = apply {
+    this.adhoc = { adhoc }
+  }
+
   override fun produce(): BookingEntity = BookingEntity(
     id = this.id(),
     crn = this.crn(),
@@ -221,5 +226,6 @@ class BookingEntityFactory : Factory<BookingEntity> {
     nomsNumber = this.nomsNumber(),
     placementRequest = this.placementRequest(),
     status = this.status.invoke(),
+    adhoc = this.adhoc(),
   )
 }
