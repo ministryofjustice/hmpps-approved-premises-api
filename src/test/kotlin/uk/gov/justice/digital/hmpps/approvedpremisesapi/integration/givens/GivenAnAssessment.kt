@@ -111,7 +111,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
 }
 
 fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
-  allocatedToUser: UserEntity,
+  allocatedToUser: UserEntity?,
   createdByUser: UserEntity,
   crn: String = randomStringMultiCaseWithNumbers(8),
   reallocated: Boolean = false,
@@ -137,7 +137,9 @@ fun IntegrationTestBase.`Given an Assessment for Temporary Accommodation`(
   }
 
   val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
-    withAllocatedToUser(allocatedToUser)
+    if (allocatedToUser != null) {
+      withAllocatedToUser(allocatedToUser)
+    }
     withApplication(application)
     withAssessmentSchema(assessmentSchema)
     withData(data)
