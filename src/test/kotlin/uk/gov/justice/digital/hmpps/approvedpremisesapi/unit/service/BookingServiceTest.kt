@@ -6678,10 +6678,24 @@ class BookingServiceTest {
     }
 
     @Test
-    fun `getWithdrawableState exempt from cascde if adhoc booking`() {
+    fun `getWithdrawableState exempt from cascade if adhoc booking`() {
       val booking = BookingEntityFactory()
         .withPremises(premises)
         .withAdhoc(true)
+        .produce()
+
+      every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
+
+      val result = bookingService.getWithdrawableState(booking, user)
+
+      assertThat(result.exemptFromCascade).isEqualTo(true)
+    }
+
+    @Test
+    fun `getWithdrawableState exempt from cascade if adhoc status not known`() {
+      val booking = BookingEntityFactory()
+        .withPremises(premises)
+        .withAdhoc(null)
         .produce()
 
       every { mockUserAccessService.userMayCancelBooking(user, booking) } returns true
