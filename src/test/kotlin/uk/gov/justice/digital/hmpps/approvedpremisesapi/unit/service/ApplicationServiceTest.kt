@@ -19,6 +19,7 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
@@ -67,6 +68,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderIds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderLanguages
@@ -944,6 +946,7 @@ class ApplicationServiceTest {
             isPipeApplication = null,
             isEmergencyApplication = false,
             isEsapApplication = false,
+            apType = null,
             releaseType = null,
             arrivalDate = null,
             data = "{}",
@@ -975,6 +978,7 @@ class ApplicationServiceTest {
             isPipeApplication = null,
             isEmergencyApplication = false,
             isEsapApplication = false,
+            apType = null,
             releaseType = null,
             arrivalDate = null,
             data = "{}",
@@ -1000,6 +1004,7 @@ class ApplicationServiceTest {
           isPipeApplication = null,
           isEmergencyApplication = false,
           isEsapApplication = false,
+          apType = null,
           releaseType = null,
           arrivalDate = null,
           data = "{}",
@@ -1032,6 +1037,7 @@ class ApplicationServiceTest {
           isPipeApplication = null,
           isEmergencyApplication = false,
           isEsapApplication = false,
+          apType = null,
           releaseType = null,
           arrivalDate = null,
           data = "{}",
@@ -1050,7 +1056,40 @@ class ApplicationServiceTest {
     }
 
     @Test
-    fun `updateApprovedPremisesApplication returns Success with updated Application`() {
+    fun `updateApprovedPremisesApplication returns GeneralValidationError when application has AP type specified in multiple ways`() {
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      application.submittedAt = OffsetDateTime.now()
+
+      val result = applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = null,
+          isEmergencyApplication = false,
+          isEsapApplication = false,
+          apType = ApType.normal,
+          releaseType = null,
+          arrivalDate = null,
+          data = "{}",
+          isInapplicable = null,
+          noticeType = null,
+        ),
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`")
+    }
+
+    @Test
+    fun `updateApprovedPremisesApplication returns Success with updated Application when using legacy AP type fields`() {
       setupMocksForSuccess()
 
       val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
@@ -1074,6 +1113,7 @@ class ApplicationServiceTest {
           isPipeApplication = true,
           isEmergencyApplication = false,
           isEsapApplication = false,
+          apType = null,
           releaseType = "rotl",
           arrivalDate = LocalDate.parse("2023-04-17"),
           data = updatedData,
@@ -1093,6 +1133,63 @@ class ApplicationServiceTest {
       assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
       assertThat(approvedPremisesApplication.isWomensApplication).isEqualTo(false)
       assertThat(approvedPremisesApplication.isPipeApplication).isEqualTo(true)
+      assertThat(approvedPremisesApplication.releaseType).isEqualTo("rotl")
+      assertThat(approvedPremisesApplication.isInapplicable).isEqualTo(false)
+      assertThat(approvedPremisesApplication.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
+      assertThat(approvedPremisesApplication.applicantUserDetails).isNull()
+      assertThat(approvedPremisesApplication.caseManagerIsNotApplicant).isNull()
+      assertThat(approvedPremisesApplication.caseManagerUserDetails).isNull()
+      assertThat(approvedPremisesApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.emergency)
+    }
+
+    @ParameterizedTest
+    @EnumSource(ApType::class)
+    fun `updateApprovedPremisesApplication returns Success with updated Application when using apType`(apType: ApType) {
+      setupMocksForSuccess()
+
+      val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match { it.name == "applicantName" && it.email == "applicantEmail" && it.telephoneNumber == "applicantPhone" },
+        )
+      } returns theApplicantUserDetailsEntity
+
+      val theCaseManagerUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match { it.name == "caseManagerName" && it.email == "caseManagerEmail" && it.telephoneNumber == "caseManagerPhone" },
+        )
+      } returns theCaseManagerUserDetailsEntity
+
+      val result = applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = null,
+          isEmergencyApplication = false,
+          isEsapApplication = null,
+          apType = apType,
+          releaseType = "rotl",
+          arrivalDate = LocalDate.parse("2023-04-17"),
+          data = updatedData,
+          isInapplicable = false,
+          noticeType = Cas1ApplicationTimelinessCategory.emergency,
+        ),
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.Success).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+
+      val approvedPremisesApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+
+      assertThat(approvedPremisesApplication.data).isEqualTo(updatedData)
+      assertThat(approvedPremisesApplication.isWomensApplication).isEqualTo(false)
+      assertThat(approvedPremisesApplication.isPipeApplication).isEqualTo(apType == ApType.pipe)
+      assertThat(approvedPremisesApplication.isEsapApplication).isEqualTo(apType == ApType.esap)
+      assertThat(approvedPremisesApplication.apType).isEqualTo(apType.asApprovedPremisesType())
       assertThat(approvedPremisesApplication.releaseType).isEqualTo("rotl")
       assertThat(approvedPremisesApplication.isInapplicable).isEqualTo(false)
       assertThat(approvedPremisesApplication.arrivalDate).isEqualTo(OffsetDateTime.parse("2023-04-17T00:00:00Z"))
@@ -1128,6 +1225,7 @@ class ApplicationServiceTest {
           isPipeApplication = true,
           isEmergencyApplication = noticeType == Cas1ApplicationTimelinessCategory.emergency,
           isEsapApplication = false,
+          apType = null,
           releaseType = "rotl",
           arrivalDate = if (noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
             LocalDate.now().plusDays(10)
@@ -1544,6 +1642,57 @@ class ApplicationServiceTest {
       assertThat(validatableActionResult.message).isEqualTo("caseManagerUserDetails must be provided if caseManagerIsNotApplicant is true")
     }
 
+    @Test
+    fun `submitApprovedPremisesApplication returns GeneralValidationError when application has AP type specified in multiple ways`() {
+      val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
+
+      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        isPipeApplication = true,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        apType = ApType.normal,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        applicantUserDetails = null,
+        caseManagerIsNotApplicant = false,
+      )
+
+      every { mockObjectMapper.writeValueAsString(submitApprovedPremisesApplication.translatedDocument) } returns "{}"
+
+      val result = applicationService.submitApprovedPremisesApplication(
+        applicationId,
+        submitApprovedPremisesApplication,
+        username,
+        "jwt",
+        null,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(validatableActionResult.message).isEqualTo("`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`")
+    }
+
     @ParameterizedTest
     @EnumSource(value = SituationOption::class)
     @NullSource
@@ -1718,6 +1867,105 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.isWomensApplication).isFalse
       assertThat(persistedApplication.releaseType).isEqualTo(submitApprovedPremisesApplication.releaseType.toString())
       assertThat(persistedApplication.noticeType).isEqualTo(noticeType)
+      assertThat(persistedApplication.targetLocation).isEqualTo(submitApprovedPremisesApplication.targetLocation)
+      assertThat(persistedApplication.inmateInOutStatusOnSubmission).isEqualTo("OUT")
+      assertThat(persistedApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
+      assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
+      assertThat(persistedApplication.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
+
+      verify { mockApplicationRepository.save(any()) }
+      verify(exactly = 1) { mockAssessmentService.createApprovedPremisesAssessment(application) }
+
+      verify(exactly = 1) {
+        mockCas1ApplicationDomainEventService.applicationSubmitted(
+          application,
+          submitApprovedPremisesApplication,
+          username,
+          "jwt",
+        )
+      }
+
+      verify(exactly = 1) {
+        mockEmailNotificationService.sendEmail(
+          any(),
+          "c9944bd8-63c4-473c-8dce-b3636e47d3dd",
+          match {
+            it["name"] == user.name &&
+              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
+          },
+        )
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(ApType::class)
+    fun `submitApprovedPremisesApplication sets apType correctly`(apType: ApType) {
+      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        isPipeApplication = null,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        isEsapApplication = null,
+        apType = apType,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        caseManagerIsNotApplicant = true,
+        caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
+        arrivalDate = LocalDate.now().plusMonths(7),
+        noticeType = null,
+      )
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withCreatedAt(OffsetDateTime.now())
+        .withSubmittedAt(null)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      setupMocksForSuccess(application)
+
+      val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match { it.name == "applicantName" && it.email == "applicantEmail" && it.telephoneNumber == "applicantPhone" },
+        )
+      } returns theApplicantUserDetailsEntity
+
+      val theCaseManagerUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match { it.name == "caseManagerName" && it.email == "caseManagerEmail" && it.telephoneNumber == "caseManagerPhone" },
+        )
+      } returns theCaseManagerUserDetailsEntity
+
+      val result =
+        applicationService.submitApprovedPremisesApplication(
+          applicationId,
+          submitApprovedPremisesApplication,
+          username,
+          "jwt",
+          user.probationRegion.id,
+        )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.Success).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+      val persistedApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+      assertThat(persistedApplication.isPipeApplication).isEqualTo(apType == ApType.pipe)
+      assertThat(persistedApplication.isEsapApplication).isEqualTo(apType == ApType.esap)
+      assertThat(persistedApplication.apType).isEqualTo(apType.asApprovedPremisesType())
+      assertThat(persistedApplication.isWomensApplication).isFalse
+      assertThat(persistedApplication.releaseType).isEqualTo(submitApprovedPremisesApplication.releaseType.toString())
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
       assertThat(persistedApplication.targetLocation).isEqualTo(submitApprovedPremisesApplication.targetLocation)
       assertThat(persistedApplication.inmateInOutStatusOnSubmission).isEqualTo("OUT")
       assertThat(persistedApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
