@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Assigne
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.IDs
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import java.time.LocalDate
@@ -359,34 +360,53 @@ class OffenderServiceTest {
     }
   }
 
+  private fun mockExistingNonLaoOffender() {
+    val resultBody = OffenderDetailsSummaryFactory()
+      .withCrn("a-crn")
+      .withFirstName("Bob")
+      .withLastName("Doe")
+      .withCurrentRestriction(false)
+      .withCurrentExclusion(false)
+      .produce()
+
+    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+  }
+
   @Nested
-  inner class GetInfoForPerson {
+  inner class GetFullInfoForPersonOrThrow {
+
     @Test
-    fun `returns NotFound if Community API responds with a 404`() {
+    fun `throws NotFoundProblem when offender is PersonInfoResult-NotFound, status 404`() {
       val crn = "ABC123"
-
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/ABC123", HttpStatus.NOT_FOUND, null, true)
-
-      val result = offenderService.getInfoForPerson(crn)
-
-      assertThat(result is PersonInfoResult.NotFound).isTrue
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult
+        .Failure
+        .StatusCode(
+          HttpMethod.GET,
+          "/secure/offenders/crn/ABC123",
+          HttpStatus.NOT_FOUND,
+          null,
+          true,
+        )
+      assertThrows<NotFoundProblem> { offenderService.getFullInfoForPersonOrThrow(crn) }
     }
 
     @Test
-    fun `returns Unknown if Community API responds with a 500`() {
+    fun `throws NotFoundProblem exception when offender is PersonInfoResult-Unknown, status 500`() {
       val crn = "ABC123"
-
-      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns StatusCode(HttpMethod.GET, "/secure/offenders/crn/ABC123", HttpStatus.INTERNAL_SERVER_ERROR, null, true)
-
-      val result = offenderService.getInfoForPerson(crn)
-
-      assertThat(result is PersonInfoResult.Unknown).isTrue
-      result as PersonInfoResult.Unknown
-      assertThat(result.throwable).isNotNull()
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary(crn) } returns ClientResult
+        .Failure
+        .StatusCode(
+          HttpMethod.GET,
+          "/secure/offenders/crn/ABC123",
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          null,
+          true,
+        )
+      assertThrows<NotFoundProblem> { offenderService.getFullInfoForPersonOrThrow(crn) }
     }
 
     @Test
-    fun `returns Full for CRN with both Community API and Prison API data where Community API links to Prison API`() {
+    fun `returns PersonInfoResult-Success-Full when offender and inmate details are found, status 200`() {
       val crn = "ABC123"
       val nomsNumber = "NOMSABC"
 
@@ -409,26 +429,13 @@ class OffenderServiceTest {
         body = inmateDetail,
       )
 
-      val result = offenderService.getInfoForPerson(crn)
+      val result = offenderService.getFullInfoForPersonOrThrow(crn)
 
       assertThat(result is PersonInfoResult.Success.Full).isTrue
-      result as PersonInfoResult.Success.Full
       assertThat(result.crn).isEqualTo(crn)
       assertThat(result.offenderDetailSummary).isEqualTo(offenderDetails)
       assertThat(result.inmateDetail).isEqualTo(inmateDetail)
     }
-  }
-
-  private fun mockExistingNonLaoOffender() {
-    val resultBody = OffenderDetailsSummaryFactory()
-      .withCrn("a-crn")
-      .withFirstName("Bob")
-      .withLastName("Doe")
-      .withCurrentRestriction(false)
-      .withCurrentExclusion(false)
-      .produce()
-
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
   }
 
   private fun mock404RoSH(crn: String) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns StatusCode(HttpMethod.GET, "/rosh/a-crn", HttpStatus.NOT_FOUND, body = null)

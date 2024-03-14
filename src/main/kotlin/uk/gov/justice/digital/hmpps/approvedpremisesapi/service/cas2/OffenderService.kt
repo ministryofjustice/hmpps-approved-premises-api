@@ -17,6 +17,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RoshRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.probationoffendersearchapi.ProbationOffenderDetail
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 
 @Service("CAS2OffenderService")
@@ -79,7 +82,7 @@ class OffenderService(
     }
   }
 
-  fun getInfoForPerson(crn: String): PersonInfoResult {
+  private fun getInfoForPerson(crn: String): PersonInfoResult {
     var offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
 
     val offender = when (offenderResponse) {
@@ -106,6 +109,24 @@ class OffenderService(
       offenderDetailSummary = offender,
       inmateDetail = inmateDetails,
     )
+  }
+
+  fun getInfoForPersonOrThrowInternalServerError(crn: String):
+    PersonInfoResult.Success {
+    val personInfo = getInfoForPerson(crn)
+    if (personInfo is PersonInfoResult.NotFound) throw InternalServerErrorProblem("Unable to get Person via crn: $crn")
+
+    return personInfo as PersonInfoResult.Success
+  }
+
+  fun getFullInfoForPersonOrThrow(crn: String):
+    PersonInfoResult.Success.Full {
+    val personInfo = getInfoForPerson(crn)
+    when (personInfo) {
+      is PersonInfoResult.NotFound, is PersonInfoResult.Unknown -> throw NotFoundProblem(crn, "Offender")
+      is PersonInfoResult.Success.Restricted -> throw ForbiddenProblem()
+      is PersonInfoResult.Success.Full -> return personInfo
+    }
   }
 
   fun getInmateDetailByNomsNumber(crn: String, nomsNumber: String): AuthorisableActionResult<InmateDetail?> {
