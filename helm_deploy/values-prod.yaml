@@ -79,8 +79,8 @@ generic-service:
     ARRIVED-DEPARTED-DOMAIN-EVENTS-DISABLED: true
     URL-TEMPLATES_API_CAS3_BOOKING-CANCELLED-UPDATED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/cas3/booking-cancelled-updated/#eventId
 
-    DATA-SOURCES_OFFENDER-DETAILS: community_api
-    DATA-SOURCES_OFFENDER-RISKS: community_api
+    DATA-SOURCES_OFFENDER-DETAILS: ap_delius_context_api
+    DATA-SOURCES_OFFENDER-RISKS: ap_delius_context_api
 
     PAGINATION_CAS3_BOOKING-SEARCH-PAGE-SIZE: 100
 
