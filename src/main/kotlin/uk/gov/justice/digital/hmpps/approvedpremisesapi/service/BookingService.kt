@@ -1140,9 +1140,11 @@ class BookingService(
        * This behaviour was removed in commit 2d96a4d37567fde3f91a7a9172b459a91fb30625
        *
        * To avoid such adhoc bookings being unintentionally withdrawn when (unrelated) ancestor
-       * elements are withdrawn, we mark them as exempt from cascade
+       * elements are withdrawn, we mark them as exempt from cascade. We also treat bookings
+       * with an unknown state (i.e. ones we could not backfill) as adhoc to avoid non-adhoc
+       * bookings being inadvertently removed
        */
-      exemptFromCascade = booking.adhoc == true,
+      exemptFromCascade = booking.adhoc == null || booking.adhoc == true,
     )
   }
 

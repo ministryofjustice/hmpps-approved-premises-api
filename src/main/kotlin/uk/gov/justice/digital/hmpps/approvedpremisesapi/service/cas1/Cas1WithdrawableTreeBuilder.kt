@@ -152,7 +152,7 @@ data class WithdrawableTreeNode(
   }
 
   private fun exemptFromCascadeDescription() = if (status.exemptFromCascade) {
-    "EXEMPT FROM CASCADE"
+    "EXEMPT FROM CASCADE (AD-HOC BOOKING)"
   } else {
     ""
   }
