@@ -23,6 +23,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.WOMENS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_MATCHER
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_WORKFLOW_MANAGER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REFERRER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
@@ -74,20 +76,20 @@ class UserTransformerTest {
   @Test
   fun `Should successfully transfer user entity with role CAS1_MATCHER to matcher`() {
     val result =
-      userTransformer.transformJpaToApi(buildUserEntity(UserRole.CAS1_MATCHER), approvedPremises) as ApprovedPremisesUser
+      userTransformer.transformJpaToApi(buildUserEntity(CAS1_MATCHER), approvedPremises) as ApprovedPremisesUser
 
     assertThat(result.roles).contains(matcher)
-    assertThat(result.service).isEqualTo(approvedPremises.value)
+    assertThat(result.service).isEqualTo("CAS1")
     verify(exactly = 1) { probationRegionTransformer.transformJpaToApi(any()) }
   }
 
   @Test
   fun `should return distinct roles for Approved Premises`() {
-    val user = buildUserEntity(UserRole.CAS1_MATCHER)
-    user.addRoleForUnitTest(UserRole.CAS1_MATCHER)
-    user.addRoleForUnitTest(UserRole.CAS1_MATCHER)
-    user.addRoleForUnitTest(UserRole.CAS1_MATCHER)
-    user.addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
+    val user = buildUserEntity(CAS1_MATCHER)
+    user.addRoleForUnitTest(CAS1_MATCHER)
+    user.addRoleForUnitTest(CAS1_MATCHER)
+    user.addRoleForUnitTest(CAS1_MATCHER)
+    user.addRoleForUnitTest(CAS1_WORKFLOW_MANAGER)
     user.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
 
     val result =
@@ -104,11 +106,11 @@ class UserTransformerTest {
 
   @Test
   fun `should return distinct roles for Temporary Accommodation`() {
-    val user = buildUserEntity(UserRole.CAS3_REFERRER)
-    user.addRoleForUnitTest(UserRole.CAS3_REFERRER)
-    user.addRoleForUnitTest(UserRole.CAS3_REFERRER)
-    user.addRoleForUnitTest(UserRole.CAS3_REFERRER)
-    user.addRoleForUnitTest(UserRole.CAS3_REPORTER)
+    val user = buildUserEntity(CAS3_REFERRER)
+    user.addRoleForUnitTest(CAS3_REFERRER)
+    user.addRoleForUnitTest(CAS3_REFERRER)
+    user.addRoleForUnitTest(CAS3_REFERRER)
+    user.addRoleForUnitTest(CAS3_REPORTER)
 
     val result =
       userTransformer.transformJpaToApi(user, temporaryAccommodation) as TemporaryAccommodationUser
@@ -123,11 +125,11 @@ class UserTransformerTest {
 
   @Test
   fun `transformJpaToAPIUserWithWorkload should return distinct roles`() {
-    val user = buildUserEntity(UserRole.CAS1_MATCHER)
-    user.addRoleForUnitTest(UserRole.CAS1_MATCHER)
-    user.addRoleForUnitTest(UserRole.CAS1_MATCHER)
-    user.addRoleForUnitTest(UserRole.CAS1_MATCHER)
-    user.addRoleForUnitTest(UserRole.CAS1_WORKFLOW_MANAGER)
+    val user = buildUserEntity(CAS1_MATCHER)
+    user.addRoleForUnitTest(CAS1_MATCHER)
+    user.addRoleForUnitTest(CAS1_MATCHER)
+    user.addRoleForUnitTest(CAS1_MATCHER)
+    user.addRoleForUnitTest(CAS1_WORKFLOW_MANAGER)
 
     val workload = UserWorkload(
       0,
@@ -148,7 +150,7 @@ class UserTransformerTest {
 
   @Test
   fun `transformJpaToAPIUserWithWorkload should return AP area`() {
-    val user = buildUserEntity(UserRole.CAS1_MATCHER)
+    val user = buildUserEntity(CAS1_MATCHER)
 
     val workload = UserWorkload(
       0,

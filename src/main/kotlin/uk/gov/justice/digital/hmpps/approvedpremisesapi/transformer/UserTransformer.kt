@@ -50,7 +50,7 @@ class UserTransformer(
       isActive = jpa.isActive,
       qualifications = jpa.qualifications.map(::transformQualificationToApi),
       region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
-      service = ServiceName.approvedPremises.value,
+      service = "CAS1",
       apArea = apAreaTransformer.transformJpaToApi(jpa.probationRegion.apArea),
     )
     ServiceName.temporaryAccommodation -> TemporaryAccommodationUser(

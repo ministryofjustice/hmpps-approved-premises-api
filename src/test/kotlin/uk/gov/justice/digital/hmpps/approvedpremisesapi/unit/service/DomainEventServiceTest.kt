@@ -9,6 +9,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonD
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationSubmittedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationWithdrawnFactory
@@ -44,11 +46,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomainEventWorker
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@SuppressWarnings("CyclomaticComplexMethod")
 class DomainEventServiceTest {
   private val domainEventRespositoryMock = mockk<DomainEventRepository>()
   private val domainEventWorkerMock = mockk<ConfiguredDomainEventWorker>()
@@ -57,11 +61,14 @@ class DomainEventServiceTest {
     registerModule(JavaTimeModule())
     registerKotlinModule()
   }
+  private val userService = mockk<UserService>()
+  private val user = UserEntityFactory().withDefaultProbationRegion().produce()
 
   private val domainEventService = DomainEventService(
     objectMapper = objectMapper,
     domainEventRepository = domainEventRespositoryMock,
     domainEventWorker = domainEventWorkerMock,
+    userService = userService,
     emitDomainEventsEnabled = true,
     applicationSubmittedDetailUrlTemplate = "http://api/events/application-submitted/#eventId",
     applicationAssessedDetailUrlTemplate = "http://api/events/application-assessed/#eventId",
@@ -77,6 +84,11 @@ class DomainEventServiceTest {
     placementApplicationWithdrawnDetailUrlTemplate = UrlTemplate("http://api/events/placement-application-withdrawn/#eventId"),
     matchRequestWithdrawnDetailUrlTemplate = UrlTemplate("http://api/events/match-request-withdrawn/#eventId"),
   )
+
+  @BeforeEach
+  fun setupUserService() {
+    every { userService.getUserForRequestOrNull() } returns user
+  }
 
   @Test
   fun `getApplicationSubmittedDomainEvent returns null when event does not exist`() {
@@ -155,7 +167,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -211,7 +224,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -298,7 +312,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -354,7 +369,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -441,7 +457,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -497,7 +514,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -584,7 +602,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -640,7 +659,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -728,7 +748,8 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.bookingId == domainEventToSave.bookingId
+            it.bookingId == domainEventToSave.bookingId &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -784,7 +805,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -872,7 +894,8 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.bookingId == domainEventToSave.bookingId
+            it.bookingId == domainEventToSave.bookingId &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -928,7 +951,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -968,7 +992,8 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.bookingId == domainEventToSave.bookingId
+            it.bookingId == domainEventToSave.bookingId &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1142,7 +1167,8 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.bookingId == domainEventToSave.bookingId
+            it.bookingId == domainEventToSave.bookingId &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1198,7 +1224,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1240,7 +1267,8 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.bookingId == domainEventToSave.bookingId
+            it.bookingId == domainEventToSave.bookingId &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1326,7 +1354,8 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.bookingId == domainEventToSave.bookingId
+            it.bookingId == domainEventToSave.bookingId &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1382,7 +1411,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1424,7 +1454,8 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.bookingId == domainEventToSave.bookingId
+            it.bookingId == domainEventToSave.bookingId &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1509,7 +1540,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1565,7 +1597,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1652,7 +1685,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1708,7 +1742,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1795,7 +1830,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1851,7 +1887,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1894,7 +1931,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1950,7 +1988,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -1993,7 +2032,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }
@@ -2049,7 +2089,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
         },
       )
     }

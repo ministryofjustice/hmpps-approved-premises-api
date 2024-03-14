@@ -31,6 +31,7 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@SuppressWarnings("CyclomaticComplexMethod")
 class DomainEventServiceTest {
   private val domainEventRepositoryMock = mockk<DomainEventRepository>()
   private val hmppsQueueServiceMock = mockk<HmppsQueueService>()
@@ -139,7 +140,8 @@ class DomainEventServiceTest {
                 it.type == DomainEventType.CAS2_APPLICATION_SUBMITTED &&
                 it.crn == domainEventToSave.crn &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-                it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+                it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+                it.triggeredByUserId == null
             },
           )
         }
@@ -201,7 +203,8 @@ class DomainEventServiceTest {
                 it.type == DomainEventType.CAS2_APPLICATION_SUBMITTED &&
                 it.crn == domainEventToSave.crn &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-                it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+                it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+                it.triggeredByUserId == null
             },
           )
         }
@@ -255,7 +258,8 @@ class DomainEventServiceTest {
                 it.type == DomainEventType.CAS2_APPLICATION_SUBMITTED &&
                 it.crn == domainEventToSave.crn &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-                it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+                it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+                it.triggeredByUserId == null
             },
           )
         }
@@ -310,7 +314,8 @@ class DomainEventServiceTest {
                 it.type == DomainEventType.CAS2_APPLICATION_STATUS_UPDATED &&
                 it.crn == domainEventToSave.crn &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-                it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+                it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+                it.triggeredByUserId == null
             },
           )
         }
@@ -377,7 +382,8 @@ class DomainEventServiceTest {
                 it.type == DomainEventType.CAS2_APPLICATION_STATUS_UPDATED &&
                 it.crn == domainEventToSave.crn &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-                it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+                it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+                it.triggeredByUserId == null
             },
           )
         }
@@ -426,7 +432,8 @@ class DomainEventServiceTest {
                 it.type == DomainEventType.CAS2_APPLICATION_STATUS_UPDATED &&
                 it.crn == domainEventToSave.crn &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-                it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+                it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+                it.triggeredByUserId == null
             },
           )
         }

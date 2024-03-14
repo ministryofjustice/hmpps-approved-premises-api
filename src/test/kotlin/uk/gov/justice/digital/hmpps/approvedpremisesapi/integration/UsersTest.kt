@@ -193,7 +193,7 @@ class UsersTest : IntegrationTestBase() {
             telephoneNumber = telephoneNumber,
             roles = emptyList(),
             qualifications = emptyList(),
-            service = ServiceName.approvedPremises.value,
+            service = "CAS1",
             isActive = true,
             apArea = ApArea(region.apArea.id, region.apArea.identifier, region.apArea.name),
           ),

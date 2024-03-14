@@ -36,21 +36,22 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 
   @Query(
     """
-      SELECT 
-        cast(d.id as TEXT), 
-        d.type, 
-        d.occurred_at as occurredAt,
-        cast(d.application_id as TEXT) as applicationId,
-        cast(d.assessment_id as TEXT) as assessmentId,
-        cast(d.booking_id as TEXT) as bookingId,
-        cast(b.premises_id as TEXT) as premisesId,
-        cast(a.id as TEXT) as appealId
-      FROM domain_events d 
-      LEFT OUTER JOIN bookings b ON b.id = d.booking_id
-      LEFT OUTER JOIN appeals a ON d.application_id = a.application_id
-      WHERE d.application_id = :applicationId
-    """,
-    nativeQuery = true,
+     SELECT 
+        d.id as id,
+        d.type as type, 
+        d.occurredAt as occurredAt,
+        d.applicationId as applicationId,
+        d.assessmentId as assessmentId,
+        d.bookingId as bookingId,
+        b.premises.id as premisesId,
+        a.id as appealId,
+        u as triggeredByUser
+      FROM DomainEventEntity d 
+      LEFT OUTER JOIN BookingEntity b ON b.id = d.bookingId
+      LEFT OUTER JOIN AppealEntity a ON a.application.id = d.applicationId 
+      LEFT OUTER JOIN UserEntity u ON u.id = d.triggeredByUserId
+      WHERE d.applicationId = :applicationId
+    """
   )
   fun findAllTimelineEventsByApplicationId(applicationId: UUID): List<DomainEventSummary>
 

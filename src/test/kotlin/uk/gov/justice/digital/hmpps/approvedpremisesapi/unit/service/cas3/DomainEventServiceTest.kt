@@ -53,6 +53,7 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 
+@SuppressWarnings("CyclomaticComplexMethod")
 class DomainEventServiceTest {
   private val domainEventRepositoryMock = mockk<DomainEventRepository>()
   private val domainEventBuilderMock = mockk<DomainEventBuilder>()
@@ -72,29 +73,15 @@ class DomainEventServiceTest {
     }
     .produce()
 
-  private val domainEventService = DomainEventService(
-    objectMapper = objectMapper,
-    domainEventRepository = domainEventRepositoryMock,
-    domainEventBuilder = domainEventBuilderMock,
-    hmppsQueueService = hmppsQueueServiceMock,
-    emitDomainEventsEnabled = EventType.entries,
-    bookingCancelledDetailUrlTemplate = "http://api/events/cas3/booking-cancelled/#eventId",
-    bookingCancelledUpdatedDetailUrlTemplate = "http://api/events/cas3/booking-cancelled-updated/#eventId",
-    bookingConfirmedDetailUrlTemplate = "http://api/events/cas3/booking-confirmed/#eventId",
-    bookingProvisionallyMadeDetailUrlTemplate = "http://api/events/cas3/booking-provisionally-made/#eventId",
-    personArrivedDetailUrlTemplate = "http://api/events/cas3/person-arrived/#eventId",
-    personDepartedDetailUrlTemplate = "http://api/events/cas3/person-departed/#eventId",
-    referralSubmittedDetailUrlTemplate = "http://api/events/cas3/referral-submitted/#eventId",
-    personDepartureUpdatedDetailUrlTemplate = "http://api/events/cas3/person-departure-updated/#eventId",
-    personArrivedUpdatedDetailUrlTemplate = "http://api/events/cas3/person-arrived-updated/#eventId",
-  )
+  private val domainEventService = buildService(emitDomainEventsEnabled = EventType.entries)
+  private val domainEventServiceEmittingDisabled = buildService(emitDomainEventsEnabled = listOf())
 
-  private val domainEventServiceEmittingDisabled = DomainEventService(
+  private fun buildService(emitDomainEventsEnabled: List<EventType>) = DomainEventService(
     objectMapper = objectMapper,
     domainEventRepository = domainEventRepositoryMock,
     domainEventBuilder = domainEventBuilderMock,
     hmppsQueueService = hmppsQueueServiceMock,
-    emitDomainEventsEnabled = listOf(),
+    emitDomainEventsEnabled = emitDomainEventsEnabled,
     bookingCancelledDetailUrlTemplate = "http://api/events/cas3/booking-cancelled/#eventId",
     bookingCancelledUpdatedDetailUrlTemplate = "http://api/events/cas3/booking-cancelled-updated/#eventId",
     bookingConfirmedDetailUrlTemplate = "http://api/events/cas3/booking-confirmed/#eventId",
@@ -347,7 +334,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_CANCELLED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -480,7 +468,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_CONFIRMED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -545,7 +534,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_CONFIRMED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -598,7 +588,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_CONFIRMED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -733,7 +724,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -800,7 +792,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -855,7 +848,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -988,7 +982,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_PERSON_ARRIVED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1053,7 +1048,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_PERSON_ARRIVED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1106,7 +1102,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_PERSON_ARRIVED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1202,7 +1199,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_PERSON_DEPARTED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1267,7 +1265,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_PERSON_DEPARTED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1320,7 +1319,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_PERSON_DEPARTED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1427,7 +1427,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_REFERRAL_SUBMITTED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1503,7 +1504,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_REFERRAL_SUBMITTED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1567,7 +1569,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_REFERRAL_SUBMITTED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1601,7 +1604,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1649,7 +1653,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1683,7 +1688,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1770,7 +1776,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1805,7 +1812,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1853,7 +1861,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1899,7 +1908,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -1933,7 +1943,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -2012,7 +2023,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_PERSON_ARRIVED_UPDATED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -2060,7 +2072,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_PERSON_ARRIVED_UPDATED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
@@ -2091,7 +2104,8 @@ class DomainEventServiceTest {
             it.type == DomainEventType.CAS3_PERSON_ARRIVED_UPDATED &&
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data)
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == null
         },
       )
     }
