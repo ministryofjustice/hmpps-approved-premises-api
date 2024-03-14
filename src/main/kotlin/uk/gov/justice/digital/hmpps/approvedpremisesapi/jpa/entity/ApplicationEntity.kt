@@ -367,7 +367,6 @@ class ApprovedPremisesApplicationEntity(
   fun getLatestPlacementRequest(): PlacementRequestEntity? = this.placementRequests.maxByOrNull { it.createdAt }
   fun getLatestBooking(): BookingEntity? = getLatestPlacementRequest()?.booking
   fun isSubmitted() = submittedAt != null
-
   fun isShortNoticeApplication() = this.arrivalDate?.let { Duration.between(this.createdAt, this.arrivalDate).toKotlinDuration() < 28.days }
 }
 

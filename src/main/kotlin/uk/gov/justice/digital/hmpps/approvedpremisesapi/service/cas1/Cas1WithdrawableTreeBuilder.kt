@@ -37,6 +37,8 @@ class WithdrawableTreeBuilder(
   fun treeForApp(application: ApprovedPremisesApplicationEntity, user: UserEntity): WithdrawableTreeNode {
     val children = mutableListOf<WithdrawableTreeNode>()
 
+    // TODO: we need to change this to a list even tho it's not technically correct as there
+    // are a few apps that won't map
     placementRequestService.getPlacementRequestForInitialApplicationDates(application.id)?.let {
       children.add(treeForPlacementReq(it, user))
     }

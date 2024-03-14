@@ -81,19 +81,19 @@ fun IntegrationTestBase.`Given a Placement Application`(
   placementType: PlacementType? = PlacementType.ADDITIONAL_PLACEMENT,
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   block: (placementApplicationEntity: PlacementApplicationEntity) -> Unit,
-) {
-  block(
-    `Given a Placement Application`(
-      assessmentDecision = assessmentDecision,
-      createdByUser = createdByUser,
-      schema = schema,
-      crn = crn,
-      allocatedToUser = allocatedToUser,
-      submittedAt = submittedAt,
-      decision = decision,
-      reallocated = reallocated,
-      placementType = placementType,
-      dueAt = dueAt,
-    ),
+): PlacementApplicationEntity {
+  val placementApplication = `Given a Placement Application`(
+    assessmentDecision = assessmentDecision,
+    createdByUser = createdByUser,
+    schema = schema,
+    crn = crn,
+    allocatedToUser = allocatedToUser,
+    submittedAt = submittedAt,
+    decision = decision,
+    reallocated = reallocated,
+    placementType = placementType,
+    dueAt = dueAt,
   )
+  block(placementApplication)
+  return placementApplication
 }
