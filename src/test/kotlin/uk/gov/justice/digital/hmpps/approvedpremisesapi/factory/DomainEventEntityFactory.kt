@@ -6,6 +6,7 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
@@ -23,6 +24,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(7) }
   private var data: Yielded<String> = { "{}" }
   private var service: Yielded<String> = { randomOf(listOf("CAS1", "CAS2", "CAS3")) }
+  private var triggeredByUserId: Yielded<UUID?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -85,5 +87,6 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     createdAt = this.createdAt(),
     data = this.data(),
     service = this.service(),
+    triggeredByUserId = this.triggeredByUserId(),
   )
 }

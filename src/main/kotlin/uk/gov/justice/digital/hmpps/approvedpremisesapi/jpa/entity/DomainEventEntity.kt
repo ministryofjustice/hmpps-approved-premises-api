@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
@@ -26,6 +27,8 @@ import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
 import javax.persistence.Id
+import javax.persistence.JoinColumn
+import javax.persistence.ManyToOne
 import javax.persistence.Table
 
 @Repository
@@ -33,21 +36,22 @@ interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
 
   @Query(
     """
-      SELECT 
-        cast(d.id as TEXT), 
-        d.type, 
-        d.occurred_at as occurredAt,
-        cast(d.application_id as TEXT) as applicationId,
-        cast(d.assessment_id as TEXT) as assessmentId,
-        cast(d.booking_id as TEXT) as bookingId,
-        cast(b.premises_id as TEXT) as premisesId,
-        cast(a.id as TEXT) as appealId
-      FROM domain_events d 
-      LEFT OUTER JOIN bookings b ON b.id = d.booking_id
-      LEFT OUTER JOIN appeals a ON d.application_id = a.application_id
-      WHERE d.application_id = :applicationId
-    """,
-    nativeQuery = true,
+     SELECT 
+        d.id as id,
+        d.type as type, 
+        d.occurredAt as occurredAt,
+        d.applicationId as applicationId,
+        d.assessmentId as assessmentId,
+        d.bookingId as bookingId,
+        b.premises.id as premisesId,
+        a.id as appealId,
+        u as triggeredByUser
+      FROM DomainEventEntity d 
+      LEFT OUTER JOIN BookingEntity b ON b.id = d.bookingId
+      LEFT OUTER JOIN AppealEntity a ON a.application.id = d.applicationId 
+      LEFT OUTER JOIN UserEntity u ON u.id = d.triggeredByUserId
+      WHERE d.applicationId = :applicationId
+    """
   )
   fun findAllTimelineEventsByApplicationId(applicationId: UUID): List<DomainEventSummary>
 
@@ -76,6 +80,7 @@ data class DomainEventEntity(
   @Type(type = "com.vladmihalcea.hibernate.type.json.JsonType")
   val data: String,
   val service: String,
+  val triggeredByUserId: UUID?,
 ) {
   final inline fun <reified T> toDomainEvent(objectMapper: ObjectMapper): DomainEvent<T> {
     val data = when {

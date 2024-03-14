@@ -37,6 +37,7 @@ class DomainEventService(
   private val objectMapper: ObjectMapper,
   private val domainEventRepository: DomainEventRepository,
   val domainEventWorker: ConfiguredDomainEventWorker,
+  private val userService: UserService,
   @Value("\${domain-events.cas1.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
   @Value("\${url-templates.api.cas1.application-submitted-event-detail}") private val applicationSubmittedDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas1.application-assessed-event-detail}") private val applicationAssessedDetailUrlTemplate: String,
@@ -250,6 +251,7 @@ class DomainEventService(
         createdAt = OffsetDateTime.now(),
         data = objectMapper.writeValueAsString(domainEvent.data),
         service = "CAS1",
+        triggeredByUserId = userService.getUserForRequestOrNull()?.id,
       ),
     )
 

@@ -3,18 +3,25 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 import io.mockk.every
 import io.mockk.mockk
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventAssociatedUrl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventUrlType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toTimestamp
 import java.sql.Timestamp
@@ -23,6 +30,7 @@ import java.util.UUID
 
 class ApplicationTimelineTransformerTest {
   private val mockDomainEventDescriber = mockk<DomainEventDescriber>()
+  private val mockUserTransformer = mockk<UserTransformer>()
 
   private val applicationTimelineTransformer = ApplicationTimelineTransformer(
     UrlTemplate("http://somehost:3000/applications/#id"),
@@ -30,45 +38,52 @@ class ApplicationTimelineTransformerTest {
     UrlTemplate("http://somehost:3000/premises/#premisesId/bookings/#bookingId"),
     UrlTemplate("http://somehost:3000/applications/#applicationId/appeals/#appealId"),
     mockDomainEventDescriber,
+    mockUserTransformer,
   )
 
   data class DomainEventSummaryImpl(
     override val id: String,
     override val type: DomainEventType,
-    override val occurredAt: Timestamp,
+    override val occurredAt: OffsetDateTime,
     override val applicationId: UUID?,
     override val assessmentId: UUID?,
     override val bookingId: UUID?,
     override val premisesId: UUID?,
     override val appealId: UUID?,
+    override val triggeredByUser: UserEntity?,
   ) : DomainEventSummary
 
   @ParameterizedTest
   @MethodSource("domainEventTypeArgs")
   fun `transformDomainEventSummaryToTimelineEvent transforms domain event correctly`(args: Pair<DomainEventType, TimelineEventType>) {
     val (domainEventType, timelineEventType) = args
+
+    val userJpa = UserEntityFactory().withDefaultProbationRegion().produce()
+
     val domainEvent = DomainEventSummaryImpl(
       id = UUID.randomUUID().toString(),
       type = domainEventType,
-      occurredAt = OffsetDateTime.now().toTimestamp(),
+      occurredAt = OffsetDateTime.now(),
       bookingId = null,
       applicationId = null,
       assessmentId = null,
       premisesId = null,
       appealId = null,
+      triggeredByUser = userJpa,
     )
 
+    val userApi = mockk<ApprovedPremisesUser>()
+    every { mockUserTransformer.transformJpaToApi(userJpa, ServiceName.approvedPremises) } returns userApi
     every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
 
-    Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
-      TimelineEvent(
-        id = domainEvent.id,
-        type = timelineEventType,
-        occurredAt = domainEvent.occurredAt.toInstant(),
-        associatedUrls = emptyList(),
-        content = "Some event",
-      ),
-    )
+    val result = applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
+
+    assertThat(result.id).isEqualTo(domainEvent.id)
+    assertThat(result.type).isEqualTo(timelineEventType)
+    assertThat(result.occurredAt).isEqualTo(domainEvent.occurredAt.toInstant())
+    assertThat(result.associatedUrls).isEmpty()
+    assertThat(result.content).isEqualTo("Some event")
+    assertThat(result.createdBy).isEqualTo(userApi)
   }
 
   @Test
@@ -87,12 +102,13 @@ class ApplicationTimelineTransformerTest {
     val domainEvent = DomainEventSummaryImpl(
       id = UUID.randomUUID().toString(),
       type = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
-      occurredAt = OffsetDateTime.now().toTimestamp(),
+      occurredAt = OffsetDateTime.now(),
       bookingId = null,
       applicationId = applicationId,
       assessmentId = null,
       premisesId = null,
       appealId = null,
+      triggeredByUser = null,
     )
 
     every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
@@ -119,12 +135,13 @@ class ApplicationTimelineTransformerTest {
     val domainEvent = DomainEventSummaryImpl(
       id = UUID.randomUUID().toString(),
       type = domainEventType,
-      occurredAt = OffsetDateTime.now().toTimestamp(),
+      occurredAt = OffsetDateTime.now(),
       bookingId = null,
       applicationId = applicationId,
       assessmentId = null,
       premisesId = null,
       appealId = appealId,
+      triggeredByUser = null,
     )
 
     every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
@@ -155,12 +172,13 @@ class ApplicationTimelineTransformerTest {
     val domainEvent = DomainEventSummaryImpl(
       id = UUID.randomUUID().toString(),
       type = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
-      occurredAt = OffsetDateTime.now().toTimestamp(),
+      occurredAt = OffsetDateTime.now(),
       bookingId = bookingId,
       applicationId = null,
       assessmentId = null,
       premisesId = premisesId,
       appealId = null,
+      triggeredByUser = null,
     )
 
     every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
@@ -184,12 +202,13 @@ class ApplicationTimelineTransformerTest {
     val domainEvent = DomainEventSummaryImpl(
       id = UUID.randomUUID().toString(),
       type = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
-      occurredAt = OffsetDateTime.now().toTimestamp(),
+      occurredAt = OffsetDateTime.now(),
       bookingId = null,
       applicationId = null,
       assessmentId = assessmentId,
       premisesId = null,
       appealId = null,
+      triggeredByUser = null,
     )
 
     every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
@@ -217,12 +236,13 @@ class ApplicationTimelineTransformerTest {
     val domainEvent = DomainEventSummaryImpl(
       id = UUID.randomUUID().toString(),
       type = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
-      occurredAt = OffsetDateTime.now().toTimestamp(),
+      occurredAt = OffsetDateTime.now(),
       bookingId = bookingId,
       applicationId = applicationId,
       assessmentId = assessmentId,
       premisesId = premisesId,
       appealId = appealId,
+      triggeredByUser = null,
     )
 
     every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"

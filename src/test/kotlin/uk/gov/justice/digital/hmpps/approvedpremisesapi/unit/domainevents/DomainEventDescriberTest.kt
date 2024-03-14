@@ -30,12 +30,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNotArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
@@ -322,23 +324,25 @@ class DomainEventDescriberTest {
 data class DomainEventSummaryImpl(
   override val id: String,
   override val type: DomainEventType,
-  override val occurredAt: Timestamp,
+  override val occurredAt: OffsetDateTime,
   override val applicationId: UUID?,
   override val assessmentId: UUID?,
   override val bookingId: UUID?,
   override val premisesId: UUID?,
   override val appealId: UUID?,
+  override val triggeredByUser: UserEntity?,
 ) : DomainEventSummary {
   companion object {
     fun ofType(type: DomainEventType) = DomainEventSummaryImpl(
       id = UUID.randomUUID().toString(),
       type = type,
-      occurredAt = Timestamp.from(Instant.now()),
+      occurredAt = OffsetDateTime.now(),
       applicationId = null,
       assessmentId = null,
       bookingId = null,
       premisesId = null,
       appealId = null,
+      triggeredByUser = null,
     )
   }
 }
