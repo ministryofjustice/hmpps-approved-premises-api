@@ -47,6 +47,18 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
   @Modifying
   @Query("UPDATE PlacementApplicationEntity p SET p.dueAt = :dueAt WHERE p.id = :id")
   fun updateDueAt(id: UUID, dueAt: OffsetDateTime?)
+
+  @Query(
+    """
+    SELECT cast(pa.application_id as text) 
+    FROM placement_applications pa 
+    LEFT OUTER JOIN placement_requests pr ON pr.placement_application_id = pa.id
+    WHERE pa.decision = 'ACCEPTED' AND pr.id IS NULL
+    GROUP BY pa.application_id
+    """,
+    nativeQuery = true,
+  )
+  fun findApplicationsThatHaveAnAcceptedPlacementApplicationWithoutACorrespondingPlacementRequest(): List<String>
 }
 
 @Entity
@@ -115,6 +127,8 @@ data class PlacementApplicationEntity(
   fun isReallocated() = reallocatedAt != null
 
   fun isActive() = !isReallocated() && !isWithdrawn()
+
+  fun isAccepted() = decision == PlacementApplicationDecision.ACCEPTED
 
   fun isInWithdrawableState() = isSubmitted() && isActive()
 

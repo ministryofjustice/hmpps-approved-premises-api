@@ -346,6 +346,11 @@ class PlacementRequestService(
    * We know that only one of these placement requests relate to the initial application dates,
    * and the rest relate to placement_applications, but we have no programmatic way of 'fixing'
    * this link for those placement requests.
+   *
+   * Note: this is only an issue when the placement applications are withdrawn, so any incorrect
+   * placement requests returned here will appear as withdrawn to the user
+   *
+   * See [Cas1FixPlacementApplicationLinksJob] for more information.
    */
   fun getPlacementRequestForInitialApplicationDates(applicationId: UUID) =
     placementRequestRepository.findByApplication_id(applicationId)

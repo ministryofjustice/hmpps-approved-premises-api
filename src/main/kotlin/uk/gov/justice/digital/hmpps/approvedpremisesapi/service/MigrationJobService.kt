@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApAreaMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApAreaMigrationJobApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.BookingStatusMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1FixPlacementApplicationLinksJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1UserDetailsMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2AssessmentMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
@@ -85,6 +86,14 @@ class MigrationJobService(
           applicationContext.getBean(Cas1ApplicationUserDetailsRepository::class.java),
           applicationContext.getBean(EntityManager::class.java),
           pageSize,
+          transactionTemplate,
+        )
+
+        MigrationJobType.cas1FixPlacementAppLinks -> Cas1FixPlacementApplicationLinksJob(
+          applicationContext.getBean(PlacementApplicationRepository::class.java),
+          applicationContext.getBean(ApplicationRepository::class.java),
+          applicationContext.getBean(PlacementRequestRepository::class.java),
+          applicationContext.getBean(EntityManager::class.java),
           transactionTemplate,
         )
       }
