@@ -197,8 +197,8 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   fun findActiveOverlappingBookingByBed(bedId: UUID, date: LocalDate): List<BookingEntity>
 
   @Modifying
-  @Query("UPDATE BookingEntity b set b.adhoc = true where b.id = :bookingId")
-  fun updateBookingAsAdhoc(bookingId: UUID): Int
+  @Query("UPDATE BookingEntity b set b.adhoc = :adhoc where b.id = :bookingId")
+  fun updateBookingAdhocStatus(bookingId: UUID, adhoc: Boolean): Int
 }
 
 @EntityListeners(BookingListener::class)

@@ -18,7 +18,7 @@ class SeedCas1BookingAdhocPropertyTest : SeedTestBase() {
 
     withCsv(
       "invalid-booking-id",
-      bookingIdListToCsvRows(listOf(invalidId)),
+      bookingIdListToCsvRows(listOf(invalidId to false)),
     )
 
     seedService.seedData(SeedFileType.approvedPremisesBookingAdhocProperty, "invalid-booking-id")
@@ -34,7 +34,7 @@ class SeedCas1BookingAdhocPropertyTest : SeedTestBase() {
   }
 
   @Test
-  fun `Bookings are updated to be adhoc`() {
+  fun `Bookings adhoc statuses are updated`() {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withProbationRegion(
         probationRegionEntityFactory.produceAndPersist {
@@ -52,13 +52,17 @@ class SeedCas1BookingAdhocPropertyTest : SeedTestBase() {
     val booking3 = bookingEntityFactory.produceAndPersist {
       withPremises(premises)
     }
+    val booking4 = bookingEntityFactory.produceAndPersist {
+      withPremises(premises)
+    }
 
     withCsv(
       "valid-booking-ids",
       bookingIdListToCsvRows(
         listOf(
-          booking1.id,
-          booking3.id,
+          booking1.id to true,
+          booking3.id to false,
+          booking4.id to true,
         ),
       ),
     )
@@ -67,17 +71,20 @@ class SeedCas1BookingAdhocPropertyTest : SeedTestBase() {
 
     assertThat(bookingRepository.findByIdOrNull(booking1.id)!!.adhoc).isTrue()
     assertThat(bookingRepository.findByIdOrNull(booking2.id)!!.adhoc).isNull()
-    assertThat(bookingRepository.findByIdOrNull(booking3.id)!!.adhoc).isTrue()
+    assertThat(bookingRepository.findByIdOrNull(booking3.id)!!.adhoc).isFalse()
+    assertThat(bookingRepository.findByIdOrNull(booking4.id)!!.adhoc).isTrue()
   }
 
-  private fun bookingIdListToCsvRows(rows: List<UUID>): String {
+  private fun bookingIdListToCsvRows(rows: List<Pair<UUID, Boolean>>): String {
     val builder = CsvBuilder()
-      .withUnquotedFields("adhoc_booking_id")
+      .withUnquotedFields("booking_id")
+      .withUnquotedFields("is_adhoc")
       .newRow()
 
     rows.forEach {
       builder
-        .withQuotedField(it)
+        .withQuotedField(it.first)
+        .withQuotedFields(it.second)
         .newRow()
     }
 

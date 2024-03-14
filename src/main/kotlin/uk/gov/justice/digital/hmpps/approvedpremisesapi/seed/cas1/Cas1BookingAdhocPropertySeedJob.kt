@@ -12,26 +12,30 @@ class Cas1BookingAdhocPropertySeedJob(
   id = UUID.randomUUID(),
   fileName = fileName,
   requiredHeaders = setOf(
-    "adhoc_booking_id",
+    "booking_id",
+    "is_adhoc",
   ),
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun deserializeRow(columns: Map<String, String>) = Cas1BookingAdhocPropertySeedCsvRow(
-    adhocBookingId = columns["adhoc_booking_id"]!!.trim(),
+    bookingId = columns["booking_id"]!!.trim(),
+    isAdhoc = columns["is_adhoc"]!!.trim().equals("true", ignoreCase = true),
   )
 
   override fun processRow(row: Cas1BookingAdhocPropertySeedCsvRow) {
-    val bookingId = row.adhocBookingId
+    val bookingId = row.bookingId
+    val isAdhoc = row.isAdhoc
 
-    if (bookingRepository.updateBookingAsAdhoc(UUID.fromString(bookingId)) == 0) {
+    if (bookingRepository.updateBookingAdhocStatus(UUID.fromString(bookingId), isAdhoc) == 0) {
       error("Could not find booking with id $bookingId")
     }
 
-    log.info("Update booking $bookingId to indicate it's adhoc")
+    log.info("Update booking $bookingId adhoc status to $isAdhoc")
   }
 }
 
 data class Cas1BookingAdhocPropertySeedCsvRow(
-  val adhocBookingId: String,
+  val bookingId: String,
+  val isAdhoc: Boolean,
 )
