@@ -338,10 +338,19 @@ class PlacementRequestService(
     return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))
   }
 
+  /**
+   * Whilst this should always return 0 or 1 requests, due to legacy application
+   * data inconsistencies there are a small number of applications that will return multiple
+   * placement requests.
+   *
+   * We know that only one of these placement requests relate to the initial application dates,
+   * and the rest relate to placement_applications, but we have no programmatic way of 'fixing'
+   * this link for those placement requests.
+   */
   fun getPlacementRequestForInitialApplicationDates(applicationId: UUID) =
     placementRequestRepository.findByApplication_id(applicationId)
       .filter { it.isForApplicationsArrivalDate() }
-      .firstOrNull { !it.isReallocated() }
+      .filter { !it.isReallocated() }
 
   private fun updateApplicationStatusOnWithdrawal(
     placementRequest: PlacementRequestEntity,
