@@ -195,6 +195,36 @@ object Cas2ApplicationStatusSeeding {
             name = "noRecourseToPublicFunds",
             label = "No recourse to public funds",
           ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("c149a14d-ba06-420a-b844-5edfc02da6b1"),
+            name = "noPropertyAvailable",
+            label = "No property available",
+          ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("3fbdccc9-4858-4ae4-abb5-bd2b90d96d96"),
+            name = "noFemalePropertyAvailable",
+            label = "No female property available",
+          ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("bc539d6d-c353-49fa-847f-6967a148c527"),
+            name = "noAdaptedPropertyAvailable",
+            label = "No adapted property available",
+          ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("78636840-0155-45d4-971e-fe8d2d6c660c"),
+            name = "noSuitablePropertyAvailable",
+            label = "No suitable property available",
+          ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("7e8749c9-5254-4dae-90ed-590cf9f59847"),
+            name = "incompleteReferral",
+            label = "Incomplete referral",
+          ),
+          Cas2PersistedApplicationStatusDetail(
+            id = UUID.fromString("d1d96185-d92a-450b-b47f-bcce50356eed"),
+            name = "createdInError",
+            label = "Created in error",
+          ),
         ),
       ),
       Cas2PersistedApplicationStatus(
