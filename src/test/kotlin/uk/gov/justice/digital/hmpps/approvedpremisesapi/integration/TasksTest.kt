@@ -612,6 +612,11 @@ class TasksTest : IntegrationTestBase() {
                 ),
               )
 
+              `Given an Assessment for Temporary Accommodation`(
+                createdByUser = otherUser,
+                allocatedToUser = null,
+              )
+
               repeat(counts[TaskType.assessment]!!["allocated"]!!) {
                 `Given an Assessment for Approved Premises`(
                   allocatedToUser = otherUser,

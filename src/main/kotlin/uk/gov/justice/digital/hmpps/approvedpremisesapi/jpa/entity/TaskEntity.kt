@@ -49,7 +49,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
       FROM
         assessments assessment
         INNER JOIN applications application ON assessment.application_id = application.id
-        LEFT JOIN approved_premises_applications apa ON application.id = apa.id
+        INNER JOIN approved_premises_applications apa ON application.id = apa.id
         LEFT JOIN ap_areas area ON area.id = apa.ap_area_id
         LEFT JOIN users u ON u.id = assessment.allocated_to_user_id
       WHERE
@@ -87,7 +87,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
       from
         placement_applications placement_application
         INNER JOIN applications application ON placement_application.application_id = application.id
-        LEFT JOIN approved_premises_applications apa ON application.id = apa.id
+        INNER JOIN approved_premises_applications apa ON application.id = apa.id
         LEFT JOIN ap_areas area ON area.id = apa.ap_area_id
         LEFT JOIN users u ON u.id = placement_application.allocated_to_user_id
       WHERE
@@ -125,7 +125,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
       FROM
         placement_requests placement_request
         INNER JOIN applications application ON placement_request.application_id = application.id
-        LEFT JOIN approved_premises_applications apa ON application.id = apa.id
+        INNER JOIN approved_premises_applications apa ON application.id = apa.id
         LEFT JOIN booking_not_mades booking_not_made ON booking_not_made.placement_request_id = placement_request.id
         LEFT JOIN ap_areas area ON area.id = apa.ap_area_id
         LEFT JOIN users u ON u.id = placement_request.allocated_to_user_id
