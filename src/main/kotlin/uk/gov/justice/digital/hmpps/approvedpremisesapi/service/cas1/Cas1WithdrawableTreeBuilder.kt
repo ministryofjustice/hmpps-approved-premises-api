@@ -142,8 +142,7 @@ data class WithdrawableTreeNode(
       "$entityType($abbreviatedId), " +
       "withdrawable:${yesOrNo(status.withdrawable)}, " +
       "mayDirectlyWithdraw:${yesOrNo(status.userMayDirectlyWithdraw)}" +
-      blockingDescription() +
-      exemptFromCascadeDescription()
+      blockingDescription()
 
     return "$padding$description\n" +
       children.joinToString(separator = "") { it.render(depth + 1, includeIds) }
@@ -159,12 +158,6 @@ data class WithdrawableTreeNode(
     ", BLOCKING"
   } else if (isBlocked()) {
     ", BLOCKED"
-  } else {
-    ""
-  }
-
-  private fun exemptFromCascadeDescription() = if (status.exemptFromCascade) {
-    " EXEMPT FROM CASCADE (AD-HOC BOOKING)"
   } else {
     ""
   }

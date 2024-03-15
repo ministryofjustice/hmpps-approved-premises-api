@@ -233,13 +233,6 @@ data class WithdrawableState(
    * placement and application
    */
   val blockAncestorWithdrawals: Boolean = false,
-  /**
-   * If true, this entity will not be automatically withdrawn if an
-   * ancestor entity is withdrawn. For example, adhoc bookings linked
-   * to an application are not automatically withdrawn if the application
-   * is withdrawn
-   */
-  val exemptFromCascade: Boolean = false,
 )
 
 data class WithdrawableDatePeriod(
