@@ -6463,6 +6463,8 @@ components:
           type: string
         nomsNumber:
           type: string
+        personName:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -6475,6 +6477,7 @@ components:
         - id
         - person
         - createdAt
+        - personName
         - crn
         - nomsNumber
     Cas2StatusUpdate:

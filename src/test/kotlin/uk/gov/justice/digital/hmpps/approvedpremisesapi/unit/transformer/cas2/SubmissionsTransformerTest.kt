@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Assessment
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.AssessmentsTransformer
@@ -127,11 +129,29 @@ class SubmissionsTransformerTest {
         override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
       }
 
-      val transformation = applicationTransformer.transformJpaSummaryToApiRepresentation(applicationSummary, mockk())
+      val personInfo = mockk<PersonInfoResult.Success>()
+      val person = mockk<Person>()
 
-      assertThat(transformation.id).isEqualTo(applicationSummary.getId())
-      assertThat(transformation.crn).isEqualTo(applicationSummary.getCrn())
-      assertThat(transformation.nomsNumber).isEqualTo(applicationSummary.getNomsNumber())
+      every { mockPersonTransformer.transformModelToPersonApi(personInfo) } returns person
+
+      val expectedSubmittedApplicationSummary = Cas2SubmittedApplicationSummary(
+        id = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809"),
+        crn = "CRN123",
+        nomsNumber = "NOMS456",
+        createdByUserId = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f"),
+        createdAt = Instant.parse("2023-04-19T13:25:00+01:00"),
+        submittedAt = Instant.parse("2023-04-19T13:25:30+01:00"),
+        personName = "Example Offender",
+        person = person,
+      )
+
+      val transformation = applicationTransformer.transformJpaSummaryToApiRepresentation(
+        applicationSummary,
+        personInfo,
+        "Example Offender",
+      )
+
+      assertThat(transformation).isEqualTo(expectedSubmittedApplicationSummary)
     }
   }
 }
