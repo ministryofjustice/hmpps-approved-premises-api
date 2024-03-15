@@ -71,11 +71,22 @@ class Cas1WithdrawableTreeBuilder(
   }
 
   fun treeForPlacementReq(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableTreeNode {
-    val children = listOfNotNull(
-      placementRequest.booking?.let {
-        treeForBooking(it, user)
-      },
-    )
+    val booking = placementRequest.booking
+
+    /*
+     * Some legacy adhoc bookings were incorrectly linked to placement requests,
+     * and in some cases these placement requests had completely different dates
+     * from the bookings. Until these relationships are removed, we should exclude
+     * this relationship for any adhoc booking as to avoid unexpected withdrawal
+     * cascading.
+     *
+     * If adhoc is null, we treat it as 'potentially adhoc' and exclude it.
+     */
+    val children = if (booking != null && booking.adhoc == false) {
+      listOf(treeForBooking(booking, user))
+    } else {
+      emptyList()
+    }
 
     return WithdrawableTreeNode(
       entityType = WithdrawableEntityType.PlacementRequest,

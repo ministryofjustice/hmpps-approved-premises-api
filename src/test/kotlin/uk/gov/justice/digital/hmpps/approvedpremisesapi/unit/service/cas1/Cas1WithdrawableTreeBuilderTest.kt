@@ -78,7 +78,7 @@ class Cas1WithdrawableTreeBuilderTest {
     val initialPlacementRequest = createPlacementRequest()
     setupWithdrawableState(initialPlacementRequest, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false))
 
-    val initialPlacementRequestBooking = createBooking()
+    val initialPlacementRequestBooking = createBooking(adhoc = false)
     initialPlacementRequest.booking = initialPlacementRequestBooking
     setupWithdrawableState(initialPlacementRequestBooking, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false))
 
@@ -93,7 +93,7 @@ class Cas1WithdrawableTreeBuilderTest {
     val placementApp1PlacementRequest1 = createPlacementRequest()
     placementApp1.placementRequests.add(placementApp1PlacementRequest1)
     setupWithdrawableState(placementApp1PlacementRequest1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false, blockAncestorWithdrawals = true))
-    val placementApp1PlacementRequest1Booking = createBooking()
+    val placementApp1PlacementRequest1Booking = createBooking(adhoc = false)
     placementApp1PlacementRequest1.booking = placementApp1PlacementRequest1Booking
     setupWithdrawableState(placementApp1PlacementRequest1Booking, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false))
 
@@ -104,7 +104,7 @@ class Cas1WithdrawableTreeBuilderTest {
       placementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(application.id)
     } returns listOf(placementApp1, placementApplication2)
 
-    val adhocBooking1 = createBooking()
+    val adhocBooking1 = createBooking(adhoc = true)
     setupWithdrawableState(adhocBooking1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false, blockAncestorWithdrawals = false))
 
     every {
@@ -128,6 +128,65 @@ Application(), withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
     )
   }
 
+  @Test
+  fun `tree for app excludes placement request bookings if bookings are adhoc or potentially adhoc`() {
+    every {
+      applicationService.getWithdrawableState(application, user)
+    } returns WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true)
+
+    val initialPlacementRequest = createPlacementRequest()
+    setupWithdrawableState(initialPlacementRequest, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false))
+
+    val initialPlacementRequestBooking = createBooking(adhoc = true)
+    initialPlacementRequest.booking = initialPlacementRequestBooking
+    setupWithdrawableState(initialPlacementRequestBooking, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false))
+
+    every {
+      placementRequestService.getPlacementRequestForInitialApplicationDates(application.id)
+    } returns listOf(
+      initialPlacementRequest,
+    )
+
+    val placementApp1 = createPlacementApplication()
+    setupWithdrawableState(placementApp1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false))
+    val placementApp1PlacementRequest1 = createPlacementRequest()
+    placementApp1.placementRequests.add(placementApp1PlacementRequest1)
+    setupWithdrawableState(placementApp1PlacementRequest1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false, blockAncestorWithdrawals = true))
+    val placementApp1PlacementRequest1Booking = createBooking(adhoc = false)
+    placementApp1PlacementRequest1.booking = placementApp1PlacementRequest1Booking
+    setupWithdrawableState(placementApp1PlacementRequest1Booking, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false))
+
+    val placementApp2 = createPlacementApplication()
+    setupWithdrawableState(placementApp2, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false))
+    val placementApp2PlacementRequest1 = createPlacementRequest()
+    placementApp2.placementRequests.add(placementApp2PlacementRequest1)
+    setupWithdrawableState(placementApp2PlacementRequest1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false, blockAncestorWithdrawals = true))
+    val placementApp2PlacementRequest1Booking = createBooking(adhoc = null)
+    placementApp2PlacementRequest1.booking = placementApp2PlacementRequest1Booking
+    setupWithdrawableState(placementApp2PlacementRequest1Booking, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false))
+
+    every {
+      placementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(application.id)
+    } returns listOf(placementApp1, placementApp2)
+
+    every { bookingService.getAllAdhocOrUnknownForApplication(application) } returns emptyList()
+
+    val result = service.treeForApp(application, user)
+
+    assertThat(result.render(0, includeIds = false).trim()).isEqualTo(
+      """
+Application(), withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
+---> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N
+---> PlacementApplication(), withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
+------> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N, BLOCKING
+---------> Booking(), withdrawable:Y, mayDirectlyWithdraw:N
+---> PlacementApplication(), withdrawable:N, mayDirectlyWithdraw:N, BLOCKED
+------> PlacementRequest(), withdrawable:N, mayDirectlyWithdraw:N, BLOCKING
+      """
+        .trim(),
+    )
+  }
+
   private fun createPlacementRequest() = PlacementRequestEntityFactory()
     .withApplication(application)
     .withAssessment(assessment)
@@ -139,9 +198,10 @@ Application(), withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
     .withCreatedByUser(user)
     .produce()
 
-  private fun createBooking() = BookingEntityFactory()
+  private fun createBooking(adhoc: Boolean?) = BookingEntityFactory()
     .withDefaults()
     .withApplication(application)
+    .withAdhoc(adhoc)
     .produce()
 
   private fun setupWithdrawableState(placementRequest: PlacementRequestEntity, state: WithdrawableState) {
