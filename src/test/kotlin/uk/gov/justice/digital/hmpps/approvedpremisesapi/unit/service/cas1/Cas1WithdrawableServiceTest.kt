@@ -24,12 +24,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableDatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableTreeBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableTreeNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import java.time.LocalDate
@@ -41,7 +41,7 @@ class Cas1WithdrawableServiceTest {
   private val placementRequestService = mockk<PlacementRequestService>()
   private val placementApplicationService = mockk<PlacementApplicationService>()
   private val bookingService = mockk<BookingService>()
-  private val withdrawableTreeBuilder = mockk<WithdrawableTreeBuilder>()
+  private val cas1WithdrawableTreeBuilder = mockk<Cas1WithdrawableTreeBuilder>()
   private val cas1WithdrawableTreeOperations = mockk<Cas1WithdrawableTreeOperations>()
 
   private val withdrawableService = WithdrawableService(
@@ -49,7 +49,7 @@ class Cas1WithdrawableServiceTest {
     placementRequestService,
     placementApplicationService,
     bookingService,
-    withdrawableTreeBuilder,
+    cas1WithdrawableTreeBuilder,
     cas1WithdrawableTreeOperations,
   )
 
@@ -68,7 +68,7 @@ class Cas1WithdrawableServiceTest {
     val appId = UUID.randomUUID()
 
     every {
-      withdrawableTreeBuilder.treeForApp(application, user)
+      cas1WithdrawableTreeBuilder.treeForApp(application, user)
     } returns
       WithdrawableTreeNode(
         entityType = WithdrawableEntityType.PlacementApplication,
@@ -107,7 +107,7 @@ class Cas1WithdrawableServiceTest {
     val placementNotWithdrawableId = UUID.randomUUID()
 
     every {
-      withdrawableTreeBuilder.treeForApp(application, user)
+      cas1WithdrawableTreeBuilder.treeForApp(application, user)
     } returns
       WithdrawableTreeNode(
         entityType = WithdrawableEntityType.Application,
@@ -178,7 +178,7 @@ class Cas1WithdrawableServiceTest {
     val placementNotWithdrawableId = UUID.randomUUID()
 
     every {
-      withdrawableTreeBuilder.treeForApp(application, user)
+      cas1WithdrawableTreeBuilder.treeForApp(application, user)
     } returns
       WithdrawableTreeNode(
         entityType = WithdrawableEntityType.Application,
@@ -250,7 +250,7 @@ class Cas1WithdrawableServiceTest {
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
       )
 
-      every { withdrawableTreeBuilder.treeForApp(application, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForApp(application, user) } returns tree
 
       every {
         applicationService.withdrawApprovedPremisesApplication(any(), any(), any(), any())
@@ -307,7 +307,7 @@ class Cas1WithdrawableServiceTest {
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
       )
 
-      every { withdrawableTreeBuilder.treeForApp(application, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForApp(application, user) } returns tree
 
       val result = withdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
 
@@ -324,7 +324,7 @@ class Cas1WithdrawableServiceTest {
         WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
       )
 
-      every { withdrawableTreeBuilder.treeForApp(application, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForApp(application, user) } returns tree
 
       val result = withdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
 
@@ -349,7 +349,7 @@ class Cas1WithdrawableServiceTest {
         ),
       )
 
-      every { withdrawableTreeBuilder.treeForApp(application, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForApp(application, user) } returns tree
 
       val result = withdrawableService.withdrawApplication(application.id, user, withdrawalReason, withdrawalOtherReason)
 
@@ -388,7 +388,7 @@ class Cas1WithdrawableServiceTest {
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
       )
 
-      every { withdrawableTreeBuilder.treeForPlacementReq(placementRequest, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user) } returns tree
 
       every {
         placementRequestService.withdrawPlacementRequest(any(), any(), any())
@@ -432,7 +432,7 @@ class Cas1WithdrawableServiceTest {
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
       )
 
-      every { withdrawableTreeBuilder.treeForPlacementReq(placementRequest, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user) } returns tree
 
       val result = withdrawableService.withdrawPlacementRequest(placementRequest.id, user, withdrawalReason)
 
@@ -449,7 +449,7 @@ class Cas1WithdrawableServiceTest {
         WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
       )
 
-      every { withdrawableTreeBuilder.treeForPlacementReq(placementRequest, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user) } returns tree
 
       val result = withdrawableService.withdrawPlacementRequest(placementRequest.id, user, withdrawalReason)
 
@@ -474,7 +474,7 @@ class Cas1WithdrawableServiceTest {
         ),
       )
 
-      every { withdrawableTreeBuilder.treeForPlacementReq(placementRequest, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user) } returns tree
 
       val result = withdrawableService.withdrawPlacementRequest(placementRequest.id, user, withdrawalReason)
 
@@ -504,7 +504,7 @@ class Cas1WithdrawableServiceTest {
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
       )
 
-      every { withdrawableTreeBuilder.treeForPlacementApp(placementApplication, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user) } returns tree
 
       every {
         placementApplicationService.withdrawPlacementApplication(any(), any(), any())
@@ -543,7 +543,7 @@ class Cas1WithdrawableServiceTest {
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
       )
 
-      every { withdrawableTreeBuilder.treeForPlacementApp(placementApplication, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user) } returns tree
 
       val result = withdrawableService.withdrawPlacementApplication(placementApplication.id, user, withdrawalReason)
 
@@ -560,7 +560,7 @@ class Cas1WithdrawableServiceTest {
         WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
       )
 
-      every { withdrawableTreeBuilder.treeForPlacementApp(placementApplication, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user) } returns tree
 
       val result = withdrawableService.withdrawPlacementApplication(placementApplication.id, user, withdrawalReason)
 
@@ -585,7 +585,7 @@ class Cas1WithdrawableServiceTest {
         ),
       )
 
-      every { withdrawableTreeBuilder.treeForPlacementApp(placementApplication, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user) } returns tree
 
       val result = withdrawableService.withdrawPlacementApplication(placementApplication.id, user, withdrawalReason)
 
@@ -615,7 +615,7 @@ class Cas1WithdrawableServiceTest {
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
       )
 
-      every { withdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
 
       every {
         bookingService.createCas1Cancellation(any(), any(), any(), any(), any(), any())
@@ -655,7 +655,7 @@ class Cas1WithdrawableServiceTest {
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
       )
 
-      every { withdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
 
       val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes, otherReason)
 
@@ -670,7 +670,7 @@ class Cas1WithdrawableServiceTest {
         WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
       )
 
-      every { withdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
 
       val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes, otherReason)
 
@@ -686,7 +686,7 @@ class Cas1WithdrawableServiceTest {
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
       )
 
-      every { withdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
+      every { cas1WithdrawableTreeBuilder.treeForBooking(booking, user) } returns tree
 
       val result = withdrawableService.withdrawBooking(booking, user, cancelledAt, userProvidedReason, notes, otherReason)
 

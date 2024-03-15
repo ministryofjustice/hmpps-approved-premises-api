@@ -26,7 +26,7 @@ class WithdrawableService(
   private val placementRequestService: PlacementRequestService,
   private val placementApplicationService: PlacementApplicationService,
   private val bookingService: BookingService,
-  private val withdrawableTreeBuilder: WithdrawableTreeBuilder,
+  private val cas1WithdrawableTreeBuilder: Cas1WithdrawableTreeBuilder,
   private val cas1WithdrawableTreeOperations: Cas1WithdrawableTreeOperations,
 ) {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -35,7 +35,7 @@ class WithdrawableService(
     application: ApprovedPremisesApplicationEntity,
     user: UserEntity,
   ): Set<WithdrawableEntity> {
-    val rootNode = withdrawableTreeBuilder.treeForApp(application, user)
+    val rootNode = cas1WithdrawableTreeBuilder.treeForApp(application, user)
 
     if (log.isDebugEnabled) {
       log.debug("Withdrawables tree is $rootNode")
@@ -74,7 +74,7 @@ class WithdrawableService(
     )
 
     return withdraw(
-      withdrawableTreeBuilder.treeForApp(application, user),
+      cas1WithdrawableTreeBuilder.treeForApp(application, user),
       withdrawalContext,
     ) {
       applicationService.withdrawApprovedPremisesApplication(applicationId, user, withdrawalReason, otherReason)
@@ -97,7 +97,7 @@ class WithdrawableService(
     )
 
     return withdraw(
-      withdrawableTreeBuilder.treeForPlacementReq(placementRequest, user),
+      cas1WithdrawableTreeBuilder.treeForPlacementReq(placementRequest, user),
       withdrawalContext,
     ) {
       placementRequestService.withdrawPlacementRequest(placementRequestId, userProvidedReason, withdrawalContext)
@@ -120,7 +120,7 @@ class WithdrawableService(
     )
 
     return withdraw(
-      withdrawableTreeBuilder.treeForPlacementApp(placementApplication, user),
+      cas1WithdrawableTreeBuilder.treeForPlacementApp(placementApplication, user),
       withdrawalContext,
     ) {
       placementApplicationService.withdrawPlacementApplication(placementApplicationId, userProvidedReason, withdrawalContext)
@@ -143,7 +143,7 @@ class WithdrawableService(
     )
 
     return withdraw(
-      withdrawableTreeBuilder.treeForBooking(booking, user),
+      cas1WithdrawableTreeBuilder.treeForBooking(booking, user),
       withdrawalContext,
     ) {
       bookingService.createCas1Cancellation(

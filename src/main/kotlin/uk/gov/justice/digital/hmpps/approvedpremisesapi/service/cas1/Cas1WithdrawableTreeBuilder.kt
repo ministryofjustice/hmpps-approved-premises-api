@@ -28,7 +28,7 @@ import java.util.UUID
  * an application is withdrawn, that is not managed by the tree
  **/
 @Component
-class WithdrawableTreeBuilder(
+class Cas1WithdrawableTreeBuilder(
   @Lazy private val placementRequestService: PlacementRequestService,
   @Lazy private val bookingService: BookingService,
   @Lazy private val placementApplicationService: PlacementApplicationService,
@@ -124,17 +124,18 @@ data class WithdrawableTreeNode(
   }
 
   @SuppressWarnings("MagicNumber")
-  private fun render(depth: Int): String {
-    val padding = "  " + if (depth > 0) { "-".repeat(3 * depth) + "> " } else { "" }
-    val abbreviatedId = entityId.toString().substring(0, 3)
+  fun render(depth: Int, includeIds: Boolean = true): String {
+    val padding = if (depth > 0) { "-".repeat(3 * depth) + "> " } else { "" }
+    val abbreviatedId = if (includeIds) { entityId.toString().substring(0, 3) } else ""
     val description = "" +
       "$entityType($abbreviatedId), " +
       "withdrawable:${yesOrNo(status.withdrawable)}, " +
-      "mayDirectlyWithdraw:${yesOrNo(status.userMayDirectlyWithdraw)}, " +
-      "${blockingDescription()} ${exemptFromCascadeDescription()}"
+      "mayDirectlyWithdraw:${yesOrNo(status.userMayDirectlyWithdraw)}" +
+      blockingDescription() +
+      exemptFromCascadeDescription()
 
     return "$padding$description\n" +
-      children.joinToString(separator = "") { it.render(depth + 1) }
+      children.joinToString(separator = "") { it.render(depth + 1, includeIds) }
   }
 
   private fun yesOrNo(value: Boolean) = if (value) {
@@ -144,15 +145,15 @@ data class WithdrawableTreeNode(
   }
 
   private fun blockingDescription() = if (status.blockAncestorWithdrawals) {
-    "BLOCKING"
+    ", BLOCKING"
   } else if (isBlocked()) {
-    "BLOCKED"
+    ", BLOCKED"
   } else {
     ""
   }
 
   private fun exemptFromCascadeDescription() = if (status.exemptFromCascade) {
-    "EXEMPT FROM CASCADE (AD-HOC BOOKING)"
+    " EXEMPT FROM CASCADE (AD-HOC BOOKING)"
   } else {
     ""
   }
