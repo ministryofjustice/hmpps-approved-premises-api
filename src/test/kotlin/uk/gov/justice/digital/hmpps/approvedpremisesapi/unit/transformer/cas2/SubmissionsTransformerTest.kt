@@ -26,7 +26,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.SubmissionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.TimelineEventsTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.OffsetDateTime
@@ -121,7 +120,8 @@ class SubmissionsTransformerTest {
     fun `transforms submitted summary application to API summary representation `() {
       val applicationSummary = object : Cas2ApplicationSummary {
         override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
-        override fun getCrn() = randomStringMultiCaseWithNumbers(6)
+        override fun getCrn() = "CRN123"
+        override fun getNomsNumber() = "NOMS456"
         override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
         override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
         override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
@@ -130,6 +130,8 @@ class SubmissionsTransformerTest {
       val transformation = applicationTransformer.transformJpaSummaryToApiRepresentation(applicationSummary, mockk())
 
       assertThat(transformation.id).isEqualTo(applicationSummary.getId())
+      assertThat(transformation.crn).isEqualTo(applicationSummary.getCrn())
+      assertThat(transformation.nomsNumber).isEqualTo(applicationSummary.getNomsNumber())
     }
   }
 }

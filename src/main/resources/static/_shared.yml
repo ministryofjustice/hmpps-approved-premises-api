@@ -1962,6 +1962,10 @@ components:
           format: uuid
         person:
           $ref: '#/components/schemas/Person'
+        crn:
+          type: string
+        nomsNumber:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -1974,6 +1978,8 @@ components:
         - id
         - person
         - createdAt
+        - crn
+        - nomsNumber
     Cas2StatusUpdate:
       type: object
       properties:

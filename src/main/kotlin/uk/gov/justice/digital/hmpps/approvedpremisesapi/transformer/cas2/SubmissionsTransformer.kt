@@ -56,6 +56,8 @@ class SubmissionsTransformer(
       createdByUserId = jpaSummary.getCreatedByUserId(),
       createdAt = jpaSummary.getCreatedAt().toInstant(),
       submittedAt = jpaSummary.getSubmittedAt()?.toInstant(),
+      crn = jpaSummary.getCrn(),
+      nomsNumber = jpaSummary.getNomsNumber(),
     )
   }
 
