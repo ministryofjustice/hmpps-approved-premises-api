@@ -569,7 +569,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * | -> Request for placement 2         | YES       | YES      | -        | -         | YES            |
      * | -> Match request 2                 | YES       | YES      | -        | -         | -              |
      * | ---> Booking 2 arrival pending     | YES       | YES      | YES      | YES       | -              |
-     * | -> Adhoc Booking 1 arrival pending | NO        | -        | -        | -         | -              |
+     * | -> Adhoc Booking 1 arrival pending | YES       | YES      | YES      | YES       | -              |
      * ```
      */
     @Test
@@ -641,13 +641,13 @@ class WithdrawalTest : IntegrationTestBase() {
             )
             assertBookingWithdrawn(booking2NoArrival, "Related application withdrawn")
 
-            assertBookingNotWithdrawn(adhocBooking1NoArrival)
+            assertBookingWithdrawn(adhocBooking1NoArrival, "Related application withdrawn")
 
             val applicantEmail = applicant.email!!
             val cruEmail = application.apArea!!.emailAddress!!
             val requestForPlacementAssessorEmail = requestForPlacementAssessor.email!!
 
-            emailAsserter.assertEmailsRequestedCount(11)
+            emailAsserter.assertEmailsRequestedCount(14)
             assertApplicationWithdrawnEmail(applicantEmail, application)
 
             assertPlacementRequestWithdrawnEmail(applicantEmail, placementApplication1)
@@ -664,6 +664,10 @@ class WithdrawalTest : IntegrationTestBase() {
             assertBookingWithdrawnEmail(applicantEmail, booking2NoArrival)
             assertBookingWithdrawnEmail(booking2NoArrival.premises.emailAddress!!, booking2NoArrival)
             assertBookingWithdrawnEmail(cruEmail, booking2NoArrival)
+
+            assertBookingWithdrawnEmail(applicantEmail, adhocBooking1NoArrival)
+            assertBookingWithdrawnEmail(adhocBooking1NoArrival.premises.emailAddress!!, adhocBooking1NoArrival)
+            assertBookingWithdrawnEmail(cruEmail, adhocBooking1NoArrival)
           }
         }
       }
