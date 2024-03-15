@@ -108,7 +108,7 @@ class Cas1WithdrawableTreeBuilderTest {
     setupWithdrawableState(adhocBooking1, WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = false, blockAncestorWithdrawals = false))
 
     every {
-      bookingService.getAllAdhocForApplication(application)
+      bookingService.getAllAdhocOrUnknownForApplication(application)
     } returns listOf(adhocBooking1)
 
     val result = service.treeForApp(application, user)

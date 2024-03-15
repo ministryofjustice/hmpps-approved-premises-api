@@ -45,7 +45,7 @@ class Cas1WithdrawableTreeBuilder(
       children.add(treeForPlacementApp(it, user))
     }
 
-    bookingService.getAllAdhocForApplication(application).forEach {
+    bookingService.getAllAdhocOrUnknownForApplication(application).forEach {
       children.add(treeForBooking(it, user))
     }
 

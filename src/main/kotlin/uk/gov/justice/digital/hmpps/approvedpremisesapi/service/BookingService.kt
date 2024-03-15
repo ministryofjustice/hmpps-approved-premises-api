@@ -1138,8 +1138,13 @@ class BookingService(
     )
   }
 
-  fun getAllAdhocForApplication(applicationEntity: ApplicationEntity) =
-    bookingRepository.findAllByApplicationAndPlacementRequestIsNull(applicationEntity)
+  /**
+   * In CAS1 there are some legacy applications where the adhoc status is not known, indicated
+   * by the adhoc column being null. These are typically treated the same as adhoc
+   * bookings for certain operations (e.g. withdrawals)
+   */
+  fun getAllAdhocOrUnknownForApplication(applicationEntity: ApplicationEntity) =
+    bookingRepository.findAllAdhocOrUnknownByApplication(applicationEntity)
 
   /**
    * This function should not be called directly. Instead, use [WithdrawableService.withdrawBooking] that

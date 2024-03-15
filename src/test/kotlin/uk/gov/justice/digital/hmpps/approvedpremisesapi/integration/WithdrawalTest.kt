@@ -386,6 +386,7 @@ class WithdrawalTest : IntegrationTestBase() {
 
               val adhocBooking = createBooking(
                 application = application,
+                adhoc = true,
                 hasArrival = false,
                 startDate = LocalDate.now().plusDays(20),
                 endDate = LocalDate.now().plusDays(26),
@@ -570,6 +571,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * | -> Match request 2                 | YES       | YES      | -        | -         | -              |
      * | ---> Booking 2 arrival pending     | YES       | YES      | YES      | YES       | -              |
      * | -> Adhoc Booking 1 arrival pending | YES       | YES      | YES      | YES       | -              |
+     * | -> Adhoc Booking 2 arrival pending | YES       | YES      | YES      | YES       | -              |
      * ```
      */
     @Test
@@ -613,6 +615,17 @@ class WithdrawalTest : IntegrationTestBase() {
               adhoc = true,
             )
 
+            // we don't know the adhoc status for some legacy
+            // applications. in this case adhoc is 'null'
+            // for these cases we treat them as adhoc bookings
+            val adhocBooking2NoArrival = createBooking(
+              application = application,
+              hasArrival = false,
+              startDate = LocalDate.now().plusDays(1),
+              endDate = LocalDate.now().plusDays(6),
+              adhoc = null,
+            )
+
             withdrawApplication(application, jwt)
 
             assertApplicationWithdrawn(application)
@@ -642,12 +655,13 @@ class WithdrawalTest : IntegrationTestBase() {
             assertBookingWithdrawn(booking2NoArrival, "Related application withdrawn")
 
             assertBookingWithdrawn(adhocBooking1NoArrival, "Related application withdrawn")
+            assertBookingWithdrawn(adhocBooking2NoArrival, "Related application withdrawn")
 
             val applicantEmail = applicant.email!!
             val cruEmail = application.apArea!!.emailAddress!!
             val requestForPlacementAssessorEmail = requestForPlacementAssessor.email!!
 
-            emailAsserter.assertEmailsRequestedCount(14)
+            emailAsserter.assertEmailsRequestedCount(17)
             assertApplicationWithdrawnEmail(applicantEmail, application)
 
             assertPlacementRequestWithdrawnEmail(applicantEmail, placementApplication1)
@@ -668,6 +682,10 @@ class WithdrawalTest : IntegrationTestBase() {
             assertBookingWithdrawnEmail(applicantEmail, adhocBooking1NoArrival)
             assertBookingWithdrawnEmail(adhocBooking1NoArrival.premises.emailAddress!!, adhocBooking1NoArrival)
             assertBookingWithdrawnEmail(cruEmail, adhocBooking1NoArrival)
+
+            assertBookingWithdrawnEmail(applicantEmail, adhocBooking2NoArrival)
+            assertBookingWithdrawnEmail(adhocBooking1NoArrival.premises.emailAddress!!, adhocBooking2NoArrival)
+            assertBookingWithdrawnEmail(cruEmail, adhocBooking2NoArrival)
           }
         }
       }
@@ -1242,7 +1260,7 @@ class WithdrawalTest : IntegrationTestBase() {
     startDate: LocalDate,
     endDate: LocalDate,
     hasArrival: Boolean = false,
-    adhoc: Boolean = false,
+    adhoc: Boolean? = false,
   ): BookingEntity {
     val premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
