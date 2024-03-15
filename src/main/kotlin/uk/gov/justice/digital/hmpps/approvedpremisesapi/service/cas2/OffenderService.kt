@@ -82,6 +82,16 @@ class OffenderService(
     }
   }
 
+  fun getOffenderNameOrPlaceholder(personInfoResult: PersonInfoResult.Success): String {
+    return when (personInfoResult) {
+      is PersonInfoResult.Success.Full ->
+        "${personInfoResult.offenderDetailSummary.firstName} " +
+          personInfoResult.offenderDetailSummary.surname
+
+      is PersonInfoResult.Success.Restricted -> "Unknown"
+    }
+  }
+
   private fun getInfoForPerson(crn: String): PersonInfoResult {
     var offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
 
