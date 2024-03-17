@@ -1079,6 +1079,9 @@ class ReportsTest : IntegrationTestBase() {
             withRoom(room)
           }
 
+          bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
+          bedRepository.save(bed)
+
           GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
           bookingEntityFactory.produceAndPersist {
@@ -1138,6 +1141,9 @@ class ReportsTest : IntegrationTestBase() {
           val bed = bedEntityFactory.produceAndPersist {
             withRoom(room)
           }
+
+          bed.apply { createdAt = OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
+          bedRepository.save(bed)
 
           GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
