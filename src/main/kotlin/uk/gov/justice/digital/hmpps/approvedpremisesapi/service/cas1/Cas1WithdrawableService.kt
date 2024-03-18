@@ -38,7 +38,7 @@ class WithdrawableService(
     val rootNode = cas1WithdrawableTreeBuilder.treeForApp(application, user)
 
     if (log.isDebugEnabled) {
-      log.debug("Withdrawables tree is $rootNode")
+      log.debug("Withdrawables tree for application ${application.id} is $rootNode")
     }
 
     return rootNode.flatten()
