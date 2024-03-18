@@ -4,6 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -44,7 +45,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   assessmentSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
   placementApplication: PlacementApplicationEntity? = null,
   requiredQualification: UserQualification? = null,
-): Pair<PlacementRequestEntity, ApplicationEntity> {
+): Pair<PlacementRequestEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
   }

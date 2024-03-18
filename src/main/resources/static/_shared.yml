@@ -3496,6 +3496,7 @@ components:
         - update_task_due_dates
         - update_cas2_applications_with_assessments
         - update_cas1_user_details
+        - update_cas1_fix_placement_app_links
     PlacementDates:
       type: object
       properties:
