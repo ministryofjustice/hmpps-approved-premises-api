@@ -299,7 +299,6 @@ class Cas2SubmissionTest(
     ) {
       Assertions.assertThat(response).matches {
         expectedSubmittedApplication.id == it.id &&
-          expectedSubmittedApplication.crn == it.person.crn &&
           expectedSubmittedApplication.crn == it.crn &&
           expectedSubmittedApplication.nomsNumber == it.nomsNumber &&
           expectedSubmittedApplication.createdAt.toInstant() == it.createdAt &&

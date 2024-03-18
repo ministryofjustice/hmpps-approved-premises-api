@@ -2513,8 +2513,6 @@ components:
         createdByUserId:
           type: string
           format: uuid
-        person:
-          $ref: '#/components/schemas/Person'
         crn:
           type: string
         nomsNumber:

@@ -82,13 +82,19 @@ class OffenderService(
     }
   }
 
-  fun getOffenderNameOrPlaceholder(personInfoResult: PersonInfoResult.Success): String {
-    return when (personInfoResult) {
-      is PersonInfoResult.Success.Full ->
-        "${personInfoResult.offenderDetailSummary.firstName} " +
-          personInfoResult.offenderDetailSummary.surname
+  fun getOffenderNameOrPlaceholder(crn: String): String {
+    return when (val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)) {
+      is ClientResult.Success ->
+        "${offenderResponse.body.firstName} ${offenderResponse.body.surname}"
 
-      is PersonInfoResult.Success.Restricted -> "Unknown"
+      is ClientResult.Failure.StatusCode ->
+        if (offenderResponse.status.value() == HttpStatus.NOT_FOUND.value()) {
+          return "Person Not Found"
+        } else {
+          return "Unknown"
+        }
+
+      is ClientResult.Failure -> return "Unknown"
     }
   }
 
