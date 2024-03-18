@@ -354,6 +354,7 @@ class WithdrawalTest : IntegrationTestBase() {
           `Given a User` { requestForPlacementAssessor, _ ->
             `Given an Offender` { offenderDetails, _ ->
               val (application, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
+              val (otherApplication, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
               val placementApplication1 = createPlacementApplication(application, listOf(LocalDate.now() to 2))
               val placementRequest1 = createPlacementRequest(application) {
@@ -389,6 +390,21 @@ class WithdrawalTest : IntegrationTestBase() {
               val adhocBooking = createBooking(
                 application = application,
                 adhoc = true,
+                hasArrival = false,
+                startDate = LocalDate.now().plusDays(20),
+                endDate = LocalDate.now().plusDays(26),
+              )
+
+              createBooking(
+                application = otherApplication,
+                adhoc = true,
+                hasArrival = false,
+                startDate = LocalDate.now().plusDays(20),
+                endDate = LocalDate.now().plusDays(26),
+              )
+              createBooking(
+                application = otherApplication,
+                adhoc = null,
                 hasArrival = false,
                 startDate = LocalDate.now().plusDays(20),
                 endDate = LocalDate.now().plusDays(26),
@@ -484,7 +500,7 @@ class WithdrawalTest : IntegrationTestBase() {
             )
             addBookingToPlacementRequest(placementRequest3, booking2HasArrival)
 
-            val adhocBooking = createBooking(
+            createBooking(
               application = application,
               hasArrival = false,
               startDate = LocalDate.now().plusDays(20),
@@ -582,6 +598,7 @@ class WithdrawalTest : IntegrationTestBase() {
         `Given a User` { requestForPlacementAssessor, _ ->
           `Given an Offender` { offenderDetails, _ ->
             val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
+            val (otherApplication, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
             val placementApplication1 = createPlacementApplication(application, listOf(LocalDate.now() to 2))
             val placementRequest1 = createPlacementRequest(application) {
@@ -626,6 +643,23 @@ class WithdrawalTest : IntegrationTestBase() {
               startDate = LocalDate.now().plusDays(1),
               endDate = LocalDate.now().plusDays(6),
               adhoc = null,
+            )
+
+            // regression test to ensure other application's
+            // bookings aren't affected
+            createBooking(
+              application = otherApplication,
+              adhoc = true,
+              hasArrival = false,
+              startDate = LocalDate.now().plusDays(20),
+              endDate = LocalDate.now().plusDays(26),
+            )
+            createBooking(
+              application = otherApplication,
+              adhoc = null,
+              hasArrival = false,
+              startDate = LocalDate.now().plusDays(20),
+              endDate = LocalDate.now().plusDays(26),
             )
 
             withdrawApplication(application, jwt)
