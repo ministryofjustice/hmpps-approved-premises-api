@@ -28,7 +28,7 @@ import java.util.UUID
  * an application is withdrawn, that is not managed by the tree
  **/
 @Component
-class WithdrawableTreeBuilder(
+class Cas1WithdrawableTreeBuilder(
   @Lazy private val placementRequestService: PlacementRequestService,
   @Lazy private val bookingService: BookingService,
   @Lazy private val placementApplicationService: PlacementApplicationService,
@@ -45,7 +45,7 @@ class WithdrawableTreeBuilder(
       children.add(treeForPlacementApp(it, user))
     }
 
-    bookingService.getAllAdhocForApplication(application).forEach {
+    bookingService.getAllAdhocOrUnknownForApplication(application).forEach {
       children.add(treeForBooking(it, user))
     }
 
@@ -71,11 +71,22 @@ class WithdrawableTreeBuilder(
   }
 
   fun treeForPlacementReq(placementRequest: PlacementRequestEntity, user: UserEntity): WithdrawableTreeNode {
-    val children = listOfNotNull(
-      placementRequest.booking?.let {
-        treeForBooking(it, user)
-      },
-    )
+    val booking = placementRequest.booking
+
+    /*
+     * Some legacy adhoc bookings were incorrectly linked to placement requests,
+     * and in some cases these placement requests had completely different dates
+     * from the bookings. Until these relationships are removed, we should exclude
+     * this relationship for any adhoc booking as to avoid unexpected withdrawal
+     * cascading.
+     *
+     * If adhoc is null, we treat it as 'potentially adhoc' and exclude it.
+     */
+    val children = if (booking != null && booking.adhoc == false) {
+      listOf(treeForBooking(booking, user))
+    } else {
+      emptyList()
+    }
 
     return WithdrawableTreeNode(
       entityType = WithdrawableEntityType.PlacementRequest,
@@ -124,17 +135,17 @@ data class WithdrawableTreeNode(
   }
 
   @SuppressWarnings("MagicNumber")
-  private fun render(depth: Int): String {
-    val padding = "  " + if (depth > 0) { "-".repeat(3 * depth) + "> " } else { "" }
-    val abbreviatedId = entityId.toString().substring(0, 3)
+  fun render(depth: Int, includeIds: Boolean = true): String {
+    val padding = if (depth > 0) { "-".repeat(3 * depth) + "> " } else { "" }
+    val abbreviatedId = if (includeIds) { entityId.toString().substring(0, 3) } else ""
     val description = "" +
       "$entityType($abbreviatedId), " +
       "withdrawable:${yesOrNo(status.withdrawable)}, " +
-      "mayDirectlyWithdraw:${yesOrNo(status.userMayDirectlyWithdraw)}, " +
-      "${blockingDescription()} ${exemptFromCascadeDescription()}"
+      "mayDirectlyWithdraw:${yesOrNo(status.userMayDirectlyWithdraw)}" +
+      blockingDescription()
 
     return "$padding$description\n" +
-      children.joinToString(separator = "") { it.render(depth + 1) }
+      children.joinToString(separator = "") { it.render(depth + 1, includeIds) }
   }
 
   private fun yesOrNo(value: Boolean) = if (value) {
@@ -144,15 +155,9 @@ data class WithdrawableTreeNode(
   }
 
   private fun blockingDescription() = if (status.blockAncestorWithdrawals) {
-    "BLOCKING"
+    ", BLOCKING"
   } else if (isBlocked()) {
-    "BLOCKED"
-  } else {
-    ""
-  }
-
-  private fun exemptFromCascadeDescription() = if (status.exemptFromCascade) {
-    "EXEMPT FROM CASCADE (AD-HOC BOOKING)"
+    ", BLOCKED"
   } else {
     ""
   }
