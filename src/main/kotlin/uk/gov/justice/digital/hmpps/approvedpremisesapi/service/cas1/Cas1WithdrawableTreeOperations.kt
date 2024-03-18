@@ -25,12 +25,27 @@ class Cas1WithdrawableTreeOperations(
     rootNode: WithdrawableTreeNode,
     withdrawalContext: WithdrawalContext,
   ) {
-    rootNode.collectDescendants().forEach { descendant ->
-      if (descendant.status.withdrawable &&
-        !descendant.isBlocked()
-      ) {
-        withdraw(descendant, withdrawalContext)
+    val withdrawableDescendants = rootNode
+      .collectDescendants()
+      .filter { it.status.withdrawable }
+      .filter { !it.isBlocked() }
+
+    val withdrawableDescendantsForOtherApps = withdrawableDescendants
+      .filter { it.applicationId != rootNode.applicationId }
+
+    if (withdrawableDescendantsForOtherApps.isNotEmpty()) {
+      val entityList = withdrawableDescendantsForOtherApps.map {
+        "${it.entityType} ${it.entityId} (application ${it.applicationId})"
       }
+
+      throw IllegalStateException(
+        "Cascade withdrawal for root node belonging to application ${rootNode.applicationId} " +
+          "would remove the following nodes belonging to other applications $entityList",
+      )
+    }
+
+    withdrawableDescendants.forEach {
+      withdraw(it, withdrawalContext)
     }
   }
 
