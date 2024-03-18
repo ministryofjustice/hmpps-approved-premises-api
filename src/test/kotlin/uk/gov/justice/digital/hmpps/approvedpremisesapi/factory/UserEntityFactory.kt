@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -24,6 +25,7 @@ class UserEntityFactory : Factory<UserEntity> {
   private var qualifications: Yielded<MutableList<UserQualificationAssignmentEntity>> = { mutableListOf() }
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
   private var isActive: Yielded<Boolean> = { true }
+  private var apArea: Yielded<ApAreaEntity?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -110,5 +112,6 @@ class UserEntityFactory : Factory<UserEntity> {
     qualifications = this.qualifications(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided"),
     isActive = this.isActive(),
+    apArea = this.apArea(),
   )
 }

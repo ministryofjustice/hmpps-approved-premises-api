@@ -281,6 +281,7 @@ class UserService(
         qualifications = mutableListOf(),
         probationRegion = staffProbationRegion,
         isActive = true,
+        apArea = null,
       ),
     )
   }
