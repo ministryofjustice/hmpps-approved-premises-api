@@ -43,19 +43,25 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
   }
 
   @Test
+  fun `getOffenderDetailSummary returns not found if CRN not returned in AP Delius Context API call`() {
+    every {
+      mockApDeliusContextApiClient.getSummariesForCrns(listOf("SOME-CRN"))
+    } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(cases = emptyList()), true)
+
+    val result = apDeliusContextApiOffenderDetailsDataSource.getOffenderDetailSummary("SOME-CRN")
+
+    assertThat(result).isInstanceOf(ClientResult.Failure.StatusCode::class.java)
+    assertThat((result as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
+  }
+
+  @Test
   fun `getOffenderDetailSummaries returns transformed response from AP Delius Context API call`() {
     val crns = listOf("CRN-A", "CRN-B", "CRN-C")
 
     val caseSummaries = listOf(
-      CaseSummaryFactory()
-        .withCrn("CRN-A")
-        .produce(),
-      CaseSummaryFactory()
-        .withCrn("CRN-B")
-        .produce(),
-      CaseSummaryFactory()
-        .withCrn("CRN-C")
-        .produce(),
+      CaseSummaryFactory().withCrn("CRN-A").produce(),
+      CaseSummaryFactory().withCrn("CRN-B").produce(),
+      CaseSummaryFactory().withCrn("CRN-C").produce(),
     )
 
     val expectedResults = caseSummaries.map { it.crn to ClientResult.Success(HttpStatus.OK, it.asOffenderDetailSummary(), false) }.toMap()
@@ -72,7 +78,7 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
   }
 
   @Test
-  fun `getOffenderDetailSummaries returns an entry per CRN for failures`() {
+  fun `getOffenderDetailSummaries returns an entry per CRN for response error`() {
     val crns = listOf("CRN-A", "CRN-B", "CRN-C")
 
     val cacheTimeoutClientResult = cacheTimeoutClientResult<CaseSummaries>()
@@ -83,6 +89,37 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
     assertThat(results["CRN-A"]).isEqualTo(cacheTimeoutClientResult)
     assertThat(results["CRN-B"]).isEqualTo(cacheTimeoutClientResult)
     assertThat(results["CRN-C"]).isEqualTo(cacheTimeoutClientResult)
+  }
+
+  @Test
+  fun `getOffenderDetailSummaries returns not found if crn not included in results`() {
+    val crns = listOf("CRN-A", "CRN-B", "CRN-C")
+    val crnACaseSummary = CaseSummaryFactory().withCrn("CRN-A").produce()
+    val crnCCaseSummary = CaseSummaryFactory().withCrn("CRN-C").produce()
+
+    val caseSummaries = listOf(crnACaseSummary, crnCCaseSummary)
+
+    every { mockApDeliusContextApiClient.getSummariesForCrns(crns) } returns ClientResult.Success(
+      HttpStatus.OK,
+      CaseSummaries(caseSummaries),
+      false,
+    )
+
+    val results = apDeliusContextApiOffenderDetailsDataSource.getOffenderDetailSummaries(crns)
+
+    assertThat(results).hasSize(3)
+
+    val crnAResult = results["CRN-A"]
+    assertThat(crnAResult).isInstanceOf(ClientResult.Success::class.java)
+    assertThat((crnAResult as ClientResult.Success).body).isEqualTo(crnACaseSummary.asOffenderDetailSummary())
+
+    val crnBResult = results["CRN-B"]
+    assertThat(crnBResult).isInstanceOf(ClientResult.Failure.StatusCode::class.java)
+    assertThat((crnBResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
+
+    val crnCResult = results["CRN-C"]
+    assertThat(crnCResult).isInstanceOf(ClientResult.Success::class.java)
+    assertThat((crnCResult as ClientResult.Success).body).isEqualTo(crnCCaseSummary.asOffenderDetailSummary())
   }
 
   @ParameterizedTest
@@ -99,18 +136,24 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
   }
 
   @Test
+  fun `getUserAccessForOffenderCrn returns not found if CRN not returned in AP Delius Context API call`() {
+    every {
+      mockApDeliusContextApiClient.getUserAccessForCrns("DELIUS-USER", listOf("SOME-CRN"))
+    } returns ClientResult.Success(HttpStatus.OK, UserAccess(access = emptyList()), true)
+
+    val result = apDeliusContextApiOffenderDetailsDataSource.getUserAccessForOffenderCrn("DELIUS-USER", "SOME-CRN")
+
+    assertThat(result).isInstanceOf(ClientResult.Failure.StatusCode::class.java)
+    assertThat((result as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
+  }
+
+  @Test
   fun `getUserAccessForOffenderCrns returns transformed response from AP Delius Context API`() {
     val crns = listOf("CRN-A", "CRN-B", "CRN-C")
     val caseAccesses = listOf(
-      CaseAccessFactory()
-        .withCrn("CRN-A")
-        .produce(),
-      CaseAccessFactory()
-        .withCrn("CRN-B")
-        .produce(),
-      CaseAccessFactory()
-        .withCrn("CRN-C")
-        .produce(),
+      CaseAccessFactory().withCrn("CRN-A").produce(),
+      CaseAccessFactory().withCrn("CRN-B").produce(),
+      CaseAccessFactory().withCrn("CRN-C").produce(),
     )
 
     val expectedResults = caseAccesses.map { it.crn to ClientResult.Success(HttpStatus.OK, it.asUserOffenderAccess(), false) }.toMap()
@@ -138,6 +181,36 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
     assertThat(results["CRN-A"]).isEqualTo(cacheTimeoutClientResult)
     assertThat(results["CRN-B"]).isEqualTo(cacheTimeoutClientResult)
     assertThat(results["CRN-C"]).isEqualTo(cacheTimeoutClientResult)
+  }
+
+  @Test
+  fun `getUserAccessForOffenderCrns returns not found if crn not included in results`() {
+    val crns = listOf("CRN-A", "CRN-B", "CRN-C")
+    val crnBCaseAccess = CaseAccessFactory().withCrn("CRN-B").produce()
+    val crnCCaseAccess = CaseAccessFactory().withCrn("CRN-C").produce()
+
+    val caseAccesses = listOf(crnBCaseAccess, crnCCaseAccess)
+
+    every { mockApDeliusContextApiClient.getUserAccessForCrns("DELIUS-USER", crns) } returns ClientResult.Success(
+      HttpStatus.OK,
+      UserAccess(caseAccesses),
+      false,
+    )
+
+    val results = apDeliusContextApiOffenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", crns)
+
+    assertThat(results).hasSize(3)
+    val crnAResult = results["CRN-A"]
+    assertThat(crnAResult).isInstanceOf(ClientResult.Failure.StatusCode::class.java)
+    assertThat((crnAResult as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
+
+    val crnBResult = results["CRN-B"]
+    assertThat(crnBResult).isInstanceOf(ClientResult.Success::class.java)
+    assertThat((crnBResult as ClientResult.Success).body).isEqualTo(crnBCaseAccess.asUserOffenderAccess())
+
+    val crnCResult = results["CRN-C"]
+    assertThat(crnCResult).isInstanceOf(ClientResult.Success::class.java)
+    assertThat((crnCResult as ClientResult.Success).body).isEqualTo(crnCCaseAccess.asUserOffenderAccess())
   }
 
   private companion object {
