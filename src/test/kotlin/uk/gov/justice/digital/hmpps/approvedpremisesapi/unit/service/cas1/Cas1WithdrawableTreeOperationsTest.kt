@@ -633,11 +633,44 @@ class Cas1WithdrawableTreeOperationsTest {
     assertThatThrownBy {
       service.withdrawDescendantsOfRootNode(tree, context)
     }.hasMessage(
-      "Cascade withdrawal for root node belonging to application fb724580-d6df-4e0e-92bb-54573f396202 would " +
+      "Cascade withdrawal for root node Application fb724580-d6df-4e0e-92bb-54573f396202 (application fb724580-d6df-4e0e-92bb-54573f396202) would " +
         "remove the following nodes belonging to other applications " +
         "[PlacementApplication db8c102a-4062-4f8e-ab0f-d5f8953f447c (application 4071072a-3d52-4904-b5bd-32b6420b105a), " +
         "Booking 843de779-0b23-4517-8dea-f749596e0666 (application 4071072a-3d52-4904-b5bd-32b6420b105a), " +
         "Booking 3a159ffe-d22e-4a04-9432-c7df4f836098 (application 4071072a-3d52-4904-b5bd-32b6420b105a)]",
+    )
+  }
+
+  @Test
+  fun `withdrawDescendantsOfRootNode throws exception if attempting to withdraw more than 50 descendants`() {
+    val childenNodes = (0..105).map {
+      WithdrawableTreeNode(
+        applicationId = application.id,
+        entityType = WithdrawableEntityType.PlacementRequest,
+        entityId = UUID.randomUUID(),
+        status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+      )
+    }
+
+    val tree = WithdrawableTreeNode(
+      applicationId = application.id,
+      entityType = WithdrawableEntityType.Application,
+      entityId = application.id,
+      status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
+      children = childenNodes,
+    )
+
+    val context = WithdrawalContext(
+      triggeringUser = user,
+      triggeringEntityType = WithdrawableEntityType.Application,
+      triggeringEntityId = application.id,
+    )
+
+    assertThatThrownBy {
+      service.withdrawDescendantsOfRootNode(tree, context)
+    }.hasMessage(
+      "Cascade withdrawal for root node Application fb724580-d6df-4e0e-92bb-54573f396202 (application fb724580-d6df-4e0e-92bb-54573f396202) " +
+        "will lead to an unexpectedly high number of withdrawals (106)",
     )
   }
 }

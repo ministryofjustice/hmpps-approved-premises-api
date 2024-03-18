@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1WithdrawableTreeOperations.Constants.MAX_WITHDRAWAL_COUNT
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractMessageFromCasResult
 import java.time.LocalDate
 
@@ -21,6 +22,10 @@ class Cas1WithdrawableTreeOperations(
 ) {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
+  object Constants {
+    const val MAX_WITHDRAWAL_COUNT = 100
+  }
+
   fun withdrawDescendantsOfRootNode(
     rootNode: WithdrawableTreeNode,
     withdrawalContext: WithdrawalContext,
@@ -30,16 +35,21 @@ class Cas1WithdrawableTreeOperations(
       .filter { it.status.withdrawable }
       .filter { !it.isBlocked() }
 
+    if (withdrawableDescendants.size > MAX_WITHDRAWAL_COUNT) {
+      throw IllegalStateException(
+        "Cascade withdrawal for root node ${rootNode.simpleDescription()} will lead to" +
+          " an unexpectedly high number of withdrawals (${withdrawableDescendants.size})",
+      )
+    }
+
     val withdrawableDescendantsForOtherApps = withdrawableDescendants
       .filter { it.applicationId != rootNode.applicationId }
 
     if (withdrawableDescendantsForOtherApps.isNotEmpty()) {
-      val entityList = withdrawableDescendantsForOtherApps.map {
-        "${it.entityType} ${it.entityId} (application ${it.applicationId})"
-      }
+      val entityList = withdrawableDescendantsForOtherApps.map { it.simpleDescription() }
 
       throw IllegalStateException(
-        "Cascade withdrawal for root node belonging to application ${rootNode.applicationId} " +
+        "Cascade withdrawal for root node ${rootNode.simpleDescription()} " +
           "would remove the following nodes belonging to other applications $entityList",
       )
     }

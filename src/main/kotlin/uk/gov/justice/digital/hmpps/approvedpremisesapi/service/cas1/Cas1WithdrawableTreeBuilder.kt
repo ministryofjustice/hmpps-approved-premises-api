@@ -139,6 +139,8 @@ data class WithdrawableTreeNode(
     return "\n\n${render(0)}\n"
   }
 
+  fun simpleDescription(): String = "$entityType $entityId (application $applicationId)"
+
   @SuppressWarnings("MagicNumber")
   fun render(depth: Int, includeIds: Boolean = true): String {
     val padding = if (depth > 0) { "-".repeat(3 * depth) + "> " } else { "" }
