@@ -50,6 +50,7 @@ class Cas1WithdrawableTreeBuilder(
     }
 
     return WithdrawableTreeNode(
+      applicationId = application.id,
       entityType = WithdrawableEntityType.Application,
       entityId = application.id,
       status = applicationService.getWithdrawableState(application, user),
@@ -62,6 +63,7 @@ class Cas1WithdrawableTreeBuilder(
     val children = placementApplication.placementRequests.map { treeForPlacementReq(it, user) }
 
     return WithdrawableTreeNode(
+      applicationId = placementApplication.application.id,
       entityType = WithdrawableEntityType.PlacementApplication,
       entityId = placementApplication.id,
       status = placementApplicationService.getWithdrawableState(placementApplication, user),
@@ -89,6 +91,7 @@ class Cas1WithdrawableTreeBuilder(
     }
 
     return WithdrawableTreeNode(
+      applicationId = placementRequest.application.id,
       entityType = WithdrawableEntityType.PlacementRequest,
       entityId = placementRequest.id,
       status = placementRequestService.getWithdrawableState(placementRequest, user),
@@ -99,6 +102,7 @@ class Cas1WithdrawableTreeBuilder(
 
   fun treeForBooking(booking: BookingEntity, user: UserEntity): WithdrawableTreeNode {
     return WithdrawableTreeNode(
+      applicationId = booking.application?.id,
       entityType = WithdrawableEntityType.Booking,
       entityId = booking.id,
       status = bookingService.getWithdrawableState(booking, user),
@@ -109,6 +113,7 @@ class Cas1WithdrawableTreeBuilder(
 }
 
 data class WithdrawableTreeNode(
+  val applicationId: UUID?,
   val entityType: WithdrawableEntityType,
   val entityId: UUID,
   val status: WithdrawableState,

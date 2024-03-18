@@ -71,6 +71,7 @@ class Cas1WithdrawableServiceTest {
       cas1WithdrawableTreeBuilder.treeForApp(application, user)
     } returns
       WithdrawableTreeNode(
+        applicationId = application.id,
         entityType = WithdrawableEntityType.PlacementApplication,
         entityId = appId,
         status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
@@ -110,16 +111,19 @@ class Cas1WithdrawableServiceTest {
       cas1WithdrawableTreeBuilder.treeForApp(application, user)
     } returns
       WithdrawableTreeNode(
+        applicationId = application.id,
         entityType = WithdrawableEntityType.Application,
         entityId = appWithdrawableId,
         status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
         children = listOf(
           WithdrawableTreeNode(
+            applicationId = application.id,
             entityType = WithdrawableEntityType.PlacementRequest,
             entityId = placementRequest1WithdrawableId,
             status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
             children = listOf(
               WithdrawableTreeNode(
+                applicationId = application.id,
                 entityType = WithdrawableEntityType.Booking,
                 entityId = placementWithdrawableId,
                 status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
@@ -127,16 +131,19 @@ class Cas1WithdrawableServiceTest {
             ),
           ),
           WithdrawableTreeNode(
+            applicationId = application.id,
             entityType = WithdrawableEntityType.PlacementRequest,
             entityId = placementRequestWithdrawableButNotPermittedId,
             status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
           ),
           WithdrawableTreeNode(
+            applicationId = application.id,
             entityType = WithdrawableEntityType.PlacementApplication,
             entityId = placementApplication1WithdrawableId,
             status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
             children = listOf(
               WithdrawableTreeNode(
+                applicationId = application.id,
                 entityType = WithdrawableEntityType.PlacementRequest,
                 entityId = placementRequest2WithdrawableId,
                 status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
@@ -144,11 +151,13 @@ class Cas1WithdrawableServiceTest {
             ),
           ),
           WithdrawableTreeNode(
+            applicationId = application.id,
             entityType = WithdrawableEntityType.PlacementApplication,
             entityId = placementApplication2NotWithdrawableId,
             status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
           ),
           WithdrawableTreeNode(
+            applicationId = application.id,
             entityType = WithdrawableEntityType.Booking,
             entityId = placementNotWithdrawableId,
             status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
@@ -181,16 +190,19 @@ class Cas1WithdrawableServiceTest {
       cas1WithdrawableTreeBuilder.treeForApp(application, user)
     } returns
       WithdrawableTreeNode(
+        applicationId = application.id,
         entityType = WithdrawableEntityType.Application,
         entityId = appWithdrawableButBlockedId,
         status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
         children = listOf(
           WithdrawableTreeNode(
+            applicationId = application.id,
             entityType = WithdrawableEntityType.PlacementRequest,
             entityId = placementRequest1WithdrawableButBlockedId,
             status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
             children = listOf(
               WithdrawableTreeNode(
+                applicationId = application.id,
                 entityType = WithdrawableEntityType.Booking,
                 entityId = placementWithdrawableButBlockingId,
                 status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
@@ -198,16 +210,19 @@ class Cas1WithdrawableServiceTest {
             ),
           ),
           WithdrawableTreeNode(
+            applicationId = application.id,
             entityType = WithdrawableEntityType.PlacementRequest,
             entityId = placementRequestWithdrawableButNotPermittedId,
             status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
           ),
           WithdrawableTreeNode(
+            applicationId = application.id,
             entityType = WithdrawableEntityType.PlacementApplication,
             entityId = placementApplication1WithdrawableId,
             status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
             children = listOf(
               WithdrawableTreeNode(
+                applicationId = application.id,
                 entityType = WithdrawableEntityType.PlacementRequest,
                 entityId = placementRequest2WithdrawableId,
                 status = WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = false),
@@ -215,11 +230,13 @@ class Cas1WithdrawableServiceTest {
             ),
           ),
           WithdrawableTreeNode(
+            applicationId = application.id,
             entityType = WithdrawableEntityType.PlacementApplication,
             entityId = placementApplication2NotWithdrawableId,
             status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
           ),
           WithdrawableTreeNode(
+            applicationId = application.id,
             entityType = WithdrawableEntityType.Booking,
             entityId = placementNotWithdrawableId,
             status = WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
@@ -245,6 +262,7 @@ class Cas1WithdrawableServiceTest {
       every { applicationService.getApplication(application.id) } returns application
 
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.Application,
         application.id,
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
@@ -302,6 +320,7 @@ class Cas1WithdrawableServiceTest {
       every { applicationService.getApplication(application.id) } returns application
 
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.Application,
         application.id,
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
@@ -319,6 +338,7 @@ class Cas1WithdrawableServiceTest {
       every { applicationService.getApplication(application.id) } returns application
 
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.Application,
         application.id,
         WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
@@ -337,11 +357,13 @@ class Cas1WithdrawableServiceTest {
       every { applicationService.getApplication(application.id) } returns application
 
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.Application,
         application.id,
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
         children = listOf(
           WithdrawableTreeNode(
+            applicationId = application.id,
             WithdrawableEntityType.Booking,
             UUID.randomUUID(),
             WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
@@ -383,6 +405,7 @@ class Cas1WithdrawableServiceTest {
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
 
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.PlacementRequest,
         placementRequest.id,
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
@@ -427,6 +450,7 @@ class Cas1WithdrawableServiceTest {
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
 
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.PlacementRequest,
         placementRequest.id,
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
@@ -444,6 +468,7 @@ class Cas1WithdrawableServiceTest {
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
 
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.PlacementRequest,
         placementRequest.id,
         WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
@@ -462,11 +487,13 @@ class Cas1WithdrawableServiceTest {
       every { placementRequestService.getPlacementRequestOrNull(placementRequest.id) } returns placementRequest
 
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.PlacementRequest,
         placementRequest.id,
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
         children = listOf(
           WithdrawableTreeNode(
+            applicationId = application.id,
             WithdrawableEntityType.Booking,
             UUID.randomUUID(),
             WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
@@ -499,6 +526,7 @@ class Cas1WithdrawableServiceTest {
       every { placementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
 
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.PlacementApplication,
         placementApplication.id,
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
@@ -538,6 +566,7 @@ class Cas1WithdrawableServiceTest {
       every { placementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
 
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.PlacementApplication,
         placementApplication.id,
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
@@ -555,6 +584,7 @@ class Cas1WithdrawableServiceTest {
       every { placementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
 
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.PlacementApplication,
         placementApplication.id,
         WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
@@ -573,11 +603,13 @@ class Cas1WithdrawableServiceTest {
       every { placementApplicationService.getApplicationOrNull(placementApplication.id) } returns placementApplication
 
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.PlacementApplication,
         placementApplication.id,
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
         children = listOf(
           WithdrawableTreeNode(
+            applicationId = application.id,
             WithdrawableEntityType.PlacementApplication,
             placementApplication.id,
             WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
@@ -610,6 +642,7 @@ class Cas1WithdrawableServiceTest {
     @Test
     fun success() {
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.Booking,
         booking.id,
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true),
@@ -650,6 +683,7 @@ class Cas1WithdrawableServiceTest {
     @Test
     fun `fails if user may not directly withdraw()`() {
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.Booking,
         booking.id,
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false),
@@ -665,6 +699,7 @@ class Cas1WithdrawableServiceTest {
     @Test
     fun `fails if not withdrawable()`() {
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.Booking,
         booking.id,
         WithdrawableState(withdrawable = false, userMayDirectlyWithdraw = true),
@@ -681,6 +716,7 @@ class Cas1WithdrawableServiceTest {
     @Test
     fun `fails if blocked()`() {
       val tree = WithdrawableTreeNode(
+        applicationId = application.id,
         WithdrawableEntityType.Booking,
         booking.id,
         WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true, blockAncestorWithdrawals = true),
