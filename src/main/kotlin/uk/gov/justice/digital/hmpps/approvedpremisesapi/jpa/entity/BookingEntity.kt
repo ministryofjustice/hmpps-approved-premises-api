@@ -133,7 +133,7 @@ interface BookingRepository : JpaRepository<BookingEntity, UUID> {
   fun findAllByCrn(crn: String): List<BookingEntity>
 
   @Query(
-    "SELECT b From BookingEntity b WHERE b.adhoc IS TRUE or b.adhoc IS NULL",
+    "SELECT b From BookingEntity b WHERE b.application = :application AND (b.adhoc IS TRUE or b.adhoc IS NULL)",
   )
   fun findAllAdhocOrUnknownByApplication(application: ApplicationEntity): List<BookingEntity>
 
