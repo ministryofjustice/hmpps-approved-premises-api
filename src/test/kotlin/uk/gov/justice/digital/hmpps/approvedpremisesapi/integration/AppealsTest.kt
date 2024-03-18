@@ -452,4 +452,64 @@ class AppealsTest : IntegrationTestBase() {
       }
     }
   }
+
+  @Test
+  fun `Creating multiple appeals creates the correct number of events in the application timeline`() {
+    `Given a User`(roles = listOf(UserRole.CAS1_APPEALS_MANAGER)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
+        `Given an Assessment for Approved Premises`(
+          allocatedToUser = userEntity,
+          createdByUser = userEntity,
+          crn = offenderDetails.otherIds.crn,
+          decision = AssessmentDecision.REJECTED,
+          submittedAt = OffsetDateTime.now(),
+        ) { assessment, application ->
+          GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+          webTestClient.post()
+            .uri("/applications/${application.id}/appeals")
+            .bodyValue(
+              NewAppeal(
+                appealDate = LocalDate.parse("2024-01-01"),
+                appealDetail = "Some details about the appeal.",
+                decision = AppealDecision.rejected,
+                decisionDetail = "Some details about the decision.",
+              ),
+            )
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isCreated
+
+          webTestClient.post()
+            .uri("/applications/${application.id}/appeals")
+            .bodyValue(
+              NewAppeal(
+                appealDate = LocalDate.parse("2024-01-01"),
+                appealDetail = "Some details about the appeal.",
+                decision = AppealDecision.rejected,
+                decisionDetail = "Some details about the decision.",
+              ),
+            )
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isCreated
+
+          val timelineResult = webTestClient.get()
+            .uri("/applications/${application.id}/timeline")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.approvedPremises.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult(String::class.java)
+
+          val timeline = objectMapper.readValue<List<TimelineEvent>>(timelineResult.responseBody.blockFirst()!!)
+
+          assertThat(timeline.size).isEqualTo(2)
+        }
+      }
+    }
+  }
 }
