@@ -13,7 +13,6 @@ import javax.persistence.Table
 @Repository
 interface ProbationRegionRepository : JpaRepository<ProbationRegionEntity, UUID> {
   fun findByName(name: String): ProbationRegionEntity?
-  fun findByDeliusCode(deliusCode: String): ProbationRegionEntity?
 }
 
 @Entity
