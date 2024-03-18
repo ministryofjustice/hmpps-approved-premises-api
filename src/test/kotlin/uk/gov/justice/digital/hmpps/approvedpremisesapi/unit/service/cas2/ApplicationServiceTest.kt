@@ -12,6 +12,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
@@ -390,6 +392,72 @@ class ApplicationServiceTest {
       val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
 
       assertThat(validatableActionResult.message).isEqualTo("This application has already been submitted")
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = ["<", "＜", "〈", "〈", ">", "＞", "〉", "〉", "<＜〈〈>＞〉〉"])
+    fun `returns Success when an application, that contains removed malicious characters, is updated`(str: String) {
+      val applicationId = UUID.fromString("dced02b1-8e3b-4ea5-bf99-1fba0ca1b87c")
+      val username = "SOMEPERSON"
+
+      val user = NomisUserEntityFactory()
+        .withNomisUsername(username)
+        .produce()
+
+      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+      val updatedData = """
+      {
+        "aProperty": "val${str}ue"
+      }
+    """
+
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockUserService.getUserForRequest() } returns user
+      every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
+        application
+      every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
+        application
+      every {
+        mockJsonSchemaService.getNewestSchema(
+          Cas2ApplicationJsonSchemaEntity::class
+            .java,
+        )
+      } returns newestSchema
+      every { mockJsonSchemaService.validate(newestSchema, updatedData) } returns true
+      every { mockApplicationRepository.save(any()) } answers {
+        it.invocation.args[0]
+          as Cas2ApplicationEntity
+      }
+
+      val result = applicationService.updateApplication(
+        applicationId = applicationId,
+        data = updatedData,
+        username = username,
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.Success).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+
+      val cas2Application = validatableActionResult.entity
+
+      assertThat(cas2Application.data).isEqualTo(
+        """
+      {
+        "aProperty": "value"
+      }
+    """,
+      )
     }
 
     @Test
