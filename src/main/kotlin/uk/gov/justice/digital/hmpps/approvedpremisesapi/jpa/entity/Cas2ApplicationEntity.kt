@@ -46,6 +46,7 @@ WHERE a.created_by_user_id = :userId
 SELECT
     CAST(a.id AS TEXT) as id,
     a.crn,
+    a.noms_number as nomsNumber,
     CAST(a.created_by_user_id AS TEXT) as createdByUserId,
     a.created_at as createdAt,
     a.submitted_at as submittedAt
@@ -134,6 +135,7 @@ data class Cas2ApplicationEntity(
 interface AppSummary {
   fun getId(): UUID
   fun getCrn(): String
+  fun getNomsNumber(): String
   fun getCreatedByUserId(): UUID
   fun getCreatedAt(): Timestamp
   fun getSubmittedAt(): Timestamp?

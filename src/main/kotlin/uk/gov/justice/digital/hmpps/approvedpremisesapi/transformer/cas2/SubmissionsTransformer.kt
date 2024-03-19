@@ -49,13 +49,17 @@ class SubmissionsTransformer(
     jpaSummary: Cas2ApplicationSummary,
     personInfo:
       PersonInfoResult.Success,
+    personName: String,
   ): Cas2SubmittedApplicationSummary {
     return Cas2SubmittedApplicationSummary(
       id = jpaSummary.getId(),
       person = personTransformer.transformModelToPersonApi(personInfo),
+      personName = personName,
       createdByUserId = jpaSummary.getCreatedByUserId(),
       createdAt = jpaSummary.getCreatedAt().toInstant(),
       submittedAt = jpaSummary.getSubmittedAt()?.toInstant(),
+      crn = jpaSummary.getCrn(),
+      nomsNumber = jpaSummary.getNomsNumber(),
     )
   }
 

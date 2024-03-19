@@ -2010,6 +2010,12 @@ components:
           format: uuid
         person:
           $ref: '#/components/schemas/Person'
+        crn:
+          type: string
+        nomsNumber:
+          type: string
+        personName:
+          type: string
         createdAt:
           type: string
           format: date-time
@@ -2022,6 +2028,9 @@ components:
         - id
         - person
         - createdAt
+        - personName
+        - crn
+        - nomsNumber
     Cas2StatusUpdate:
       type: object
       properties:

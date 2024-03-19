@@ -438,6 +438,32 @@ class OffenderServiceTest {
     }
   }
 
+  @Nested
+  inner class GetOffenderNameOrPlaceholder {
+    @Test
+    fun `returns Unknown when offender is PersonInfoResult-Restricted`() {
+      val personInfoResult = PersonInfoResult.Success.Restricted(crn = "RESTRICTED", nomsNumber = null)
+      val result = offenderService.getOffenderNameOrPlaceholder(personInfoResult)
+      assertThat(result).isEqualTo("Unknown")
+    }
+
+    @Test
+    fun `returns the person's full name when offender is PersonInfoResult-Full`() {
+      val offenderDetailSummary = OffenderDetailsSummaryFactory()
+        .withFirstName("ExampleFirst")
+        .withLastName("ExampleLast")
+        .produce()
+      val inmateDetail = InmateDetailFactory().produce()
+      val personInfoResult = PersonInfoResult.Success.Full(
+        crn = "FULL",
+        offenderDetailSummary,
+        inmateDetail,
+      )
+      val result = offenderService.getOffenderNameOrPlaceholder(personInfoResult)
+      assertThat(result).isEqualTo("ExampleFirst ExampleLast")
+    }
+  }
+
   private fun mock404RoSH(crn: String) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns StatusCode(HttpMethod.GET, "/rosh/a-crn", HttpStatus.NOT_FOUND, body = null)
 
   private fun mock500RoSH(crn: String) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns StatusCode(HttpMethod.GET, "/rosh/a-crn", HttpStatus.INTERNAL_SERVER_ERROR, body = null)
