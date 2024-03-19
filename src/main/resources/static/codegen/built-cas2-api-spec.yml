@@ -529,7 +529,7 @@ paths:
           description: name of the report to download
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/Cas2ReportName'
       responses:
         200:
           description: successful operation
@@ -4996,3 +4996,9 @@ components:
           type: string
       required:
         - name
+    Cas2ReportName:
+      type: string
+      enum:
+        - submitted-applications
+        - application-status-updates
+        - unsubmitted-applications

@@ -527,7 +527,7 @@ paths:
           description: name of the report to download
           required: true
           schema:
-            type: string
+            $ref: '_shared.yml#/components/schemas/Cas2ReportName'
       responses:
         200:
           description: successful operation
