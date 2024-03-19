@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.earliestDateOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.latestDateOf
 import java.time.LocalDate
-import java.time.YearMonth
 
 class BedUtilisationReportGenerator(
   private val bookingRepository: BookingRepository,
@@ -83,7 +82,12 @@ class BedUtilisationReportGenerator(
     }
 
     val totalBookedDays = bookedDaysActiveAndClosed
-    val daysInMonth = YearMonth.of(properties.year, properties.month).lengthOfMonth()
+    val bedspaceOnlineDaysEndDate =
+      if (this.endDate == null) endOfMonth else earliestDateOf(this.endDate!!, endOfMonth)
+
+    val bedspaceOnlineDays = latestDateOf(this.createdAt.toLocalDate(), startOfMonth)
+      .getDaysUntilInclusive(bedspaceOnlineDaysEndDate)
+      .count()
 
     val temporaryAccommodationPremisesEntity = premises as? TemporaryAccommodationPremisesEntity
     listOf(
@@ -103,8 +107,10 @@ class BedUtilisationReportGenerator(
         effectiveTurnaroundDays = effectiveTurnaroundDays,
         voidDays = voidDays,
         totalBookedDays = totalBookedDays,
-        totalDaysInTheMonth = daysInMonth,
-        occupancyRate = totalBookedDays.toDouble() / daysInMonth,
+        bedspaceStartDate = this.createdAt.toLocalDate(),
+        bedspaceEndDate = this.endDate,
+        bedspaceOnlineDays = bedspaceOnlineDays,
+        occupancyRate = totalBookedDays.toDouble() / bedspaceOnlineDays,
         uniquePropertyRef = premises.id.toShortBase58(),
         uniqueBedspaceRef = this.room.id.toShortBase58(),
       ),

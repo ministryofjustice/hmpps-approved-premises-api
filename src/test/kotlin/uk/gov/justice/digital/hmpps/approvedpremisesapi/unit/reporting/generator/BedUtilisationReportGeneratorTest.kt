@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountS
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
+@SuppressWarnings("LargeClass")
 class BedUtilisationReportGeneratorTest {
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockLostBedsRepository = mockk<LostBedsRepository>()
@@ -752,7 +753,7 @@ class BedUtilisationReportGeneratorTest {
   }
 
   @Test
-  fun `totalBookedDays shows the combined total days in the month of non-cancelled bookings, not non-cancelled voids or turnarounds - totalDaysInTheMonth, occupancyRate show correctly`() {
+  fun `totalBookedDays shows the combined total days in the month of non-cancelled bookings, not non-cancelled voids or turnarounds - bedspaceOnlineDays, occupancyRate show correctly`() {
     val apArea = ApAreaEntityFactory()
       .produce()
 
@@ -773,6 +774,7 @@ class BedUtilisationReportGeneratorTest {
 
     val bed = BedEntityFactory()
       .withRoom(room)
+      .withCreatedAt { OffsetDateTime.parse("2023-02-16T14:03:00+00:00") }
       .produce()
 
     val departureReason = DepartureReasonEntityFactory().produce()
@@ -877,7 +879,678 @@ class BedUtilisationReportGeneratorTest {
     // 4 days for relevantVoidStraddlingStartOfMonth
     // 6 days for relevantVoidStraddlingEndOfMonth
     assertThat(result[0][BedUtilisationReportRow::totalBookedDays]).isEqualTo(7)
-    assertThat(result[0][BedUtilisationReportRow::totalDaysInTheMonth]).isEqualTo(30)
+    assertThat(result[0][BedUtilisationReportRow::bedspaceOnlineDays]).isEqualTo(30)
     assertThat(result[0][BedUtilisationReportRow::occupancyRate]).isEqualTo(7.toDouble() / 30)
+  }
+
+  @Test
+  fun `bedspaceStartDate show bedspace created date`() {
+    val apArea = ApAreaEntityFactory()
+      .produce()
+
+    val probationRegion1 = ProbationRegionEntityFactory()
+      .withApArea(apArea)
+      .produce()
+
+    val localAuthorityArea1 = LocalAuthorityEntityFactory().produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea1)
+      .withProbationRegion(probationRegion1)
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .withCreatedAt { OffsetDateTime.parse("2024-01-16T14:03:00+00:00") }
+      .produce()
+
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+
+    val result = bedUtilisationReportGenerator.createReport(
+      listOf(bed),
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2024, 2),
+    )
+
+    assertThat(result.count()).isEqualTo(1)
+    assertThat(result[0][BedUtilisationReportRow::bedspaceStartDate]).isEqualTo(LocalDate.parse("2024-01-16"))
+  }
+
+  @Test
+  fun `bedspaceEndDate show bedspace end date when it is not null`() {
+    val apArea = ApAreaEntityFactory()
+      .produce()
+
+    val probationRegion1 = ProbationRegionEntityFactory()
+      .withApArea(apArea)
+      .produce()
+
+    val localAuthorityArea1 = LocalAuthorityEntityFactory().produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea1)
+      .withProbationRegion(probationRegion1)
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .withCreatedAt { OffsetDateTime.parse("2024-02-16T14:03:00+00:00") }
+      .withEndDate { LocalDate.parse("2024-05-12") }
+      .produce()
+
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+
+    val result = bedUtilisationReportGenerator.createReport(
+      listOf(bed),
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2024, 2),
+    )
+
+    assertThat(result.count()).isEqualTo(1)
+    assertThat(result[0][BedUtilisationReportRow::bedspaceEndDate]).isEqualTo(LocalDate.parse("2024-05-12"))
+  }
+
+  @Test
+  fun `bedspaceEndDate show nothing when bedspace end date is null`() {
+    val apArea = ApAreaEntityFactory()
+      .produce()
+
+    val probationRegion1 = ProbationRegionEntityFactory()
+      .withApArea(apArea)
+      .produce()
+
+    val localAuthorityArea1 = LocalAuthorityEntityFactory().produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea1)
+      .withProbationRegion(probationRegion1)
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .withCreatedAt { OffsetDateTime.parse("2024-02-16T14:03:00+00:00") }
+      .produce()
+
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+
+    val result = bedUtilisationReportGenerator.createReport(
+      listOf(bed),
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2024, 2),
+    )
+
+    assertThat(result.count()).isEqualTo(1)
+    assertThat(result[0][BedUtilisationReportRow::bedspaceEndDate]).isNull()
+  }
+
+  @Test
+  fun `bedspaceOnlineDays shows number of days between bedspaceStartDate and report end date when bedspaceStartDate is later than report start date and bedspaceEndDate is null`() {
+    val apArea = ApAreaEntityFactory()
+      .produce()
+
+    val probationRegion1 = ProbationRegionEntityFactory()
+      .withApArea(apArea)
+      .produce()
+
+    val localAuthorityArea1 = LocalAuthorityEntityFactory().produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea1)
+      .withProbationRegion(probationRegion1)
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .withCreatedAt { OffsetDateTime.parse("2024-02-05T14:03:00+00:00") }
+      .produce()
+
+    val departureReason = DepartureReasonEntityFactory().produce()
+    val moveOnCategory = MoveOnCategoryEntityFactory().produce()
+
+    val relevantBookingStraddlingStartOfMonth = BookingEntityFactory()
+      .withBed(bed)
+      .withPremises(premises)
+      .withArrivalDate(LocalDate.parse("2024-02-07"))
+      .withDepartureDate(LocalDate.parse("2024-02-12"))
+      .produce()
+      .apply {
+        turnarounds += TurnaroundEntityFactory()
+          .withBooking(this)
+          .withWorkingDayCount(2)
+          .produce()
+        arrivals += ArrivalEntityFactory()
+          .withBooking(this)
+          .withArrivalDate(LocalDate.parse("2024-02-07"))
+          .produce()
+        departures += DepartureEntityFactory()
+          .withBooking(this)
+          .withDateTime(OffsetDateTime.parse("2024-02-12T12:00:00.000Z"))
+          .withReason(departureReason)
+          .withMoveOnCategory(moveOnCategory)
+          .produce()
+      }
+
+    every {
+      mockWorkingDayCountService.addWorkingDays(
+        relevantBookingStraddlingStartOfMonth.departureDate,
+        relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount,
+      )
+    } returns LocalDate.parse("2024-02-14")
+
+    every {
+      mockWorkingDayCountService.getWorkingDaysCount(
+        LocalDate.parse("2024-02-13"),
+        LocalDate.parse("2024-02-14"),
+      )
+    } returns 2
+
+    val relevantBookingStraddlingEndOfMonth = BookingEntityFactory()
+      .withBed(bed)
+      .withPremises(premises)
+      .withArrivalDate(LocalDate.parse("2024-02-16"))
+      .withDepartureDate(LocalDate.parse("2024-02-22"))
+      .produce()
+      .apply {
+        turnarounds += TurnaroundEntityFactory()
+          .withBooking(this)
+          .withWorkingDayCount(3)
+          .produce()
+        arrivals += ArrivalEntityFactory()
+          .withBooking(this)
+          .withArrivalDate(LocalDate.parse("2024-02-16"))
+          .produce()
+        departures += DepartureEntityFactory()
+          .withBooking(this)
+          .withDateTime(OffsetDateTime.parse("2024-02-22T12:00:00.000Z"))
+          .withReason(departureReason)
+          .withMoveOnCategory(moveOnCategory)
+          .produce()
+      }
+
+    every {
+      mockWorkingDayCountService.addWorkingDays(
+        relevantBookingStraddlingEndOfMonth.departureDate,
+        relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount,
+      )
+    } returns LocalDate.parse("2024-02-27")
+
+    every {
+      mockWorkingDayCountService.getWorkingDaysCount(
+        LocalDate.parse("2024-02-23"),
+        LocalDate.parse("2024-02-27"),
+      )
+    } returns 3
+
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+
+    val result = bedUtilisationReportGenerator.createReport(
+      listOf(bed),
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2024, 2),
+    )
+
+    assertThat(result.count()).isEqualTo(1)
+    assertThat(result[0][BedUtilisationReportRow::totalBookedDays]).isEqualTo(13)
+    assertThat(result[0][BedUtilisationReportRow::bedspaceStartDate]).isEqualTo(LocalDate.parse("2024-02-05"))
+    assertThat(result[0][BedUtilisationReportRow::bedspaceEndDate]).isNull()
+    assertThat(result[0][BedUtilisationReportRow::bedspaceOnlineDays]).isEqualTo(25)
+    assertThat(result[0][BedUtilisationReportRow::occupancyRate]).isEqualTo(13.toDouble() / 25)
+  }
+
+  @Test
+  fun `bedspaceOnlineDays shows number of days between bedspaceStartDate and bedspaceEndtDate when bedspace dates are in report dates range`() {
+    val apArea = ApAreaEntityFactory()
+      .produce()
+
+    val probationRegion1 = ProbationRegionEntityFactory()
+      .withApArea(apArea)
+      .produce()
+
+    val localAuthorityArea1 = LocalAuthorityEntityFactory().produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea1)
+      .withProbationRegion(probationRegion1)
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .withCreatedAt { OffsetDateTime.parse("2024-02-05T14:03:00+00:00") }
+      .withEndDate { LocalDate.parse("2024-02-27") }
+      .produce()
+
+    val departureReason = DepartureReasonEntityFactory().produce()
+    val moveOnCategory = MoveOnCategoryEntityFactory().produce()
+
+    val relevantBookingStraddlingStartOfMonth = BookingEntityFactory()
+      .withBed(bed)
+      .withPremises(premises)
+      .withArrivalDate(LocalDate.parse("2024-02-07"))
+      .withDepartureDate(LocalDate.parse("2024-02-12"))
+      .produce()
+      .apply {
+        turnarounds += TurnaroundEntityFactory()
+          .withBooking(this)
+          .withWorkingDayCount(2)
+          .produce()
+        arrivals += ArrivalEntityFactory()
+          .withBooking(this)
+          .withArrivalDate(LocalDate.parse("2024-02-07"))
+          .produce()
+        departures += DepartureEntityFactory()
+          .withBooking(this)
+          .withDateTime(OffsetDateTime.parse("2024-02-12T12:00:00.000Z"))
+          .withReason(departureReason)
+          .withMoveOnCategory(moveOnCategory)
+          .produce()
+      }
+
+    every {
+      mockWorkingDayCountService.addWorkingDays(
+        relevantBookingStraddlingStartOfMonth.departureDate,
+        relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount,
+      )
+    } returns LocalDate.parse("2024-02-14")
+
+    every {
+      mockWorkingDayCountService.getWorkingDaysCount(
+        LocalDate.parse("2024-02-13"),
+        LocalDate.parse("2024-02-14"),
+      )
+    } returns 2
+
+    val relevantBookingStraddlingEndOfMonth = BookingEntityFactory()
+      .withBed(bed)
+      .withPremises(premises)
+      .withArrivalDate(LocalDate.parse("2024-02-16"))
+      .withDepartureDate(LocalDate.parse("2024-02-22"))
+      .produce()
+      .apply {
+        turnarounds += TurnaroundEntityFactory()
+          .withBooking(this)
+          .withWorkingDayCount(3)
+          .produce()
+        arrivals += ArrivalEntityFactory()
+          .withBooking(this)
+          .withArrivalDate(LocalDate.parse("2024-02-16"))
+          .produce()
+        departures += DepartureEntityFactory()
+          .withBooking(this)
+          .withDateTime(OffsetDateTime.parse("2024-02-22T12:00:00.000Z"))
+          .withReason(departureReason)
+          .withMoveOnCategory(moveOnCategory)
+          .produce()
+      }
+
+    every {
+      mockWorkingDayCountService.addWorkingDays(
+        relevantBookingStraddlingEndOfMonth.departureDate,
+        relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount,
+      )
+    } returns LocalDate.parse("2024-02-27")
+
+    every {
+      mockWorkingDayCountService.getWorkingDaysCount(
+        LocalDate.parse("2024-02-23"),
+        LocalDate.parse("2024-02-27"),
+      )
+    } returns 3
+
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+
+    val result = bedUtilisationReportGenerator.createReport(
+      listOf(bed),
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2024, 2),
+    )
+
+    assertThat(result.count()).isEqualTo(1)
+    assertThat(result[0][BedUtilisationReportRow::totalBookedDays]).isEqualTo(13)
+    assertThat(result[0][BedUtilisationReportRow::bedspaceStartDate]).isEqualTo(LocalDate.parse("2024-02-05"))
+    assertThat(result[0][BedUtilisationReportRow::bedspaceEndDate]).isEqualTo(LocalDate.parse("2024-02-27"))
+    assertThat(result[0][BedUtilisationReportRow::bedspaceOnlineDays]).isEqualTo(23)
+    assertThat(result[0][BedUtilisationReportRow::occupancyRate]).isEqualTo(13.toDouble() / 23)
+  }
+
+  @Test
+  fun `bedspaceOnlineDays shows number of days between report start date and bedspaceEndtDate when bedspace star and end dates are earlier than report start and end dates`() {
+    val apArea = ApAreaEntityFactory()
+      .produce()
+
+    val probationRegion1 = ProbationRegionEntityFactory()
+      .withApArea(apArea)
+      .produce()
+
+    val localAuthorityArea1 = LocalAuthorityEntityFactory().produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea1)
+      .withProbationRegion(probationRegion1)
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .withCreatedAt { OffsetDateTime.parse("2024-01-17T14:03:00+00:00") }
+      .withEndDate { LocalDate.parse("2024-02-25") }
+      .produce()
+
+    val departureReason = DepartureReasonEntityFactory().produce()
+    val moveOnCategory = MoveOnCategoryEntityFactory().produce()
+
+    val relevantBookingStraddlingStartOfMonth = BookingEntityFactory()
+      .withBed(bed)
+      .withPremises(premises)
+      .withArrivalDate(LocalDate.parse("2024-02-02"))
+      .withDepartureDate(LocalDate.parse("2024-02-07"))
+      .produce()
+      .apply {
+        turnarounds += TurnaroundEntityFactory()
+          .withBooking(this)
+          .withWorkingDayCount(2)
+          .produce()
+        arrivals += ArrivalEntityFactory()
+          .withBooking(this)
+          .withArrivalDate(LocalDate.parse("2024-02-02"))
+          .produce()
+        departures += DepartureEntityFactory()
+          .withBooking(this)
+          .withDateTime(OffsetDateTime.parse("2024-02-07T12:00:00.000Z"))
+          .withReason(departureReason)
+          .withMoveOnCategory(moveOnCategory)
+          .produce()
+      }
+
+    every {
+      mockWorkingDayCountService.addWorkingDays(
+        relevantBookingStraddlingStartOfMonth.departureDate,
+        relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount,
+      )
+    } returns LocalDate.parse("2024-02-09")
+
+    every {
+      mockWorkingDayCountService.getWorkingDaysCount(
+        LocalDate.parse("2024-02-08"),
+        LocalDate.parse("2024-02-09"),
+      )
+    } returns 2
+
+    val relevantBookingStraddlingEndOfMonth = BookingEntityFactory()
+      .withBed(bed)
+      .withPremises(premises)
+      .withArrivalDate(LocalDate.parse("2024-02-10"))
+      .withDepartureDate(LocalDate.parse("2024-02-15"))
+      .produce()
+      .apply {
+        turnarounds += TurnaroundEntityFactory()
+          .withBooking(this)
+          .withWorkingDayCount(3)
+          .produce()
+        arrivals += ArrivalEntityFactory()
+          .withBooking(this)
+          .withArrivalDate(LocalDate.parse("2024-02-10"))
+          .produce()
+        departures += DepartureEntityFactory()
+          .withBooking(this)
+          .withDateTime(OffsetDateTime.parse("2024-02-15T12:00:00.000Z"))
+          .withReason(departureReason)
+          .withMoveOnCategory(moveOnCategory)
+          .produce()
+      }
+
+    every {
+      mockWorkingDayCountService.addWorkingDays(
+        relevantBookingStraddlingEndOfMonth.departureDate,
+        relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount,
+      )
+    } returns LocalDate.parse("2024-02-20")
+
+    every {
+      mockWorkingDayCountService.getWorkingDaysCount(
+        LocalDate.parse("2024-02-16"),
+        LocalDate.parse("2024-02-20"),
+      )
+    } returns 3
+
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+
+    val result = bedUtilisationReportGenerator.createReport(
+      listOf(bed),
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2024, 2),
+    )
+
+    assertThat(result.count()).isEqualTo(1)
+    assertThat(result[0][BedUtilisationReportRow::totalBookedDays]).isEqualTo(12)
+    assertThat(result[0][BedUtilisationReportRow::bedspaceStartDate]).isEqualTo(LocalDate.parse("2024-01-17"))
+    assertThat(result[0][BedUtilisationReportRow::bedspaceEndDate]).isEqualTo(LocalDate.parse("2024-02-25"))
+    assertThat(result[0][BedUtilisationReportRow::bedspaceOnlineDays]).isEqualTo(25)
+    assertThat(result[0][BedUtilisationReportRow::occupancyRate]).isEqualTo(12.toDouble() / 25)
+  }
+
+  @Test
+  fun `bedspaceOnlineDays shows number of days between report start and end date when bedspace start and end dates are out of the report dates range`() {
+    val apArea = ApAreaEntityFactory()
+      .produce()
+
+    val probationRegion1 = ProbationRegionEntityFactory()
+      .withApArea(apArea)
+      .produce()
+
+    val localAuthorityArea1 = LocalAuthorityEntityFactory().produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea1)
+      .withProbationRegion(probationRegion1)
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .withCreatedAt { OffsetDateTime.parse("2024-01-17T14:03:00+00:00") }
+      .withEndDate { LocalDate.parse("2024-03-15") }
+      .produce()
+
+    val departureReason = DepartureReasonEntityFactory().produce()
+    val moveOnCategory = MoveOnCategoryEntityFactory().produce()
+
+    val relevantBookingStraddlingStartOfMonth = BookingEntityFactory()
+      .withBed(bed)
+      .withPremises(premises)
+      .withArrivalDate(LocalDate.parse("2024-02-02"))
+      .withDepartureDate(LocalDate.parse("2024-02-07"))
+      .produce()
+      .apply {
+        turnarounds += TurnaroundEntityFactory()
+          .withBooking(this)
+          .withWorkingDayCount(2)
+          .produce()
+        arrivals += ArrivalEntityFactory()
+          .withBooking(this)
+          .withArrivalDate(LocalDate.parse("2024-02-02"))
+          .produce()
+        departures += DepartureEntityFactory()
+          .withBooking(this)
+          .withDateTime(OffsetDateTime.parse("2024-02-07T12:00:00.000Z"))
+          .withReason(departureReason)
+          .withMoveOnCategory(moveOnCategory)
+          .produce()
+      }
+
+    every {
+      mockWorkingDayCountService.addWorkingDays(
+        relevantBookingStraddlingStartOfMonth.departureDate,
+        relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount,
+      )
+    } returns LocalDate.parse("2024-02-09")
+
+    every {
+      mockWorkingDayCountService.getWorkingDaysCount(
+        LocalDate.parse("2024-02-08"),
+        LocalDate.parse("2024-02-09"),
+      )
+    } returns 2
+
+    val relevantBookingStraddlingEndOfMonth = BookingEntityFactory()
+      .withBed(bed)
+      .withPremises(premises)
+      .withArrivalDate(LocalDate.parse("2024-02-10"))
+      .withDepartureDate(LocalDate.parse("2024-02-15"))
+      .produce()
+      .apply {
+        turnarounds += TurnaroundEntityFactory()
+          .withBooking(this)
+          .withWorkingDayCount(3)
+          .produce()
+        arrivals += ArrivalEntityFactory()
+          .withBooking(this)
+          .withArrivalDate(LocalDate.parse("2024-02-10"))
+          .produce()
+        departures += DepartureEntityFactory()
+          .withBooking(this)
+          .withDateTime(OffsetDateTime.parse("2024-02-15T12:00:00.000Z"))
+          .withReason(departureReason)
+          .withMoveOnCategory(moveOnCategory)
+          .produce()
+      }
+
+    every {
+      mockWorkingDayCountService.addWorkingDays(
+        relevantBookingStraddlingEndOfMonth.departureDate,
+        relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount,
+      )
+    } returns LocalDate.parse("2024-02-20")
+
+    every {
+      mockWorkingDayCountService.getWorkingDaysCount(
+        LocalDate.parse("2024-02-16"),
+        LocalDate.parse("2024-02-20"),
+      )
+    } returns 3
+
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+
+    val result = bedUtilisationReportGenerator.createReport(
+      listOf(bed),
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2024, 2),
+    )
+
+    assertThat(result.count()).isEqualTo(1)
+    assertThat(result[0][BedUtilisationReportRow::totalBookedDays]).isEqualTo(12)
+    assertThat(result[0][BedUtilisationReportRow::bedspaceStartDate]).isEqualTo(LocalDate.parse("2024-01-17"))
+    assertThat(result[0][BedUtilisationReportRow::bedspaceEndDate]).isEqualTo(LocalDate.parse("2024-03-15"))
+    assertThat(result[0][BedUtilisationReportRow::bedspaceOnlineDays]).isEqualTo(29)
+    assertThat(result[0][BedUtilisationReportRow::occupancyRate]).isEqualTo(12.toDouble() / 29)
   }
 }

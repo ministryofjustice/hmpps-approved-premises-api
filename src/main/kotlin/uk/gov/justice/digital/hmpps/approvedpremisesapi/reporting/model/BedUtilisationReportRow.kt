@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model
 
+import java.time.LocalDate
+
 data class BedUtilisationReportRow(
   val probationRegion: String?,
   val pdu: String?,
@@ -16,7 +18,9 @@ data class BedUtilisationReportRow(
   val effectiveTurnaroundDays: Int,
   val voidDays: Int,
   val totalBookedDays: Int,
-  val totalDaysInTheMonth: Int,
+  val bedspaceStartDate: LocalDate,
+  val bedspaceEndDate: LocalDate?,
+  val bedspaceOnlineDays: Int,
   val occupancyRate: Double,
   val uniquePropertyRef: String,
   val uniqueBedspaceRef: String,
