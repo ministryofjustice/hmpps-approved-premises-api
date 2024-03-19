@@ -369,7 +369,9 @@ class OffenderServiceTest {
       .withCurrentExclusion(false)
       .produce()
 
-    every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
+    every {
+      mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn")
+    } returns ClientResult.Success(HttpStatus.OK, resultBody)
   }
 
   @Nested
@@ -441,9 +443,34 @@ class OffenderServiceTest {
   @Nested
   inner class GetOffenderNameOrPlaceholder {
     @Test
-    fun `returns Unknown when offender is PersonInfoResult-Restricted`() {
-      val personInfoResult = PersonInfoResult.Success.Restricted(crn = "RESTRICTED", nomsNumber = null)
-      val result = offenderService.getOffenderNameOrPlaceholder(personInfoResult)
+    fun `returns Not Found when offender is PersonInfoResult-NotFound, status 404`() {
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary("NOTFOUND") } returns ClientResult
+        .Failure
+        .StatusCode(
+          HttpMethod.GET,
+          "/secure/offenders/crn/ABC123",
+          HttpStatus.NOT_FOUND,
+          null,
+          true,
+        )
+
+      val result = offenderService.getOffenderNameOrPlaceholder("NOTFOUND")
+      assertThat(result).isEqualTo("Person Not Found")
+    }
+
+    @Test
+    fun `returns Unknown when offender returns any other code except 404`() {
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary("UNKNOWN") } returns ClientResult
+        .Failure
+        .StatusCode(
+          HttpMethod.GET,
+          "/secure/offenders/crn/ABC123",
+          HttpStatus.FORBIDDEN,
+          null,
+          true,
+        )
+
+      val result = offenderService.getOffenderNameOrPlaceholder("UNKNOWN")
       assertThat(result).isEqualTo("Unknown")
     }
 
@@ -453,13 +480,12 @@ class OffenderServiceTest {
         .withFirstName("ExampleFirst")
         .withLastName("ExampleLast")
         .produce()
-      val inmateDetail = InmateDetailFactory().produce()
-      val personInfoResult = PersonInfoResult.Success.Full(
-        crn = "FULL",
-        offenderDetailSummary,
-        inmateDetail,
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummary("FULL") } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = offenderDetailSummary,
       )
-      val result = offenderService.getOffenderNameOrPlaceholder(personInfoResult)
+
+      val result = offenderService.getOffenderNameOrPlaceholder("FULL")
       assertThat(result).isEqualTo("ExampleFirst ExampleLast")
     }
   }
