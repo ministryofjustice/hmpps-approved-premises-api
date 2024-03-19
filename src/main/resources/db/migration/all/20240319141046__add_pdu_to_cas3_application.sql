@@ -1,0 +1,1 @@
+ALTER TABLE temporary_accommodation_applications ADD COLUMN pdu TEXT NULL;

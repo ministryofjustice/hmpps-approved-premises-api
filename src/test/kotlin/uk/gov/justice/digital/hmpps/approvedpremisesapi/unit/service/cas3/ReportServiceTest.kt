@@ -210,6 +210,7 @@ class ReportServiceTest {
     personReleaseDate = null,
     town = null,
     postCode = null,
+    pdu = null,
   )
 
   @Suppress("LongParameterList")
@@ -238,5 +239,6 @@ class ReportServiceTest {
     override val personReleaseDate: LocalDate?,
     override val town: String?,
     override val postCode: String?,
+    override val pdu: String?,
   ) : TransitionalAccommodationReferralReportData
 }

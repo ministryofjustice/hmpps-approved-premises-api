@@ -2316,6 +2316,8 @@ components:
               type: string
               format: date
               example: '2024-02-21'
+            pdu:
+              type: string
             summaryData:
               $ref: '#/components/schemas/AnyValue'
           required:
