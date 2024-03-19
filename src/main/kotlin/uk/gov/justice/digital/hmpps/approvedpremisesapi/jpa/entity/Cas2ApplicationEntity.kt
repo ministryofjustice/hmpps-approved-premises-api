@@ -35,6 +35,7 @@ SELECT
     a.submitted_at as submittedAt
 FROM cas_2_applications a
 WHERE a.created_by_user_id = :userId
+ORDER BY createdAt DESC
 """,
     nativeQuery = true,
   )

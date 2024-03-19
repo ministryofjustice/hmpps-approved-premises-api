@@ -178,11 +178,20 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withId(UUID.randomUUID())
             }
 
-            val cas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+            val firstApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(userEntity)
               withCrn(offenderDetails.otherIds.crn)
               withData("{}")
+              withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
+            }
+
+            val secondApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(userEntity)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
             }
 
             val otherCas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
@@ -207,16 +216,22 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
             Assertions.assertThat(responseBody).anyMatch {
-              cas2ApplicationEntity.id == it.id &&
-                cas2ApplicationEntity.crn == it.person.crn &&
-                cas2ApplicationEntity.createdAt.toInstant() == it.createdAt &&
-                cas2ApplicationEntity.createdByUser.id == it.createdByUserId &&
-                cas2ApplicationEntity.submittedAt?.toInstant() == it.submittedAt
+              firstApplicationEntity.id == it.id &&
+                firstApplicationEntity.crn == it.person.crn &&
+                firstApplicationEntity.createdAt.toInstant() == it.createdAt &&
+                firstApplicationEntity.createdByUser.id == it.createdByUserId &&
+                firstApplicationEntity.submittedAt?.toInstant() == it.submittedAt
             }
 
             Assertions.assertThat(responseBody).noneMatch {
               otherCas2ApplicationEntity.id == it.id
             }
+
+            Assertions.assertThat(responseBody[0].createdAt)
+              .isEqualTo(secondApplicationEntity.createdAt.toInstant())
+
+            Assertions.assertThat(responseBody[1].createdAt)
+              .isEqualTo(firstApplicationEntity.createdAt.toInstant())
           }
         }
       }
