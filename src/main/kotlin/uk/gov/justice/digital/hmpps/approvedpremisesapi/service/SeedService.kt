@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesAutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesBookingCancelSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesBookingSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.ApprovedPremisesOfflineApplicationsSeedJob
@@ -62,6 +63,7 @@ class SeedService(
   private val applicationContext: ApplicationContext,
   private val transactionTemplate: TransactionTemplate,
   private val seedLogger: SeedLogger,
+  private val approvedPremisesAutoScript: ApprovedPremisesAutoScript,
   private val cas2AutoScript: Cas2AutoScript,
 ) {
 
@@ -115,6 +117,7 @@ class SeedService(
 
   fun autoScript() {
     seedLogger.info("**Auto-scripting**")
+    approvedPremisesAutoScript.script()
     cas2AutoScript.script()
   }
 

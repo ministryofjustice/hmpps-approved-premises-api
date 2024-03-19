@@ -1,0 +1,801 @@
+{
+  "basic-information": {
+    "enter-risk-level": {
+      "riskLevel": "highRisk"
+    },
+    "is-exceptional-case": {
+      "isExceptionalCase": "yes"
+    },
+    "exception-details": {
+      "agreedCaseWithManager": "yes",
+      "managerName": "Roger Brown",
+      "agreementDate": "2024-01-20",
+      "agreementDate-year": "2024",
+      "agreementDate-month": "01",
+      "agreementDate-day": "20",
+      "agreementSummary": "The Tiering service appears to be out of date. Mr Brown confirmed that Mr Bertrand is *high risk*"
+    },
+    "confirm-your-details": {
+      "emailAddress": "",
+      "name": "",
+      "phoneNumber": "",
+      "caseManagementResponsibility": "yes",
+      "userDetailsFromDelius": {
+        "name": "Unallocated Staff",
+        "emailAddress": "bernard.beaks@justice.gov.uk",
+        "phoneNumber": null,
+        "area": {
+          "id": "6025b8c6-883f-4300-bc26-2b01fbd6e272",
+          "identifier": "NE",
+          "name": "North East"
+        }
+      },
+      "area": "6025b8c6-883f-4300-bc26-2b01fbd6e272",
+      "areas": [
+        {
+          "id": "c482836a-bd2a-4cce-be6f-c5d548f621f8",
+          "identifier": "LON",
+          "name": "London"
+        },
+        {
+          "id": "6025b8c6-883f-4300-bc26-2b01fbd6e272",
+          "identifier": "NE",
+          "name": "North East"
+        },
+        {
+          "id": "93a59a2d-1730-4154-8e02-aee6f2f01a76",
+          "identifier": "NW",
+          "name": "North West"
+        },
+        {
+          "id": "37ceb2bf-c588-4f08-ab62-8f3e7f9b0c0f",
+          "identifier": "Mids",
+          "name": "Midlands"
+        },
+        {
+          "id": "858a01cf-9fd1-482c-a983-1a74713f9227",
+          "identifier": "SEE",
+          "name": "South East & Eastern"
+        },
+        {
+          "id": "2cc6bc0f-58cf-4d82-99dd-dfc67b7f5c33",
+          "identifier": "SWSC",
+          "name": "South West & South Central"
+        },
+        {
+          "id": "56d78348-64d4-4af2-a13c-e5c0d4d30dd0",
+          "identifier": "Wales",
+          "name": "Wales"
+        },
+        {
+          "id": "2fa23a25-610c-4728-aea6-c84e0207120b",
+          "identifier": "National",
+          "name": "NAT"
+        }
+      ]
+    },
+    "transgender": {
+      "transgenderOrHasTransgenderHistory": "no"
+    },
+    "relevant-dates": {
+      "paroleEligibilityDate-year": "",
+      "paroleEligibilityDate-month": "",
+      "paroleEligibilityDate-day": "",
+      "homeDetentionCurfewDate-year": "",
+      "homeDetentionCurfewDate-month": "",
+      "homeDetentionCurfewDate-day": "",
+      "licenceExpiryDate": "2024-09-20",
+      "licenceExpiryDate-year": "2024",
+      "licenceExpiryDate-month": "09",
+      "licenceExpiryDate-day": "20",
+      "pssStartDate-year": "",
+      "pssStartDate-month": "",
+      "pssStartDate-day": "",
+      "pssEndDate-year": "",
+      "pssEndDate-month": "",
+      "pssEndDate-day": "",
+      "sentenceExpiryDate": "2024-02-20",
+      "sentenceExpiryDate-year": "2024",
+      "sentenceExpiryDate-month": "02",
+      "sentenceExpiryDate-day": "20",
+      "selectedDates": [
+        "licenceExpiryDate",
+        "sentenceExpiryDate"
+      ]
+    },
+    "sentence-type": {
+      "sentenceType": "extendedDeterminate"
+    },
+    "release-type": {
+      "releaseType": "extendedDeterminateLicence"
+    },
+    "release-date": {
+      "knowReleaseDate": "yes",
+      "releaseDate-year": "2024",
+      "releaseDate-month": "05",
+      "releaseDate-day": "19",
+      "releaseDate": "2024-05-19"
+    },
+    "placement-date": {
+      "startDateSameAsReleaseDate": "yes"
+    },
+    "reason-for-short-notice": {
+      "reason": "planBrokenDown",
+      "other": ""
+    },
+    "placement-purpose": {
+      "placementPurposes": [
+        "publicProtection",
+        "preventContact",
+        "readjust",
+        "preventSelfHarm"
+      ]
+    }
+  },
+  "type-of-ap": {
+    "ap-type": {
+      "type": "standard"
+    }
+  },
+  "oasys-import": {
+    "optional-oasys-sections": {
+      "needsLinkedToReoffending": [],
+      "otherNeeds": [
+        {
+          "section": 5,
+          "name": "Finance",
+          "linkedToHarm": false,
+          "linkedToReOffending": false
+        },
+        {
+          "section": 6,
+          "name": "Relationships",
+          "linkedToHarm": false,
+          "linkedToReOffending": false
+        },
+        {
+          "section": 7,
+          "name": "Lifestyle",
+          "linkedToHarm": false,
+          "linkedToReOffending": false
+        },
+        {
+          "section": 10,
+          "name": "Emotional",
+          "linkedToHarm": false,
+          "linkedToReOffending": false
+        },
+        {
+          "section": 11,
+          "name": "Thinking and Behavioural",
+          "linkedToHarm": false,
+          "linkedToReOffending": false
+        },
+        {
+          "section": 12,
+          "name": "Attitude",
+          "linkedToHarm": false,
+          "linkedToReOffending": false
+        },
+        {
+          "section": 13,
+          "name": "Health",
+          "linkedToHarm": null,
+          "linkedToReOffending": null
+        }
+      ]
+    },
+    "rosh-summary": {
+      "roshAnswers": {
+        "R10.1": "[R10.1] IN CUSTODY\r\n\r\nKNOWN ADULTS:\r\nSuch as Ms Elaine Underhill and any of the victims of the index offence if they are placed close to Mr Smith cell.\r\n\r\nCHILDREN:\r\nSimon Smith, Roger Smith, Lindy Smith",
+        "R10.2": "[R10.2] IN CUSTODY:\r\n\r\nKNOWN ADULTS:\r\nIntimidation, threats of violence, use of weapons or boiling water, physical education and violent assault, long term psychological impact as a result of Mr Smith violent behaviour. This harm may be cause in the course of physical altercation due to seeking revenge or holding grudges...",
+        "R10.3": "[R10.3] STATIC RISK FACTORS:\r\n\r\nMr Smith gender - At the time of the offence, Mr Smith was 35 years old and considered to be in the higher risk group.\r\n\r\nSTABLE DYNAMIC RISK FACTORS:\r\nThinking and behaviour - limited ability to manage mood or emotions poor impulse control. Mr Smith demonstrated cognitive deficit in committing the index offences and this still remains a concern...",
+        "R10.4": "[R10.4] CIRCUMSTANCES:\r\nA lack of stable accommodation\r\nunemployment\r\nnon constructive use of time\r\nbreakdown of family support\r\nbeing unable to access benefits\r\n\r\nUNDERLYING FACTORS:\r\npro criminal attitudes supporting commission of crime...",
+        "R10.5": "[R10.5] Engage with Mental Health Services in prison and in the community.\r\nMaintain emotional stability.\r\nAbstain from alcohol.\r\nAbstain from illegal drugs.\r\nRegular testing for alcohol and drug use, in prison and on Licence.\r\nMaintain stable accommodation..."
+      },
+      "roshSummaries": [
+        {
+          "label": "Who is at risk",
+          "questionNumber": "R10.1",
+          "answer": "[R10.1] IN CUSTODY\r\n\r\nKNOWN ADULTS:\r\nSuch as Ms Elaine Underhill and any of the victims of the index offence if they are placed close to Mr Smith cell.\r\n\r\nCHILDREN:\r\nSimon Smith, Roger Smith, Lindy Smith"
+        },
+        {
+          "label": "What is the nature of the risk",
+          "questionNumber": "R10.2",
+          "answer": "[R10.2] IN CUSTODY:\r\n\r\nKNOWN ADULTS:\r\nIntimidation, threats of violence, use of weapons or boiling water, physical education and violent assault, long term psychological impact as a result of Mr Smith violent behaviour. This harm may be cause in the course of physical altercation due to seeking revenge or holding grudges..."
+        },
+        {
+          "label": "When is the risk likely to be the greatest",
+          "questionNumber": "R10.3",
+          "answer": "[R10.3] STATIC RISK FACTORS:\r\n\r\nMr Smith gender - At the time of the offence, Mr Smith was 35 years old and considered to be in the higher risk group.\r\n\r\nSTABLE DYNAMIC RISK FACTORS:\r\nThinking and behaviour - limited ability to manage mood or emotions poor impulse control. Mr Smith demonstrated cognitive deficit in committing the index offences and this still remains a concern..."
+        },
+        {
+          "label": "What circumstances are likely to increase risk",
+          "questionNumber": "R10.4",
+          "answer": "[R10.4] CIRCUMSTANCES:\r\nA lack of stable accommodation\r\nunemployment\r\nnon constructive use of time\r\nbreakdown of family support\r\nbeing unable to access benefits\r\n\r\nUNDERLYING FACTORS:\r\npro criminal attitudes supporting commission of crime..."
+        },
+        {
+          "label": "What circumstances are likely to reduce the risk",
+          "questionNumber": "R10.5",
+          "answer": "[R10.5] Engage with Mental Health Services in prison and in the community.\r\nMaintain emotional stability.\r\nAbstain from alcohol.\r\nAbstain from illegal drugs.\r\nRegular testing for alcohol and drug use, in prison and on Licence.\r\nMaintain stable accommodation..."
+        }
+      ]
+    },
+    "offence-details": {
+      "offenceDetailsAnswers": {
+        "2.1": "[2.1] Mr Smith appeared before Newcastle Crown Court 16/09/2021 where he pleaded guilty to Wounding and other acts endangering life...",
+        "2.4.1": "[2.4.2] Ms Joan Black, ex-partner of Mr Smith ",
+        "2.4.2": "[2.4.1] There is an element of vulnerability as Ms Black experience years of domestic abuse...",
+        "2.5": "[2.5] Ms Black attended Newtree hospital at 22:40 hours on 01/03/21 with injuries to her face and body that they were...",
+        "2.8.3": "[2.8.3] Mr Smith states that he was angry, and became aggressive towards Ms Black because...",
+        "2.12": "[2.12] Mr Smith has 11 previous convictions from 22 offences. His criminal history includes...",
+        "2.98": "[2.98] The index offence is assessed as harm related and there is an identifiable victim Ms Black..."
+      },
+      "offenceDetailsSummaries": [
+        {
+          "label": "Offence analysis",
+          "questionNumber": "2.1",
+          "answer": "[2.1] Mr Smith appeared before Newcastle Crown Court 16/09/2021 where he pleaded guilty to Wounding and other acts endangering life..."
+        },
+        {
+          "label": "Victim - perpetrator relationship",
+          "questionNumber": "2.4.1",
+          "answer": "[2.4.2] Ms Joan Black, ex-partner of Mr Smith "
+        },
+        {
+          "label": "Other victim information",
+          "questionNumber": "2.4.2",
+          "answer": "[2.4.1] There is an element of vulnerability as Ms Black experience years of domestic abuse..."
+        },
+        {
+          "label": "Impact on the victim",
+          "questionNumber": "2.5",
+          "answer": "[2.5] Ms Black attended Newtree hospital at 22:40 hours on 01/03/21 with injuries to her face and body that they were..."
+        },
+        {
+          "label": "Motivation and triggers",
+          "questionNumber": "2.8.3",
+          "answer": "[2.8.3] Mr Smith states that he was angry, and became aggressive towards Ms Black because..."
+        },
+        {
+          "label": "Pattern of offending",
+          "questionNumber": "2.12",
+          "answer": "[2.12] Mr Smith has 11 previous convictions from 22 offences. His criminal history includes..."
+        },
+        {
+          "label": "Issues contributing to risks",
+          "questionNumber": "2.98",
+          "answer": "[2.98] The index offence is assessed as harm related and there is an identifiable victim Ms Black..."
+        }
+      ]
+    },
+    "supporting-information": {
+      "supportingInformationAnswers": {
+        "3.9": "[3.9] Mr Smith told me that he was renting a room in a shared house, prior to his current remand...",
+        "4.9": "[4.9] He said that he has since learnt to read and write during periods of custody and an initial assessment of his...",
+        "5.9": "[5.9] Mr Smith was in receipt of Job Seekers Allowance prior to his current remand in custody...",
+        "6.9": "[6.9] Mr Smith described his family as travellers.  He said that they were very supportive of him, although they had at times found it difficult to accept his involvement with drugs...",
+        "7.9": "[7.9] Mr Smith has clearly had issues concerning the company he keeps, in that his involvement in the drug culture has at times been entrenched...",
+        "8.9": "[8.9] Mr Smith told me that he had experimented with many drugs throughout his teens. ...",
+        "9.9": "[9.9] Mr Smith told me that he rarely consumes alcohol and has not had any problems associated with excessive drinking in years...",
+        "10.9": "[10.9] Mr Smith told me that he was untroubled by mental health difficulties and had no history of self harm or suicidal thoughts",
+        "11.9": "[11.9] The circumstances of the current offence suggest that Mr Smith acted ...",
+        "12.9": "[12.9] During interview, Mr Smith referred to being motivated to alter his...."
+      },
+      "supportingInformationSummaries": [
+        {
+          "label": "Accommodation issues contributing to risks of offending and harm",
+          "questionNumber": "3.9",
+          "sectionNumber": 3,
+          "linkedToHarm": true,
+          "linkedToReOffending": true,
+          "answer": "[3.9] Mr Smith told me that he was renting a room in a shared house, prior to his current remand..."
+        },
+        {
+          "label": "Education, training and employability issues contributing to risks of offending and harm",
+          "questionNumber": "4.9",
+          "sectionNumber": 4,
+          "linkedToHarm": true,
+          "linkedToReOffending": true,
+          "answer": "[4.9] He said that he has since learnt to read and write during periods of custody and an initial assessment of his..."
+        },
+        {
+          "label": "Financial management issues contributing to risks of offending and harm",
+          "questionNumber": "5.9",
+          "sectionNumber": 5,
+          "linkedToHarm": false,
+          "linkedToReOffending": false,
+          "answer": "[5.9] Mr Smith was in receipt of Job Seekers Allowance prior to his current remand in custody..."
+        },
+        {
+          "label": "Relationship issues contributing to risks of offending and harm",
+          "questionNumber": "6.9",
+          "sectionNumber": 6,
+          "linkedToHarm": false,
+          "linkedToReOffending": false,
+          "answer": "[6.9] Mr Smith described his family as travellers.  He said that they were very supportive of him, although they had at times found it difficult to accept his involvement with drugs..."
+        },
+        {
+          "label": "Lifestyle issues contributing to risks of offending and harm",
+          "questionNumber": "7.9",
+          "sectionNumber": 7,
+          "linkedToHarm": false,
+          "linkedToReOffending": false,
+          "answer": "[7.9] Mr Smith has clearly had issues concerning the company he keeps, in that his involvement in the drug culture has at times been entrenched..."
+        },
+        {
+          "label": "Drug misuse issues contributing to risks of offending and harm",
+          "questionNumber": "8.9",
+          "sectionNumber": 8,
+          "linkedToHarm": false,
+          "linkedToReOffending": false,
+          "answer": "[8.9] Mr Smith told me that he had experimented with many drugs throughout his teens. ..."
+        },
+        {
+          "label": "Alcohol misuse issues contributing to risks of offending and harm",
+          "questionNumber": "9.9",
+          "sectionNumber": 9,
+          "linkedToHarm": false,
+          "linkedToReOffending": true,
+          "answer": "[9.9] Mr Smith told me that he rarely consumes alcohol and has not had any problems associated with excessive drinking in years..."
+        },
+        {
+          "label": "Issues of emotional well-being contributing to risks of offending and harm",
+          "questionNumber": "10.9",
+          "sectionNumber": 10,
+          "linkedToHarm": false,
+          "linkedToReOffending": false,
+          "answer": "[10.9] Mr Smith told me that he was untroubled by mental health difficulties and had no history of self harm or suicidal thoughts"
+        },
+        {
+          "label": "Thinking / behavioural issues contributing to risks of offending and harm",
+          "questionNumber": "11.9",
+          "sectionNumber": 11,
+          "linkedToHarm": false,
+          "linkedToReOffending": false,
+          "answer": "[11.9] The circumstances of the current offence suggest that Mr Smith acted ..."
+        },
+        {
+          "label": "Issues about attitudes contributing to risks of offending and harm",
+          "questionNumber": "12.9",
+          "sectionNumber": 12,
+          "linkedToHarm": false,
+          "linkedToReOffending": false,
+          "answer": "[12.9] During interview, Mr Smith referred to being motivated to alter his...."
+        }
+      ]
+    },
+    "risk-management-plan": {
+      "riskManagementAnswers": {
+        "RM28": "[RM28] Mr Smith is currently on remand awaiting sentence",
+        "RM28.1": "[RM28.1] Currently on remand at HMP Wandsworth - Management of case under MAPPA - level not yet set.",
+        "RM30": "[RM30] Probation Officer, Education training and employment Officer, Prison Offender Supervisor",
+        "RM31": "[RM31] State they will have secure accommodation for Mr Smith  and partner on release, although she too is subject to a DRR at present. Supportive wider family.  Has completed previously Short Duration programme and attended one of the support sessions .  Engaged with CARATS in custody.  Complied with voluntary drug tests in custody. Some motivation to desist from alcohol/drug use in the future, this needs to be encouraged with use of community resources. Completed drug and heroin awareness programmes in custody.",
+        "RM32": "[RM32] Requires referral to community drug DIP upon  release. To link in with employment/training resources such as College and ETEO. Completion of victim empathy module via 1-1 supervision to build upon awareness of impact of offending.   Level setting to be undertaken by Senior Probation Officer and OMU. Multi Agency Public Protection Panel to be convened if level 2 either at start of supervision or 6 months prior to release",
+        "RM33": "[RM33] Undertake sentence planning with OS within 8 or 16 weeks of sentence carats - continue to work with Mr Smith and refer for relevant programmes during any prison sentence imposed. DIP supervise DRR is imposed or provide support post release if conditions/requirements to manage the specific risks.",
+        "RM34": "[RM34] Discuss any concerns with line manager/SPO Increase frequency of reporting Bring forward MAPPA/Consider Level 2 MAPPA professionals meetings  considered if MAPPA not applicable. Consider referral to Approved Premises Consider motivational interviewing/engagement officer.  Joint interview with police OM or other relevant agencies? To raise concerns Referral to substance misues worker for additional support. Warning letters to be employed Recall/Breach if risk not manageable.",
+        "RM35": "[RM35] Placeholder content for additional comments"
+      },
+      "riskManagementSummaries": [
+        {
+          "label": "Further considerations",
+          "questionNumber": "RM28",
+          "answer": "[RM28] Mr Smith is currently on remand awaiting sentence"
+        },
+        {
+          "label": "Key information about current situation",
+          "questionNumber": "RM28.1",
+          "answer": "[RM28.1] Currently on remand at HMP Wandsworth - Management of case under MAPPA - level not yet set."
+        },
+        {
+          "label": "Supervision",
+          "questionNumber": "RM30",
+          "answer": "[RM30] Probation Officer, Education training and employment Officer, Prison Offender Supervisor"
+        },
+        {
+          "label": "Monitoring and control",
+          "questionNumber": "RM31",
+          "answer": "[RM31] State they will have secure accommodation for Mr Smith  and partner on release, although she too is subject to a DRR at present. Supportive wider family.  Has completed previously Short Duration programme and attended one of the support sessions .  Engaged with CARATS in custody.  Complied with voluntary drug tests in custody. Some motivation to desist from alcohol/drug use in the future, this needs to be encouraged with use of community resources. Completed drug and heroin awareness programmes in custody."
+        },
+        {
+          "label": "Interventions and treatment",
+          "questionNumber": "RM32",
+          "answer": "[RM32] Requires referral to community drug DIP upon  release. To link in with employment/training resources such as College and ETEO. Completion of victim empathy module via 1-1 supervision to build upon awareness of impact of offending.   Level setting to be undertaken by Senior Probation Officer and OMU. Multi Agency Public Protection Panel to be convened if level 2 either at start of supervision or 6 months prior to release"
+        },
+        {
+          "label": "Victim safety planning",
+          "questionNumber": "RM33",
+          "answer": "[RM33] Undertake sentence planning with OS within 8 or 16 weeks of sentence carats - continue to work with Mr Smith and refer for relevant programmes during any prison sentence imposed. DIP supervise DRR is imposed or provide support post release if conditions/requirements to manage the specific risks."
+        },
+        {
+          "label": "Contingency plans",
+          "questionNumber": "RM34",
+          "answer": "[RM34] Discuss any concerns with line manager/SPO Increase frequency of reporting Bring forward MAPPA/Consider Level 2 MAPPA professionals meetings  considered if MAPPA not applicable. Consider referral to Approved Premises Consider motivational interviewing/engagement officer.  Joint interview with police OM or other relevant agencies? To raise concerns Referral to substance misues worker for additional support. Warning letters to be employed Recall/Breach if risk not manageable."
+        },
+        {
+          "label": "Additional comments",
+          "questionNumber": "RM35",
+          "answer": "[RM35] Placeholder content for additional comments"
+        }
+      ]
+    },
+    "risk-to-self": {
+      "riskToSelfAnswers": {
+        "R8.1.1": "[R8.1.1] Review 06.10.21:\r\n\r\n        There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody.  In 2021...",
+        "R8.2.1": "[R8.2.1] Has told prison staff that he swallowed batteries on one occasion due to wanting..",
+        "R8.3.1": "[R8.3.1] Review 06.10.21:\r\n\r\n        A previous assessor opined that Mr Smith was displaying all the characteristics of someone..."
+      },
+      "riskToSelfSummaries": [
+        {
+          "label": "Current concerns about self-harm or suicide",
+          "questionNumber": "R8.1.1",
+          "answer": "[R8.1.1] Review 06.10.21:\r\n\r\n        There have been numerous ACCTs opened since 2013 and every subsequent year he has been in custody.  In 2021..."
+        },
+        {
+          "label": "Current concerns about Coping in Custody or Hostel",
+          "questionNumber": "R8.2.1",
+          "answer": "[R8.2.1] Has told prison staff that he swallowed batteries on one occasion due to wanting.."
+        },
+        {
+          "label": "Current concerns about Vulnerability",
+          "questionNumber": "R8.3.1",
+          "answer": "[R8.3.1] Review 06.10.21:\r\n\r\n        A previous assessor opined that Mr Smith was displaying all the characteristics of someone..."
+        }
+      ]
+    }
+  },
+  "risk-management-features": {
+    "risk-management-features": {
+      "manageRiskDetails": "Mr Bertrand's movements need to be monitored especially at night to ensure that he does not make content with previous victims.",
+      "additionalFeaturesDetails": "Mr Bertrand should be tested for drug use regularly as he has been known to conceal this in the past."
+    },
+    "convicted-offences": {
+      "response": "yes"
+    },
+    "date-of-offence": {
+      "offencesAgainstChildren": [
+        "current",
+        "previous"
+      ]
+    },
+    "rehabilitative-interventions": {
+      "rehabilitativeInterventions": [
+        "drugsAndAlcohol",
+        "childrenAndFamilies",
+        "educationTrainingAndEmployment",
+        "attitudesAndBehaviour",
+        "abuse"
+      ],
+      "otherIntervention": "",
+      "summary": "Mr Bertrand must continue to address the behaviour which has led to offending in the past. These activities will support him in avoid reoffending."
+    }
+  },
+  "prison-information": {
+    "case-notes": {
+      "caseNoteIds": [
+        "12311312",
+        "12311319"
+      ],
+      "selectedCaseNotes": [
+        {
+          "id": "12311312",
+          "sensitive": false,
+          "createdAt": "2022-11-08T12:00:00Z",
+          "occurredAt": "2022-11-06T10:00:00Z",
+          "authorName": "Some Person",
+          "type": "Mock Case Note Type",
+          "subType": "Mock Case Note Subtype",
+          "note": "This is a case note"
+        },
+        {
+          "id": "12311319",
+          "sensitive": true,
+          "createdAt": "2022-11-08T14:00:00Z",
+          "occurredAt": "2022-11-05T09:00:00Z",
+          "authorName": "Some Person",
+          "type": "Mock Sensitive Case Note Type",
+          "subType": "Mock Sensitive Case Note Subtype",
+          "note": "This is a sensitive case note"
+        }
+      ],
+      "adjudications": [
+        {
+          "id": 1525965,
+          "reportedAt": "2023-08-16T09:30:00Z",
+          "establishment": "Moorland (HMP & YOI)",
+          "offenceDescription": "Intentionally or recklessly sets fire to any part of a prison or any other property, whether or not his own",
+          "hearingHeld": true,
+          "finding": "PROVED"
+        },
+        {
+          "id": 1525953,
+          "reportedAt": "2023-08-15T13:41:00Z",
+          "establishment": "Moorland (HMP & YOI)",
+          "offenceDescription": "Disobeys any lawful order",
+          "hearingHeld": true,
+          "finding": "PROVED"
+        },
+        {
+          "id": 1525940,
+          "reportedAt": "2023-08-08T15:14:00Z",
+          "establishment": "Moorland (HMP & YOI)",
+          "offenceDescription": "Commits any assault - all assault on other person",
+          "hearingHeld": false,
+          "finding": null
+        },
+        {
+          "id": 1525931,
+          "reportedAt": "2023-08-04T15:18:00Z",
+          "establishment": "Moorland (HMP & YOI)",
+          "offenceDescription": "(a) Attempts to commit, (b) incites another inmate to commit, or (c) assists another inmate to commit or to attempt to commit, any of the foregoing offences - at incite or assist to set fire to prison or prop",
+          "hearingHeld": false,
+          "finding": null
+        },
+        {
+          "id": 1525906,
+          "reportedAt": "2023-08-01T13:56:17Z",
+          "establishment": "Moorland (HMP & YOI)",
+          "offenceDescription": "Intentionally or recklessly sets fire to any part of a prison or any other property, whether or not his own",
+          "hearingHeld": true,
+          "finding": "PROVED"
+        },
+        {
+          "id": 2525906,
+          "reportedAt": "2023-08-01T13:56:00Z",
+          "establishment": "Moorland (HMP & YOI)",
+          "offenceDescription": "Intentionally or recklessly sets fire to any part of a prison or any other property, whether or not his own",
+          "hearingHeld": false,
+          "finding": null
+        },
+        {
+          "id": 1525901,
+          "reportedAt": "2023-07-31T16:25:19Z",
+          "establishment": "Moorland (HMP & YOI)",
+          "offenceDescription": "Disobeys or fails to comply with any rule or regulation applying to him",
+          "hearingHeld": false,
+          "finding": null
+        },
+        {
+          "id": 1525709,
+          "reportedAt": "2023-06-02T11:25:31Z",
+          "establishment": "Moorland (HMP & YOI)",
+          "offenceDescription": "Commits any assault - all assault on other person",
+          "hearingHeld": false,
+          "finding": null
+        },
+        {
+          "id": 1525707,
+          "reportedAt": "2023-06-02T10:30:14Z",
+          "establishment": "Moorland (HMP & YOI)",
+          "offenceDescription": "Disobeys or fails to comply with any rule or regulation applying to him",
+          "hearingHeld": false,
+          "finding": null
+        },
+        {
+          "id": 1525705,
+          "reportedAt": "2023-06-01T14:15:12Z",
+          "establishment": "Moorland (HMP & YOI)",
+          "offenceDescription": "Intentionally or recklessly sets fire to any part of a prison or any other property, whether or not his own",
+          "hearingHeld": true,
+          "finding": "PROVED"
+        }
+      ],
+      "acctAlerts": []
+    }
+  },
+  "location-factors": {
+    "describe-location-factors": {
+      "postcodeArea": "LS2",
+      "positiveFactors": "Mr Bertrand's family live in Otley and his sister is in Tadcaster. After a successful AP placement, he plans to move in with one or other, depending on circumstances and the progress which has been made.",
+      "restrictions": "yes",
+      "restrictionDetail": "Mr Bertrand must avoid the Old Trafford area, where the index offence was committed.",
+      "alternativeRadiusAccepted": "yes",
+      "alternativeRadius": "100"
+    },
+    "preferred-aps": {
+      "preferredAp1": "81e9517f-589e-42b2-ae50-d98c77dc652d",
+      "preferredAp2": "64c3bf6e-befe-4069-9d35-3d297bc4e5df",
+      "preferredAp3": "e079318f-d3eb-48af-8b31-24c4080cd65b",
+      "preferredAp4": "16ff4339-238e-4f8f-9442-34635c8ae88d",
+      "preferredAp5": "c7de4bd2-a4af-4340-aa6f-4978c60526b6",
+      "selectedAps": [
+        {
+          "apCode": "TEST1",
+          "probationRegion": "Greater Manchester",
+          "apArea": "North West",
+          "service": "CAS1",
+          "id": "81e9517f-589e-42b2-ae50-d98c77dc652d",
+          "name": "Test AP 1",
+          "addressLine1": "454 Nader Port",
+          "postcode": "OX26 2EQ",
+          "bedCount": 22,
+          "status": "active",
+          "addressLine2": ""
+        },
+        {
+          "apCode": "TEST12",
+          "probationRegion": "Greater Manchester",
+          "apArea": "North West",
+          "service": "CAS1",
+          "id": "64c3bf6e-befe-4069-9d35-3d297bc4e5df",
+          "name": "Test AP 12",
+          "addressLine1": "307 Annabell Flats",
+          "postcode": "GU34 5EB",
+          "bedCount": 19,
+          "status": "active",
+          "addressLine2": ""
+        },
+        {
+          "apCode": "TEST14",
+          "probationRegion": "West Midlands",
+          "apArea": "Midlands",
+          "service": "CAS1",
+          "id": "e079318f-d3eb-48af-8b31-24c4080cd65b",
+          "name": "Test AP 14",
+          "addressLine1": "0300 Blick Camp",
+          "postcode": "HU11 4XH",
+          "bedCount": 19,
+          "status": "active",
+          "addressLine2": ""
+        },
+        {
+          "apCode": "TEST5",
+          "probationRegion": "East Midlands",
+          "apArea": "Midlands",
+          "service": "CAS1",
+          "id": "16ff4339-238e-4f8f-9442-34635c8ae88d",
+          "name": "Test AP 5",
+          "addressLine1": "4023 Green Wells",
+          "postcode": "N14 6QW",
+          "bedCount": 23,
+          "status": "active",
+          "addressLine2": ""
+        },
+        {
+          "apCode": "TEST15",
+          "probationRegion": "North East",
+          "apArea": "North East",
+          "service": "CAS1",
+          "id": "c7de4bd2-a4af-4340-aa6f-4978c60526b6",
+          "name": "Test AP 15",
+          "addressLine1": "4169 Joana Branch",
+          "postcode": "IV30 1XX",
+          "bedCount": 0,
+          "status": "active",
+          "addressLine2": ""
+        }
+      ]
+    }
+  },
+  "access-and-healthcare": {
+    "access-needs": {
+      "additionalNeeds": [
+        "hearingImpairment"
+      ],
+      "religiousOrCulturalNeeds": "no",
+      "religiousOrCulturalNeedsDetail": "",
+      "careAndSupportNeeds": "no",
+      "careAndSupportNeedsDetail": "",
+      "careActAssessmentCompleted": "iDontKnow",
+      "needsInterpreter": "no",
+      "interpreterLanguage": ""
+    },
+    "covid": {
+      "boosterEligibility": "yes",
+      "boosterEligibilityDetail": "Mr Bertrand was 65 in Oct 2023",
+      "immunosuppressed": "no"
+    }
+  },
+  "further-considerations": {
+    "room-sharing": {
+      "riskToStaff": "no",
+      "riskToStaffDetail": "",
+      "riskToOthers": "no",
+      "riskToOthersDetail": "",
+      "sharingConcerns": "yes",
+      "sharingConcernsDetail": "Mr Bertrand has a history of influencing others.",
+      "traumaConcerns": "no",
+      "traumaConcernsDetail": "",
+      "sharingBenefits": "yes",
+      "sharingBenefitsDetail": "Mr Bertrand has benefitted from sharing cell and from increased social contact. Be aware of his history of influencing cell mates."
+    },
+    "vulnerability": {
+      "exploitable": "no",
+      "exploitableDetail": "",
+      "exploitOthers": "yes",
+      "exploitOthersDetail": "Mr Bertrand has a history of influencing others to participate in offences to obtain opiates"
+    },
+    "previous-placements": {
+      "previousPlacement": "no",
+      "previousPlacementDetail": ""
+    },
+    "rfap": {
+      "needARfap": "yes"
+    },
+    "rfap-details": {
+      "motivation": "Mr Bertrand has been on DART and demonstrated progress",
+      "receivingTreatment": "no",
+      "receivingTreatmentDetail": "",
+      "continuedRecovery": "Mr Bertand has committed to joining the local AA in Leeds."
+    },
+    "catering": {
+      "catering": "yes",
+      "cateringDetail": ""
+    },
+    "arson": {
+      "arson": "no",
+      "arsonDetail": ""
+    },
+    "additional-circumstances": {
+      "additionalCircumstances": "no",
+      "additionalCircumstancesDetail": ""
+    }
+  },
+  "move-on": {
+    "placement-duration": {
+      "differentDuration": "yes",
+      "duration": "112",
+      "durationDays": "0",
+      "durationWeeks": "16",
+      "reason": "This has been stipulated by the Parole Board Dec 12, 2023"
+    },
+    "relocation-region": {
+      "postcodeArea": "LS2"
+    },
+    "plans-in-place": {
+      "arePlansInPlace": "no",
+      "plansNotInPlaceDetail": "Mr Bertrand intends to move in with either this sister in Tadcaster or his own family in Otley"
+    },
+    "type-of-accommodation": {
+      "accommodationType": "other",
+      "otherAccommodationType": "not yet determined"
+    }
+  },
+  "attach-required-documents": {
+    "attach-documents": {
+      "selectedDocuments": [
+        {
+          "id": "1e593ff6-d5d6-4048-a671-cdeb8f65608b",
+          "level": "Offender",
+          "fileName": "PRE-CONS.pdf",
+          "createdAt": "2019-09-10T00:00:00Z",
+          "typeCode": "PRECONS_DOCUMENT",
+          "typeDescription": "PNC previous convictions",
+          "description": "PNC previous convictions"
+        },
+        {
+          "id": "7ceda384-3624-4a62-849d-7c729b6d0dd1",
+          "level": "Offender",
+          "fileName": "Personal circumstances.pdf.pdf",
+          "createdAt": "2019-09-12T00:00:00Z",
+          "typeCode": "PERSONAL_CIRCUMSTANCE_DOCUMENT",
+          "typeDescription": "Personal circumstance related document",
+          "description": "Personal circumstance of AP - Medication in Posession  - Assessment started on 11/09/2019"
+        },
+        {
+          "id": "1d842fce-ec2d-45dc-ac9a-748d3076ca6b",
+          "level": "Conviction",
+          "fileName": "shortFormatPreSentenceReport_04092019_121424_OMIC_A_X320741.pdf",
+          "createdAt": "2019-09-04T00:00:00Z",
+          "typeCode": "COURT_REPORT_DOCUMENT",
+          "typeDescription": "Court report",
+          "description": "Pre-Sentence Report - Fast requested by Sheffield Crown Court on 04/09/2018"
+        },
+        {
+          "id": "e6cf2802-32d5-4a91-a7a9-00064d27bb19",
+          "level": "Conviction",
+          "fileName": "paroleParom1Report_04092019_122116_OMIC_A_X320741.pdf",
+          "createdAt": "2019-09-04T00:00:00Z",
+          "typeCode": "INSTITUTION_REPORT_DOCUMENT",
+          "typeDescription": "Institution report",
+          "description": "Parole Assessment Report at Berwyn (HMP) requested on 05/09/2019"
+        }
+      ]
+    }
+  },
+  "check-your-answers": {
+    "review": {
+      "reviewed": "1"
+    }
+  }
+}
