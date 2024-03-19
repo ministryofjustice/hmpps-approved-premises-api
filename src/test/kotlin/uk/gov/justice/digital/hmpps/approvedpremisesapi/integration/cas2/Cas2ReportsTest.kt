@@ -8,6 +8,8 @@ import org.jetbrains.kotlinx.dataframe.api.toDataFrame
 import org.jetbrains.kotlinx.dataframe.io.readExcel
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
@@ -29,8 +31,15 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
   @Nested
   inner class ControlsOnExternalUsers {
-    @Test
-    fun `downloading report is forbidden to external users without MI role`() {
+    @ParameterizedTest
+    @ValueSource(
+      strings = [
+        "submitted-applications",
+        "application-status-updates",
+        "unsubmitted-applications",
+      ],
+    )
+    fun `downloading report is forbidden to external users without MI role`(reportName: String) {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "auth",
@@ -38,36 +47,27 @@ class Cas2ReportsTest : IntegrationTestBase() {
       )
 
       webTestClient.get()
-        .uri("/cas2/reports/example-report")
+        .uri("/cas2/reports/$reportName")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
         .isForbidden
     }
-
-    @Test
-    fun `downloading report is permitted to external users with MI role`() {
-      val jwt = jwtAuthHelper.createClientCredentialsJwt(
-        username = "username",
-        authSource = "auth",
-        roles = listOf("ROLE_CAS2_ASSESSOR", "ROLE_CAS2_MI"),
-      )
-
-      webTestClient.get()
-        .uri("/cas2/reports/example-report")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-    }
   }
 
   @Nested
   inner class MissingJwt {
-    @Test
-    fun `Downloading report without JWT returns 401`() {
+    @ParameterizedTest
+    @ValueSource(
+      strings = [
+        "submitted-applications",
+        "application-status-updates",
+        "unsubmitted-applications",
+      ],
+    )
+    fun `Downloading report without JWT returns 401`(reportName: String) {
       webTestClient.get()
-        .uri("/cas2/reports/example-report")
+        .uri("/cas2/reports/$reportName")
         .exchange()
         .expectStatus()
         .isUnauthorized
@@ -76,8 +76,15 @@ class Cas2ReportsTest : IntegrationTestBase() {
 
   @Nested
   inner class ControlsOnInternalUsers {
-    @Test
-    fun `downloading report is forbidden to NOMIS users without MI role`() {
+    @ParameterizedTest
+    @ValueSource(
+      strings = [
+        "submitted-applications",
+        "application-status-updates",
+        "unsubmitted-applications",
+      ],
+    )
+    fun `downloading report is forbidden to NOMIS users without MI role`(reportName: String) {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
@@ -85,27 +92,11 @@ class Cas2ReportsTest : IntegrationTestBase() {
       )
 
       webTestClient.get()
-        .uri("/cas2/reports/example-report")
+        .uri("/cas2/reports/$reportName")
         .header("Authorization", "Bearer $jwt")
         .exchange()
         .expectStatus()
         .isForbidden
-    }
-
-    @Test
-    fun `downloading report is permitted to NOMIS users with MI role`() {
-      val jwt = jwtAuthHelper.createClientCredentialsJwt(
-        username = "username",
-        authSource = "nomis",
-        roles = listOf("ROLE_POM", "ROLE_CAS2_MI"),
-      )
-
-      webTestClient.get()
-        .uri("/cas2/reports/example-report")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
     }
   }
 
