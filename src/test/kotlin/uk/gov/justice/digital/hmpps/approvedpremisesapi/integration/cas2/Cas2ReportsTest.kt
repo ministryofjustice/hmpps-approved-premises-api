@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2StatusFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Cas2ExampleMetricsRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.SubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.UnsubmittedApplicationsReportRow
@@ -516,33 +515,6 @@ class Cas2ReportsTest : IntegrationTestBase() {
           Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
         }
     }
-  }
-
-  @Test
-  fun `downloaded report is streamed as a spreadsheet`() {
-    val jwt = jwtAuthHelper.createClientCredentialsJwt(
-      username = "username",
-      authSource = "nomis",
-      roles = listOf("ROLE_CAS2_MI"),
-    )
-
-    val expectedDataFrame = listOf(Cas2ExampleMetricsRow(id = "123", data = "example"))
-      .toDataFrame()
-
-    webTestClient.get()
-      .uri("/cas2/reports/example-report")
-      .header("Authorization", "Bearer $jwt")
-      .exchange()
-      .expectStatus()
-      .isOk
-      .expectBody()
-      .consumeWith {
-        val actual = DataFrame
-          .readExcel(it.responseBody!!.inputStream())
-          .convertTo<Cas2ExampleMetricsRow>(ExcessiveColumns.Remove)
-
-        Assertions.assertThat(actual).isEqualTo(expectedDataFrame)
-      }
   }
 
   private fun daysInSeconds(days: Int): Long {

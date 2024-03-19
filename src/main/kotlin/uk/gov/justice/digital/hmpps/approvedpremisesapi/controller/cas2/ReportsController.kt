@@ -11,12 +11,6 @@ import java.io.ByteArrayOutputStream
 @Service("Cas2ReportsController")
 class ReportsController(private val reportService: ReportsService) : ReportsCas2Delegate {
 
-  override fun reportsExampleReportGet(): ResponseEntity<Resource> {
-    val outputStream = ByteArrayOutputStream()
-    reportService.createCas2ExampleReport(outputStream)
-    return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
-  }
-
   override fun reportsReportNameGet(reportName: String): ResponseEntity<Resource> {
     val outputStream = ByteArrayOutputStream()
     when (reportName) {
