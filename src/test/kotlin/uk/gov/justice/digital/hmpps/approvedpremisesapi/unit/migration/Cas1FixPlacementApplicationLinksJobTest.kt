@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1FixPlacementApplicationLinksJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUtcOffsetDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import javax.persistence.EntityManager
@@ -66,7 +67,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
 
   private val applicationWithArrivalDate = ApprovedPremisesApplicationEntityFactory()
     .withCreatedByUser(createdByUser)
-    .withArrivalDate(OffsetDateTime.now())
+    .withArrivalDate(LocalDate.of(2022, 1, 2).toUtcOffsetDateTime())
     .produce()
 
   private val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -399,7 +400,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
       logger.error(
         "Application ${applicationWithArrivalDate.id} has an arrival date set on the initial application, " +
           "but after matching to placement apps, the only remaining placement request doesn't have the " +
-          "expected arrival date (expected 2024-03-18 was 2024-02-18)",
+          "expected arrival date (expected 2022-01-02 was 2021-12-02)",
       )
     }
   }
