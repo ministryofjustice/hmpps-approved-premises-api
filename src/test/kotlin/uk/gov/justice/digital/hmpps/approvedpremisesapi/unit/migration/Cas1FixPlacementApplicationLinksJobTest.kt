@@ -110,9 +110,9 @@ class Cas1FixPlacementApplicationLinksJobTest {
 
     service.applyManualFix(
       ManualLinkFix(
-        applicationId = applicationWithNoArrivalDate.id.toString(),
-        placementApplicationId = placementApp1.id.toString(),
-        placementRequestId = placementRequest3.id.toString(),
+        applicationId = applicationWithNoArrivalDate.id,
+        placementApplicationId = placementApp1.id,
+        placementRequestId = placementRequest3.id,
       ),
     )
 
