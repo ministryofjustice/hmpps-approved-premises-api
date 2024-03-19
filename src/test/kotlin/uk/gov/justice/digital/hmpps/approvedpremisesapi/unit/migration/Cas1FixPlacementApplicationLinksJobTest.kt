@@ -282,8 +282,8 @@ class Cas1FixPlacementApplicationLinksJobTest {
     service.updateApplication(applicationWithNoArrivalDate.id)
     verify {
       logger.error(
-        "We should not be considering PlacementApplications with a non-null decisionMadeAt, because this was only set for " +
-          "decisions made after linking PlacementApplications to PlacementRequests was automatically managed in code. " +
+        "We should not be considering applications where all PlacementApplications have a non-null decisionMadeAt, because this was only set for " +
+          "decisions made after linking PlacementApplications to PlacementRequests was automatically managed in code. This suggests an error in the migration logic. " +
           "Placement applications are [${placementAppWithDecisionDate.id} for date 2020-01-02 and duration 10]",
       )
     }

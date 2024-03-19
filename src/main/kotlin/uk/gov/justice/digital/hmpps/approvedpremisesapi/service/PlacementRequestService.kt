@@ -304,7 +304,7 @@ class PlacementRequestService(
    *
    * 1. The entity is withdrawable, and error if not
    * 2. The user is allowed to withdraw it, and error if not
-   * 3. If withdrawn, all descdents entities are withdrawn, where applicable
+   * 3. If withdrawn, all descendent entities are withdrawn, where applicable
    */
   @Transactional
   fun withdrawPlacementRequest(

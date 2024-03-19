@@ -83,11 +83,12 @@ class Cas1FixPlacementApplicationLinksJob(
       // we only started capturing decisionMadeAt in Dec 2023
       .filter { it.placementApplication.decisionMadeAt != null }
 
-    if (placementAppsWithDecisionMadeDateSet.isNotEmpty()) {
+    if (placementAppsWithDecisionMadeDateSet.size == placementAppsAndDate.size) {
       log.error(
-        "We should not be considering PlacementApplications with a non-null decisionMadeAt, because this was " +
+        "We should not be considering applications where all PlacementApplications have a non-null decisionMadeAt, because this was " +
           "only set for decisions made after linking PlacementApplications to PlacementRequests was automatically " +
-          "managed in code. Placement applications are ${placementAppsWithDecisionMadeDateSet.map { describe(it) }}",
+          "managed in code. This suggests an error in the migration logic. " +
+          "Placement applications are ${placementAppsWithDecisionMadeDateSet.map { describe(it) }}",
       )
       return
     }
