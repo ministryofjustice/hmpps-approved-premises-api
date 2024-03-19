@@ -2501,6 +2501,7 @@ class ApplicationTest : IntegrationTestBase() {
             withApplicationSchema(applicationSchema)
             withCreatedByUser(submittingUser)
             withProbationRegion(submittingUser.probationRegion)
+            withPdu("Probation Delivery Unit Test")
             withData(
               """
               {}
@@ -2522,6 +2523,7 @@ class ApplicationTest : IntegrationTestBase() {
                   val text = "Hello world!"
                 },
                 personReleaseDate = LocalDate.now(),
+                pdu = "Probation Delivery Unit Test",
               ),
             )
             .exchange()

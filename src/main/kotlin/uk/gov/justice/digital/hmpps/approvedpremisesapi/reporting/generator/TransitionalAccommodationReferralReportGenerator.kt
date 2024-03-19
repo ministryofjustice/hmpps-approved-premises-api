@@ -41,6 +41,7 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
         town = referralData.town,
         postCode = referralData.postCode,
         probationRegion = referralData.probationRegionName,
+        pdu = referralData.pdu,
         referralSubmittedDate = referralData.referralSubmittedDate,
         referralRejected = AssessmentDecision.REJECTED.name == referralData.assessmentDecision,
         rejectionReason = referralData.assessmentRejectionReason,
