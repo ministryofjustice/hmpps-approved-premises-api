@@ -25,6 +25,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1UserDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2AssessmentMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.NoticeTypeMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.NoticeTypeMigrationJobApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.TaskDueMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationJob
@@ -95,6 +97,11 @@ class MigrationJobService(
           applicationContext.getBean(PlacementRequestRepository::class.java),
           applicationContext.getBean(EntityManager::class.java),
           transactionTemplate,
+        )
+
+        MigrationJobType.cas1NoticeTypes -> NoticeTypeMigrationJob(
+          applicationContext.getBean(NoticeTypeMigrationJobApplicationRepository::class.java),
+          pageSize,
         )
       }
 

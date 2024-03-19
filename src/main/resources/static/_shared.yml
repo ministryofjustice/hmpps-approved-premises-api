@@ -3512,6 +3512,7 @@ components:
         - update_cas2_applications_with_assessments
         - update_cas1_user_details
         - update_cas1_fix_placement_app_links
+        - update_cas1_notice_types
     PlacementDates:
       type: object
       properties:
