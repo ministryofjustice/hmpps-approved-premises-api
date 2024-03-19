@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1FixPlacementApplicationLinksJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1FixPlacementApplicationLinksJob.ManualLinkFix
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUtcOffsetDateTime
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -90,17 +91,53 @@ class Cas1FixPlacementApplicationLinksJobTest {
   }
 
   @Test
-  fun `nothing to do`() {
+  fun `applyManualFix`() {
+    every { applicationRepository.findByIdOrNull(applicationWithNoArrivalDate.id) } returns applicationWithNoArrivalDate
+
+    val placementApp1 = placementApp()
+    every { placementApplicationRepository.findByIdOrNull(placementApp1.id) } returns placementApp1
+
+    val placementRequest1 = placementRequestForDates(LocalDate.of(2020, 1, 2), 10)
+    val placementRequest2 = placementRequestForDates(LocalDate.of(2021, 1, 2), 10)
+    val placementRequest3 = placementRequestForDates(LocalDate.of(2022, 1, 2), 10)
+    applicationWithNoArrivalDate.placementRequests = mutableListOf(
+      placementRequest1,
+      placementRequest2,
+      placementRequest3,
+    )
+
+    every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+
+    service.applyManualFix(
+      ManualLinkFix(
+        applicationId = applicationWithNoArrivalDate.id.toString(),
+        placementApplicationId = placementApp1.id.toString(),
+        placementRequestId = placementRequest3.id.toString(),
+      ),
+    )
+
+    verify {
+      placementRequestRepository.save(
+        match {
+          it.id == placementRequest3.id &&
+            it.placementApplication == placementApp1
+        },
+      )
+    }
+  }
+
+  @Test
+  fun `applyAutomatedFixes nothing to do`() {
     every { applicationRepository.findByIdOrNull(applicationWithNoArrivalDate.id) } returns applicationWithNoArrivalDate
     every { placementApplicationRepository.findByApplication(applicationWithNoArrivalDate) } returns emptyList()
 
-    service.updateApplication(applicationWithNoArrivalDate.id)
+    service.applyAutomatedFixes(applicationWithNoArrivalDate.id)
 
     verify { placementRequestRepository wasNot Called }
   }
 
   @Test
-  fun `match placement app with single date to single placement request`() {
+  fun `applyAutomatedFixes match placement app with single date to single placement request`() {
     every { applicationRepository.findByIdOrNull(applicationWithNoArrivalDate.id) } returns applicationWithNoArrivalDate
 
     val placementAppWithSingleDate1 = placementApp()
@@ -112,7 +149,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
     every { placementApplicationRepository.findByApplication(applicationWithNoArrivalDate) } returns listOf(placementAppWithSingleDate1)
     every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
 
-    service.updateApplication(applicationWithNoArrivalDate.id)
+    service.applyAutomatedFixes(applicationWithNoArrivalDate.id)
 
     verify {
       placementRequestRepository.save(
@@ -127,7 +164,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
   }
 
   @Test
-  fun `match placement app with single date to single placement request ignore existing matched placement app`() {
+  fun `applyAutomatedFixes match placement app with single date to single placement request ignore existing matched placement app`() {
     every { applicationRepository.findByIdOrNull(applicationWithNoArrivalDate.id) } returns applicationWithNoArrivalDate
 
     val placementAppWithSingleDate1 = placementApp()
@@ -149,7 +186,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
     } returns listOf(placementAppWithSingleDate1, placementAppWithSingleDate2)
     every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
 
-    service.updateApplication(applicationWithNoArrivalDate.id)
+    service.applyAutomatedFixes(applicationWithNoArrivalDate.id)
 
     verify {
       placementRequestRepository.save(
@@ -164,7 +201,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
   }
 
   @Test
-  fun `match placement app with single date to single placement request when application has initial date set`() {
+  fun `applyAutomatedFixes match placement app with single date to single placement request when application has initial date set`() {
     every { applicationRepository.findByIdOrNull(applicationWithArrivalDate.id) } returns applicationWithArrivalDate
 
     val placementApp = placementApp(application = applicationWithArrivalDate)
@@ -178,7 +215,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
     every { placementApplicationRepository.findByApplication(applicationWithArrivalDate) } returns listOf(placementApp)
     every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
 
-    service.updateApplication(applicationWithArrivalDate.id)
+    service.applyAutomatedFixes(applicationWithArrivalDate.id)
 
     verify {
       placementRequestRepository.save(
@@ -193,7 +230,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
   }
 
   @Test
-  fun `match multiple placement apps with single date to placement requests`() {
+  fun `applyAutomatedFixes match multiple placement apps with single date to placement requests`() {
     every { applicationRepository.findByIdOrNull(applicationWithNoArrivalDate.id) } returns applicationWithNoArrivalDate
 
     val placementAppWithSingleDate1 = placementApp()
@@ -211,7 +248,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
     every { placementApplicationRepository.findByApplication(applicationWithNoArrivalDate) } returns listOf(placementAppWithSingleDate1, placementAppWithSingleDate2)
     every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
 
-    service.updateApplication(applicationWithNoArrivalDate.id)
+    service.applyAutomatedFixes(applicationWithNoArrivalDate.id)
 
     verify {
       placementRequestRepository.save(
@@ -235,7 +272,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
   }
 
   @Test
-  fun `match single placement apps with multiple dates to placement requests`() {
+  fun `applyAutomatedFixes match single placement apps with multiple dates to placement requests`() {
     every { applicationRepository.findByIdOrNull(applicationWithNoArrivalDate.id) } returns applicationWithNoArrivalDate
 
     val placementAppWithMultipleDate1 = placementApp()
@@ -251,7 +288,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
     every { placementApplicationRepository.findByApplication(applicationWithNoArrivalDate) } returns listOf(placementAppWithMultipleDate1)
     every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
 
-    service.updateApplication(applicationWithNoArrivalDate.id)
+    service.applyAutomatedFixes(applicationWithNoArrivalDate.id)
 
     verify {
       placementRequestRepository.save(
@@ -275,7 +312,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
   }
 
   @Test
-  fun `match placement app with single date to single placement request, ignore placement apps that aren't accepted`() {
+  fun `applyAutomatedFixes match placement app with single date to single placement request, ignore placement apps that aren't accepted`() {
     every { applicationRepository.findByIdOrNull(applicationWithNoArrivalDate.id) } returns applicationWithNoArrivalDate
 
     val placementAppWithSingleDate1 = placementApp()
@@ -290,7 +327,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
     every { placementApplicationRepository.findByApplication(applicationWithNoArrivalDate) } returns listOf(placementAppWithSingleDate1, placementAppWithoutDecisionIsIgnored)
     every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
 
-    service.updateApplication(applicationWithNoArrivalDate.id)
+    service.applyAutomatedFixes(applicationWithNoArrivalDate.id)
 
     verify {
       placementRequestRepository.save(
@@ -305,7 +342,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
   }
 
   @Test
-  fun `error if placement application has a decision date, because any application with this populated should already be correctly linked to placement requests`() {
+  fun `applyAutomatedFixes error if placement application has a decision date, because any application with this populated should already be correctly linked to placement requests`() {
     every { applicationRepository.findByIdOrNull(applicationWithNoArrivalDate.id) } returns applicationWithNoArrivalDate
 
     val placementAppWithDecisionDate = placementApp(decisionDate = OffsetDateTime.now())
@@ -316,7 +353,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
 
     every { placementApplicationRepository.findByApplication(applicationWithNoArrivalDate) } returns listOf(placementAppWithDecisionDate)
 
-    service.updateApplication(applicationWithNoArrivalDate.id)
+    service.applyAutomatedFixes(applicationWithNoArrivalDate.id)
     verify {
       logger.error(
         "We should not be considering applications where all PlacementApplications have a non-null decisionMadeAt, because this was only set for " +
@@ -327,7 +364,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
   }
 
   @Test
-  fun `error if no corresponding placement request found`() {
+  fun `applyAutomatedFixes error if no corresponding placement request found`() {
     every { applicationRepository.findByIdOrNull(applicationWithNoArrivalDate.id) } returns applicationWithNoArrivalDate
 
     val placementApp = placementApp()
@@ -335,7 +372,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
 
     every { placementApplicationRepository.findByApplication(applicationWithNoArrivalDate) } returns listOf(placementApp)
 
-    service.updateApplication(applicationWithNoArrivalDate.id)
+    service.applyAutomatedFixes(applicationWithNoArrivalDate.id)
 
     verify {
       logger.error(
@@ -346,7 +383,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
   }
 
   @Test
-  fun `error if multiple potential placement requests found`() {
+  fun `applyAutomatedFixes error if multiple potential placement requests found`() {
     every { applicationRepository.findByIdOrNull(applicationWithNoArrivalDate.id) } returns applicationWithNoArrivalDate
 
     val placementApp = placementApp()
@@ -360,7 +397,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
 
     every { placementApplicationRepository.findByApplication(applicationWithNoArrivalDate) } returns listOf(placementApp)
 
-    service.updateApplication(applicationWithNoArrivalDate.id)
+    service.applyAutomatedFixes(applicationWithNoArrivalDate.id)
 
     verify {
       logger.error(
@@ -371,7 +408,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
   }
 
   @Test
-  fun `error if application has no initial date and unmatched placement requests exist`() {
+  fun `applyAutomatedFixes error if application has no initial date and unmatched placement requests exist`() {
     every { applicationRepository.findByIdOrNull(applicationWithNoArrivalDate.id) } returns applicationWithNoArrivalDate
 
     val placementApp = placementApp()
@@ -385,7 +422,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
 
     every { placementApplicationRepository.findByApplication(applicationWithNoArrivalDate) } returns listOf(placementApp)
 
-    service.updateApplication(applicationWithNoArrivalDate.id)
+    service.applyAutomatedFixes(applicationWithNoArrivalDate.id)
 
     verify {
       logger.error(
@@ -396,7 +433,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
   }
 
   @Test
-  fun `error if application has an initial date and no unmatched placement requests exist after mapping`() {
+  fun `applyAutomatedFixes error if application has an initial date and no unmatched placement requests exist after mapping`() {
     every { applicationRepository.findByIdOrNull(applicationWithArrivalDate.id) } returns applicationWithArrivalDate
 
     val placementApp = placementApp(application = applicationWithArrivalDate)
@@ -407,7 +444,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
 
     every { placementApplicationRepository.findByApplication(applicationWithArrivalDate) } returns listOf(placementApp)
 
-    service.updateApplication(applicationWithArrivalDate.id)
+    service.applyAutomatedFixes(applicationWithArrivalDate.id)
 
     verify {
       logger.error(
@@ -418,7 +455,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
   }
 
   @Test
-  fun `error if application has an initial date and remaining placement request has different start date`() {
+  fun `applyAutomatedFixes error if application has an initial date and remaining placement request has different start date`() {
     every { applicationRepository.findByIdOrNull(applicationWithArrivalDate.id) } returns applicationWithArrivalDate
 
     val placementApp = placementApp(application = applicationWithArrivalDate)
@@ -431,7 +468,7 @@ class Cas1FixPlacementApplicationLinksJobTest {
 
     every { placementApplicationRepository.findByApplication(applicationWithArrivalDate) } returns listOf(placementApp)
 
-    service.updateApplication(applicationWithArrivalDate.id)
+    service.applyAutomatedFixes(applicationWithArrivalDate.id)
 
     verify {
       logger.error(
