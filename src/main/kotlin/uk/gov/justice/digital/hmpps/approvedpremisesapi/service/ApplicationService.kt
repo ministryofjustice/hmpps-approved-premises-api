@@ -347,6 +347,7 @@ class ApplicationService(
       applicantUserDetails = null,
       caseManagerIsNotApplicant = null,
       caseManagerUserDetails = null,
+      noticeType = null,
     )
   }
 

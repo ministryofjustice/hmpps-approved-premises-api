@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Lock
 import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.listeners.ApplicationListener
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -327,6 +328,8 @@ class ApprovedPremisesApplicationEntity(
   @OneToOne
   @JoinColumn(name = "case_manager_cas1_application_user_details_id")
   var caseManagerUserDetails: Cas1ApplicationUserDetailsEntity?,
+  @Enumerated(value = EnumType.STRING)
+  var noticeType: Cas1ApplicationTimelinessCategory?,
 ) : ApplicationEntity(
   id,
   crn,

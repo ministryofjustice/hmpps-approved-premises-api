@@ -2250,6 +2250,8 @@ components:
               type: boolean
             caseManagerUserDetails:
               $ref: '#/components/schemas/Cas1ApplicationUserDetails'
+            noticeType:
+              $ref: '#/components/schemas/Cas1ApplicationTimelinessCategory'
           required:
             - isPipeApplication
             - isWomensApplication
@@ -2347,6 +2349,12 @@ components:
         - residencyManagement
         - bailAssessment
         - bailSentence
+    Cas1ApplicationTimelinessCategory:
+      type: string
+      enum:
+        - standard
+        - emergency
+        - shortNotice
     PrisonCaseNote:
       type: object
       properties:

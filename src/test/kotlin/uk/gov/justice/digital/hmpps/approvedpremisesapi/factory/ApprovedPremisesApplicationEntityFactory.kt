@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory
 
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTeamCodeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -57,6 +58,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var applicantUserDetails: Yielded<Cas1ApplicationUserDetailsEntity?> = { null }
   private var caseManagerIsNotApplicant: Yielded<Boolean?> = { null }
   private var caseManagerUserDetails: Yielded<Cas1ApplicationUserDetailsEntity?> = { null }
+  private var noticeType: Yielded<Cas1ApplicationTimelinessCategory?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -206,6 +208,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.caseManagerUserDetails = { casManagerUserDetails }
   }
 
+  fun withNoticeType(noticeType: Cas1ApplicationTimelinessCategory?) = apply {
+    this.noticeType = { noticeType }
+  }
+
   override fun produce(): ApprovedPremisesApplicationEntity = ApprovedPremisesApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -244,5 +250,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     applicantUserDetails = this.applicantUserDetails(),
     caseManagerIsNotApplicant = this.caseManagerIsNotApplicant(),
     caseManagerUserDetails = this.caseManagerUserDetails(),
+    noticeType = this.noticeType(),
   )
 }

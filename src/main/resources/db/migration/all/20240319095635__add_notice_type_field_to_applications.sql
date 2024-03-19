@@ -1,0 +1,1 @@
+ALTER TABLE approved_premises_applications ADD COLUMN "notice_type" text NULL;
