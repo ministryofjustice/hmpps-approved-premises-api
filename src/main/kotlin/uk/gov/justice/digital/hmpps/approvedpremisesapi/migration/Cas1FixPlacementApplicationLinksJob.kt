@@ -68,6 +68,7 @@ class Cas1FixPlacementApplicationLinksJob(
       .toMutableList()
 
     val placementAppsAndDate = placementApplicationRepository.findByApplication(application)
+      .filter { it.placementRequests.isEmpty() }
       .filter { it.isAccepted() }
       .flatMap { placementApp ->
         placementApp.placementDates.map {

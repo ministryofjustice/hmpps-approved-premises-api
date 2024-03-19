@@ -127,6 +127,43 @@ class Cas1FixPlacementApplicationLinksJobTest {
   }
 
   @Test
+  fun `match placement app with single date to single placement request ignore existing matched placement app`() {
+    every { applicationRepository.findByIdOrNull(applicationWithNoArrivalDate.id) } returns applicationWithNoArrivalDate
+
+    val placementAppWithSingleDate1 = placementApp()
+    addDates(placementAppWithSingleDate1, LocalDate.of(2020, 1, 2), 10)
+
+    val placementAppWithSingleDate2 = placementApp()
+    addDates(placementAppWithSingleDate2, LocalDate.of(2020, 1, 2), 10)
+
+    val placementRequest1 = placementRequestForDates(LocalDate.of(2020, 1, 2), 10)
+    applicationWithNoArrivalDate.placementRequests.add(placementRequest1)
+
+    val placementRequest2 = placementRequestForDates(LocalDate.of(2020, 1, 2), 10)
+    placementRequest2.placementApplication = placementAppWithSingleDate2
+    applicationWithNoArrivalDate.placementRequests.add(placementRequest2)
+    placementAppWithSingleDate2.placementRequests = mutableListOf(placementRequest2)
+
+    every {
+      placementApplicationRepository.findByApplication(applicationWithNoArrivalDate)
+    } returns listOf(placementAppWithSingleDate1, placementAppWithSingleDate2)
+    every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+
+    service.updateApplication(applicationWithNoArrivalDate.id)
+
+    verify {
+      placementRequestRepository.save(
+        match {
+          it.id == placementRequest1.id &&
+            it.placementApplication == placementAppWithSingleDate1
+        },
+      )
+    }
+
+    assertNoErrorsLogged()
+  }
+
+  @Test
   fun `match placement app with single date to single placement request when application has initial date set`() {
     every { applicationRepository.findByIdOrNull(applicationWithArrivalDate.id) } returns applicationWithArrivalDate
 
