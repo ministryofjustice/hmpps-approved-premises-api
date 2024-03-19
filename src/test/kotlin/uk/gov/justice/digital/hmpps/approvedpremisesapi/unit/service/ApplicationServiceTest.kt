@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SentenceTypeOption
@@ -1505,6 +1506,7 @@ class ApplicationServiceTest {
         applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
         caseManagerIsNotApplicant = true,
         caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
       )
 
       val application = ApprovedPremisesApplicationEntityFactory()
@@ -1556,6 +1558,107 @@ class ApplicationServiceTest {
       } else {
         assertThat(persistedApplication.situation).isEqualTo(situation.toString())
       }
+      assertThat(persistedApplication.targetLocation).isEqualTo(submitApprovedPremisesApplication.targetLocation)
+      assertThat(persistedApplication.inmateInOutStatusOnSubmission).isEqualTo("OUT")
+      assertThat(persistedApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)
+      assertThat(persistedApplication.caseManagerIsNotApplicant).isEqualTo(true)
+      assertThat(persistedApplication.caseManagerUserDetails).isEqualTo(theCaseManagerUserDetailsEntity)
+      assertThat(persistedApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.standard)
+
+      verify { mockApplicationRepository.save(any()) }
+      verify(exactly = 1) { mockAssessmentService.createApprovedPremisesAssessment(application) }
+
+      verify(exactly = 1) {
+        mockCas1ApplicationDomainEventService.applicationSubmitted(
+          application,
+          submitApprovedPremisesApplication,
+          username,
+          "jwt",
+        )
+      }
+
+      verify(exactly = 1) {
+        mockEmailNotificationService.sendEmail(
+          any(),
+          "c9944bd8-63c4-473c-8dce-b3636e47d3dd",
+          match {
+            it["name"] == user.name &&
+              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
+          },
+        )
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = Cas1ApplicationTimelinessCategory::class)
+    fun `submitApprovedPremisesApplication sets noticeType correctly`(noticeType: Cas1ApplicationTimelinessCategory) {
+      submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        isPipeApplication = true,
+        isWomensApplication = false,
+        isEmergencyApplication = noticeType == Cas1ApplicationTimelinessCategory.emergency,
+        isEsapApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicantPhone"),
+        caseManagerIsNotApplicant = true,
+        caseManagerUserDetails = Cas1ApplicationUserDetails("caseManagerName", "caseManagerEmail", "caseManagerPhone"),
+        arrivalDate = if (noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
+          LocalDate.now().plusDays(10)
+        } else {
+          LocalDate.now().plusMonths(7)
+        },
+        noticeType = null,
+      )
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withCreatedAt(OffsetDateTime.now())
+        .withSubmittedAt(null)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      setupMocksForSuccess(application)
+
+      val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match { it.name == "applicantName" && it.email == "applicantEmail" && it.telephoneNumber == "applicantPhone" },
+        )
+      } returns theApplicantUserDetailsEntity
+
+      val theCaseManagerUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match { it.name == "caseManagerName" && it.email == "caseManagerEmail" && it.telephoneNumber == "caseManagerPhone" },
+        )
+      } returns theCaseManagerUserDetailsEntity
+
+      val result =
+        applicationService.submitApprovedPremisesApplication(
+          applicationId,
+          submitApprovedPremisesApplication,
+          username,
+          "jwt",
+          user.probationRegion.id,
+        )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.Success).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+      val persistedApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+      assertThat(persistedApplication.isPipeApplication).isTrue
+      assertThat(persistedApplication.isWomensApplication).isFalse
+      assertThat(persistedApplication.releaseType).isEqualTo(submitApprovedPremisesApplication.releaseType.toString())
+      assertThat(persistedApplication.noticeType).isEqualTo(noticeType)
       assertThat(persistedApplication.targetLocation).isEqualTo(submitApprovedPremisesApplication.targetLocation)
       assertThat(persistedApplication.inmateInOutStatusOnSubmission).isEqualTo("OUT")
       assertThat(persistedApplication.applicantUserDetails).isEqualTo(theApplicantUserDetailsEntity)

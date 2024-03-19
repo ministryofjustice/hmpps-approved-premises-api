@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
@@ -347,6 +348,7 @@ class ApplicationService(
       applicantUserDetails = null,
       caseManagerIsNotApplicant = null,
       caseManagerUserDetails = null,
+      noticeType = null,
     )
   }
 
@@ -803,6 +805,14 @@ class ApplicationService(
         existingEntry = this.caseManagerUserDetails,
         updatedValues = if (submitApplication.caseManagerIsNotApplicant == true) { submitApplication.caseManagerUserDetails } else null,
       )
+      this.noticeType = submitApplication.noticeType
+        ?: if (submitApplication.isEmergencyApplication) {
+          Cas1ApplicationTimelinessCategory.emergency
+        } else if (this.isShortNoticeApplication() == true) {
+          Cas1ApplicationTimelinessCategory.shortNotice
+        } else {
+          Cas1ApplicationTimelinessCategory.standard
+        }
     }
 
     assessmentService.createApprovedPremisesAssessment(application)
