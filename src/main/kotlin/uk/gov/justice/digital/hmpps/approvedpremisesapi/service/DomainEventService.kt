@@ -180,6 +180,7 @@ class DomainEventService(
       detailUrl = bookingChangedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      bookingId = domainEvent.bookingId,
     )
 
   @Transactional
