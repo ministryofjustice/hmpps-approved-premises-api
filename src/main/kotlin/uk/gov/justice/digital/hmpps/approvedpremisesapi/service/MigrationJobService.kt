@@ -101,6 +101,7 @@ class MigrationJobService(
 
         MigrationJobType.cas1NoticeTypes -> NoticeTypeMigrationJob(
           applicationContext.getBean(NoticeTypeMigrationJobApplicationRepository::class.java),
+          applicationContext.getBean(EntityManager::class.java),
           pageSize,
         )
       }
