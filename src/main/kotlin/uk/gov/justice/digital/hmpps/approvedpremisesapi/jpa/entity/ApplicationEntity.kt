@@ -356,7 +356,7 @@ class ApprovedPremisesApplicationEntity(
       requiredQualifications += UserQualification.WOMENS
     }
 
-    if (isEmergencyApplication == true) {
+    if (noticeType == Cas1ApplicationTimelinessCategory.emergency || noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
       requiredQualifications += UserQualification.EMERGENCY
     }
 
