@@ -945,18 +945,21 @@ class ApplicationService(
     offlineApplicationRepository.findAllByServiceAndCrn(serviceName.value, crn)
 
   fun getApplicationTimeline(applicationId: UUID): List<TimelineEvent> {
-    val domainEvents = domainEventService.getAllDomainEventsForApplication(applicationId)
-    val timelineEvents = domainEvents.map {
-      applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(it)
-    }.toMutableList()
-
-    timelineEvents += getAllInformationRequestEventsForApplication(applicationId)
-    timelineEvents += getAllApplicationTimelineNotesByApplicationId(applicationId)
-
+    val timelineEvents = mutableListOf<TimelineEvent>()
+    timelineEvents += getAllDomainEventTimelineEventsForApplication(applicationId)
+    timelineEvents += getAllAssessmentClarificationNoteTimeLineEventsForApplication(applicationId)
+    timelineEvents += getAllNoteTimelineEventsForApplication(applicationId)
     return timelineEvents
   }
 
-  fun getAllInformationRequestEventsForApplication(applicationId: UUID): List<TimelineEvent> {
+  private fun getAllDomainEventTimelineEventsForApplication(applicationId: UUID): List<TimelineEvent> {
+    val domainEvents = domainEventService.getAllDomainEventsForApplication(applicationId)
+    return domainEvents.map {
+      applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(it)
+    }
+  }
+
+  private fun getAllAssessmentClarificationNoteTimeLineEventsForApplication(applicationId: UUID): List<TimelineEvent> {
     val assessments = applicationRepository.findAllAssessmentsById(applicationId)
     val allClarifications = assessments.flatMap { it.clarificationNotes }
     return allClarifications.map {
@@ -964,7 +967,7 @@ class ApplicationService(
     }
   }
 
-  fun getAllApplicationTimelineNotesByApplicationId(applicationId: UUID): List<TimelineEvent> {
+  private fun getAllNoteTimelineEventsForApplication(applicationId: UUID): List<TimelineEvent> {
     val noteEntities = applicationTimelineNoteService.getApplicationTimelineNotesByApplicationId(applicationId)
     return noteEntities.map {
       applicationTimelineNoteTransformer.transformToTimelineEvents(it)
