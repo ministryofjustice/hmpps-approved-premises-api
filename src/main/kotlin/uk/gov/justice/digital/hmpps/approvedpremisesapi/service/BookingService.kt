@@ -690,6 +690,10 @@ class BookingService(
         return@validated it.id hasConflictError "A Lost Bed already exists for dates from ${it.startDate} to ${it.endDate} which overlaps with the desired dates"
       }
 
+      bedRepository.findArchivedBedByBedIdAndDate(bedId, departureDate)?.let {
+        return@validated it.id hasConflictError "BedSpace is archived from ${it.endDate} which overlaps with the desired dates"
+      }
+
       val bed = bedRepository.findByIdOrNull(bedId)
 
       if (bed == null) {

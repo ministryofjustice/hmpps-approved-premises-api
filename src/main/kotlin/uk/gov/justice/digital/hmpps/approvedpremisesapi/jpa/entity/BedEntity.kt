@@ -26,6 +26,16 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
 
   @Query(nativeQuery = true)
   fun getDetailById(id: UUID): DomainBedSummary?
+
+  @Query(
+    """
+    SELECT b 
+    FROM BedEntity b 
+    WHERE b.id = :bedId AND 
+    b.endDate IS NOT NULL AND b.endDate <= :endDate
+  """,
+  )
+  fun findArchivedBedByBedIdAndDate(bedId: UUID, endDate: LocalDate): BedEntity?
 }
 
 const val bedSummaryQuery =

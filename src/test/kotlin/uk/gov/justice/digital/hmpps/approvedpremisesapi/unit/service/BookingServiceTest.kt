@@ -4655,6 +4655,11 @@ class BookingServiceTest {
   @Nested
   inner class CreateTemporaryAccommodationBooking {
 
+    @BeforeEach
+    fun setup() {
+      every { mockBedRepository.findArchivedBedByBedIdAndDate(any(), any()) } returns null
+    }
+
     @Test
     fun `createTemporaryAccommodationBooking returns FieldValidationError if Bed ID is not provided`() {
       val crn = "CRN123"
@@ -5650,6 +5655,110 @@ class BookingServiceTest {
           },
           user,
         )
+      }
+    }
+
+    @Test
+    fun `createTemporaryAccommodationBooking throws conflict error when bedspace is archived for the requested bed`() {
+      val crn = "CRN123"
+      val arrivalDate = LocalDate.parse("2023-02-23")
+      val departureDate = LocalDate.parse("2023-02-24")
+
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val premises = TemporaryAccommodationPremisesEntityFactory()
+        .withUnitTestControlTestProbationAreaAndLocalAuthority()
+        .produce()
+
+      val room = RoomEntityFactory()
+        .withPremises(premises)
+        .produce()
+
+      val bed = BedEntityFactory()
+        .withRoom(room)
+        .withEndDate { LocalDate.now() }
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withProbationRegion(user.probationRegion)
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      every { mockBedRepository.findByIdOrNull(bed.id) } returns bed
+
+      every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
+
+      every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(bed.id, departureDate, null) } returns listOf()
+      every {
+        mockLostBedsRepository.findByBedIdAndOverlappingDate(
+          bed.id,
+          arrivalDate,
+          departureDate,
+          null,
+        )
+      } returns listOf()
+      every { mockAssessmentRepository.findByIdOrNull(application.id) } returns assessment
+
+      every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
+
+      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+
+      every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
+
+      every { mockBedRepository.findArchivedBedByBedIdAndDate(any(), any()) } returns bed
+
+      val authorisableResult = bookingService.createTemporaryAccommodationBooking(
+        user,
+        premises,
+        crn,
+        "NOMS123",
+        arrivalDate,
+        departureDate,
+        bed.id,
+        application.id,
+        false,
+      )
+
+      assertThat(authorisableResult is AuthorisableActionResult.Success).isTrue
+      authorisableResult as AuthorisableActionResult.Success
+      assertThat(authorisableResult.entity is ValidatableActionResult.ConflictError).isTrue
+      val validationError = authorisableResult.entity as ValidatableActionResult.ConflictError
+      assertThat(validationError.message).isEqualTo("BedSpace is archived from ${LocalDate.now()} which overlaps with the desired dates")
+
+      verify(exactly = 0) {
+        mockBookingRepository.save(
+          match {
+            it.crn == crn &&
+              it.premises == premises &&
+              it.arrivalDate == arrivalDate &&
+              it.departureDate == departureDate &&
+              it.application == application &&
+              it.status == BookingStatus.provisional
+          },
+        )
+      }
+
+      verify(exactly = 0) {
+        mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(
+          match {
+            it.crn == crn &&
+              it.premises == premises &&
+              it.arrivalDate == arrivalDate &&
+              it.departureDate == departureDate &&
+              it.application == application
+          },
+          user,
+        )
+      }
+
+      verify {
+        mockBedRepository.findArchivedBedByBedIdAndDate(any(), any())
       }
     }
   }
