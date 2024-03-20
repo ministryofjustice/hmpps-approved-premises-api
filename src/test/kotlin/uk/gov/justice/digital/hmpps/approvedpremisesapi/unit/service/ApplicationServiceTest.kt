@@ -944,6 +944,7 @@ class ApplicationServiceTest {
             arrivalDate = null,
             data = "{}",
             isInapplicable = null,
+            noticeType = Cas1ApplicationTimelinessCategory.standard,
           ),
         ) is AuthorisableActionResult.NotFound,
       ).isTrue
@@ -974,6 +975,7 @@ class ApplicationServiceTest {
             arrivalDate = null,
             data = "{}",
             isInapplicable = null,
+            noticeType = Cas1ApplicationTimelinessCategory.standard,
           ),
         ) is AuthorisableActionResult.Unauthorised,
       ).isTrue
@@ -998,6 +1000,7 @@ class ApplicationServiceTest {
           arrivalDate = null,
           data = "{}",
           isInapplicable = null,
+          noticeType = null,
         ),
       )
 
@@ -1029,6 +1032,7 @@ class ApplicationServiceTest {
           arrivalDate = null,
           data = "{}",
           isInapplicable = null,
+          noticeType = Cas1ApplicationTimelinessCategory.emergency,
         ),
       )
 
@@ -1070,6 +1074,7 @@ class ApplicationServiceTest {
           arrivalDate = LocalDate.parse("2023-04-17"),
           data = updatedData,
           isInapplicable = false,
+          noticeType = Cas1ApplicationTimelinessCategory.emergency,
         ),
       )
 
@@ -1090,6 +1095,56 @@ class ApplicationServiceTest {
       assertThat(approvedPremisesApplication.applicantUserDetails).isNull()
       assertThat(approvedPremisesApplication.caseManagerIsNotApplicant).isNull()
       assertThat(approvedPremisesApplication.caseManagerUserDetails).isNull()
+      assertThat(approvedPremisesApplication.noticeType).isEqualTo(Cas1ApplicationTimelinessCategory.emergency)
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = Cas1ApplicationTimelinessCategory::class)
+    fun `updateApprovedPremisesApplication sets noticeType correctly`(noticeType: Cas1ApplicationTimelinessCategory) {
+      setupMocksForSuccess()
+
+      val theApplicantUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match { it.name == "applicantName" && it.email == "applicantEmail" && it.telephoneNumber == "applicantPhone" },
+        )
+      } returns theApplicantUserDetailsEntity
+
+      val theCaseManagerUserDetailsEntity = Cas1ApplicationUserDetailsEntityFactory().produce()
+      every {
+        mockCas1ApplicationUserDetailsRepository.save(
+          match { it.name == "caseManagerName" && it.email == "caseManagerEmail" && it.telephoneNumber == "caseManagerPhone" },
+        )
+      } returns theCaseManagerUserDetailsEntity
+
+      val result = applicationService.updateApprovedPremisesApplication(
+        applicationId = applicationId,
+        Cas1ApplicationUpdateFields(
+          isWomensApplication = false,
+          isPipeApplication = true,
+          isEmergencyApplication = noticeType == Cas1ApplicationTimelinessCategory.emergency,
+          isEsapApplication = false,
+          releaseType = "rotl",
+          arrivalDate = if (noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
+            LocalDate.now().plusDays(10)
+          } else {
+            LocalDate.now().plusMonths(7)
+          },
+          data = updatedData,
+          isInapplicable = false,
+          noticeType = null,
+        ),
+      )
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.Success).isTrue
+      val validatableActionResult = result.entity as ValidatableActionResult.Success
+
+      val approvedPremisesApplication = validatableActionResult.entity as ApprovedPremisesApplicationEntity
+
+      assertThat(approvedPremisesApplication.noticeType).isEqualTo(noticeType)
     }
 
     private fun setupMocksForSuccess() {
