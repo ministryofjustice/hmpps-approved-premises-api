@@ -831,7 +831,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class CreatePlacementApplicationDecisionTest {
+  inner class SubmitDecisionForPlacementApplicationTest {
 
     @Test
     fun `submitting a placement request application decision without a JWT returns 401`() {
@@ -984,7 +984,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @CsvSource("ROTL,false", "ADDITIONAL_PLACEMENT,false", "RELEASE_FOLLOWING_DECISION,true")
-    fun `accepting a placement request application decision records the decision and creates and assigns a placement request`(placementType: JpaPlacementType, isParole: Boolean) {
+    fun `accepting a placement application decision records the decision, creates and assigns a placement request and sends an email`(placementType: JpaPlacementType, isParole: Boolean) {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
         `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
           `Given a User` { user, jwt ->
@@ -1028,6 +1028,57 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                       assertThat(createdPlacementApplication.duration).isEqualTo(placementDates.duration)
                       assertThat(createdPlacementApplication.isParole).isEqualTo(isParole)
                       assertThat(createdPlacementApplication.placementRequirements.id).isEqualTo(placementRequirements.id)
+
+                      emailAsserter.assertEmailsRequestedCount(1)
+                      emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestDecisionAccepted)
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @CsvSource("ROTL", "ADDITIONAL_PLACEMENT", "RELEASE_FOLLOWING_DECISION")
+    fun `rejecting a placement application decision records the decision and sends an email`(placementType: JpaPlacementType) {
+      `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher1, _ ->
+        `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher2, _ ->
+          `Given a User` { user, jwt ->
+            `Given an Offender` { offenderDetails, _ ->
+              `Given a submitted Placement Application`(allocatedToUser = user, offenderDetails = offenderDetails, placementType = placementType) { placementApplicationEntity ->
+                `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now()) { placementRequirements ->
+                  `Given placement requirements`(placementApplicationEntity = placementApplicationEntity, createdAt = OffsetDateTime.now().minusDays(4)) { _ ->
+                    `Given placement dates`(placementApplicationEntity = placementApplicationEntity) { placementDates ->
+
+                      webTestClient.post()
+                        .uri("/placement-applications/${placementApplicationEntity.id}/decision")
+                        .header("Authorization", "Bearer $jwt")
+                        .bodyValue(
+                          PlacementApplicationDecisionEnvelope(
+                            decision = PlacementApplicationDecision.rejected,
+                            summaryOfChanges = "ChangeSummary",
+                            decisionSummary = "DecisionSummary",
+                          ),
+                        )
+                        .exchange()
+                        .expectStatus()
+                        .isOk
+
+                      val updatedPlacementApplication =
+                        placementApplicationRepository.findByIdOrNull(placementApplicationEntity.id)!!
+
+                      assertThat(updatedPlacementApplication.decision).isEqualTo(JpaPlacementApplicationDecision.REJECTED)
+                      assertThat(updatedPlacementApplication.decisionMadeAt).isWithinTheLastMinute()
+
+                      val createdPlacementRequests =
+                        placementRequestTestRepository.findAllByApplication(placementApplicationEntity.application)
+                      assertThat(createdPlacementRequests).isEmpty()
+
+                      emailAsserter.assertEmailsRequestedCount(1)
+                      emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestDecisionRejected)
                     }
                   }
                 }
