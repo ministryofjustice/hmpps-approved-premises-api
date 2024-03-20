@@ -108,9 +108,12 @@ class DomainEventDescriber(
     /**
      * See documentation in [Cas1PlacementRequestDomainEventService] for why this is reported as a request for placement
      **/
-    return event.describe {
-      val dates = it.eventDetails.datePeriod
-      "A request for placement was withdrawn for dates ${dates.startDate.toUiFormat()} to ${dates.endDate.toUiFormat()}"
+    return event.describe { data ->
+      val dates = data.eventDetails.datePeriod
+      val reasonDescription = data.eventDetails.withdrawalReason.javaConstantNameToSentence()
+
+      "A request for placement was withdrawn for dates ${dates.startDate.toUiFormat()} to ${dates.endDate.toUiFormat()}. " +
+        "The reason was $reasonDescription"
     }
   }
 

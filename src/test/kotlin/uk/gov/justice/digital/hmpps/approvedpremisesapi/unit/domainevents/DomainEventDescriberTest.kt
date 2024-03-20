@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNot
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
@@ -337,6 +338,7 @@ class DomainEventDescriberTest {
         timestamp = Instant.now(),
         eventType = "approved-premises.match-request.withdrawn",
         eventDetails = MatchRequestWithdrawnFactory()
+          .withWithdrawalReason(PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION.toString())
           .withDatePeriod(DatePeriod(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 3, 4)))
           .produce(),
       )
@@ -344,7 +346,10 @@ class DomainEventDescriberTest {
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("A request for placement was withdrawn for dates Tuesday 2 January 2024 to Monday 4 March 2024")
+    assertThat(result).isEqualTo(
+      "A request for placement was withdrawn for dates Tuesday 2 January 2024 to Monday 4 March 2024. " +
+        "The reason was No capacity due to placement prioritisation",
+    )
   }
 
   private fun <T> buildDomainEvent(builder: (UUID) -> T): DomainEvent<T> {
