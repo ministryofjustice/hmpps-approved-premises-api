@@ -923,6 +923,7 @@ class ApplicationServiceTest {
       .withApplicationSchema(newestSchema)
       .withId(applicationId)
       .withCreatedByUser(user)
+      .withCreatedAt(OffsetDateTime.now())
       .produce()
       .apply {
         schemaUpToDate = true
