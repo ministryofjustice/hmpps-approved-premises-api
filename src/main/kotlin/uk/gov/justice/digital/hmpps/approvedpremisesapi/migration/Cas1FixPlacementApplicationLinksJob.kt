@@ -323,7 +323,7 @@ class Cas1FixPlacementApplicationLinksJob(
     ),
     ManualLinkFix(
       applicationId = UUID.fromString("07dc0d5f-0d95-4c72-aeb1-165ad3a67f44"),
-      placementRequestId = UUID.fromString("64a45fbf-976d-4736-a8bd-370a058f993"),
+      placementRequestId = UUID.fromString("64a45fbf-976d-4736-a8bd-370a058f9938"),
       placementApplicationId = UUID.fromString("3b6b444f-0254-4aea-98de-46d52834b9d3"),
     ),
     ManualLinkFix(
@@ -424,7 +424,7 @@ class Cas1FixPlacementApplicationLinksJob(
     ManualLinkFix(
       applicationId = UUID.fromString("efee904d-3c3f-42a7-85f4-cb04a1bcbf6e"),
       placementRequestId = UUID.fromString("558e245a-e59c-42f7-8e9f-c3cc1bd3eeac"),
-      placementApplicationId = UUID.fromString("558e245a-e59c-42f7-8e9f-c3cc1bd3eeac"),
+      placementApplicationId = UUID.fromString("fe4d276a-3fcf-4729-8816-714d4cc56e75"),
     ),
   )
 }
