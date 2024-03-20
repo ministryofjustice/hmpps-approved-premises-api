@@ -7,6 +7,7 @@ import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
@@ -28,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Pr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -301,6 +303,121 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           }
         }
       }
+    }
+  }
+
+  @Nested
+  inner class GetToIndexUsingIsSubmitted {
+
+    var username: String? = null
+    val submittedIds = mutableSetOf<UUID>()
+    val unSubmittedIds = mutableSetOf<UUID>()
+
+    @BeforeEach
+    fun setup() {
+      `Given a CAS2 User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          cas2ApplicationJsonSchemaRepository.deleteAll()
+
+          val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+          }
+
+          // create 3 x submitted applications for this user
+          repeat(3) {
+            submittedIds.add(
+              cas2ApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(applicationSchema)
+                withCreatedByUser(userEntity)
+                withCrn(offenderDetails.otherIds.crn)
+                withData("{}")
+                withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(30))
+              }.id,
+            )
+          }
+
+          // create 4 x un-submitted in-progress applications for this user
+          repeat(4) {
+            unSubmittedIds.add(
+              cas2ApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(applicationSchema)
+                withCreatedByUser(userEntity)
+                withCrn(offenderDetails.otherIds.crn)
+                withData("{}")
+              }.id,
+            )
+          }
+
+          username = userEntity.nomisUsername
+        }
+      }
+    }
+
+    @Test
+    fun `returns all applications for user when isSubmitted is null`() {
+      val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(username!!)
+
+      val rawResponseBody = webTestClient.get()
+        .uri("/cas2/applications")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.cas2.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult<String>()
+        .responseBody
+        .blockFirst()
+
+      val responseBody =
+        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+      val uuids = responseBody.map { it.id }.toSet()
+      Assertions.assertThat(uuids).isEqualTo(submittedIds.union(unSubmittedIds))
+    }
+
+    @Test
+    fun `returns submitted applications for user when isSubmitted is true`() {
+      val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(username!!)
+
+      val rawResponseBody = webTestClient.get()
+        .uri("/cas2/applications?isSubmitted=true")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.cas2.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult<String>()
+        .responseBody
+        .blockFirst()
+
+      val responseBody =
+        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+      val uuids = responseBody.map { it.id }.toSet()
+      Assertions.assertThat(uuids).isEqualTo(submittedIds)
+    }
+
+    @Test
+    fun `returns unsubmitted applications for user when isSubmitted is false`() {
+      val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(username!!)
+
+      val rawResponseBody = webTestClient.get()
+        .uri("/cas2/applications?isSubmitted=false")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.cas2.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult<String>()
+        .responseBody
+        .blockFirst()
+
+      val responseBody =
+        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+      val uuids = responseBody.map { it.id }.toSet()
+      Assertions.assertThat(uuids).isEqualTo(unSubmittedIds)
     }
   }
 
