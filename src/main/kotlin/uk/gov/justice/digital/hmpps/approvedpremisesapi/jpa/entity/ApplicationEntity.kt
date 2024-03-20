@@ -292,6 +292,7 @@ class ApprovedPremisesApplicationEntity(
   assessments: MutableList<AssessmentEntity>,
   var isWomensApplication: Boolean?,
   var isPipeApplication: Boolean?,
+  @Deprecated("Use noticeType=emergency instead")
   var isEmergencyApplication: Boolean?,
   var isEsapApplication: Boolean?,
   var isInapplicable: Boolean?,
