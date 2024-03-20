@@ -311,5 +311,120 @@ class Cas1FixPlacementApplicationLinksJob(
       placementRequestId = UUID.fromString("18a532f7-7893-47a1-ab8e-1e34d7b3ff46"),
       placementApplicationId = UUID.fromString("ec618a23-2ad3-4df0-bb91-a81cdaaab677"),
     ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("07dc0d5f-0d95-4c72-aeb1-165ad3a67f44"),
+      placementRequestId = UUID.fromString("2b15e7aa-323a-4626-9e1e-e4a30e82b130"),
+      placementApplicationId = UUID.fromString("674d616e-5a9e-4ad6-92a4-4a1e30644146"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("07dc0d5f-0d95-4c72-aeb1-165ad3a67f44"),
+      placementRequestId = UUID.fromString("7ecd4887-d0b0-4451-af38-8ee2cc07ed26"),
+      placementApplicationId = UUID.fromString("270071ee-6ba9-4de7-a7e1-389bad72a377"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("07dc0d5f-0d95-4c72-aeb1-165ad3a67f44"),
+      placementRequestId = UUID.fromString("64a45fbf-976d-4736-a8bd-370a058f993"),
+      placementApplicationId = UUID.fromString("3b6b444f-0254-4aea-98de-46d52834b9d3"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("1102c7bb-6824-4aa5-8e29-9196e4c8f9c3"),
+      placementRequestId = UUID.fromString("ce833d80-44f7-439d-996f-f1ce41010871"),
+      placementApplicationId = UUID.fromString("0b3376d4-1321-41fa-9b6b-dbf3884c34d2"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("1102c7bb-6824-4aa5-8e29-9196e4c8f9c3"),
+      placementRequestId = UUID.fromString("737013c3-236d-4682-9510-e8b7928d339e"),
+      placementApplicationId = UUID.fromString("bb518bec-cdfd-4721-8070-8130e4110558"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("4d4691a1-9ce0-4dfc-86c2-954dcdc0179b"),
+      placementRequestId = UUID.fromString("e95d22f8-663b-427c-a00c-1e49bcfa51dd"),
+      placementApplicationId = UUID.fromString("c8abc860-9222-40e8-ae76-720c3c182a07"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("911fd475-a175-4813-8d99-b5d3d13729af"),
+      placementRequestId = UUID.fromString("9978e4a0-5a56-4b1b-bd2b-eb31e42e7692"),
+      placementApplicationId = UUID.fromString("b1745a01-7d57-4788-80e3-996379c070fe"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("911fd475-a175-4813-8d99-b5d3d13729af"),
+      placementRequestId = UUID.fromString("79a7eb05-f31d-4ab3-ab2d-63ab9901583d"),
+      placementApplicationId = UUID.fromString("e77de0de-07c3-433a-9d01-5d84f9c887ca"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("911fd475-a175-4813-8d99-b5d3d13729af"),
+      placementRequestId = UUID.fromString("285df48d-63da-4f69-85fe-a596f2740986"),
+      placementApplicationId = UUID.fromString("7a0575f6-2de6-4c4f-b76f-d547c26f4d63"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("911fd475-a175-4813-8d99-b5d3d13729af"),
+      placementRequestId = UUID.fromString("51e86a5e-9470-40d2-b08a-40d017f4eb54"),
+      placementApplicationId = UUID.fromString("0da9e7a4-ede9-484d-8a12-8a235d5adc2c"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("911fd475-a175-4813-8d99-b5d3d13729af"),
+      placementRequestId = UUID.fromString("4d9a7a8e-e0e6-448b-bc79-914647ce2941"),
+      placementApplicationId = UUID.fromString("e8bb2d0a-7e3e-4c38-b483-21e3c97fd357"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("911fd475-a175-4813-8d99-b5d3d13729af"),
+      placementRequestId = UUID.fromString("5bcccaa1-a4cf-4a32-bd4b-3a636df0c206"),
+      placementApplicationId = UUID.fromString("e8bcd26b-4280-404f-8c06-ea0f5d0b47ce"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("ba2c27b7-f06c-41b7-bee9-ea3b4e3c786e"),
+      placementRequestId = UUID.fromString("7204a118-1efc-4178-b806-adbc430082f0"),
+      placementApplicationId = UUID.fromString("1e5abf01-d59d-4092-b5d6-89dc52a72779"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("ba2c27b7-f06c-41b7-bee9-ea3b4e3c786e"),
+      placementRequestId = UUID.fromString("29cf583d-2f1a-40a1-b8f0-9bd400631302"),
+      placementApplicationId = UUID.fromString("98fd1526-13f8-435f-b43c-5a605e7bd731"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("ba2c27b7-f06c-41b7-bee9-ea3b4e3c786e"),
+      placementRequestId = UUID.fromString("948e20dd-2273-4856-840d-f121722eba80"),
+      placementApplicationId = UUID.fromString("1077733e-6006-48b8-8e6d-0e0af420ecf0"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("ba2c27b7-f06c-41b7-bee9-ea3b4e3c786e"),
+      placementRequestId = UUID.fromString("50b559c6-89d5-4920-b765-bca0e7c796f4"),
+      placementApplicationId = UUID.fromString("46ef9724-f1a1-443d-922c-4e298a9e02b8"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("ba2c27b7-f06c-41b7-bee9-ea3b4e3c786e"),
+      placementRequestId = UUID.fromString("07a4136a-b0ef-4f07-a53b-691c9aa796a1"),
+      placementApplicationId = UUID.fromString("d41a1b42-c5bb-46d0-be15-0ba0fb6d6e4f"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("efee904d-3c3f-42a7-85f4-cb04a1bcbf6e"),
+      placementRequestId = UUID.fromString("bcf62f1d-c887-44ec-9701-482dac0c7ede"),
+      placementApplicationId = UUID.fromString("87e4d3a6-8561-4a0d-85ac-cfe8c3f1e750"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("efee904d-3c3f-42a7-85f4-cb04a1bcbf6e"),
+      placementRequestId = UUID.fromString("573f1fb4-7d3f-4502-befc-54933302d939"),
+      placementApplicationId = UUID.fromString("e9cd5e54-7099-490d-b29e-e3446b3dbb6a"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("efee904d-3c3f-42a7-85f4-cb04a1bcbf6e"),
+      placementRequestId = UUID.fromString("048ac187-252d-4ac0-bfd2-058dd7609d52"),
+      placementApplicationId = UUID.fromString("55965b77-3745-4a3b-b6f2-156aaade3f41"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("efee904d-3c3f-42a7-85f4-cb04a1bcbf6e"),
+      placementRequestId = UUID.fromString("d5e28f80-3979-4dda-8326-b5c2109a436d"),
+      placementApplicationId = UUID.fromString("9ae1f9eb-7e00-4c8e-97c3-b71b8abcde16"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("efee904d-3c3f-42a7-85f4-cb04a1bcbf6e"),
+      placementRequestId = UUID.fromString("71bd6253-213a-4387-844e-6f10a50ab5d2"),
+      placementApplicationId = UUID.fromString("f0c634b1-b798-48b5-a6f8-aeaec7ab9f5d"),
+    ),
+    ManualLinkFix(
+      applicationId = UUID.fromString("efee904d-3c3f-42a7-85f4-cb04a1bcbf6e"),
+      placementRequestId = UUID.fromString("558e245a-e59c-42f7-8e9f-c3cc1bd3eeac"),
+      placementApplicationId = UUID.fromString("558e245a-e59c-42f7-8e9f-c3cc1bd3eeac"),
+    ),
   )
 }
