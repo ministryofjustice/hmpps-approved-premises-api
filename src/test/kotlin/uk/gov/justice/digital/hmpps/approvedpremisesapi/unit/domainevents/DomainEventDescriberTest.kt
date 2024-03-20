@@ -203,7 +203,7 @@ class DomainEventDescriberTest {
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("The booking was cancelled. The reason was: $reason")
+    assertThat(result).isEqualTo("The booking was cancelled. The reason was: '$reason'")
   }
 
   @Test
@@ -233,7 +233,7 @@ class DomainEventDescriberTest {
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("The application was withdrawn. The reason was: change in circumstances new application to be submitted")
+    assertThat(result).isEqualTo("The application was withdrawn. The reason was: 'change in circumstances new application to be submitted'")
   }
 
   @Test
@@ -254,7 +254,7 @@ class DomainEventDescriberTest {
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("The application was withdrawn. The reason was: the main withdrawal reason (additional reason)")
+    assertThat(result).isEqualTo("The application was withdrawn. The reason was: 'the main withdrawal reason' (additional reason)")
   }
 
   @ParameterizedTest
@@ -296,7 +296,7 @@ class DomainEventDescriberTest {
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("A request for placement was withdrawn. The reason was Related application withdrawn")
+    assertThat(result).isEqualTo("A request for placement was withdrawn. The reason was: 'Related application withdrawn'")
   }
 
   @Test
@@ -324,7 +324,7 @@ class DomainEventDescriberTest {
 
     assertThat(result).isEqualTo(
       "A request for placement was withdrawn for dates Tuesday 2 January 2024 to Monday 4 March 2024, Monday 6 May 2024 to Monday 8 July 2024. " +
-        "The reason was Duplicate placement request",
+        "The reason was: 'Duplicate placement request'",
     )
   }
 
@@ -348,7 +348,7 @@ class DomainEventDescriberTest {
 
     assertThat(result).isEqualTo(
       "A request for placement was withdrawn for dates Tuesday 2 January 2024 to Monday 4 March 2024. " +
-        "The reason was No capacity due to placement prioritisation",
+        "The reason was: 'No capacity due to placement prioritisation'",
     )
   }
 

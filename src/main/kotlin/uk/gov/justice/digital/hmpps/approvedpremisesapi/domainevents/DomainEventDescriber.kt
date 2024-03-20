@@ -43,7 +43,7 @@ class DomainEventDescriber(
     return event.describe { data ->
       val formattedWithdrawalReason = data.eventDetails.withdrawalReason.replace("_", " ")
 
-      "The application was withdrawn. The reason was: $formattedWithdrawalReason" +
+      "The application was withdrawn. The reason was: '$formattedWithdrawalReason'" +
         (data.eventDetails.otherWithdrawalReason?.let { " ($it)" } ?: "")
     }
   }
@@ -80,7 +80,7 @@ class DomainEventDescriber(
 
   private fun buildBookingCancelledDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getBookingCancelledEvent(domainEventSummary.id())
-    return event.describe { "The booking was cancelled. The reason was: ${it.eventDetails.cancellationReason}" }
+    return event.describe { "The booking was cancelled. The reason was: '${it.eventDetails.cancellationReason}'" }
   }
 
   private fun buildAssessmentAppealedDescription(domainEventSummary: DomainEventSummary): String? {
@@ -99,7 +99,7 @@ class DomainEventDescriber(
         if (dates.isNotEmpty()) {
           " for dates " + dates.joinToString(", ") { "${it.startDate.toUiFormat()} to ${it.endDate.toUiFormat()}" }
         } else { "" } +
-        ". The reason was $reasonDescription"
+        ". The reason was: '$reasonDescription'"
     }
   }
 
@@ -113,7 +113,7 @@ class DomainEventDescriber(
       val reasonDescription = data.eventDetails.withdrawalReason.javaConstantNameToSentence()
 
       "A request for placement was withdrawn for dates ${dates.startDate.toUiFormat()} to ${dates.endDate.toUiFormat()}. " +
-        "The reason was $reasonDescription"
+        "The reason was: '$reasonDescription'"
     }
   }
 
