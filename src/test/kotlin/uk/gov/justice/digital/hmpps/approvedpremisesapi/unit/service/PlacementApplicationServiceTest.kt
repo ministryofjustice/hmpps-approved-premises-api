@@ -358,10 +358,8 @@ class PlacementApplicationServiceTest {
         ),
       )
 
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-      assertThat(validationResult is ValidatableActionResult.Success).isTrue
-      validationResult as ValidatableActionResult.Success
-      val updatedApplication = validationResult.entity
+      assertThat(result is CasResult.Success).isTrue
+      val updatedApplication = (result as CasResult.Success).value
 
       assertThat(updatedApplication.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
       assertThat(updatedApplication.decisionMadeAt).isWithinTheLastMinute()
@@ -401,10 +399,8 @@ class PlacementApplicationServiceTest {
         ),
       )
 
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-      assertThat(validationResult is ValidatableActionResult.Success).isTrue
-      validationResult as ValidatableActionResult.Success
-      val updatedApplication = validationResult.entity
+      assertThat(result is CasResult.Success).isTrue
+      val updatedApplication = (result as CasResult.Success).value
 
       val expectedDecision = when (decision) {
         uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.accepted -> PlacementApplicationDecision.ACCEPTED

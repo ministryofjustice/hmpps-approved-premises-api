@@ -105,8 +105,7 @@ class PlacementApplicationsController(
   ): ResponseEntity<PlacementApplication> {
     val result = placementApplicationService.recordDecision(id, placementApplicationDecisionEnvelope)
 
-    val validationResult = extractEntityFromAuthorisableActionResult(result)
-    val placementApplication = extractEntityFromValidatableActionResult(validationResult)
+    val placementApplication = extractEntityFromCasResult(result)
 
     return ResponseEntity.ok(placementApplicationTransformer.transformJpaToApi(placementApplication))
   }
