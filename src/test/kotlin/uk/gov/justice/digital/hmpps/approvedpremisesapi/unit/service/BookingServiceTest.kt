@@ -3641,6 +3641,7 @@ class BookingServiceTest {
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
+              it.bookingId == bookingEntity.id &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
@@ -3714,6 +3715,7 @@ class BookingServiceTest {
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
+              it.bookingId == bookingEntity.id &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
@@ -7205,6 +7207,7 @@ class BookingServiceTest {
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
+              it.bookingId == booking.id &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
@@ -7281,6 +7284,7 @@ class BookingServiceTest {
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
+              it.bookingId == booking.id &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(

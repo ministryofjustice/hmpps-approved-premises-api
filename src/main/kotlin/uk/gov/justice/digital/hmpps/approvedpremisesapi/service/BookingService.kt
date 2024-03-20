@@ -625,6 +625,7 @@ class BookingService(
         applicationId = applicationId,
         crn = booking.crn,
         occurredAt = bookingChangedAt.toInstant(),
+        bookingId = booking.id,
         data = BookingChangedEnvelope(
           id = domainEventId,
           timestamp = bookingChangedAt.toInstant(),

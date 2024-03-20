@@ -573,6 +573,7 @@ class DomainEventServiceTest {
   fun `saveBookingChangedDomainEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val bookingId = UUID.fromString("b831ead2-31ae-4907-8e1c-cad74cb9667c")
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
     val crn = "CRN"
 
@@ -581,6 +582,7 @@ class DomainEventServiceTest {
     val domainEventToSave = DomainEvent(
       id = id,
       applicationId = applicationId,
+      bookingId = bookingId,
       crn = crn,
       occurredAt = Instant.now(),
       data = BookingChangedEnvelope(
@@ -603,7 +605,8 @@ class DomainEventServiceTest {
             it.crn == domainEventToSave.crn &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
+            it.triggeredByUserId == user.id &&
+            it.bookingId == bookingId
         },
       )
     }
