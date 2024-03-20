@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -229,7 +230,7 @@ class AssessmentService(
       if (createdFromAppeal) {
         assessmentEmailService.appealedAssessmentAllocated(allocatedUser, assessment.id, application.crn)
       } else {
-        assessmentEmailService.assessmentAllocated(allocatedUser, assessment.id, application.crn, assessment.dueAt, application.isEmergencyApplication ?: false)
+        assessmentEmailService.assessmentAllocated(allocatedUser, assessment.id, application.crn, assessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.emergency)
       }
     }
 
@@ -773,7 +774,7 @@ class AssessmentService(
     assessmentRepository.save(newAssessment)
 
     if (application is ApprovedPremisesApplicationEntity) {
-      assessmentEmailService.assessmentAllocated(assigneeUser, newAssessment.id, application.crn, newAssessment.dueAt, application.isEmergencyApplication ?: false)
+      assessmentEmailService.assessmentAllocated(assigneeUser, newAssessment.id, application.crn, newAssessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.emergency)
       val allocatedToUser = currentAssessment.allocatedToUser
       if (allocatedToUser != null) {
         assessmentEmailService.assessmentDeallocated(allocatedToUser, newAssessment.id, application.crn)
