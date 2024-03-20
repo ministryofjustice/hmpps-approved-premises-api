@@ -47,6 +47,12 @@ paths:
       tags:
         - Operations on CAS2 applications
       summary: List summaries of all CAS2 applications authorised for the logged in user
+      parameters:
+        - name: isSubmitted
+          in: query
+          description: Returns submitted applications if true, un submitted applications if false, and all applications if absent
+          schema:
+            type: boolean
       responses:
         200:
           description: successful operation
