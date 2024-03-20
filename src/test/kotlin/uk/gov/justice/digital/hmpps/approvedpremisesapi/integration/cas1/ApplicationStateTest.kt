@@ -371,7 +371,7 @@ class ApplicationStateTest : IntegrationTestBase() {
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity
     application.data = "{\"data\": \"something\"}"
     val arrivalDate = if (hasArrival) {
-      LocalDate.now()
+      LocalDate.now().plusMonths(7)
     } else {
       null
     }
