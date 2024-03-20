@@ -6,16 +6,17 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocatorRule
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocatorRuleOutcome
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 
 @Component
-@ConditionalOnProperty(name = ["user-allocations.rules.emergency-assessments.enabled"])
-class EmergencyAssessmentRule(
-  @Value("\${user-allocations.rules.emergency-assessments.priority:0}")
+@ConditionalOnProperty(name = ["user-allocations.rules.emergency-and-short-notice-assessments.enabled"])
+class EmergencyAndShortNoticeAssessmentRule(
+  @Value("\${user-allocations.rules.emergency-and-short-notice-assessments.priority:0}")
   override val priority: Int,
-  private val config: EmergencyAssessmentRuleConfig,
+  private val config: EmergencyAndShortNoticeAssessmentRuleConfig,
 ) : UserAllocatorRule {
   override val name: String
     get() = "Emergency assessments"
@@ -30,7 +31,10 @@ class EmergencyAssessmentRule(
     if (application !is ApprovedPremisesApplicationEntity) return UserAllocatorRuleOutcome.Skip
     if (application.submittedAt == null) return UserAllocatorRuleOutcome.Skip
 
-    return when (application.isEmergencyApplication) {
+    return when (
+      application.noticeType == Cas1ApplicationTimelinessCategory.emergency ||
+        application.noticeType == Cas1ApplicationTimelinessCategory.shortNotice
+    ) {
       true -> allocateByRegion(application.apArea)
       else -> UserAllocatorRuleOutcome.Skip
     }
@@ -53,7 +57,7 @@ class EmergencyAssessmentRule(
 }
 
 @Component
-@ConfigurationProperties(prefix = "user-allocations.rules.emergency-assessments")
-data class EmergencyAssessmentRuleConfig(
+@ConfigurationProperties(prefix = "user-allocations.rules.emergency-and-short-notice-assessments")
+data class EmergencyAndShortNoticeAssessmentRuleConfig(
   val allocateToUsers: Map<String, String>,
 )

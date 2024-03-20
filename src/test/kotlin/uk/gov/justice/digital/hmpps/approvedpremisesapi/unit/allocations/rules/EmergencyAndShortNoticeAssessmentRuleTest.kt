@@ -6,9 +6,11 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocatorRuleOutcome
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.rules.EmergencyAssessmentRule
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.rules.EmergencyAssessmentRuleConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.rules.EmergencyAndShortNoticeAssessmentRule
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.rules.EmergencyAndShortNoticeAssessmentRuleConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -20,10 +22,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import java.time.OffsetDateTime
 
-class EmergencyAssessmentRuleTest {
-  val emergencyAssessmentRule = EmergencyAssessmentRule(
+class EmergencyAndShortNoticeAssessmentRuleTest {
+  val emergencyAssessmentRule = EmergencyAndShortNoticeAssessmentRule(
     0,
-    EmergencyAssessmentRuleConfig(
+    EmergencyAndShortNoticeAssessmentRuleConfig(
       mapOf(
         "wales" to "WALES-USER",
         "north-west" to "NORTHWEST-USER",
@@ -34,11 +36,17 @@ class EmergencyAssessmentRuleTest {
 
   @Nested
   inner class EvaluateAssessment {
-    @CsvSource(value = ["Wales,WALES-USER", "North West,NORTHWEST-USER", "South West & South Central,SWSC-USER"])
+    @CsvSource(
+      value = [
+        "Wales,WALES-USER,emergency", "North West,NORTHWEST-USER,emergency", "South West & South Central,SWSC-USER,emergency",
+        "Wales,WALES-USER,shortNotice", "North West,NORTHWEST-USER,shortNotice", "South West & South Central,SWSC-USER,shortNotice",
+      ],
+    )
     @ParameterizedTest
-    fun `Returns AllocateToUser with configured username for the application's region when the application is for Approved Premises, is submitted, and the application is an emergency`(
+    fun `Returns AllocateToUser with configured username for the application's region when the application is for Approved Premises, is submitted, and the application is emergency or short notice`(
       regionName: String,
       expectedUser: String,
+      noticeType: Cas1ApplicationTimelinessCategory,
     ) {
       val apArea = ApAreaEntityFactory()
         .withName(regionName)
@@ -55,7 +63,7 @@ class EmergencyAssessmentRuleTest {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(OffsetDateTime.now())
-        .withIsEmergencyApplication(true)
+        .withNoticeType(noticeType)
         .produce()
         .apply {
           this.apArea = apArea
@@ -98,8 +106,9 @@ class EmergencyAssessmentRuleTest {
       assertThat(result).isEqualTo(UserAllocatorRuleOutcome.Skip)
     }
 
-    @Test
-    fun `Returns Skip if the application is not submitted`() {
+    @ParameterizedTest
+    @EnumSource(Cas1ApplicationTimelinessCategory::class, names = ["emergency", "shortNotice"])
+    fun `Returns Skip if the application is not submitted`(noticeType: Cas1ApplicationTimelinessCategory) {
       val apArea = ApAreaEntityFactory()
         .produce()
 
@@ -117,7 +126,7 @@ class EmergencyAssessmentRuleTest {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(null)
-        .withIsEmergencyApplication(true)
+        .withNoticeType(noticeType)
         .produce()
         .apply {
           this.apArea = apArea
@@ -133,7 +142,7 @@ class EmergencyAssessmentRuleTest {
     }
 
     @Test
-    fun `Returns Skip if the application is not emergency`() {
+    fun `Returns Skip if the application has a standard noticeType`() {
       val apArea = ApAreaEntityFactory()
         .produce()
 
@@ -148,7 +157,7 @@ class EmergencyAssessmentRuleTest {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(OffsetDateTime.now())
-        .withIsEmergencyApplication(false)
+        .withNoticeType(Cas1ApplicationTimelinessCategory.standard)
         .produce()
         .apply {
           this.apArea = apArea
@@ -163,8 +172,9 @@ class EmergencyAssessmentRuleTest {
       assertThat(result).isEqualTo(UserAllocatorRuleOutcome.Skip)
     }
 
-    @Test
-    fun `Returns Skip with when no region is assigned to the application`() {
+    @ParameterizedTest
+    @EnumSource(Cas1ApplicationTimelinessCategory::class, names = ["emergency", "shortNotice"])
+    fun `Returns Skip with when no region is assigned to the application`(noticeType: Cas1ApplicationTimelinessCategory) {
       val probationRegion = ProbationRegionEntityFactory()
         .withYieldedApArea {
           ApAreaEntityFactory()
@@ -179,7 +189,7 @@ class EmergencyAssessmentRuleTest {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(OffsetDateTime.now())
-        .withIsEmergencyApplication(true)
+        .withNoticeType(noticeType)
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -191,8 +201,9 @@ class EmergencyAssessmentRuleTest {
       assertThat(result).isEqualTo(UserAllocatorRuleOutcome.Skip)
     }
 
-    @Test
-    fun `Returns Skip with when no user is configured for the region`() {
+    @ParameterizedTest
+    @EnumSource(Cas1ApplicationTimelinessCategory::class, names = ["emergency", "shortNotice"])
+    fun `Returns Skip with when no user is configured for the region`(noticeType: Cas1ApplicationTimelinessCategory) {
       val apArea = ApAreaEntityFactory()
         .produce()
 
@@ -208,7 +219,7 @@ class EmergencyAssessmentRuleTest {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(OffsetDateTime.now())
-        .withIsEmergencyApplication(true)
+        .withNoticeType(noticeType)
         .produce()
         .apply {
           this.apArea = apArea

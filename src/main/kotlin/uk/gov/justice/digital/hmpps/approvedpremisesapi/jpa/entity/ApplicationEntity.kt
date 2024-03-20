@@ -292,6 +292,7 @@ class ApprovedPremisesApplicationEntity(
   assessments: MutableList<AssessmentEntity>,
   var isWomensApplication: Boolean?,
   var isPipeApplication: Boolean?,
+  @Deprecated("Use noticeType=emergency instead")
   var isEmergencyApplication: Boolean?,
   var isEsapApplication: Boolean?,
   var isInapplicable: Boolean?,
@@ -356,7 +357,7 @@ class ApprovedPremisesApplicationEntity(
       requiredQualifications += UserQualification.WOMENS
     }
 
-    if (isEmergencyApplication == true) {
+    if (noticeType == Cas1ApplicationTimelinessCategory.emergency || noticeType == Cas1ApplicationTimelinessCategory.shortNotice) {
       requiredQualifications += UserQualification.EMERGENCY
     }
 

@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonR
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
@@ -2428,8 +2429,13 @@ class AssessmentServiceTest {
     }
 
     @ParameterizedTest
-    @CsvSource(value = ["true,true", "false,true", "true,false", "false,false"])
-    fun `createApprovedPremisesAssessment creates an Assessment and sends allocation email`(isEmergencyApplication: Boolean, createdFromAppeal: Boolean) {
+    @CsvSource(
+      value = [
+        "emergency,true", "standard,true", "shortNotice,true",
+        "emergency,false", "standard,false", "shortNotice,false",
+      ],
+    )
+    fun `createApprovedPremisesAssessment creates an Assessment and sends allocation email`(timelinessCategory: Cas1ApplicationTimelinessCategory, createdFromAppeal: Boolean) {
       val userWithLeastAllocatedAssessments = UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -2448,7 +2454,7 @@ class AssessmentServiceTest {
             .withQualification(UserQualification.PIPE)
             .produce()
 
-          if (isEmergencyApplication) {
+          if (timelinessCategory != Cas1ApplicationTimelinessCategory.standard) {
             qualifications += UserQualificationAssignmentEntityFactory()
               .withUser(this)
               .withQualification(UserQualification.EMERGENCY)
@@ -2467,7 +2473,7 @@ class AssessmentServiceTest {
             .produce(),
         )
         .withIsPipeApplication(true)
-        .withIsEmergencyApplication(isEmergencyApplication)
+        .withNoticeType(timelinessCategory)
         .produce()
 
       val dueAt = OffsetDateTime.now()
@@ -2502,7 +2508,7 @@ class AssessmentServiceTest {
             any<UUID>(),
             application.crn,
             dueAt,
-            isEmergencyApplication,
+            timelinessCategory == Cas1ApplicationTimelinessCategory.emergency,
           )
         }
       }
