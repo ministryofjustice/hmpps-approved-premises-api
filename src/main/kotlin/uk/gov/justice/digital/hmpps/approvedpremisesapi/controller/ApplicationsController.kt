@@ -262,6 +262,7 @@ class ApplicationsController(
           releaseType = body.releaseType?.name,
           arrivalDate = body.arrivalDate,
           isInapplicable = body.isInapplicable,
+          noticeType = body.noticeType,
         ),
       )
 

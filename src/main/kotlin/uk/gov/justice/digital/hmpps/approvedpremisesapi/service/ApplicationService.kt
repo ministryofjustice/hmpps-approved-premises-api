@@ -487,6 +487,7 @@ class ApplicationService(
     val arrivalDate: LocalDate?,
     val data: String,
     val isInapplicable: Boolean?,
+    val noticeType: Cas1ApplicationTimelinessCategory?,
   )
 
   @Transactional
@@ -534,6 +535,7 @@ class ApplicationService(
         null
       }
       this.data = updateFields.data
+      this.noticeType = getNoticeType(updateFields.noticeType, updateFields.isEmergencyApplication, this)
     }
 
     val savedApplication = applicationRepository.save(application)
@@ -806,14 +808,7 @@ class ApplicationService(
         existingEntry = this.caseManagerUserDetails,
         updatedValues = if (submitApplication.caseManagerIsNotApplicant == true) { submitApplication.caseManagerUserDetails } else null,
       )
-      this.noticeType = submitApplication.noticeType
-        ?: if (submitApplication.isEmergencyApplication) {
-          Cas1ApplicationTimelinessCategory.emergency
-        } else if (this.isShortNoticeApplication() == true) {
-          Cas1ApplicationTimelinessCategory.shortNotice
-        } else {
-          Cas1ApplicationTimelinessCategory.standard
-        }
+      this.noticeType = getNoticeType(submitApplication.noticeType, submitApplication.isEmergencyApplication, this)
     }
 
     assessmentService.createApprovedPremisesAssessment(application)
@@ -828,6 +823,15 @@ class ApplicationService(
       ValidatableActionResult.Success(application),
     )
   }
+
+  private fun getNoticeType(noticeType: Cas1ApplicationTimelinessCategory?, isEmergencyApplication: Boolean?, application: ApprovedPremisesApplicationEntity) = noticeType
+    ?: if (isEmergencyApplication == true) {
+      Cas1ApplicationTimelinessCategory.emergency
+    } else if (application.isShortNoticeApplication() == true) {
+      Cas1ApplicationTimelinessCategory.shortNotice
+    } else {
+      Cas1ApplicationTimelinessCategory.standard
+    }
 
   fun getArrivalDate(arrivalDate: LocalDate?): OffsetDateTime? {
     if (arrivalDate !== null) {

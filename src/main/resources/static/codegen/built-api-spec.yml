@@ -6647,6 +6647,8 @@ components:
             arrivalDate:
               type: string
               format: date
+            noticeType:
+              $ref: '#/components/schemas/Cas1ApplicationTimelinessCategory'
     UpdateTemporaryAccommodationApplication:
       allOf:
         - $ref: '#/components/schemas/UpdateApplication'
