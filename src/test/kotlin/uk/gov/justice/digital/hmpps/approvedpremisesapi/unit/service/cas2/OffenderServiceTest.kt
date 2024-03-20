@@ -490,6 +490,63 @@ class OffenderServiceTest {
     }
   }
 
+  @Nested
+  inner class GetOffenderNamesOrPlaceholder {
+    @Test
+    fun `returns Not Found when offender is PersonInfoResult-NotFound, status 404`() {
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf("NOTFOUND")) } returns mapOf(
+        "NOTFOUND" to
+          ClientResult
+            .Failure
+            .StatusCode(
+              HttpMethod.GET,
+              "/secure/offenders/crn/ABC123",
+              HttpStatus.NOT_FOUND,
+              null,
+              true,
+            ),
+      )
+
+      val result = offenderService.getOffenderNamesOrPlaceholder(setOf("NOTFOUND"))
+      assertThat(result).isEqualTo(mapOf("NOTFOUND" to "Person Not Found"))
+    }
+
+    @Test
+    fun `returns Unknown when offender returns any other code except 404`() {
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf("UNKNOWN")) } returns mapOf(
+        "UNKNOWN" to
+          ClientResult
+            .Failure
+            .StatusCode(
+              HttpMethod.GET,
+              "/secure/offenders/crn/ABC123",
+              HttpStatus.FORBIDDEN,
+              null,
+              true,
+            ),
+      )
+
+      val result = offenderService.getOffenderNamesOrPlaceholder(setOf("UNKNOWN"))
+      assertThat(result).isEqualTo(mapOf("UNKNOWN" to "Unknown"))
+    }
+
+    @Test
+    fun `returns the person's full name when offender is PersonInfoResult-Full`() {
+      val offenderDetailSummary = OffenderDetailsSummaryFactory()
+        .withFirstName("ExampleFirst")
+        .withLastName("ExampleLast")
+        .produce()
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf("FULL")) } returns mapOf(
+        "FULL" to ClientResult.Success(
+          status = HttpStatus.OK,
+          body = offenderDetailSummary,
+        ),
+      )
+      val result = offenderService.getOffenderNamesOrPlaceholder(setOf("FULL"))
+      assertThat(result).isEqualTo(mapOf("FULL" to "ExampleFirst ExampleLast"))
+    }
+  }
+
   private fun mock404RoSH(crn: String) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns StatusCode(HttpMethod.GET, "/rosh/a-crn", HttpStatus.NOT_FOUND, body = null)
 
   private fun mock500RoSH(crn: String) = every { mockApOASysContextApiClient.getRoshRatings(crn) } returns StatusCode(HttpMethod.GET, "/rosh/a-crn", HttpStatus.INTERNAL_SERVER_ERROR, body = null)

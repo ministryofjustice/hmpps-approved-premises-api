@@ -98,6 +98,36 @@ class OffenderService(
     }
   }
 
+  private fun getOffenderSummariesByCrns(
+    crns: Set<String>,
+  ): Map<String, ClientResult<OffenderDetailSummary>> {
+    if (crns.isEmpty()) return emptyMap()
+
+    return offenderDetailsDataSource.getOffenderDetailSummaries(crns.toList())
+  }
+
+  fun getOffenderNamesOrPlaceholder(crns: Set<String>): Map<String, String> {
+    // get all offender summaries mapped to crns
+    val offenderSummaries = getOffenderSummariesByCrns(crns)
+
+    // iterate through to  get names mapped to crns
+    return crns.map { crn ->
+      when (val offenderResponse = offenderSummaries[crn]) {
+        is ClientResult.Success ->
+          return@map crn to "${offenderResponse.body.firstName} ${offenderResponse.body.surname}"
+
+        is ClientResult.Failure.StatusCode ->
+          if (offenderResponse.status.value() == HttpStatus.NOT_FOUND.value()) {
+            return@map crn to "Person Not Found"
+          } else {
+            return@map crn to "Unknown"
+          }
+
+        else -> return@map crn to "Unknown"
+      }
+    }.toMap()
+  }
+
   private fun getInfoForPerson(crn: String): PersonInfoResult {
     var offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
 
