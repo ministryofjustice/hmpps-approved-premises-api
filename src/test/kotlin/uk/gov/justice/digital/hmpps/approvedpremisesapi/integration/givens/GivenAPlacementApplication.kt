@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
@@ -29,6 +30,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   name: String? = null,
   requiredQualification: UserQualification? = null,
+  noticeType: Cas1ApplicationTimelinessCategory? = null,
 ): PlacementApplicationEntity {
   val (_, application) = `Given an Assessment for Approved Premises`(
     decision = assessmentDecision,
@@ -51,6 +53,7 @@ fun IntegrationTestBase.`Given a Placement Application`(
     apArea = apArea,
     name = name,
     requiredQualification = requiredQualification,
+    noticeType = noticeType,
   )
 
   return placementApplicationFactory.produceAndPersist {

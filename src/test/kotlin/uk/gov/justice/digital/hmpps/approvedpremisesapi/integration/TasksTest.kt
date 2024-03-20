@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Reallocation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -745,7 +746,7 @@ class TasksTest : IntegrationTestBase() {
     inner class FilterQualification {
       lateinit var jwt: String
 
-      lateinit var tasks: Map<TaskType, Map<UserQualification, Task>>
+      lateinit var tasks: Map<TaskType, Map<UserQualification, List<Task>>>
 
       @BeforeEach
       fun setup() {
@@ -754,31 +755,42 @@ class TasksTest : IntegrationTestBase() {
             `Given an Offender` { offenderDetails, _ ->
               this.jwt = jwt
 
-              val assessmentTasks = mutableMapOf<UserQualification, Task>()
-              val placementRequestTasks = mutableMapOf<UserQualification, Task>()
-              val placementApplicationTasks = mutableMapOf<UserQualification, Task>()
+              val assessmentTasks = mutableMapOf<UserQualification, List<Task>>()
+              val placementRequestTasks = mutableMapOf<UserQualification, List<Task>>()
+              val placementApplicationTasks = mutableMapOf<UserQualification, List<Task>>()
 
-              listOf(
-                UserQualification.WOMENS,
-                UserQualification.ESAP,
-                UserQualification.EMERGENCY,
-                UserQualification.PIPE,
-              ).forEach { qualification ->
+              fun createAssessmentTask(requiredQualification: UserQualification?, noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard): Task {
                 val (assessment) = `Given an Assessment for Approved Premises`(
                   allocatedToUser = otherUser,
                   createdByUser = otherUser,
                   crn = offenderDetails.otherIds.crn,
-                  requiredQualification = qualification,
+                  requiredQualification = requiredQualification,
+                  noticeType = noticeType,
                 )
 
+                return taskTransformer.transformAssessmentToTask(
+                  assessment,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                )
+              }
+
+              fun createPlacementRequestTask(requiredQualification: UserQualification?, noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard): Task {
                 val (placementRequest, _) = `Given a Placement Request`(
                   placementRequestAllocatedTo = otherUser,
                   assessmentAllocatedTo = otherUser,
                   createdByUser = user,
                   crn = offenderDetails.otherIds.crn,
-                  requiredQualification = qualification,
+                  requiredQualification = requiredQualification,
+                  noticeType = noticeType,
                 )
 
+                return taskTransformer.transformPlacementRequestToTask(
+                  placementRequest,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                )
+              }
+
+              fun createPlacementApplicationTask(requiredQualification: UserQualification?, noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard): Task {
                 val placementApplication = `Given a Placement Application`(
                   createdByUser = user,
                   allocatedToUser = user,
@@ -787,22 +799,44 @@ class TasksTest : IntegrationTestBase() {
                   },
                   crn = offenderDetails.otherIds.crn,
                   submittedAt = OffsetDateTime.now(),
-                  requiredQualification = qualification,
+                  requiredQualification = requiredQualification,
+                  noticeType = noticeType,
                 )
 
-                assessmentTasks[qualification] = taskTransformer.transformAssessmentToTask(
-                  assessment,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                )
-                placementRequestTasks[qualification] = taskTransformer.transformPlacementRequestToTask(
-                  placementRequest,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                )
-                placementApplicationTasks[qualification] = taskTransformer.transformPlacementApplicationToTask(
+                return taskTransformer.transformPlacementApplicationToTask(
                   placementApplication,
                   "${offenderDetails.firstName} ${offenderDetails.surname}",
                 )
               }
+
+              listOf(
+                UserQualification.WOMENS,
+                UserQualification.ESAP,
+                UserQualification.PIPE,
+              ).forEach { qualification ->
+                assessmentTasks[qualification] = listOf(
+                  createAssessmentTask(qualification),
+                )
+                placementRequestTasks[qualification] = listOf(
+                  createPlacementRequestTask(qualification),
+                )
+                placementApplicationTasks[qualification] = listOf(
+                  createPlacementApplicationTask(qualification),
+                )
+              }
+
+              assessmentTasks[UserQualification.EMERGENCY] = listOf(
+                createAssessmentTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
+                createAssessmentTask(null, Cas1ApplicationTimelinessCategory.emergency),
+              )
+              placementRequestTasks[UserQualification.EMERGENCY] = listOf(
+                createPlacementRequestTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
+                createPlacementRequestTask(null, Cas1ApplicationTimelinessCategory.emergency),
+              )
+              placementApplicationTasks[UserQualification.EMERGENCY] = listOf(
+                createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
+                createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.emergency),
+              )
 
               tasks = mapOf(
                 TaskType.assessment to assessmentTasks,
@@ -822,7 +856,7 @@ class TasksTest : IntegrationTestBase() {
       )
       fun `Get all tasks filters by task type and required qualification`(taskType: TaskType, qualification: UserQualification) {
         val url = "/tasks?type=${taskType.value}&requiredQualification=${qualification.name.lowercase()}"
-        val expectedTask = tasks[taskType]!![qualification]!!
+        val expectedTasks = tasks[taskType]!![qualification]!!
 
         webTestClient.get()
           .uri(url)
@@ -833,7 +867,7 @@ class TasksTest : IntegrationTestBase() {
           .expectBody()
           .json(
             objectMapper.writeValueAsString(
-              listOf(expectedTask),
+              expectedTasks,
             ),
           )
       }
@@ -846,7 +880,7 @@ class TasksTest : IntegrationTestBase() {
           tasks[TaskType.assessment]!![qualification]!!,
           tasks[TaskType.placementRequest]!![qualification]!!,
           tasks[TaskType.placementApplication]!![qualification]!!,
-        )
+        ).flatten()
 
         webTestClient.get()
           .uri(url)

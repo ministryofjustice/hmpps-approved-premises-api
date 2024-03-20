@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
@@ -29,6 +30,7 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
   dueAt: OffsetDateTime? = OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres(),
   name: String? = null,
   requiredQualification: UserQualification? = null,
+  noticeType: Cas1ApplicationTimelinessCategory? = null,
 ): Pair<AssessmentEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -53,9 +55,9 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     if (requiredQualification !== null) {
       withIsPipeApplication(requiredQualification == UserQualification.PIPE)
       withIsEsapApplication(requiredQualification == UserQualification.ESAP)
-      withIsEmergencyApplication(requiredQualification == UserQualification.EMERGENCY)
       withIsWomensApplication(requiredQualification == UserQualification.WOMENS)
     }
+    withNoticeType(noticeType)
   }
 
   val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {

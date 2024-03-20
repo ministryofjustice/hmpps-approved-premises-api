@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
@@ -45,6 +46,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
   assessmentSubmittedAt: OffsetDateTime = OffsetDateTime.now(),
   placementApplication: PlacementApplicationEntity? = null,
   requiredQualification: UserQualification? = null,
+  noticeType: Cas1ApplicationTimelinessCategory? = null,
 ): Pair<PlacementRequestEntity, ApprovedPremisesApplicationEntity> {
   val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
     withPermissiveSchema()
@@ -86,9 +88,9 @@ fun IntegrationTestBase.`Given a Placement Request`(
     if (requiredQualification !== null) {
       withIsPipeApplication(requiredQualification == UserQualification.PIPE)
       withIsEsapApplication(requiredQualification == UserQualification.ESAP)
-      withIsEmergencyApplication(requiredQualification == UserQualification.EMERGENCY)
       withIsWomensApplication(requiredQualification == UserQualification.WOMENS)
     }
+    withNoticeType(noticeType)
   }
 
   val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
