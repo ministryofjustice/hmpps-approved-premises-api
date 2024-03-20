@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import java.util.UUID
+import javax.persistence.EntityManager
 
 @Repository
 interface NoticeTypeMigrationJobApplicationRepository : JpaRepository<ApplicationEntity, UUID> {
@@ -24,48 +25,48 @@ interface NoticeTypeMigrationJobApplicationRepository : JpaRepository<Applicatio
   fun updateEmergencyApplicationNoticeType()
 
   @Modifying
-  @Query("UPDATE ApprovedPremisesApplicationEntity ap set ap.noticeType = :noticeType where ap.id in :ids")
-  fun updateApplicationNoticeType(ids: List<UUID>, noticeType: Cas1ApplicationTimelinessCategory)
+  @Query("UPDATE ApprovedPremisesApplicationEntity ap set ap.noticeType = :noticeType where ap.id = :id")
+  fun updateApplicationNoticeType(id: UUID, noticeType: Cas1ApplicationTimelinessCategory)
 
-  @Query("SELECT ap FROM ApprovedPremisesApplicationEntity ap where ap.isEmergencyApplication = false")
+  @Query(
+    "SELECT ap FROM ApprovedPremisesApplicationEntity ap where " +
+      "ap.noticeType = null AND ap.isEmergencyApplication = false ",
+  )
   fun getApplicationsThatRequireNoticeTypeUpdating(pageable: Pageable): Slice<ApprovedPremisesApplicationEntity>
 }
 
 class NoticeTypeMigrationJob(
   private val applicationRepository: NoticeTypeMigrationJobApplicationRepository,
+  private val entityManager: EntityManager,
   private val pageSize: Int,
 ) : MigrationJob() {
   private val log = LoggerFactory.getLogger(this::class.java)
   override val shouldRunInTransaction = true
 
   override fun process() {
+    log.info("Updating emergency applications")
     applicationRepository.updateEmergencyApplicationNoticeType()
 
-    var page = 0
+    var page = 1
     var hasNext = true
     var slice: Slice<ApprovedPremisesApplicationEntity>
 
-    val shortNoticeApplicationIds = mutableListOf<UUID>()
-    val standardApplicationIds = mutableListOf<UUID>()
-
     while (hasNext) {
       log.info("Getting page $page")
-      slice = applicationRepository.getApplicationsThatRequireNoticeTypeUpdating(PageRequest.of(page, pageSize))
+      slice = applicationRepository.getApplicationsThatRequireNoticeTypeUpdating(PageRequest.of(0, pageSize))
+
       slice.content.forEach {
+        entityManager.detach(it)
         if (it.isShortNoticeApplication() == true) {
-          shortNoticeApplicationIds.add(it.id)
+          applicationRepository.updateApplicationNoticeType(it.id, Cas1ApplicationTimelinessCategory.shortNotice)
         } else {
-          standardApplicationIds.add(it.id)
+          applicationRepository.updateApplicationNoticeType(it.id, Cas1ApplicationTimelinessCategory.standard)
         }
       }
+
+      entityManager.clear()
       hasNext = slice.hasNext()
       page += 1
     }
-
-    log.info("Updating ${shortNoticeApplicationIds.count()} short notice applications")
-    applicationRepository.updateApplicationNoticeType(shortNoticeApplicationIds, Cas1ApplicationTimelinessCategory.shortNotice)
-
-    log.info("Updating ${standardApplicationIds.count()} standard notice applications")
-    applicationRepository.updateApplicationNoticeType(standardApplicationIds, Cas1ApplicationTimelinessCategory.standard)
   }
 }
