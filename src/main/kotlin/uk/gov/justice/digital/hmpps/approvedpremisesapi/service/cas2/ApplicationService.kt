@@ -162,7 +162,7 @@ class ApplicationService(
     }
 
     application.apply {
-      this.data = data
+      this.data = removeXssCharacters(data)
     }
 
     val savedApplication = applicationRepository.save(application)
@@ -318,5 +318,17 @@ class ApplicationService(
       ),
       replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
     )
+  }
+
+  private fun removeXssCharacters(data: String?): String? {
+    if (data != null) {
+      val xssCharacters = setOf('<', '＜', '〈', '〈', '>', '＞', '〉', '〉')
+      var sanitisedData = data
+      xssCharacters.forEach { character ->
+        sanitisedData = sanitisedData?.replace(character.toString(), "")
+      }
+      return sanitisedData
+    }
+    return null
   }
 }
