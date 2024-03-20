@@ -18,7 +18,7 @@ data class BedUtilisationReportRow(
   val effectiveTurnaroundDays: Int,
   val voidDays: Int,
   val totalBookedDays: Int,
-  val bedspaceStartDate: LocalDate,
+  val bedspaceStartDate: LocalDate?,
   val bedspaceEndDate: LocalDate?,
   val bedspaceOnlineDays: Int,
   val occupancyRate: Double,

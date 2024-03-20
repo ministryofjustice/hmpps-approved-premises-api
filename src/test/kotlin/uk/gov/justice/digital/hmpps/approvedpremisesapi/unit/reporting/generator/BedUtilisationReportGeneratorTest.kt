@@ -983,6 +983,55 @@ class BedUtilisationReportGeneratorTest {
   }
 
   @Test
+  fun `bedspaceStartDate show nothing when bedspace start date is null`() {
+    val apArea = ApAreaEntityFactory()
+      .produce()
+
+    val probationRegion1 = ProbationRegionEntityFactory()
+      .withApArea(apArea)
+      .produce()
+
+    val localAuthorityArea1 = LocalAuthorityEntityFactory().produce()
+
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withLocalAuthorityArea(localAuthorityArea1)
+      .withProbationRegion(probationRegion1)
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .withCreatedAt(null)
+      .produce()
+
+    every {
+      mockBookingRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+    every {
+      mockLostBedsRepository.findAllByOverlappingDateForBed(
+        LocalDate.parse("2024-02-01"),
+        LocalDate.parse("2024-02-29"),
+        bed,
+      )
+    } returns emptyList()
+
+    val result = bedUtilisationReportGenerator.createReport(
+      listOf(bed),
+      BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2024, 2),
+    )
+
+    assertThat(result.count()).isEqualTo(1)
+    assertThat(result[0][BedUtilisationReportRow::bedspaceStartDate]).isNull()
+  }
+
+  @Test
   fun `bedspaceEndDate show nothing when bedspace end date is null`() {
     val apArea = ApAreaEntityFactory()
       .produce()
