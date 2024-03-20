@@ -8,6 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAppealedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCancelledFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
@@ -215,9 +217,42 @@ class DomainEventDescriberTest {
   fun `Returns expected description for application withdrawn event`() {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN)
 
+    every { mockDomainEventService.getApplicationWithdrawnEvent(any()) } returns buildDomainEvent {
+      ApplicationWithdrawnEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = "approved-premises.application.withdrawn",
+        eventDetails = ApplicationWithdrawnFactory()
+          .withWithdrawalReason("change_in_circumstances_new_application_to_be_submitted")
+          .withOtherWithdrawalReason(null)
+          .produce(),
+      )
+    }
+
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("The application was withdrawn")
+    assertThat(result).isEqualTo("The application was withdrawn. The reason was: change in circumstances new application to be submitted")
+  }
+
+  @Test
+  fun `Returns expected description for application withdrawn event with additional reason`() {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN)
+
+    every { mockDomainEventService.getApplicationWithdrawnEvent(any()) } returns buildDomainEvent {
+      ApplicationWithdrawnEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = "approved-premises.application.withdrawn",
+        eventDetails = ApplicationWithdrawnFactory()
+          .withWithdrawalReason("the main withdrawal reason")
+          .withOtherWithdrawalReason("additional reason")
+          .produce(),
+      )
+    }
+
+    val result = domainEventDescriber.getDescription(domainEventSummary)
+
+    assertThat(result).isEqualTo("The application was withdrawn. The reason was: the main withdrawal reason (additional reason)")
   }
 
   @ParameterizedTest

@@ -28,11 +28,22 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> buildBookingNotMadeDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> buildBookingCancelledDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> "The booking had its arrival or departure date changed"
-      DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> "The application was withdrawn"
+      DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> buildApplicationWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> buildAssessmentAppealedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> buildPlacementApplicationWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> buildMatchRequestWithdrawnDescription(domainEventSummary)
       else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
+    }
+  }
+
+  private fun buildApplicationWithdrawnDescription(domainEventSummary: DomainEventSummary): String? {
+    val event = domainEventService.getApplicationWithdrawnEvent(domainEventSummary.id())
+
+    return event.describe { data ->
+      val formattedWithdrawalReason = data.eventDetails.withdrawalReason.replace("_", " ")
+
+      "The application was withdrawn. The reason was: $formattedWithdrawalReason" +
+        (data.eventDetails.otherWithdrawalReason?.let { " ($it)" } ?: "")
     }
   }
 

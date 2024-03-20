@@ -19,6 +19,7 @@ class ApplicationWithdrawnFactory : Factory<ApplicationWithdrawn> {
   private var withdrawnBy: Yielded<WithdrawnBy> = { WithdrawnByFactory().produce() }
   private var withdrawnAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(5) }
   private var withdrawalReason: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
+  private var otherWithdrawalReason: Yielded<String?> = { randomStringMultiCaseWithNumbers(6) }
 
   fun withApplicationId(applicationId: UUID) = apply {
     this.applicationId = { applicationId }
@@ -48,6 +49,10 @@ class ApplicationWithdrawnFactory : Factory<ApplicationWithdrawn> {
     this.withdrawalReason = { withdrawalReason }
   }
 
+  fun withOtherWithdrawalReason(otherWithdrawalReason: String?) = apply {
+    this.otherWithdrawalReason = { otherWithdrawalReason }
+  }
+
   override fun produce() = ApplicationWithdrawn(
     applicationId = this.applicationId(),
     applicationUrl = this.applicationUrl(),
@@ -56,5 +61,6 @@ class ApplicationWithdrawnFactory : Factory<ApplicationWithdrawn> {
     withdrawnBy = this.withdrawnBy(),
     withdrawnAt = this.withdrawnAt(),
     withdrawalReason = this.withdrawalReason(),
+    otherWithdrawalReason = this.otherWithdrawalReason(),
   )
 }
