@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApAreaMigratio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.BookingStatusMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1FixPlacementApplicationLinksJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1UserDetailsMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1ValidateApAreaUserMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2AssessmentMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
@@ -103,6 +105,12 @@ class MigrationJobService(
           applicationContext.getBean(NoticeTypeMigrationJobApplicationRepository::class.java),
           applicationContext.getBean(EntityManager::class.java),
           pageSize,
+        )
+
+        MigrationJobType.cas1ValidateApAreaUserMapping -> Cas1ValidateApAreaUserMapping(
+          applicationContext.getBean(UserRepository::class.java),
+          applicationContext.getBean(UserMappingService::class.java),
+          applicationContext.getBean(CommunityApiClient::class.java),
         )
       }
 
