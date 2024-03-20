@@ -2704,7 +2704,7 @@ class ApplicationTest : IntegrationTestBase() {
           "A booking was not made for the placement request. The reason was: no suitable premises",
           "The booking was cancelled. The reason was: additional sentencing",
           "The booking had its arrival or departure date changed",
-          "The application was withdrawn",
+          "The application was assessed and accepted",
         )
 
         val summaries = domainEvents.zip(domainEventDescriptions).map {
@@ -2749,7 +2749,7 @@ class ApplicationTest : IntegrationTestBase() {
           "A booking was not made for the placement request. The reason was: no suitable premises",
           "The booking was cancelled. The reason was: additional sentencing",
           "The booking had its arrival or departure date changed",
-          "The application was withdrawn",
+          "The application was assessed and accepted",
         )
 
         val domainEvents = createTenDomainEvents()
@@ -3152,7 +3152,7 @@ class ApplicationTest : IntegrationTestBase() {
       val domainEvent7 = createDomainEvent(8, DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE)
       val domainEvent8 = createDomainEvent(9, DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
       val domainEvent9 = createDomainEvent(10, DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
-      val domainEvent10 = createDomainEvent(11, DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN)
+      val domainEvent10 = createDomainEvent(11, DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
 
       return listOf(
         domainEvent1, domainEvent2, domainEvent3,
