@@ -11,11 +11,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 
 @Component
-@ConditionalOnProperty(name = ["user-allocations.rules.emergency-assessments.enabled"])
-class EmergencyAssessmentRule(
-  @Value("\${user-allocations.rules.emergency-assessments.priority:0}")
+@ConditionalOnProperty(name = ["user-allocations.rules.emergency-and-short-notice-assessments.enabled"])
+class EmergencyAndShortNoticeAssessmentRule(
+  @Value("\${user-allocations.rules.emergency-and-short-notice-assessments.priority:0}")
   override val priority: Int,
-  private val config: EmergencyAssessmentRuleConfig,
+  private val config: EmergencyAndShortNoticeAssessmentRuleConfig,
 ) : UserAllocatorRule {
   override val name: String
     get() = "Emergency assessments"
@@ -53,7 +53,7 @@ class EmergencyAssessmentRule(
 }
 
 @Component
-@ConfigurationProperties(prefix = "user-allocations.rules.emergency-assessments")
-data class EmergencyAssessmentRuleConfig(
+@ConfigurationProperties(prefix = "user-allocations.rules.emergency-and-short-notice-assessments")
+data class EmergencyAndShortNoticeAssessmentRuleConfig(
   val allocateToUsers: Map<String, String>,
 )

@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocatorRuleOutcome
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.rules.EmergencyAssessmentRule
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.rules.EmergencyAssessmentRuleConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.rules.EmergencyAndShortNoticeAssessmentRule
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.rules.EmergencyAndShortNoticeAssessmentRuleConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -20,10 +20,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import java.time.OffsetDateTime
 
-class EmergencyAssessmentRuleTest {
-  val emergencyAssessmentRule = EmergencyAssessmentRule(
+class EmergencyAndShortNoticeAssessmentRuleTest {
+  val emergencyAssessmentRule = EmergencyAndShortNoticeAssessmentRule(
     0,
-    EmergencyAssessmentRuleConfig(
+    EmergencyAndShortNoticeAssessmentRuleConfig(
       mapOf(
         "wales" to "WALES-USER",
         "north-west" to "NORTHWEST-USER",

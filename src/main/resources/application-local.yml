@@ -56,7 +56,7 @@ user-allocations:
     esap-assessments:
       enabled: true
       allocate-to-user: JIMSNOWLDAP
-    emergency-assessments:
+    emergency-and-short-notice-assessments:
       enabled: true
       allocate-to-users:
         london: JIMSNOWLDAP
