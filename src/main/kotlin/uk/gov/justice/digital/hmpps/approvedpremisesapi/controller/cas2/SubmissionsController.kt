@@ -175,7 +175,9 @@ class SubmissionsController(
   private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummary>):
     List<Cas2SubmittedApplicationSummary> {
     val crns = applicationSummaries.map { it.getCrn() }
-    val personNamesMap = offenderService.getOffenderNamesOrPlaceholder(crns.toSet())
+
+    val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)
+
     return applicationSummaries.map { application ->
       submissionsTransformer.transformJpaSummaryToApiRepresentation(application, personNamesMap[application.getCrn()]!!)
     }

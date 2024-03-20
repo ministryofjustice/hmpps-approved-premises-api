@@ -6,6 +6,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -54,6 +55,7 @@ class OffenderServiceTest {
     mockProbationOffenderSearchClient,
     mockApOASysContextApiClient,
     mockOffenderDetailsDataSource,
+    2,
   )
 
   @Nested
@@ -491,7 +493,12 @@ class OffenderServiceTest {
   }
 
   @Nested
-  inner class GetOffenderNamesOrPlaceholder {
+  inner class GetMapOfPersonsNamesAndCrns {
+    val offenderDetailSummary = OffenderDetailsSummaryFactory()
+      .withFirstName("ExampleFirst")
+      .withLastName("ExampleLast")
+      .produce()
+
     @Test
     fun `returns Not Found when offender is PersonInfoResult-NotFound, status 404`() {
       every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf("NOTFOUND")) } returns mapOf(
@@ -507,7 +514,7 @@ class OffenderServiceTest {
             ),
       )
 
-      val result = offenderService.getOffenderNamesOrPlaceholder(setOf("NOTFOUND"))
+      val result = offenderService.getMapOfPersonNamesAndCrns(listOf("NOTFOUND"))
       assertThat(result).isEqualTo(mapOf("NOTFOUND" to "Person Not Found"))
     }
 
@@ -526,24 +533,34 @@ class OffenderServiceTest {
             ),
       )
 
-      val result = offenderService.getOffenderNamesOrPlaceholder(setOf("UNKNOWN"))
+      val result = offenderService.getMapOfPersonNamesAndCrns(listOf("UNKNOWN"))
       assertThat(result).isEqualTo(mapOf("UNKNOWN" to "Unknown"))
     }
 
     @Test
     fun `returns the person's full name when offender is PersonInfoResult-Full`() {
-      val offenderDetailSummary = OffenderDetailsSummaryFactory()
-        .withFirstName("ExampleFirst")
-        .withLastName("ExampleLast")
-        .produce()
       every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf("FULL")) } returns mapOf(
         "FULL" to ClientResult.Success(
           status = HttpStatus.OK,
           body = offenderDetailSummary,
         ),
       )
-      val result = offenderService.getOffenderNamesOrPlaceholder(setOf("FULL"))
+      val result = offenderService.getMapOfPersonNamesAndCrns(listOf("FULL"))
       assertThat(result).isEqualTo(mapOf("FULL" to "ExampleFirst ExampleLast"))
+    }
+
+    @Test
+    fun `calls offender API 2 times when crn search limit exceed`() {
+      every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(any<List<String>>()) } returns mapOf(
+        "CRN" to ClientResult.Success(
+          status = HttpStatus.OK,
+          body = offenderDetailSummary,
+        ),
+      )
+      val crns = listOf("CRN1", "CRN2", "CRN3")
+      offenderService.getMapOfPersonNamesAndCrns(crns)
+      verify(exactly = 1) { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf("CRN1", "CRN2")) }
+      verify(exactly = 1) { mockOffenderDetailsDataSource.getOffenderDetailSummaries(listOf("CRN3")) }
     }
   }
 

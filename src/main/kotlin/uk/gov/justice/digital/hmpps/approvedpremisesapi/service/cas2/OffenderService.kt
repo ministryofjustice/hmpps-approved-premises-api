@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 
+import org.apache.commons.collections4.ListUtils
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
@@ -21,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import java.util.stream.Collectors
 
 @Service("CAS2OffenderService")
 @Suppress(
@@ -31,6 +34,7 @@ class OffenderService(
   private val probationOffenderSearchApiClient: ProbationOffenderSearchApiClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
+  @Value("\${cas2.crn-search-limit:400}") private val numberOfCrn: Int,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -106,11 +110,18 @@ class OffenderService(
     return offenderDetailsDataSource.getOffenderDetailSummaries(crns.toList())
   }
 
-  fun getOffenderNamesOrPlaceholder(crns: Set<String>): Map<String, String> {
-    // get all offender summaries mapped to crns
+  fun getMapOfPersonNamesAndCrns(crns: List<String>): Map<String, String> {
+    val personNamesListOfMaps = ListUtils.partition(crns.toList(), numberOfCrn).stream()
+      .map { partitionedCrns ->
+        getOffenderNamesOrPlaceholder(partitionedCrns.toSet())
+      }.collect(Collectors.toList())
+
+    return personNamesListOfMaps.flatMap { it.toList() }.toMap()
+  }
+
+  private fun getOffenderNamesOrPlaceholder(crns: Set<String>): Map<String, String> {
     val offenderSummaries = getOffenderSummariesByCrns(crns)
 
-    // iterate through to  get names mapped to crns
     return crns.map { crn ->
       when (val offenderResponse = offenderSummaries[crn]) {
         is ClientResult.Success ->
