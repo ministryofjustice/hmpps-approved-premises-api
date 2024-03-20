@@ -7,6 +7,7 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
@@ -40,7 +41,7 @@ class TaskDeadlineServiceTest {
   @Test
   fun `getDeadline returns a deadline of the assessment's created date plus 10 working days for a standard assessment`() {
     val createdAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
-    val assessment = createAssessment(isEmergencyApplication = false, isEsap = false, isShortNoticeApplication = false, createdAt = createdAt)
+    val assessment = createAssessment(noticeType = Cas1ApplicationTimelinessCategory.standard, isEsap = false, createdAt = createdAt)
     val result = taskDeadlineService.getDeadline(assessment)
 
     assertThat(result!!.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-11"))
@@ -76,7 +77,7 @@ class TaskDeadlineServiceTest {
   @Test
   fun `getDeadline returns a deadline of the assessment's created date plus 2 working days for a short notice assessment`() {
     val createdAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
-    val assessment = createAssessment(isEmergencyApplication = false, isShortNoticeApplication = true, isEsap = false, createdAt = createdAt)
+    val assessment = createAssessment(noticeType = Cas1ApplicationTimelinessCategory.shortNotice, isEsap = false, createdAt = createdAt)
     val result = taskDeadlineService.getDeadline(assessment)
 
     assertThat(result!!.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-03"))
@@ -92,7 +93,7 @@ class TaskDeadlineServiceTest {
   @Test
   fun `getDeadline returns a deadline of within two hours for an emergency assessment created before 1pm`() {
     val createdAt = OffsetDateTime.parse("2023-01-01T11:00:00Z")
-    val assessment = createAssessment(isEmergencyApplication = true, isShortNoticeApplication = false, isEsap = false, createdAt = createdAt)
+    val assessment = createAssessment(noticeType = Cas1ApplicationTimelinessCategory.emergency, isEsap = false, createdAt = createdAt)
     val result = taskDeadlineService.getDeadline(assessment)
 
     assertThat(result).isEqualTo(OffsetDateTime.parse("2023-01-01T13:00:00Z"))
@@ -101,7 +102,7 @@ class TaskDeadlineServiceTest {
   @Test
   fun `getDeadline returns a deadline of 11am on the next working day for an emergency assessment created after 1pm`() {
     val createdAt = OffsetDateTime.parse("2023-01-01T14:00:00Z")
-    val assessment = createAssessment(isEmergencyApplication = true, isShortNoticeApplication = false, isEsap = false, createdAt = createdAt)
+    val assessment = createAssessment(noticeType = Cas1ApplicationTimelinessCategory.emergency, isEsap = false, createdAt = createdAt)
 
     every { workingDayCountService.nextWorkingDay(any()) } returns LocalDate.parse("2023-01-02")
 
@@ -117,7 +118,7 @@ class TaskDeadlineServiceTest {
   @Test
   fun `getDeadline returns a deadline of the placement request's created date plus 5 working days for a standard placement request`() {
     val createdAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
-    val placementRequest = createPlacementRequest(isEmergencyApplication = false, isShortNoticeApplication = false, isEsap = false, createdAt)
+    val placementRequest = createPlacementRequest(noticeType = Cas1ApplicationTimelinessCategory.standard, isEsap = false, createdAt)
     val result = taskDeadlineService.getDeadline(placementRequest)
 
     assertThat(result.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-06"))
@@ -131,9 +132,9 @@ class TaskDeadlineServiceTest {
   }
 
   @Test
-  fun `getDeadline returns a deadline of the placement request's created date plus 2 working days for a standard placement request`() {
+  fun `getDeadline returns a deadline of the placement request's created date plus 2 working days for a short notice placement request`() {
     val createdAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
-    val placementRequest = createPlacementRequest(isEmergencyApplication = false, isShortNoticeApplication = true, isEsap = false, createdAt = createdAt)
+    val placementRequest = createPlacementRequest(noticeType = Cas1ApplicationTimelinessCategory.shortNotice, isEsap = false, createdAt = createdAt)
     val result = taskDeadlineService.getDeadline(placementRequest)
 
     assertThat(result.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-03"))
@@ -148,7 +149,7 @@ class TaskDeadlineServiceTest {
 
   @Test
   fun `getDeadline returns a deadline of the placement request's created date for an emergency placement request`() {
-    val placementRequest = createPlacementRequest(isEmergencyApplication = true, isShortNoticeApplication = false, isEsap = false, createdAt = OffsetDateTime.now())
+    val placementRequest = createPlacementRequest(noticeType = Cas1ApplicationTimelinessCategory.emergency, isEsap = false, createdAt = OffsetDateTime.now())
     val result = taskDeadlineService.getDeadline(placementRequest)
 
     assertThat(result).isEqualTo(placementRequest.createdAt)
@@ -156,7 +157,7 @@ class TaskDeadlineServiceTest {
 
   @Test
   fun `getDeadline returns a deadline of the placement request's created date for an ESAP placement request`() {
-    val placementRequest = createPlacementRequest(isEmergencyApplication = false, isShortNoticeApplication = false, isEsap = true, createdAt = OffsetDateTime.now())
+    val placementRequest = createPlacementRequest(noticeType = Cas1ApplicationTimelinessCategory.standard, isEsap = true, createdAt = OffsetDateTime.now())
 
     val result = taskDeadlineService.getDeadline(placementRequest)
 
@@ -166,7 +167,7 @@ class TaskDeadlineServiceTest {
   @Test
   fun `getDeadline returns a deadline of the placement application's created date plus 10 working days for a placement application`() {
     val createdAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
-    val placementRequest = createPlacementRequest(isEmergencyApplication = false, isShortNoticeApplication = false, isEsap = true, createdAt = createdAt)
+    val placementRequest = createPlacementRequest(noticeType = Cas1ApplicationTimelinessCategory.shortNotice, isEsap = true, createdAt = createdAt)
     val placementApplication = PlacementApplicationEntityFactory()
       .withApplication(placementRequest.application)
       .withCreatedByUser(placementRequest.application.createdByUser)
@@ -185,7 +186,7 @@ class TaskDeadlineServiceTest {
     }
   }
 
-  private fun createApplication(isEmergencyApplication: Boolean, isShortNoticeApplication: Boolean, isEsap: Boolean): ApprovedPremisesApplicationEntity {
+  private fun createApplication(noticeType: Cas1ApplicationTimelinessCategory, isEsap: Boolean): ApprovedPremisesApplicationEntity {
     val user = UserEntityFactory()
       .withDefaultProbationRegion()
       .produce()
@@ -193,18 +194,16 @@ class TaskDeadlineServiceTest {
     val application = spyk(
       ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
-        .withIsEmergencyApplication(isEmergencyApplication)
+        .withNoticeType(noticeType)
         .withIsEsapApplication(isEsap)
         .produce(),
     )
 
-    every { application.isShortNoticeApplication() } returns isShortNoticeApplication
-
     return application
   }
 
-  private fun createPlacementRequest(isEmergencyApplication: Boolean, isShortNoticeApplication: Boolean, isEsap: Boolean, createdAt: OffsetDateTime): PlacementRequestEntity {
-    val assessment = createAssessment(isEmergencyApplication, isShortNoticeApplication, isEsap, createdAt)
+  private fun createPlacementRequest(noticeType: Cas1ApplicationTimelinessCategory, isEsap: Boolean, createdAt: OffsetDateTime): PlacementRequestEntity {
+    val assessment = createAssessment(noticeType, isEsap, createdAt)
 
     return PlacementRequestEntityFactory()
       .withApplication(assessment.application as ApprovedPremisesApplicationEntity)
@@ -219,8 +218,8 @@ class TaskDeadlineServiceTest {
       .produce()
   }
 
-  private fun createAssessment(isEmergencyApplication: Boolean, isShortNoticeApplication: Boolean, isEsap: Boolean, createdAt: OffsetDateTime): ApprovedPremisesAssessmentEntity {
-    val application = createApplication(isEmergencyApplication, isShortNoticeApplication, isEsap)
+  private fun createAssessment(noticeType: Cas1ApplicationTimelinessCategory, isEsap: Boolean, createdAt: OffsetDateTime): ApprovedPremisesAssessmentEntity {
+    val application = createApplication(noticeType, isEsap)
 
     return ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)

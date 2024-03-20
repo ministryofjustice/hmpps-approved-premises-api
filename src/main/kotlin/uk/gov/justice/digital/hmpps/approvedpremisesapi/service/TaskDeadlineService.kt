@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
@@ -19,8 +20,8 @@ class TaskDeadlineService(
     val application = assessment.application
     return when {
       application !is ApprovedPremisesApplicationEntity -> null
-      application.isEmergencyApplication == true -> emergencyAssessmentDueDateTime(assessment)
-      application.isShortNoticeApplication() == true -> addWorkingDays(assessment.createdAt, SHORT_NOTICE_ASSESSMENT_TIMEFRAME)
+      application.noticeType == Cas1ApplicationTimelinessCategory.emergency -> emergencyAssessmentDueDateTime(assessment)
+      application.noticeType == Cas1ApplicationTimelinessCategory.shortNotice -> addWorkingDays(assessment.createdAt, SHORT_NOTICE_ASSESSMENT_TIMEFRAME)
       else -> addWorkingDays(assessment.createdAt, STANDARD_ASSESSMENT_TIMEFRAME)
     }
   }
@@ -28,8 +29,8 @@ class TaskDeadlineService(
   fun getDeadline(placementRequest: PlacementRequestEntity): OffsetDateTime {
     val application = placementRequest.application
     return when {
-      application.isEmergencyApplication == true -> placementRequest.createdAt
-      application.isShortNoticeApplication() == true -> addWorkingDays(placementRequest.createdAt, SHORT_NOTICE_PLACEMENT_REQUEST_TIMEFRAME)
+      application.noticeType == Cas1ApplicationTimelinessCategory.emergency -> placementRequest.createdAt
+      application.noticeType == Cas1ApplicationTimelinessCategory.shortNotice -> addWorkingDays(placementRequest.createdAt, SHORT_NOTICE_PLACEMENT_REQUEST_TIMEFRAME)
       application.isEsapApplication == true -> placementRequest.createdAt
       else -> addWorkingDays(placementRequest.createdAt, STANDARD_PLACEMENT_REQUEST_TIMEFRAME)
     }
