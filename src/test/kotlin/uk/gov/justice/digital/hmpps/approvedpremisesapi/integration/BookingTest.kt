@@ -931,6 +931,390 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create Temporary Accommodation Booking returns 409 Conflict when bed archived date is before the arrival date`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val arrivalDate = LocalDate.parse("2022-08-12")
+        val departureDate = LocalDate.parse("2022-08-30")
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withName("test-bed")
+          withEndDate { arrivalDate.minusDays(1) }
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withName("test-room")
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withProbationRegion(userEntity.probationRegion)
+          withApplicationSchema(applicationSchema)
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }
+        assessment.schemaUpToDate = true
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewBooking(
+              crn = offenderDetails.otherIds.crn,
+              arrivalDate = arrivalDate,
+              departureDate = departureDate,
+              serviceName = ServiceName.temporaryAccommodation,
+              bedId = bed.id,
+              assessmentId = assessment.id,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Conflict")
+          .jsonPath("status").isEqualTo(409)
+          .jsonPath("detail")
+          .isEqualTo("BedSpace is archived from ${bed.endDate} which overlaps with the desired dates: ${bed.id}")
+      }
+    }
+  }
+
+  @Test
+  fun `Create Temporary Accommodation Booking returns 409 Conflict when bed archived date is exactly on the arrival date`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val arrivalDate = LocalDate.parse("2022-08-12")
+        val departureDate = LocalDate.parse("2022-08-30")
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withName("test-bed")
+          withEndDate { arrivalDate }
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withName("test-room")
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withProbationRegion(userEntity.probationRegion)
+          withApplicationSchema(applicationSchema)
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }
+        assessment.schemaUpToDate = true
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewBooking(
+              crn = offenderDetails.otherIds.crn,
+              arrivalDate = arrivalDate,
+              departureDate = departureDate,
+              serviceName = ServiceName.temporaryAccommodation,
+              bedId = bed.id,
+              assessmentId = assessment.id,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Conflict")
+          .jsonPath("status").isEqualTo(409)
+          .jsonPath("detail")
+          .isEqualTo("BedSpace is archived from ${bed.endDate} which overlaps with the desired dates: ${bed.id}")
+      }
+    }
+  }
+
+  @Test
+  fun `Create Temporary Accommodation Booking returns 409 Conflict when bed archived date is before departure date`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val arrivalDate = LocalDate.parse("2022-08-12")
+        val departureDate = LocalDate.parse("2022-08-30")
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withName("test-bed")
+          withEndDate { departureDate.minusDays(1) }
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withName("test-room")
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withProbationRegion(userEntity.probationRegion)
+          withApplicationSchema(applicationSchema)
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }
+        assessment.schemaUpToDate = true
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewBooking(
+              crn = offenderDetails.otherIds.crn,
+              arrivalDate = arrivalDate,
+              departureDate = departureDate,
+              serviceName = ServiceName.temporaryAccommodation,
+              bedId = bed.id,
+              assessmentId = assessment.id,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Conflict")
+          .jsonPath("status").isEqualTo(409)
+          .jsonPath("detail")
+          .isEqualTo("BedSpace is archived from ${bed.endDate} which overlaps with the desired dates: ${bed.id}")
+      }
+    }
+  }
+
+  @Test
+  fun `Create Temporary Accommodation Booking returns 409 Conflict when bed archived date is exactly on departure date`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val arrivalDate = LocalDate.parse("2022-08-12")
+        val departureDate = LocalDate.parse("2022-08-30")
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withName("test-bed")
+          withEndDate { departureDate }
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withName("test-room")
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withProbationRegion(userEntity.probationRegion)
+          withApplicationSchema(applicationSchema)
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }
+        assessment.schemaUpToDate = true
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewBooking(
+              crn = offenderDetails.otherIds.crn,
+              arrivalDate = arrivalDate,
+              departureDate = departureDate,
+              serviceName = ServiceName.temporaryAccommodation,
+              bedId = bed.id,
+              assessmentId = assessment.id,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .is4xxClientError
+          .expectBody()
+          .jsonPath("title").isEqualTo("Conflict")
+          .jsonPath("status").isEqualTo(409)
+          .jsonPath("detail")
+          .isEqualTo("BedSpace is archived from ${bed.endDate} which overlaps with the desired dates: ${bed.id}")
+      }
+    }
+  }
+
+  @Test
+  fun `Create Temporary Accommodation Booking returns OK response when bed archived date is in future compare the departure date`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val arrivalDate = LocalDate.parse("2022-08-12")
+        val departureDate = LocalDate.parse("2022-08-30")
+
+        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withYieldedProbationRegion {
+            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+          }
+        }
+
+        val bed = bedEntityFactory.produceAndPersist {
+          withName("test-bed")
+          withEndDate { departureDate.plusDays(1) }
+          withYieldedRoom {
+            roomEntityFactory.produceAndPersist {
+              withName("test-room")
+              withYieldedPremises { premises }
+            }
+          }
+        }
+
+        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        }
+
+        val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+          withCreatedByUser(userEntity)
+          withCrn(offenderDetails.otherIds.crn)
+          withProbationRegion(userEntity.probationRegion)
+          withApplicationSchema(applicationSchema)
+        }
+
+        val assessmentSchema = temporaryAccommodationAssessmentJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+          withAddedAt(OffsetDateTime.now())
+        }
+
+        val assessment = temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+          withApplication(application)
+          withAssessmentSchema(assessmentSchema)
+        }
+        assessment.schemaUpToDate = true
+
+        GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+
+        webTestClient.post()
+          .uri("/premises/${premises.id}/bookings")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            NewBooking(
+              crn = offenderDetails.otherIds.crn,
+              arrivalDate = arrivalDate,
+              departureDate = departureDate,
+              serviceName = ServiceName.temporaryAccommodation,
+              bedId = bed.id,
+              assessmentId = assessment.id,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
+          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
+          .jsonPath("$.departureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
+          .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.keyWorker").isEqualTo(null)
+          .jsonPath("$.status").isEqualTo("provisional")
+          .jsonPath("$.arrival").isEqualTo(null)
+          .jsonPath("$.departure").isEqualTo(null)
+          .jsonPath("$.nonArrival").isEqualTo(null)
+          .jsonPath("$.cancellation").isEqualTo(null)
+          .jsonPath("$.confirmation").isEqualTo(null)
+          .jsonPath("$.serviceName").isEqualTo(ServiceName.temporaryAccommodation.value)
+          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+          .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
+          .jsonPath("$.bed.name").isEqualTo("test-bed")
+          .jsonPath("$.assessmentId").isEqualTo("${assessment.id}")
+      }
+    }
+  }
+
+  @Test
   fun `Create Temporary Accommodation Booking returns OK with correct body when overlapping booking is a non-arrival`() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
