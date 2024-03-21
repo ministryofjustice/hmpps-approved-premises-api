@@ -90,6 +90,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
@@ -126,6 +127,7 @@ class ApplicationServiceTest {
   private val mockDomainEventTransformer = mockk<DomainEventTransformer>()
   private val mockCas1ApplicationDomainEventService = mockk<Cas1ApplicationDomainEventService>()
   private val mockCas1ApplicationUserDetailsRepository = mockk<Cas1ApplicationUserDetailsRepository>()
+  private val mockCas1ApplicationEmailService = mockk<Cas1ApplicationEmailService>()
 
   private val applicationService = ApplicationService(
     mockUserRepository,
@@ -152,6 +154,7 @@ class ApplicationServiceTest {
     mockDomainEventTransformer,
     mockCas1ApplicationDomainEventService,
     mockCas1ApplicationUserDetailsRepository,
+    mockCas1ApplicationEmailService,
   )
 
   @Test
@@ -2511,7 +2514,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    fun `withdrawApprovedPremisesApplication returns Success and saves Application with isWithdrawn set to true, emits domain event`() {
+    fun `withdrawApprovedPremisesApplication returns Success and saves Application with isWithdrawn set to true, emits domain event and email`() {
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
@@ -2527,7 +2530,7 @@ class ApplicationServiceTest {
       val domainEventWithdrawnBy = WithdrawnByFactory().produce()
       every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
       every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
-      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+      every { mockCas1ApplicationEmailService.applicationWithdrawn(any()) } just Runs
 
       val result = applicationService.withdrawApprovedPremisesApplication(
         application.id,
@@ -2567,6 +2570,8 @@ class ApplicationServiceTest {
           },
         )
       }
+
+      verify { mockCas1ApplicationEmailService.applicationWithdrawn(application) }
     }
 
     @Test
@@ -2586,7 +2591,7 @@ class ApplicationServiceTest {
       val domainEventWithdrawnBy = WithdrawnByFactory().produce()
       every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
       every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
-      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+      every { mockCas1ApplicationEmailService.applicationWithdrawn(any()) } just Runs
 
       val result =
         applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", "Some other reason")
@@ -2639,8 +2644,7 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
       every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-
-      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+      every { mockCas1ApplicationEmailService.applicationWithdrawn(any()) } returns Unit
 
       val domainEventWithdrawnBy = WithdrawnByFactory().produce()
       every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy

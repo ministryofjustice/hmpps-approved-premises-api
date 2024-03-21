@@ -51,6 +51,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
@@ -100,6 +101,7 @@ class ApplicationService(
   private val domainEventTransformer: DomainEventTransformer,
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
   private val cas1ApplicationUserDetailsRepository: Cas1ApplicationUserDetailsRepository,
+  private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
 ) {
   fun getApplication(applicationId: UUID) = applicationRepository.findByIdOrNull(applicationId)
 
@@ -626,8 +628,7 @@ class ApplicationService(
       ),
     )
 
-    val premisesName = application.getLatestBooking()?.premises?.name
-    sendEmailApplicationWithdrawn(user, application, premisesName)
+    cas1ApplicationEmailService.applicationWithdrawn(application)
 
     application.assessments.map {
       assessmentService.updateCas1AssessmentWithdrawn(it.id)
@@ -641,21 +642,6 @@ class ApplicationService(
       withdrawable = !application.isWithdrawn,
       userMayDirectlyWithdraw = userAccessService.userMayWithdrawApplication(user, application),
     )
-  }
-
-  fun sendEmailApplicationWithdrawn(user: UserEntity, application: ApplicationEntity, premisesName: String?) {
-    user.email?.let { email ->
-      emailNotificationService.sendEmail(
-        recipientEmailAddress = email,
-        templateId = notifyConfig.templates.applicationWithdrawn,
-        personalisation = mapOf(
-          "name" to user.name,
-          "apName" to premisesName,
-          "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
-          "crn" to application.crn,
-        ),
-      )
-    }
   }
 
   private fun getApplicationWithdrawn(
