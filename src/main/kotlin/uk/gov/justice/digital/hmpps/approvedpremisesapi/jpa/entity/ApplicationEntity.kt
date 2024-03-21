@@ -426,6 +426,7 @@ class TemporaryAccommodationApplicationEntity(
   var prisonNameOnCreation: String?,
   var personReleaseDate: LocalDate?,
   var pdu: String?,
+  var name: String?,
 ) : ApplicationEntity(
   id,
   crn,
