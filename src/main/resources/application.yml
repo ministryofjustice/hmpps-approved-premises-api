@@ -261,3 +261,4 @@ pagination:
 
 feature-flags:
   cas1-use-new-withdrawal-logic: false
+  cas1-aps530-withdrawal-email-improvements: false

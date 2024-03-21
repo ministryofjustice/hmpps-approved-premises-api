@@ -74,3 +74,4 @@ user-allocations:
 
 feature-flags:
   cas1-use-new-withdrawal-logic: true
+  cas1-aps530-withdrawal-email-improvements: true
