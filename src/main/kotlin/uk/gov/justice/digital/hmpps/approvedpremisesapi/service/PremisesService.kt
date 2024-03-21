@@ -433,6 +433,14 @@ class PremisesService(
       }
     }
 
+    if (premises is TemporaryAccommodationPremisesEntity && status == PropertyStatus.archived) {
+      premises.rooms.forEach { room ->
+        room.beds.forEach { bed ->
+          bed.endDate = LocalDate.now()
+        }
+      }
+    }
+
     val savedPremises = premisesRepository.save(premises)
 
     return AuthorisableActionResult.Success(
