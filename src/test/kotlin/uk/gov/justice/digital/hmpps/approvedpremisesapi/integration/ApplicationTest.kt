@@ -2426,6 +2426,7 @@ class ApplicationTest : IntegrationTestBase() {
       `Given a User` { _, _ ->
         `Given an Offender` { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+          val offenderName = "${offenderDetails.firstName} ${offenderDetails.surname}"
 
           val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
             withAddedAt(OffsetDateTime.now())
@@ -2439,6 +2440,7 @@ class ApplicationTest : IntegrationTestBase() {
             withApplicationSchema(applicationSchema)
             withCreatedByUser(submittingUser)
             withProbationRegion(submittingUser.probationRegion)
+            withName(offenderName)
             withData(
               """
               {}
@@ -2469,6 +2471,7 @@ class ApplicationTest : IntegrationTestBase() {
           val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
 
           assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
+          assertThat(persistedApplication.name).isEqualTo(offenderName)
         }
       }
     }

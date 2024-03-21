@@ -2159,6 +2159,7 @@ class ApplicationServiceTest {
         .withCreatedByUser(user)
         .withSubmittedAt(null)
         .withProbationRegion(user.probationRegion)
+        .withName(user.name)
         .produce()
         .apply {
           schemaUpToDate = true
@@ -2209,6 +2210,7 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.dutyToReferLocalAuthorityAreaName).isEqualTo("Aberdeen City")
       assertThat(persistedApplication.personReleaseDate).isEqualTo(submitTemporaryAccommodationApplicationWithMiReportingData.personReleaseDate)
       assertThat(persistedApplication.pdu).isEqualTo("Probation Delivery Unit Test")
+      assertThat(persistedApplication.name).isEqualTo(user.name)
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) {

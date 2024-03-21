@@ -1,0 +1,1 @@
+ALTER TABLE temporary_accommodation_applications ADD COLUMN name TEXT NULL;

@@ -477,6 +477,7 @@ class ApplicationService(
       prisonNameOnCreation = prisonName,
       personReleaseDate = null,
       pdu = null,
+      name = "${offenderDetails.firstName} ${offenderDetails.surname}",
     )
   }
 
