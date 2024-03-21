@@ -78,8 +78,6 @@ class AssessmentService(
   private val userAllocator: UserAllocator,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
-  @Value("\${feature-flags.cas1-use-new-withdrawal-logic}")
-  private val sendNewWithdrawalNotifications: Boolean,
   private val taskDeadlineService: TaskDeadlineService,
   private val assessmentEmailService: Cas1AssessmentEmailService,
 ) {
@@ -937,20 +935,10 @@ class AssessmentService(
       assessment.isWithdrawn = true
       assessmentRepository.save(assessment)
 
-      val allocatedUserEmail = assessment.allocatedToUser?.email
-      if (sendNewWithdrawalNotifications &&
-        isPendingAssessment &&
-        allocatedUserEmail != null
-      ) {
-        emailNotificationService.sendEmail(
-          recipientEmailAddress = allocatedUserEmail,
-          templateId = notifyConfig.templates.assessmentWithdrawn,
-          personalisation = mapOf(
-            "applicationUrl" to applicationUrlTemplate.resolve("id", assessment.application.id.toString()),
-            "crn" to assessment.application.crn,
-          ),
-        )
-      }
+      assessmentEmailService.assessmentWithdrawn(
+        assessment = assessment,
+        isAssessmentPending = isPendingAssessment,
+      )
     }
   }
 

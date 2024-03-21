@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
@@ -19,6 +20,8 @@ class Cas1AssessmentEmailService(
   private val notifyConfig: NotifyConfig,
   private val workingDayCountService: WorkingDayCountService,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
+  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val sendNewWithdrawalNotifications: Boolean,
 ) {
 
   fun assessmentAllocated(allocatedUser: UserEntity, assessmentId: UUID, crn: String, deadline: OffsetDateTime?, isEmergency: Boolean) {
@@ -61,6 +64,26 @@ class Cas1AssessmentEmailService(
           "crn" to crn,
         ),
       )
+    }
+  }
+
+  fun assessmentWithdrawn(
+    assessment: ApprovedPremisesAssessmentEntity,
+    isAssessmentPending: Boolean,
+  ) {
+    if (sendNewWithdrawalNotifications &&
+      isAssessmentPending
+    ) {
+      assessment.allocatedToUser?.email?.let { email ->
+        emailNotificationService.sendEmail(
+          recipientEmailAddress = email,
+          templateId = notifyConfig.templates.assessmentWithdrawn,
+          personalisation = mapOf(
+            "applicationUrl" to applicationUrlTemplate.resolve("id", assessment.application.id.toString()),
+            "crn" to assessment.application.crn,
+          ),
+        )
+      }
     }
   }
 
