@@ -13,6 +13,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService.Companion.NEXT_WORKING_DAY_EMERGENCY_DEADLINE_COPY
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService.Companion.SAME_DAY_EMERGENCY_DEADLINE_COPY
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService.Companion.STANDARD_DEADLINE_COPY
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1AssessmentEmailServiceTest.Constants.ALLOCATED_EMAIL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1AssessmentEmailServiceTest.Constants.CRN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockEmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
@@ -20,14 +22,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormattedHourOf
 import java.time.OffsetDateTime
 import java.util.UUID
 
-object Cas1AssessmentEmailServiceTestConstants {
-  const val ALLOCATED_USER_EMAIL = "applicant@test.com"
-  const val DEALLOCATED_USER_EMAIL = "deallocated@test.com"
-  const val APPEALED_ASSESSMENT_ALLOCATED_USER_EMAIL = "appealed@test.com"
-  const val CRN = "CRN123"
-}
-
 class Cas1AssessmentEmailServiceTest {
+
+  object Constants {
+    const val ALLOCATED_EMAIL = "applicant@test.com"
+    const val CRN = "CRN123"
+  }
+
   private val notifyConfig = NotifyConfig()
   private val mockEmailNotificationService = MockEmailNotificationService()
   private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
@@ -48,32 +49,42 @@ class Cas1AssessmentEmailServiceTest {
   inner class AssessmentAllocated {
     private val applicant = UserEntityFactory()
       .withUnitTestControlProbationRegion()
-      .withEmail(Cas1AssessmentEmailServiceTestConstants.ALLOCATED_USER_EMAIL)
+      .withEmail(ALLOCATED_EMAIL)
       .produce()
     private val assessmentID = UUID.randomUUID()
 
     @Test
     fun `assessmentAllocated sends an email to a user if they have an email address and no deadline`() {
-      service.assessmentAllocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN, null, false)
+      service.assessmentAllocated(applicant, assessmentID, CRN, null, false)
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
-        Cas1AssessmentEmailServiceTestConstants.ALLOCATED_USER_EMAIL,
+        ALLOCATED_EMAIL,
         notifyConfig.templates.assessmentAllocated,
-        expectedAssessmentAllocatedPersonalisation(applicant.name, Cas1AssessmentEmailServiceTestConstants.CRN, assessmentID, DEFAULT_DEADLINE_COPY),
+        expectedAssessmentAllocatedPersonalisation(
+          applicant.name,
+          CRN,
+          assessmentID,
+          DEFAULT_DEADLINE_COPY,
+        ),
       )
     }
 
     @Test
     fun `assessmentAllocated sends an email to a user if they have an email address and an emergency assessment with a deadline of today`() {
       val deadline = OffsetDateTime.now().minusHours(2)
-      service.assessmentAllocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN, deadline, true)
+      service.assessmentAllocated(applicant, assessmentID, CRN, deadline, true)
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
-        Cas1AssessmentEmailServiceTestConstants.ALLOCATED_USER_EMAIL,
+        ALLOCATED_EMAIL,
         notifyConfig.templates.assessmentAllocated,
-        expectedAssessmentAllocatedPersonalisation(applicant.name, Cas1AssessmentEmailServiceTestConstants.CRN, assessmentID, SAME_DAY_EMERGENCY_DEADLINE_COPY),
+        expectedAssessmentAllocatedPersonalisation(
+          applicant.name,
+          CRN,
+          assessmentID,
+          SAME_DAY_EMERGENCY_DEADLINE_COPY,
+        ),
       )
     }
 
@@ -82,15 +93,20 @@ class Cas1AssessmentEmailServiceTest {
       every { mockWorkingDayCountService.getCompleteWorkingDaysFromNowUntil(any()) } returns 2
       val deadline = OffsetDateTime.now().plusDays(2)
 
-      service.assessmentAllocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN, deadline, true)
+      service.assessmentAllocated(applicant, assessmentID, CRN, deadline, true)
 
       val expectedDeadlineCopy = NEXT_WORKING_DAY_EMERGENCY_DEADLINE_COPY.format(deadline.toUiFormattedHourOfDay(), deadline.toLocalDate().toUiFormat())
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
-        Cas1AssessmentEmailServiceTestConstants.ALLOCATED_USER_EMAIL,
+        ALLOCATED_EMAIL,
         notifyConfig.templates.assessmentAllocated,
-        expectedAssessmentAllocatedPersonalisation(applicant.name, Cas1AssessmentEmailServiceTestConstants.CRN, assessmentID, expectedDeadlineCopy),
+        expectedAssessmentAllocatedPersonalisation(
+          applicant.name,
+          CRN,
+          assessmentID,
+          expectedDeadlineCopy,
+        ),
       )
     }
 
@@ -99,15 +115,20 @@ class Cas1AssessmentEmailServiceTest {
       every { mockWorkingDayCountService.getCompleteWorkingDaysFromNowUntil(any()) } returns 10
       val deadline = OffsetDateTime.now().plusDays(10)
 
-      service.assessmentAllocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN, deadline, false)
+      service.assessmentAllocated(applicant, assessmentID, CRN, deadline, false)
 
       val expectedDeadlineCopy = STANDARD_DEADLINE_COPY.format("10")
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
-        Cas1AssessmentEmailServiceTestConstants.ALLOCATED_USER_EMAIL,
+        ALLOCATED_EMAIL,
         notifyConfig.templates.assessmentAllocated,
-        expectedAssessmentAllocatedPersonalisation(applicant.name, Cas1AssessmentEmailServiceTestConstants.CRN, assessmentID, expectedDeadlineCopy),
+        expectedAssessmentAllocatedPersonalisation(
+          applicant.name,
+          CRN,
+          assessmentID,
+          expectedDeadlineCopy,
+        ),
       )
     }
 
@@ -119,7 +140,13 @@ class Cas1AssessmentEmailServiceTest {
         .produce()
       val assessmentID = UUID.randomUUID()
 
-      service.assessmentAllocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN, OffsetDateTime.now(), false)
+      service.assessmentAllocated(
+        applicant,
+        assessmentID,
+        CRN,
+        OffsetDateTime.now(),
+        false,
+      )
       mockEmailNotificationService.assertEmailRequestCount(0)
     }
 
@@ -137,19 +164,19 @@ class Cas1AssessmentEmailServiceTest {
     fun `assessmentDeallocated sends an email when the user has an email address`() {
       val applicant = UserEntityFactory()
         .withUnitTestControlProbationRegion()
-        .withEmail(Cas1AssessmentEmailServiceTestConstants.DEALLOCATED_USER_EMAIL)
+        .withEmail(ALLOCATED_EMAIL)
         .produce()
       val assessmentID = UUID.randomUUID()
 
-      service.assessmentDeallocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN)
+      service.assessmentDeallocated(applicant, assessmentID, CRN)
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
-        Cas1AssessmentEmailServiceTestConstants.DEALLOCATED_USER_EMAIL,
+        ALLOCATED_EMAIL,
         notifyConfig.templates.assessmentDeallocated,
         mapOf(
           "name" to applicant.name,
-          "crn" to Cas1AssessmentEmailServiceTestConstants.CRN,
+          "crn" to CRN,
           "assessmentUrl" to "http://frontend/assessments/$assessmentID",
         ),
       )
@@ -163,7 +190,7 @@ class Cas1AssessmentEmailServiceTest {
         .produce()
       val assessmentID = UUID.randomUUID()
 
-      service.assessmentDeallocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN)
+      service.assessmentDeallocated(applicant, assessmentID, CRN)
       mockEmailNotificationService.assertEmailRequestCount(0)
     }
   }
@@ -174,19 +201,19 @@ class Cas1AssessmentEmailServiceTest {
     fun `appealedAssessmentAllocated sends an email when the user has an email address`() {
       val applicant = UserEntityFactory()
         .withUnitTestControlProbationRegion()
-        .withEmail(Cas1AssessmentEmailServiceTestConstants.APPEALED_ASSESSMENT_ALLOCATED_USER_EMAIL)
+        .withEmail(ALLOCATED_EMAIL)
         .produce()
       val assessmentID = UUID.randomUUID()
 
-      service.appealedAssessmentAllocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN)
+      service.appealedAssessmentAllocated(applicant, assessmentID, CRN)
 
       mockEmailNotificationService.assertEmailRequestCount(1)
       mockEmailNotificationService.assertEmailRequested(
-        Cas1AssessmentEmailServiceTestConstants.APPEALED_ASSESSMENT_ALLOCATED_USER_EMAIL,
+        ALLOCATED_EMAIL,
         notifyConfig.templates.appealedAssessmentAllocated,
         mapOf(
           "name" to applicant.name,
-          "crn" to Cas1AssessmentEmailServiceTestConstants.CRN,
+          "crn" to CRN,
           "assessmentUrl" to "http://frontend/assessments/$assessmentID",
         ),
       )
@@ -200,7 +227,7 @@ class Cas1AssessmentEmailServiceTest {
         .produce()
       val assessmentID = UUID.randomUUID()
 
-      service.appealedAssessmentAllocated(applicant, assessmentID, Cas1AssessmentEmailServiceTestConstants.CRN)
+      service.appealedAssessmentAllocated(applicant, assessmentID, CRN)
       mockEmailNotificationService.assertEmailRequestCount(0)
     }
   }
