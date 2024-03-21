@@ -818,11 +818,11 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
               emailAsserter.assertEmailsRequestedCount(6)
               emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2024-01-02"))
-              emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocated, mapOf("startDate" to "2024-01-02"))
+              emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocatedV2, mapOf("startDate" to "2024-01-02"))
               emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2024-02-03"))
-              emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocated, mapOf("startDate" to "2024-02-03"))
+              emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocatedV2, mapOf("startDate" to "2024-02-03"))
               emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2024-03-04"))
-              emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocated, mapOf("startDate" to "2024-03-04"))
+              emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocatedV2, mapOf("startDate" to "2024-03-04"))
             }
           }
         }
@@ -1030,7 +1030,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                       assertThat(createdPlacementApplication.placementRequirements.id).isEqualTo(placementRequirements.id)
 
                       emailAsserter.assertEmailsRequestedCount(1)
-                      emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestDecisionAccepted)
+                      emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestDecisionAcceptedV2)
                     }
                   }
                 }
@@ -1078,7 +1078,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
                       assertThat(createdPlacementRequests).isEmpty()
 
                       emailAsserter.assertEmailsRequestedCount(1)
-                      emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestDecisionRejected)
+                      emailAsserter.assertEmailRequested(placementApplicationEntity.createdByUser.email!!, notifyConfig.templates.placementRequestDecisionRejectedV2)
                     }
                   }
                 }
