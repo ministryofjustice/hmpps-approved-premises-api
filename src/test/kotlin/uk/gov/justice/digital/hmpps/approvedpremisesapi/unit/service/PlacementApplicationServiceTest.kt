@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocato
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -41,7 +40,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
@@ -64,9 +62,7 @@ class PlacementApplicationServiceTest {
   private val userService = mockk<UserService>()
   private val placementDateRepository = mockk<PlacementDateRepository>()
   private val placementRequestService = mockk<PlacementRequestService>()
-  private val emailNotificationService = mockk<EmailNotificationService>()
   private val userAllocator = mockk<UserAllocator>()
-  private val notifyConfig = mockk<NotifyConfig>()
   private val userAccessService = mockk<UserAccessService>()
   private val cas1PlacementApplicationEmailService = mockk<Cas1PlacementApplicationEmailService>()
   private val cas1PlacementApplicationDomainEventService = mockk<Cas1PlacementApplicationDomainEventService>()
@@ -82,12 +78,9 @@ class PlacementApplicationServiceTest {
     placementDateRepository,
     placementRequestService,
     userAllocator,
-    emailNotificationService,
-    notifyConfig,
     userAccessService,
     cas1PlacementApplicationEmailService,
     cas1PlacementApplicationDomainEventService,
-    sendPlacementRequestNotifications = true,
     taskDeadlineServiceMock,
     useNewWithdrawalLogic = useNewWithdrawalLogic,
   )
@@ -354,9 +347,7 @@ class PlacementApplicationServiceTest {
       } returns AuthorisableActionResult.Success(emptyList())
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
-      val notifyAcceptedTemplateId = UUID.randomUUID().toString()
-      every { notifyConfig.templates.placementRequestDecisionAccepted } answers { notifyAcceptedTemplateId }
-      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationAccepted(any()) } returns Unit
 
       val result = placementApplicationService.recordDecision(
         placementApplication.id,
@@ -367,25 +358,14 @@ class PlacementApplicationServiceTest {
         ),
       )
 
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-      assertThat(validationResult is ValidatableActionResult.Success).isTrue
-      validationResult as ValidatableActionResult.Success
-      val updatedApplication = validationResult.entity
+      assertThat(result is CasResult.Success).isTrue
+      val updatedApplication = (result as CasResult.Success).value
 
       assertThat(updatedApplication.decision).isEqualTo(PlacementApplicationDecision.ACCEPTED)
       assertThat(updatedApplication.decisionMadeAt).isWithinTheLastMinute()
 
       verify { placementRequestService.createPlacementRequestsFromPlacementApplication(placementApplication, "decisionSummary") }
-
-      verify(exactly = 1) {
-        emailNotificationService.sendEmail(
-          createdByUser.email!!,
-          notifyAcceptedTemplateId,
-          mapOf(
-            "crn" to application.crn,
-          ),
-        )
-      }
+      verify { cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplication) }
     }
 
     @ParameterizedTest
@@ -408,10 +388,7 @@ class PlacementApplicationServiceTest {
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
-
-      val notifyRejectedTemplateId = UUID.randomUUID().toString()
-      every { notifyConfig.templates.placementRequestDecisionRejected } answers { notifyRejectedTemplateId }
-      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationRejected(any()) } returns Unit
 
       val result = placementApplicationService.recordDecision(
         placementApplication.id,
@@ -422,10 +399,8 @@ class PlacementApplicationServiceTest {
         ),
       )
 
-      val validationResult = (result as AuthorisableActionResult.Success).entity
-      assertThat(validationResult is ValidatableActionResult.Success).isTrue
-      validationResult as ValidatableActionResult.Success
-      val updatedApplication = validationResult.entity
+      assertThat(result is CasResult.Success).isTrue
+      val updatedApplication = (result as CasResult.Success).value
 
       val expectedDecision = when (decision) {
         uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision.accepted -> PlacementApplicationDecision.ACCEPTED
@@ -438,16 +413,7 @@ class PlacementApplicationServiceTest {
       assertThat(updatedApplication.decisionMadeAt).isWithinTheLastMinute()
 
       verify { placementRequestService wasNot Called }
-
-      verify(exactly = 1) {
-        emailNotificationService.sendEmail(
-          createdByUser.email!!,
-          notifyRejectedTemplateId,
-          mapOf(
-            "crn" to application.crn,
-          ),
-        )
-      }
+      verify { cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplication) }
     }
   }
 
@@ -592,8 +558,6 @@ class PlacementApplicationServiceTest {
         )
       } answers { newPlacementDates }
 
-      val notifyTemplateId = UUID.randomUUID().toString()
-      every { notifyConfig.templates.placementRequestAllocated } answers { notifyTemplateId }
       every { cas1PlacementApplicationEmailService.placementApplicationAllocated(any()) } returns Unit
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
@@ -814,7 +778,6 @@ class PlacementApplicationServiceTest {
       )
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(placementApplication, withdrawalContext) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any()) } returns Unit
@@ -844,7 +807,6 @@ class PlacementApplicationServiceTest {
         .produce()
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(any(), any()) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(any(), any()) } returns Unit
@@ -877,7 +839,6 @@ class PlacementApplicationServiceTest {
         .produce()
 
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { emailNotificationService.sendEmail(any(), any(), any()) } returns Unit
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
 
       Assertions.assertThatThrownBy {

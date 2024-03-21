@@ -53,6 +53,40 @@ class Cas1PlacementApplicationEmailService(
     }
   }
 
+  fun placementApplicationAccepted(placementApplication: PlacementApplicationEntity) {
+    if (!sendPlacementRequestNotifications) {
+      return
+    }
+
+    val createdByUser = placementApplication.createdByUser
+    createdByUser.email?.let { email ->
+      emailNotifier.sendEmail(
+        recipientEmailAddress = email,
+        templateId = notifyConfig.templates.placementRequestDecisionAccepted,
+        personalisation = mapOf(
+          "crn" to placementApplication.application.crn,
+        ),
+      )
+    }
+  }
+
+  fun placementApplicationRejected(placementApplication: PlacementApplicationEntity) {
+    if (!sendPlacementRequestNotifications) {
+      return
+    }
+
+    val createdByUser = placementApplication.createdByUser
+    createdByUser.email?.let { email ->
+      emailNotifier.sendEmail(
+        recipientEmailAddress = email,
+        templateId = notifyConfig.templates.placementRequestDecisionRejected,
+        personalisation = mapOf(
+          "crn" to placementApplication.application.crn,
+        ),
+      )
+    }
+  }
+
   fun placementApplicationWithdrawn(placementApplication: PlacementApplicationEntity, wasBeingAssessedBy: UserEntity?) {
     if (!sendNewWithdrawalNotifications) {
       return

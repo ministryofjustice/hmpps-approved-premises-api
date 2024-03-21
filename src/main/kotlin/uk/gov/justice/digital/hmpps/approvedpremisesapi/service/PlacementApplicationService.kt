@@ -8,7 +8,6 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecisionEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesPlacementApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
@@ -52,13 +51,9 @@ class PlacementApplicationService(
   private val placementDateRepository: PlacementDateRepository,
   private val placementRequestService: PlacementRequestService,
   private val userAllocator: UserAllocator,
-  private val emailNotificationService: EmailNotificationService,
-  private val notifyConfig: NotifyConfig,
   private val userAccessService: UserAccessService,
   private val cas1PlacementApplicationEmailService: Cas1PlacementApplicationEmailService,
   private val cas1PlacementApplicationDomainEventService: Cas1PlacementApplicationDomainEventService,
-  @Value("\${notify.send-placement-request-notifications}")
-  private val sendPlacementRequestNotifications: Boolean,
   private val taskDeadlineService: TaskDeadlineService,
   @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val useNewWithdrawalLogic: Boolean,
 ) {
@@ -370,19 +365,17 @@ class PlacementApplicationService(
   fun recordDecision(
     id: UUID,
     placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope,
-  ): AuthorisableActionResult<ValidatableActionResult<PlacementApplicationEntity>> {
+  ): CasResult<PlacementApplicationEntity> {
     val user = userService.getUserForRequest()
     val placementApplicationEntity =
-      placementApplicationRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+      placementApplicationRepository.findByIdOrNull(id) ?: return CasResult.NotFound()
 
     if (placementApplicationEntity.allocatedToUser != user) {
-      return AuthorisableActionResult.Unauthorised()
+      return CasResult.Unauthorised()
     }
 
     if (placementApplicationEntity.decision != null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This application has already had a decision set"),
-      )
+      return CasResult.GeneralValidationError("This application has already had a decision set")
     }
 
     if (placementApplicationDecisionEnvelope.decision == ApiPlacementApplicationDecision.accepted) {
@@ -393,58 +386,32 @@ class PlacementApplicationService(
         )
 
       if (placementRequestResult is AuthorisableActionResult.NotFound) {
-        return AuthorisableActionResult.NotFound(placementRequestResult.entityType, placementRequestResult.id)
+        return CasResult.NotFound(placementRequestResult.entityType, placementRequestResult.id)
       }
     }
 
     placementApplicationEntity.apply {
-      decision = when (placementApplicationDecisionEnvelope.decision) {
-        ApiPlacementApplicationDecision.accepted -> JpaPlacementApplicationDecision.ACCEPTED
-        ApiPlacementApplicationDecision.rejected -> JpaPlacementApplicationDecision.REJECTED
-        ApiPlacementApplicationDecision.withdraw -> JpaPlacementApplicationDecision.WITHDRAW
-        ApiPlacementApplicationDecision.withdrawnByPp -> JpaPlacementApplicationDecision.WITHDRAWN_BY_PP
-      }
+      decision = mapToJpaDecision(placementApplicationDecisionEnvelope.decision)
       decisionMadeAt = OffsetDateTime.now()
     }
 
     val savedApplication = placementApplicationRepository.save(placementApplicationEntity)
 
-    sendAcceptedRejectedNotification(
-      placementApplicationEntity,
-      placementApplicationDecisionEnvelope,
-    )
+    when (placementApplicationDecisionEnvelope.decision) {
+      ApiPlacementApplicationDecision.accepted -> cas1PlacementApplicationEmailService.placementApplicationAccepted(placementApplicationEntity)
+      ApiPlacementApplicationDecision.rejected -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
+      ApiPlacementApplicationDecision.withdraw -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
+      ApiPlacementApplicationDecision.withdrawnByPp -> cas1PlacementApplicationEmailService.placementApplicationRejected(placementApplicationEntity)
+    }
 
-    return AuthorisableActionResult.Success(
-      ValidatableActionResult.Success(savedApplication),
-    )
+    return CasResult.Success(savedApplication)
   }
 
-  private fun sendAcceptedRejectedNotification(
-    placementApplicationEntity: PlacementApplicationEntity,
-    placementApplicationDecisionEnvelope: PlacementApplicationDecisionEnvelope,
-  ) {
-    if (!sendPlacementRequestNotifications) {
-      return
-    }
-
-    val applicationCreatedBy = placementApplicationEntity.createdByUser
-    applicationCreatedBy.email?.let { email ->
-
-      val template = when (placementApplicationDecisionEnvelope.decision) {
-        ApiPlacementApplicationDecision.accepted -> notifyConfig.templates.placementRequestDecisionAccepted
-        ApiPlacementApplicationDecision.rejected -> notifyConfig.templates.placementRequestDecisionRejected
-        ApiPlacementApplicationDecision.withdraw -> notifyConfig.templates.placementRequestDecisionRejected
-        ApiPlacementApplicationDecision.withdrawnByPp -> notifyConfig.templates.placementRequestDecisionRejected
-      }
-
-      emailNotificationService.sendEmail(
-        email,
-        template,
-        mapOf(
-          "crn" to placementApplicationEntity.application.crn,
-        ),
-      )
-    }
+  private fun mapToJpaDecision(decision: uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision) = when (decision) {
+    ApiPlacementApplicationDecision.accepted -> JpaPlacementApplicationDecision.ACCEPTED
+    ApiPlacementApplicationDecision.rejected -> JpaPlacementApplicationDecision.REJECTED
+    ApiPlacementApplicationDecision.withdraw -> JpaPlacementApplicationDecision.WITHDRAW
+    ApiPlacementApplicationDecision.withdrawnByPp -> JpaPlacementApplicationDecision.WITHDRAWN_BY_PP
   }
 
   private fun getPlacementType(apiPlacementType: ApiPlacementType): PlacementType {
