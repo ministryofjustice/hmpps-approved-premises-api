@@ -31,12 +31,11 @@ class Cas1PlacementApplicationEmailServiceTest {
   val service = buildService(sendNewWithdrawalNotifications = true)
   val serviceUsingLegacyWithdrawalsNotifications = buildService(sendNewWithdrawalNotifications = false)
 
-  fun buildService(sendNewWithdrawalNotifications: Boolean) = Cas1PlacementApplicationEmailService(
+  private fun buildService(sendNewWithdrawalNotifications: Boolean) = Cas1PlacementApplicationEmailService(
     mockEmailNotificationService,
     notifyConfig = notifyConfig,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
     sendNewWithdrawalNotifications = sendNewWithdrawalNotifications,
-    sendPlacementRequestNotifications = true,
   )
 
   @Test

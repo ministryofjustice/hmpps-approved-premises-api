@@ -259,8 +259,5 @@ pagination:
   cas3:
     booking-search-page-size: 10
 
-notify:
-  send-placement-request-notifications: false
-
 feature-flags:
   cas1-use-new-withdrawal-logic: false

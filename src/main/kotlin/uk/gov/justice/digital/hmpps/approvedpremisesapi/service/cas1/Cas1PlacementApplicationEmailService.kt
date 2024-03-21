@@ -14,14 +14,9 @@ class Cas1PlacementApplicationEmailService(
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val sendNewWithdrawalNotifications: Boolean,
-  @Value("\${notify.send-placement-request-notifications}") private val sendPlacementRequestNotifications: Boolean,
 ) {
 
   fun placementApplicationSubmitted(placementApplication: PlacementApplicationEntity) {
-    if (!sendPlacementRequestNotifications) {
-      return
-    }
-
     val templateId = if (sendNewWithdrawalNotifications) {
       notifyConfig.templates.placementRequestSubmittedV2
     } else {
@@ -39,10 +34,6 @@ class Cas1PlacementApplicationEmailService(
   }
 
   fun placementApplicationAllocated(placementApplication: PlacementApplicationEntity) {
-    if (!sendPlacementRequestNotifications) {
-      return
-    }
-
     val createdByUser = placementApplication.createdByUser
     createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
@@ -54,10 +45,6 @@ class Cas1PlacementApplicationEmailService(
   }
 
   fun placementApplicationAccepted(placementApplication: PlacementApplicationEntity) {
-    if (!sendPlacementRequestNotifications) {
-      return
-    }
-
     val createdByUser = placementApplication.createdByUser
     createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
@@ -71,10 +58,6 @@ class Cas1PlacementApplicationEmailService(
   }
 
   fun placementApplicationRejected(placementApplication: PlacementApplicationEntity) {
-    if (!sendPlacementRequestNotifications) {
-      return
-    }
-
     val createdByUser = placementApplication.createdByUser
     createdByUser.email?.let { email ->
       emailNotifier.sendEmail(

@@ -202,7 +202,6 @@ user-allocations:
       enabled: true
 
 notify:
-  send-placement-request-notifications: true
   emailaddresses:
     cas2assessors: "assessors@example.com"
 
