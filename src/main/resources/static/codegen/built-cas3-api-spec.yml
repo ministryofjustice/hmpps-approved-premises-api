@@ -4504,3 +4504,9 @@ components:
           type: string
       required:
         - name
+    Cas2ReportName:
+      type: string
+      enum:
+        - submitted-applications
+        - application-status-updates
+        - unsubmitted-applications
