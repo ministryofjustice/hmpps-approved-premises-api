@@ -60,7 +60,7 @@ class DocumentFactory : Factory<Document> {
   }
 
   override fun produce(): Document = Document(
-    id = this.id(),
+    _id = this.id(),
     documentName = this.documentName(),
     author = this.author(),
     type = DocumentType(

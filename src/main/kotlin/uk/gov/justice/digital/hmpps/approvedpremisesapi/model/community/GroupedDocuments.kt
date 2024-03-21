@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDateTime
+import java.util.UUID
 
 data class GroupedDocuments(
   val documents: List<Document>,
@@ -10,7 +12,8 @@ data class GroupedDocuments(
 }
 
 data class Document(
-  val id: String?,
+  @JsonProperty("id")
+  private val _id: String?,
   val documentName: String,
   val author: String?,
   val type: DocumentType,
@@ -18,7 +21,14 @@ data class Document(
   val createdAt: LocalDateTime,
   val lastModifiedAt: LocalDateTime?,
   val parentPrimaryKeyId: Long?,
-)
+) {
+  // Some Documents don't have IDs, so we need to generate an ID based on the document name
+  // and created at date, which we assume to be immutable
+  val id: String
+    get() = this._id ?: UUID.nameUUIDFromBytes(
+      listOf(this.documentName, this.createdAt).joinToString("").toByteArray(),
+    ).toString()
+}
 
 data class ConvictionDocuments(
   val convictionId: String,

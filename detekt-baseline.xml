@@ -36,6 +36,8 @@
     <ID>ThrowsCount:TasksTest.kt$TasksTest.GetAllReallocatableTest$@ParameterizedTest @CsvSource(value = ["createdAt,asc", "createdAt,desc", "dueAt,asc", "dueAt,desc", "person,asc", "person,desc", "allocatedTo,asc", "allocatedTo,desc"]) fun `Get all reallocatable tasks returns 200 when no type retains original sort order`(sortBy: String, sortDirection: String)</ID>
     <ID>TooGenericExceptionThrown:TasksTest.kt$TasksTest.GetAllReallocatableTest$throw RuntimeException("Unexpected sortField $sortBy")</ID>
     <ID>LongParameterList:GivenAnAssessment.kt$( allocatedToUser: UserEntity?, createdByUser: UserEntity, crn: String = randomStringMultiCaseWithNumbers(8), reallocated: Boolean = false, data: String? = "{ \"some\": \"data\"}", createdAt: OffsetDateTime? = null, block: ((assessment: AssessmentEntity, application: TemporaryAccommodationApplicationEntity) -> Unit)? = null, )</ID>
+    <ID>ConstructorParameterNaming:GroupedDocuments.kt$Document$private val _id: String?</ID>
+    <ID>ConstructorParameterNaming:GroupedDocuments.kt$Document$@JsonProperty("id") private val _id: String?</ID>
   </ManuallySuppressedIssues>
   <CurrentIssues>
     <ID>ComplexCondition:BookingService.kt$BookingService$booking.service == ServiceName.approvedPremises.value &amp;&amp; booking.application != null &amp;&amp; user != null &amp;&amp; !arrivedAndDepartedDomainEventsDisabled</ID>
