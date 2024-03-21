@@ -1,50 +1,33 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DocumentLevel
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Document
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import java.time.ZoneOffset
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Document as CommunityApiDocument
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document as ApiDocument
 
 @Component
 class DocumentTransformer {
-  fun transformToApi(groupedDocuments: GroupedDocuments, convictionId: Long): List<Document> {
-    val offenderDocuments = documentsWithIds(groupedDocuments.documents).map {
-      Document(
-        id = it.id!!,
-        level = DocumentLevel.offender,
-        fileName = it.documentName,
-        createdAt = it.createdAt.toInstant(ZoneOffset.UTC),
-        typeCode = it.type.code,
-        typeDescription = it.type.description,
-        description = it.extendedDescription,
-      )
-    }
+  fun transformToApi(document: Document, level: DocumentLevel) = ApiDocument(
+    id = document.id,
+    level = level,
+    fileName = document.documentName,
+    createdAt = document.createdAt.toInstant(ZoneOffset.UTC),
+    typeCode = document.type.code,
+    typeDescription = document.type.description,
+    description = document.extendedDescription,
+  )
+
+  fun transformToApi(groupedDocuments: GroupedDocuments, convictionId: Long): List<ApiDocument> {
+    val offenderDocuments = groupedDocuments.documents.map { transformToApi(it, DocumentLevel.offender) }
 
     val documentsForConvictionId = groupedDocuments.convictions
       .firstOrNull { it.convictionId == convictionId.toString() }
 
-    val convictionDocuments = if (documentsForConvictionId != null) {
-      documentsWithIds(documentsForConvictionId.documents).map {
-        Document(
-          id = it.id!!,
-          level = DocumentLevel.conviction,
-          fileName = it.documentName,
-          createdAt = it.createdAt.toInstant(ZoneOffset.UTC),
-          typeCode = it.type.code,
-          typeDescription = it.type.description,
-          description = it.extendedDescription,
-        )
-      }
-    } else {
-      emptyList()
-    }
+    val convictionDocuments = documentsForConvictionId?.documents?.map { transformToApi(it, DocumentLevel.conviction) }
+      ?: emptyList()
 
     return offenderDocuments + convictionDocuments
   }
-
-  // Filter out any documents without IDs - at the moment, we don't have a way of fetching documents without IDs
-  // This fixes the nullability problem we have previously had with documents with no ID
-  fun documentsWithIds(documents: List<CommunityApiDocument>) = documents.filter { it.id != null }
 }

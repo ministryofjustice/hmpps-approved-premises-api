@@ -2,88 +2,80 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.transformer
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Document
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.DocumentLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DocumentFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.GroupedDocumentsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
-import java.time.Instant
-import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 
 class DocumentTransformerTest {
   private val documentTransformer = DocumentTransformer()
 
+  @ParameterizedTest
+  @EnumSource
+  fun `transformToApi transforms single documents correctly`(documentLevel: DocumentLevel) {
+    val document = DocumentFactory()
+      .withId(UUID.randomUUID().toString())
+      .produce()
+
+    val transformedDocument = documentTransformer.transformToApi(document, documentLevel)
+
+    assertThat(transformedDocument.id).isEqualTo(document.id)
+    assertThat(transformedDocument.level).isEqualTo(documentLevel)
+    assertThat(transformedDocument.fileName).isEqualTo(document.documentName)
+    assertThat(transformedDocument.createdAt).isEqualTo(document.createdAt.toInstant(ZoneOffset.UTC))
+    assertThat(transformedDocument.typeCode).isEqualTo(document.type.code)
+    assertThat(transformedDocument.typeDescription).isEqualTo(document.type.description)
+    assertThat(transformedDocument.description).isEqualTo(document.extendedDescription)
+  }
+
   @Test
-  fun `transformToApi transforms correctly - filters out convictions other than one specified`() {
+  fun `transformToApi transforms document list correctly - filters out convictions other than one specified`() {
+    val offenderLevelDocument = DocumentFactory()
+      .withId(UUID.randomUUID().toString())
+      .produce()
+    val offenderLevelDocumentWithoutId = DocumentFactory()
+      .withId(null)
+      .produce()
+
+    val convictionLevelDocument = DocumentFactory()
+      .withId(UUID.randomUUID().toString())
+      .produce()
+    val convictionLevelDocumentWithoutId = DocumentFactory()
+      .withId(null)
+      .produce()
+
     val groupedDocuments = GroupedDocumentsFactory()
       .withOffenderLevelDocument(
-        DocumentFactory()
-          .withId(UUID.fromString("b0df5ec4-5685-4b02-8a95-91b6da80156f").toString())
-          .withDocumentName("offender_level_doc.pdf")
-          .withTypeCode("TYPE-1")
-          .withTypeDescription("Type 1 Description")
-          .withCreatedAt(LocalDateTime.parse("2022-12-07T11:40:00"))
-          .withExtendedDescription("Extended Description 1")
-          .produce(),
+        offenderLevelDocument,
       )
       .withOffenderLevelDocument(
-        DocumentFactory()
-          .withId(null)
-          .produce(),
+        offenderLevelDocumentWithoutId,
       )
       .withConvictionLevelDocument(
         "12345",
-        DocumentFactory()
-          .withId(UUID.fromString("457af8a5-82b1-449a-ad03-032b39435865").toString())
-          .withDocumentName("conviction_level_doc.pdf")
-          .withoutAuthor()
-          .withTypeCode("TYPE-2")
-          .withTypeDescription("Type 2 Description")
-          .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
-          .withExtendedDescription("Extended Description 2")
-          .produce(),
+        convictionLevelDocument,
       )
       .withConvictionLevelDocument(
         "12345",
-        DocumentFactory()
-          .withId(null)
-          .produce(),
+        convictionLevelDocumentWithoutId,
       )
       .withConvictionLevelDocument(
         "6789",
-        DocumentFactory()
-          .withId(UUID.fromString("e20589b3-7f83-4502-a0df-c8dd645f3f44").toString())
-          .withDocumentName("conviction_level_doc_2.pdf")
-          .withTypeCode("TYPE-2")
-          .withTypeDescription("Type 2 Description")
-          .withCreatedAt(LocalDateTime.parse("2022-12-07T10:40:00"))
-          .withExtendedDescription("Extended Description 2")
-          .produce(),
+        DocumentFactory().produce(),
       )
       .produce()
 
     val result = documentTransformer.transformToApi(groupedDocuments, 12345)
 
     assertThat(result).containsExactlyInAnyOrder(
-      Document(
-        id = UUID.fromString("b0df5ec4-5685-4b02-8a95-91b6da80156f").toString(),
-        level = DocumentLevel.offender,
-        fileName = "offender_level_doc.pdf",
-        createdAt = Instant.parse("2022-12-07T11:40:00Z"),
-        typeCode = "TYPE-1",
-        typeDescription = "Type 1 Description",
-        description = "Extended Description 1",
-      ),
-      Document(
-        id = UUID.fromString("457af8a5-82b1-449a-ad03-032b39435865").toString(),
-        level = DocumentLevel.conviction,
-        fileName = "conviction_level_doc.pdf",
-        createdAt = Instant.parse("2022-12-07T10:40:00Z"),
-        typeCode = "TYPE-2",
-        typeDescription = "Type 2 Description",
-        description = "Extended Description 2",
-      ),
+      documentTransformer.transformToApi(offenderLevelDocument, DocumentLevel.offender),
+      documentTransformer.transformToApi(offenderLevelDocumentWithoutId, DocumentLevel.offender),
+      documentTransformer.transformToApi(convictionLevelDocument, DocumentLevel.conviction),
+      documentTransformer.transformToApi(convictionLevelDocumentWithoutId, DocumentLevel.conviction),
     )
   }
 }
