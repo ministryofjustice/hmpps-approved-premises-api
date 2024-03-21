@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import io.mockk.verify
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.reference.Cas2PersistedApplicationStatusFinder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.StatusUpdateService
@@ -101,13 +103,16 @@ class Cas2AutoScriptTest {
 
     every { mockApplicationService.createCas2ApplicationSubmittedEvent(any()) } answers { }
     every { mockStatusUpdateService.createStatusUpdatedDomainEvent(any()) } answers { }
+    mockkStatic(::insertHdcDates)
   }
 
   @Test
   fun `creates 3 applications for each Nomis User`() {
+    every { insertHdcDates(any<String>()) } returns "{}"
     autoScript.script()
 
     verify(exactly = 3) { mockApplicationRepository.save(any()) }
+    verify(exactly = 3) { insertHdcDates(any()) }
   }
 
   @Test
