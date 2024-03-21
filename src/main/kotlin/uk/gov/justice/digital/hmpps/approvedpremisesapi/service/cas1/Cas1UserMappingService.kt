@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 
 @Component
-class UserMappingService(
+class Cas1UserMappingService(
   private val apAreaRepository: ApAreaRepository,
 ) {
   private val deliusTeamMappings = listOf(
@@ -36,7 +36,7 @@ class UserMappingService(
   fun determineApArea(
     usersProbationRegion: ProbationRegionEntity,
     deliusUser: StaffUserDetails,
-  ): ApAreaEntity? {
+  ): ApAreaEntity {
     val deliusProbationAreaCode = deliusUser.probationArea.code
     val isInNationalProbationArea = listOf("N43", "N41", "XX").contains(deliusProbationAreaCode)
     if (isInNationalProbationArea) {
@@ -56,6 +56,9 @@ class UserMappingService(
       }
 
       return apAreaRepository.findByIdentifier(deliusTeamMapping.apAreaCode)
+        ?: throw InternalServerErrorProblem(
+          "Could not find AP Area for code ${deliusTeamMapping.apAreaCode}",
+        )
     } else {
       return usersProbationRegion.apArea
     }

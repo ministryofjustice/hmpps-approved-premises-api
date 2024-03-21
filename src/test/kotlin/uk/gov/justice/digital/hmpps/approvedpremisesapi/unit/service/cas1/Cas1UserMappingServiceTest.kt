@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import io.mockk.every
 import io.mockk.mockk
@@ -13,13 +13,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserMappingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserMappingService
 
-class UserMappingServiceTest {
+class Cas1UserMappingServiceTest {
 
   private val apAreaRepository = mockk<ApAreaRepository>()
 
-  private val service = UserMappingService(apAreaRepository)
+  private val service = Cas1UserMappingService(apAreaRepository)
 
   private val usersProbationRegionApArea = ApAreaEntityFactory().produce()
 
@@ -140,7 +140,7 @@ class UserMappingServiceTest {
     }
 
     @Test
-    fun ` throws error and logs details when user in national probation area but mapping is not available for any of their teams`() {
+    fun `throws error with details when user in national probation area but mapping is not available for any of their teams`() {
       val staffUserDetails = StaffUserDetailsFactory()
         .withUsername("J_ALUCARD")
         .withProbationAreaCode("N43")
@@ -161,6 +161,29 @@ class UserMappingServiceTest {
         "Internal Server Error: Could not find a delius team mapping for delius user J_ALUCARD " +
           "with delius probation area code N43 and teams " +
           "[CODE_NOT_IN_MAPPING, OTHER_CODE_NOT_IN_MAPPING]",
+      )
+    }
+
+    @Test
+    fun `throws error with details when resolved area id doesnt exist in ap area table`() {
+      val staffUserDetails = StaffUserDetailsFactory()
+        .withProbationAreaCode("XX")
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory().withCode("N43MID").produce(),
+          ),
+        )
+        .produce()
+
+      every { apAreaRepository.findByIdentifier("Mids") } returns null
+
+      assertThatThrownBy {
+        service.determineApArea(
+          usersProbationRegion,
+          staffUserDetails,
+        )
+      }.hasMessage(
+        "Internal Server Error: Could not find AP Area for code Mids",
       )
     }
   }
