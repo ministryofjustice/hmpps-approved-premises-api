@@ -25,6 +25,7 @@ class EmailAddressConfig {
 class NotifyTemplates {
   val applicationSubmitted = "c9944bd8-63c4-473c-8dce-b3636e47d3dd"
   val applicationWithdrawn = "ad6d2449-f5a1-432a-9a96-0835c3f92dad"
+  val applicationWithdrawnV2 = "335b4d51-0be0-432e-9819-469d768d06d5"
   val assessmentAllocated = "2edd59f9-0013-4fbf-91df-7421518b447d"
   val assessmentDeallocated = "331ce452-ea83-4f0c-aec0-5eafe85094f2"
   val appealedAssessmentAllocated = "d378ad90-c20b-49d9-bd8b-5a50e1416dea"

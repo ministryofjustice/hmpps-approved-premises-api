@@ -1094,7 +1094,7 @@ class WithdrawalTest : IntegrationTestBase() {
     private fun assertApplicationWithdrawnEmail(emailAddress: String, application: ApplicationEntity) =
       emailAsserter.assertEmailRequested(
         emailAddress,
-        notifyConfig.templates.applicationWithdrawn,
+        notifyConfig.templates.applicationWithdrawnV2,
         mapOf("crn" to application.crn),
       )
 

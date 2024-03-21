@@ -3287,7 +3287,7 @@ class ApplicationTest : IntegrationTestBase() {
         emailAsserter.assertEmailsRequestedCount(1)
         emailAsserter.assertEmailRequested(
           user.email!!,
-          notifyConfig.templates.applicationWithdrawn,
+          notifyConfig.templates.applicationWithdrawnV2,
         )
       }
     }
@@ -3324,7 +3324,7 @@ class ApplicationTest : IntegrationTestBase() {
           emailAsserter.assertEmailsRequestedCount(2)
           emailAsserter.assertEmailRequested(
             applicant.email!!,
-            notifyConfig.templates.applicationWithdrawn,
+            notifyConfig.templates.applicationWithdrawnV2,
           )
           emailAsserter.assertEmailRequested(
             assessor.email!!,

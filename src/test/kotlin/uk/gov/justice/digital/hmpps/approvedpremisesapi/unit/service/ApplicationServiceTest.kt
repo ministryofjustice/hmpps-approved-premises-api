@@ -2780,7 +2780,7 @@ class ApplicationServiceTest {
       val domainEventWithdrawnBy = WithdrawnByFactory().produce()
       every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
       every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
-      every { mockCas1ApplicationEmailService.applicationWithdrawn(any()) } just Runs
+      every { mockCas1ApplicationEmailService.applicationWithdrawn(any(), any()) } just Runs
 
       val result = applicationService.withdrawApprovedPremisesApplication(
         application.id,
@@ -2821,7 +2821,7 @@ class ApplicationServiceTest {
         )
       }
 
-      verify { mockCas1ApplicationEmailService.applicationWithdrawn(application) }
+      verify { mockCas1ApplicationEmailService.applicationWithdrawn(application, user) }
     }
 
     @Test
@@ -2841,7 +2841,7 @@ class ApplicationServiceTest {
       val domainEventWithdrawnBy = WithdrawnByFactory().produce()
       every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
       every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
-      every { mockCas1ApplicationEmailService.applicationWithdrawn(any()) } just Runs
+      every { mockCas1ApplicationEmailService.applicationWithdrawn(any(), any()) } just Runs
 
       val result =
         applicationService.withdrawApprovedPremisesApplication(application.id, user, "other", "Some other reason")
@@ -2894,7 +2894,7 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
       every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-      every { mockCas1ApplicationEmailService.applicationWithdrawn(any()) } returns Unit
+      every { mockCas1ApplicationEmailService.applicationWithdrawn(any(), any()) } returns Unit
 
       val domainEventWithdrawnBy = WithdrawnByFactory().produce()
       every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
