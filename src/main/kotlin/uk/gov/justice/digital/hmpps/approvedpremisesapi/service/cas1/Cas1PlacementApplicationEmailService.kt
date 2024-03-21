@@ -14,14 +14,10 @@ class Cas1PlacementApplicationEmailService(
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val sendNewWithdrawalNotifications: Boolean,
-  @Value("\${notify.send-placement-request-notifications}") private val sendPlacementRequestNotifications: Boolean,
+  @Value("\${feature-flags.cas1-aps530-withdrawal-email-improvements}") private val aps530WithdrawalEmailImprovements: Boolean,
 ) {
 
   fun placementApplicationSubmitted(placementApplication: PlacementApplicationEntity) {
-    if (!sendPlacementRequestNotifications) {
-      return
-    }
-
     val templateId = if (sendNewWithdrawalNotifications) {
       notifyConfig.templates.placementRequestSubmittedV2
     } else {
@@ -33,56 +29,52 @@ class Cas1PlacementApplicationEmailService(
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
         templateId = templateId,
-        personalisation = getPersonalisation(placementApplication),
+        personalisation = getCommonPersonalisation(placementApplication),
       )
     }
   }
 
   fun placementApplicationAllocated(placementApplication: PlacementApplicationEntity) {
-    if (!sendPlacementRequestNotifications) {
-      return
-    }
-
     val createdByUser = placementApplication.createdByUser
     createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.placementRequestAllocated,
-        personalisation = getPersonalisation(placementApplication),
+        templateId = if (aps530WithdrawalEmailImprovements) {
+          notifyConfig.templates.placementRequestAllocatedV2
+        } else {
+          notifyConfig.templates.placementRequestAllocated
+        },
+        personalisation = getCommonPersonalisation(placementApplication),
       )
     }
   }
 
   fun placementApplicationAccepted(placementApplication: PlacementApplicationEntity) {
-    if (!sendPlacementRequestNotifications) {
-      return
-    }
-
     val createdByUser = placementApplication.createdByUser
     createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.placementRequestDecisionAccepted,
-        personalisation = mapOf(
-          "crn" to placementApplication.application.crn,
-        ),
+        templateId = if (aps530WithdrawalEmailImprovements) {
+          notifyConfig.templates.placementRequestDecisionAcceptedV2
+        } else {
+          notifyConfig.templates.placementRequestDecisionAccepted
+        },
+        personalisation = getCommonPersonalisation(placementApplication),
       )
     }
   }
 
   fun placementApplicationRejected(placementApplication: PlacementApplicationEntity) {
-    if (!sendPlacementRequestNotifications) {
-      return
-    }
-
     val createdByUser = placementApplication.createdByUser
     createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.placementRequestDecisionRejected,
-        personalisation = mapOf(
-          "crn" to placementApplication.application.crn,
-        ),
+        templateId = if (aps530WithdrawalEmailImprovements) {
+          notifyConfig.templates.placementRequestDecisionRejectedV2
+        } else {
+          notifyConfig.templates.placementRequestDecisionRejected
+        },
+        personalisation = getCommonPersonalisation(placementApplication),
       )
     }
   }
@@ -92,7 +84,7 @@ class Cas1PlacementApplicationEmailService(
       return
     }
 
-    val personalisation = getPersonalisation(placementApplication)
+    val personalisation = getCommonPersonalisation(placementApplication)
 
     val createdByUserEmail = placementApplication.createdByUser.email
     createdByUserEmail?.let { email ->
@@ -113,7 +105,7 @@ class Cas1PlacementApplicationEmailService(
     }
   }
 
-  private fun getPersonalisation(placementApplication: PlacementApplicationEntity): Map<String, String?> {
+  private fun getCommonPersonalisation(placementApplication: PlacementApplicationEntity): Map<String, String?> {
     val application = placementApplication.application
     val dates = placementApplication.placementDates
 

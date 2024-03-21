@@ -78,8 +78,6 @@ class AssessmentService(
   private val userAllocator: UserAllocator,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
-  @Value("\${notify.send-placement-request-notifications}")
-  private val sendPlacementRequestNotifications: Boolean,
   @Value("\${feature-flags.cas1-use-new-withdrawal-logic}")
   private val sendNewWithdrawalNotifications: Boolean,
   private val taskDeadlineService: TaskDeadlineService,
@@ -439,7 +437,7 @@ class AssessmentService(
           ),
         )
 
-        if (createPlacementRequest && sendPlacementRequestNotifications) {
+        if (createPlacementRequest) {
           emailNotificationService.sendEmail(
             recipientEmailAddress = email,
             templateId = notifyConfig.templates.placementRequestSubmitted,
