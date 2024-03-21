@@ -108,7 +108,6 @@ class AcceptAssessmentTest {
     userAllocator,
     objectMapperMock,
     UrlTemplate("http://frontend/applications/#id"),
-    sendNewWithdrawalNotifications = true,
     taskDeadlineServiceMock,
     assessmentEmailServiceMock,
   )

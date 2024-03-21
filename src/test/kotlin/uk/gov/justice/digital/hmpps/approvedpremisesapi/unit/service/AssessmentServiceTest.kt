@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.mockk.Called
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -64,6 +63,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -124,7 +124,6 @@ class AssessmentServiceTest {
     userAllocatorMock,
     objectMapperMock,
     UrlTemplate("http://frontend/applications/#id"),
-    sendNewWithdrawalNotifications = true,
     taskDeadlineServiceMock,
     assessmentEmailServiceMock,
   )
@@ -2234,7 +2233,6 @@ class AssessmentServiceTest {
       userAllocatorMock,
       objectMapperMock,
       UrlTemplate("http://frontend/applications/#id"),
-      sendNewWithdrawalNotifications = true,
       taskDeadlineServiceMock,
       assessmentEmailServiceMock,
     )
@@ -2548,22 +2546,21 @@ class AssessmentServiceTest {
 
   @Nested
   inner class UpdateCas1AssessmentWithdrawn {
+    private val assessmentId: UUID = UUID.randomUUID()
+
+    private val allocatedUser: UserEntity = UserEntityFactory()
+      .withDefaultProbationRegion()
+      .withEmail("user@test.com")
+      .produce()
+
+    private val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
 
     @Test
-    fun `updateCas1AssessmentWithdrawn triggers email`() {
-      val assessmentId = UUID.randomUUID()
-
-      val allocatedUser = UserEntityFactory()
-        .withDefaultProbationRegion()
-        .withEmail("user@test.com")
-        .produce()
-
-      val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
-        id = UUID.randomUUID(),
-        addedAt = OffsetDateTime.now(),
-        schema = "{}",
-      )
-
+    fun `updateCas1AssessmentWithdrawn triggers email with assessment pending if assessment active and allocated`() {
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withId(assessmentId)
         .withApplication(
@@ -2581,37 +2578,20 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
-      every { emailNotificationServiceMock.sendEmail(any(), any(), any()) } just Runs
+      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any()) } just Runs
 
       assessmentService.updateCas1AssessmentWithdrawn(assessmentId)
 
-      verify(exactly = 1) {
-        emailNotificationServiceMock.sendEmail(
-          "user@test.com",
-          "44ade006-7ac6-4769-aa40-542da56f21b5",
-          match {
-            it["crn"] == assessment.application.crn &&
-              it["applicationUrl"] == "http://frontend/applications/${assessment.application.id}"
-          },
+      verify {
+        assessmentEmailServiceMock.assessmentWithdrawn(
+          assessment,
+          isAssessmentPending = true,
         )
       }
     }
 
     @Test
-    fun `updateCas1AssessmentWithdrawn dont send email if assessment withdrawn`() {
-      val assessmentId = UUID.randomUUID()
-
-      val allocatedUser = UserEntityFactory()
-        .withDefaultProbationRegion()
-        .withEmail("user@test.com")
-        .produce()
-
-      val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
-        id = UUID.randomUUID(),
-        addedAt = OffsetDateTime.now(),
-        schema = "{}",
-      )
-
+    fun `updateCas1AssessmentWithdrawn triggers email with assessment not pending if assessment withdrawn`() {
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withId(assessmentId)
         .withApplication(
@@ -2629,27 +2609,20 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any()) } just Runs
 
       assessmentService.updateCas1AssessmentWithdrawn(assessmentId)
 
-      verify { emailNotificationServiceMock wasNot Called }
+      verify {
+        assessmentEmailServiceMock.assessmentWithdrawn(
+          assessment,
+          isAssessmentPending = false,
+        )
+      }
     }
 
     @Test
-    fun `updateCas1AssessmentWithdrawn dont send email if assessment submitted`() {
-      val assessmentId = UUID.randomUUID()
-
-      val allocatedUser = UserEntityFactory()
-        .withDefaultProbationRegion()
-        .withEmail("user@test.com")
-        .produce()
-
-      val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
-        id = UUID.randomUUID(),
-        addedAt = OffsetDateTime.now(),
-        schema = "{}",
-      )
-
+    fun `updateCas1AssessmentWithdrawn triggers email with assessment not pending if assessment submitted`() {
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withId(assessmentId)
         .withApplication(
@@ -2667,27 +2640,20 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any()) } just Runs
 
       assessmentService.updateCas1AssessmentWithdrawn(assessmentId)
 
-      verify { emailNotificationServiceMock wasNot Called }
+      verify {
+        assessmentEmailServiceMock.assessmentWithdrawn(
+          assessment,
+          isAssessmentPending = false,
+        )
+      }
     }
 
     @Test
-    fun `updateCas1AssessmentWithdrawn dont send email if assessment reallocated`() {
-      val assessmentId = UUID.randomUUID()
-
-      val allocatedUser = UserEntityFactory()
-        .withDefaultProbationRegion()
-        .withEmail("user@test.com")
-        .produce()
-
-      val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
-        id = UUID.randomUUID(),
-        addedAt = OffsetDateTime.now(),
-        schema = "{}",
-      )
-
+    fun `updateCas1AssessmentWithdrawn triggers email with assessment not pending if assessment reallocated`() {
       val assessment = ApprovedPremisesAssessmentEntityFactory()
         .withId(assessmentId)
         .withApplication(
@@ -2705,10 +2671,16 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any()) } just Runs
 
       assessmentService.updateCas1AssessmentWithdrawn(assessmentId)
 
-      verify { emailNotificationServiceMock wasNot Called }
+      verify {
+        assessmentEmailServiceMock.assessmentWithdrawn(
+          assessment,
+          isAssessmentPending = false,
+        )
+      }
     }
   }
 }

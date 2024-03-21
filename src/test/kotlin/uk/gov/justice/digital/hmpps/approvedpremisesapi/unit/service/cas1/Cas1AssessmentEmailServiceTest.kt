@@ -6,7 +6,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService.Companion.DEFAULT_DEADLINE_COPY
@@ -37,7 +42,9 @@ class Cas1AssessmentEmailServiceTest {
     mockEmailNotificationService,
     notifyConfig,
     assessmentUrlTemplate = UrlTemplate("http://frontend/assessments/#id"),
+    applicationUrlTemplate = UrlTemplate("http://frontend/application/#id"),
     workingDayCountService = mockWorkingDayCountService,
+    sendNewWithdrawalNotifications = true,
   )
 
   @BeforeEach
@@ -229,6 +236,84 @@ class Cas1AssessmentEmailServiceTest {
 
       service.appealedAssessmentAllocated(applicant, assessmentID, CRN)
       mockEmailNotificationService.assertEmailRequestCount(0)
+    }
+  }
+
+  @Nested
+  inner class AssessmentWithdrawn {
+
+    @Test
+    fun `assessmentWithdrawn sends an email when the user has an email address and assessment is pending`() {
+      val assessment = createAssessment(allocatedUserEmail = ALLOCATED_EMAIL)
+
+      service.assessmentWithdrawn(
+        assessment = assessment,
+        isAssessmentPending = true,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertEmailRequested(
+        ALLOCATED_EMAIL,
+        notifyConfig.templates.assessmentWithdrawn,
+        mapOf(
+          "crn" to CRN,
+          "applicationUrl" to "http://frontend/application/${assessment.application.id}",
+        ),
+      )
+    }
+
+    @Test
+    fun `assessmentWithdrawn does not send an email to a user if they do not have an email address and assessment is pending`() {
+      val assessment = createAssessment(allocatedUserEmail = null)
+
+      service.assessmentWithdrawn(
+        assessment = assessment,
+        isAssessmentPending = true,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(0)
+    }
+
+    @Test
+    fun `assessmentWithdrawn does not send an email to a user if they do have an email address but assessment is not pending`() {
+      val assessment = createAssessment(allocatedUserEmail = ALLOCATED_EMAIL)
+
+      service.assessmentWithdrawn(
+        assessment = assessment,
+        isAssessmentPending = false,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(0)
+    }
+
+    private fun createAssessment(allocatedUserEmail: String?): ApprovedPremisesAssessmentEntity {
+      val allocatedUser: UserEntity = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .withEmail(allocatedUserEmail)
+        .produce()
+
+      val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
+        id = UUID.randomUUID(),
+        addedAt = OffsetDateTime.now(),
+        schema = "{}",
+      )
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(
+          ApprovedPremisesApplicationEntityFactory()
+            .withCrn(CRN)
+            .withCreatedByUser(UserEntityFactory().withDefaultProbationRegion().produce())
+            .produce(),
+        )
+        .withAssessmentSchema(schema)
+        .withData("{\"test\": \"data\"}")
+        .withAllocatedToUser(allocatedUser)
+        .withSubmittedAt(null)
+        .withReallocatedAt(null)
+        .withIsWithdrawn(false)
+        .produce()
+
+      return assessment
     }
   }
 }
