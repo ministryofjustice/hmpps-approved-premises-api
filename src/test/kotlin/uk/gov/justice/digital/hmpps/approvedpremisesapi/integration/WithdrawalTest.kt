@@ -1088,7 +1088,7 @@ class WithdrawalTest : IntegrationTestBase() {
     private fun assertAssessmentWithdrawnEmail(emailAddress: String) =
       emailAsserter.assertEmailRequested(
         emailAddress,
-        notifyConfig.templates.assessmentWithdrawn,
+        notifyConfig.templates.assessmentWithdrawnV2,
       )
 
     private fun assertApplicationWithdrawnEmail(emailAddress: String, application: ApplicationEntity) =

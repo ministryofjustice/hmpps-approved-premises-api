@@ -38,12 +38,17 @@ class Cas1AssessmentEmailServiceTest {
   private val mockEmailNotificationService = MockEmailNotificationService()
   private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
 
-  val service = Cas1AssessmentEmailService(
+  val service = createService(aps530WithdrawalEmailImprovements = false)
+  val serviceUsingAps530Improvements = createService(aps530WithdrawalEmailImprovements = true)
+
+  private fun createService(aps530WithdrawalEmailImprovements: Boolean) = Cas1AssessmentEmailService(
     mockEmailNotificationService,
     notifyConfig,
     assessmentUrlTemplate = UrlTemplate("http://frontend/assessments/#id"),
     applicationUrlTemplate = UrlTemplate("http://frontend/application/#id"),
+    applicationTimelineUrlTemplate = UrlTemplate("http://frontend/application/#applicationId?tab=timeline"),
     workingDayCountService = mockWorkingDayCountService,
+    aps530WithdrawalEmailImprovements = aps530WithdrawalEmailImprovements,
     sendNewWithdrawalNotifications = true,
   )
 
@@ -242,6 +247,11 @@ class Cas1AssessmentEmailServiceTest {
   @Nested
   inner class AssessmentWithdrawn {
 
+    val withdrawingUser = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .withName("mr withdrawer")
+      .produce()
+
     @Test
     fun `assessmentWithdrawn sends an email when the user has an email address and assessment is pending`() {
       val assessment = createAssessment(allocatedUserEmail = ALLOCATED_EMAIL)
@@ -249,6 +259,7 @@ class Cas1AssessmentEmailServiceTest {
       service.assessmentWithdrawn(
         assessment = assessment,
         isAssessmentPending = true,
+        withdrawingUser = withdrawingUser,
       )
 
       mockEmailNotificationService.assertEmailRequestCount(1)
@@ -263,12 +274,36 @@ class Cas1AssessmentEmailServiceTest {
     }
 
     @Test
+    fun `assessmentWithdrawn sends a V2 email when the user has an email address and assessment is pending`() {
+      val assessment = createAssessment(allocatedUserEmail = ALLOCATED_EMAIL)
+
+      serviceUsingAps530Improvements.assessmentWithdrawn(
+        assessment = assessment,
+        isAssessmentPending = true,
+        withdrawingUser = withdrawingUser,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertEmailRequested(
+        ALLOCATED_EMAIL,
+        notifyConfig.templates.assessmentWithdrawnV2,
+        mapOf(
+          "crn" to CRN,
+          "applicationUrl" to "http://frontend/application/${assessment.application.id}",
+          "applicationTimelineUrl" to "http://frontend/application/${assessment.application.id}?tab=timeline",
+          "withdrawnBy" to "mr withdrawer",
+        ),
+      )
+    }
+
+    @Test
     fun `assessmentWithdrawn does not send an email to a user if they do not have an email address and assessment is pending`() {
       val assessment = createAssessment(allocatedUserEmail = null)
 
       service.assessmentWithdrawn(
         assessment = assessment,
         isAssessmentPending = true,
+        withdrawingUser = withdrawingUser,
       )
 
       mockEmailNotificationService.assertEmailRequestCount(0)
@@ -281,6 +316,7 @@ class Cas1AssessmentEmailServiceTest {
       service.assessmentWithdrawn(
         assessment = assessment,
         isAssessmentPending = false,
+        withdrawingUser = withdrawingUser,
       )
 
       mockEmailNotificationService.assertEmailRequestCount(0)

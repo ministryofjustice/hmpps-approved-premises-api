@@ -642,7 +642,7 @@ class ApplicationService(
     cas1ApplicationEmailService.applicationWithdrawn(application, user)
 
     application.assessments.map {
-      assessmentService.updateCas1AssessmentWithdrawn(it.id)
+      assessmentService.updateCas1AssessmentWithdrawn(it.id, user)
     }
 
     return CasResult.Success(Unit)

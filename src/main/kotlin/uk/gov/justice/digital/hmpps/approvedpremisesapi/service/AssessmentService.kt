@@ -927,7 +927,7 @@ class AssessmentService(
     return AuthorisableActionResult.Success(referralHistoryNoteEntity)
   }
 
-  fun updateCas1AssessmentWithdrawn(assessmentId: UUID) {
+  fun updateCas1AssessmentWithdrawn(assessmentId: UUID, withdrawingUser: UserEntity) {
     val assessment = assessmentRepository.findByIdOrNull(assessmentId)
     if (assessment is ApprovedPremisesAssessmentEntity) {
       val isPendingAssessment = assessment.isPendingAssessment()
@@ -938,6 +938,7 @@ class AssessmentService(
       assessmentEmailService.assessmentWithdrawn(
         assessment = assessment,
         isAssessmentPending = isPendingAssessment,
+        withdrawingUser = withdrawingUser,
       )
     }
   }

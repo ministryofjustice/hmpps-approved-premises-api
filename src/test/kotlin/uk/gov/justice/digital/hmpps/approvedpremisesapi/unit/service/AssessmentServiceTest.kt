@@ -2554,6 +2554,11 @@ class AssessmentServiceTest {
       .withEmail("user@test.com")
       .produce()
 
+    private val withdrawingUser: UserEntity = UserEntityFactory()
+      .withDefaultProbationRegion()
+      .withEmail("withdrawing@test.com")
+      .produce()
+
     private val schema = ApprovedPremisesAssessmentJsonSchemaEntity(
       id = UUID.randomUUID(),
       addedAt = OffsetDateTime.now(),
@@ -2579,14 +2584,15 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
-      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any()) } just Runs
+      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
 
-      assessmentService.updateCas1AssessmentWithdrawn(assessmentId)
+      assessmentService.updateCas1AssessmentWithdrawn(assessmentId, withdrawingUser)
 
       verify {
         assessmentEmailServiceMock.assessmentWithdrawn(
           assessment,
           isAssessmentPending = true,
+          withdrawingUser = withdrawingUser,
         )
       }
     }
@@ -2610,14 +2616,15 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
-      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any()) } just Runs
+      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
 
-      assessmentService.updateCas1AssessmentWithdrawn(assessmentId)
+      assessmentService.updateCas1AssessmentWithdrawn(assessmentId, withdrawingUser)
 
       verify {
         assessmentEmailServiceMock.assessmentWithdrawn(
           assessment,
           isAssessmentPending = false,
+          withdrawingUser = withdrawingUser,
         )
       }
     }
@@ -2641,14 +2648,15 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
-      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any()) } just Runs
+      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
 
-      assessmentService.updateCas1AssessmentWithdrawn(assessmentId)
+      assessmentService.updateCas1AssessmentWithdrawn(assessmentId, withdrawingUser)
 
       verify {
         assessmentEmailServiceMock.assessmentWithdrawn(
           assessment,
           isAssessmentPending = false,
+          withdrawingUser = withdrawingUser,
         )
       }
     }
@@ -2672,14 +2680,15 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
-      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any()) } just Runs
+      every { assessmentEmailServiceMock.assessmentWithdrawn(any(), any(), any()) } just Runs
 
-      assessmentService.updateCas1AssessmentWithdrawn(assessmentId)
+      assessmentService.updateCas1AssessmentWithdrawn(assessmentId, withdrawingUser)
 
       verify {
         assessmentEmailServiceMock.assessmentWithdrawn(
           assessment,
           isAssessmentPending = false,
+          withdrawingUser = withdrawingUser,
         )
       }
     }

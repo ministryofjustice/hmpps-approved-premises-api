@@ -3328,7 +3328,7 @@ class ApplicationTest : IntegrationTestBase() {
           )
           emailAsserter.assertEmailRequested(
             assessor.email!!,
-            notifyConfig.templates.assessmentWithdrawn,
+            notifyConfig.templates.assessmentWithdrawnV2,
           )
         }
       }
