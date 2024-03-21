@@ -117,7 +117,7 @@ data class BedEntity(
   val room: RoomEntity,
   var endDate: LocalDate?,
   @CreationTimestamp
-  var createdAt: OffsetDateTime,
+  var createdAt: OffsetDateTime?,
 ) {
 
   override fun toString() = "BedEntity: $id"

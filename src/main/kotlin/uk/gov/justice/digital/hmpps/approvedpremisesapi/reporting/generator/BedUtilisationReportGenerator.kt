@@ -82,10 +82,13 @@ class BedUtilisationReportGenerator(
     }
 
     val totalBookedDays = bookedDaysActiveAndClosed
+    val bedspaceOnlineDaysStartDate =
+      if (this.createdAt == null) startOfMonth else latestDateOf(this.createdAt!!.toLocalDate(), startOfMonth)
+
     val bedspaceOnlineDaysEndDate =
       if (this.endDate == null) endOfMonth else earliestDateOf(this.endDate!!, endOfMonth)
 
-    val bedspaceOnlineDays = latestDateOf(this.createdAt.toLocalDate(), startOfMonth)
+    val bedspaceOnlineDays = bedspaceOnlineDaysStartDate
       .getDaysUntilInclusive(bedspaceOnlineDaysEndDate)
       .count()
 
@@ -107,7 +110,7 @@ class BedUtilisationReportGenerator(
         effectiveTurnaroundDays = effectiveTurnaroundDays,
         voidDays = voidDays,
         totalBookedDays = totalBookedDays,
-        bedspaceStartDate = this.createdAt.toLocalDate(),
+        bedspaceStartDate = if (this.createdAt == null) null else this.createdAt!!.toLocalDate(),
         bedspaceEndDate = this.endDate,
         bedspaceOnlineDays = bedspaceOnlineDays,
         occupancyRate = totalBookedDays.toDouble() / bedspaceOnlineDays,

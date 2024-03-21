@@ -231,8 +231,8 @@ class RoomService(
         if (bed.endDate != null) {
           "$.roomId" hasValidationError "bedEndDateCantBeModified"
         }
-        if (bedEndDate.isBefore(bed.createdAt.toLocalDate())) {
-          "${bed.createdAt.toLocalDate()}" hasValidationError "afterBedspaceEndDate"
+        if (bed.createdAt != null && bedEndDate.isBefore(bed.createdAt!!.toLocalDate())) {
+          "${bed.createdAt!!.toLocalDate()}" hasValidationError "afterBedspaceEndDate"
         }
 
         if (bookingRepository.findActiveOverlappingBookingByBed(bed.id, bedEndDate).isNotEmpty()) {

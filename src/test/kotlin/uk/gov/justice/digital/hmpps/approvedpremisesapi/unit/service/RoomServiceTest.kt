@@ -304,6 +304,62 @@ class RoomServiceTest {
   }
 
   @Test
+  fun `updateBedEndDate returns Success containing updated bed end-date when start date is null`() {
+    val bedEndDate = LocalDate.now()
+    val premises = TemporaryAccommodationPremisesEntityFactory()
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+      .produce()
+
+    val room = RoomEntityFactory()
+      .withPremises(premises)
+      .produce()
+
+    val bed = BedEntityFactory()
+      .withRoom(room)
+      .withCreatedAt(null)
+      .produce()
+
+    room.beds.add(bed)
+
+    every { roomRepository.findByIdOrNull(any()) } returns room
+    every { bookingRepository.findActiveOverlappingBookingByBed(any(), any()) } returns emptyList()
+    every { bedRepository.save(any()) } returnsArgument 0
+
+    val result = roomService.updateBedEndDate(premises, room.id, bedEndDate)
+
+    assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+    result as AuthorisableActionResult.Success
+    assertThat(result.entity).isInstanceOf(ValidatableActionResult.Success::class.java)
+    val resultEntity = result.entity as ValidatableActionResult.Success
+    assertThat(resultEntity.entity).matches {
+      it.id == room.id &&
+        it.beds.first().endDate == bedEndDate
+    }
+
+    verify(exactly = 1) {
+      roomRepository.findByIdOrNull(any())
+    }
+
+    verify(exactly = 1) {
+      bookingRepository.findActiveOverlappingBookingByBed(any(), any())
+    }
+
+    verify(exactly = 1) {
+      bedRepository.save(
+        match {
+          it.createdAt == null
+          it.endDate == bedEndDate
+        },
+      )
+    }
+  }
+
+  @Test
   fun `updateBedEndDate returns NotFound error when given rooms is not exists`() {
     val bedEndDate = LocalDate.now()
     val premises = TemporaryAccommodationPremisesEntityFactory()
@@ -479,7 +535,7 @@ class RoomServiceTest {
     assertThat(result.entity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
     val resultEntity = result.entity as ValidatableActionResult.FieldValidationError
     assertThat(resultEntity.validationMessages).contains(
-      entry("${bed.createdAt.toLocalDate()}", "afterBedspaceEndDate"),
+      entry("${bed.createdAt!!.toLocalDate()}", "afterBedspaceEndDate"),
     )
 
     verify(exactly = 1) {
