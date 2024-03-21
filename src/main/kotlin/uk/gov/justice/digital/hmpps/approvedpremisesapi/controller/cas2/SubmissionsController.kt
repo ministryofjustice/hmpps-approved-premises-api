@@ -63,7 +63,7 @@ class SubmissionsController(
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
-    ).body(applications.map { getPersonDetailAndTransformToSummary(it) })
+    ).body(getPersonNamesAndTransformToSummaries(applications))
   }
 
   override fun submissionsApplicationIdGet(applicationId: UUID): ResponseEntity<Cas2SubmittedApplication> {
@@ -172,16 +172,15 @@ class SubmissionsController(
     nomisUserService.getUserForRequest()
   }
 
-  private fun getPersonDetailAndTransformToSummary(
-    application: Cas2ApplicationSummary,
-  ):
-    Cas2SubmittedApplicationSummary {
-    val personName = offenderService.getOffenderNameOrPlaceholder(application.getCrn())
+  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummary>):
+    List<Cas2SubmittedApplicationSummary> {
+    val crns = applicationSummaries.map { it.getCrn() }
 
-    return submissionsTransformer.transformJpaSummaryToApiRepresentation(
-      application,
-      personName,
-    )
+    val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)
+
+    return applicationSummaries.map { application ->
+      submissionsTransformer.transformJpaSummaryToApiRepresentation(application, personNamesMap[application.getCrn()]!!)
+    }
   }
 
   private fun getPersonDetailAndTransform(

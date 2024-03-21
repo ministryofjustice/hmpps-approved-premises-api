@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2
 
+import org.apache.commons.collections4.ListUtils
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
@@ -21,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import java.util.stream.Collectors
 
 @Service("CAS2OffenderService")
 @Suppress(
@@ -31,6 +34,7 @@ class OffenderService(
   private val probationOffenderSearchApiClient: ProbationOffenderSearchApiClient,
   private val apOASysContextApiClient: ApOASysContextApiClient,
   private val offenderDetailsDataSource: OffenderDetailsDataSource,
+  @Value("\${cas2.crn-search-limit:400}") private val numberOfCrn: Int,
 ) {
 
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -96,6 +100,43 @@ class OffenderService(
 
       is ClientResult.Failure -> return "Unknown"
     }
+  }
+
+  private fun getOffenderSummariesByCrns(
+    crns: Set<String>,
+  ): Map<String, ClientResult<OffenderDetailSummary>> {
+    if (crns.isEmpty()) return emptyMap()
+
+    return offenderDetailsDataSource.getOffenderDetailSummaries(crns.toList())
+  }
+
+  fun getMapOfPersonNamesAndCrns(crns: List<String>): Map<String, String> {
+    val personNamesListOfMaps = ListUtils.partition(crns.toList(), numberOfCrn).stream()
+      .map { partitionedCrns ->
+        getOffenderNamesOrPlaceholder(partitionedCrns.toSet())
+      }.collect(Collectors.toList())
+
+    return personNamesListOfMaps.flatMap { it.toList() }.toMap()
+  }
+
+  private fun getOffenderNamesOrPlaceholder(crns: Set<String>): Map<String, String> {
+    val offenderSummaries = getOffenderSummariesByCrns(crns)
+
+    return crns.map { crn ->
+      when (val offenderResponse = offenderSummaries[crn]) {
+        is ClientResult.Success ->
+          return@map crn to "${offenderResponse.body.firstName} ${offenderResponse.body.surname}"
+
+        is ClientResult.Failure.StatusCode ->
+          if (offenderResponse.status.value() == HttpStatus.NOT_FOUND.value()) {
+            return@map crn to "Person Not Found"
+          } else {
+            return@map crn to "Unknown"
+          }
+
+        else -> return@map crn to "Unknown"
+      }
+    }.toMap()
   }
 
   private fun getInfoForPerson(crn: String): PersonInfoResult {
