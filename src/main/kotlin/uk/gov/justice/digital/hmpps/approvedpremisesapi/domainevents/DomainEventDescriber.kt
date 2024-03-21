@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.javaConstantNameToSentence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -42,7 +43,7 @@ class DomainEventDescriber(
     return event.describe { data ->
       val formattedWithdrawalReason = data.eventDetails.withdrawalReason.replace("_", " ")
 
-      "The application was withdrawn. The reason was: $formattedWithdrawalReason" +
+      "The application was withdrawn. The reason was: '$formattedWithdrawalReason'" +
         (data.eventDetails.otherWithdrawalReason?.let { " ($it)" } ?: "")
     }
   }
@@ -79,7 +80,7 @@ class DomainEventDescriber(
 
   private fun buildBookingCancelledDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getBookingCancelledEvent(domainEventSummary.id())
-    return event.describe { "The booking was cancelled. The reason was: ${it.eventDetails.cancellationReason}" }
+    return event.describe { "The booking was cancelled. The reason was: '${it.eventDetails.cancellationReason}'" }
   }
 
   private fun buildAssessmentAppealedDescription(domainEventSummary: DomainEventSummary): String? {
@@ -87,13 +88,19 @@ class DomainEventDescriber(
     return event.describe { "The assessment was appealed and ${it.eventDetails.decision.value}. The reason was: ${it.eventDetails.decisionDetail}" }
   }
 
-  private fun buildPlacementApplicationWithdrawnDescription(domainEventSummary: DomainEventSummary): String {
+  private fun buildPlacementApplicationWithdrawnDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getPlacementApplicationWithdrawnEvent(domainEventSummary.id())
-    val dates = event?.data?.eventDetails?.placementDates ?: emptyList()
-    return "A request for placement was withdrawn" +
-      if (dates.isNotEmpty()) {
-        " for dates " + dates.joinToString(", ") { "${it.startDate.toUiFormat()} to ${it.endDate.toUiFormat()}" }
-      } else { "" }
+
+    return event.describe { data ->
+      val dates = data.eventDetails.placementDates ?: emptyList()
+      val reasonDescription = data.eventDetails.withdrawalReason.javaConstantNameToSentence()
+
+      "A request for placement was withdrawn" +
+        if (dates.isNotEmpty()) {
+          " for dates " + dates.joinToString(", ") { "${it.startDate.toUiFormat()} to ${it.endDate.toUiFormat()}" }
+        } else { "" } +
+        ". The reason was: '$reasonDescription'"
+    }
   }
 
   private fun buildMatchRequestWithdrawnDescription(domainEventSummary: DomainEventSummary): String? {
@@ -101,9 +108,12 @@ class DomainEventDescriber(
     /**
      * See documentation in [Cas1PlacementRequestDomainEventService] for why this is reported as a request for placement
      **/
-    return event.describe {
-      val dates = it.eventDetails.datePeriod
-      "A request for placement was withdrawn for dates ${dates.startDate.toUiFormat()} to ${dates.endDate.toUiFormat()}"
+    return event.describe { data ->
+      val dates = data.eventDetails.datePeriod
+      val reasonDescription = data.eventDetails.withdrawalReason.javaConstantNameToSentence()
+
+      "A request for placement was withdrawn for dates ${dates.startDate.toUiFormat()} to ${dates.endDate.toUiFormat()}. " +
+        "The reason was: '$reasonDescription'"
     }
   }
 

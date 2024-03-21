@@ -2702,7 +2702,7 @@ class ApplicationTest : IntegrationTestBase() {
           "The person was due to move into the premises on 2024-01-01 but did not arrive",
           "The person moved out of the premises on 2024-04-01",
           "A booking was not made for the placement request. The reason was: no suitable premises",
-          "The booking was cancelled. The reason was: additional sentencing",
+          "The booking was cancelled. The reason was: 'additional sentencing'",
           "The booking had its arrival or departure date changed",
           "The application was assessed and accepted",
         )
@@ -2747,7 +2747,7 @@ class ApplicationTest : IntegrationTestBase() {
           "The person was due to move into the premises on 2024-01-01 but did not arrive",
           "The person moved out of the premises on 2024-04-01",
           "A booking was not made for the placement request. The reason was: no suitable premises",
-          "The booking was cancelled. The reason was: additional sentencing",
+          "The booking was cancelled. The reason was: 'additional sentencing'",
           "The booking had its arrival or departure date changed",
           "The application was assessed and accepted",
         )
