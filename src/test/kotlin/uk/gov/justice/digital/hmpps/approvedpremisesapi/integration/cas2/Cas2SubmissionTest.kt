@@ -652,7 +652,7 @@ class Cas2SubmissionTest(
   }
 
   @Nested
-  inner class PostToCreate {
+  inner class PostToSubmit {
     @Test
     fun `Submit Cas2 application returns 200`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
