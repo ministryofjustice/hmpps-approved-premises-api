@@ -8,10 +8,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
-import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApplicationTeamCodeEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
@@ -25,8 +22,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
@@ -39,25 +34,23 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TemporaryAccommodationApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.servlet.http.HttpServletRequest
 
 class UserAccessServiceTest {
   private val userService = mockk<UserService>()
   private val offenderService = mockk<OffenderService>()
-  private val currentRequest = mockk<HttpServletRequest>()
-  private val communityApiClient = mockk<CommunityApiClient>()
+  private val requestContextService = mockk<RequestContextService>()
 
   private val userAccessService = UserAccessService(
     userService,
     offenderService,
-    currentRequest,
-    communityApiClient,
+    requestContextService,
   )
 
   private val probationRegionId = UUID.randomUUID()
@@ -113,26 +106,11 @@ class UserAccessServiceTest {
     .produce()
 
   private fun currentRequestIsFor(service: ServiceName) {
-    every { currentRequest.getHeader("X-Service-Name") } returns service.value
+    every { requestContextService.getServiceForRequest() } returns service
   }
 
   private fun currentRequestIsForArbitraryService() {
-    every { currentRequest.getHeader("X-Service-Name") } returns "arbitrary-value"
-  }
-
-  private fun communityApiStaffUserDetailsReturnsTeamCodes(vararg teamCodes: String) {
-    every { communityApiClient.getStaffUserDetails(any()) } returns ClientResult.Success(
-      HttpStatus.OK,
-      StaffUserDetailsFactory()
-        .withTeams(
-          teamCodes.map {
-            StaffUserTeamMembershipFactory()
-              .withCode(it)
-              .produce()
-          },
-        )
-        .produce(),
-    )
+    every { requestContextService.getServiceForRequest() } returns null
   }
 
   @BeforeEach
@@ -960,8 +938,6 @@ class UserAccessServiceTest {
         .produce(),
     )
 
-    communityApiStaffUserDetailsReturnsTeamCodes("TEAM1")
-
     every { offenderService.getOffenderByCrn(application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
       OffenderDetailsSummaryFactory().produce(),
     )
@@ -987,8 +963,6 @@ class UserAccessServiceTest {
         .withApplication(application)
         .produce(),
     )
-
-    communityApiStaffUserDetailsReturnsTeamCodes("TEAM1")
 
     every { offenderService.getOffenderByCrn(application.crn, user.deliusUsername) } returns AuthorisableActionResult.Unauthorised()
 

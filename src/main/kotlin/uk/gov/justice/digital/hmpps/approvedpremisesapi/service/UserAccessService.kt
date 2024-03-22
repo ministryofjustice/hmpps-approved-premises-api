@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
@@ -21,14 +20,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import java.util.UUID
-import javax.servlet.http.HttpServletRequest
 
 @Service
 class UserAccessService(
   private val userService: UserService,
   private val offenderService: OffenderService,
-  private val currentRequest: HttpServletRequest,
-  private val communityApiClient: CommunityApiClient,
+  private val requestContextService: RequestContextService,
 ) {
   fun currentUserCanAccessRegion(probationRegionId: UUID?) =
     userCanAccessRegion(userService.getUserForRequest(), probationRegionId)
@@ -39,9 +36,9 @@ class UserAccessService(
   fun currentUserHasAllRegionsAccess() = userHasAllRegionsAccess(userService.getUserForRequest())
 
   fun userHasAllRegionsAccess(user: UserEntity) =
-    when (currentRequest.getHeader("X-Service-Name")) {
+    when (requestContextService.getServiceForRequest()) {
       // TODO: Revisit once Temporary Accommodation introduces user roles
-      ServiceName.temporaryAccommodation.value -> user.hasRole(CAS3_REPORTER)
+      ServiceName.temporaryAccommodation -> user.hasRole(CAS3_REPORTER)
       // TODO: Revisit if Approved Premises introduces region-limited access
       else -> true
     }
@@ -121,9 +118,9 @@ class UserAccessService(
     userCanViewReport(userService.getUserForRequest())
 
   fun userCanViewReport(user: UserEntity) =
-    when (currentRequest.getHeader("X-Service-Name")) {
-      ServiceName.temporaryAccommodation.value -> user.hasAnyRole(UserRole.CAS3_ASSESSOR, CAS3_REPORTER)
-      ServiceName.approvedPremises.value -> user.hasAnyRole(UserRole.CAS1_REPORT_VIEWER, UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ADMIN)
+    when (requestContextService.getServiceForRequest()) {
+      ServiceName.temporaryAccommodation -> user.hasAnyRole(UserRole.CAS3_ASSESSOR, CAS3_REPORTER)
+      ServiceName.approvedPremises -> user.hasAnyRole(UserRole.CAS1_REPORT_VIEWER, UserRole.CAS1_WORKFLOW_MANAGER, UserRole.CAS1_ADMIN)
       else -> false
     }
 
@@ -172,16 +169,16 @@ class UserAccessService(
 
   fun currentUserCanReallocateTask() = userCanReallocateTask(userService.getUserForRequest())
 
-  fun userCanReallocateTask(user: UserEntity): Boolean = when (currentRequest.getHeader("X-Service-Name")) {
-    ServiceName.temporaryAccommodation.value -> user.hasRole(UserRole.CAS3_ASSESSOR)
-    ServiceName.approvedPremises.value -> user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)
+  fun userCanReallocateTask(user: UserEntity): Boolean = when (requestContextService.getServiceForRequest()) {
+    ServiceName.temporaryAccommodation -> user.hasRole(UserRole.CAS3_ASSESSOR)
+    ServiceName.approvedPremises -> user.hasRole(UserRole.CAS1_WORKFLOW_MANAGER)
     else -> false
   }
 
   fun currentUserCanDeallocateTask() = userCanDeallocateTask(userService.getUserForRequest())
 
-  fun userCanDeallocateTask(user: UserEntity): Boolean = when (currentRequest.getHeader("X-Service-Name")) {
-    ServiceName.temporaryAccommodation.value -> user.hasRole(UserRole.CAS3_ASSESSOR)
+  fun userCanDeallocateTask(user: UserEntity): Boolean = when (requestContextService.getServiceForRequest()) {
+    ServiceName.temporaryAccommodation -> user.hasRole(UserRole.CAS3_ASSESSOR)
     else -> false
   }
 

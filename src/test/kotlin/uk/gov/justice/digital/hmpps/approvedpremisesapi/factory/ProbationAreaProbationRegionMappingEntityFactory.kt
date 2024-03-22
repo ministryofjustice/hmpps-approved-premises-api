@@ -24,6 +24,14 @@ class ProbationAreaProbationRegionMappingEntityFactory : Factory<ProbationAreaPr
     this.probationRegion = { probationRegion }
   }
 
+  fun withDefaultProbationRegion() = apply {
+    this.probationRegion = {
+      ProbationRegionEntityFactory()
+        .withDefaults()
+        .produce()
+    }
+  }
+
   override fun produce() = ProbationAreaProbationRegionMappingEntity(
     id = this.id(),
     probationAreaDeliusCode = this.probationAreaDeliusCode(),
