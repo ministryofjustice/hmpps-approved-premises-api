@@ -19,8 +19,8 @@ class CalendarRepository(private val namedParameterJdbcTemplate: NamedParameterJ
            b.crn AS crn,
            ((n.id, c.id) IS NULL) AS active
     FROM premises p 
-    JOIN rooms r ON r.premises_id = p.id
-    JOIN beds bed ON bed.room_id = r.id 
+    JOIN rooms r ON r.premises_id = p.id 
+    JOIN beds bed ON bed.room_id = r.id AND (bed.end_date IS NULL OR bed.end_date >= :startDate)
     LEFT JOIN bookings b ON b.bed_id = bed.id AND tsrange(b.arrival_date, b.departure_date, '[]') && tsrange(:startDate, :endDate, '[]')
     LEFT JOIN cancellations c ON c.booking_id = b.id
     LEFT JOIN non_arrivals n ON n.booking_id = b.id
@@ -37,7 +37,7 @@ class CalendarRepository(private val namedParameterJdbcTemplate: NamedParameterJ
            (c.id IS NULL) AS active
     FROM premises p 
     JOIN rooms r ON r.premises_id = p.id
-    JOIN beds bed ON bed.room_id = r.id 
+    JOIN beds bed ON bed.room_id = r.id AND (bed.end_date IS NULL OR bed.end_date >= :startDate)
     LEFT JOIN lost_beds lb ON lb.bed_id = bed.id AND tsrange(lb.start_date, lb.end_date, '[]') && tsrange(:startDate, :endDate, '[]')
     LEFT JOIN lost_bed_cancellations c ON c.lost_bed_id = lb.id
     WHERE p.id = :premisesId

@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarBedInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarBookingInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.CalendarLostBedInfo
@@ -16,9 +18,11 @@ class CalendarRepositoryTest : IntegrationTestBase() {
   @Autowired
   lateinit var calendarRepository: CalendarRepository
 
-  @Test
-  fun `Results are correct for a Premises without Rooms or Beds`() {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
+  lateinit var premises: PremisesEntity
+
+  @BeforeEach
+  fun createPremises() {
+    premises = approvedPremisesEntityFactory.produceAndPersist {
       withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
       withYieldedProbationRegion {
         probationRegionEntityFactory.produceAndPersist {
@@ -29,25 +33,16 @@ class CalendarRepositoryTest : IntegrationTestBase() {
         }
       }
     }
+  }
 
+  @Test
+  fun `Results are correct for a Premises without Rooms or Beds`() {
     val result = calendarRepository.getCalendarInfo(premises.id, LocalDate.of(2023, 6, 9), LocalDate.of(2023, 7, 9))
     assertThat(result).isEmpty()
   }
 
   @Test
   fun `Results are correct for a Premises with a Room & Bed but no Bookings or Lost Beds`() {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withId(UUID.randomUUID())
-          withYieldedApArea {
-            apAreaEntityFactory.produceAndPersist()
-          }
-        }
-      }
-    }
-
     val bed = bedEntityFactory.produceAndPersist {
       withName("test-bed")
       withYieldedRoom {
@@ -71,19 +66,51 @@ class CalendarRepositoryTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Results are correct for a Premises with a Room & Bed and a cancelled lost bed and booking`() {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withId(UUID.randomUUID())
-          withYieldedApArea {
-            apAreaEntityFactory.produceAndPersist()
-          }
+  fun `Deactivated beds are not shown`() {
+    val deactivatedBed = bedEntityFactory.produceAndPersist {
+      withName("deactivated-bed")
+      withYieldedRoom {
+        roomEntityFactory.produceAndPersist {
+          withName("deactivated-room")
+          withYieldedPremises { premises }
+        }
+      }
+      withEndDate { LocalDate.of(2023, 4, 9) }
+    }
+
+    val bed = bedEntityFactory.produceAndPersist {
+      withName("test-bed")
+      withYieldedRoom {
+        roomEntityFactory.produceAndPersist {
+          withName("test-room")
+          withYieldedPremises { premises }
         }
       }
     }
 
+    val deactivatedBedKey = CalendarBedInfo(
+      bedId = deactivatedBed.id,
+      bedName = deactivatedBed.name,
+    )
+
+    val expectedBedKey = CalendarBedInfo(
+      bedId = bed.id,
+      bedName = bed.name,
+    )
+
+    val resultWithStartDateBeforeDeactivation = calendarRepository.getCalendarInfo(premises.id, LocalDate.of(2023, 3, 9), LocalDate.of(2023, 4, 9))
+
+    assertThat(resultWithStartDateBeforeDeactivation).containsKey(deactivatedBedKey)
+    assertThat(resultWithStartDateBeforeDeactivation).containsKey(expectedBedKey)
+
+    val resultWithStartDateAfterDeactivation = calendarRepository.getCalendarInfo(premises.id, LocalDate.of(2023, 6, 9), LocalDate.of(2023, 7, 9))
+
+    assertThat(resultWithStartDateAfterDeactivation).doesNotContainKey(deactivatedBedKey)
+    assertThat(resultWithStartDateAfterDeactivation).containsKey(expectedBedKey)
+  }
+
+  @Test
+  fun `Results are correct for a Premises with a Room & Bed and a cancelled lost bed and booking`() {
     val bed = bedEntityFactory.produceAndPersist {
       withName("test-bed")
       withYieldedRoom {
@@ -135,18 +162,6 @@ class CalendarRepositoryTest : IntegrationTestBase() {
 
   @Test
   fun `Results are correct for a Premises with a Room & Bed and a lost bed and non-arrived booking`() {
-    val premises = approvedPremisesEntityFactory.produceAndPersist {
-      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withId(UUID.randomUUID())
-          withYieldedApArea {
-            apAreaEntityFactory.produceAndPersist()
-          }
-        }
-      }
-    }
-
     val bed = bedEntityFactory.produceAndPersist {
       withName("test-bed")
       withYieldedRoom {
@@ -188,18 +203,6 @@ class CalendarRepositoryTest : IntegrationTestBase() {
   fun `Results are correct for a Premises with non-double-booked Bookings & Lost Bed`() {
     `Given an Offender` { offenderDetailsOne, _ ->
       `Given an Offender` { offenderDetailsTwo, _ ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withId(UUID.randomUUID())
-              withYieldedApArea {
-                apAreaEntityFactory.produceAndPersist()
-              }
-            }
-          }
-        }
-
         val bed = bedEntityFactory.produceAndPersist {
           withName("test-bed")
           withYieldedRoom {
@@ -273,18 +276,6 @@ class CalendarRepositoryTest : IntegrationTestBase() {
   @Test
   fun `Results are correct for a Premises with a Booking and Lost Bed that finishes on the start date`() {
     `Given an Offender` { offenderDetailsOne, _ ->
-      val premises = approvedPremisesEntityFactory.produceAndPersist {
-        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-        withYieldedProbationRegion {
-          probationRegionEntityFactory.produceAndPersist {
-            withId(UUID.randomUUID())
-            withYieldedApArea {
-              apAreaEntityFactory.produceAndPersist()
-            }
-          }
-        }
-      }
-
       val bed = bedEntityFactory.produceAndPersist {
         withName("test-bed")
         withYieldedRoom {
@@ -342,18 +333,6 @@ class CalendarRepositoryTest : IntegrationTestBase() {
   fun `Results are correct for a Premises with double-booked Bookings & Lost Bed`() {
     `Given an Offender` { offenderDetailsOne, _ ->
       `Given an Offender` { offenderDetailsTwo, _ ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist {
-              withId(UUID.randomUUID())
-              withYieldedApArea {
-                apAreaEntityFactory.produceAndPersist()
-              }
-            }
-          }
-        }
-
         val bed = bedEntityFactory.produceAndPersist {
           withName("test-bed")
           withYieldedRoom {
