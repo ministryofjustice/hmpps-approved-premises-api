@@ -292,28 +292,6 @@ class UserServiceTest {
 
   @Nested
   inner class UpdateUserFromCommunityApiById {
-    private val mockCurrentRequest = mockk<HttpServletRequest>()
-    private val mockHttpAuthService = mockk<HttpAuthService>()
-    private val mockOffenderService = mockk<OffenderService>()
-    private val mockCommunityApiClient = mockk<CommunityApiClient>()
-    private val mockUserRepository = mockk<UserRepository>()
-    private val mockUserRoleAssignmentRepository = mockk<UserRoleAssignmentRepository>()
-    private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
-    private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
-    private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
-
-    private val userService = UserService(
-      false,
-      mockCurrentRequest,
-      mockHttpAuthService,
-      mockOffenderService,
-      mockCommunityApiClient,
-      mockUserRepository,
-      mockUserRoleAssignmentRepository,
-      mockUserQualificationAssignmentRepository,
-      mockProbationRegionRepository,
-      mockProbationAreaProbationRegionMappingRepository,
-    )
 
     private val id = UUID.fromString("21b61d19-3a96-4b88-8df9-a5e89bc6fe73")
     private val username = "SOMEPERSON"
@@ -526,29 +504,6 @@ class UserServiceTest {
 
   @Nested
   inner class SearchUsersOnAPI {
-    private val mockCurrentRequest = mockk<HttpServletRequest>()
-    private val mockHttpAuthService = mockk<HttpAuthService>()
-    private val mockOffenderService = mockk<OffenderService>()
-    private val mockCommunityApiClient = mockk<CommunityApiClient>()
-    private val mockUserRepository = mockk<UserRepository>()
-    private val mockUserRoleAssignmentRepository = mockk<UserRoleAssignmentRepository>()
-    private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
-    private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
-    private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
-
-    private val userService = UserService(
-      false,
-      mockCurrentRequest,
-      mockHttpAuthService,
-      mockOffenderService,
-      mockCommunityApiClient,
-      mockUserRepository,
-      mockUserRoleAssignmentRepository,
-      mockUserQualificationAssignmentRepository,
-      mockProbationRegionRepository,
-      mockProbationAreaProbationRegionMappingRepository,
-    )
-
     private val userFactory = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
@@ -591,29 +546,6 @@ class UserServiceTest {
 
   @Nested
   inner class DeleteUsersOnAPI {
-    private val mockCurrentRequest = mockk<HttpServletRequest>()
-    private val mockHttpAuthService = mockk<HttpAuthService>()
-    private val mockOffenderService = mockk<OffenderService>()
-    private val mockCommunityApiClient = mockk<CommunityApiClient>()
-    private val mockUserRepository = mockk<UserRepository>()
-    private val mockUserRoleAssignmentRepository = mockk<UserRoleAssignmentRepository>()
-    private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
-    private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
-    private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
-
-    private val userService = UserService(
-      false,
-      mockCurrentRequest,
-      mockHttpAuthService,
-      mockOffenderService,
-      mockCommunityApiClient,
-      mockUserRepository,
-      mockUserRoleAssignmentRepository,
-      mockUserQualificationAssignmentRepository,
-      mockProbationRegionRepository,
-      mockProbationAreaProbationRegionMappingRepository,
-    )
-
     private val userFactory = UserEntityFactory()
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
