@@ -60,234 +60,242 @@ class UserServiceTest {
     mockProbationAreaProbationRegionMappingRepository,
   )
 
-  @Test
-  fun `getUserForRequest returns existing User when exists, does not call Community API or save`() {
-    val username = "SOMEPERSON"
-    val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+  @Nested
+  inner class GetUserForRequest {
 
-    every { mockRequestContextService.getServiceForRequest() } returns ServiceName.approvedPremises
+    @Test
+    fun `getUserForRequest returns existing User when exists, does not call Community API or save`() {
+      val username = "SOMEPERSON"
+      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
 
-    every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
-    every { mockPrincipal.name } returns username
+      every { mockRequestContextService.getServiceForRequest() } returns ServiceName.approvedPremises
 
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
+      every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
+      every { mockPrincipal.name } returns username
 
-    every { mockUserRepository.findByDeliusUsername(username) } returns user
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
 
-    assertThat(userService.getUserForRequest()).isEqualTo(user)
+      every { mockUserRepository.findByDeliusUsername(username) } returns user
 
-    verify(exactly = 0) { mockCommunityApiClient.getStaffUserDetails(username) }
-    verify(exactly = 0) { mockUserRepository.save(any()) }
-  }
+      assertThat(userService.getUserForRequest()).isEqualTo(user)
 
-  @Test
-  fun `getUserForRequest returns new User when one does not already exist, does call Community API and save`() {
-    val username = "SOMEPERSON"
-    val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+      verify(exactly = 0) { mockCommunityApiClient.getStaffUserDetails(username) }
+      verify(exactly = 0) { mockUserRepository.save(any()) }
+    }
 
-    every { mockRequestContextService.getServiceForRequest() } returns ServiceName.approvedPremises
+    @Test
+    fun `getUserForRequest returns new User when one does not already exist, does call Community API and save`() {
+      val username = "SOMEPERSON"
+      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
 
-    every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
-    every { mockPrincipal.name } returns username
+      every { mockRequestContextService.getServiceForRequest() } returns ServiceName.approvedPremises
 
-    every { mockUserRepository.findByDeliusUsername(username) } returns null
-    every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
+      every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
+      every { mockPrincipal.name } returns username
 
-    every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
-      HttpStatus.OK,
-      StaffUserDetailsFactory()
-        .withUsername(username)
-        .withForenames("Jim")
-        .withSurname("Jimmerson")
-        .withStaffIdentifier(5678)
-        .withProbationAreaCode("AREACODE")
-        .produce(),
-    )
+      every { mockUserRepository.findByDeliusUsername(username) } returns null
+      every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
 
-    every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode("AREACODE") } returns ProbationAreaProbationRegionMappingEntityFactory()
-      .withProbationRegion(
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
+      every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
+        HttpStatus.OK,
+        StaffUserDetailsFactory()
+          .withUsername(username)
+          .withForenames("Jim")
+          .withSurname("Jimmerson")
+          .withStaffIdentifier(5678)
+          .withProbationAreaCode("AREACODE")
           .produce(),
       )
-      .withProbationAreaDeliusCode("AREACODE")
-      .produce()
 
-    assertThat(userService.getUserForRequest()).matches {
-      it.name == "Jim Jimmerson"
+      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode("AREACODE") } returns ProbationAreaProbationRegionMappingEntityFactory()
+        .withProbationRegion(
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce(),
+        )
+        .withProbationAreaDeliusCode("AREACODE")
+        .produce()
+
+      assertThat(userService.getUserForRequest()).matches {
+        it.name == "Jim Jimmerson"
+      }
+
+      verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
+      verify(exactly = 1) { mockUserRepository.save(any()) }
+      verify(exactly = 1) { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(any()) }
     }
 
-    verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
-    verify(exactly = 1) { mockUserRepository.save(any()) }
-    verify(exactly = 1) { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(any()) }
-  }
+    @Test
+    fun `getUserForRequest assigns a default role of CAS3_REFERRER for Temporary Accommodation if the user has no Temporary Accommodation roles`() {
+      val username = "SOMEPERSON"
+      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
 
-  @Test
-  fun `getUserForRequest assigns a default role of CAS3_REFERRER for Temporary Accommodation if the user has no Temporary Accommodation roles`() {
-    val username = "SOMEPERSON"
-    val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+      every { mockRequestContextService.getServiceForRequest() } returns ServiceName.temporaryAccommodation
 
-    every { mockRequestContextService.getServiceForRequest() } returns ServiceName.temporaryAccommodation
+      every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
+      every { mockPrincipal.name } returns username
 
-    every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
-    every { mockPrincipal.name } returns username
+      val expectedUser = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
 
-    val expectedUser = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
+      val roleAssignment = UserRoleAssignmentEntityFactory()
+        .withUser(expectedUser)
+        .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
+        .produce()
+
+      expectedUser.roles += roleAssignment
+
+      every { mockUserRepository.findByDeliusUsername(username) } returns expectedUser
+
+      every { mockUserRoleAssignmentRepository.save(any()) } returnsArgument 0
+
+      val actualUser = userService.getUserForRequest()
+
+      assertThat(actualUser).isEqualTo(expectedUser)
+      assertThat(actualUser.hasRole(UserRole.CAS3_REFERRER)).isTrue
+
+      verify(exactly = 1) {
+        mockUserRoleAssignmentRepository.save(
+          match {
+            it.user == actualUser &&
+              it.role == UserRole.CAS3_REFERRER
+          },
+        )
       }
-      .produce()
+    }
 
-    val roleAssignment = UserRoleAssignmentEntityFactory()
-      .withUser(expectedUser)
-      .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
-      .produce()
+    @Test
+    fun `getUserForRequest does not assign a default role for Temporary Accommodation if the user already has a Temporary Accommodation role`() {
+      val username = "SOMEPERSON"
+      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
 
-    expectedUser.roles += roleAssignment
+      every { mockRequestContextService.getServiceForRequest() } returns ServiceName.temporaryAccommodation
 
-    every { mockUserRepository.findByDeliusUsername(username) } returns expectedUser
+      every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
+      every { mockPrincipal.name } returns username
 
-    every { mockUserRoleAssignmentRepository.save(any()) } returnsArgument 0
+      val expectedUser = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
 
-    val actualUser = userService.getUserForRequest()
+      val roleAssignment = UserRoleAssignmentEntityFactory()
+        .withUser(expectedUser)
+        .withRole(UserRole.CAS3_ASSESSOR)
+        .produce()
 
-    assertThat(actualUser).isEqualTo(expectedUser)
-    assertThat(actualUser.hasRole(UserRole.CAS3_REFERRER)).isTrue
+      expectedUser.roles += roleAssignment
 
-    verify(exactly = 1) {
-      mockUserRoleAssignmentRepository.save(
-        match {
-          it.user == actualUser &&
-            it.role == UserRole.CAS3_REFERRER
-        },
-      )
+      every { mockUserRepository.findByDeliusUsername(username) } returns expectedUser
+
+      every { mockUserRoleAssignmentRepository.save(any()) } returnsArgument 0
+
+      val actualUser = userService.getUserForRequest()
+
+      assertThat(actualUser).isEqualTo(expectedUser)
+      assertThat(actualUser.hasRole(UserRole.CAS3_ASSESSOR)).isTrue()
+
+      verify(exactly = 0) {
+        mockUserRoleAssignmentRepository.save(any())
+      }
+    }
+
+    @Test
+    fun `getUserForRequest does not assign a default role for Approved Premises`() {
+      val username = "SOMEPERSON"
+      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+
+      every { mockRequestContextService.getServiceForRequest() } returns ServiceName.approvedPremises
+
+      every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
+      every { mockPrincipal.name } returns username
+
+      val expectedUser = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      every { mockUserRepository.findByDeliusUsername(username) } returns expectedUser
+
+      every { mockUserRoleAssignmentRepository.save(any()) } returnsArgument 0
+
+      val actualUser = userService.getUserForRequest()
+
+      assertThat(actualUser).isEqualTo(expectedUser)
+      assertThat(actualUser.roles).isEmpty()
+
+      verify(exactly = 0) {
+        mockUserRoleAssignmentRepository.save(any())
+      }
     }
   }
 
-  @Test
-  fun `getUserForRequest does not assign a default role for Temporary Accommodation if the user already has a Temporary Accommodation role`() {
-    val username = "SOMEPERSON"
-    val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+  @Nested
+  inner class GetUserForRequestOrNull {
 
-    every { mockRequestContextService.getServiceForRequest() } returns ServiceName.temporaryAccommodation
+    @Test
+    fun `getUserForRequestOrNull returns User when exists, does not call Community API or save`() {
+      val username = "SOMEPERSON"
+      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
 
-    every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
-    every { mockPrincipal.name } returns username
+      every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns mockPrincipal
+      every { mockPrincipal.name } returns username
 
-    val expectedUser = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
 
-    val roleAssignment = UserRoleAssignmentEntityFactory()
-      .withUser(expectedUser)
-      .withRole(UserRole.CAS3_ASSESSOR)
-      .produce()
+      every { mockUserRepository.findByDeliusUsername(username) } returns user
 
-    expectedUser.roles += roleAssignment
+      assertThat(userService.getUserForRequestOrNull()).isEqualTo(user)
 
-    every { mockUserRepository.findByDeliusUsername(username) } returns expectedUser
-
-    every { mockUserRoleAssignmentRepository.save(any()) } returnsArgument 0
-
-    val actualUser = userService.getUserForRequest()
-
-    assertThat(actualUser).isEqualTo(expectedUser)
-    assertThat(actualUser.hasRole(UserRole.CAS3_ASSESSOR)).isTrue()
-
-    verify(exactly = 0) {
-      mockUserRoleAssignmentRepository.save(any())
+      verify(exactly = 0) { mockCommunityApiClient.getStaffUserDetails(username) }
+      verify(exactly = 0) { mockUserRepository.save(any()) }
     }
-  }
 
-  @Test
-  fun `getUserForRequest does not assign a default role for Approved Premises`() {
-    val username = "SOMEPERSON"
-    val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+    @Test
+    fun `getUserForRequestOrNull returns null when User does not already exist, does not call Community API or save`() {
+      val username = "SOMEPERSON"
+      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
 
-    every { mockRequestContextService.getServiceForRequest() } returns ServiceName.approvedPremises
+      every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns mockPrincipal
+      every { mockPrincipal.name } returns username
 
-    every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
-    every { mockPrincipal.name } returns username
+      every { mockUserRepository.findByDeliusUsername(username) } returns null
 
-    val expectedUser = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
+      assertThat(userService.getUserForRequestOrNull()).isNull()
 
-    every { mockUserRepository.findByDeliusUsername(username) } returns expectedUser
-
-    every { mockUserRoleAssignmentRepository.save(any()) } returnsArgument 0
-
-    val actualUser = userService.getUserForRequest()
-
-    assertThat(actualUser).isEqualTo(expectedUser)
-    assertThat(actualUser.roles).isEmpty()
-
-    verify(exactly = 0) {
-      mockUserRoleAssignmentRepository.save(any())
+      verify(exactly = 0) { mockCommunityApiClient.getStaffUserDetails(username) }
+      verify(exactly = 0) { mockUserRepository.save(any()) }
     }
-  }
 
-  @Test
-  fun `getUserForRequestOrNull returns User when exists, does not call Community API or save`() {
-    val username = "SOMEPERSON"
-    val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+    @Test
+    fun `getUserForRequestOrNull returns null when no principal is available`() {
+      every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns null
 
-    every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns mockPrincipal
-    every { mockPrincipal.name } returns username
-
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    every { mockUserRepository.findByDeliusUsername(username) } returns user
-
-    assertThat(userService.getUserForRequestOrNull()).isEqualTo(user)
-
-    verify(exactly = 0) { mockCommunityApiClient.getStaffUserDetails(username) }
-    verify(exactly = 0) { mockUserRepository.save(any()) }
-  }
-
-  @Test
-  fun `getUserForRequestOrNull returns null when User does not already exist, does not call Community API or save`() {
-    val username = "SOMEPERSON"
-    val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
-
-    every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns mockPrincipal
-    every { mockPrincipal.name } returns username
-
-    every { mockUserRepository.findByDeliusUsername(username) } returns null
-
-    assertThat(userService.getUserForRequestOrNull()).isNull()
-
-    verify(exactly = 0) { mockCommunityApiClient.getStaffUserDetails(username) }
-    verify(exactly = 0) { mockUserRepository.save(any()) }
-  }
-
-  @Test
-  fun `getUserForRequestOrNull returns null when no principal is available`() {
-    every { mockHttpAuthService.getDeliusPrincipalOrNull() } returns null
-
-    assertThat(userService.getUserForRequestOrNull()).isNull()
+      assertThat(userService.getUserForRequestOrNull()).isNull()
+    }
   }
 
   @Nested
