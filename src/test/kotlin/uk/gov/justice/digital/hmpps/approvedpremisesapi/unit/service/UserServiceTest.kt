@@ -31,13 +31,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestContextService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import java.util.UUID
-import javax.servlet.http.HttpServletRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
 class UserServiceTest {
-  private val mockCurrentRequest = mockk<HttpServletRequest>()
+  private val mockRequestContextService = mockk<RequestContextService>()
   private val mockHttpAuthService = mockk<HttpAuthService>()
   private val mockOffenderService = mockk<OffenderService>()
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
@@ -49,7 +49,7 @@ class UserServiceTest {
 
   private val userService = UserService(
     false,
-    mockCurrentRequest,
+    mockRequestContextService,
     mockHttpAuthService,
     mockOffenderService,
     mockCommunityApiClient,
@@ -65,7 +65,7 @@ class UserServiceTest {
     val username = "SOMEPERSON"
     val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
 
-    every { mockCurrentRequest.getHeader("X-Service-Name") } returns "approved-premises"
+    every { mockRequestContextService.getServiceForRequest() } returns ServiceName.approvedPremises
 
     every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
     every { mockPrincipal.name } returns username
@@ -91,7 +91,7 @@ class UserServiceTest {
     val username = "SOMEPERSON"
     val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
 
-    every { mockCurrentRequest.getHeader("X-Service-Name") } returns "approved-premises"
+    every { mockRequestContextService.getServiceForRequest() } returns ServiceName.approvedPremises
 
     every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
     every { mockPrincipal.name } returns username
@@ -133,7 +133,7 @@ class UserServiceTest {
     val username = "SOMEPERSON"
     val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
 
-    every { mockCurrentRequest.getHeader("X-Service-Name") } returns "temporary-accommodation"
+    every { mockRequestContextService.getServiceForRequest() } returns ServiceName.temporaryAccommodation
 
     every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
     every { mockPrincipal.name } returns username
@@ -177,7 +177,7 @@ class UserServiceTest {
     val username = "SOMEPERSON"
     val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
 
-    every { mockCurrentRequest.getHeader("X-Service-Name") } returns "temporary-accommodation"
+    every { mockRequestContextService.getServiceForRequest() } returns ServiceName.temporaryAccommodation
 
     every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
     every { mockPrincipal.name } returns username
@@ -216,7 +216,7 @@ class UserServiceTest {
     val username = "SOMEPERSON"
     val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
 
-    every { mockCurrentRequest.getHeader("X-Service-Name") } returns "approved-premises"
+    every { mockRequestContextService.getServiceForRequest() } returns ServiceName.approvedPremises
 
     every { mockHttpAuthService.getDeliusPrincipalOrThrow() } returns mockPrincipal
     every { mockPrincipal.name } returns username

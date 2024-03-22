@@ -38,13 +38,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformUserRoles
 import java.util.UUID
-import javax.servlet.http.HttpServletRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
 @Service
 class UserService(
   @Value("\${assign-default-region-to-users-with-unknown-region}") private val assignDefaultRegionToUsersWithUnknownRegion: Boolean,
-  private val currentRequest: HttpServletRequest,
+  private val requestContextService: RequestContextService,
   private val httpAuthService: HttpAuthService,
   private val offenderService: OffenderService,
   private val communityApiClient: CommunityApiClient,
@@ -66,7 +65,7 @@ class UserService(
 
     val user = getExistingUserOrCreate(username)
 
-    if (currentRequest.getHeader("X-Service-Name") == ServiceName.temporaryAccommodation.value) {
+    if (requestContextService.getServiceForRequest() == ServiceName.temporaryAccommodation) {
       if (!user.hasAnyRole(*UserRole.getAllRolesForService(ServiceName.temporaryAccommodation).toTypedArray())) {
         user.roles += userRoleAssignmentRepository.save(
           UserRoleAssignmentEntity(
