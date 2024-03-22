@@ -1669,7 +1669,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             )
             emailAsserter.assertEmailRequested(
               placementRequest.application.createdByUser.email!!,
-              notifyConfig.templates.placementRequestWithdrawn,
+              notifyConfig.templates.placementRequestWithdrawnV2,
             )
           }
         }

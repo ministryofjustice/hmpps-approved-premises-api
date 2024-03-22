@@ -40,6 +40,7 @@ class Cas1PlacementApplicationEmailServiceTest {
     mockEmailNotificationService,
     notifyConfig = notifyConfig,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
+    applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
     sendNewWithdrawalNotifications = sendNewWithdrawalNotifications,
     aps530WithdrawalEmailImprovements = aps530WithdrawalEmailImprovements,
   )
@@ -537,6 +538,11 @@ class Cas1PlacementApplicationEmailServiceTest {
   @Nested
   inner class PlacementApplicationWithdrawn {
 
+    val withdrawnByUser = createUser(
+      emailAddress = null,
+      name = "withdrawingUser",
+    )
+
     @Test
     fun `placementApplicationWithdrawn doesnt send email to applicant or assessor if no email addresses defined`() {
       val applicant = createUser(emailAddress = null)
@@ -550,7 +556,11 @@ class Cas1PlacementApplicationEmailServiceTest {
         .withAllocatedToUser(assessor)
         .produce()
 
-      service.placementApplicationWithdrawn(placementApplication, wasBeingAssessedBy = assessor)
+      service.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        wasBeingAssessedBy = assessor,
+        withdrawingUser = withdrawnByUser,
+      )
 
       mockEmailNotificationService.assertNoEmailsRequested()
     }
@@ -574,7 +584,11 @@ class Cas1PlacementApplicationEmailServiceTest {
           .produce(),
       )
 
-      service.placementApplicationWithdrawn(placementApplication, wasBeingAssessedBy = null)
+      service.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        wasBeingAssessedBy = null,
+        withdrawingUser = withdrawnByUser,
+      )
 
       mockEmailNotificationService.assertEmailRequestCount(1)
 
@@ -615,7 +629,11 @@ class Cas1PlacementApplicationEmailServiceTest {
           .produce(),
       )
 
-      service.placementApplicationWithdrawn(placementApplication, wasBeingAssessedBy = assessor)
+      service.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        wasBeingAssessedBy = assessor,
+        withdrawingUser = withdrawnByUser,
+      )
 
       mockEmailNotificationService.assertEmailRequestCount(1)
 
@@ -631,6 +649,97 @@ class Cas1PlacementApplicationEmailServiceTest {
       mockEmailNotificationService.assertEmailRequested(
         ASSESSOR_EMAIL,
         notifyConfig.templates.placementRequestWithdrawn,
+        personalisation,
+      )
+    }
+
+    @Test
+    fun `placementApplicationWithdrawn sends a V2 email to applicant if email addresses defined`() {
+      val applicant = createUser(emailAddress = APPLICANT_EMAIL)
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      serviceUsingAps530Improvements.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        wasBeingAssessedBy = null,
+        withdrawingUser = withdrawnByUser,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to "2020-03-12",
+        "endDate" to "2020-03-22",
+        "additionalDatesSet" to "no",
+        "withdrawnBy" to "withdrawingUser",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.placementRequestWithdrawnV2,
+        personalisation,
+      )
+    }
+
+    @Test
+    fun `placementApplicationWithdrawn sends a V2 email to assessor if email address defined`() {
+      val applicant = createUser(emailAddress = null)
+      val assessor = createUser(emailAddress = ASSESSOR_EMAIL)
+
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      serviceUsingAps530Improvements.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        wasBeingAssessedBy = assessor,
+        withdrawingUser = withdrawnByUser,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to "2020-03-12",
+        "endDate" to "2020-03-22",
+        "additionalDatesSet" to "no",
+        "withdrawnBy" to "withdrawingUser",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        ASSESSOR_EMAIL,
+        notifyConfig.templates.placementRequestWithdrawnV2,
         personalisation,
       )
     }
@@ -661,7 +770,11 @@ class Cas1PlacementApplicationEmailServiceTest {
           .produce(),
       )
 
-      service.placementApplicationWithdrawn(placementApplication, wasBeingAssessedBy = assessor)
+      service.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        wasBeingAssessedBy = assessor,
+        withdrawingUser = withdrawnByUser,
+      )
 
       mockEmailNotificationService.assertEmailRequestCount(1)
 
@@ -677,9 +790,13 @@ class Cas1PlacementApplicationEmailServiceTest {
     }
   }
 
-  private fun createUser(emailAddress: String?) = UserEntityFactory()
+  private fun createUser(
+    emailAddress: String?,
+    name: String = "default name",
+  ) = UserEntityFactory()
     .withUnitTestControlProbationRegion()
     .withEmail(emailAddress)
+    .withName(name)
     .produce()
 
   private fun createApplicationForApplicant(applicant: UserEntity) = ApprovedPremisesApplicationEntityFactory()

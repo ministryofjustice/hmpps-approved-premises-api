@@ -13,6 +13,7 @@ class Cas1PlacementApplicationEmailService(
   private val emailNotifier: EmailNotifier,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
   @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val sendNewWithdrawalNotifications: Boolean,
   @Value("\${feature-flags.cas1-aps530-withdrawal-email-improvements}") private val aps530WithdrawalEmailImprovements: Boolean,
 ) {
@@ -79,18 +80,32 @@ class Cas1PlacementApplicationEmailService(
     }
   }
 
-  fun placementApplicationWithdrawn(placementApplication: PlacementApplicationEntity, wasBeingAssessedBy: UserEntity?) {
+  fun placementApplicationWithdrawn(
+    placementApplication: PlacementApplicationEntity,
+    wasBeingAssessedBy: UserEntity?,
+    withdrawingUser: UserEntity?,
+  ) {
     if (!sendNewWithdrawalNotifications) {
       return
     }
 
     val personalisation = getCommonPersonalisation(placementApplication)
 
+    if (withdrawingUser != null) {
+      personalisation["withdrawnBy"] = withdrawingUser.name
+    }
+
+    val template = if (aps530WithdrawalEmailImprovements) {
+      notifyConfig.templates.placementRequestWithdrawnV2
+    } else {
+      notifyConfig.templates.placementRequestWithdrawn
+    }
+
     val createdByUserEmail = placementApplication.createdByUser.email
     createdByUserEmail?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.placementRequestWithdrawn,
+        templateId = template,
         personalisation = personalisation,
       )
     }
@@ -99,19 +114,20 @@ class Cas1PlacementApplicationEmailService(
     assessorEmail?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = notifyConfig.templates.placementRequestWithdrawn,
+        templateId = template,
         personalisation = personalisation,
       )
     }
   }
 
-  private fun getCommonPersonalisation(placementApplication: PlacementApplicationEntity): Map<String, String?> {
+  private fun getCommonPersonalisation(placementApplication: PlacementApplicationEntity): MutableMap<String, String?> {
     val application = placementApplication.application
     val dates = placementApplication.placementDates
 
-    return mapOf(
+    return mutableMapOf(
       "crn" to application.crn,
       "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
+      "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", application.id.toString()),
       "applicationArea" to application.apArea?.name,
       "startDate" to dates.getOrNull(0)?.expectedArrival.toString(),
       "endDate" to dates.getOrNull(0)?.expectedDeparture().toString(),

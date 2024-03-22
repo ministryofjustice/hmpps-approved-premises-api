@@ -695,7 +695,7 @@ class PlacementRequestServiceTest {
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
       every { placementRequestRepository.findByApplication(application) } returns listOf(placementRequest)
-      every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
+      every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
       every {
         applicationService.updateApprovedPremisesApplicationStatus(application.id, PENDING_PLACEMENT_REQUEST)
@@ -726,7 +726,7 @@ class PlacementRequestServiceTest {
         )
       }
 
-      verify { cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest) }
+      verify { cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest, user) }
       verify { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(placementRequest, withdrawalContext) }
     }
 
@@ -735,7 +735,7 @@ class PlacementRequestServiceTest {
       every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
-      every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
+      every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
 
@@ -780,7 +780,7 @@ class PlacementRequestServiceTest {
       every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
-      every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
+      every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
 
@@ -820,7 +820,7 @@ class PlacementRequestServiceTest {
       every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
-      every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
+      every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
 
@@ -857,7 +857,7 @@ class PlacementRequestServiceTest {
     fun `withdrawPlacementRequest sets correct reason if withdrawal triggered by other entity and user permissions not checked`(triggeringEntity: WithdrawableEntityType) {
       every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
       every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
-      every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
+      every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
 
@@ -958,7 +958,7 @@ class PlacementRequestServiceTest {
       every {
         applicationService.updateApprovedPremisesApplicationStatus(application.id, PENDING_PLACEMENT_REQUEST)
       } returns Unit
-      every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any()) } returns Unit
+      every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
       every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
 

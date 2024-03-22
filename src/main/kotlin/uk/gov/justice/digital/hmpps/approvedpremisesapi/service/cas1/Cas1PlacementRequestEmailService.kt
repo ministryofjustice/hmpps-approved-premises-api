@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 
@@ -12,24 +13,40 @@ class Cas1PlacementRequestEmailService(
   private val emailNotifier: EmailNotifier,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
   @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val sendNewWithdrawalNotifications: Boolean,
+  @Value("\${feature-flags.cas1-aps530-withdrawal-email-improvements}") private val aps530WithdrawalEmailImprovements: Boolean,
 ) {
-  fun placementRequestWithdrawn(placementRequest: PlacementRequestEntity) {
+  fun placementRequestWithdrawn(
+    placementRequest: PlacementRequestEntity,
+    withdrawingUser: UserEntity?,
+  ) {
     if (!sendNewWithdrawalNotifications) {
       return
     }
 
     val application = placementRequest.application
 
-    val personalisation = mapOf(
+    val personalisation = mutableMapOf(
       "crn" to application.crn,
       "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
+      "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", application.id.toString()),
       "applicationArea" to application.apArea?.name,
       "startDate" to placementRequest.expectedArrival.toString(),
       "endDate" to placementRequest.expectedDeparture().toString(),
     )
 
+    if (withdrawingUser != null) {
+      personalisation["withdrawnBy"] = withdrawingUser.name
+    }
+
     if (placementRequest.isForApplicationsArrivalDate()) {
+      val template = if (aps530WithdrawalEmailImprovements) {
+        notifyConfig.templates.placementRequestWithdrawnV2
+      } else {
+        notifyConfig.templates.placementRequestWithdrawn
+      }
+
       val applicant = application.createdByUser
       applicant.email?.let { applicantEmail ->
         emailNotifier.sendEmail(
@@ -38,7 +55,7 @@ class Cas1PlacementRequestEmailService(
            * For information on why we send a request for placement email
            * instead of match request, see [PlacementRequestEntity.isForApplicationsArrivalDate]
            **/
-          templateId = notifyConfig.templates.placementRequestWithdrawn,
+          templateId = template,
           personalisation = personalisation,
         )
       }

@@ -1313,11 +1313,11 @@ class PlacementApplicationsTest : IntegrationTestBase() {
             emailAsserter.assertEmailsRequestedCount(2)
             emailAsserter.assertEmailRequested(
               placementApplicationEntity.createdByUser.email!!,
-              notifyConfig.templates.placementRequestWithdrawn,
+              notifyConfig.templates.placementRequestWithdrawnV2,
             )
             emailAsserter.assertEmailRequested(
               placementApplicationEntity.allocatedToUser!!.email!!,
-              notifyConfig.templates.placementRequestWithdrawn,
+              notifyConfig.templates.placementRequestWithdrawnV2,
             )
           }
         }
@@ -1377,11 +1377,11 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               emailAsserter.assertEmailsRequestedCount(2)
               emailAsserter.assertEmailRequested(
                 placementApplicationEntity.createdByUser.email!!,
-                notifyConfig.templates.placementRequestWithdrawn,
+                notifyConfig.templates.placementRequestWithdrawnV2,
               )
               emailAsserter.assertEmailRequested(
                 placementApplicationEntity.allocatedToUser!!.email!!,
-                notifyConfig.templates.placementRequestWithdrawn,
+                notifyConfig.templates.placementRequestWithdrawnV2,
               )
             }
           }

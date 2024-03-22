@@ -46,6 +46,7 @@ class NotifyTemplates {
   val placementRequestSubmitted = "deb11bc6-d424-4370-bbe5-41f6a823d292"
   val placementRequestSubmittedV2 = "e7e5b481-aca8-4930-bf4e-b3098834e840"
   val placementRequestWithdrawn = "a5f44549-e849-4a26-abb1-802316081533"
+  val placementRequestWithdrawnV2 = "58bda3a6-c091-4d78-a533-de5991777300"
   val cas2ApplicationSubmitted = "a0823218-91dd-4cf0-9835-4b90024f62c8"
   val cas2NoteAddedForReferrer = "debe17a2-9f79-4d26-88a0-690dd73e2a5b"
   val cas2NoteAddedForAssessor = "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1"

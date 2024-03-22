@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.APPLICANT_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.AREA_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.CRU_EMAIL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.WITHDRAWING_USER_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockEmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.OffsetDateTime
@@ -28,16 +29,27 @@ class Cas1PlacementRequestEmailServiceTest {
     const val AREA_NAME = "theAreaName"
     const val CRN = "CRN123"
     const val CRU_EMAIL = "cruEmail@test.com"
+    const val WITHDRAWING_USER_NAME = "the withdrawing user"
   }
 
   private val notifyConfig = NotifyConfig()
   private val mockEmailNotificationService = MockEmailNotificationService()
 
-  val service = Cas1PlacementRequestEmailService(
+  private val service = buildService(aps530WithdrawalEmailImprovements = false)
+  private val serviceUsingAps530Improvements = buildService(aps530WithdrawalEmailImprovements = true)
+
+  private val withdrawingUser = UserEntityFactory()
+    .withDefaults()
+    .withName(WITHDRAWING_USER_NAME)
+    .produce()
+
+  fun buildService(aps530WithdrawalEmailImprovements: Boolean) = Cas1PlacementRequestEmailService(
     mockEmailNotificationService,
     notifyConfig = notifyConfig,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
+    applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
     sendNewWithdrawalNotifications = true,
+    aps530WithdrawalEmailImprovements = aps530WithdrawalEmailImprovements,
   )
 
   @Test
@@ -45,7 +57,7 @@ class Cas1PlacementRequestEmailServiceTest {
     val application = createApplication(apAreaEmail = null)
     val placementRequest = createPlacementRequest(application, booking = null)
 
-    service.placementRequestWithdrawn(placementRequest)
+    service.placementRequestWithdrawn(placementRequest, withdrawingUser)
 
     mockEmailNotificationService.assertNoEmailsRequested()
   }
@@ -59,17 +71,17 @@ class Cas1PlacementRequestEmailServiceTest {
       .produce()
     val placementRequest = createPlacementRequest(application, booking)
 
-    service.placementRequestWithdrawn(placementRequest)
+    service.placementRequestWithdrawn(placementRequest, withdrawingUser)
 
     mockEmailNotificationService.assertNoEmailsRequested()
   }
 
   @Test
-  fun `placementRequestWithdrawn sends email to CRU if email addresses defined and no booking`() {
+  fun `placementRequestWithdrawn sends match request withdrawn email to CRU if email addresses defined and no booking`() {
     val application = createApplication(apAreaEmail = CRU_EMAIL)
     val placementRequest = createPlacementRequest(application, booking = null)
 
-    service.placementRequestWithdrawn(placementRequest)
+    service.placementRequestWithdrawn(placementRequest, withdrawingUser)
 
     mockEmailNotificationService.assertEmailRequestCount(1)
 
@@ -102,7 +114,7 @@ class Cas1PlacementRequestEmailServiceTest {
       hasPlacementApplication = false,
     )
 
-    service.placementRequestWithdrawn(placementRequest)
+    service.placementRequestWithdrawn(placementRequest, withdrawingUser)
 
     mockEmailNotificationService.assertNoEmailsRequested()
   }
@@ -124,13 +136,13 @@ class Cas1PlacementRequestEmailServiceTest {
       hasPlacementApplication = true,
     )
 
-    service.placementRequestWithdrawn(placementRequest)
+    service.placementRequestWithdrawn(placementRequest, withdrawingUser)
 
     mockEmailNotificationService.assertNoEmailsRequested()
   }
 
   @Test
-  fun `placementRequestWithdrawn sends email to applicant if placement request not linked to placement application `() {
+  fun `placementRequestWithdrawn sends placement request withdrawn email to applicant if placement request not linked to placement application `() {
     val application = createApplication(
       applicantEmail = APPLICANT_EMAIL,
     )
@@ -145,7 +157,7 @@ class Cas1PlacementRequestEmailServiceTest {
       hasPlacementApplication = false,
     )
 
-    service.placementRequestWithdrawn(placementRequest)
+    service.placementRequestWithdrawn(placementRequest, withdrawingUser)
 
     mockEmailNotificationService.assertEmailRequestCount(1)
     mockEmailNotificationService.assertEmailRequested(
@@ -157,6 +169,40 @@ class Cas1PlacementRequestEmailServiceTest {
         "applicationArea" to AREA_NAME,
         "startDate" to placementRequest.expectedArrival.toString(),
         "endDate" to placementRequest.expectedDeparture().toString(),
+      ),
+    )
+  }
+
+  @Test
+  fun `placementRequestWithdrawn sends placement request withdrawn email V2 to applicant if placement request not linked to placement application `() {
+    val application = createApplication(
+      applicantEmail = APPLICANT_EMAIL,
+    )
+    val booking = BookingEntityFactory()
+      .withApplication(application)
+      .withDefaultPremises()
+      .produce()
+
+    val placementRequest = createPlacementRequest(
+      application,
+      booking,
+      hasPlacementApplication = false,
+    )
+
+    serviceUsingAps530Improvements.placementRequestWithdrawn(placementRequest, withdrawingUser)
+
+    mockEmailNotificationService.assertEmailRequestCount(1)
+    mockEmailNotificationService.assertEmailRequested(
+      APPLICANT_EMAIL,
+      notifyConfig.templates.placementRequestWithdrawnV2,
+      mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to placementRequest.expectedArrival.toString(),
+        "endDate" to placementRequest.expectedDeparture().toString(),
+        "withdrawnBy" to WITHDRAWING_USER_NAME,
       ),
     )
   }
