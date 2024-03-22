@@ -232,14 +232,20 @@ class ApplicationService(
     val schema = application.schemaVersion as? Cas2ApplicationJsonSchemaEntity
       ?: throw RuntimeException("Incorrect type of JSON schema referenced by CAS2 Application")
 
-    application.apply {
-      submittedAt = OffsetDateTime.now()
-      document = serializedTranslatedDocument
-      referringPrisonCode = retrievePrisonCode(application)
-      preferredAreas = submitApplication.preferredAreas
-      hdcEligibilityDate = submitApplication.hdcEligibilityDate
-      conditionalReleaseDate = submitApplication.conditionalReleaseDate
-      telephoneNumber = submitApplication.telephoneNumber
+    try {
+      application.apply {
+        submittedAt = OffsetDateTime.now()
+        document = serializedTranslatedDocument
+        referringPrisonCode = retrievePrisonCode(application)
+        preferredAreas = submitApplication.preferredAreas
+        hdcEligibilityDate = submitApplication.hdcEligibilityDate
+        conditionalReleaseDate = submitApplication.conditionalReleaseDate
+        telephoneNumber = submitApplication.telephoneNumber
+      }
+    } catch (error: UpstreamApiException) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError(error.message.toString()),
+      )
     }
 
     application = applicationRepository.save(application)
@@ -299,6 +305,7 @@ class ApplicationService(
     assessmentService.createCas2Assessment(application)
   }
 
+  @SuppressWarnings("ThrowsCount")
   private fun retrievePrisonCode(application: Cas2ApplicationEntity): String {
     val inmateDetailResult = offenderService.getInmateDetailByNomsNumber(
       crn = application.crn,
@@ -310,7 +317,7 @@ class ApplicationService(
       is AuthorisableActionResult.Success -> inmateDetailResult.entity
     }
 
-    return inmateDetail?.assignedLivingUnit?.agencyId ?: "no Agency ID found"
+    return inmateDetail?.assignedLivingUnit?.agencyId ?: throw UpstreamApiException("No prison code available")
   }
 
   private fun sendEmailApplicationSubmitted(user: NomisUserEntity, application: Cas2ApplicationEntity) {
