@@ -1101,7 +1101,7 @@ class WithdrawalTest : IntegrationTestBase() {
     private fun assertBookingWithdrawnEmail(emailAddress: String, booking: BookingEntity) =
       emailAsserter.assertEmailRequested(
         emailAddress,
-        notifyConfig.templates.bookingWithdrawn,
+        notifyConfig.templates.bookingWithdrawnV2,
         mapOf(
           "startDate" to booking.arrivalDate.toString(),
           "endDate" to booking.departureDate.toString(),

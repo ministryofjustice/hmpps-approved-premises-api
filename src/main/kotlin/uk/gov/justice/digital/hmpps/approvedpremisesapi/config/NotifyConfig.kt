@@ -36,6 +36,7 @@ class NotifyTemplates {
   val bookingMade = "1e3d2ee2-250e-4755-af38-80d24cdc3480"
   val bookingMadePremises = "337bb149-6f12-4be2-b5a3-a9a73d73c1e1"
   val bookingWithdrawn = "30cdc876-40a6-41b0-b642-a6b6115c835c"
+  val bookingWithdrawnV2 = "01324632-4450-4416-b48d-5b8fb8922d98"
   val matchRequestWithdrawn = "bb5c68d2-cea1-4924-ba3a-3a8e2beeb640"
   val matchRequestWithdrawnV2 = "d9830236-6546-4fb7-90b7-8c81ba278123"
   val placementRequestAllocated = "375d83be-c973-44ed-939f-48ffc00230f3"

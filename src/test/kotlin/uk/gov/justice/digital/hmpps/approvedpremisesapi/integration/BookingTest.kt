@@ -3182,9 +3182,9 @@ class BookingTest : IntegrationTestBase() {
             assertThat(updatedApplication.status).isEqualTo(ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT)
 
             emailAsserter.assertEmailsRequestedCount(3)
-            emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawn)
-            emailAsserter.assertEmailRequested(booking.premises.emailAddress!!, notifyConfig.templates.bookingWithdrawn)
-            emailAsserter.assertEmailRequested(apArea.emailAddress!!, notifyConfig.templates.bookingWithdrawn)
+            emailAsserter.assertEmailRequested(applicant.email!!, notifyConfig.templates.bookingWithdrawnV2)
+            emailAsserter.assertEmailRequested(booking.premises.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
+            emailAsserter.assertEmailRequested(apArea.emailAddress!!, notifyConfig.templates.bookingWithdrawnV2)
           }
         }
       }

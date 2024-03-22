@@ -2361,7 +2361,7 @@ class BookingServiceTest {
       every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
       every { mockApplicationService.updateApprovedPremisesApplicationStatus(any(), any()) } returns Unit
 
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, user) } returns Unit
 
       val cancelledAt = LocalDate.parse("2022-08-25")
       val notes = "notes"
@@ -2450,7 +2450,7 @@ class BookingServiceTest {
 
       every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
       every { mockApplicationService.updateApprovedPremisesApplicationStatus(any(), any()) } returns Unit
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, user) } returns Unit
 
       val cancelledAt = LocalDate.parse("2022-08-25")
       val notes = "notes"
@@ -2470,7 +2470,7 @@ class BookingServiceTest {
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
 
-      verify(exactly = 1) { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity) }
+      verify(exactly = 1) { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, user) }
     }
 
     @Test
@@ -2785,7 +2785,7 @@ class BookingServiceTest {
         )
       } returns Unit
 
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, user) } returns Unit
 
       val cancelledBooking1 = BookingEntityFactory()
         .withPremises(premises)
@@ -2880,7 +2880,7 @@ class BookingServiceTest {
         )
       } returns Unit
 
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, user) } returns Unit
 
       val cancelledBooking1 = BookingEntityFactory()
         .withPremises(premises)
@@ -2957,7 +2957,7 @@ class BookingServiceTest {
           ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
         )
       } returns Unit
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, user) } returns Unit
 
       every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
 
