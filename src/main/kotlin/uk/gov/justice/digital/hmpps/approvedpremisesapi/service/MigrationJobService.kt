@@ -21,9 +21,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApAreaMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApAreaMigrationJobApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.BookingStatusMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1BackfillUserApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1FixPlacementApplicationLinksJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1UserDetailsMigrationJob
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1ValidateApAreaUserMapping
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2AssessmentMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
@@ -108,10 +108,11 @@ class MigrationJobService(
           pageSize,
         )
 
-        MigrationJobType.cas1ValidateApAreaUserMapping -> Cas1ValidateApAreaUserMapping(
+        MigrationJobType.cas1BackfillUserApArea -> Cas1BackfillUserApArea(
           applicationContext.getBean(UserRepository::class.java),
           applicationContext.getBean(Cas1UserMappingService::class.java),
           applicationContext.getBean(CommunityApiClient::class.java),
+          transactionTemplate,
         )
       }
 
