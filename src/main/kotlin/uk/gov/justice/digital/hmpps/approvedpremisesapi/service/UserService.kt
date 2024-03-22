@@ -154,7 +154,7 @@ class UserService(
     userRepository.save(user)
   }
 
-  fun updateUser(
+  fun updateUserRolesAndQualifications(
     id: UUID,
     userRolesAndQualifications: UserRolesAndQualifications,
   ): AuthorisableActionResult<UserEntity> {

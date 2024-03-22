@@ -88,7 +88,7 @@ class UsersController(
       throw ForbiddenProblem()
     }
 
-    val userEntity = when (val result = userService.updateUser(id, userRolesAndQualifications)) {
+    val userEntity = when (val result = userService.updateUserRolesAndQualifications(id, userRolesAndQualifications)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, "User")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> result.entity

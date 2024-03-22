@@ -452,7 +452,7 @@ class UserServiceTest {
   }
 
   @Nested
-  inner class UpdateUserRolesAndQualificationsFromApiById {
+  inner class UpdateUserRolesAndQualifications {
 
     private val userService = mockk<UserService>()
 
