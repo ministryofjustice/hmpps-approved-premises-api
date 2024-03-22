@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.Submiss
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.net.URI
 import java.util.UUID
+import javax.transaction.Transactional
 
 @Service("Cas2SubmissionsController")
 class SubmissionsController(
@@ -88,6 +89,7 @@ class SubmissionsController(
     throw NotFoundProblem(applicationId, "Application")
   }
 
+  @Transactional
   override fun submissionsPost(
     submitApplication: SubmitCas2Application,
   ): ResponseEntity<Unit> {
