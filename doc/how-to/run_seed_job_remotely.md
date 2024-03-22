@@ -44,10 +44,11 @@ To process a seed CSV against a non-local environment:
   /app/run_seed_job approved_premises ap_seed_file
   ```
 
-- Check the logs using [Azure Application Insights](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4154196024/Viewing+and+Tailing+Kubernetes+logs) to see how processing is progressing. The following query will provide migration logs only:
+- Check the logs using [Azure Application Insights](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4154196024/Viewing+and+Tailing+Kubernetes+logs) to see how processing is progressing. The following query will provide seed traces and exceptions only:
   ```
-  traces
-   | where cloud_RoleName == 'approved-premises-api' and customDimensions contains "uk.gov.justice.digital.hmpps.approvedpremisesapi.seed"
+  union traces, exceptions
+  | where cloud_RoleName == 'approved-premises-api' and customDimensions contains ("uk.gov.justice.digital.hmpps.approvedpremisesapi.seed")
+  | project timestamp, message, outerMessage, severityLevel, customDimensions, problemId, operation_Name, operation_Id
    ```
   
 ## Run book

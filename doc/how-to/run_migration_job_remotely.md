@@ -31,9 +31,10 @@ To run a migration job against a non-local environment:
   /app/run_migration_job update_all_users_from_community_api
   ```
 
-- Check the logs using [Azure Application Insights](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4154196024/Viewing+and+Tailing+Kubernetes+logs) to see how processing is progressing. The following query will provide migration logs only:
+- Check the logs using [Azure Application Insights](https://dsdmoj.atlassian.net/wiki/spaces/AP/pages/4154196024/Viewing+and+Tailing+Kubernetes+logs) to see how processing is progressing. The following query will provide traces and exceptions for migration jobs:
   ```
-  traces
-   | where cloud_RoleName == 'approved-premises-api' and customDimensions contains "uk.gov.justice.digital.hmpps.approvedpremisesapi.migration"
+  union traces, exceptions
+  | where cloud_RoleName == 'approved-premises-api' and customDimensions contains ("uk.gov.justice.digital.hmpps.approvedpremisesapi.migration")
+  | project timestamp, message, outerMessage, severityLevel, customDimensions, problemId, operation_Name, operation_Id
    ```
 
