@@ -62,11 +62,17 @@ class Cas1PlacementRequestEmailService(
     }
 
     if (!placementRequest.hasActiveBooking()) {
+      val template = if (aps530WithdrawalEmailImprovements) {
+        notifyConfig.templates.matchRequestWithdrawnV2
+      } else {
+        notifyConfig.templates.matchRequestWithdrawn
+      }
+
       val area = application.apArea
       area?.emailAddress?.let { cruEmail ->
         emailNotifier.sendEmail(
           recipientEmailAddress = cruEmail,
-          templateId = notifyConfig.templates.matchRequestWithdrawn,
+          templateId = template,
           personalisation = personalisation,
         )
       }

@@ -99,6 +99,30 @@ class Cas1PlacementRequestEmailServiceTest {
   }
 
   @Test
+  fun `placementRequestWithdrawn sends match request withdrawn email V2 to CRU if email addresses defined and no booking`() {
+    val application = createApplication(apAreaEmail = CRU_EMAIL)
+    val placementRequest = createPlacementRequest(application, booking = null)
+
+    serviceUsingAps530Improvements.placementRequestWithdrawn(placementRequest, withdrawingUser)
+
+    mockEmailNotificationService.assertEmailRequestCount(1)
+
+    mockEmailNotificationService.assertEmailRequested(
+      CRU_EMAIL,
+      notifyConfig.templates.matchRequestWithdrawnV2,
+      mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to placementRequest.expectedArrival.toString(),
+        "endDate" to placementRequest.expectedDeparture().toString(),
+        "withdrawnBy" to WITHDRAWING_USER_NAME,
+      ),
+    )
+  }
+
+  @Test
   fun `placementRequestWithdrawn does not send email to applicant if placement request not linked to placement application but no email addresses defined`() {
     val application = createApplication(
       applicantEmail = null,

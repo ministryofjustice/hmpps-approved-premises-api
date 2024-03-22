@@ -1125,7 +1125,7 @@ class WithdrawalTest : IntegrationTestBase() {
     private fun assertMatchRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) =
       emailAsserter.assertEmailRequested(
         emailAddress,
-        notifyConfig.templates.matchRequestWithdrawn,
+        notifyConfig.templates.matchRequestWithdrawnV2,
         mapOf("startDate" to placementRequest.expectedArrival.toString()),
       )
   }
