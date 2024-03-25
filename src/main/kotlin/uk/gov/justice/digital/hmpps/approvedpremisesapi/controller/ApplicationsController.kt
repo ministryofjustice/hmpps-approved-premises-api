@@ -259,6 +259,7 @@ class ApplicationsController(
           isPipeApplication = body.isPipeApplication,
           isEmergencyApplication = body.isEmergencyApplication,
           isEsapApplication = body.isEsapApplication,
+          apType = body.apType,
           releaseType = body.releaseType?.name,
           arrivalDate = body.arrivalDate,
           isInapplicable = body.isInapplicable,

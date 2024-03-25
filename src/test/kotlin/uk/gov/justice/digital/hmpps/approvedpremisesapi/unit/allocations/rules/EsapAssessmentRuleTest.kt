@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import java.time.OffsetDateTime
 
 class EsapAssessmentRuleTest {
@@ -38,7 +39,7 @@ class EsapAssessmentRuleTest {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(OffsetDateTime.now())
-        .withIsEsapApplication(true)
+        .withApType(ApprovedPremisesType.ESAP)
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -94,7 +95,7 @@ class EsapAssessmentRuleTest {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(null)
-        .withIsEsapApplication(true)
+        .withApType(ApprovedPremisesType.ESAP)
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()
@@ -122,7 +123,7 @@ class EsapAssessmentRuleTest {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(createdByUser)
         .withSubmittedAt(OffsetDateTime.now())
-        .withIsEsapApplication(false)
+        .withApType(ApprovedPremisesType.NORMAL)
         .produce()
 
       val assessment = ApprovedPremisesAssessmentEntityFactory()

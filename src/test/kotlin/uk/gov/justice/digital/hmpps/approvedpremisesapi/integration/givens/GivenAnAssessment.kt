@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import java.time.OffsetDateTime
@@ -52,10 +53,11 @@ fun IntegrationTestBase.`Given an Assessment for Approved Premises`(
     if (name !== null) {
       withName(name)
     }
-    if (requiredQualification !== null) {
-      withIsPipeApplication(requiredQualification == UserQualification.PIPE)
-      withIsEsapApplication(requiredQualification == UserQualification.ESAP)
-      withIsWomensApplication(requiredQualification == UserQualification.WOMENS)
+    when (requiredQualification) {
+      UserQualification.PIPE -> withApType(ApprovedPremisesType.PIPE)
+      UserQualification.ESAP -> withApType(ApprovedPremisesType.ESAP)
+      UserQualification.WOMENS -> withIsWomensApplication(true)
+      else -> { }
     }
     withNoticeType(noticeType)
   }

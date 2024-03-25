@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
@@ -39,11 +40,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
@@ -322,9 +325,8 @@ class ApplicationService(
       createdAt = OffsetDateTime.now(),
       submittedAt = null,
       isWomensApplication = null,
-      isPipeApplication = null,
       isEmergencyApplication = null,
-      isEsapApplication = null,
+      apType = ApprovedPremisesType.NORMAL,
       convictionId = convictionId!!,
       eventNumber = deliusEventNumber!!,
       offenceId = offenceId!!,
@@ -486,6 +488,7 @@ class ApplicationService(
     val isPipeApplication: Boolean?,
     val isEmergencyApplication: Boolean?,
     val isEsapApplication: Boolean?,
+    val apType: ApType?,
     val releaseType: String?,
     val arrivalDate: LocalDate?,
     val data: String,
@@ -504,6 +507,14 @@ class ApplicationService(
     if (application !is ApprovedPremisesApplicationEntity) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("onlyCas1Supported"),
+      )
+    }
+
+    if (updateFields.isUsingLegacyApTypeFields && updateFields.isUsingNewApTypeField) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError(
+          "`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`",
+        ),
       )
     }
 
@@ -528,9 +539,8 @@ class ApplicationService(
     application.apply {
       this.isInapplicable = updateFields.isInapplicable
       this.isWomensApplication = updateFields.isWomensApplication
-      this.isPipeApplication = updateFields.isPipeApplication
       this.isEmergencyApplication = updateFields.isEmergencyApplication
-      this.isEsapApplication = updateFields.isEsapApplication
+      this.apType = updateFields.deriveApType()
       this.releaseType = updateFields.releaseType
       this.arrivalDate = if (updateFields.arrivalDate !== null) {
         OffsetDateTime.of(updateFields.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
@@ -735,6 +745,24 @@ class ApplicationService(
       )
     }
 
+    if (submitApplication.isUsingLegacyApTypeFields && submitApplication.isUsingNewApTypeField) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError(
+          "`isPipeApplication`/`isEsapApplication` should not be used in conjunction with `apType`",
+        ),
+      )
+    }
+
+    val apType = when {
+      submitApplication.isUsingLegacyApTypeFields -> when {
+        submitApplication.isPipeApplication == true -> ApprovedPremisesType.PIPE
+        submitApplication.isEsapApplication == true -> ApprovedPremisesType.ESAP
+        else -> ApprovedPremisesType.NORMAL
+      }
+      submitApplication.isUsingNewApTypeField -> submitApplication.apType!!.asApprovedPremisesType()
+      else -> ApprovedPremisesType.NORMAL
+    }
+
     if (application.submittedAt != null) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("This application has already been submitted"),
@@ -777,9 +805,8 @@ class ApplicationService(
 
     application.apply {
       isWomensApplication = submitApplication.isWomensApplication
-      isPipeApplication = submitApplication.isPipeApplication
       this.isEmergencyApplication = isEmergencyApplication
-      this.isEsapApplication = isEsapApplication
+      this.apType = apType
       submittedAt = OffsetDateTime.now()
       document = serializedTranslatedDocument
       releaseType = submitApplication.releaseType.toString()
@@ -981,4 +1008,26 @@ class ApplicationService(
     }
     return prisonName
   }
+
+  private val Cas1ApplicationUpdateFields.isUsingLegacyApTypeFields: Boolean
+    get() = isPipeApplication != null || isEsapApplication != null
+
+  private val Cas1ApplicationUpdateFields.isUsingNewApTypeField: Boolean
+    get() = apType != null
+
+  private fun Cas1ApplicationUpdateFields.deriveApType() = when {
+    this.isUsingLegacyApTypeFields -> when {
+      this.isPipeApplication == true -> ApprovedPremisesType.PIPE
+      this.isEsapApplication == true -> ApprovedPremisesType.ESAP
+      else -> ApprovedPremisesType.NORMAL
+    }
+    this.isUsingNewApTypeField -> this.apType!!.asApprovedPremisesType()
+    else -> ApprovedPremisesType.NORMAL
+  }
+
+  private val SubmitApprovedPremisesApplication.isUsingLegacyApTypeFields: Boolean
+    get() = isPipeApplication != null || isEsapApplication != null
+
+  private val SubmitApprovedPremisesApplication.isUsingNewApTypeField: Boolean
+    get() = apType != null
 }

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens
 
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
@@ -85,11 +87,7 @@ fun IntegrationTestBase.`Given a Placement Request`(
       risksFactory.produce(),
     )
     withApArea(apArea)
-    if (requiredQualification !== null) {
-      withIsPipeApplication(requiredQualification == UserQualification.PIPE)
-      withIsEsapApplication(requiredQualification == UserQualification.ESAP)
-      withIsWomensApplication(requiredQualification == UserQualification.WOMENS)
-    }
+    applyQualification(requiredQualification)
     withNoticeType(noticeType)
   }
 
@@ -148,6 +146,15 @@ fun IntegrationTestBase.`Given a Placement Request`(
   }
 
   return Pair(placementRequest, application)
+}
+
+private fun ApprovedPremisesApplicationEntityFactory.applyQualification(requiredQualification: UserQualification?) {
+  when (requiredQualification) {
+    UserQualification.PIPE -> withApType(ApprovedPremisesType.PIPE)
+    UserQualification.ESAP -> withApType(ApprovedPremisesType.ESAP)
+    UserQualification.WOMENS -> withIsWomensApplication(true)
+    else -> { }
+  }
 }
 
 @Suppress(

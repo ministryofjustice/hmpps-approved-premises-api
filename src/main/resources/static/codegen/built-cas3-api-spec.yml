@@ -1656,6 +1656,8 @@ components:
               type: boolean
             isEsapApplication:
               type: boolean
+            apType:
+              $ref: '#/components/schemas/ApType'
             arrivalDate:
               type: string
               format: date-time
@@ -2191,6 +2193,8 @@ components:
               type: boolean
             isEsapApplication:
               type: boolean
+            apType:
+              $ref: '#/components/schemas/ApType'
             targetLocation:
               type: string
             releaseType:
@@ -2232,6 +2236,8 @@ components:
               type: boolean
             isEsapApplication:
               type: boolean
+            apType:
+              $ref: '#/components/schemas/ApType'
             targetLocation:
               type: string
             releaseType:
@@ -2255,10 +2261,6 @@ components:
             noticeType:
               $ref: '#/components/schemas/Cas1ApplicationTimelinessCategory'
           required:
-            - isPipeApplication
-            - isWomensApplication
-            - isEmergencyApplication
-            - isEsapApplication
             - targetLocation
             - releaseType
             - sentenceType
@@ -3820,6 +3822,8 @@ components:
       enum:
         - isPIPE
         - isESAP
+        - isMHAPStJosephs
+        - isMHAPElliottHouse
         - isSemiSpecialistMentalHealth
         - isRecoveryFocussed
         - hasBrailleSignage
@@ -3851,6 +3855,8 @@ components:
         - pipe
         - esap
         - rfap
+        - mhapStJosephs
+        - mhapElliottHouse
     BedSearchParameters:
       type: object
       properties:

@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.JsonSchemaEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
@@ -32,9 +33,8 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var isWomensApplication: Yielded<Boolean?> = { null }
-  private var isPipeApplication: Yielded<Boolean?> = { null }
   private var isEmergencyApplication: Yielded<Boolean?> = { null }
-  private var isEsapApplication: Yielded<Boolean?> = { null }
+  private var apType: Yielded<ApprovedPremisesType> = { ApprovedPremisesType.NORMAL }
   private var convictionId: Yielded<Long> = { randomInt(0, 1000).toLong() }
   private var eventNumber: Yielded<String> = { randomInt(1, 9).toString() }
   private var offenceId: Yielded<String> = { randomStringMultiCaseWithNumbers(5) }
@@ -104,10 +104,6 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.isWomensApplication = { isWomensApplication }
   }
 
-  fun withIsPipeApplication(isPipeApplication: Boolean) = apply {
-    this.isPipeApplication = { isPipeApplication }
-  }
-
   fun withConvictionId(convictionId: Long) = apply {
     this.convictionId = { convictionId }
   }
@@ -172,8 +168,8 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.isEmergencyApplication = { isEmergencyApplication }
   }
 
-  fun withIsEsapApplication(isEsapApplication: Boolean?) = apply {
-    this.isEsapApplication = { isEsapApplication }
+  fun withApType(apType: ApprovedPremisesType) = apply {
+    this.apType = { apType }
   }
 
   fun withName(name: String) = apply {
@@ -222,9 +218,8 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     createdAt = this.createdAt(),
     submittedAt = this.submittedAt(),
     isWomensApplication = this.isWomensApplication(),
-    isPipeApplication = this.isPipeApplication(),
     isEmergencyApplication = this.isEmergencyApplication(),
-    isEsapApplication = this.isEsapApplication(),
+    apType = this.apType(),
     convictionId = this.convictionId(),
     eventNumber = this.eventNumber(),
     offenceId = this.offenceId(),
