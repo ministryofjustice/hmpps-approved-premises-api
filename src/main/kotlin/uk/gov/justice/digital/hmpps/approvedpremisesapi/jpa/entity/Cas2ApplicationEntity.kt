@@ -39,8 +39,8 @@ ORDER BY createdAt DESC
 """,
     nativeQuery = true,
   )
-  fun findAllCas2ApplicationSummariesCreatedByUser(userId: UUID):
-    List<Cas2ApplicationSummary>
+  fun findAllCas2ApplicationSummariesCreatedByUser(userId: UUID, pageable: Pageable?):
+    Page<Cas2ApplicationSummary>
 
   @Query(
     """
@@ -57,8 +57,8 @@ ORDER BY createdAt DESC
 """,
     nativeQuery = true,
   )
-  fun findSubmittedCas2ApplicationSummariesCreatedByUser(userId: UUID):
-    List<Cas2ApplicationSummary>
+  fun findSubmittedCas2ApplicationSummariesCreatedByUser(userId: UUID, pageable: Pageable?):
+    Page<Cas2ApplicationSummary>
 
   @Query(
     """
@@ -75,8 +75,8 @@ ORDER BY createdAt DESC
 """,
     nativeQuery = true,
   )
-  fun findUnsubmittedCas2ApplicationSummariesCreatedByUser(userId: UUID):
-    List<Cas2ApplicationSummary>
+  fun findUnsubmittedCas2ApplicationSummariesCreatedByUser(userId: UUID, pageable: Pageable?):
+    Page<Cas2ApplicationSummary>
 
   @Query(
     """
