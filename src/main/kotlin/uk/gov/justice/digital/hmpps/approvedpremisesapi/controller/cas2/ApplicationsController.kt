@@ -7,9 +7,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.ApplicationsCas
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.ApplicationsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
@@ -39,16 +40,20 @@ class ApplicationsController(
   private val userService: NomisUserService,
 ) : ApplicationsCas2Delegate {
 
-  override fun applicationsGet(isSubmitted: Boolean?): ResponseEntity<List<ApplicationSummary>> {
+  override fun applicationsGet(isSubmitted: Boolean?, page: Int?): ResponseEntity<List<ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
-    val applications = when (isSubmitted) {
-      true -> applicationService.getSubmittedApplicationsForUser(user)
-      false -> applicationService.getUnsubmittedApplicationsForUser(user)
-      null -> applicationService.getAllApplicationsForUser(user)
+    val pageCriteria = PageCriteria("created_at", SortDirection.desc, page)
+
+    val (applications, metadata) = when (isSubmitted) {
+      true -> applicationService.getSubmittedApplicationsForUser(user, pageCriteria)
+      false -> applicationService.getUnsubmittedApplicationsForUser(user, pageCriteria)
+      null -> applicationService.getAllApplicationsForUser(user, pageCriteria)
     }
 
-    return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it, user) })
+    return ResponseEntity.ok().headers(
+      metadata?.toHeaders(),
+    ).body(applications.map { getPersonDetailAndTransformToSummary(it, user) })
   }
 
   override fun applicationsApplicationIdGet(applicationId: UUID):
