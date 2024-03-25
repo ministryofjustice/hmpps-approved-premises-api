@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEnti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
 import java.util.UUID
+import kotlin.math.sign
 
 class Cas2ApplicationTest : IntegrationTestBase() {
   @SpykBean
@@ -240,6 +241,74 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Get all applications with pagination returns 200 with correct body and header`() {
+      `Given a CAS2 User` { userEntity, jwt ->
+        `Given a CAS2 User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            cas2ApplicationJsonSchemaRepository.deleteAll()
+
+            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+            }
+
+            repeat(12) {
+              cas2ApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(applicationSchema)
+                withCreatedByUser(userEntity)
+                withCrn(offenderDetails.otherIds.crn)
+                withData("{}")
+                withCreatedAt(OffsetDateTime.now().randomDateTimeBefore())
+              }
+            }
+
+            val rawResponseBodyPage1 = webTestClient.get()
+              .uri("/cas2/applications?page=1")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.cas2.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBodyPage1 =
+              objectMapper.readValue(rawResponseBodyPage1, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+            Assertions.assertThat(responseBodyPage1).size().isEqualTo(10)
+
+            Assertions.assertThat(isOrderedByCreatedAtDescending(responseBodyPage1)).isTrue()
+
+            val rawResponseBodyPage2 = webTestClient.get()
+              .uri("/cas2/applications?page=2")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.cas2.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .expectHeader().valueEquals("X-Pagination-CurrentPage", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalPages", 2)
+              .expectHeader().valueEquals("X-Pagination-TotalResults", 12)
+              .expectHeader().valueEquals("X-Pagination-PageSize", 10)
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBodyPage2 =
+              objectMapper.readValue(rawResponseBodyPage2, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+            Assertions.assertThat(responseBodyPage2).size().isEqualTo(2)
+          }
+        }
+      }
+    }
+
+    @Test
     fun `Get list of applications returns 500 when a person cannot be found`() {
       `Given a CAS2 User`() { userEntity, jwt ->
         val crn = "X1234"
@@ -303,6 +372,30 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           }
         }
       }
+    }
+
+    /**
+     * Returns true if the list of application summaries is sorted by descending created_at
+     * or false if not.
+     *
+     * Works by calculating the difference in seconds between two dates and using the sign
+     * of this difference.  If two dates are descending then the difference will be positive.
+     * If two dates are ascending the difference will be negative (which is set to 0).
+     *
+     * For a list of dates, the cumulative multiple of these signs will be 1 if all
+     * dates in the range are descending (= 1 x 1 x 1 etc.).
+     *
+     * If any dates are ascending the multiple will be 0 ( = 1 x 1 x 0 etc.).
+     *
+     * If all dates are ascending the multiple will also be 0 ( = 1 x 0 x 0 etc.).
+     */
+    private fun isOrderedByCreatedAtDescending(responseBody: List<Cas2ApplicationSummary>): Boolean {
+      var allDescending = 1
+      for (i in 1..(responseBody.size - 1)) {
+        val isDescending = (responseBody[i - 1].createdAt.epochSecond - responseBody[i].createdAt.epochSecond).sign
+        allDescending *= if (isDescending > 0) 1 else 0
+      }
+      return allDescending == 1
     }
   }
 
