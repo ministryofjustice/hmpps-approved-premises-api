@@ -47,6 +47,42 @@ ORDER BY createdAt DESC
 SELECT
     CAST(a.id AS TEXT) as id,
     a.crn,
+    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
+    a.created_at as createdAt,
+    a.submitted_at as submittedAt
+FROM cas_2_applications a
+WHERE a.created_by_user_id = :userId
+AND a.submitted_at IS NOT NULL
+ORDER BY createdAt DESC
+""",
+    nativeQuery = true,
+  )
+  fun findSubmittedCas2ApplicationSummariesCreatedByUser(userId: UUID):
+    List<Cas2ApplicationSummary>
+
+  @Query(
+    """
+SELECT
+    CAST(a.id AS TEXT) as id,
+    a.crn,
+    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
+    a.created_at as createdAt,
+    a.submitted_at as submittedAt
+FROM cas_2_applications a
+WHERE a.created_by_user_id = :userId
+AND a.submitted_at IS NULL
+ORDER BY createdAt DESC
+""",
+    nativeQuery = true,
+  )
+  fun findUnsubmittedCas2ApplicationSummariesCreatedByUser(userId: UUID):
+    List<Cas2ApplicationSummary>
+
+  @Query(
+    """
+SELECT
+    CAST(a.id AS TEXT) as id,
+    a.crn,
     a.noms_number as nomsNumber,
     CAST(a.created_by_user_id AS TEXT) as createdByUserId,
     a.created_at as createdAt,

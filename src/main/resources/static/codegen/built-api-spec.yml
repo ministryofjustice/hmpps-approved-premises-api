@@ -8014,7 +8014,7 @@ components:
         - update_cas1_user_details
         - update_cas1_fix_placement_app_links
         - update_cas1_notice_types
-        - update_cas1_validate_ap_area_user_mapping
+        - update_cas1_backfill_user_ap_area
     PlacementDates:
       type: object
       properties:
@@ -8953,3 +8953,9 @@ components:
           type: string
       required:
         - name
+    Cas2ReportName:
+      type: string
+      enum:
+        - submitted-applications
+        - application-status-updates
+        - unsubmitted-applications

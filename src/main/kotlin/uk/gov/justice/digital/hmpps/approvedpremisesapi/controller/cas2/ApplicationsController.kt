@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSum
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -38,10 +39,14 @@ class ApplicationsController(
   private val userService: NomisUserService,
 ) : ApplicationsCas2Delegate {
 
-  override fun applicationsGet(): ResponseEntity<List<ApplicationSummary>> {
+  override fun applicationsGet(isSubmitted: Boolean?): ResponseEntity<List<ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
-    val applications = applicationService.getAllApplicationsForUser(user)
+    val applications = when (isSubmitted) {
+      true -> applicationService.getSubmittedApplicationsForUser(user)
+      false -> applicationService.getUnsubmittedApplicationsForUser(user)
+      null -> applicationService.getAllApplicationsForUser(user)
+    }
 
     return ResponseEntity.ok(applications.map { getPersonDetailAndTransformToSummary(it, user) })
   }

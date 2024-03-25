@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -230,6 +231,10 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
     nativeQuery = true,
   )
   fun findWorkloadForUserIds(userIds: List<UUID>): List<UserWorkload>
+
+  @Modifying
+  @Query("UPDATE UserEntity u set u.apArea = :apArea where u.id = :userId")
+  fun updateApArea(userId: UUID, apArea: ApAreaEntity)
 }
 
 @Entity

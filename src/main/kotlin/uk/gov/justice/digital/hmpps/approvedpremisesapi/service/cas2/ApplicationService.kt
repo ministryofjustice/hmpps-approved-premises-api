@@ -56,6 +56,14 @@ class ApplicationService(
     return applicationRepository.findAllCas2ApplicationSummariesCreatedByUser(user.id)
   }
 
+  fun getSubmittedApplicationsForUser(user: NomisUserEntity): List<Cas2ApplicationSummary> {
+    return applicationRepository.findSubmittedCas2ApplicationSummariesCreatedByUser(user.id)
+  }
+
+  fun getUnsubmittedApplicationsForUser(user: NomisUserEntity): List<Cas2ApplicationSummary> {
+    return applicationRepository.findUnsubmittedCas2ApplicationSummariesCreatedByUser(user.id)
+  }
+
   fun getAllSubmittedApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummary>, PaginationMetadata?> {
     val pageable = getPageable(pageCriteria)
 

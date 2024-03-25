@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationStatusUpdatesReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2SubmittedApplicationReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2UnsubmittedApplicationsReportRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Cas2ExampleMetricsRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.ApplicationStatusUpdatesReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.SubmittedApplicationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.cas2.UnsubmittedApplicationsReportRow
@@ -19,15 +18,6 @@ class ReportsService(
   private val applicationStatusUpdatesReportRepository: Cas2ApplicationStatusUpdatesReportRepository,
   private val unsubmittedApplicationsReportRepository: Cas2UnsubmittedApplicationsReportRepository,
 ) {
-  fun createCas2ExampleReport(outputStream: OutputStream) {
-    // TODO replace this with a real report
-    val exampleData = listOf(Cas2ExampleMetricsRow(id = "123", data = "example"))
-
-    exampleData.toDataFrame()
-      .writeExcel(outputStream) {
-        WorkbookFactory.create(true)
-      }
-  }
 
   fun createSubmittedApplicationsReport(outputStream: OutputStream) {
     val reportData = submittedApplicationReportRepository.generateSubmittedApplicationReportRows().map { row ->

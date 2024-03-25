@@ -75,6 +75,7 @@ class UserEntityFactory : Factory<UserEntity> {
     this.probationRegion = probationRegion
   }
 
+  fun withDefaults() = withDefaultProbationRegion()
   fun withDefaultProbationRegion() =
     withYieldedProbationRegion {
       ProbationRegionEntityFactory()

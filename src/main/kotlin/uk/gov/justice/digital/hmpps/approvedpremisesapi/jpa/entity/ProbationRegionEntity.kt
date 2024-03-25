@@ -27,4 +27,6 @@ data class ProbationRegionEntity(
   @OneToMany(mappedBy = "probationRegion")
   val premises: MutableList<PremisesEntity>,
   val deliusCode: String,
-)
+) {
+  override fun toString() = "ProbationRegionEntity:$id"
+}
