@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSumm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.FullPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationAssessmentSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 
 fun List<AssessmentSummary>.sort(sortDirection: SortDirection, sortField: AssessmentSortField): List<AssessmentSummary> {
   val comparator = Comparator<AssessmentSummary> { a, b ->
@@ -17,6 +18,7 @@ fun List<AssessmentSummary>.sort(sortDirection: SortDirection, sortField: Assess
         else -> throw RuntimeException("Cannot compare values of types ${a::class.qualifiedName} and ${b::class.qualifiedName} due to incomparable status types.")
       }
       AssessmentSortField.assessmentCreatedAt -> compareValues(a.createdAt, b.createdAt)
+      AssessmentSortField.assessmentDueAt -> throw BadRequestProblem(errorDetail = "Sorting by due date is not supported for CAS3")
     }
 
     when (sortDirection) {

@@ -77,6 +77,7 @@ class AssessmentController(
           PageCriteria(resolvedSortBy, resolvedSortDirection, page, perPage),
         )
         val transformSummaries = when (sortBy) {
+          AssessmentSortField.assessmentDueAt -> throw BadRequestProblem(errorDetail = "Sorting by due date is not supported for CAS3")
           AssessmentSortField.personName -> transformDomainToApi(user, summaries, user.hasQualification(UserQualification.LAO)).sort(resolvedSortDirection, sortBy)
           else -> transformDomainToApi(user, summaries)
         }

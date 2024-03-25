@@ -13,6 +13,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
@@ -33,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReferralHis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequirements
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Problem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistorySystemNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReferralHistoryUserNote
@@ -80,6 +82,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toTimestampOrNull
 import java.sql.Timestamp
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 
 class AssessmentTest : IntegrationTestBase() {
@@ -153,11 +156,13 @@ class AssessmentTest : IntegrationTestBase() {
             else -> IN_PROGRESS
           }
 
-          assertUrlReturnsAssessments(
+          assertResponseForUrl(
             jwt,
             ServiceName.approvedPremises,
             "/assessments",
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment, status = responseStatus),
+            ExpectedResponse.OK(
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment, status = responseStatus),
+            ),
           )
         }
       }
@@ -204,11 +209,11 @@ class AssessmentTest : IntegrationTestBase() {
             val expectedAssessments =
               assessmentSummaryMapper(offenderDetails, inmateDetails = null).toSummaries(assessment, status = IN_PROGRESS)
 
-            assertUrlReturnsAssessments(
+            assertResponseForUrl(
               jwt,
               serviceName,
               url,
-              expectedAssessments,
+              ExpectedResponse.OK(expectedAssessments),
             )
           }
         }
@@ -470,13 +475,15 @@ class AssessmentTest : IntegrationTestBase() {
 
           val mapper = assessmentSummaryMapper(offenderDetails, inmateDetails)
 
-          val page1Response = assertUrlReturnsAssessments(
+          val page1Response = assertResponseForUrl(
             jwt,
             ServiceName.approvedPremises,
             "/assessments?page=1&sortBy=${AssessmentSortField.assessmentArrivalDate.value}&perPage=2&sortDirection=desc",
-            listOf(
-              mapper.toSummary(veryNew, status = IN_PROGRESS),
-              mapper.toSummary(new, status = AWAITING_RESPONSE),
+            ExpectedResponse.OK(
+              listOf(
+                mapper.toSummary(veryNew, status = IN_PROGRESS),
+                mapper.toSummary(new, status = AWAITING_RESPONSE),
+              ),
             ),
           )
 
@@ -485,13 +492,15 @@ class AssessmentTest : IntegrationTestBase() {
             .expectHeader().valueEquals("X-Pagination-TotalResults", 5)
             .expectHeader().valueEquals("X-Pagination-PageSize", 2)
 
-          val page2Response = assertUrlReturnsAssessments(
+          val page2Response = assertResponseForUrl(
             jwt,
             ServiceName.approvedPremises,
             "/assessments?page=2&sortBy=${AssessmentSortField.assessmentArrivalDate.value}&perPage=2&sortDirection=desc",
-            listOf(
-              mapper.toSummary(old, status = IN_PROGRESS),
-              mapper.toSummary(veryOld, status = IN_PROGRESS),
+            ExpectedResponse.OK(
+              listOf(
+                mapper.toSummary(old, status = IN_PROGRESS),
+                mapper.toSummary(veryOld, status = IN_PROGRESS),
+              ),
             ),
           )
 
@@ -500,12 +509,14 @@ class AssessmentTest : IntegrationTestBase() {
             .expectHeader().valueEquals("X-Pagination-TotalResults", 5)
             .expectHeader().valueEquals("X-Pagination-PageSize", 2)
 
-          val page3Response = assertUrlReturnsAssessments(
+          val page3Response = assertResponseForUrl(
             jwt,
             ServiceName.approvedPremises,
             "/assessments?page=3&sortBy=${AssessmentSortField.assessmentArrivalDate.value}&perPage=2&sortDirection=desc",
-            listOf(
-              mapper.toSummary(ancient, status = IN_PROGRESS),
+            ExpectedResponse.OK(
+              listOf(
+                mapper.toSummary(ancient, status = IN_PROGRESS),
+              ),
             ),
           )
 
@@ -518,7 +529,7 @@ class AssessmentTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all assessments for Approved Premises sorts correctly when sortDirection is createdAt`() {
+    fun `Get all assessments for Approved Premises sorts correctly when sortBy is createdAt`() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
 
@@ -568,7 +579,7 @@ class AssessmentTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all assessments for Approved Premises sorts correctly when sortDirection is status`() {
+    fun `Get all assessments for Approved Premises sorts correctly when sortBy is status`() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
 
@@ -594,7 +605,7 @@ class AssessmentTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all assessments for Approved Premises sorts correctly when sortDirection is personName`() {
+    fun `Get all assessments for Approved Premises sorts correctly when sortBy is personName`() {
       `Given a User` { user, jwt ->
         val (offender1, inmate1) = `Given an Offender`({ withFirstName("Zendaya"); withLastName("") })
         val assessZendaya = createApprovedPremisesAssessmentForStatus(user, offender1, cas1InProgress)
@@ -624,7 +635,7 @@ class AssessmentTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all assessments for Approved Premises sorts correctly when sortDirection is personCrn`() {
+    fun `Get all assessments for Approved Premises sorts correctly when sortBy is personCrn`() {
       `Given a User` { user, jwt ->
         val (offender1, inmate1) = `Given an Offender`({ withCrn("CRN1") })
         val assessCrn1 = createApprovedPremisesAssessmentForStatus(user, offender1, cas1InProgress)
@@ -654,7 +665,7 @@ class AssessmentTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get all assessments for Approved Premises sorts correctly when sortDirection is arrivalDate`() {
+    fun `Get all assessments for Approved Premises sorts correctly when sortBy is arrivalDate`() {
       `Given a User` { user, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
 
@@ -696,6 +707,55 @@ class AssessmentTest : IntegrationTestBase() {
               assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(veryNew, status = IN_PROGRESS),
             ),
             sortBy = AssessmentSortField.assessmentArrivalDate,
+            status = emptyList(),
+          )
+        }
+      }
+    }
+
+    @Test
+    fun `Get all assessments for Approved Premises sorts correctly when sortBy is dueAt`() {
+      `Given a User` { user, jwt ->
+        `Given an Offender` { offenderDetails, inmateDetails ->
+
+          val dueMuchLater = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            assessmentMutator = { withDueAt(OffsetDateTime.now().plusDays(10).truncatedTo(ChronoUnit.DAYS)) },
+          )
+
+          val dueVerySoon = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            assessmentMutator = { withDueAt(OffsetDateTime.now().plusDays(2).truncatedTo(ChronoUnit.DAYS)) },
+          )
+
+          val dueLater = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            assessmentMutator = { withDueAt(OffsetDateTime.now().plusDays(5).truncatedTo(ChronoUnit.DAYS)) },
+          )
+
+          val dueSoon = createApprovedPremisesAssessmentForStatus(
+            user,
+            offenderDetails,
+            cas1InProgress,
+            assessmentMutator = { withDueAt(OffsetDateTime.now().plusDays(3).truncatedTo(ChronoUnit.DAYS)) },
+          )
+
+          assertAssessmentsReturnedGivenStatus(
+            jwt,
+            ServiceName.approvedPremises,
+            listOf(
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(dueVerySoon, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(dueSoon, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(dueLater, status = IN_PROGRESS),
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(dueMuchLater, status = IN_PROGRESS),
+            ),
+            sortBy = AssessmentSortField.assessmentDueAt,
             status = emptyList(),
           )
         }
@@ -871,18 +931,22 @@ class AssessmentTest : IntegrationTestBase() {
 
           val statusParams = listOf(AssessmentStatus.cas3Closed, cas3Rejected).map { "statuses=${it.value}" }.joinToString("&")
 
-          val page1Response = assertUrlReturnsAssessments(
+          val page1Response = assertResponseForUrl(
             jwt,
             ServiceName.temporaryAccommodation,
             "/assessments?page=1&perPage=3&sortBy=${AssessmentSortField.assessmentCreatedAt.value}&$statusParams",
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(closed1, rejected1, closed2),
+            ExpectedResponse.OK(
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(closed1, rejected1, closed2),
+            ),
           )
 
-          val page2Response = assertUrlReturnsAssessments(
+          val page2Response = assertResponseForUrl(
             jwt,
             ServiceName.temporaryAccommodation,
             "/assessments?page=2&perPage=3&sortBy=${AssessmentSortField.assessmentCreatedAt.value}&$statusParams",
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(rejected2),
+            ExpectedResponse.OK(
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(rejected2),
+            ),
           )
 
           page1Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
@@ -966,11 +1030,11 @@ class AssessmentTest : IntegrationTestBase() {
       val sortParam = sortBy.value
       val statusParams = status.map { "statuses=${it.value}" }.joinToString("&")
 
-      assertUrlReturnsAssessments(
+      assertResponseForUrl(
         jwt,
         serviceName,
         "/assessments?sortBy=$sortParam&$statusParams",
-        expectedAssessments,
+        ExpectedResponse.OK(expectedAssessments),
       )
     }
 
@@ -1152,27 +1216,62 @@ class AssessmentTest : IntegrationTestBase() {
             AssessmentParams(assessment, offenderDetails, inmateDetails)
           }
 
-          val expectedAssessments = when (sortBy) {
-            AssessmentSortField.personName -> assessments.sortedByDescending { "${it.offenderDetails.firstName} ${it.offenderDetails.surname}" }
-            AssessmentSortField.personCrn -> assessments.sortedByDescending { it.assessment.application.crn }
-            AssessmentSortField.assessmentArrivalDate -> assessments.sortedByDescending { (it.assessment.application as TemporaryAccommodationApplicationEntity).arrivalDate }
+          val toSummary = { assessmentParams: AssessmentParams ->
+            assessmentSummaryMapper(assessmentParams.offenderDetails, assessmentParams.inmateDetails)
+              .toSummary(assessmentParams.assessment)
+          }
+
+          val expectedResponse = when (sortBy) {
+            AssessmentSortField.personName -> {
+              ExpectedResponse.OK(
+                assessments
+                  .sortedByDescending { "${it.offenderDetails.firstName} ${it.offenderDetails.surname}" }
+                  .map(toSummary),
+              )
+            }
+
+            AssessmentSortField.personCrn -> {
+              ExpectedResponse.OK(
+                assessments
+                  .sortedByDescending { it.assessment.application.crn }
+                  .map(toSummary),
+              )
+            }
+
+            AssessmentSortField.assessmentArrivalDate -> {
+              ExpectedResponse.OK(
+                assessments
+                  .sortedByDescending { (it.assessment.application as TemporaryAccommodationApplicationEntity).arrivalDate }
+                  .map(toSummary),
+              )
+            }
+
             AssessmentSortField.assessmentStatus -> {
               // Skip test for sorting by assessment status, as it would involve replicating the logic used to determine
               // that status.
               Assumptions.assumeThat(true).isFalse
-              assessments
+              // Allow the compiler to ignore this branch without defining a dummy value.
+              return@`Given Some Offenders`
             }
 
-            AssessmentSortField.assessmentCreatedAt -> assessments.sortedByDescending { it.assessment.createdAt }
-          }.map {
-            assessmentSummaryMapper(it.offenderDetails, it.inmateDetails).toSummary(it.assessment)
+            AssessmentSortField.assessmentCreatedAt -> {
+              ExpectedResponse.OK(
+                assessments
+                  .sortedByDescending { it.assessment.createdAt }
+                  .map(toSummary),
+              )
+            }
+
+            AssessmentSortField.assessmentDueAt -> {
+              ExpectedResponse.Error(HttpStatus.BAD_REQUEST, "Sorting by due date is not supported for CAS3")
+            }
           }
 
-          assertUrlReturnsAssessments(
+          assertResponseForUrl(
             jwt,
             ServiceName.temporaryAccommodation,
             "/assessments?sortDirection=desc&sortBy=${sortBy.value}",
-            expectedAssessments,
+            expectedResponse,
           )
         }
       }
@@ -1189,18 +1288,22 @@ class AssessmentTest : IntegrationTestBase() {
           val assessment4 = createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
           val assessment5 = createTemporaryAccommodationAssessmentForStatus(user, offenderDetails, AssessmentStatus.cas3InReview)
 
-          val page1Response = assertUrlReturnsAssessments(
+          val page1Response = assertResponseForUrl(
             jwt,
             ServiceName.temporaryAccommodation,
             "/assessments?page=1&perPage=3&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment1, assessment2, assessment3, status = COMPLETED),
+            ExpectedResponse.OK(
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment1, assessment2, assessment3, status = COMPLETED),
+            ),
           )
 
-          val page2Response = assertUrlReturnsAssessments(
+          val page2Response = assertResponseForUrl(
             jwt,
             ServiceName.temporaryAccommodation,
             "/assessments?page=2&perPage=3&sortBy=${AssessmentSortField.assessmentCreatedAt.value}",
-            assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment4, assessment5, status = COMPLETED),
+            ExpectedResponse.OK(
+              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummaries(assessment4, assessment5, status = COMPLETED),
+            ),
           )
 
           page1Response.expectHeader().valueEquals("X-Pagination-CurrentPage", 1)
@@ -1261,11 +1364,11 @@ class AssessmentTest : IntegrationTestBase() {
             .sortedBy { (it.assessment.application as TemporaryAccommodationApplicationEntity).arrivalDate }
             .map { assessmentSummaryMapper(it.offenderDetails, it.inmateDetails).toSummary(it.assessment) }
 
-          assertUrlReturnsAssessments(
+          assertResponseForUrl(
             jwt,
             ServiceName.temporaryAccommodation,
             "/assessments",
-            expectedAssessments,
+            ExpectedResponse.OK(expectedAssessments),
           )
         }
       }
@@ -1316,11 +1419,13 @@ class AssessmentTest : IntegrationTestBase() {
 
           otherAssessment.schemaUpToDate = true
 
-          assertUrlReturnsAssessments(
+          assertResponseForUrl(
             jwt,
             ServiceName.temporaryAccommodation,
             "/assessments?crn=${offender.first.otherIds.crn}",
-            assessmentSummaryMapper(offender.first, offender.second).toSummaries(assessment),
+            ExpectedResponse.OK(
+              assessmentSummaryMapper(offender.first, offender.second).toSummaries(assessment),
+            ),
           )
         }
       }
@@ -1380,13 +1485,15 @@ class AssessmentTest : IntegrationTestBase() {
 
           mockOffenderUserAccessCommunityApiCall(user.deliusUsername, otherOffender.first.otherIds.crn, true, true)
 
-          assertUrlReturnsAssessments(
+          assertResponseForUrl(
             jwt,
             ServiceName.temporaryAccommodation,
             "/assessments",
-            listOf(
-              assessmentSummaryMapper(offender.first, offender.second).toSummary(assessment),
-              assessmentSummaryMapper(otherOffender.first, inmateDetails = null).toRestricted(otherAssessment),
+            ExpectedResponse.OK(
+              listOf(
+                assessmentSummaryMapper(offender.first, offender.second).toSummary(assessment),
+                assessmentSummaryMapper(otherOffender.first, inmateDetails = null).toRestricted(otherAssessment),
+              ),
             ),
           )
         }
@@ -1427,41 +1534,83 @@ class AssessmentTest : IntegrationTestBase() {
 
           mockOffenderUserAccessCommunityApiCall(user.deliusUsername, offenderDetails.otherIds.crn, true, true)
 
-          assertUrlReturnsAssessments(
+          assertResponseForUrl(
             jwt,
             ServiceName.approvedPremises,
             "/assessments",
-            listOf(
-              assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(assessment, status = COMPLETED),
+            ExpectedResponse.OK(
+              listOf(
+                assessmentSummaryMapper(offenderDetails, inmateDetails).toSummary(assessment, status = COMPLETED),
+              ),
             ),
           )
         }
       }
     }
+  }
 
-    private fun assertUrlReturnsAssessments(
-      jwt: String,
-      serviceName: ServiceName,
-      url: String,
-      expectedAssessmentSummaries: List<AssessmentSummary>,
-    ): WebTestClient.ResponseSpec {
-      val response = webTestClient.get()
-        .uri(url)
-        .header("Authorization", "Bearer $jwt")
-        .header("X-Service-Name", serviceName.value)
-        .exchange()
-        .expectStatus()
-        .isOk
+  sealed interface ExpectedResponse {
+    data class OK(val expectedAssessmentSummaries: List<AssessmentSummary>) : ExpectedResponse
+    data class Error(val status: HttpStatus, val errorDetail: String) : ExpectedResponse
+  }
 
-      val responseBody = response
-        .returnResult<String>()
-        .responseBody
-        .blockFirst()
+  private fun assertUrlReturnsError(
+    jwt: String,
+    serviceName: ServiceName,
+    url: String,
+    status: HttpStatus,
+    errorDetail: String,
+  ): WebTestClient.ResponseSpec {
+    val response = webTestClient.get()
+      .uri(url)
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", serviceName.value)
+      .exchange()
+      .expectStatus()
+      .isEqualTo(status)
 
-      assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedAssessmentSummaries))
+    val responseBody = response
+      .returnResult<Problem>()
+      .responseBody
+      .blockFirst()
 
-      return response
-    }
+    assertThat(responseBody?.detail).isEqualTo(errorDetail)
+
+    return response
+  }
+
+  private fun assertResponseForUrl(
+    jwt: String,
+    serviceName: ServiceName,
+    url: String,
+    expectedResponse: ExpectedResponse,
+  ): WebTestClient.ResponseSpec = when (expectedResponse) {
+    is ExpectedResponse.OK -> assertUrlReturnsAssessments(jwt, serviceName, url, expectedResponse.expectedAssessmentSummaries)
+    is ExpectedResponse.Error -> assertUrlReturnsError(jwt, serviceName, url, expectedResponse.status, expectedResponse.errorDetail)
+  }
+
+  private fun assertUrlReturnsAssessments(
+    jwt: String,
+    serviceName: ServiceName,
+    url: String,
+    expectedAssessmentSummaries: List<AssessmentSummary>,
+  ): WebTestClient.ResponseSpec {
+    val response = webTestClient.get()
+      .uri(url)
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", serviceName.value)
+      .exchange()
+      .expectStatus()
+      .isOk
+
+    val responseBody = response
+      .returnResult<String>()
+      .responseBody
+      .blockFirst()
+
+    assertThat(responseBody).isEqualTo(objectMapper.writeValueAsString(expectedAssessmentSummaries))
+
+    return response
   }
 
   @Test
