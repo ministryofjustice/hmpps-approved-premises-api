@@ -33,8 +33,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockCaseSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockUserAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
@@ -189,8 +191,22 @@ class PremisesTest : IntegrationTestBase() {
           probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
       }
-
       val premisesToGet = premises[0]
+
+      val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
+        withYieldedPremises { premisesToGet }
+      }
+
+      val bed1 = bedEntityFactory.produceAndPersist {
+        withRoom(rooms[0])
+      }
+
+      val bed2 = bedEntityFactory.produceAndPersist {
+        withRoom(rooms[1])
+      }
+
+      rooms[0].beds += bed1
+      rooms[1].beds += bed2
 
       webTestClient.put()
         .uri("/premises/${premisesToGet.id}")
@@ -223,6 +239,8 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("probationRegion.name").isEqualTo("North West")
         .jsonPath("status").isEqualTo("archived")
         .jsonPath("turnaroundWorkingDayCount").doesNotExist()
+
+      assertApprovedPremisesBedSpaceIsNotArchived(premisesToGet)
     }
   }
 
@@ -244,6 +262,21 @@ class PremisesTest : IntegrationTestBase() {
       }
 
       val premisesToGet = premises[0]
+      val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
+        withYieldedPremises { premisesToGet }
+      }
+
+      val bedEntityWithEndDate = bedEntityFactory.produceAndPersist {
+        withRoom(rooms[0])
+        withEndDate { LocalDate.now().plusDays(10) }
+      }
+
+      val bedEntityWithoutEndDate = bedEntityFactory.produceAndPersist {
+        withRoom(rooms[1])
+      }
+
+      rooms[0].beds += bedEntityWithEndDate
+      rooms[1].beds += bedEntityWithoutEndDate
 
       webTestClient.put()
         .uri("/premises/${premisesToGet.id}")
@@ -281,6 +314,89 @@ class PremisesTest : IntegrationTestBase() {
         .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
         .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
         .jsonPath("turnaroundWorkingDayCount").isEqualTo(5)
+
+      assertTemporaryAccommodationPremisesBedSpaceIsArchived(premisesToGet)
+    }
+  }
+
+  @Test
+  fun `When a Temporary Accommodation Premises is updated with online status then respective bedspace enddate is not updated`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { user, jwt ->
+      val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(user.probationRegion)
+      }
+
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(1) {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withProbationRegion(user.probationRegion)
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(user.probationRegion)
+          }
+        }
+      }
+
+      val premisesToGet = premises[0]
+      val rooms = roomEntityFactory.produceAndPersistMultiple(5) {
+        withYieldedPremises { premisesToGet }
+      }
+
+      val bedEntityWithEndDate = bedEntityFactory.produceAndPersist {
+        withRoom(rooms[0])
+        withEndDate { LocalDate.now() }
+      }
+
+      val bedEntityWithoutEndDate = bedEntityFactory.produceAndPersist {
+        withRoom(rooms[1])
+      }
+
+      rooms[0].beds += bedEntityWithEndDate
+      rooms[1].beds += bedEntityWithoutEndDate
+
+      webTestClient.put()
+        .uri("/premises/${premisesToGet.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdatePremises(
+            addressLine1 = "1 somewhere updated",
+            addressLine2 = "Some other district",
+            town = "Somewhere Else",
+            postcode = "AB456CD",
+            notes = "some arbitrary notes updated",
+            localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"), // Allerdale
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.active,
+            probationDeliveryUnitId = probationDeliveryUnit.id,
+            turnaroundWorkingDayCount = 5,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .jsonPath("addressLine1").isEqualTo("1 somewhere updated")
+        .jsonPath("addressLine2").isEqualTo("Some other district")
+        .jsonPath("town").isEqualTo("Somewhere Else")
+        .jsonPath("postcode").isEqualTo("AB456CD")
+        .jsonPath("notes").isEqualTo("some arbitrary notes updated")
+        .jsonPath("localAuthorityArea.id").isEqualTo("d1bd139b-7b90-4aae-87aa-9f93e183a7ff")
+        .jsonPath("localAuthorityArea.name").isEqualTo("Allerdale")
+        .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
+        .jsonPath("probationRegion.name").isEqualTo(user.probationRegion.name)
+        .jsonPath("status").isEqualTo("active")
+        .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
+        .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("turnaroundWorkingDayCount").isEqualTo(5)
+
+      val findById = temporaryAccommodationPremisesRepository.findById(premisesToGet.id)
+      assertThat(findById).isNotNull()
+      assertThat(findById.get().rooms).isNotEmpty()
+      val actualBedWithEndDate = findById.get().rooms.flatMap { it.beds }.firstOrNull { it.id == bedEntityWithEndDate.id }
+      val actualBedWithoutEndDate = findById.get().rooms.flatMap { it.beds }.firstOrNull { it.id == bedEntityWithoutEndDate.id }
+      assertThat(actualBedWithEndDate!!.endDate).isEqualTo(bedEntityWithEndDate.endDate)
+      assertThat(actualBedWithoutEndDate!!.endDate).isEqualTo(bedEntityWithoutEndDate.endDate)
     }
   }
 
@@ -3684,6 +3800,28 @@ class PremisesTest : IntegrationTestBase() {
       }
     }.map {
       roomTestRepository.getReferenceById(it.id)
+    }
+  }
+
+  private fun assertApprovedPremisesBedSpaceIsNotArchived(premisesToGet: ApprovedPremisesEntity) {
+    val approvedPremises = approvedPremisesRepository.findById(premisesToGet.id)
+    assertThat(approvedPremises).isNotNull()
+    assertThat(approvedPremises.get().rooms).isNotEmpty()
+    approvedPremises.get().rooms.forEach { room ->
+      room.beds.forEach { bed ->
+        assertThat(bed.endDate).isNull()
+      }
+    }
+  }
+
+  private fun assertTemporaryAccommodationPremisesBedSpaceIsArchived(premisesToGet: TemporaryAccommodationPremisesEntity) {
+    val temporaryAccommodationPremise = temporaryAccommodationPremisesRepository.findById(premisesToGet.id)
+    assertThat(temporaryAccommodationPremise).isNotNull()
+    assertThat(temporaryAccommodationPremise.get().rooms).isNotEmpty()
+    temporaryAccommodationPremise.get().rooms.forEach { room ->
+      room.beds.forEach { bed ->
+        assertThat(bed.endDate).isEqualTo(LocalDate.now())
+      }
     }
   }
 }
