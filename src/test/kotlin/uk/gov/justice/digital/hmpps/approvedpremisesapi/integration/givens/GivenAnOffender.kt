@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockServerErrorOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockServerErrorInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -20,6 +21,7 @@ fun IntegrationTestBase.`Given an Offender`(
   inmateDetailsConfigBlock: (InmateDetailFactory.() -> Unit)? = null,
   mockServerErrorForCommunityApi: Boolean = false,
   mockServerErrorForPrisonApi: Boolean = false,
+  mockNotFoundErrorForPrisonApi: Boolean = false,
 ): Pair<OffenderDetailSummary, InmateDetail> {
   val inmateDetailsFactory = InmateDetailFactory()
   if (inmateDetailsConfigBlock != null) {
@@ -62,16 +64,23 @@ fun IntegrationTestBase.`Given an Offender`(
     false -> PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetails)
   }
 
+  when (mockNotFoundErrorForPrisonApi) {
+    true -> PrisonAPI_mockNotFoundInmateDetailsCall(inmateDetails.offenderNo)
+    false -> {}
+  }
+
   loadPreemptiveCacheForInmateDetails(inmateDetails.offenderNo)
 
   return Pair(offenderDetails, inmateDetails)
 }
 
+@SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.`Given an Offender`(
   offenderDetailsConfigBlock: (OffenderDetailsSummaryFactory.() -> Unit)? = null,
   inmateDetailsConfigBlock: (InmateDetailFactory.() -> Unit)? = null,
   mockServerErrorForCommunityApi: Boolean = false,
   mockServerErrorForPrisonApi: Boolean = false,
+  mockNotFoundErrorForPrisonApi: Boolean = false,
   block: (offenderDetails: OffenderDetailSummary, inmateDetails: InmateDetail) -> Unit,
 ) {
   val (offenderDetails, inmateDetails) = `Given an Offender`(
@@ -79,6 +88,7 @@ fun IntegrationTestBase.`Given an Offender`(
     inmateDetailsConfigBlock,
     mockServerErrorForCommunityApi,
     mockServerErrorForPrisonApi,
+    mockNotFoundErrorForPrisonApi,
   )
 
   block(offenderDetails, inmateDetails)

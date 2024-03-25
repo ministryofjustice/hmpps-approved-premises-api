@@ -20,24 +20,22 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2SubmittedA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ExternalUserDetailsFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Admin`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ManageUsers_mockSuccessfulExternalUsersCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulInmateDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateDetailRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2StatusUpdateRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -48,7 +46,7 @@ class Cas2SubmissionTest(
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) : IntegrationTestBase() {
   @SpykBean
-  lateinit var realApplicationRepository: ApplicationRepository
+  lateinit var realApplicationRepository: Cas2ApplicationRepository
 
   @SpykBean
   lateinit var realAssessmentRepository: Cas2AssessmentRepository
@@ -652,7 +650,8 @@ class Cas2SubmissionTest(
   }
 
   @Nested
-  inner class PostToCreate {
+  inner class PostToSubmit {
+
     @Test
     fun `Submit Cas2 application returns 200`() {
       val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
@@ -660,7 +659,18 @@ class Cas2SubmissionTest(
 
       `Given a CAS2 User`() { submittingUser, jwt ->
         `Given a CAS2 User` { userEntity, _ ->
-          `Given an Offender` { offenderDetails, _ ->
+          `Given an Offender`(
+            inmateDetailsConfigBlock = {
+              withAssignedLivingUnit(
+                AssignedLivingUnit(
+                  agencyId = "agency_id",
+                  locationId = 123.toLong(),
+                  agencyName = "agency_name",
+                  description = null,
+                ),
+              )
+            },
+          ) { offenderDetails, _ ->
 
             val applicationSchema =
               cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -684,11 +694,6 @@ class Cas2SubmissionTest(
                         }
                """,
               )
-
-              val inmateDetail = InmateDetailFactory()
-                .withOffenderNo(offenderDetails.otherIds.nomsNumber.toString())
-                .produce()
-              PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
             }
 
             Assertions.assertThat(realAssessmentRepository.count()).isEqualTo(0)
@@ -746,7 +751,18 @@ class Cas2SubmissionTest(
     @Test
     fun `When several concurrent submit application requests occur, only one is successful, all others return 400`() {
       `Given a CAS2 User`() { submittingUser, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
+        `Given an Offender`(
+          inmateDetailsConfigBlock = {
+            withAssignedLivingUnit(
+              AssignedLivingUnit(
+                agencyId = "agency_id",
+                locationId = 123.toLong(),
+                agencyName = "agency_name",
+                description = null,
+              ),
+            )
+          },
+        ) { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
           val applicationSchema = cas2ApplicationJsonSchemaEntityFactory
@@ -773,14 +789,9 @@ class Cas2SubmissionTest(
             )
           }
 
-          val inmateDetail = InmateDetailFactory()
-            .withOffenderNo(offenderDetails.otherIds.nomsNumber.toString())
-            .produce()
-          PrisonAPI_mockSuccessfulInmateDetailsCall(inmateDetail = inmateDetail)
-
           every { realApplicationRepository.save(any()) } answers {
             Thread.sleep(1000)
-            it.invocation.args[0] as ApplicationEntity
+            it.invocation.args[0] as Cas2ApplicationEntity
           }
 
           val responseStatuses = mutableListOf<HttpStatus>()
@@ -813,6 +824,64 @@ class Cas2SubmissionTest(
 
           Assertions.assertThat(responseStatuses.count { it.value() == 200 }).isEqualTo(1)
           Assertions.assertThat(responseStatuses.count { it.value() == 400 }).isEqualTo(9)
+        }
+      }
+    }
+
+    @Test
+    fun `When there's an error fetching the referred person's prison code, the application is not saved`() {
+      `Given a CAS2 User`() { submittingUser, jwt ->
+        `Given an Offender`(mockNotFoundErrorForPrisonApi = true) { offenderDetails, _ ->
+          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+          val applicationSchema = cas2ApplicationJsonSchemaEntityFactory
+            .produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(
+                schema,
+              )
+            }
+
+          cas2ApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withNomsNumber(offenderDetails.otherIds.nomsNumber!!)
+            withId(applicationId)
+            withApplicationSchema(applicationSchema)
+            withCreatedByUser(submittingUser)
+            withData(
+              """
+            {
+               "thingId": 123
+            }
+            """,
+            )
+          }
+
+          Assertions.assertThat(domainEventRepository.count()).isEqualTo(0)
+          Assertions.assertThat(realAssessmentRepository.count()).isEqualTo(0)
+
+          webTestClient.post()
+            .uri("/cas2/submissions")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.cas2.value)
+            .bodyValue(
+              SubmitCas2Application(
+                applicationId = applicationId,
+                translatedDocument = {},
+                preferredAreas = "Leeds | Bradford",
+                hdcEligibilityDate = LocalDate.parse("2023-03-30"),
+                conditionalReleaseDate = LocalDate.parse("2023-04-29"),
+                telephoneNumber = "123 456 789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+
+          Assertions.assertThat(domainEventRepository.count()).isEqualTo(0)
+          Assertions.assertThat(realAssessmentRepository.count()).isEqualTo(0)
+          Assertions.assertThat(realApplicationRepository.findById(applicationId).get().submittedAt).isNull()
         }
       }
     }

@@ -11,7 +11,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.kotlin.any
@@ -40,7 +39,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
@@ -642,7 +640,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    fun `throws an UpstreamApiException if InmateDetails (for prison code) are not available`() {
+    fun `throws a validation error if InmateDetails (for prison code) are not available`() {
       val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
 
       val application = Cas2ApplicationEntityFactory()
@@ -685,12 +683,69 @@ class ApplicationServiceTest {
         mockOffenderService.getInmateDetailByNomsNumber(any(), any())
       } returns AuthorisableActionResult.NotFound()
 
-      val exception = assertThrows<UpstreamApiException> {
-        applicationService.submitApplication(submitCas2Application)
-      }
-      assertThat(exception.message).isEqualTo("Inmate Detail not found")
+      assertGeneralValidationError("Inmate Detail not found")
 
       assertEmailAndAssessmentsWereNotCreated()
+    }
+
+    @Test
+    fun `throws an UpstreamApiException if prison code is null`() {
+      val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
+
+      val application = Cas2ApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      every { mockUserService.getUserForRequest() } returns user
+      every {
+        mockApplicationRepository.findByIdOrNullWithWriteLock(any())
+      } returns application
+      every { mockJsonSchemaService.checkSchemaOutdated(any()) } returns
+        application
+      every { mockJsonSchemaService.validate(any(), any()) } returns true
+
+      every { mockApplicationRepository.save(any()) } answers {
+        it.invocation.args[0]
+          as Cas2ApplicationEntity
+      }
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withCrn(application.crn)
+        .produce()
+
+      every { mockOffenderService.getOffenderByCrn(any()) } returns AuthorisableActionResult.Success(
+        offenderDetails,
+      )
+
+      // this call to the Prison API to find the referringPrisonCode when saving
+      // the application.submitted domain event *should* always have a prison code,
+      // but we need to account for possibility it may be missing.
+      // If there is a problem with accessing the Prison API, we fail hard and
+      // abort our attempt to submit the application and return a validation message.
+      every {
+        mockOffenderService.getInmateDetailByNomsNumber(any(), any())
+      } returns AuthorisableActionResult.Success(InmateDetailFactory().produce())
+
+      assertGeneralValidationError("No prison code available")
+
+      assertEmailAndAssessmentsWereNotCreated()
+    }
+
+    private fun assertGeneralValidationError(message: String) {
+      val result = applicationService.submitApplication(submitCas2Application)
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+      val error = result.entity as ValidatableActionResult.GeneralValidationError
+
+      assertThat(error.message).isEqualTo(message)
     }
 
     private fun assertEmailAndAssessmentsWereNotCreated() {
