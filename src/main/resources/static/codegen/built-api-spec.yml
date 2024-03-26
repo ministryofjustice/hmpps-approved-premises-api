@@ -7071,12 +7071,14 @@ components:
         - arrivalDate
         - status
         - createdAt
+        - dueAt
       x-enum-varnames:
         - personName
         - personCrn
         - assessmentArrivalDate
         - assessmentStatus
         - assessmentCreatedAt
+        - assessmentDueAt
     AssessmentDecision:
       type: string
       enum:

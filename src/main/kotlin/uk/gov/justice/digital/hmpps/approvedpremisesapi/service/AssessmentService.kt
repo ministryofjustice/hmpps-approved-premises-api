@@ -102,6 +102,7 @@ class AssessmentService(
       AssessmentSortField.assessmentStatus -> "status"
       AssessmentSortField.assessmentArrivalDate -> "arrivalDate"
       AssessmentSortField.assessmentCreatedAt -> "createdAt"
+      AssessmentSortField.assessmentDueAt -> "dueAt"
       AssessmentSortField.personCrn -> "crn"
       AssessmentSortField.personName -> "personName"
     }
