@@ -37,7 +37,7 @@ class TaskDeadlineService(
   }
 
   fun getDeadline(placementApplication: PlacementApplicationEntity): OffsetDateTime {
-    return addWorkingDays(placementApplication.createdAt, STANDARD_PLACEMENT_APPLICATION_TIMEFRAME)
+    return addWorkingDays(placementApplication.submittedAt!!, STANDARD_PLACEMENT_APPLICATION_TIMEFRAME)
   }
 
   fun addWorkingDays(date: OffsetDateTime, workingDays: Int): OffsetDateTime = workingDayCountService.addWorkingDays(date.toLocalDate(), workingDays).toLocalDateTime()
