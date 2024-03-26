@@ -30,7 +30,6 @@ on conflict(id) do nothing;
 insert into
   approved_premises_applications (
     "id",
-    "is_pipe_application",
     "is_womens_application",
     "conviction_id",
     "event_number",
@@ -40,17 +39,16 @@ insert into
     "arrival_date",
     "is_inapplicable",
     "is_emergency_application",
-    "is_esap_application",
     "is_withdrawn",
     "withdrawal_reason",
     "other_withdrawal_reason",
     "name",
     "target_location",
-    "status"
+    "status",
+    "ap_type"
   )
 values (
   '51c50b75-e142-4fdf-a02e-57957541770a',
-  NULL,
   NULL,
   '2500403796',
   '2',
@@ -60,13 +58,13 @@ values (
   NULL,
   NULL,
   NULL,
-  NULL,
   'false',
   NULL,
   NULL,
   'BEN DAVIES',
   NULL,
-  'AWAITING_PLACEMENT'
+  'AWAITING_PLACEMENT',
+  'NORMAL'
 )
 on conflict(id) do nothing;
 
@@ -136,7 +134,6 @@ on conflict(id) do nothing;
 insert into
   approved_premises_applications (
     "id",
-    "is_pipe_application",
     "is_womens_application",
     "conviction_id",
     "event_number",
@@ -146,17 +143,16 @@ insert into
     "arrival_date",
     "is_inapplicable",
     "is_emergency_application",
-    "is_esap_application",
     "is_withdrawn",
     "withdrawal_reason",
     "other_withdrawal_reason",
     "name",
     "target_location",
-    "status"
+    "status",
+    "ap_type"
   )
 values (
   'f2e0de20-cb6b-43d3-82f1-defe5190ba51',
-  NULL,
   NULL,
   '2500403796',
   '2',
@@ -166,13 +162,13 @@ values (
   NULL,
   NULL,
   NULL,
-  NULL,
   'false',
   NULL,
   NULL,
   'BEN DAVIES',
   NULL,
-  'STARTED'
+  'STARTED',
+  'NORMAL'
 )
 on conflict(id) do nothing;
 
