@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
+import java.util.UUID
 
 class ReferenceDataTest : IntegrationTestBase() {
   @Autowired
@@ -515,17 +517,25 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Test
   fun `Get Cancellation Reasons for only approved premises returns 200 with correct body`() {
-    cancellationReasonRepository.deleteAll()
-
-    cancellationReasonEntityFactory.produceAndPersistMultiple(10)
-
-    val expectedCancellationReasons = cancellationReasonEntityFactory.produceAndPersistMultiple(10) {
-      withServiceScope(ServiceName.approvedPremises.value)
-    }
-
-    val expectedJson = objectMapper.writeValueAsString(
-      expectedCancellationReasons.map(cancellationReasonTransformer::transformJpaToApi),
+    val expectedCancellationReasons = listOf(
+      CancellationReason(UUID.fromString("c4ae53be-8bf6-4139-b530-254eb79bf79f"), "An alternative AP placement needs to be found", true, "approved-premises"),
+      CancellationReason(UUID.fromString("b43a314a-7e25-459b-8a82-7bbcc9313caa"), "AP has appealed placement", true, "approved-premises"),
+      CancellationReason(UUID.fromString("acba3547-ab22-442d-acec-2652e49895f2"), "Booking successfully appealed", false, "approved-premises"),
+      CancellationReason(UUID.fromString("eece6c5d-7554-4eaa-884c-d2bdd71ae627"), "Deceased", false, "approved-premises"),
+      CancellationReason(UUID.fromString("3a5afbfc-3c0f-11ee-be56-0242ac120002"), "Error in booking", false, "approved-premises"),
+      CancellationReason(UUID.fromString("7c310cfd-3952-456d-b0ee-0f7817afe64a"), "Error in Booking Details", false, "approved-premises"),
+      CancellationReason(UUID.fromString("6b07a333-f838-4426-8f01-bdf70c965983"), "Person has been deprioritised at this AP", true, "approved-premises"),
+      CancellationReason(UUID.fromString("d39572ea-9e42-460c-ae88-b6b30fca0b09"), "Probation Practitioner requested it", true, "approved-premises"),
+      CancellationReason(UUID.fromString("bcb90030-b2d3-47d1-b289-a8b8c8898576"), "Related application withdrawn", false, "approved-premises"),
+      CancellationReason(UUID.fromString("0a115fa4-6fd0-4b23-8e31-e6d1769c3985"), "Related placement request withdrawn", false, "approved-premises"),
+      CancellationReason(UUID.fromString("0e068767-c62e-43b5-866d-f0fb1d02ad83"), "Related request for placement withdrawn", false, "approved-premises"),
+      CancellationReason(UUID.fromString("3c2a6820-d59d-4c06-a194-7873e9a7b63a"), "The AP requested it", false, "approved-premises"),
+      CancellationReason(UUID.fromString("b5688d29-762d-499c-be42-708729aef5ed"), "The placement is being transferred", false, "approved-premises"),
+      CancellationReason(UUID.fromString("a693e972-a092-428f-9222-d802849c7121"), "Withdrawn by Approved Premises", false, "approved-premises"),
+      CancellationReason(UUID.fromString("1d6f3c6e-3a86-49b4-bfca-2513a078aba3"), "Other", true, "approved-premises"),
     )
+
+    val expectedJson = objectMapper.writeValueAsString(expectedCancellationReasons)
 
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
 

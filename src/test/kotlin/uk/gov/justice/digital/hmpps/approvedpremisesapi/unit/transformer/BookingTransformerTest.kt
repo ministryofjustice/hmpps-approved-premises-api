@@ -544,7 +544,7 @@ class BookingTransformerTest {
         CancellationEntity(
           id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
           date = LocalDate.parse("2022-08-10"),
-          reason = CancellationReasonEntity(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = "approved-premises"),
+          reason = CancellationReasonEntity(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = "approved-premises", sortOrder = 0),
           notes = null,
           booking = this,
           createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
@@ -627,7 +627,13 @@ class BookingTransformerTest {
         CancellationEntity(
           id = UUID.fromString("77e66712-b0a0-4968-b284-77ac1babe09c"),
           date = LocalDate.parse("2022-08-10"),
-          reason = CancellationReasonEntity(id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"), name = "Because", isActive = true, serviceScope = ServiceName.temporaryAccommodation.value),
+          reason = CancellationReasonEntity(
+            id = UUID.fromString("aa4ee8cf-3580-44e1-a3e1-6f3ee7d5ec67"),
+            name = "Because",
+            isActive = true,
+            serviceScope = ServiceName.temporaryAccommodation.value,
+            sortOrder = 0,
+          ),
           notes = null,
           booking = this,
           createdAt = OffsetDateTime.parse("2022-07-01T12:34:56.789Z"),
@@ -636,7 +642,13 @@ class BookingTransformerTest {
         CancellationEntity(
           id = UUID.fromString("d34415c3-d128-45a0-9950-b84491ab8d11"),
           date = LocalDate.parse("2022-08-10"),
-          reason = CancellationReasonEntity(id = UUID.fromString("dd6444f7-af56-436c-8451-ca993617471e"), name = "Some other reason", isActive = true, serviceScope = ServiceName.temporaryAccommodation.value),
+          reason = CancellationReasonEntity(
+            id = UUID.fromString("dd6444f7-af56-436c-8451-ca993617471e"),
+            name = "Some other reason",
+            isActive = true,
+            serviceScope = ServiceName.temporaryAccommodation.value,
+            sortOrder = 0,
+          ),
           notes = "Original reason chosen in error",
           booking = this,
           createdAt = OffsetDateTime.parse("2022-07-02T12:34:56.789Z"),

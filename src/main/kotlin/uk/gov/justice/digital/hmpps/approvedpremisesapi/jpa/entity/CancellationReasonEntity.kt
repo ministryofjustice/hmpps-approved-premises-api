@@ -16,7 +16,7 @@ interface CancellationReasonRepository : JpaRepository<CancellationReasonEntity,
     val CAS1_RELATED_APP_WITHDRAWN_ID: UUID = UUID.fromString("bcb90030-b2d3-47d1-b289-a8b8c8898576")
   }
 
-  @Query("SELECT c FROM CancellationReasonEntity c WHERE c.serviceScope = :serviceName OR c.serviceScope = '*'")
+  @Query("SELECT c FROM CancellationReasonEntity c WHERE c.serviceScope = :serviceName OR c.serviceScope = '*' ORDER by c.sortOrder ASC, c.name ASC")
   fun findAllByServiceScope(serviceName: String): List<CancellationReasonEntity>
 
   fun findByNameAndServiceScope(name: String, serviceScope: String): CancellationReasonEntity?
@@ -30,6 +30,7 @@ data class CancellationReasonEntity(
   val name: String,
   val isActive: Boolean,
   val serviceScope: String,
+  val sortOrder: Int,
 ) {
   override fun toString() = "CancellationReasonEntity:$id"
 }
