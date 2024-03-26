@@ -4463,6 +4463,13 @@ components:
           type: string
       required:
         - name
+    ReportType:
+      type: string
+      enum:
+        - referral
+        - booking
+        - bedUsage
+        - bedOccupancy
     Cas2ReportName:
       type: string
       enum:
