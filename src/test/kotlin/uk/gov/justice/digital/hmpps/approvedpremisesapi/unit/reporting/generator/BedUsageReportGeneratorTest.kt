@@ -42,11 +42,12 @@ class BedUsageReportGeneratorTest {
     mockBookingRepository,
     mockLostBedsRepository,
     mockWorkingDayService,
-    0,
   )
 
   @Test
   fun `Only results for beds from the specified service are returned in the report`() {
+    val startDate = LocalDate.of(2023, 4, 1)
+    val endDate = LocalDate.of(2023, 4, 30)
     val temporaryAccommodationPremises = TemporaryAccommodationPremisesEntityFactory()
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
       .produce()
@@ -94,7 +95,7 @@ class BedUsageReportGeneratorTest {
 
     val result = bedUsageReportGenerator.createReport(
       listOf(approvedPremisesBed, temporaryAccommodationBed),
-      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
     assertThat(result.count()).isEqualTo(1)
@@ -104,6 +105,8 @@ class BedUsageReportGeneratorTest {
 
   @Test
   fun `Only results for beds from the temporary accommodation service are returned in the report with 3 month duration`() {
+    val startDate = LocalDate.of(2023, 4, 1)
+    val endDate = LocalDate.of(2023, 7, 1)
     val temporaryAccommodationPremises = TemporaryAccommodationPremisesEntityFactory()
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
       .produce()
@@ -178,12 +181,11 @@ class BedUsageReportGeneratorTest {
       mockBookingRepository,
       mockLostBedsRepository,
       mockWorkingDayService,
-      3,
     )
 
     val result = bedUsageReportGeneratorWithThreeMonth.createReport(
       listOf(approvedPremisesBed, temporaryAccommodationBed),
-      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
     assertThat(result.count()).isEqualTo(1)
@@ -197,6 +199,8 @@ class BedUsageReportGeneratorTest {
 
   @Test
   fun `Only results for beds from the approved premises service are returned in the report for 1 month for approved premises`() {
+    val startDate = LocalDate.of(2023, 4, 1)
+    val endDate = LocalDate.of(2023, 4, 30)
     val temporaryAccommodationPremises = TemporaryAccommodationPremisesEntityFactory()
       .withUnitTestControlTestProbationAreaAndLocalAuthority()
       .produce()
@@ -247,12 +251,11 @@ class BedUsageReportGeneratorTest {
       mockBookingRepository,
       mockLostBedsRepository,
       mockWorkingDayService,
-      3,
     )
 
     val result = bedUsageReportGeneratorWithThreeMonth.createReport(
       listOf(approvedPremisesBed, temporaryAccommodationBed),
-      BedUsageReportProperties(ServiceName.approvedPremises, null, 2023, 4),
+      BedUsageReportProperties(ServiceName.approvedPremises, null, startDate, endDate),
     )
 
     assertThat(result.count()).isEqualTo(1)
@@ -266,6 +269,8 @@ class BedUsageReportGeneratorTest {
 
   @Test
   fun `Only results for beds from the specified probation region are returned in the report`() {
+    val startDate = LocalDate.of(2023, 4, 1)
+    val endDate = LocalDate.of(2023, 4, 30)
     val apArea = ApAreaEntityFactory()
       .produce()
 
@@ -330,7 +335,7 @@ class BedUsageReportGeneratorTest {
 
     val result = bedUsageReportGenerator.createReport(
       listOf(temporaryAccommodationBedInProbationRegion, temporaryAccommodationBedOutsideProbationRegion),
-      BedUsageReportProperties(ServiceName.temporaryAccommodation, probationRegion1.id, 2023, 4),
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, probationRegion1.id, startDate, endDate),
     )
 
     assertThat(result.count()).isEqualTo(1)
@@ -340,6 +345,8 @@ class BedUsageReportGeneratorTest {
 
   @Test
   fun `Results for beds from all probation regions are returned in the report if no probation region ID is provided`() {
+    val startDate = LocalDate.of(2023, 4, 1)
+    val endDate = LocalDate.of(2023, 4, 30)
     val apArea = ApAreaEntityFactory()
       .produce()
 
@@ -404,7 +411,7 @@ class BedUsageReportGeneratorTest {
 
     val result = bedUsageReportGenerator.createReport(
       listOf(temporaryAccommodationBedInProbationRegion, temporaryAccommodationBedOutsideProbationRegion),
-      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
     assertThat(result.count()).isEqualTo(2)
@@ -416,6 +423,8 @@ class BedUsageReportGeneratorTest {
 
   @Test
   fun `Booking rows are correctly generated`() {
+    val startDate = LocalDate.of(2023, 4, 1)
+    val endDate = LocalDate.of(2023, 4, 30)
     val probationRegion = ProbationRegionEntityFactory()
       .withApArea(ApAreaEntityFactory().produce())
       .produce()
@@ -456,7 +465,7 @@ class BedUsageReportGeneratorTest {
 
     val result = bedUsageReportGenerator.createReport(
       listOf(temporaryAccommodationBed),
-      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
     assertThat(result.count()).isEqualTo(1)
@@ -478,6 +487,8 @@ class BedUsageReportGeneratorTest {
 
   @Test
   fun `Turnaround rows are correctly generated`() {
+    val startDate = LocalDate.of(2023, 4, 1)
+    val endDate = LocalDate.of(2023, 4, 30)
     val probationRegion = ProbationRegionEntityFactory()
       .withApArea(ApAreaEntityFactory().produce())
       .produce()
@@ -527,7 +538,7 @@ class BedUsageReportGeneratorTest {
 
     val result = bedUsageReportGenerator.createReport(
       listOf(temporaryAccommodationBed),
-      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
     assertThat(result.count()).isEqualTo(2)
@@ -549,6 +560,8 @@ class BedUsageReportGeneratorTest {
 
   @Test
   fun `Void rows are correctly generated`() {
+    val startDate = LocalDate.of(2023, 4, 1)
+    val endDate = LocalDate.of(2023, 4, 30)
     val probationRegion = ProbationRegionEntityFactory()
       .withApArea(ApAreaEntityFactory().produce())
       .produce()
@@ -587,7 +600,7 @@ class BedUsageReportGeneratorTest {
 
     val result = bedUsageReportGenerator.createReport(
       listOf(temporaryAccommodationBed),
-      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+      BedUsageReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
 
     assertThat(result.count()).isEqualTo(1)

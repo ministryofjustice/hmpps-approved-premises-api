@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator
 
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName.temporaryAccommodation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BedEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsRepository
@@ -12,13 +11,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.earliestDateOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.latestDateOf
-import java.time.LocalDate
 
 class BedUtilisationReportGenerator(
   private val bookingRepository: BookingRepository,
   private val lostBedsRepository: LostBedsRepository,
   private val workingDayService: WorkingDayService,
-  private val cas3EndDateOverride: Int,
 ) : ReportGenerator<BedEntity, BedUtilisationReportRow, BedUtilisationReportProperties>(BedUtilisationReportRow::class) {
   override fun filter(properties: BedUtilisationReportProperties): (BedEntity) -> Boolean = {
     checkServiceType(properties.serviceName, it.room.premises) &&
@@ -26,13 +23,6 @@ class BedUtilisationReportGenerator(
   }
 
   override val convert: BedEntity.(properties: BedUtilisationReportProperties) -> List<BedUtilisationReportRow> = { properties ->
-    val startOfMonth = LocalDate.of(properties.year, properties.month, 1)
-    val endOfMonth = if (properties.serviceName == temporaryAccommodation && cas3EndDateOverride != 0) {
-      startOfMonth.plusMonths(cas3EndDateOverride.toLong())
-    } else {
-      LocalDate.of(properties.year, properties.month, startOfMonth.month.length(startOfMonth.isLeapYear))
-    }
-
     var bookedDaysActiveAndClosed = 0
     var confirmedDays = 0
     var provisionalDays = 0
@@ -40,18 +30,18 @@ class BedUtilisationReportGenerator(
     var effectiveTurnaroundDays = 0
     var voidDays = 0
 
-    val nonCancelledBookings = bookingRepository.findAllByOverlappingDateForBed(startOfMonth, endOfMonth, this)
+    val nonCancelledBookings = bookingRepository.findAllByOverlappingDateForBed(properties.startDate, properties.endDate, this)
       .filter { it.cancellation == null }
 
-    val nonCancelledVoids = lostBedsRepository.findAllByOverlappingDateForBed(startOfMonth, endOfMonth, this)
+    val nonCancelledVoids = lostBedsRepository.findAllByOverlappingDateForBed(properties.startDate, properties.endDate, this)
       .filter { it.cancellation == null }
 
     val premises = this.room.premises
 
     nonCancelledBookings
       .forEach { booking ->
-        val daysOfBookingInMonth = latestDateOf(booking.arrivalDate, startOfMonth)
-          .getDaysUntilInclusive(earliestDateOf(booking.departureDate, endOfMonth))
+        val daysOfBookingInMonth = latestDateOf(booking.arrivalDate, properties.startDate)
+          .getDaysUntilInclusive(earliestDateOf(booking.departureDate, properties.endDate))
           .count()
 
         when {
@@ -63,8 +53,8 @@ class BedUtilisationReportGenerator(
         if (booking.turnaround != null) {
           val turnaroundStartDate = booking.departureDate.plusDays(1)
           val turnaroundEndDate = workingDayService.addWorkingDays(booking.departureDate, booking.turnaround!!.workingDayCount)
-          val firstDayOfTurnaroundInMonth = latestDateOf(turnaroundStartDate, startOfMonth)
-          val lastDayOfTurnaroundInMonth = earliestDateOf(turnaroundEndDate, endOfMonth)
+          val firstDayOfTurnaroundInMonth = latestDateOf(turnaroundStartDate, properties.startDate)
+          val lastDayOfTurnaroundInMonth = earliestDateOf(turnaroundEndDate, properties.endDate)
 
           scheduledTurnaroundDays += workingDayService.getWorkingDaysCount(firstDayOfTurnaroundInMonth, lastDayOfTurnaroundInMonth)
           effectiveTurnaroundDays += firstDayOfTurnaroundInMonth
@@ -74,8 +64,8 @@ class BedUtilisationReportGenerator(
       }
 
     nonCancelledVoids.forEach { void ->
-      val daysOfVoidInMonth = latestDateOf(void.startDate, startOfMonth)
-        .getDaysUntilInclusive(earliestDateOf(void.endDate, endOfMonth))
+      val daysOfVoidInMonth = latestDateOf(void.startDate, properties.startDate)
+        .getDaysUntilInclusive(earliestDateOf(void.endDate, properties.endDate))
         .count()
 
       voidDays += daysOfVoidInMonth
@@ -83,10 +73,10 @@ class BedUtilisationReportGenerator(
 
     val totalBookedDays = bookedDaysActiveAndClosed
     val bedspaceOnlineDaysStartDate =
-      if (this.createdAt == null) startOfMonth else latestDateOf(this.createdAt!!.toLocalDate(), startOfMonth)
+      if (this.createdAt == null) properties.startDate else latestDateOf(this.createdAt!!.toLocalDate(), properties.startDate)
 
     val bedspaceOnlineDaysEndDate =
-      if (this.endDate == null) endOfMonth else earliestDateOf(this.endDate!!, endOfMonth)
+      if (this.endDate == null) properties.endDate else earliestDateOf(this.endDate!!, properties.endDate)
 
     val bedspaceOnlineDays = bedspaceOnlineDaysStartDate
       .getDaysUntilInclusive(bedspaceOnlineDaysEndDate)
