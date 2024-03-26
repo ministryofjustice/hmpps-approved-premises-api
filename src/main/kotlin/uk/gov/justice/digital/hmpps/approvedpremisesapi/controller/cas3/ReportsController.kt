@@ -5,7 +5,11 @@ import org.springframework.core.io.Resource
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas3.ReportsCas3Delegate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReportType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.bedOccupancy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.bedUsage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.booking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType.referral
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -14,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.ReportServiceForCas3
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportService
 import java.io.ByteArrayOutputStream
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -25,7 +29,7 @@ private const val MAXIMUM_REPORT_DURATION_IN_MONTHS = 3
 @Service("Cas3ReportsController")
 class ReportsController(
   private val userAccessService: UserAccessService,
-  private val reportServiceForCas3: ReportServiceForCas3,
+  private val cas3ReportService: Cas3ReportService,
 ) : ReportsCas3Delegate {
 
   override fun reportsReferralsGet(
@@ -46,7 +50,7 @@ class ReportsController(
 
     when (xServiceName) {
       ServiceName.temporaryAccommodation -> {
-        reportServiceForCas3.createCas3ApplicationReferralsReport(properties, outputStream)
+        cas3ReportService.createCas3ApplicationReferralsReport(properties, outputStream)
       }
       else -> throw UnsupportedOperationException("Only supported for CAS3")
     }
@@ -55,7 +59,7 @@ class ReportsController(
   }
 
   override fun reportsReportNameGet(
-    reportName: ReportType,
+    reportName: Cas3ReportType,
     startDate: LocalDate,
     endDate: LocalDate,
     probationRegionId: UUID?,
@@ -67,7 +71,7 @@ class ReportsController(
     val outputStream = ByteArrayOutputStream()
 
     when (reportName) {
-      ReportType.referral -> reportServiceForCas3.createCas3ApplicationReferralsReport(
+      referral -> cas3ReportService.createCas3ApplicationReferralsReport(
         TransitionalAccommodationReferralReportProperties(
           startDate = startDate,
           endDate = endDate,
@@ -76,7 +80,7 @@ class ReportsController(
         outputStream,
       )
 
-      ReportType.booking -> reportServiceForCas3.createBookingsReport(
+      booking -> cas3ReportService.createBookingsReport(
         BookingsReportProperties(
           ServiceName.temporaryAccommodation,
           startDate = startDate,
@@ -85,7 +89,7 @@ class ReportsController(
         ),
         outputStream,
       )
-      ReportType.bedUsage -> reportServiceForCas3.createBedUsageReport(
+      bedUsage -> cas3ReportService.createBedUsageReport(
         BedUsageReportProperties(
           ServiceName.temporaryAccommodation,
           startDate = startDate,
@@ -95,7 +99,7 @@ class ReportsController(
         outputStream,
       )
 
-      ReportType.bedOccupancy -> reportServiceForCas3.createBedUtilisationReport(
+      bedOccupancy -> cas3ReportService.createBedUtilisationReport(
         BedUtilisationReportProperties(
           ServiceName.temporaryAccommodation,
           startDate = startDate,

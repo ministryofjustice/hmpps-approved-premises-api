@@ -4470,7 +4470,7 @@ components:
           type: string
       required:
         - name
-    ReportType:
+    Cas3ReportType:
       type: string
       enum:
         - referral

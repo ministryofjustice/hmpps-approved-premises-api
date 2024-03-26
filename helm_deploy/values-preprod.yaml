@@ -97,7 +97,6 @@ generic-service:
 
     FEATURE-FLAGS_CAS1-USE-NEW-WITHDRAWAL-LOGIC: true
     FEATURE-FLAGS_CAS1-APS530-WITHDRAWAL-EMAIL-IMPROVEMENTS: true
-    CAS3-REPORT_END-DATE-OVERRIDE: 3
 
   namespace_secrets:
     hmpps-domain-events-topic:

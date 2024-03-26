@@ -24,20 +24,20 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.BookingsRepor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TransitionalAccommodationReferralReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.io.OutputStream
 import java.util.stream.Collectors
 
-@Service("Cas3ReportService")
-class ReportServiceForCas3(
+@Service
+class Cas3ReportService(
   private val offenderService: OffenderService,
   private val userService: UserService,
   private val transitionalAccommodationReferralReportRowRepository: TransitionalAccommodationReferralReportRepository,
   private val bookingsReportRepository: BookingsReportRepository,
   private val lostBedsRepository: LostBedsRepository,
   private val bookingTransformer: BookingTransformer,
-  private val workingDayCountService: WorkingDayCountService,
+  private val workingDayService: WorkingDayService,
   private val bookingRepository: BookingRepository,
   private val bedRepository: BedRepository,
   @Value("\${cas3-report.crn-search-limit:400}") private val numberOfCrn: Int,
@@ -90,7 +90,7 @@ class ReportServiceForCas3(
   }
 
   fun createBedUsageReport(properties: BedUsageReportProperties, outputStream: OutputStream) {
-    BedUsageReportGenerator(bookingTransformer, bookingRepository, lostBedsRepository, workingDayCountService)
+    BedUsageReportGenerator(bookingTransformer, bookingRepository, lostBedsRepository, workingDayService)
       .createReport(bedRepository.findAll(), properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
@@ -98,7 +98,7 @@ class ReportServiceForCas3(
   }
 
   fun createBedUtilisationReport(properties: BedUtilisationReportProperties, outputStream: OutputStream) {
-    BedUtilisationReportGenerator(bookingRepository, lostBedsRepository, workingDayCountService)
+    BedUtilisationReportGenerator(bookingRepository, lostBedsRepository, workingDayService)
       .createReport(bedRepository.findAll(), properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)

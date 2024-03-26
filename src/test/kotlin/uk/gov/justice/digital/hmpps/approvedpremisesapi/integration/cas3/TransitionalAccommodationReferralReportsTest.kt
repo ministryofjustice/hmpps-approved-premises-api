@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas3InReview
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas3ReadyToPlace
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentStatus.cas3Unallocated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReportType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
@@ -56,7 +56,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Transiti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
@@ -79,11 +79,11 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
   lateinit var realLostBedsRepository: LostBedsRepository
 
   @Autowired
-  lateinit var realWorkingDayCountService: WorkingDayCountService
+  lateinit var realWorkingDayCountService: WorkingDayService
 
   @ParameterizedTest
-  @EnumSource(value = ReportType::class)
-  fun `Get bookings report for all regions returns 403 Forbidden if user does not have all regions access`(reportType: ReportType) {
+  @EnumSource(value = Cas3ReportType::class)
+  fun `Get bookings report for all regions returns 403 Forbidden if user does not have all regions access`(reportType: Cas3ReportType) {
     `Given a User`(roles = listOf(CAS3_ASSESSOR)) { _, jwt ->
       webTestClient.get()
         .uri("/cas3/reports/$reportType?startDate=2023-04-01&endDate=2023-04-02")
@@ -96,8 +96,8 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = ReportType::class)
-  fun `Get bookings report for a region returns 403 Forbidden if user cannot access the specified region`(reportType: ReportType) {
+  @EnumSource(value = Cas3ReportType::class)
+  fun `Get bookings report for a region returns 403 Forbidden if user cannot access the specified region`(reportType: Cas3ReportType) {
     `Given a User`(roles = listOf(CAS3_ASSESSOR)) { _, jwt ->
       webTestClient.get()
         .uri("/cas3/reports/$reportType?startDate=2023-04-01&endDate=2023-04-02&probationRegionId=${UUID.randomUUID()}")
@@ -110,9 +110,9 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = ReportType::class)
+  @EnumSource(value = Cas3ReportType::class)
   fun `Get bookings report returns 403 Forbidden for Temporary Accommodation if a user does not have the CAS3_ASSESSOR role`(
-    reportType: ReportType,
+    reportType: Cas3ReportType,
   ) {
     `Given a User` { user, jwt ->
       webTestClient.get()
@@ -126,8 +126,8 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = ReportType::class)
-  fun `Get report returns 400 if dates provided is more than 3 months`(reportType: ReportType) {
+  @EnumSource(value = Cas3ReportType::class)
+  fun `Get report returns 400 if dates provided is more than 3 months`(reportType: Cas3ReportType) {
     `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       val startDate = "2023-04-01"
       val endDate = "2023-08-02"
@@ -144,7 +144,7 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = ReportType::class)
+  @EnumSource(value = Cas3ReportType::class)
   fun `Get report returns 400 if start date is later than end date`() {
     `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       val startDate = "2023-08-03"
@@ -162,7 +162,7 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
   }
 
   @ParameterizedTest
-  @EnumSource(value = ReportType::class)
+  @EnumSource(value = Cas3ReportType::class)
   fun `Get report returns 400 if mandatory dates are not provided`() {
     `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       webTestClient.get()

@@ -17,7 +17,6 @@ class BedUsageReportGenerator(
   private val bookingRepository: BookingRepository,
   private val lostBedsRepository: LostBedsRepository,
   private val workingDayService: WorkingDayService,
-  private val cas3EndDateOverride: Int,
 ) : ReportGenerator<BedEntity, BedUsageReportRow, BedUsageReportProperties>(BedUsageReportRow::class) {
   override fun filter(properties: BedUsageReportProperties): (BedEntity) -> Boolean = {
     checkServiceType(properties.serviceName, it.room.premises) &&

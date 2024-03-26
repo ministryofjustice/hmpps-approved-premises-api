@@ -57,7 +57,7 @@ paths:
           description: Name of the report to download
           required: true
           schema:
-            $ref: '#/components/schemas/ReportType'
+            $ref: '#/components/schemas/Cas3ReportType'
         - name: probationRegionId
           in: query
           required: false
@@ -4561,7 +4561,7 @@ components:
           type: string
       required:
         - name
-    ReportType:
+    Cas3ReportType:
       type: string
       enum:
         - referral

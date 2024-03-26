@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Ref
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.ReportServiceForCas3
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportService
 import java.io.ByteArrayOutputStream
 import java.time.LocalDate
 import java.util.UUID
@@ -32,7 +32,7 @@ import java.util.UUID
 @Service
 class ReportsController(
   private val reportService: ReportService,
-  private val reportServiceForCas3: ReportServiceForCas3,
+  private val cas3ReportService: Cas3ReportService,
   private val userAccessService: UserAccessService,
   private val userService: UserService,
 ) : ReportsApiDelegate {
@@ -49,7 +49,7 @@ class ReportsController(
     val properties = BookingsReportProperties(xServiceName, probationRegionId, startDate, endDate)
     val outputStream = ByteArrayOutputStream()
 
-    reportServiceForCas3.createBookingsReport(properties, outputStream)
+    cas3ReportService.createBookingsReport(properties, outputStream)
 
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }
@@ -65,7 +65,7 @@ class ReportsController(
     val properties = BedUsageReportProperties(xServiceName, probationRegionId, startDate, endDate)
     val outputStream = ByteArrayOutputStream()
 
-    reportServiceForCas3.createBedUsageReport(properties, outputStream)
+    cas3ReportService.createBedUsageReport(properties, outputStream)
 
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }
@@ -81,7 +81,7 @@ class ReportsController(
     val properties = BedUtilisationReportProperties(xServiceName, probationRegionId, startDate, endDate)
     val outputStream = ByteArrayOutputStream()
 
-    reportServiceForCas3.createBedUtilisationReport(properties, outputStream)
+    cas3ReportService.createBedUtilisationReport(properties, outputStream)
 
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }

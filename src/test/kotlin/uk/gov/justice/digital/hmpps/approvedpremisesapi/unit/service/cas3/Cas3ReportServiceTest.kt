@@ -20,8 +20,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TransitionalA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.repository.TransitionalAccommodationReferralReportRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.ReportServiceForCas3
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.io.ByteArrayOutputStream
 import java.sql.Timestamp
@@ -29,7 +29,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
-class ReportServiceForCas3Test {
+class Cas3ReportServiceTest {
   private val mockOffenderService = mockk<OffenderService>()
   private val mockUserService = mockk<UserService>()
   private val mockTransitionalAccommodationReferralReportRowRepository =
@@ -37,18 +37,18 @@ class ReportServiceForCas3Test {
   private val mockBookingsReportRepository = mockk<BookingsReportRepository>()
   private val mockLostBedsRepository = mockk<LostBedsRepository>()
   private val mockBookingTransformer = mockk<BookingTransformer>()
-  private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
+  private val mockWorkingDayService = mockk<WorkingDayService>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockBedRepository = mockk<BedRepository>()
 
-  private val reportServiceForCas3 = ReportServiceForCas3(
+  private val cas3ReportService = Cas3ReportService(
     mockOffenderService,
     mockUserService,
     mockTransitionalAccommodationReferralReportRowRepository,
     mockBookingsReportRepository,
     mockLostBedsRepository,
     mockBookingTransformer,
-    mockWorkingDayCountService,
+    mockWorkingDayService,
     mockBookingRepository,
     mockBedRepository,
     2,
@@ -68,7 +68,7 @@ class ReportServiceForCas3Test {
       PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
     )
 
-    reportServiceForCas3.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
+    cas3ReportService.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
 
     verify {
       mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
@@ -95,20 +95,20 @@ class ReportServiceForCas3Test {
       PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
     )
 
-    val reportServiceForCas3WithThreeMonths = ReportServiceForCas3(
+    val cas3ReportServiceWithThreeMonths = Cas3ReportService(
       mockOffenderService,
       mockUserService,
       mockTransitionalAccommodationReferralReportRowRepository,
       mockBookingsReportRepository,
       mockLostBedsRepository,
       mockBookingTransformer,
-      mockWorkingDayCountService,
+      mockWorkingDayService,
       mockBookingRepository,
       mockBedRepository,
       3,
     )
 
-    reportServiceForCas3WithThreeMonths.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
+    cas3ReportServiceWithThreeMonths.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
 
     verify {
       mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
@@ -132,7 +132,7 @@ class ReportServiceForCas3Test {
     every { mockUserService.getUserForRequest() } returns UserEntityFactory().withUnitTestControlProbationRegion().produce()
     every { mockOffenderService.getOffenderSummariesByCrns(any<Set<String>>(), any()) } returns emptyList()
 
-    reportServiceForCas3.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
+    cas3ReportService.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
 
     verify {
       mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
@@ -168,7 +168,7 @@ class ReportServiceForCas3Test {
       PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
     )
 
-    reportServiceForCas3.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
+    cas3ReportService.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
 
     verify {
       mockTransitionalAccommodationReferralReportRowRepository.findAllReferrals(
@@ -207,7 +207,7 @@ class ReportServiceForCas3Test {
 
     Assertions.assertThatExceptionOfType(RuntimeException::class.java)
       .isThrownBy {
-        reportServiceForCas3.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
+        cas3ReportService.createCas3ApplicationReferralsReport(properties, ByteArrayOutputStream())
       }
 
     verify {
@@ -235,7 +235,7 @@ class ReportServiceForCas3Test {
       PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
     )
 
-    reportServiceForCas3.createBookingsReport(properties, ByteArrayOutputStream())
+    cas3ReportService.createBookingsReport(properties, ByteArrayOutputStream())
 
     verify {
       mockBookingsReportRepository.findAllByOverlappingDate(
@@ -273,7 +273,7 @@ class ReportServiceForCas3Test {
       PersonSummaryInfoResult.Success.Full("", CaseSummaryFactory().produce()),
     )
 
-    reportServiceForCas3.createBookingsReport(properties, ByteArrayOutputStream())
+    cas3ReportService.createBookingsReport(properties, ByteArrayOutputStream())
 
     verify {
       mockBookingsReportRepository.findAllByOverlappingDate(
