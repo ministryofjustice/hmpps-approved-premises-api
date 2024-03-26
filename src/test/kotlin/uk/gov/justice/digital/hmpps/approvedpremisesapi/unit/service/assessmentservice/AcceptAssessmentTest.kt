@@ -110,6 +110,7 @@ class AcceptAssessmentTest {
     UrlTemplate("http://frontend/applications/#id"),
     taskDeadlineServiceMock,
     assessmentEmailServiceMock,
+    UrlTemplate("http://frontend/assessments/#id"),
   )
 
   lateinit var user: UserEntity
