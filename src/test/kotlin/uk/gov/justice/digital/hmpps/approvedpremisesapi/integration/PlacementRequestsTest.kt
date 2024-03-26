@@ -1665,11 +1665,11 @@ class PlacementRequestsTest : IntegrationTestBase() {
             emailAsserter.assertEmailsRequestedCount(2)
             emailAsserter.assertEmailRequested(
               placementRequest.application.apArea!!.emailAddress!!,
-              notifyConfig.templates.matchRequestWithdrawn,
+              notifyConfig.templates.matchRequestWithdrawnV2,
             )
             emailAsserter.assertEmailRequested(
               placementRequest.application.createdByUser.email!!,
-              notifyConfig.templates.placementRequestWithdrawn,
+              notifyConfig.templates.placementRequestWithdrawnV2,
             )
           }
         }

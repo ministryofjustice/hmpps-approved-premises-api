@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -39,626 +40,763 @@ class Cas1PlacementApplicationEmailServiceTest {
     mockEmailNotificationService,
     notifyConfig = notifyConfig,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
+    applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
     sendNewWithdrawalNotifications = sendNewWithdrawalNotifications,
     aps530WithdrawalEmailImprovements = aps530WithdrawalEmailImprovements,
   )
 
-  @Test
-  fun `placementApplicationSubmitted doesnt sent email to applicant if no email address defined`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
+  @Nested
+  inner class PlacementApplicationSubmitted {
 
-    val assessor = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
+    @Test
+    fun `placementApplicationSubmitted doesnt sent email to applicant if no email address defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
 
-    val application = createApplicationForApplicant(applicant)
+      val assessor = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
 
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .withAllocatedToUser(assessor)
-      .produce()
+      val application = createApplicationForApplicant(applicant)
 
-    service.placementApplicationSubmitted(placementApplication)
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
 
-    mockEmailNotificationService.assertNoEmailsRequested()
+      service.placementApplicationSubmitted(placementApplication)
+
+      mockEmailNotificationService.assertNoEmailsRequested()
+    }
+
+    @Test
+    fun `placementApplicationSubmitted sends v1 email to applicant if email address defined and not using new withdrawals`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
+
+      val assessor = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
+
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      serviceUsingLegacyWithdrawalsNotifications.placementApplicationSubmitted(placementApplication)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to "2020-03-12",
+        "endDate" to "2020-03-22",
+        "additionalDatesSet" to "no",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.placementRequestSubmitted,
+        personalisation,
+      )
+    }
+
+    @Test
+    fun `placementApplicationSubmitted sends v2 email to applicant if email address defined and using new withdrawals`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
+
+      val assessor = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
+
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      service.placementApplicationSubmitted(placementApplication)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to "2020-03-12",
+        "endDate" to "2020-03-22",
+        "additionalDatesSet" to "no",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.placementRequestSubmittedV2,
+        personalisation,
+      )
+    }
   }
 
-  @Test
-  fun `placementApplicationSubmitted sends v1 email to applicant if email address defined and not using new withdrawals`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(APPLICANT_EMAIL)
-      .produce()
+  @Nested
+  inner class PlacementApplicationAllocated {
 
-    val assessor = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
+    @Test
+    fun `placementApplicationAllocated doesnt send email to applicant if no email address defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
 
-    val application = createApplicationForApplicant(applicant)
+      val assessor = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
 
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .withAllocatedToUser(assessor)
-      .produce()
+      val application = createApplicationForApplicant(applicant)
 
-    placementApplication.placementDates = mutableListOf(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
-        .withPlacementApplication(placementApplication)
-        .produce(),
-    )
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
 
-    serviceUsingLegacyWithdrawalsNotifications.placementApplicationSubmitted(placementApplication)
+      service.placementApplicationAllocated(placementApplication)
 
-    mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertNoEmailsRequested()
+    }
 
-    val personalisation = mapOf(
-      "applicationUrl" to "http://frontend/applications/${application.id}",
-      "crn" to TestConstants.CRN,
-      "applicationArea" to AREA_NAME,
-      "startDate" to "2020-03-12",
-      "endDate" to "2020-03-22",
-      "additionalDatesSet" to "no",
-    )
+    @Test
+    fun `placementApplicationAllocated sends V1 email to applicant if email address defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
 
-    mockEmailNotificationService.assertEmailRequested(
-      APPLICANT_EMAIL,
-      notifyConfig.templates.placementRequestSubmitted,
-      personalisation,
-    )
+      val assessor = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
+
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      service.placementApplicationAllocated(placementApplication)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to "2020-03-12",
+        "endDate" to "2020-03-22",
+        "additionalDatesSet" to "no",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.placementRequestAllocated,
+        personalisation,
+      )
+    }
+
+    @Test
+    fun `placementApplicationAllocated sends V2 email to applicant if email address defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
+
+      val assessor = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
+
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      serviceUsingAps530Improvements.placementApplicationAllocated(placementApplication)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to "2020-03-12",
+        "endDate" to "2020-03-22",
+        "additionalDatesSet" to "no",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.placementRequestAllocatedV2,
+        personalisation,
+      )
+    }
   }
 
-  @Test
-  fun `placementApplicationSubmitted sends v2 email to applicant if email address defined and using new withdrawals`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(APPLICANT_EMAIL)
-      .produce()
+  @Nested
+  inner class PlacementApplicationAccepted {
 
-    val assessor = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
+    @Test
+    fun `placementApplicationAccepted doesnt send email to applicant if no email address defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
 
-    val application = createApplicationForApplicant(applicant)
+      val assessor = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
 
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .withAllocatedToUser(assessor)
-      .produce()
+      val application = createApplicationForApplicant(applicant)
 
-    placementApplication.placementDates = mutableListOf(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
-        .withPlacementApplication(placementApplication)
-        .produce(),
-    )
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
 
-    service.placementApplicationSubmitted(placementApplication)
+      service.placementApplicationAccepted(placementApplication)
 
-    mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertNoEmailsRequested()
+    }
 
-    val personalisation = mapOf(
-      "applicationUrl" to "http://frontend/applications/${application.id}",
-      "crn" to TestConstants.CRN,
-      "applicationArea" to AREA_NAME,
-      "startDate" to "2020-03-12",
-      "endDate" to "2020-03-22",
-      "additionalDatesSet" to "no",
-    )
+    @Test
+    fun `placementApplicationAccepted sends V1 email to applicant if email address defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
 
-    mockEmailNotificationService.assertEmailRequested(
-      APPLICANT_EMAIL,
-      notifyConfig.templates.placementRequestSubmittedV2,
-      personalisation,
-    )
+      val assessor = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
+
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      service.placementApplicationAccepted(placementApplication)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "crn" to TestConstants.CRN,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.placementRequestDecisionAccepted,
+        personalisation,
+      )
+    }
+
+    @Test
+    fun `placementApplicationAccepted sends V2 email to applicant if email address defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
+
+      val assessor = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
+
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      serviceUsingAps530Improvements.placementApplicationAccepted(placementApplication)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to "2020-03-12",
+        "endDate" to "2020-03-22",
+        "additionalDatesSet" to "no",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.placementRequestDecisionAcceptedV2,
+        personalisation,
+      )
+    }
   }
 
-  @Test
-  fun `placementApplicationAllocated doesnt send email to applicant if no email address defined`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
+  @Nested
+  inner class PlacementApplicationRejected {
 
-    val assessor = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
+    @Test
+    fun `placementApplicationRejected doesnt send email to applicant if no email address defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
 
-    val application = createApplicationForApplicant(applicant)
+      val assessor = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
 
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .withAllocatedToUser(assessor)
-      .produce()
+      val application = createApplicationForApplicant(applicant)
 
-    service.placementApplicationAllocated(placementApplication)
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
 
-    mockEmailNotificationService.assertNoEmailsRequested()
+      service.placementApplicationRejected(placementApplication)
+
+      mockEmailNotificationService.assertNoEmailsRequested()
+    }
+
+    @Test
+    fun `placementApplicationRejected sends V1 email to applicant if email address defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
+
+      val assessor = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
+
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      service.placementApplicationRejected(placementApplication)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to "2020-03-12",
+        "endDate" to "2020-03-22",
+        "additionalDatesSet" to "no",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.placementRequestDecisionRejected,
+        personalisation,
+      )
+    }
+
+    @Test
+    fun `placementApplicationRejected sends V2 email to applicant if email address defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
+
+      val assessor = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
+
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      service.placementApplicationRejected(placementApplication)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "crn" to TestConstants.CRN,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.placementRequestDecisionRejected,
+        personalisation,
+      )
+    }
   }
 
-  @Test
-  fun `placementApplicationAllocated sends V1 email to applicant if email address defined`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(APPLICANT_EMAIL)
-      .produce()
+  @Nested
+  inner class PlacementApplicationWithdrawn {
 
-    val assessor = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
-
-    val application = createApplicationForApplicant(applicant)
-
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .withAllocatedToUser(assessor)
-      .produce()
-
-    placementApplication.placementDates = mutableListOf(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
-        .withPlacementApplication(placementApplication)
-        .produce(),
+    val withdrawnByUser = createUser(
+      emailAddress = null,
+      name = "withdrawingUser",
     )
 
-    service.placementApplicationAllocated(placementApplication)
+    @Test
+    fun `placementApplicationWithdrawn doesnt send email to applicant or assessor if no email addresses defined`() {
+      val applicant = createUser(emailAddress = null)
+      val assessor = createUser(emailAddress = null)
 
-    mockEmailNotificationService.assertEmailRequestCount(1)
+      val application = createApplicationForApplicant(applicant)
 
-    val personalisation = mapOf(
-      "applicationUrl" to "http://frontend/applications/${application.id}",
-      "crn" to TestConstants.CRN,
-      "applicationArea" to AREA_NAME,
-      "startDate" to "2020-03-12",
-      "endDate" to "2020-03-22",
-      "additionalDatesSet" to "no",
-    )
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
 
-    mockEmailNotificationService.assertEmailRequested(
-      APPLICANT_EMAIL,
-      notifyConfig.templates.placementRequestAllocated,
-      personalisation,
-    )
+      service.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        wasBeingAssessedBy = assessor,
+        withdrawingUser = withdrawnByUser,
+      )
+
+      mockEmailNotificationService.assertNoEmailsRequested()
+    }
+
+    @Test
+    fun `placementApplicationWithdrawn sends an email to applicant if email addresses defined`() {
+      val applicant = createUser(emailAddress = APPLICANT_EMAIL)
+
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      service.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        wasBeingAssessedBy = null,
+        withdrawingUser = withdrawnByUser,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to "2020-03-12",
+        "endDate" to "2020-03-22",
+        "additionalDatesSet" to "no",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.placementRequestWithdrawn,
+        personalisation,
+      )
+    }
+
+    @Test
+    fun `placementApplicationWithdrawn sends an email to assessor if email address defined`() {
+      val applicant = createUser(emailAddress = null)
+      val assessor = createUser(emailAddress = ASSESSOR_EMAIL)
+
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      service.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        wasBeingAssessedBy = assessor,
+        withdrawingUser = withdrawnByUser,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to "2020-03-12",
+        "endDate" to "2020-03-22",
+        "additionalDatesSet" to "no",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        ASSESSOR_EMAIL,
+        notifyConfig.templates.placementRequestWithdrawn,
+        personalisation,
+      )
+    }
+
+    @Test
+    fun `placementApplicationWithdrawn sends a V2 email to applicant if email addresses defined`() {
+      val applicant = createUser(emailAddress = APPLICANT_EMAIL)
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      serviceUsingAps530Improvements.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        wasBeingAssessedBy = null,
+        withdrawingUser = withdrawnByUser,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to "2020-03-12",
+        "endDate" to "2020-03-22",
+        "additionalDatesSet" to "no",
+        "withdrawnBy" to "withdrawingUser",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.placementRequestWithdrawnV2,
+        personalisation,
+      )
+    }
+
+    @Test
+    fun `placementApplicationWithdrawn sends a V2 email to assessor if email address defined`() {
+      val applicant = createUser(emailAddress = null)
+      val assessor = createUser(emailAddress = ASSESSOR_EMAIL)
+
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      serviceUsingAps530Improvements.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        wasBeingAssessedBy = assessor,
+        withdrawingUser = withdrawnByUser,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to "2020-03-12",
+        "endDate" to "2020-03-22",
+        "additionalDatesSet" to "no",
+        "withdrawnBy" to "withdrawingUser",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        ASSESSOR_EMAIL,
+        notifyConfig.templates.placementRequestWithdrawnV2,
+        personalisation,
+      )
+    }
+
+    @Test
+    fun `placementApplicationWithdrawn sends an email with 'additionalDates' if multiple dates defined due to a legacy placement application`() {
+      val applicant = createUser(emailAddress = null)
+      val assessor = createUser(emailAddress = ASSESSOR_EMAIL)
+
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .withAllocatedToUser(assessor)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2021, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      service.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        wasBeingAssessedBy = assessor,
+        withdrawingUser = withdrawnByUser,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "additionalDatesSet" to "yes",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        ASSESSOR_EMAIL,
+        notifyConfig.templates.placementRequestWithdrawn,
+        personalisation,
+      )
+    }
   }
 
-  @Test
-  fun `placementApplicationAllocated sends V2 email to applicant if email address defined`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(APPLICANT_EMAIL)
-      .produce()
-
-    val assessor = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
-
-    val application = createApplicationForApplicant(applicant)
-
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .withAllocatedToUser(assessor)
-      .produce()
-
-    placementApplication.placementDates = mutableListOf(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
-        .withPlacementApplication(placementApplication)
-        .produce(),
-    )
-
-    serviceUsingAps530Improvements.placementApplicationAllocated(placementApplication)
-
-    mockEmailNotificationService.assertEmailRequestCount(1)
-
-    val personalisation = mapOf(
-      "applicationUrl" to "http://frontend/applications/${application.id}",
-      "crn" to TestConstants.CRN,
-      "applicationArea" to AREA_NAME,
-      "startDate" to "2020-03-12",
-      "endDate" to "2020-03-22",
-      "additionalDatesSet" to "no",
-    )
-
-    mockEmailNotificationService.assertEmailRequested(
-      APPLICANT_EMAIL,
-      notifyConfig.templates.placementRequestAllocatedV2,
-      personalisation,
-    )
-  }
-
-  @Test
-  fun `placementApplicationAccepted doesnt send email to applicant if no email address defined`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
-
-    val assessor = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
-
-    val application = createApplicationForApplicant(applicant)
-
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .withAllocatedToUser(assessor)
-      .produce()
-
-    service.placementApplicationAccepted(placementApplication)
-
-    mockEmailNotificationService.assertNoEmailsRequested()
-  }
-
-  @Test
-  fun `placementApplicationAccepted sends V1 email to applicant if email address defined`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(APPLICANT_EMAIL)
-      .produce()
-
-    val assessor = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
-
-    val application = createApplicationForApplicant(applicant)
-
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .withAllocatedToUser(assessor)
-      .produce()
-
-    placementApplication.placementDates = mutableListOf(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
-        .withPlacementApplication(placementApplication)
-        .produce(),
-    )
-
-    service.placementApplicationAccepted(placementApplication)
-
-    mockEmailNotificationService.assertEmailRequestCount(1)
-
-    val personalisation = mapOf(
-      "crn" to TestConstants.CRN,
-    )
-
-    mockEmailNotificationService.assertEmailRequested(
-      APPLICANT_EMAIL,
-      notifyConfig.templates.placementRequestDecisionAccepted,
-      personalisation,
-    )
-  }
-
-  @Test
-  fun `placementApplicationAccepted sends V2 email to applicant if email address defined`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(APPLICANT_EMAIL)
-      .produce()
-
-    val assessor = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
-
-    val application = createApplicationForApplicant(applicant)
-
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .withAllocatedToUser(assessor)
-      .produce()
-
-    placementApplication.placementDates = mutableListOf(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
-        .withPlacementApplication(placementApplication)
-        .produce(),
-    )
-
-    serviceUsingAps530Improvements.placementApplicationAccepted(placementApplication)
-
-    mockEmailNotificationService.assertEmailRequestCount(1)
-
-    val personalisation = mapOf(
-      "applicationUrl" to "http://frontend/applications/${application.id}",
-      "crn" to TestConstants.CRN,
-      "applicationArea" to AREA_NAME,
-      "startDate" to "2020-03-12",
-      "endDate" to "2020-03-22",
-      "additionalDatesSet" to "no",
-    )
-
-    mockEmailNotificationService.assertEmailRequested(
-      APPLICANT_EMAIL,
-      notifyConfig.templates.placementRequestDecisionAcceptedV2,
-      personalisation,
-    )
-  }
-
-  @Test
-  fun `placementApplicationRejected doesnt send email to applicant if no email address defined`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
-
-    val assessor = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
-
-    val application = createApplicationForApplicant(applicant)
-
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .withAllocatedToUser(assessor)
-      .produce()
-
-    service.placementApplicationRejected(placementApplication)
-
-    mockEmailNotificationService.assertNoEmailsRequested()
-  }
-
-  @Test
-  fun `placementApplicationRejected sends V1 email to applicant if email address defined`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(APPLICANT_EMAIL)
-      .produce()
-
-    val assessor = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
-
-    val application = createApplicationForApplicant(applicant)
-
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .withAllocatedToUser(assessor)
-      .produce()
-
-    placementApplication.placementDates = mutableListOf(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
-        .withPlacementApplication(placementApplication)
-        .produce(),
-    )
-
-    service.placementApplicationRejected(placementApplication)
-
-    mockEmailNotificationService.assertEmailRequestCount(1)
-
-    val personalisation = mapOf(
-      "applicationUrl" to "http://frontend/applications/${application.id}",
-      "crn" to TestConstants.CRN,
-      "applicationArea" to AREA_NAME,
-      "startDate" to "2020-03-12",
-      "endDate" to "2020-03-22",
-      "additionalDatesSet" to "no",
-    )
-
-    mockEmailNotificationService.assertEmailRequested(
-      APPLICANT_EMAIL,
-      notifyConfig.templates.placementRequestDecisionRejected,
-      personalisation,
-    )
-  }
-
-  @Test
-  fun `placementApplicationRejected sends V2 email to applicant if email address defined`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(APPLICANT_EMAIL)
-      .produce()
-
-    val assessor = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
-
-    val application = createApplicationForApplicant(applicant)
-
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .withAllocatedToUser(assessor)
-      .produce()
-
-    placementApplication.placementDates = mutableListOf(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
-        .withPlacementApplication(placementApplication)
-        .produce(),
-    )
-
-    service.placementApplicationRejected(placementApplication)
-
-    mockEmailNotificationService.assertEmailRequestCount(1)
-
-    val personalisation = mapOf(
-      "crn" to TestConstants.CRN,
-    )
-
-    mockEmailNotificationService.assertEmailRequested(
-      APPLICANT_EMAIL,
-      notifyConfig.templates.placementRequestDecisionRejected,
-      personalisation,
-    )
-  }
-
-  @Test
-  fun `placementApplicationWithdrawn doesnt send email to applicant or assessor if no email addresses defined`() {
-    val applicant = createUser(emailAddress = null)
-    val assessor = createUser(emailAddress = null)
-
-    val application = createApplicationForApplicant(applicant)
-
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .withAllocatedToUser(assessor)
-      .produce()
-
-    service.placementApplicationWithdrawn(placementApplication, wasBeingAssessedBy = assessor)
-
-    mockEmailNotificationService.assertNoEmailsRequested()
-  }
-
-  @Test
-  fun `placementApplicationWithdrawn sends an email to applicant if email addresses defined`() {
-    val applicant = createUser(emailAddress = APPLICANT_EMAIL)
-
-    val application = createApplicationForApplicant(applicant)
-
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .produce()
-
-    placementApplication.placementDates = mutableListOf(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
-        .withPlacementApplication(placementApplication)
-        .produce(),
-    )
-
-    service.placementApplicationWithdrawn(placementApplication, wasBeingAssessedBy = null)
-
-    mockEmailNotificationService.assertEmailRequestCount(1)
-
-    val personalisation = mapOf(
-      "applicationUrl" to "http://frontend/applications/${application.id}",
-      "crn" to TestConstants.CRN,
-      "applicationArea" to AREA_NAME,
-      "startDate" to "2020-03-12",
-      "endDate" to "2020-03-22",
-      "additionalDatesSet" to "no",
-    )
-
-    mockEmailNotificationService.assertEmailRequested(
-      APPLICANT_EMAIL,
-      notifyConfig.templates.placementRequestWithdrawn,
-      personalisation,
-    )
-  }
-
-  @Test
-  fun `placementApplicationWithdrawn sends an email to assessor if email address defined`() {
-    val applicant = createUser(emailAddress = null)
-    val assessor = createUser(emailAddress = ASSESSOR_EMAIL)
-
-    val application = createApplicationForApplicant(applicant)
-
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .withAllocatedToUser(assessor)
-      .produce()
-
-    placementApplication.placementDates = mutableListOf(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
-        .withPlacementApplication(placementApplication)
-        .produce(),
-    )
-
-    service.placementApplicationWithdrawn(placementApplication, wasBeingAssessedBy = assessor)
-
-    mockEmailNotificationService.assertEmailRequestCount(1)
-
-    val personalisation = mapOf(
-      "applicationUrl" to "http://frontend/applications/${application.id}",
-      "crn" to TestConstants.CRN,
-      "applicationArea" to AREA_NAME,
-      "startDate" to "2020-03-12",
-      "endDate" to "2020-03-22",
-      "additionalDatesSet" to "no",
-    )
-
-    mockEmailNotificationService.assertEmailRequested(
-      ASSESSOR_EMAIL,
-      notifyConfig.templates.placementRequestWithdrawn,
-      personalisation,
-    )
-  }
-
-  @Test
-  fun `placementApplicationWithdrawn sends an email with 'additionalDates' if multiple dates defined due to a legacy placement application`() {
-    val applicant = createUser(emailAddress = null)
-    val assessor = createUser(emailAddress = ASSESSOR_EMAIL)
-
-    val application = createApplicationForApplicant(applicant)
-
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(application)
-      .withCreatedByUser(applicant)
-      .withAllocatedToUser(assessor)
-      .produce()
-
-    placementApplication.placementDates = mutableListOf(
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2020, 3, 12))
-        .withDuration(10)
-        .withPlacementApplication(placementApplication)
-        .produce(),
-      PlacementDateEntityFactory()
-        .withExpectedArrival(LocalDate.of(2021, 3, 12))
-        .withDuration(10)
-        .withPlacementApplication(placementApplication)
-        .produce(),
-    )
-
-    service.placementApplicationWithdrawn(placementApplication, wasBeingAssessedBy = assessor)
-
-    mockEmailNotificationService.assertEmailRequestCount(1)
-
-    val personalisation = mapOf(
-      "additionalDatesSet" to "yes",
-    )
-
-    mockEmailNotificationService.assertEmailRequested(
-      ASSESSOR_EMAIL,
-      notifyConfig.templates.placementRequestWithdrawn,
-      personalisation,
-    )
-  }
-
-  private fun createUser(emailAddress: String?) = UserEntityFactory()
+  private fun createUser(
+    emailAddress: String?,
+    name: String = "default name",
+  ) = UserEntityFactory()
     .withUnitTestControlProbationRegion()
     .withEmail(emailAddress)
+    .withName(name)
     .produce()
 
   private fun createApplicationForApplicant(applicant: UserEntity) = ApprovedPremisesApplicationEntityFactory()

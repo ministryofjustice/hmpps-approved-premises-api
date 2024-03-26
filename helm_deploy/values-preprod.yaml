@@ -38,6 +38,7 @@ generic-service:
 
     URL-TEMPLATES_FRONTEND_APPLICATION: https://approved-premises-preprod.hmpps.service.justice.gov.uk/applications/#id
     URL-TEMPLATES_FRONTEND_APPLICATION-APPEAL: https://approved-premises-preprod.hmpps.service.justice.gov.uk/applications/#applicationId/appeals/#appealId
+    URL-TEMPLATES_FRONTEND_APPLICATION-TIMELINE: https://approved-premises-preprod.hmpps.service.justice.gov.uk/applications/#applicationId?tab=timeline
     URL-TEMPLATES_FRONTEND_ASSESSMENT: https://approved-premises-preprod.hmpps.service.justice.gov.uk/assessments/#id
     URL-TEMPLATES_FRONTEND_BOOKING: https://approved-premises-preprod.hmpps.service.justice.gov.uk/premises/#premisesId/bookings/#bookingId
     URL-TEMPLATES_FRONTEND_CAS2_APPLICATION: https://community-accommodation-tier-2-preprod.hmpps.service.justice.gov.uk/applications/#id

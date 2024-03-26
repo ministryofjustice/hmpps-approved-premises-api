@@ -1088,20 +1088,20 @@ class WithdrawalTest : IntegrationTestBase() {
     private fun assertAssessmentWithdrawnEmail(emailAddress: String) =
       emailAsserter.assertEmailRequested(
         emailAddress,
-        notifyConfig.templates.assessmentWithdrawn,
+        notifyConfig.templates.assessmentWithdrawnV2,
       )
 
     private fun assertApplicationWithdrawnEmail(emailAddress: String, application: ApplicationEntity) =
       emailAsserter.assertEmailRequested(
         emailAddress,
-        notifyConfig.templates.applicationWithdrawn,
+        notifyConfig.templates.applicationWithdrawnV2,
         mapOf("crn" to application.crn),
       )
 
     private fun assertBookingWithdrawnEmail(emailAddress: String, booking: BookingEntity) =
       emailAsserter.assertEmailRequested(
         emailAddress,
-        notifyConfig.templates.bookingWithdrawn,
+        notifyConfig.templates.bookingWithdrawnV2,
         mapOf(
           "startDate" to booking.arrivalDate.toString(),
           "endDate" to booking.departureDate.toString(),
@@ -1111,21 +1111,21 @@ class WithdrawalTest : IntegrationTestBase() {
     private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementApplication: PlacementApplicationEntity) =
       emailAsserter.assertEmailRequested(
         emailAddress,
-        notifyConfig.templates.placementRequestWithdrawn,
+        notifyConfig.templates.placementRequestWithdrawnV2,
         mapOf("startDate" to placementApplication.placementDates[0].expectedArrival.toString()),
       )
 
     private fun assertPlacementRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) =
       emailAsserter.assertEmailRequested(
         emailAddress,
-        notifyConfig.templates.placementRequestWithdrawn,
+        notifyConfig.templates.placementRequestWithdrawnV2,
         mapOf("startDate" to placementRequest.expectedArrival.toString()),
       )
 
     private fun assertMatchRequestWithdrawnEmail(emailAddress: String, placementRequest: PlacementRequestEntity) =
       emailAsserter.assertEmailRequested(
         emailAddress,
-        notifyConfig.templates.matchRequestWithdrawn,
+        notifyConfig.templates.matchRequestWithdrawnV2,
         mapOf("startDate" to placementRequest.expectedArrival.toString()),
       )
   }

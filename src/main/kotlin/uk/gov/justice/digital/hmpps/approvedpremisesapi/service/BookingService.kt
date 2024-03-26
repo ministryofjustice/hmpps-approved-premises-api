@@ -1219,7 +1219,13 @@ class BookingService(
     )
 
     val application = booking.application as ApprovedPremisesApplicationEntity?
-    application?.let { cas1BookingEmailService.bookingWithdrawn(it, booking) }
+    application?.let {
+      cas1BookingEmailService.bookingWithdrawn(
+        it,
+        booking,
+        withdrawalContext.triggeringUser,
+      )
+    }
 
     return CasResult.Success(cancellationEntity)
   }

@@ -209,7 +209,7 @@ class PlacementApplicationService(
    *
    * 1. The entity is withdrawable, and error if not
    * 2. The user is allowed to withdraw it, and error if not
-   * 3. If withdrawn, all descdents entities are withdrawn, where applicable
+   * 3. If withdrawn, all descendents entities are withdrawn, where applicable
    */
   @Transactional
   fun withdrawPlacementApplication(
@@ -238,7 +238,11 @@ class PlacementApplicationService(
     val savedApplication = placementApplicationRepository.save(placementApplication)
 
     cas1PlacementApplicationDomainEventService.placementApplicationWithdrawn(placementApplication, withdrawalContext)
-    cas1PlacementApplicationEmailService.placementApplicationWithdrawn(placementApplication, wasBeingAssessedBy)
+    cas1PlacementApplicationEmailService.placementApplicationWithdrawn(
+      placementApplication = placementApplication,
+      wasBeingAssessedBy = wasBeingAssessedBy,
+      withdrawingUser = withdrawalContext.triggeringUser,
+    )
 
     return CasResult.Success(savedApplication)
   }

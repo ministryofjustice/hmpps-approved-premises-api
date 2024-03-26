@@ -35,17 +35,28 @@ class Cas1BookingEmailServiceTest {
     const val PREMISES_EMAIL = "premisesEmail@test.com"
     const val PREMISES_NAME = "The Premises Name"
     const val REGION_NAME = "The Region Name"
+    const val WITHDRAWING_USER_NAME = "the withdrawing user"
   }
 
   private val notifyConfig = NotifyConfig()
   private val mockEmailNotificationService = MockEmailNotificationService()
 
-  val service = Cas1BookingEmailService(
+  private val service = buildService(aps530WithdrawalEmailImprovements = false)
+  private val serviceUsingAps530Improvements = buildService(aps530WithdrawalEmailImprovements = true)
+
+  private val withdrawingUser = UserEntityFactory()
+    .withDefaults()
+    .withName(TestConstants.WITHDRAWING_USER_NAME)
+    .produce()
+
+  fun buildService(aps530WithdrawalEmailImprovements: Boolean) = Cas1BookingEmailService(
     mockEmailNotificationService,
     notifyConfig = notifyConfig,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
+    applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
     bookingUrlTemplate = UrlTemplate("http://frontend/premises/#premisesId/bookings/#bookingId"),
     sendNewWithdrawalNotifications = true,
+    aps530WithdrawalEmailImprovements = aps530WithdrawalEmailImprovements,
   )
 
   val premises = ApprovedPremisesEntityFactory()
@@ -188,7 +199,7 @@ class Cas1BookingEmailServiceTest {
       departureDate = LocalDate.of(2023, 2, 14),
     )
 
-    service.bookingWithdrawn(application, booking)
+    service.bookingWithdrawn(application, booking, withdrawingUser)
 
     val expectedPersonalisation = mapOf(
       "apName" to PREMISES_NAME,
@@ -220,6 +231,53 @@ class Cas1BookingEmailServiceTest {
   }
 
   @Test
+  fun `bookingWithdrawn sends email V2 to applicant, premises and CRU if emails are defined`() {
+    val applicant = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .withEmail(APPLICANT_EMAIL)
+      .produce()
+
+    val (application, booking) = createApplicationAndBooking(
+      applicant,
+      premises,
+      arrivalDate = LocalDate.of(2023, 2, 1),
+      departureDate = LocalDate.of(2023, 2, 14),
+    )
+
+    serviceUsingAps530Improvements.bookingWithdrawn(application, booking, withdrawingUser)
+
+    val expectedPersonalisation = mapOf(
+      "apName" to PREMISES_NAME,
+      "applicationUrl" to "http://frontend/applications/${application.id}",
+      "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+      "crn" to CRN,
+      "startDate" to "2023-02-01",
+      "endDate" to "2023-02-14",
+      "region" to REGION_NAME,
+      "withdrawnBy" to TestConstants.WITHDRAWING_USER_NAME,
+    )
+
+    mockEmailNotificationService.assertEmailRequestCount(3)
+    mockEmailNotificationService.assertEmailRequested(
+      APPLICANT_EMAIL,
+      notifyConfig.templates.bookingWithdrawnV2,
+      expectedPersonalisation,
+    )
+
+    mockEmailNotificationService.assertEmailRequested(
+      PREMISES_EMAIL,
+      notifyConfig.templates.bookingWithdrawnV2,
+      expectedPersonalisation,
+    )
+
+    mockEmailNotificationService.assertEmailRequested(
+      AP_AREA_EMAIL,
+      notifyConfig.templates.bookingWithdrawnV2,
+      expectedPersonalisation,
+    )
+  }
+
+  @Test
   fun `bookingWithdrawn doesn't send email to applicant, premises or CRU if email not defined`() {
     val applicant = UserEntityFactory()
       .withUnitTestControlProbationRegion()
@@ -241,7 +299,7 @@ class Cas1BookingEmailServiceTest {
       departureDate = LocalDate.of(2023, 2, 14),
     )
 
-    service.bookingWithdrawn(application, booking)
+    service.bookingWithdrawn(application, booking, withdrawingUser)
 
     mockEmailNotificationService.assertNoEmailsRequested()
   }

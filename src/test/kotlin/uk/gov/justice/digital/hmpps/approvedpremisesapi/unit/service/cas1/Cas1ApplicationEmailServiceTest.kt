@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockEmailNotificationService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.OffsetDateTime
 
 class Cas1ApplicationEmailServiceTest {
@@ -20,18 +21,24 @@ class Cas1ApplicationEmailServiceTest {
   private val notifyConfig = NotifyConfig()
   private val mockEmailNotificationService = MockEmailNotificationService()
 
-  val service = Cas1ApplicationEmailService(
+  private val service = createService(aps530WithdrawalEmailImprovements = false)
+  private val serviceUsingAps530Improvements = createService(aps530WithdrawalEmailImprovements = true)
+
+  private fun createService(aps530WithdrawalEmailImprovements: Boolean) = Cas1ApplicationEmailService(
     emailNotifier = mockEmailNotificationService,
     notifyConfig = notifyConfig,
+    applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
+    aps530WithdrawalEmailImprovements = aps530WithdrawalEmailImprovements,
   )
 
   @Test
   fun `applicationWithdrawn doesnt send email to applicant if no email addresses defined`() {
     val applicant = createUser(emailAddress = null)
+    val withdrawingUser = createUser(emailAddress = null)
 
     val application = createApplicationForApplicant(applicant)
 
-    service.applicationWithdrawn(application)
+    service.applicationWithdrawn(application, withdrawingUser)
 
     mockEmailNotificationService.assertNoEmailsRequested()
   }
@@ -39,10 +46,11 @@ class Cas1ApplicationEmailServiceTest {
   @Test
   fun `applicationWithdrawn sends an email to applicant if email addresses defined`() {
     val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
+    val withdrawingUser = createUser(emailAddress = null)
 
     val application = createApplicationForApplicant(applicant)
 
-    service.applicationWithdrawn(application)
+    service.applicationWithdrawn(application, withdrawingUser)
 
     mockEmailNotificationService.assertEmailRequestCount(1)
 
@@ -57,9 +65,37 @@ class Cas1ApplicationEmailServiceTest {
     )
   }
 
-  private fun createUser(emailAddress: String?) = UserEntityFactory()
+  @Test
+  fun `applicationWithdrawn sends a V2 email to applicant if email addresses defined`() {
+    val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
+    val withdrawingUser = createUser(name = "the withdrawing user")
+
+    val application = createApplicationForApplicant(applicant)
+
+    serviceUsingAps530Improvements.applicationWithdrawn(application, withdrawingUser)
+
+    mockEmailNotificationService.assertEmailRequestCount(1)
+
+    val personalisation = mapOf(
+      "crn" to TestConstants.CRN,
+      "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+      "withdrawnBy" to "the withdrawing user",
+    )
+
+    mockEmailNotificationService.assertEmailRequested(
+      TestConstants.APPLICANT_EMAIL,
+      notifyConfig.templates.applicationWithdrawnV2,
+      personalisation,
+    )
+  }
+
+  private fun createUser(
+    emailAddress: String? = null,
+    name: String = "default name",
+  ) = UserEntityFactory()
     .withUnitTestControlProbationRegion()
     .withEmail(emailAddress)
+    .withName(name)
     .produce()
 
   private fun createApplicationForApplicant(applicant: UserEntity) = ApprovedPremisesApplicationEntityFactory()

@@ -332,7 +332,7 @@ class PlacementRequestService(
     val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementRequest
     updateApplicationStatusOnWithdrawal(placementRequest, isUserRequestedWithdrawal)
 
-    cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest)
+    cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest, withdrawalContext.triggeringUser)
     cas1PlacementRequestDomainEventService.placementRequestWithdrawn(placementRequest, withdrawalContext)
 
     return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))

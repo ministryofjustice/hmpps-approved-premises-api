@@ -150,6 +150,7 @@ url-templates:
   frontend:
     application: http://frontend/applications/#id
     application-appeal: http://frontend/applications/#applicationId/appeals/#appealId
+    application-timeline: http://frontend/applications/#applicationId?tab=timeline
     assessment: http://frontend/assessments/#id
     booking: http://frontend/premises/#premisesId/bookings/#bookingId
     cas2:

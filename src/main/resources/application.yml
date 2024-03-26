@@ -232,6 +232,7 @@ url-templates:
   frontend:
     application: http://localhost:3000/applications/#id
     application-appeal: http://localhost:3000/applications/#applicationId/appeals/#appealId
+    application-timeline: http://localhost:3000/applications/#applicationId?tab=timeline
     assessment: http://localhost:3000/assessments/#id
     booking: http://localhost:3000/premises/#premisesId/bookings/#bookingId
     cas2:

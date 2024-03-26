@@ -21,6 +21,8 @@ class Cas1AssessmentEmailService(
   private val workingDayCountService: WorkingDayCountService,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
+  @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
+  @Value("\${feature-flags.cas1-aps530-withdrawal-email-improvements}") private val aps530WithdrawalEmailImprovements: Boolean,
   @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val sendNewWithdrawalNotifications: Boolean,
 ) {
 
@@ -70,17 +72,26 @@ class Cas1AssessmentEmailService(
   fun assessmentWithdrawn(
     assessment: ApprovedPremisesAssessmentEntity,
     isAssessmentPending: Boolean,
+    withdrawingUser: UserEntity,
   ) {
     if (sendNewWithdrawalNotifications &&
       isAssessmentPending
     ) {
+      val templateId = if (aps530WithdrawalEmailImprovements) {
+        notifyConfig.templates.assessmentWithdrawnV2
+      } else {
+        notifyConfig.templates.assessmentWithdrawn
+      }
+
       assessment.allocatedToUser?.email?.let { email ->
         emailNotificationService.sendEmail(
           recipientEmailAddress = email,
-          templateId = notifyConfig.templates.assessmentWithdrawn,
+          templateId = templateId,
           personalisation = mapOf(
             "applicationUrl" to applicationUrlTemplate.resolve("id", assessment.application.id.toString()),
+            "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", assessment.application.id.toString()),
             "crn" to assessment.application.crn,
+            "withdrawnBy" to withdrawingUser.name,
           ),
         )
       }
