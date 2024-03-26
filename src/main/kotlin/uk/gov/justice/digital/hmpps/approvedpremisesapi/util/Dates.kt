@@ -12,6 +12,7 @@ val cas1UiExtendedDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("E
 val cas2UiExtendedDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMMM y")
 val cas1UiTimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("ha")
 val cas2UiTimeFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("h:mma")
+val cas2ApplicationDataDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
 fun LocalDate.getDaysUntilInclusive(end: LocalDate): List<LocalDate> {
   val result = mutableListOf<LocalDate>()
@@ -100,6 +101,11 @@ fun LocalDate.toUtcOffsetDateTime(): OffsetDateTime = OffsetDateTime.of(
 fun OffsetDateTime.toUiFormattedHourOfDay(): String = this.format(cas1UiTimeFormat).lowercase()
 
 fun OffsetDateTime.toCas2UiFormattedHourOfDay(): String = this.format(cas2UiTimeFormat).lowercase()
+
+/*
+  takes OffsetDateTime and returns string in "yyyy-mm-dd" format
+ */
+fun OffsetDateTime.toCas2ApplicationDataFormattedDate(): String = this.format(cas2ApplicationDataDateFormat).lowercase()
 
 fun earliestDateOf(date1: LocalDate, date2: LocalDate): LocalDate {
   if (date1.isBefore(date2)) return date1

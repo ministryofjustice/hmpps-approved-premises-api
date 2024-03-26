@@ -97,6 +97,11 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     assertThat(persistedApplication).isNotNull
 
     assertThat(serializableToJsonNode(persistedApplication.data)).isNotEmpty()
+    assertThat(
+      serializableToJsonNode(persistedApplication.data)
+        .get("hdc-licence-dates")
+        .get("hdc-licence-dates"),
+    ).isNotEmpty()
     assertThat(serializableToJsonNode(persistedApplication.document)).isEmpty()
     assertThat(persistedApplication.assessment).isNull()
   }
