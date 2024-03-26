@@ -58,6 +58,33 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /events/assessment-allocated/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "'Apply' events"
+      summary: An assessment-allocated event
+      responses:
+        '200':
+          description: The assessment-allocated event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentAllocatedEnvelope'
+        404:
+          description: No assessment-allocated event found for the provided `eventId`
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /events/application-assessed/{eventId}:
     parameters:
       - name: eventId
@@ -409,6 +436,15 @@ components:
       description: The URL on the Approved Premises service at which a user can view a representation of an AP application and related resources, including bookings
       type: string
       example: https://approved-premises-dev.hmpps.service.justice.gov.uk/applications/484b8b5e-6c3b-4400-b200-425bbe410713
+    AssessmentId:
+      description: The UUID of an assessment of an application for an AP place
+      type: string
+      format: uuid
+      example: 484b8b5e-6c3b-4400-b200-425bbe410713
+    AssessmentUrl:
+      description: The URL on the Approved Premises service at which a user can view a representation of an AP assessment and related resources, including bookings
+      type: string
+      example: https://approved-premises-dev.hmpps.service.justice.gov.uk/assessments/484b8b5e-6c3b-4400-b200-425bbe410713
     AppealId:
       description: The UUID of an appeal for an application
       type: string
@@ -1334,6 +1370,54 @@ components:
         - reason
         - legacyReasonCode
         - destination
+    AssessmentAllocatedEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          type: string
+          example: approved-premises.assessment.allocated
+        eventDetails:
+          $ref: '#/components/schemas/AssessmentAllocated'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
+    AssessmentAllocated:
+      type: object
+      properties:
+        assessmentId:
+          $ref: '#/components/schemas/AssessmentId'
+        assessmentUrl:
+          $ref: '#/components/schemas/AssessmentUrl'
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        allocatedAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+        allocatedTo:
+          $ref: '#/components/schemas/StaffMember'
+        allocatedBy:
+          $ref: '#/components/schemas/StaffMember'
+      required:
+        - assessmentId
+        - assessmentUrl
+        - applicationId
+        - applicationUrl
+        - personReference
+        - allocatedBy
+        - allocatedAt
     AssessmentAppealedEnvelope:
       type: object
       properties:

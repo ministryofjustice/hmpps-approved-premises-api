@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.EventsApiDelegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
@@ -110,6 +111,13 @@ class DomainEventsController(
 
   override fun eventsAssessmentAppealedEventIdGet(eventId: UUID): ResponseEntity<AssessmentAppealedEnvelope> {
     val event = domainEventService.getAssessmentAppealedEvent(eventId)
+      ?: throw NotFoundProblem(eventId, "DomainEvent")
+
+    return ResponseEntity.ok(event.data)
+  }
+
+  override fun eventsAssessmentAllocatedEventIdGet(eventId: UUID): ResponseEntity<AssessmentAllocatedEnvelope> {
+    val event = domainEventService.getAssessmentAllocatedEvent(eventId)
       ?: throw NotFoundProblem(eventId, "DomainEvent")
 
     return ResponseEntity.ok(event.data)
