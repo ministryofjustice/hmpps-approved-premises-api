@@ -145,8 +145,7 @@ class ApplicationsTransformerTest {
   inner class TransformJpaSummaryToSummary {
 
     @Test
-    fun `transforms an in progress CAS2 application correctly`
-    () {
+    fun `transforms an in progress CAS2 application correctly`() {
       val application = object : Cas2ApplicationSummary {
         override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
         override fun getCrn() = randomStringMultiCaseWithNumbers(6)
@@ -154,6 +153,7 @@ class ApplicationsTransformerTest {
         override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
         override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
         override fun getSubmittedAt() = null
+        override fun getLatestStatusUpdate() = null
       }
 
       val result = applicationsTransformer.transformJpaSummaryToSummary(
@@ -164,6 +164,7 @@ class ApplicationsTransformerTest {
       assertThat(result.id).isEqualTo(application.getId())
       assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
       assertThat(result.risks).isNull()
+      assertThat(result.latestStatusUpdate).isNull()
     }
 
     @Test
@@ -175,6 +176,7 @@ class ApplicationsTransformerTest {
         override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
         override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
         override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
+        override fun getLatestStatusUpdate(): String? = "my latest status update"
       }
 
       val result = applicationsTransformer.transformJpaSummaryToSummary(
@@ -184,6 +186,7 @@ class ApplicationsTransformerTest {
 
       assertThat(result.id).isEqualTo(application.getId())
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
+      assertThat(result.latestStatusUpdate).isEqualTo("my latest status update")
     }
   }
 }

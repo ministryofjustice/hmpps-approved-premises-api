@@ -85,10 +85,17 @@ SELECT
     a.crn,
     a.noms_number as nomsNumber,
     CAST(a.created_by_user_id AS TEXT) as createdByUserId,
+    asu.label as latestStatusUpdate,
     a.created_at as createdAt,
     a.submitted_at as submittedAt
 FROM cas_2_applications a
-WHERE a.submitted_at IS NOT NULL
+LEFT JOIN
+    (SELECT DISTINCT ON (application_id) su.application_id, su.label
+    FROM cas_2_status_updates su
+    ORDER BY su.application_id, su.created_at DESC) as asu
+ON a.id = asu.application_id
+WHERE a.created_by_user_id = '975464f9-f6f5-4526-ba7e-7b0c50fb231f'
+AND a.submitted_at IS NOT NULL
 """,
     countQuery =
     """
@@ -176,6 +183,7 @@ interface AppSummary {
   fun getCreatedByUserId(): UUID
   fun getCreatedAt(): Timestamp
   fun getSubmittedAt(): Timestamp?
+  fun getLatestStatusUpdate(): String?
 }
 
 interface Cas2ApplicationSummary : AppSummary
