@@ -95,6 +95,7 @@ class TaskDueMigrationJobTest : IntegrationTestBase() {
         withApplication(application)
         withCreatedByUser(user)
         withSchemaVersion(placementApplicationSchema)
+        withSubmittedAt(OffsetDateTime.now())
         withDueAt(null)
       }
   }

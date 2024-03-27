@@ -1782,6 +1782,7 @@ class TasksTest : IntegrationTestBase() {
                   withPermissiveSchema()
                 },
                 crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
               ) { placementApplication ->
                 val placementDate = placementDateFactory.produceAndPersist {
                   withPlacementApplication(placementApplication)

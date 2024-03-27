@@ -166,13 +166,15 @@ class TaskDeadlineServiceTest {
   }
 
   @Test
-  fun `getDeadline returns a deadline of the placement application's created date plus 10 working days for a placement application`() {
-    val createdAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
+  fun `getDeadline returns a deadline of the placement application's submitted date plus 10 working days for a placement application`() {
+    val createdAt = OffsetDateTime.parse("2022-01-01T15:00:00Z")
+    val submittedAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
     val placementRequest = createPlacementRequest(noticeType = Cas1ApplicationTimelinessCategory.shortNotice, isEsap = true, createdAt = createdAt)
     val placementApplication = PlacementApplicationEntityFactory()
       .withApplication(placementRequest.application)
       .withCreatedByUser(placementRequest.application.createdByUser)
       .withCreatedAt(createdAt)
+      .withSubmittedAt(submittedAt)
       .produce()
 
     val result = taskDeadlineService.getDeadline(placementApplication)
@@ -181,7 +183,7 @@ class TaskDeadlineServiceTest {
 
     verify(exactly = 1) {
       workingDayCountService.addWorkingDays(
-        placementApplication.createdAt.toLocalDate(),
+        submittedAt.toLocalDate(),
         TaskDeadlineService.STANDARD_PLACEMENT_APPLICATION_TIMEFRAME,
       )
     }

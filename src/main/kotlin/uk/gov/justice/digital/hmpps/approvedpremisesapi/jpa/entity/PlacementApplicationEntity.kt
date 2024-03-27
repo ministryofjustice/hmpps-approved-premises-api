@@ -41,7 +41,7 @@ interface PlacementApplicationRepository : JpaRepository<PlacementApplicationEnt
 
   fun findByApplication(application: ApplicationEntity): List<PlacementApplicationEntity>
 
-  @Query("SELECT p from PlacementApplicationEntity p WHERE p.dueAt IS NULL")
+  @Query("SELECT p from PlacementApplicationEntity p WHERE p.dueAt IS NULL AND p.submittedAt IS NOT NULL")
   fun findAllWithNullDueAt(pageable: Pageable?): Slice<PlacementApplicationEntity>
 
   @Modifying
