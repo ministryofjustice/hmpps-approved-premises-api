@@ -26,7 +26,12 @@ class Cas1UserMappingService(
     DeliusTeamMapping("N43OSE", "SEE"),
     DeliusTeamMapping("N43OWS", "SWSC"),
     DeliusTeamMapping("N41CRU", "NE"),
+    DeliusTeamMapping("N41EFT", "NE"),
+    DeliusTeamMapping("N41EXM", "NE"),
+    DeliusTeamMapping("N41EP4", "NE"),
   )
+
+  private val noTeamsApArea = "NE"
 
   data class DeliusTeamMapping(
     val deliusTeamCode: String,
@@ -44,6 +49,10 @@ class Cas1UserMappingService(
         teams.map { it.code }
       } ?: emptyList()
 
+      if (deliusUserTeamCodes.isEmpty()) {
+        return apAreaForCode(noTeamsApArea)
+      }
+
       val deliusTeamMapping = deliusTeamMappings.firstOrNull { deliusTeamMapping ->
         deliusUserTeamCodes.contains(deliusTeamMapping.deliusTeamCode)
       }
@@ -55,12 +64,12 @@ class Cas1UserMappingService(
         )
       }
 
-      return apAreaRepository.findByIdentifier(deliusTeamMapping.apAreaCode)
-        ?: throw InternalServerErrorProblem(
-          "Could not find AP Area for code ${deliusTeamMapping.apAreaCode}",
-        )
+      return apAreaForCode(deliusTeamMapping.apAreaCode)
     } else {
       return usersProbationRegion.apArea
     }
   }
+
+  private fun apAreaForCode(apAreaCode: String) = apAreaRepository.findByIdentifier(apAreaCode)
+    ?: throw InternalServerErrorProblem("Could not find AP Area for code $apAreaCode")
 }
