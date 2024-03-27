@@ -40,7 +40,7 @@ To process a seed CSV against a non-local environment:
 
   Where `seed type` is a value from the [`SeedFileType`](https://github.com/ministryofjustice/hmpps-approved-premises-api/blob/d8dc87aefa0294289a7bcb08048fbd8679b9954c/src/main/resources/static/_shared.yml#L3240) enum in the OpenAPI spec.  e.g.
   ```
-  kubectl exec --stdin --tty $pod -- /bin/bash -n $namespace
+  kubectl -n $namespace exec --stdin --tty $pod -- /bin/bash
   /app/run_seed_job approved_premises ap_seed_file
   ```
 
