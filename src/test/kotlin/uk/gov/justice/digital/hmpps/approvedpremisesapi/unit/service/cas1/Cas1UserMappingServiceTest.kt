@@ -62,6 +62,9 @@ class Cas1UserMappingServiceTest {
       "N43, N43OSE, SEE",
       "N43, N43OWS, SWSC",
       "N43, N41CRU, NE",
+      "N43, N41EFT, NE",
+      "N43, N41EXM, NE",
+      "N43, N41EP4, NE",
       "N41, N43CP1, NE",
       "N41, N43CP1, NE",
       "N41, N43CP2, NE",
@@ -77,6 +80,9 @@ class Cas1UserMappingServiceTest {
       "N41, N43OSE, SEE",
       "N41, N43OWS, SWSC",
       "N41, N41CRU, NE",
+      "N41, N41EFT, NE",
+      "N41, N41EXM, NE",
+      "N41, N41EP4, NE",
       "XX, N43CP1, NE",
       "XX, N43CP1, NE",
       "XX, N43CP2, NE",
@@ -92,6 +98,9 @@ class Cas1UserMappingServiceTest {
       "XX, N43OSE, SEE",
       "XX, N43OWS, SWSC",
       "XX, N41CRU, NE",
+      "XX, N41EFT, NE",
+      "XX, N41EXM, NE",
+      "XX, N41EP4, NE",
     )
     fun `determine ApArea from team code when user in national probation area and mapping exists for team`(
       deliusProbationAreaCode: String,
@@ -121,22 +130,22 @@ class Cas1UserMappingServiceTest {
     }
 
     @Test
-    fun `determineApArea when user in national probation area but they are not in any teams`() {
+    fun `determineApArea when user in national probation area but they are not in any teams use NE`() {
       val staffUserDetails = StaffUserDetailsFactory()
         .withUsername("J_ALUCARD")
         .withProbationAreaCode("N43")
         .withTeams(emptyList())
         .produce()
 
-      assertThatThrownBy {
-        service.determineApArea(
-          usersProbationRegion,
-          staffUserDetails,
-        )
-      }.hasMessage(
-        "Internal Server Error: Could not find a delius team mapping for delius user J_ALUCARD " +
-          "with delius probation area code N43 and teams []",
+      val retrievedApArea = ApAreaEntityFactory().produce()
+      every { apAreaRepository.findByIdentifier("NE") } returns retrievedApArea
+
+      val result = service.determineApArea(
+        usersProbationRegion,
+        staffUserDetails,
       )
+
+      assertThat(result).isEqualTo(retrievedApArea)
     }
 
     @Test
