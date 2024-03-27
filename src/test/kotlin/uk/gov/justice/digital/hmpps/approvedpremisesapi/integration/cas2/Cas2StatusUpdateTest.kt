@@ -254,4 +254,7 @@ class Cas2StatusUpdateTest(
       }
     }
   }
+
+  @Nested
+  inner class OnAssessments
 }

@@ -125,7 +125,7 @@ class Cas2AutoScript(
     )
     update.apply { this.createdAt = application.submittedAt!!.plusDays(idx + 1.toLong()) }
     statusUpdateRepository.save(update)
-    statusUpdateService.createStatusUpdatedDomainEvent(update)
+    statusUpdateService.createStatusUpdatedDomainEvent(update, application)
   }
 
   private fun findStatusAtPosition(idx: Int): Cas2PersistedApplicationStatus {
