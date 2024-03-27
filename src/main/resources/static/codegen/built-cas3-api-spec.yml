@@ -1986,7 +1986,7 @@ components:
         - id
         - name
         - label
-    Cas2ApplicationStatusUpdate:
+    Cas2AssessmentStatusUpdate:
       type: object
       properties:
         newStatus:

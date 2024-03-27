@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateEntityFactory
@@ -88,7 +88,7 @@ class StatusUpdateServiceTest {
     description = "",
     isActive = true,
   )
-  private val applicationStatusUpdate = Cas2ApplicationStatusUpdate(newStatus = activeStatus.name)
+  private val applicationStatusUpdate = Cas2AssessmentStatusUpdate(newStatus = activeStatus.name)
 
   val statusDetail = Cas2PersistedApplicationStatusDetail(
     id = UUID.fromString("390e81d4-2ace-4e76-a9e3-5efa47be606e"),
@@ -105,7 +105,7 @@ class StatusUpdateServiceTest {
     ),
     isActive = true,
   )
-  private val applicationStatusUpdateWithDetail = Cas2ApplicationStatusUpdate(
+  private val applicationStatusUpdateWithDetail = Cas2AssessmentStatusUpdate(
     newStatus = activeStatusWithDetail.name,
     newStatusDetails = listOf(statusDetail.name),
   )
@@ -124,14 +124,14 @@ class StatusUpdateServiceTest {
 
     @Test
     fun `returns true when the given newStatus is valid`() {
-      val validUpdate = Cas2ApplicationStatusUpdate(newStatus = "activeStatusName")
+      val validUpdate = Cas2AssessmentStatusUpdate(newStatus = "activeStatusName")
 
       assertThat(statusUpdateService.isValidStatus(validUpdate)).isTrue()
     }
 
     @Test
     fun `returns false when the given newStatus is NOT valid`() {
-      val invalidUpdate = Cas2ApplicationStatusUpdate(newStatus = "invalidStatus")
+      val invalidUpdate = Cas2AssessmentStatusUpdate(newStatus = "invalidStatus")
 
       assertThat(statusUpdateService.isValidStatus(invalidUpdate)).isFalse()
     }
