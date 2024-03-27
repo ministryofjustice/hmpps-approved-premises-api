@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -15,6 +16,7 @@ class Cas1ApplicationEmailServiceTest {
 
   private object TestConstants {
     const val APPLICANT_EMAIL = "applicantEmail@test.com"
+    const val APPLICANT_NAME = "the applicant name"
     const val CRN = "CRN123"
   }
 
@@ -27,9 +29,51 @@ class Cas1ApplicationEmailServiceTest {
   private fun createService(aps530WithdrawalEmailImprovements: Boolean) = Cas1ApplicationEmailService(
     emailNotifier = mockEmailNotificationService,
     notifyConfig = notifyConfig,
+    applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
     aps530WithdrawalEmailImprovements = aps530WithdrawalEmailImprovements,
   )
+
+  @Nested
+  inner class ApplicationSubmitted {
+
+    @Test
+    fun `applicationSubmitted doesnt send email to applicant if no email addresses defined`() {
+      val applicant = createUser(emailAddress = null)
+
+      val application = createApplicationForApplicant(applicant)
+
+      service.applicationSubmitted(application)
+
+      mockEmailNotificationService.assertNoEmailsRequested()
+    }
+
+    @Test
+    fun `applicationSubmitted sends an email to applicant if email addresses defined`() {
+      val applicant = createUser(
+        name = TestConstants.APPLICANT_NAME,
+        emailAddress = TestConstants.APPLICANT_EMAIL,
+      )
+
+      val application = createApplicationForApplicant(applicant)
+
+      service.applicationSubmitted(application)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "name" to TestConstants.APPLICANT_NAME,
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "crn" to TestConstants.CRN,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        TestConstants.APPLICANT_EMAIL,
+        notifyConfig.templates.applicationSubmitted,
+        personalisation,
+      )
+    }
+  }
 
   @Test
   fun `applicationWithdrawn doesnt send email to applicant if no email addresses defined`() {
