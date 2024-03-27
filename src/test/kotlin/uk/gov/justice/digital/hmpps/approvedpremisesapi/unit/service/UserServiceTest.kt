@@ -16,13 +16,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
@@ -332,21 +333,36 @@ class UserServiceTest {
   inner class UpdateUserFromCommunityApiById {
 
     private val id = UUID.fromString("21b61d19-3a96-4b88-8df9-a5e89bc6fe73")
+    private val email = "foo@example.com"
+    private val telephoneNumber = "0123456789"
     private val username = "SOMEPERSON"
     private val forename = "Jim"
     private val surname = "Jimmerson"
     private val staffIdentifier = 5678
+    private val staffCode = "STAFF1"
+
+    private val probationRegion = ProbationRegionEntityFactory()
+      .withDefaults()
+      .produce()
 
     private val userFactory = UserEntityFactory()
+      .withDefaults()
       .withDeliusUsername(username)
       .withName("$forename $surname")
+      .withEmail(email)
       .withDeliusStaffIdentifier(staffIdentifier.toLong())
-      .withDefaults()
+      .withTelephoneNumber(telephoneNumber)
+      .withDeliusStaffCode(staffCode)
+      .withProbationRegion(probationRegion)
 
     private val staffUserDetailsFactory = StaffUserDetailsFactory()
       .withUsername(username)
       .withForenames(forename)
       .withSurname(surname)
+      .withEmail(email)
+      .withTelephoneNumber(telephoneNumber)
+      .withStaffCode(staffCode)
+      .withProbationAreaCode(probationRegion.deliusCode)
       .withStaffIdentifier(staffIdentifier.toLong())
 
     @BeforeEach
@@ -355,44 +371,116 @@ class UserServiceTest {
     }
 
     @Test
-    fun `it returns the user's details from the Community API and saves the email address, telephone, staff code and probation region`() {
-      val newProbationRegion = ProbationRegionEntityFactory()
-        .withYieldedApArea { ApAreaEntityFactory().produce() }
-        .produce()
-
+    fun `it does not update the user entity if fields of interest are the same as delius`() {
       val user = userFactory.produce()
-
-      val deliusUser = staffUserDetailsFactory
-        .withEmail("foo@example.com")
-        .withTelephoneNumber("0123456789")
-        .withStaffCode("STAFF1")
-        .withProbationAreaCode(newProbationRegion.deliusCode)
-        .produce()
+      val deliusUser = staffUserDetailsFactory.produce()
 
       every { mockUserRepository.findByIdOrNull(id) } returns user
       every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
         HttpStatus.OK,
         deliusUser,
       )
-      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(newProbationRegion.deliusCode) } returns ProbationAreaProbationRegionMappingEntityFactory()
-        .withProbationRegion(newProbationRegion)
-        .withProbationAreaDeliusCode(newProbationRegion.deliusCode)
+
+      val result = userService.updateUserFromCommunityApiById(id)
+
+      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
+      val entity = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(entity.id).isEqualTo(user.id)
+
+      verify(exactly = 0) { mockUserRepository.save(any()) }
+    }
+
+    @Test
+    fun `it updates the user entity if the email has been updated in delius`() {
+      val user = userFactory.produce()
+
+      val deliusUser = staffUserDetailsFactory
+        .withEmail(email + "updated")
+        .produce()
+
+      assertUserUpdated(user, deliusUser, probationRegion)
+    }
+
+    @Test
+    fun `it updates the user entity if the full name has been updated in delius`() {
+      val user = userFactory.produce()
+
+      val deliusUser = staffUserDetailsFactory
+        .withForenames(forename)
+        .withSurname(surname + "updated")
+        .produce()
+
+      assertUserUpdated(user, deliusUser, probationRegion)
+    }
+
+    @Test
+    fun `it updates the user entity if the telephone number has been updated in delius`() {
+      val user = userFactory.produce()
+
+      val deliusUser = staffUserDetailsFactory
+        .withTelephoneNumber(telephoneNumber + "updated")
+        .produce()
+
+      assertUserUpdated(user, deliusUser, probationRegion)
+    }
+
+    @Test
+    fun `it updates the user entity if the staff code number has been updated in delius`() {
+      val user = userFactory.produce()
+
+      val deliusUser = staffUserDetailsFactory
+        .withStaffCode(staffCode + "updated")
+        .produce()
+
+      assertUserUpdated(user, deliusUser, probationRegion)
+    }
+
+    @Test
+    fun `it updates the user entity if the probation area code has been updated in delius`() {
+      val newProbationRegion = ProbationRegionEntityFactory()
+        .withDefaults()
+        .produce()
+
+      val user = userFactory.produce()
+
+      val deliusUser = staffUserDetailsFactory
+        .withProbationAreaCode(newProbationRegion.deliusCode)
+        .produce()
+
+      assertUserUpdated(user, deliusUser, newProbationRegion)
+    }
+
+    private fun assertUserUpdated(
+      user: UserEntity,
+      deliusUser: StaffUserDetails,
+      probationRegion: ProbationRegionEntity,
+    ) {
+      every { mockUserRepository.findByIdOrNull(id) } returns user
+      every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
+        HttpStatus.OK,
+        deliusUser,
+      )
+
+      every {
+        mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(probationRegion.deliusCode)
+      } returns ProbationAreaProbationRegionMappingEntityFactory()
+        .withProbationRegion(probationRegion)
+        .withProbationAreaDeliusCode(probationRegion.deliusCode)
         .produce()
 
       val result = userService.updateUserFromCommunityApiById(id)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      result as AuthorisableActionResult.Success
-
-      var entity = result.entity
+      val entity = (result as AuthorisableActionResult.Success).entity
 
       assertThat(entity.id).isEqualTo(user.id)
-      assertThat(entity.name).isEqualTo("$forename $surname")
+      assertThat(entity.name).isEqualTo(deliusUser.staff.fullName)
       assertThat(entity.deliusUsername).isEqualTo(user.deliusUsername)
       assertThat(entity.email).isEqualTo(deliusUser.email)
       assertThat(entity.telephoneNumber).isEqualTo(deliusUser.telephoneNumber)
       assertThat(entity.deliusStaffCode).isEqualTo(deliusUser.staffCode)
-      assertThat(entity.probationRegion.name).isEqualTo(newProbationRegion.name)
+      assertThat(entity.probationRegion.name).isEqualTo(probationRegion.name)
 
       verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
       verify(exactly = 1) { mockUserRepository.save(any()) }
@@ -431,48 +519,6 @@ class UserServiceTest {
 
       verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
       verify(exactly = 1) { mockUserRepository.save(any()) }
-    }
-
-    @Test
-    fun `it does not save the object if the email, telephone number, staff code and probation region are the same as Delius`() {
-      val email = "foo@example.com"
-      val telephoneNumber = "0123456789"
-      val staffCode = "STAFF1"
-
-      val user = userFactory
-        .withName("$forename $surname")
-        .withEmail(email)
-        .withTelephoneNumber(telephoneNumber)
-        .withDeliusStaffCode(staffCode)
-        .withUnitTestControlProbationRegion()
-        .produce()
-
-      val deliusUser = staffUserDetailsFactory
-        .withForenames(forename)
-        .withSurname(surname)
-        .withEmail(email)
-        .withTelephoneNumber(telephoneNumber)
-        .withStaffCode(staffCode)
-        .withProbationAreaCode(user.probationRegion.deliusCode)
-        .produce()
-
-      every { mockUserRepository.findByIdOrNull(id) } returns user
-      every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
-        HttpStatus.OK,
-        deliusUser,
-      )
-
-      val result = userService.updateUserFromCommunityApiById(id)
-
-      assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
-      result as AuthorisableActionResult.Success
-
-      var entity = result.entity
-
-      assertThat(entity.id).isEqualTo(user.id)
-      assertThat(entity.name).isEqualTo(user.name)
-
-      verify(exactly = 0) { mockUserRepository.save(any()) }
     }
 
     @Test
