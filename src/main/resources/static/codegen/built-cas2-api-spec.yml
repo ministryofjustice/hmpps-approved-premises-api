@@ -330,7 +330,7 @@ paths:
         content:
           'application/json':
             schema:
-              $ref: '#/components/schemas/Cas2ApplicationStatusUpdate'
+              $ref: '#/components/schemas/Cas2AssessmentStatusUpdate'
         required: true
       responses:
         200:
@@ -2554,7 +2554,7 @@ components:
         - id
         - name
         - label
-    Cas2ApplicationStatusUpdate:
+    Cas2AssessmentStatusUpdate:
       type: object
       properties:
         newStatus:

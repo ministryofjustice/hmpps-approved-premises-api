@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.ExternalUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
@@ -57,7 +57,7 @@ class StatusUpdateService(
 
   private val log = LoggerFactory.getLogger(this::class.java)
 
-  fun isValidStatus(statusUpdate: Cas2ApplicationStatusUpdate): Boolean {
+  fun isValidStatus(statusUpdate: Cas2AssessmentStatusUpdate): Boolean {
     return findActiveStatusByName(statusUpdate.newStatus) != null
   }
 
@@ -65,7 +65,7 @@ class StatusUpdateService(
   @Transactional
   fun create(
     applicationId: UUID,
-    statusUpdate: Cas2ApplicationStatusUpdate,
+    statusUpdate: Cas2AssessmentStatusUpdate,
     assessor: ExternalUserEntity,
   ): AuthorisableActionResult<ValidatableActionResult<Cas2StatusUpdateEntity>> {
     val application = applicationRepository.findSubmittedApplicationById(applicationId)

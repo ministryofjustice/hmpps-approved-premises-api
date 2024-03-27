@@ -10,7 +10,7 @@ import org.junit.jupiter.api.fail
 import org.springframework.beans.factory.annotation.Value
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2StatusDetail
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationStatusUpdate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2AssessmentStatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
@@ -96,7 +96,7 @@ class Cas2StatusUpdateTest(
             .uri("/cas2/submissions/${application.id}/status-updates")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              Cas2ApplicationStatusUpdate(newStatus = "moreInfoRequested"),
+              Cas2AssessmentStatusUpdate(newStatus = "moreInfoRequested"),
             )
             .exchange()
             .expectStatus()
@@ -133,7 +133,7 @@ class Cas2StatusUpdateTest(
           .uri("/cas2/submissions/66f7127a-fe03-4b66-8378-5c0b048490f8/status-updates")
           .header("Authorization", "Bearer $jwt")
           .bodyValue(
-            Cas2ApplicationStatusUpdate(newStatus = "moreInfoRequested"),
+            Cas2AssessmentStatusUpdate(newStatus = "moreInfoRequested"),
           )
           .exchange()
           .expectStatus()
@@ -156,7 +156,7 @@ class Cas2StatusUpdateTest(
             .uri("/cas2/submissions/${application.id}/status-updates")
             .header("Authorization", "Bearer $jwt")
             .bodyValue(
-              Cas2ApplicationStatusUpdate(newStatus = "invalidStatus"),
+              Cas2AssessmentStatusUpdate(newStatus = "invalidStatus"),
             )
             .exchange()
             .expectStatus()
@@ -191,7 +191,7 @@ class Cas2StatusUpdateTest(
               .uri("/cas2/submissions/${application.id}/status-updates")
               .header("Authorization", "Bearer $jwt")
               .bodyValue(
-                Cas2ApplicationStatusUpdate(
+                Cas2AssessmentStatusUpdate(
                   newStatus = "offerDeclined",
                   newStatusDetails = listOf("changeOfCircumstances"),
                 ),
