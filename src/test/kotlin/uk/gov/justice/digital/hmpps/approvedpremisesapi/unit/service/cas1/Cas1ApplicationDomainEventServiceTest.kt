@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ProbationAreaFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
@@ -214,6 +215,45 @@ class Cas1ApplicationDomainEventServiceTest {
             data.mappa == risks.mappa.value!!.level &&
             data.sentenceLengthInMonths == null &&
             data.offenceId == application.offenceId
+        },
+      )
+    }
+  }
+
+  @Test
+  fun `applicationWithdrawn success`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
+
+    val application = ApprovedPremisesApplicationEntityFactory()
+      .withCreatedByUser(user)
+      .withWithdrawalReason("alternative_identified_placement_no_longer_required")
+      .withOtherWithdrawalReason("the other reason")
+      .produce()
+
+    val domainEventWithdrawnBy = WithdrawnByFactory().produce()
+    every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
+    every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
+
+    service.applicationWithdrawn(application, user)
+
+    verify(exactly = 1) {
+      mockDomainEventService.saveApplicationWithdrawnEvent(
+        match {
+          val data = it.data.eventDetails
+
+          it.applicationId == application.id &&
+            it.crn == application.crn &&
+            data.applicationId == application.id &&
+            data.applicationUrl == "http://frontend/applications/${application.id}" &&
+            data.personReference == PersonReference(
+            crn = application.crn,
+            noms = application.nomsNumber!!,
+          ) &&
+            data.deliusEventNumber == application.eventNumber &&
+            data.withdrawalReason == "alternative_identified_placement_no_longer_required" &&
+            data.otherWithdrawalReason == "the other reason"
         },
       )
     }

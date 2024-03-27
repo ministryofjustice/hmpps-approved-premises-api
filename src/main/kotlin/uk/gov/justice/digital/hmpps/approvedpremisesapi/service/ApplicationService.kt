@@ -1,12 +1,8 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawn
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimelineNote
@@ -40,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepositor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
@@ -58,10 +53,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
-import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -95,10 +88,8 @@ class ApplicationService(
   private val userAccessService: UserAccessService,
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val objectMapper: ObjectMapper,
-  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
   private val apAreaRepository: ApAreaRepository,
   private val applicationTimelineTransformer: ApplicationTimelineTransformer,
-  private val domainEventTransformer: DomainEventTransformer,
   private val cas1ApplicationDomainEventService: Cas1ApplicationDomainEventService,
   private val cas1ApplicationUserDetailsRepository: Cas1ApplicationUserDetailsRepository,
   private val cas1ApplicationEmailService: Cas1ApplicationEmailService,
@@ -620,24 +611,7 @@ class ApplicationService(
       },
     )
 
-    val domainEventId = UUID.randomUUID()
-    val eventOccurredAt = Instant.now()
-
-    domainEventService.saveApplicationWithdrawnEvent(
-      DomainEvent(
-        id = domainEventId,
-        applicationId = application.id,
-        crn = application.crn,
-        occurredAt = eventOccurredAt,
-        data = ApplicationWithdrawnEnvelope(
-          id = domainEventId,
-          timestamp = eventOccurredAt,
-          eventType = "approved-premises.application.withdrawn",
-          eventDetails = getApplicationWithdrawn(application, user, eventOccurredAt),
-        ),
-      ),
-    )
-
+    cas1ApplicationDomainEventService.applicationWithdrawn(application, withdrawingUser = user)
     cas1ApplicationEmailService.applicationWithdrawn(application, user)
 
     application.assessments.map {
@@ -651,26 +625,6 @@ class ApplicationService(
     return WithdrawableState(
       withdrawable = !application.isWithdrawn,
       userMayDirectlyWithdraw = userAccessService.userMayWithdrawApplication(user, application),
-    )
-  }
-
-  private fun getApplicationWithdrawn(
-    application: ApprovedPremisesApplicationEntity,
-    user: UserEntity,
-    eventOccurredAt: Instant,
-  ): ApplicationWithdrawn {
-    return ApplicationWithdrawn(
-      applicationId = application.id,
-      applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),
-      personReference = PersonReference(
-        crn = application.crn,
-        noms = application.nomsNumber ?: "Unknown NOMS Number",
-      ),
-      deliusEventNumber = application.eventNumber,
-      withdrawnAt = eventOccurredAt,
-      withdrawnBy = domainEventTransformer.toWithdrawnBy(user),
-      withdrawalReason = application.withdrawalReason!!,
-      otherWithdrawalReason = application.otherWithdrawalReason,
     )
   }
 
