@@ -12,9 +12,27 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 class Cas1ApplicationEmailService(
   val emailNotifier: EmailNotifier,
   private val notifyConfig: NotifyConfig,
+  @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
   @Value("\${feature-flags.cas1-aps530-withdrawal-email-improvements}") private val aps530WithdrawalEmailImprovements: Boolean,
 ) {
+
+  fun applicationSubmitted(
+    application: ApprovedPremisesApplicationEntity,
+  ) {
+    application.createdByUser.email?.let { email ->
+      emailNotifier.sendEmail(
+        recipientEmailAddress = email,
+        templateId = notifyConfig.templates.applicationSubmitted,
+        personalisation = mapOf(
+          "name" to application.createdByUser.name,
+          "applicationUrl" to applicationUrlTemplate.resolve("id", application.id.toString()),
+          "crn" to application.crn,
+        ),
+      )
+    }
+  }
+
   fun applicationWithdrawn(
     application: ApprovedPremisesApplicationEntity,
     withdrawingUser: UserEntity,

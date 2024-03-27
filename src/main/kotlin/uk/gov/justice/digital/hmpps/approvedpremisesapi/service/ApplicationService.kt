@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -93,9 +92,7 @@ class ApplicationService(
   private val cas3DomainEventService: Cas3DomainEventService,
   private val apDeliusContextApiClient: ApDeliusContextApiClient,
   private val applicationTeamCodeRepository: ApplicationTeamCodeRepository,
-  private val emailNotificationService: EmailNotificationService,
   private val userAccessService: UserAccessService,
-  private val notifyConfig: NotifyConfig,
   private val assessmentClarificationNoteTransformer: AssessmentClarificationNoteTransformer,
   private val objectMapper: ObjectMapper,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: String,
@@ -831,9 +828,7 @@ class ApplicationService(
     application = applicationRepository.save(application)
 
     cas1ApplicationDomainEventService.applicationSubmitted(application, submitApplication, username, jwt)
-    if (user.email != null) {
-      sendEmailApplicationSubmitted(user, application)
-    }
+    cas1ApplicationEmailService.applicationSubmitted(application)
 
     return AuthorisableActionResult.Success(
       ValidatableActionResult.Success(application),
@@ -854,18 +849,6 @@ class ApplicationService(
       return OffsetDateTime.of(arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
     }
     return null
-  }
-
-  fun sendEmailApplicationSubmitted(user: UserEntity, application: ApplicationEntity) {
-    emailNotificationService.sendEmail(
-      recipientEmailAddress = user.email!!,
-      templateId = notifyConfig.templates.applicationSubmitted,
-      personalisation = mapOf(
-        "name" to user.name,
-        "applicationUrl" to applicationUrlTemplate.replace("#id", application.id.toString()),
-        "crn" to application.crn,
-      ),
-    )
   }
 
   @Transactional

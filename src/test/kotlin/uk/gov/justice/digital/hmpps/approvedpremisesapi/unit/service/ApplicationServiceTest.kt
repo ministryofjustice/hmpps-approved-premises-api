@@ -31,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
@@ -86,7 +85,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -121,7 +119,6 @@ class ApplicationServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApplicationTeamCodeRepository = mockk<ApplicationTeamCodeRepository>()
   private val mockUserAccessService = mockk<UserAccessService>()
-  private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockAssessmentClarificationNoteTransformer = mockk<AssessmentClarificationNoteTransformer>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockApAreaRepository = mockk<ApAreaRepository>()
@@ -145,9 +142,7 @@ class ApplicationServiceTest {
     mockCas3DomainEventService,
     mockApDeliusContextApiClient,
     mockApplicationTeamCodeRepository,
-    mockEmailNotificationService,
     mockUserAccessService,
-    NotifyConfig(),
     mockAssessmentClarificationNoteTransformer,
     mockObjectMapper,
     "http://frontend/applications/#id",
@@ -1697,7 +1692,7 @@ class ApplicationServiceTest {
     @EnumSource(value = SituationOption::class)
     @NullSource
     @Suppress("CyclomaticComplexMethod")
-    fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event, sends confirmation email`(
+    fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event, triggers email`(
       situation: SituationOption?,
     ) {
       submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
@@ -1785,16 +1780,7 @@ class ApplicationServiceTest {
         )
       }
 
-      verify(exactly = 1) {
-        mockEmailNotificationService.sendEmail(
-          any(),
-          "c9944bd8-63c4-473c-8dce-b3636e47d3dd",
-          match {
-            it["name"] == user.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-          },
-        )
-      }
+      verify(exactly = 1) { mockCas1ApplicationEmailService.applicationSubmitted(application) }
     }
 
     @ParameterizedTest
@@ -1885,16 +1871,7 @@ class ApplicationServiceTest {
         )
       }
 
-      verify(exactly = 1) {
-        mockEmailNotificationService.sendEmail(
-          any(),
-          "c9944bd8-63c4-473c-8dce-b3636e47d3dd",
-          match {
-            it["name"] == user.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-          },
-        )
-      }
+      verify(exactly = 1) { mockCas1ApplicationEmailService.applicationSubmitted(application) }
     }
 
     @ParameterizedTest
@@ -1984,16 +1961,7 @@ class ApplicationServiceTest {
         )
       }
 
-      verify(exactly = 1) {
-        mockEmailNotificationService.sendEmail(
-          any(),
-          "c9944bd8-63c4-473c-8dce-b3636e47d3dd",
-          match {
-            it["name"] == user.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-          },
-        )
-      }
+      verify(exactly = 1) { mockCas1ApplicationEmailService.applicationSubmitted(application) }
     }
 
     @Test
@@ -2165,7 +2133,7 @@ class ApplicationServiceTest {
         )
       } returns Unit
 
-      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+      every { mockCas1ApplicationEmailService.applicationSubmitted(any()) } just Runs
     }
   }
 
