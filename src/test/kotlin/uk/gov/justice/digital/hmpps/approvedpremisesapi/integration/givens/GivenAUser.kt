@@ -28,6 +28,11 @@ fun IntegrationTestBase.`Given a User`(
 
   val staffUserDetails = staffUserDetailsFactory.produce()
 
+  val yieldedProbationRegion = probationRegion
+    ?: probationRegionEntityFactory.produceAndPersist {
+      withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+    }
+
   val user = userEntityFactory.produceAndPersist {
     withId(id)
     withDeliusUsername(staffUserDetails.username)
@@ -35,14 +40,11 @@ fun IntegrationTestBase.`Given a User`(
     withTelephoneNumber(staffUserDetails.telephoneNumber)
     withName("${staffUserDetails.staff.forenames} ${staffUserDetails.staff.surname}")
     withIsActive(isActive)
-    if (probationRegion == null) {
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
-    } else {
-      withProbationRegion(probationRegion)
+    withYieldedProbationRegion {
+      yieldedProbationRegion
+    }
+    withYieldedApArea {
+      yieldedProbationRegion.apArea
     }
   }
 

@@ -104,6 +104,14 @@ class UserEntityFactory : Factory<UserEntity> {
     )
   }
 
+  fun withYieldedApArea(apArea: Yielded<ApAreaEntity>) = apply {
+    this.apArea = apArea
+  }
+
+  fun withApArea(apArea: ApAreaEntity?) = apply {
+    this.apArea = { apArea }
+  }
+
   fun withTeamCodes(teamCodes: List<String>) = apply {
     this.teamCodes = { teamCodes }
   }

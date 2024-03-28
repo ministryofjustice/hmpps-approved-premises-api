@@ -75,6 +75,8 @@ class ProfileTest : IntegrationTestBase() {
       },
       probationRegion = region,
     ) { userEntity, jwt ->
+      val userApArea = userEntity.apArea!!
+
       webTestClient.get()
         .uri("/profile")
         .header("Authorization", "Bearer $jwt")
@@ -96,7 +98,7 @@ class ProfileTest : IntegrationTestBase() {
               qualifications = listOf(uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification.pipe),
               service = "CAS1",
               isActive = true,
-              apArea = ApArea(region.apArea.id, region.apArea.identifier, region.apArea.name),
+              apArea = ApArea(userApArea.id, userApArea.identifier, userApArea.name),
             ),
           ),
         )

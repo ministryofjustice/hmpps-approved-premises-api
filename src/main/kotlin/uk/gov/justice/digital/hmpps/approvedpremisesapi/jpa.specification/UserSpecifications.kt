@@ -67,7 +67,7 @@ fun hasQualificationsAndRoles(
     }
 
     if (apArea != null) {
-      val apAreaID = root.get<ProbationRegionEntity>("probationRegion").get<ApArea>("apArea").get<UUID>("id")
+      val apAreaID = root.get<ApArea>("apArea").get<UUID>("id")
 
       predicates.add(
         criteriaBuilder.and(
