@@ -21,6 +21,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
@@ -181,13 +184,25 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withId(UUID.randomUUID())
             }
 
+            val user = NomisUserEntityFactory().produce()
+            val cas2ApplicationFactory = Cas2ApplicationEntityFactory().withCreatedByUser(user)
+
+            val statusUpdate1 = Cas2StatusUpdateEntityFactory()
+              .withLabel("more recent status update").withApplication(cas2ApplicationFactory.produce()).produce()
+            val statusUpdate2 =
+              Cas2StatusUpdateEntityFactory()
+                .withLabel("older status update").withApplication(cas2ApplicationFactory.produce()).produce()
+
             val firstApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
               withCreatedByUser(userEntity)
               withCrn(offenderDetails.otherIds.crn)
               withData("{}")
               withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
+              withStatusUpdates(mutableListOf(statusUpdate1, statusUpdate2))
             }
+
+            firstApplicationEntity.statusUpdates = mutableListOf(statusUpdate1, statusUpdate2)
 
             val secondApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
               withApplicationSchema(applicationSchema)
@@ -223,7 +238,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 firstApplicationEntity.crn == it.person.crn &&
                 firstApplicationEntity.createdAt.toInstant() == it.createdAt &&
                 firstApplicationEntity.createdByUser.id == it.createdByUserId &&
-                firstApplicationEntity.submittedAt?.toInstant() == it.submittedAt
+                firstApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
+                firstApplicationEntity.statusUpdates!!.first().label == it.latestStatusUpdate
             }
 
             Assertions.assertThat(responseBody).noneMatch {
