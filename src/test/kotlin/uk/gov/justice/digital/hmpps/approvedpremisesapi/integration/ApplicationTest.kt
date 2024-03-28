@@ -2098,7 +2098,7 @@ class ApplicationTest : IntegrationTestBase() {
             assertThat(persistedApplication?.isPipeApplication).isTrue
             assertThat(persistedApplication?.targetLocation).isEqualTo("SW1A 1AA")
             assertThat(persistedApplication?.sentenceType).isEqualTo(SentenceTypeOption.nonStatutory.toString())
-            assertThat(persistedApplication?.apArea?.id).isEqualTo(submittingUser.probationRegion.apArea.id)
+            assertThat(persistedApplication?.apArea?.id).isEqualTo(submittingUser.apArea!!.id)
 
             val createdAssessment =
               approvedPremisesAssessmentRepository.findAll().first { it.application.id == applicationId }

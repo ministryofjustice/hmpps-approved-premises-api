@@ -21,6 +21,9 @@ data class ProbationRegionEntity(
   @Id
   val id: UUID,
   val name: String,
+  /**
+   * If the AP Area for a user is required, instead use [UserEntity.apArea]
+   */
   @ManyToOne
   @JoinColumn(name = "ap_area_id")
   val apArea: ApAreaEntity,

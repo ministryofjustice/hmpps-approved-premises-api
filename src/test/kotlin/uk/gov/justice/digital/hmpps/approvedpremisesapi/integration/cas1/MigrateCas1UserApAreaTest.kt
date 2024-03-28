@@ -28,6 +28,8 @@ class MigrateCas1UserApAreaTest : MigrationJobTestBase() {
       },
     ) { userEntity, _ ->
 
+      userEntity.apArea = null
+      userRepository.save(userEntity)
       assertThat(userEntity.apArea).isNull()
       assertThat(userEntity.teamCodes).isNull()
 
