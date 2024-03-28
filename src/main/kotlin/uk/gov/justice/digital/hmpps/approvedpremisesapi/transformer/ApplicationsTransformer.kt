@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.asApiType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas1.Cas1ApplicationUserDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary as ApiApplicationSummary
@@ -98,6 +99,7 @@ class ApplicationsTransformer(
         applicantUserDetails = jpa.applicantUserDetails?.let { cas1ApplicationUserDetailsTransformer.transformJpaToApi(it) },
         caseManagerIsNotApplicant = jpa.caseManagerIsNotApplicant,
         caseManagerUserDetails = jpa.caseManagerUserDetails?.let { cas1ApplicationUserDetailsTransformer.transformJpaToApi(it) },
+        apType = jpa.apType?.asApiType(),
       )
 
       is DomainTemporaryAccommodationApplicationEntity -> TemporaryAccommodationApplication(

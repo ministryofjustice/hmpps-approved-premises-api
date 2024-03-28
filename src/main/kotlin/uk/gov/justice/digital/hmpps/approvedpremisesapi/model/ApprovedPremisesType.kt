@@ -19,3 +19,12 @@ fun ApType.asApprovedPremisesType() = when (this) {
   ApType.mhapStJosephs -> ApprovedPremisesType.MHAP_ST_JOSEPHS
   ApType.mhapElliottHouse -> ApprovedPremisesType.MHAP_ELLIOTT_HOUSE
 }
+
+fun ApprovedPremisesType.asApiType() = when (this) {
+  ApprovedPremisesType.NORMAL -> ApType.normal
+  ApprovedPremisesType.PIPE -> ApType.pipe
+  ApprovedPremisesType.ESAP -> ApType.esap
+  ApprovedPremisesType.RFAP -> ApType.rfap
+  ApprovedPremisesType.MHAP_ST_JOSEPHS -> ApType.mhapStJosephs
+  ApprovedPremisesType.MHAP_ELLIOTT_HOUSE -> ApType.mhapElliottHouse
+}
