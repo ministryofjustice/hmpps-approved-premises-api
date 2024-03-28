@@ -102,7 +102,7 @@ class OffenderService(
     }
   }
 
-  private fun getOffenderSummariesByCrns(
+  fun getOffenderSummariesByCrns(
     crns: Set<String>,
   ): Map<String, ClientResult<OffenderDetailSummary>> {
     if (crns.isEmpty()) return emptyMap()
@@ -141,7 +141,10 @@ class OffenderService(
 
   private fun getInfoForPerson(crn: String): PersonInfoResult {
     var offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
+    return getInfoForOffender(crn, offenderResponse)
+  }
 
+  fun getInfoForOffender(crn: String, offenderResponse: ClientResult<OffenderDetailSummary>): PersonInfoResult {
     val offender = when (offenderResponse) {
       is ClientResult.Success -> offenderResponse.body
 
