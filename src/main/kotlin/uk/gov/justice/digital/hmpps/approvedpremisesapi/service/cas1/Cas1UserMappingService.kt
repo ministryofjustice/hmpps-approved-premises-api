@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaReposit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.getTeamCodes
 
 @Component
 class Cas1UserMappingService(
@@ -45,9 +46,7 @@ class Cas1UserMappingService(
     val deliusProbationAreaCode = deliusUser.probationArea.code
     val isInNationalProbationArea = listOf("N43", "N41", "XX").contains(deliusProbationAreaCode)
     if (isInNationalProbationArea) {
-      val deliusUserTeamCodes = deliusUser.teams?.let { teams ->
-        teams.map { it.code }
-      } ?: emptyList()
+      val deliusUserTeamCodes = deliusUser.getTeamCodes()
 
       if (deliusUserTeamCodes.isEmpty()) {
         return apAreaForCode(noTeamsApArea)

@@ -1,12 +1,14 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
 
 import org.slf4j.LoggerFactory
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserMappingService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.getTeamCodes
 
 class Cas1BackfillUserApArea(
   private val userRepository: UserRepository,
@@ -31,7 +33,7 @@ class Cas1BackfillUserApArea(
 
   @SuppressWarnings("TooGenericExceptionCaught")
   private fun updateUser(user: UserEntity) {
-    log.info("Update ap area for user ${user.id}")
+    log.info("Update ap area and teams for user ${user.id}")
     try {
       val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
       val staffDetails = when (staffDetailsResult) {
@@ -44,8 +46,12 @@ class Cas1BackfillUserApArea(
         deliusUser = staffDetails,
       )
 
-      log.info("Updating user ${user.id} AP Area to ${apArea.name}")
-      userRepository.updateApArea(user.id, apArea)
+      log.info("Updating user ${user.id} AP Area to ${apArea.name} and team codes to ${staffDetails.getTeamCodes()}")
+
+      val userToUpdate = userRepository.findByIdOrNull(user.id)!!
+      userToUpdate.apArea = apArea
+      userToUpdate.teamCodes = staffDetails.getTeamCodes()
+      userRepository.save(userToUpdate)
     } catch (exception: Exception) {
       log.error("Unable to find ap area for user ${user.id}", exception)
     }

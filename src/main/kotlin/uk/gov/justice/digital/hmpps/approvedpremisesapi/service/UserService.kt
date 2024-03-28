@@ -281,6 +281,7 @@ class UserService(
         probationRegion = staffProbationRegion,
         isActive = true,
         apArea = null,
+        teamCodes = null,
       ),
     )
   }
@@ -339,3 +340,5 @@ class UserService(
       (deliusUser.probationArea.code != user.probationRegion.deliusCode)
   }
 }
+
+fun StaffUserDetails.getTeamCodes() = teams?.let { teams -> teams.map { it.code } } ?: emptyList()

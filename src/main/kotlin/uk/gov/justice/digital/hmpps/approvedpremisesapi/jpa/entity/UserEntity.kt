@@ -2,12 +2,13 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
-import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.StringListConverter
 import java.util.Objects
 import java.util.UUID
+import javax.persistence.Convert
 import javax.persistence.Entity
 import javax.persistence.EnumType
 import javax.persistence.Enumerated
@@ -231,10 +232,6 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
     nativeQuery = true,
   )
   fun findWorkloadForUserIds(userIds: List<UUID>): List<UserWorkload>
-
-  @Modifying
-  @Query("UPDATE UserEntity u set u.apArea = :apArea where u.id = :userId")
-  fun updateApArea(userId: UUID, apArea: ApAreaEntity)
 }
 
 @Entity
@@ -260,6 +257,8 @@ data class UserEntity(
   @ManyToOne
   @JoinColumn(name = "ap_area_id")
   var apArea: ApAreaEntity?,
+  @Convert(converter = StringListConverter::class)
+  var teamCodes: List<String>?,
 ) {
   fun hasRole(userRole: UserRole) = roles.any { it.role == userRole }
   fun hasAnyRole(vararg userRoles: UserRole) = userRoles.any(::hasRole)

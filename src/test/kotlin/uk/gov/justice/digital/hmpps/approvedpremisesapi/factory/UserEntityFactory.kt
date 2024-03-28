@@ -26,6 +26,7 @@ class UserEntityFactory : Factory<UserEntity> {
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
   private var isActive: Yielded<Boolean> = { true }
   private var apArea: Yielded<ApAreaEntity?> = { null }
+  private var teamCodes: Yielded<List<String>?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -100,6 +101,10 @@ class UserEntityFactory : Factory<UserEntity> {
     )
   }
 
+  fun withTeamCodes(teamCodes: List<String>) = apply {
+    this.teamCodes = { teamCodes }
+  }
+
   override fun produce(): UserEntity = UserEntity(
     id = this.id(),
     name = this.name(),
@@ -114,5 +119,6 @@ class UserEntityFactory : Factory<UserEntity> {
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided"),
     isActive = this.isActive(),
     apArea = this.apArea(),
+    teamCodes = this.teamCodes(),
   )
 }

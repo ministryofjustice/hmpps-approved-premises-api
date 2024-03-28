@@ -1,0 +1,1 @@
+ALTER TABLE users ADD team_codes TEXT NULL;
