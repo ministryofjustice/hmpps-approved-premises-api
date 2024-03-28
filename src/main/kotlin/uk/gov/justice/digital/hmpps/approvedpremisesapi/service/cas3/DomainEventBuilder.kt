@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEventDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
@@ -298,10 +297,6 @@ class DomainEventBuilder(
     departedAt = departure.dateTime.toInstant(),
     reason = departure.reason.name,
     notes = departure.notes ?: "",
-    moveOnCategory = MoveOnCategory(
-      description = departure.moveOnCategory.name,
-      label = departure.moveOnCategory.legacyDeliusCategoryCode ?: "",
-    ),
     applicationId = application?.id,
     applicationUrl = application.toUrl(),
     reasonDetail = null,

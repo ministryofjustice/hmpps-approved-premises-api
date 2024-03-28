@@ -474,8 +474,6 @@ class DomainEventBuilderTest {
         data.departedAt == departureDateTime.toInstant() &&
         data.reason == reasonName &&
         data.notes == notes &&
-        data.moveOnCategory.description == moveOnCategoryDescription &&
-        data.moveOnCategory.label == moveOnCategoryLabel &&
         data.applicationId == application.id &&
         data.applicationUrl.toString() == "http://api/applications/${application.id}"
     }
@@ -548,8 +546,6 @@ class DomainEventBuilderTest {
         data.bookingId == booking.id &&
         data.bookingUrl.toString() == "http://api/premises/${premises.id}/bookings/${booking.id}" &&
         data.departedAt == departureDateTime.toInstant() &&
-        data.moveOnCategory.description == moveOnCategoryDescription &&
-        data.moveOnCategory.label == moveOnCategoryLabel &&
         data.applicationId == application.id &&
         data.applicationUrl.toString() == "http://api/applications/${application.id}"
     }
@@ -649,9 +645,7 @@ class DomainEventBuilderTest {
         assertTemporaryAccommodationApplicationEventData(it, application) &&
         data.departedAt == departureDateTime.toInstant() &&
         data.reason == reasonName &&
-        data.notes == notes &&
-        data.moveOnCategory.description == moveOnCategoryDescription &&
-        data.moveOnCategory.label == moveOnCategoryLabel
+        data.notes == notes
     }
   }
 
