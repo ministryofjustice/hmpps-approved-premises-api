@@ -1679,7 +1679,7 @@ class DomainEventServiceTest {
 
     every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
-    domainEventService.saveApplicationWithdrawnEvent(domainEventToSave)
+    domainEventService.saveApplicationWithdrawnEvent(domainEventToSave, emit = true)
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(
@@ -1712,6 +1712,46 @@ class DomainEventServiceTest {
   }
 
   @Test
+  fun `saveApplicationWithdrawnEvent does not emit event to SNS if emit parameter is false`() {
+    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+    val crn = "CRN"
+
+    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = Instant.now(),
+      data = ApplicationWithdrawnEnvelope(
+        id = id,
+        timestamp = occurredAt.toInstant(),
+        eventType = "approved-premises.application.withdrawn",
+        eventDetails = ApplicationWithdrawnFactory().produce(),
+      ),
+    )
+
+    domainEventService.saveApplicationWithdrawnEvent(domainEventToSave, emit = false)
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
+        },
+      )
+    }
+
+    verify(exactly = 0) { domainEventWorkerMock.emitEvent(any(), any()) }
+  }
+
+  @Test
   fun `saveApplicationWithdrawnEvent does not emit event to SNS if event fails to persist to database`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
@@ -1734,7 +1774,7 @@ class DomainEventServiceTest {
     )
 
     try {
-      domainEventService.saveApplicationWithdrawnEvent(domainEventToSave)
+      domainEventService.saveApplicationWithdrawnEvent(domainEventToSave, emit = true)
     } catch (_: Exception) {
     }
 
