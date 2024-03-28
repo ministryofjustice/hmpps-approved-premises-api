@@ -52,16 +52,22 @@ class ApplicationService(
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val submittedApplicationUrlTemplate: String,
 ) {
 
-  fun getAllApplicationsForUser(user: NomisUserEntity): List<Cas2ApplicationSummary> {
-    return applicationRepository.findAllCas2ApplicationSummariesCreatedByUser(user.id)
+  fun getAllApplicationsForUser(user: NomisUserEntity, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummary>, PaginationMetadata?> {
+    val response = applicationRepository.findAllCas2ApplicationSummariesCreatedByUser(user.id, getPageable(pageCriteria))
+    val metadata = getMetadata(response, pageCriteria)
+    return Pair(response.content, metadata)
   }
 
-  fun getSubmittedApplicationsForUser(user: NomisUserEntity): List<Cas2ApplicationSummary> {
-    return applicationRepository.findSubmittedCas2ApplicationSummariesCreatedByUser(user.id)
+  fun getSubmittedApplicationsForUser(user: NomisUserEntity, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummary>, PaginationMetadata?> {
+    val response = applicationRepository.findSubmittedCas2ApplicationSummariesCreatedByUser(user.id, getPageable(pageCriteria))
+    val metadata = getMetadata(response, pageCriteria)
+    return Pair(response.content, metadata)
   }
 
-  fun getUnsubmittedApplicationsForUser(user: NomisUserEntity): List<Cas2ApplicationSummary> {
-    return applicationRepository.findUnsubmittedCas2ApplicationSummariesCreatedByUser(user.id)
+  fun getUnsubmittedApplicationsForUser(user: NomisUserEntity, pageCriteria: PageCriteria<String>): Pair<MutableList<Cas2ApplicationSummary>, PaginationMetadata?> {
+    val response = applicationRepository.findUnsubmittedCas2ApplicationSummariesCreatedByUser(user.id, getPageable(pageCriteria))
+    val metadata = getMetadata(response, pageCriteria)
+    return Pair(response.content, metadata)
   }
 
   fun getAllSubmittedApplicationsForAssessor(pageCriteria: PageCriteria<String>): Pair<List<Cas2ApplicationSummary>, PaginationMetadata?> {

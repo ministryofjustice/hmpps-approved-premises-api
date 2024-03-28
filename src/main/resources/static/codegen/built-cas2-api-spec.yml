@@ -55,6 +55,11 @@ paths:
           description: Returns submitted applications if true, un submitted applications if false, and all applications if absent
           schema:
             type: boolean
+        - name: page
+          in: query
+          description: Page number of results to return.  If blank, returns all results
+          schema:
+            type: integer
       responses:
         200:
           description: successful operation
@@ -64,6 +69,15 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ApplicationSummary'
+          headers:
+            X-Pagination-CurrentPage:
+              $ref: '#/components/headers/X-Pagination-CurrentPage'
+            X-Pagination-TotalPages:
+              $ref: '#/components/headers/X-Pagination-TotalPages'
+            X-Pagination-TotalResults:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
+            X-Pagination-PageSize:
+              $ref: '#/components/headers/X-Pagination-TotalResults'
         401:
           $ref: '#/components/responses/401Response'
         403:
