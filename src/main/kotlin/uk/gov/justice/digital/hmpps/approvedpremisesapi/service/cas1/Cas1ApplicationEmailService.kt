@@ -37,6 +37,10 @@ class Cas1ApplicationEmailService(
     application: ApprovedPremisesApplicationEntity,
     withdrawingUser: UserEntity,
   ) {
+    if (!application.isSubmitted()) {
+      return
+    }
+
     val applicationCreatedByUser = application.createdByUser
 
     val templateId = if (aps530WithdrawalEmailImprovements) {
