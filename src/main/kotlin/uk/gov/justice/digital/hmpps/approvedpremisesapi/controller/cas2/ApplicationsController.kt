@@ -10,7 +10,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
@@ -53,7 +55,7 @@ class ApplicationsController(
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
-    ).body(applications.map { getPersonDetailAndTransformToSummary(it, user) })
+    ).body(getPeopleDetailsAndTransformToSummaries(applications, user))
   }
 
   override fun applicationsApplicationIdGet(applicationId: UUID):
@@ -134,15 +136,29 @@ class ApplicationsController(
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user))
   }
 
-  private fun getPersonDetailAndTransformToSummary(
-    application: uk.gov.justice.digital
-    .hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary,
-    user: NomisUserEntity,
-  ):
-    ApplicationSummary {
-    val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn())
+  private fun getPeopleDetailsAndTransformToSummaries(applications: List<Cas2ApplicationSummary>, user: NomisUserEntity): List<ApplicationSummary> {
+    val peopleInfo = offenderService.getOffenderSummariesByCrns(
+      applications.map { it.getCrn() }.toSet(),
+    )
 
-    return applicationsTransformer.transformJpaSummaryToSummary(application, personInfo)
+    val summaries = mutableListOf<ApplicationSummary>()
+
+    for (application in applications) {
+      val crn = application.getCrn()
+      val personInfo = when (val offenderDetailSummary = peopleInfo[crn]) {
+        null -> PersonInfoResult.Success.Restricted(crn, application.getNomsNumber())
+        else -> offenderService.getInfoForOffender(application.getCrn(), offenderDetailSummary)
+      }
+
+      summaries.add(
+        applicationsTransformer.transformJpaSummaryToSummary(
+          application,
+          personInfo as PersonInfoResult.Success,
+        ),
+      )
+    }
+
+    return summaries
   }
 
   private fun getPersonDetailAndTransform(

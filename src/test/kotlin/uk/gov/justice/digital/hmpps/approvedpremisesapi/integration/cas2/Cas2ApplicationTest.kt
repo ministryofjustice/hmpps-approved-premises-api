@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.ninjasquad.springmockk.SpykBean
 import io.mockk.clearMocks
+import io.mockk.every
+import io.mockk.mockk
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -29,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Pr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -309,22 +312,22 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get list of applications returns 500 when a person cannot be found`() {
+    fun `Get list of applications returns successfully when a person cannot be found`() {
       `Given a CAS2 User`() { userEntity, jwt ->
         val crn = "X1234"
 
         produceAndPersistBasicApplication(crn, userEntity)
-        CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-        loadPreemptiveCacheForOffenderDetails(crn)
+        val mockOffenderService = mockk<OffenderService>()
+        // val mockOffenderDetailsDataSource = mockk<OffenderDetailsDataSource>()
+        // every {mockOffenderDetailsDataSource.getOffenderDetailSummaries(any())} returns emptyMap()
+        every { mockOffenderService.getOffenderSummariesByCrns(any()) } returns emptyMap()
 
         webTestClient.get()
           .uri("/cas2/applications")
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
-          .is5xxServerError
-          .expectBody()
-          .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
+          .isOk
       }
     }
 
