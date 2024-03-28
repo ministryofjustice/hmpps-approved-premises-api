@@ -516,8 +516,6 @@ components:
           type: string
         notes:
           type: string
-        moveOnCategory:
-          $ref: '#/components/schemas/MoveOnCategory'
         recordedBy:
           $ref: '#/components/schemas/StaffMember'
       required:
@@ -529,7 +527,6 @@ components:
         - departedAt
         - reason
         - notes
-        - moveOnCategory
     CAS3ReferralSubmittedEvent:
       allOf:
         - $ref: '#/components/schemas/CAS3Event'
@@ -583,17 +580,6 @@ components:
         - addressLine1
         - postcode
         - region
-
-    MoveOnCategory:
-      type: object
-      properties:
-        description:
-          type: string
-        label:
-          type: string
-      required:
-        - description
-        - label
 
     # Utility schemas
     EventId:

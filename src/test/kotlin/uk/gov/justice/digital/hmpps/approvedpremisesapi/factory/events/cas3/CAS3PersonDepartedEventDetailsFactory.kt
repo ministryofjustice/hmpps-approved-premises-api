@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas3
 import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartedEventDetails
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
@@ -22,7 +21,6 @@ class CAS3PersonDepartedEventDetailsFactory : Factory<CAS3PersonDepartedEventDet
   private var departedAt: Yielded<Instant> = { Instant.now() }
   private var reason: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var notes: Yielded<String> = { randomStringLowerCase(20) }
-  private var moveOnCategory: Yielded<MoveOnCategory> = { MoveOnCategoryFactory().produce() }
   private var applicationId: Yielded<UUID?> = { null }
   private var reasonDetail: Yielded<String?> = { null }
   private var recordedBy: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
@@ -59,10 +57,6 @@ class CAS3PersonDepartedEventDetailsFactory : Factory<CAS3PersonDepartedEventDet
     this.notes = { notes }
   }
 
-  fun withMoveOnCategory(configuration: MoveOnCategoryFactory.() -> Unit) = apply {
-    this.moveOnCategory = { MoveOnCategoryFactory().apply(configuration).produce() }
-  }
-
   fun withApplicationId(applicationId: UUID?) = apply {
     this.applicationId = { applicationId }
   }
@@ -88,7 +82,6 @@ class CAS3PersonDepartedEventDetailsFactory : Factory<CAS3PersonDepartedEventDet
       departedAt = this.departedAt(),
       reason = this.reason(),
       notes = this.notes(),
-      moveOnCategory = this.moveOnCategory(),
       applicationId = applicationId,
       reasonDetail = this.reasonDetail(),
       applicationUrl = applicationId?.let { URI("http://api/applications/$it") },
