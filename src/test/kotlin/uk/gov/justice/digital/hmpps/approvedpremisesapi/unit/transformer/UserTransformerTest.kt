@@ -54,7 +54,7 @@ class UserTransformerTest {
   inner class TransformJpaToApi {
 
     @Test
-    fun `Should successfully transfer user entity with role CAS3_REPORTER to reporter`() {
+    fun `transformJpaToApi CAS3 Should successfully transfer user entity with role CAS3_REPORTER to reporter`() {
       val result = userTransformer.transformJpaToApi(
         buildUserEntity(CAS3_REPORTER),
         temporaryAccommodation,
@@ -66,7 +66,7 @@ class UserTransformerTest {
     }
 
     @Test
-    fun `Should successfully transfer user entity with role CAS3_REFERRER to referrer`() {
+    fun `transformJpaToApi CAS3 Should successfully transfer user entity with role CAS3_REFERRER to referrer`() {
       val result = userTransformer.transformJpaToApi(
         buildUserEntity(CAS3_REFERRER),
         temporaryAccommodation,
@@ -78,7 +78,7 @@ class UserTransformerTest {
     }
 
     @Test
-    fun `Should successfully transfer user entity with role CAS1_MATCHER to matcher`() {
+    fun `transformJpaToApi CAS1 Should successfully transfer user entity with role CAS1_MATCHER to matcher`() {
       val result =
         userTransformer.transformJpaToApi(buildUserEntity(CAS1_MATCHER), approvedPremises) as ApprovedPremisesUser
 
@@ -88,7 +88,7 @@ class UserTransformerTest {
     }
 
     @Test
-    fun `should return distinct roles for Approved Premises`() {
+    fun `transformJpaToApi CAS1 should return distinct roles for Approved Premises`() {
       val user = buildUserEntity(CAS1_MATCHER)
       user.addRoleForUnitTest(CAS1_MATCHER)
       user.addRoleForUnitTest(CAS1_MATCHER)
@@ -109,7 +109,7 @@ class UserTransformerTest {
     }
 
     @Test
-    fun `should return distinct roles for Temporary Accommodation`() {
+    fun `transformJpaToApi CAS3 should return distinct roles for Temporary Accommodation`() {
       val user = buildUserEntity(CAS3_REFERRER)
       user.addRoleForUnitTest(CAS3_REFERRER)
       user.addRoleForUnitTest(CAS3_REFERRER)
