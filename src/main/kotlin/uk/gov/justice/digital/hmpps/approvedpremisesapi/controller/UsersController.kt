@@ -26,7 +26,7 @@ class UsersController(
 ) : UsersApiDelegate {
 
   override fun usersIdGet(id: UUID, xServiceName: ServiceName): ResponseEntity<User> {
-    val userEntity = when (val result = userService.updateUserFromCommunityApiById(id)) {
+    val userEntity = when (val result = userService.updateUserFromCommunityApiById(id, xServiceName)) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(id, "User")
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
       is AuthorisableActionResult.Success -> result.entity
@@ -137,7 +137,7 @@ class UsersController(
       throw ForbiddenProblem()
     }
 
-    val userEntity = userService.getExistingUserOrCreate(name, true)
+    val userEntity = userService.getExistingUserOrCreate(name, xServiceName, true)
     val userTransformed = userTransformer.transformJpaToApi(userEntity, xServiceName)
     return ResponseEntity.ok(userTransformed)
   }
@@ -156,7 +156,7 @@ class UsersController(
     ApprovedPremisesUserRole.appealsManager -> JpaUserRole.CAS1_APPEALS_MANAGER
   }
 
-  private fun transformApiQualification(apiQualification: uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification): uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification =
+  private fun transformApiQualification(apiQualification: UserQualification): uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification =
     when (apiQualification) {
       UserQualification.pipe -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.PIPE
       UserQualification.womens -> uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.WOMENS
