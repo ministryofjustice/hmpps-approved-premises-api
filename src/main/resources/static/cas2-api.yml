@@ -69,13 +69,13 @@ paths:
                   $ref: '_shared.yml#/components/schemas/ApplicationSummary'
           headers:
             X-Pagination-CurrentPage:
-              $ref: '#/components/headers/X-Pagination-CurrentPage'
+              $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
             X-Pagination-TotalPages:
-              $ref: '#/components/headers/X-Pagination-TotalPages'
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalPages'
             X-Pagination-TotalResults:
-              $ref: '#/components/headers/X-Pagination-TotalResults'
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
-              $ref: '#/components/headers/X-Pagination-TotalResults'
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
@@ -240,13 +240,13 @@ paths:
                   $ref: '_shared.yml#/components/schemas/Cas2SubmittedApplicationSummary'
           headers:
             X-Pagination-CurrentPage:
-              $ref: '#/components/headers/X-Pagination-CurrentPage'
+              $ref: '_shared.yml#/components/headers/X-Pagination-CurrentPage'
             X-Pagination-TotalPages:
-              $ref: '#/components/headers/X-Pagination-TotalPages'
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalPages'
             X-Pagination-TotalResults:
-              $ref: '#/components/headers/X-Pagination-TotalResults'
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
             X-Pagination-PageSize:
-              $ref: '#/components/headers/X-Pagination-TotalResults'
+              $ref: '_shared.yml#/components/headers/X-Pagination-TotalResults'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:
