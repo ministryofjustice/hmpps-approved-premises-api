@@ -37,7 +37,7 @@ generic-service:
     CACHES_STAFFMEMBERS_EXPIRY-SECONDS: 300
     DOMAIN-EVENTS_CAS1_EMIT-ENABLED: true
     DOMAIN-EVENTS_CAS2_EMIT-ENABLED: true
-    DOMAIN-EVENTS_CAS3_EMIT-ENABLED: referralSubmitted,bookingProvisionallyMade,bookingConfirmed,bookingCancelled,bookingCancelledUpdated
+    DOMAIN-EVENTS_CAS3_EMIT-ENABLED: referralSubmitted,bookingProvisionallyMade,bookingConfirmed,bookingCancelled,bookingCancelledUpdated,personArrived,personArrivedUpdated,personDeparted,personDepartureUpdated
     DOMAIN-EVENTS_CAS1_ASYNC-SAVE-ENABLED: false
     DOMAIN-EVENTS_CAS2_ASYNC-SAVE-ENABLED: false
     DOMAIN-EVENTS_CAS3_ASYNC-SAVE-ENABLED: false
@@ -74,6 +74,7 @@ generic-service:
     URL-TEMPLATES_API_CAS3_BOOKING-CONFIRMED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/cas3/booking-confirmed/#eventId
     URL-TEMPLATES_API_CAS3_BOOKING-PROVISIONALLY-MADE-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/cas3/booking-provisionally-made/#eventId
     URL-TEMPLATES_API_CAS3_PERSON-ARRIVED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/cas3/person-arrived/#eventId
+    URL-TEMPLATES_API_CAS3_PERSON-ARRIVED-UPDATED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/cas3/person-arrived-updated/#eventId
     URL-TEMPLATES_API_CAS3_PERSON-DEPARTED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/cas3/person-departed/#eventId
     URL-TEMPLATES_API_CAS3_REFERRAL-SUBMITTED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/cas3/referral-submitted/#eventId
     URL-TEMPLATES_API_CAS3_PERSON-DEPARTURE-UPDATED-EVENT-DETAIL: https://approved-premises-api.hmpps.service.justice.gov.uk/events/cas3/person-departure-updated/#eventId
