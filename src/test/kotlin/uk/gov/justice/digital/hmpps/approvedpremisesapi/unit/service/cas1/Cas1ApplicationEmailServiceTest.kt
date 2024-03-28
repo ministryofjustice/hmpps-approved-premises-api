@@ -75,62 +75,66 @@ class Cas1ApplicationEmailServiceTest {
     }
   }
 
-  @Test
-  fun `applicationWithdrawn doesnt send email to applicant if no email addresses defined`() {
-    val applicant = createUser(emailAddress = null)
-    val withdrawingUser = createUser(emailAddress = null)
+  @Nested
+  inner class ApplicationWithdrawn {
 
-    val application = createApplicationForApplicant(applicant)
+    @Test
+    fun `applicationWithdrawn doesnt send email to applicant if no email addresses defined`() {
+      val applicant = createUser(emailAddress = null)
+      val withdrawingUser = createUser(emailAddress = null)
 
-    service.applicationWithdrawn(application, withdrawingUser)
+      val application = createApplicationForApplicant(applicant)
 
-    mockEmailNotificationService.assertNoEmailsRequested()
-  }
+      service.applicationWithdrawn(application, withdrawingUser)
 
-  @Test
-  fun `applicationWithdrawn sends an email to applicant if email addresses defined`() {
-    val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
-    val withdrawingUser = createUser(emailAddress = null)
+      mockEmailNotificationService.assertNoEmailsRequested()
+    }
 
-    val application = createApplicationForApplicant(applicant)
+    @Test
+    fun `applicationWithdrawn sends an email to applicant if email addresses defined`() {
+      val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
+      val withdrawingUser = createUser(emailAddress = null)
 
-    service.applicationWithdrawn(application, withdrawingUser)
+      val application = createApplicationForApplicant(applicant)
 
-    mockEmailNotificationService.assertEmailRequestCount(1)
+      service.applicationWithdrawn(application, withdrawingUser)
 
-    val personalisation = mapOf(
-      "crn" to TestConstants.CRN,
-    )
+      mockEmailNotificationService.assertEmailRequestCount(1)
 
-    mockEmailNotificationService.assertEmailRequested(
-      TestConstants.APPLICANT_EMAIL,
-      notifyConfig.templates.applicationWithdrawn,
-      personalisation,
-    )
-  }
+      val personalisation = mapOf(
+        "crn" to TestConstants.CRN,
+      )
 
-  @Test
-  fun `applicationWithdrawn sends a V2 email to applicant if email addresses defined`() {
-    val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
-    val withdrawingUser = createUser(name = "the withdrawing user")
+      mockEmailNotificationService.assertEmailRequested(
+        TestConstants.APPLICANT_EMAIL,
+        notifyConfig.templates.applicationWithdrawn,
+        personalisation,
+      )
+    }
 
-    val application = createApplicationForApplicant(applicant)
+    @Test
+    fun `applicationWithdrawn sends a V2 email to applicant if email addresses defined`() {
+      val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
+      val withdrawingUser = createUser(name = "the withdrawing user")
 
-    serviceUsingAps530Improvements.applicationWithdrawn(application, withdrawingUser)
+      val application = createApplicationForApplicant(applicant)
 
-    mockEmailNotificationService.assertEmailRequestCount(1)
+      serviceUsingAps530Improvements.applicationWithdrawn(application, withdrawingUser)
 
-    val personalisation = mapOf(
-      "crn" to TestConstants.CRN,
-      "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
-      "withdrawnBy" to "the withdrawing user",
-    )
+      mockEmailNotificationService.assertEmailRequestCount(1)
 
-    mockEmailNotificationService.assertEmailRequested(
-      TestConstants.APPLICANT_EMAIL,
-      notifyConfig.templates.applicationWithdrawnV2,
-      personalisation,
-    )
+      val personalisation = mapOf(
+        "crn" to TestConstants.CRN,
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "withdrawnBy" to "the withdrawing user",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        TestConstants.APPLICANT_EMAIL,
+        notifyConfig.templates.applicationWithdrawnV2,
+        personalisation,
+      )
+    }
   }
 
   private fun createUser(
