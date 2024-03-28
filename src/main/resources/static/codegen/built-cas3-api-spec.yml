@@ -3571,6 +3571,7 @@ components:
         - update_cas1_fix_placement_app_links
         - update_cas1_notice_types
         - update_cas1_backfill_user_ap_area
+        - update_cas3_application_offender_name
     PlacementDates:
       type: object
       properties:

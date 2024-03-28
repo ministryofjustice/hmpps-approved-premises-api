@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1BackfillUs
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1FixPlacementApplicationLinksJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1UserDetailsMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2AssessmentMigrationJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas3UpdateApplicationOffenderNameJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.MigrationLogger
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.NoticeTypeMigrationJob
@@ -55,6 +56,7 @@ class MigrationJobService(
           applicationContext.getBean(UserRepository::class.java),
           applicationContext.getBean(UserService::class.java),
         )
+
         MigrationJobType.sentenceTypeAndSituation -> UpdateSentenceTypeAndSituationJob(
           applicationContext.getBean(UpdateSentenceTypeAndSituationRepository::class.java),
         )
@@ -113,6 +115,13 @@ class MigrationJobService(
           applicationContext.getBean(Cas1UserMappingService::class.java),
           applicationContext.getBean(CommunityApiClient::class.java),
           transactionTemplate,
+        )
+
+        MigrationJobType.cas3ApplicationOffenderName -> Cas3UpdateApplicationOffenderNameJob(
+          applicationContext.getBean(ApplicationRepository::class.java),
+          applicationContext.getBean(OffenderService::class.java),
+          applicationContext.getBean(EntityManager::class.java),
+          pageSize,
         )
       }
 

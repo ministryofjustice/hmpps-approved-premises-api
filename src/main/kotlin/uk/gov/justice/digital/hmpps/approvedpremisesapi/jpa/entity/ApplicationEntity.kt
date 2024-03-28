@@ -235,6 +235,20 @@ WHERE taa.probation_region_id = :probationRegionId AND a.submitted_at IS NOT NUL
   @Modifying
   @Query("UPDATE ApprovedPremisesApplicationEntity ap set ap.inmateInOutStatusOnSubmission = :inOutStatus where ap.id = :applicationId")
   fun updateInOutStatus(applicationId: UUID, inOutStatus: String)
+
+  @Query("SELECT taa FROM TemporaryAccommodationApplicationEntity taa WHERE taa.id = :id")
+  fun findTemporaryAccommodationApplicationById(id: UUID): TemporaryAccommodationApplicationEntity?
+
+  @Query(
+    "SELECT * FROM  temporary_accommodation_applications taa " +
+      "LEFT JOIN applications a ON a.id = taa.id " +
+      "WHERE taa.name IS NULL",
+    nativeQuery = true,
+  )
+  fun <T : ApplicationEntity> findAllTemporaryAccommodationApplicationsAndNameNull(
+    type: Class<T>,
+    pageable: Pageable?,
+  ): Slice<TemporaryAccommodationApplicationEntity>
 }
 
 @Entity
