@@ -4,7 +4,9 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
@@ -21,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserWithWorklo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification.WOMENS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS1_MATCHER
@@ -46,130 +49,170 @@ class UserTransformerTest {
   @BeforeEach
   fun setup() {
     every { probationRegionTransformer.transformJpaToApi(any()) } returns ProbationRegion(randomUUID(), "someName")
-    every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
   }
 
-  @Test
-  fun `Should successfully transfer user entity with role CAS3_REPORTER to reporter`() {
-    val result = userTransformer.transformJpaToApi(
-      buildUserEntity(CAS3_REPORTER),
-      temporaryAccommodation,
-    ) as TemporaryAccommodationUser
+  @Nested
+  inner class TransformJpaToApi {
 
-    assertThat(result.roles).contains(reporter)
-    assertThat(result.service).isEqualTo(temporaryAccommodation.value)
-    verify(exactly = 1) { probationRegionTransformer.transformJpaToApi(any()) }
+    @Test
+    fun `transformJpaToApi CAS3 Should successfully transfer user entity with role CAS3_REPORTER to reporter`() {
+      val result = userTransformer.transformJpaToApi(
+        buildUserEntity(CAS3_REPORTER),
+        temporaryAccommodation,
+      ) as TemporaryAccommodationUser
+
+      assertThat(result.roles).contains(reporter)
+      assertThat(result.service).isEqualTo(temporaryAccommodation.value)
+      verify(exactly = 1) { probationRegionTransformer.transformJpaToApi(any()) }
+    }
+
+    @Test
+    fun `transformJpaToApi CAS3 Should successfully transfer user entity with role CAS3_REFERRER to referrer`() {
+      val result = userTransformer.transformJpaToApi(
+        buildUserEntity(CAS3_REFERRER),
+        temporaryAccommodation,
+      ) as TemporaryAccommodationUser
+
+      assertThat(result.roles).contains(referrer)
+      assertThat(result.service).isEqualTo(temporaryAccommodation.value)
+      verify(exactly = 1) { probationRegionTransformer.transformJpaToApi(any()) }
+    }
+
+    @Test
+    fun `transformJpaToApi CAS1 Should successfully transfer user entity with role CAS1_MATCHER to matcher`() {
+      val apAreaEntity = ApAreaEntityFactory().produce()
+
+      val user = buildUserEntity(
+        role = CAS1_MATCHER,
+        apArea = apAreaEntity,
+      )
+
+      every { apAreaTransformer.transformJpaToApi(apAreaEntity) } returns apArea
+
+      val result = userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
+
+      assertThat(result.roles).contains(matcher)
+      assertThat(result.service).isEqualTo("CAS1")
+      verify(exactly = 1) { probationRegionTransformer.transformJpaToApi(any()) }
+      assertThat(result.apArea).isEqualTo(apArea)
+    }
+
+    @Test
+    fun `transformJpaToApi CAS1 should return distinct roles for Approved Premises`() {
+      val user = buildUserEntity(
+        role = CAS1_MATCHER,
+        apArea = ApAreaEntityFactory().produce(),
+      )
+      user.addRoleForUnitTest(CAS1_MATCHER)
+      user.addRoleForUnitTest(CAS1_MATCHER)
+      user.addRoleForUnitTest(CAS1_MATCHER)
+      user.addRoleForUnitTest(CAS1_WORKFLOW_MANAGER)
+      user.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
+
+      every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
+
+      val result =
+        userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
+
+      assertThat(result.roles).isEqualTo(
+        listOf(
+          matcher,
+          workflowManager,
+          appealsManager,
+        ),
+      )
+    }
+
+    @Test
+    fun `transformJpaToApi CAS3 should return distinct roles for Temporary Accommodation`() {
+      val user = buildUserEntity(CAS3_REFERRER)
+      user.addRoleForUnitTest(CAS3_REFERRER)
+      user.addRoleForUnitTest(CAS3_REFERRER)
+      user.addRoleForUnitTest(CAS3_REFERRER)
+      user.addRoleForUnitTest(CAS3_REPORTER)
+
+      val result =
+        userTransformer.transformJpaToApi(user, temporaryAccommodation) as TemporaryAccommodationUser
+
+      assertThat(result.roles).isEqualTo(
+        listOf(
+          referrer,
+          reporter,
+        ),
+      )
+    }
+
+    @Test
+    fun `transformJpaToApi CAS1 should error if no ap area`() {
+      val user = buildUserEntity(
+        role = CAS1_MATCHER,
+        apArea = null,
+      )
+
+      assertThatThrownBy {
+        userTransformer.transformJpaToApi(user, approvedPremises)
+      }.hasMessage("Internal Server Error: CAS1 user ${user.id} should have AP Area Set")
+    }
   }
 
-  @Test
-  fun `Should successfully transfer user entity with role CAS3_REFERRER to referrer`() {
-    val result = userTransformer.transformJpaToApi(
-      buildUserEntity(CAS3_REFERRER),
-      temporaryAccommodation,
-    ) as TemporaryAccommodationUser
+  @Nested
+  inner class TransformJpaToApiUserWithWorkload {
 
-    assertThat(result.roles).contains(referrer)
-    assertThat(result.service).isEqualTo(temporaryAccommodation.value)
-    verify(exactly = 1) { probationRegionTransformer.transformJpaToApi(any()) }
-  }
+    @Test
+    fun `transformJpaToAPIUserWithWorkload should return distinct roles`() {
+      val user = buildUserEntity(
+        role = CAS1_MATCHER,
+        apArea = ApAreaEntityFactory().produce(),
+      )
+      user.addRoleForUnitTest(CAS1_MATCHER)
+      user.addRoleForUnitTest(CAS1_MATCHER)
+      user.addRoleForUnitTest(CAS1_MATCHER)
+      user.addRoleForUnitTest(CAS1_WORKFLOW_MANAGER)
 
-  @Test
-  fun `Should successfully transfer user entity with role CAS1_MATCHER to matcher`() {
-    val result =
-      userTransformer.transformJpaToApi(buildUserEntity(CAS1_MATCHER), approvedPremises) as ApprovedPremisesUser
+      every { apAreaTransformer.transformJpaToApi(any()) } returns apArea
 
-    assertThat(result.roles).contains(matcher)
-    assertThat(result.service).isEqualTo("CAS1")
-    verify(exactly = 1) { probationRegionTransformer.transformJpaToApi(any()) }
-  }
+      val workload = UserWorkload(
+        0,
+        0,
+        0,
+      )
 
-  @Test
-  fun `should return distinct roles for Approved Premises`() {
-    val user = buildUserEntity(CAS1_MATCHER)
-    user.addRoleForUnitTest(CAS1_MATCHER)
-    user.addRoleForUnitTest(CAS1_MATCHER)
-    user.addRoleForUnitTest(CAS1_MATCHER)
-    user.addRoleForUnitTest(CAS1_WORKFLOW_MANAGER)
-    user.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
+      val result = userTransformer.transformJpaToAPIUserWithWorkload(user, workload) as UserWithWorkload
 
-    val result =
-      userTransformer.transformJpaToApi(user, approvedPremises) as ApprovedPremisesUser
+      assertThat(result.roles).isEqualTo(
+        listOf(
+          matcher,
+          workflowManager,
+        ),
+      )
+    }
 
-    assertThat(result.roles).isEqualTo(
-      listOf(
-        matcher,
-        workflowManager,
-        appealsManager,
-      ),
-    )
-  }
+    @Test
+    fun `transformJpaToAPIUserWithWorkload should return AP area`() {
+      val apAreaEntity = ApAreaEntityFactory().produce()
 
-  @Test
-  fun `should return distinct roles for Temporary Accommodation`() {
-    val user = buildUserEntity(CAS3_REFERRER)
-    user.addRoleForUnitTest(CAS3_REFERRER)
-    user.addRoleForUnitTest(CAS3_REFERRER)
-    user.addRoleForUnitTest(CAS3_REFERRER)
-    user.addRoleForUnitTest(CAS3_REPORTER)
+      val user = buildUserEntity(
+        role = CAS1_MATCHER,
+        apArea = apAreaEntity,
+      )
 
-    val result =
-      userTransformer.transformJpaToApi(user, temporaryAccommodation) as TemporaryAccommodationUser
+      val workload = UserWorkload(
+        0,
+        0,
+        0,
+      )
 
-    assertThat(result.roles).isEqualTo(
-      listOf(
-        referrer,
-        reporter,
-      ),
-    )
-  }
+      every { apAreaTransformer.transformJpaToApi(apAreaEntity) } returns apArea
 
-  @Test
-  fun `transformJpaToAPIUserWithWorkload should return distinct roles`() {
-    val user = buildUserEntity(CAS1_MATCHER)
-    user.addRoleForUnitTest(CAS1_MATCHER)
-    user.addRoleForUnitTest(CAS1_MATCHER)
-    user.addRoleForUnitTest(CAS1_MATCHER)
-    user.addRoleForUnitTest(CAS1_WORKFLOW_MANAGER)
+      val result = userTransformer.transformJpaToAPIUserWithWorkload(user, workload) as UserWithWorkload
 
-    val workload = UserWorkload(
-      0,
-      0,
-      0,
-    )
-
-    val result =
-      userTransformer.transformJpaToAPIUserWithWorkload(user, workload) as UserWithWorkload
-
-    assertThat(result.roles).isEqualTo(
-      listOf(
-        matcher,
-        workflowManager,
-      ),
-    )
-  }
-
-  @Test
-  fun `transformJpaToAPIUserWithWorkload should return AP area`() {
-    val user = buildUserEntity(CAS1_MATCHER)
-
-    val workload = UserWorkload(
-      0,
-      0,
-      0,
-    )
-
-    val result =
-      userTransformer.transformJpaToAPIUserWithWorkload(user, workload) as UserWithWorkload
-
-    assertThat(result.apArea).isEqualTo(apArea)
-
-    verify {
-      apAreaTransformer.transformJpaToApi(user.probationRegion.apArea)
+      assertThat(result.apArea).isEqualTo(apArea)
     }
   }
 
   private fun buildUserEntity(
     role: UserRole,
+    apArea: ApAreaEntity? = null,
   ) = UserEntityFactory()
     .withId(randomUUID())
     .withName("username")
@@ -178,6 +221,7 @@ class UserTransformerTest {
     .withTelephoneNumber("someNumber")
     .withIsActive(true)
     .withProbationRegion(buildProbationRegionEntity())
+    .withApArea(apArea)
     .produce()
     .addRoleForUnitTest(role)
     .addQualificationForUnitTest(WOMENS)
