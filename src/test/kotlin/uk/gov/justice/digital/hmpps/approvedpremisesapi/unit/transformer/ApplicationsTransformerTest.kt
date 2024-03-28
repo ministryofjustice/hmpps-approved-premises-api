@@ -11,8 +11,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationSummary
@@ -31,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonRisks
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
@@ -154,6 +157,28 @@ class ApplicationsTransformerTest {
 
     assertThat(result.apArea).isEqualTo(mockApArea)
     verify { mockApAreaTransformer.transformJpaToApi(apArea) }
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+    "NORMAL,normal",
+    "PIPE,pipe",
+    "ESAP,esap",
+    "RFAP,rfap",
+    "MHAP_ST_JOSEPHS,mhapStJosephs",
+    "MHAP_ELLIOTT_HOUSE,mhapElliottHouse",
+  )
+  fun `transformJpaToApi transforms ap type correctly`(jpaTypeString: String, apiTypeString: String) {
+    val jpaType = ApprovedPremisesType.valueOf(jpaTypeString)
+    val expectedApiType = ApType.valueOf(apiTypeString)
+
+    val application = approvedPremisesApplicationFactory.withApType(jpaType).produce()
+
+    every { mockCas1ApplicationUserDetailsTransformer.transformJpaToApi(any()) } returns Cas1ApplicationUserDetails("", "", "")
+
+    val result = applicationsTransformer.transformJpaToApi(application, mockk()) as ApprovedPremisesApplication
+
+    assertThat(result.apType).isEqualTo(expectedApiType)
   }
 
   @Test
