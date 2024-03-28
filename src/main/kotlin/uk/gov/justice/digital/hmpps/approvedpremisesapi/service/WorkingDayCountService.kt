@@ -30,9 +30,9 @@ class WorkingDayCountService(
     return timeService.nowAsLocalDate().getDaysUntilExclusiveEnd(to).filter { it.isWorkingDay(bankHolidays) }.size
   }
 
-  fun addWorkingDays(date: LocalDate, count: Int): LocalDate {
+  fun addWorkingDays(date: LocalDate, daysToAdd: Int): LocalDate {
     var result = date
-    for (i in 0 until count) {
+    for (i in 0 until daysToAdd) {
       result = result.getNextWorkingDay(bankHolidays)
     }
 
