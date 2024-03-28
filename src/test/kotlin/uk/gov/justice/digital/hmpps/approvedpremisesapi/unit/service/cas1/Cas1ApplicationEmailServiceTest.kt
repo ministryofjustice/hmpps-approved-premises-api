@@ -91,6 +91,18 @@ class Cas1ApplicationEmailServiceTest {
     }
 
     @Test
+    fun `applicationWithdrawn doesnt send email to applicant if application not submitted`() {
+      val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
+      val withdrawingUser = createUser(emailAddress = null)
+
+      val application = createApplicationForApplicant(applicant, submittedAt = null)
+
+      service.applicationWithdrawn(application, withdrawingUser)
+
+      mockEmailNotificationService.assertNoEmailsRequested()
+    }
+
+    @Test
     fun `applicationWithdrawn sends an email to applicant if email addresses defined`() {
       val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
       val withdrawingUser = createUser(emailAddress = null)
@@ -146,10 +158,13 @@ class Cas1ApplicationEmailServiceTest {
     .withName(name)
     .produce()
 
-  private fun createApplicationForApplicant(applicant: UserEntity) = ApprovedPremisesApplicationEntityFactory()
+  private fun createApplicationForApplicant(
+    applicant: UserEntity,
+    submittedAt: OffsetDateTime? = OffsetDateTime.now(),
+  ) = ApprovedPremisesApplicationEntityFactory()
     .withCrn(TestConstants.CRN)
     .withCreatedByUser(applicant)
-    .withSubmittedAt(OffsetDateTime.now())
+    .withSubmittedAt(submittedAt)
     .withApArea(ApAreaEntityFactory().withName("test area").produce())
     .produce()
 }
