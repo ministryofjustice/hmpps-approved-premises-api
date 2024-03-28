@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomEmailAddress
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class UserEntityFactory : Factory<UserEntity> {
@@ -26,6 +27,9 @@ class UserEntityFactory : Factory<UserEntity> {
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
   private var isActive: Yielded<Boolean> = { true }
   private var apArea: Yielded<ApAreaEntity?> = { null }
+  private var teamCodes: Yielded<List<String>?> = { null }
+  private var createdAt: Yielded<OffsetDateTime?> = { null }
+  private var updatedAt: Yielded<OffsetDateTime?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -100,6 +104,10 @@ class UserEntityFactory : Factory<UserEntity> {
     )
   }
 
+  fun withTeamCodes(teamCodes: List<String>) = apply {
+    this.teamCodes = { teamCodes }
+  }
+
   override fun produce(): UserEntity = UserEntity(
     id = this.id(),
     name = this.name(),
@@ -114,5 +122,8 @@ class UserEntityFactory : Factory<UserEntity> {
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided"),
     isActive = this.isActive(),
     apArea = this.apArea(),
+    teamCodes = this.teamCodes(),
+    createdAt = this.createdAt(),
+    updatedAt = this.updatedAt(),
   )
 }

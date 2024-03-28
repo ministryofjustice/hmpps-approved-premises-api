@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 class MigrateCas1UserApAreaTest : MigrationJobTestBase() {
 
   @Test
-  fun `Populate ap area`() {
+  fun `Populate ap area and team codes`() {
     val apArea = apAreaEntityFactory.produceAndPersist()
 
     val probationRegion = probationRegionEntityFactory.produceAndPersist {
@@ -29,11 +29,13 @@ class MigrateCas1UserApAreaTest : MigrationJobTestBase() {
     ) { userEntity, _ ->
 
       assertThat(userEntity.apArea).isNull()
+      assertThat(userEntity.teamCodes).isNull()
 
       migrationJobService.runMigrationJob(MigrationJobType.cas1BackfillUserApArea)
 
       val updatedUser = userRepository.findByIdOrNull(userEntity.id)!!
       assertThat(updatedUser.apArea!!.id).isEqualTo(apArea.id)
+      assertThat(updatedUser.teamCodes).isEqualTo(listOf("abc"))
     }
   }
 }
