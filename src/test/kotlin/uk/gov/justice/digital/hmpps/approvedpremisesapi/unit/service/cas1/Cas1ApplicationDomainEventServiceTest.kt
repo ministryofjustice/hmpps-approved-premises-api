@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted
@@ -34,6 +35,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ProbationAreaFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
@@ -44,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.time.Period
 import java.util.UUID
 
@@ -76,146 +80,214 @@ class Cas1ApplicationDomainEventServiceTest {
 
   private val newestSchema = ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
-  @Test
-  fun `applicationSubmitted success`() {
-    val situation = SituationOption.bailSentence
+  @Nested
+  inner class ApplicationSubmitted {
 
-    val submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
-      translatedDocument = {},
-      isPipeApplication = true,
-      isWomensApplication = false,
-      isEmergencyApplication = false,
-      isEsapApplication = false,
-      targetLocation = "SW1A 1AA",
-      releaseType = ReleaseTypeOption.licence,
-      type = "CAS1",
-      sentenceType = SentenceTypeOption.nonStatutory,
-      situation = situation,
-      applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
-      caseManagerIsNotApplicant = false,
-    )
+    @Test
+    fun `applicationSubmitted success`() {
+      val situation = SituationOption.bailSentence
 
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withApplicationSchema(newestSchema)
-      .withId(applicationId)
-      .withCreatedByUser(user)
-      .withSubmittedAt(null)
-      .produce()
-      .apply {
-        schemaUpToDate = true
-      }
-
-    val offenderDetails = OffenderDetailsSummaryFactory()
-      .withGender("male")
-      .withCrn(application.crn)
-      .produce()
-
-    every {
-      mockOffenderService.getOffenderByCrn(
-        application.crn,
-        user.deliusUsername,
-        true,
+      val submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
+        translatedDocument = {},
+        isPipeApplication = true,
+        isWomensApplication = false,
+        isEmergencyApplication = false,
+        isEsapApplication = false,
+        targetLocation = "SW1A 1AA",
+        releaseType = ReleaseTypeOption.licence,
+        type = "CAS1",
+        sentenceType = SentenceTypeOption.nonStatutory,
+        situation = situation,
+        applicantUserDetails = Cas1ApplicationUserDetails("applicantName", "applicantEmail", "applicationPhone"),
+        caseManagerIsNotApplicant = false,
       )
-    } returns AuthorisableActionResult.Success(
-      offenderDetails,
-    )
 
-    val risks = PersonRisksFactory()
-      .withMappa(
-        RiskWithStatus(
-          status = RiskStatus.Retrieved,
-          value = Mappa(
-            level = "CAT C1/LEVEL L1",
-            lastUpdated = LocalDate.now(),
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withApplicationSchema(newestSchema)
+        .withId(applicationId)
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .produce()
+        .apply {
+          schemaUpToDate = true
+        }
+
+      val offenderDetails = OffenderDetailsSummaryFactory()
+        .withGender("male")
+        .withCrn(application.crn)
+        .produce()
+
+      every {
+        mockOffenderService.getOffenderByCrn(
+          application.crn,
+          user.deliusUsername,
+          true,
+        )
+      } returns AuthorisableActionResult.Success(
+        offenderDetails,
+      )
+
+      val risks = PersonRisksFactory()
+        .withMappa(
+          RiskWithStatus(
+            status = RiskStatus.Retrieved,
+            value = Mappa(
+              level = "CAT C1/LEVEL L1",
+              lastUpdated = LocalDate.now(),
+            ),
           ),
-        ),
+        )
+        .produce()
+
+      every {
+        mockOffenderService.getRiskByCrn(
+          application.crn,
+          any(),
+          user.deliusUsername,
+        )
+      } returns AuthorisableActionResult.Success(
+        risks,
       )
+
+      val staffUserDetails = StaffUserDetailsFactory()
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory()
+              .produce(),
+          ),
+        )
+        .produce()
+
+      val caseDetails = CaseDetailFactory().produce()
+
+      every { mockApDeliusContextApiClient.getCaseDetail(application.crn) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = caseDetails,
+      )
+
+      val domainEventStaffMember = StaffMemberFactory().produce()
+      every { mockDomainEventTransformer.toStaffMember(staffUserDetails) } returns domainEventStaffMember
+
+      val domainEventProbationArea = ProbationAreaFactory().produce()
+      every { mockDomainEventTransformer.toProbationArea(staffUserDetails) } returns domainEventProbationArea
+
+      every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
+
+      every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
+        status = HttpStatus.OK,
+        body = staffUserDetails,
+      )
+
+      service.applicationSubmitted(
+        application,
+        submitApprovedPremisesApplication,
+        username,
+        "jwt",
+      )
+
+      verify(exactly = 1) {
+        mockDomainEventService.saveApplicationSubmittedDomainEvent(
+          match {
+            val data = (it.data as ApplicationSubmittedEnvelope).eventDetails
+
+            it.applicationId == application.id &&
+              it.crn == application.crn &&
+              data.applicationId == application.id &&
+              data.applicationUrl == "http://frontend/applications/${application.id}" &&
+              data.personReference == PersonReference(
+              crn = offenderDetails.otherIds.crn,
+              noms = offenderDetails.otherIds.nomsNumber!!,
+            ) &&
+              data.deliusEventNumber == application.eventNumber &&
+              data.releaseType == submitApprovedPremisesApplication.releaseType.toString() &&
+              data.age == Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years &&
+              data.gender == uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted.Gender.male &&
+              data.submittedBy == ApplicationSubmittedSubmittedBy(
+              staffMember = domainEventStaffMember,
+              probationArea = domainEventProbationArea,
+              team = Team(
+                code = caseDetails.case.manager.team.code,
+                name = caseDetails.case.manager.team.name,
+              ),
+              ldu = Ldu(
+                code = caseDetails.case.manager.team.ldu.code,
+                name = caseDetails.case.manager.team.ldu.name,
+              ),
+              region = Region(
+                code = staffUserDetails.probationArea.code,
+                name = staffUserDetails.probationArea.description,
+              ),
+            ) &&
+              data.mappa == risks.mappa.value!!.level &&
+              data.sentenceLengthInMonths == null &&
+              data.offenceId == application.offenceId
+          },
+        )
+      }
+    }
+  }
+
+  @Nested
+  inner class ApplicationWithdrawn {
+
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
       .produce()
 
-    every {
-      mockOffenderService.getRiskByCrn(
-        application.crn,
-        any(),
-        user.deliusUsername,
-      )
-    } returns AuthorisableActionResult.Success(
-      risks,
-    )
+    @Test
+    fun `applicationWithdrawn dont emit domain event if application no submitted`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withSubmittedAt(null)
+        .withWithdrawalReason("alternative_identified_placement_no_longer_required")
+        .withOtherWithdrawalReason("the other reason")
+        .produce()
 
-    val staffUserDetails = StaffUserDetailsFactory()
-      .withTeams(
-        listOf(
-          StaffUserTeamMembershipFactory()
-            .produce(),
-        ),
-      )
-      .produce()
+      assertDomainEventCreated(application, emitted = false)
+    }
 
-    val caseDetails = CaseDetailFactory().produce()
+    @Test
+    fun `applicationWithdrawn success`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withWithdrawalReason("alternative_identified_placement_no_longer_required")
+        .withOtherWithdrawalReason("the other reason")
+        .produce()
 
-    every { mockApDeliusContextApiClient.getCaseDetail(application.crn) } returns ClientResult.Success(
-      status = HttpStatus.OK,
-      body = caseDetails,
-    )
+      assertDomainEventCreated(application, emitted = true)
+    }
 
-    val domainEventStaffMember = StaffMemberFactory().produce()
-    every { mockDomainEventTransformer.toStaffMember(staffUserDetails) } returns domainEventStaffMember
+    private fun assertDomainEventCreated(
+      application: ApprovedPremisesApplicationEntity,
+      emitted: Boolean,
+    ) {
+      val domainEventWithdrawnBy = WithdrawnByFactory().produce()
+      every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
+      every { mockDomainEventService.saveApplicationWithdrawnEvent(any(), any()) } just Runs
 
-    val domainEventProbationArea = ProbationAreaFactory().produce()
-    every { mockDomainEventTransformer.toProbationArea(staffUserDetails) } returns domainEventProbationArea
+      service.applicationWithdrawn(application, user)
 
-    every { mockDomainEventService.saveApplicationSubmittedDomainEvent(any()) } just Runs
+      verify(exactly = 1) {
+        mockDomainEventService.saveApplicationWithdrawnEvent(
+          match {
+            val data = it.data.eventDetails
 
-    every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(
-      status = HttpStatus.OK,
-      body = staffUserDetails,
-    )
-
-    service.applicationSubmitted(
-      application,
-      submitApprovedPremisesApplication,
-      username,
-      "jwt",
-    )
-
-    verify(exactly = 1) {
-      mockDomainEventService.saveApplicationSubmittedDomainEvent(
-        match {
-          val data = (it.data as ApplicationSubmittedEnvelope).eventDetails
-
-          it.applicationId == application.id &&
-            it.crn == application.crn &&
-            data.applicationId == application.id &&
-            data.applicationUrl == "http://frontend/applications/${application.id}" &&
-            data.personReference == PersonReference(
-            crn = offenderDetails.otherIds.crn,
-            noms = offenderDetails.otherIds.nomsNumber!!,
-          ) &&
-            data.deliusEventNumber == application.eventNumber &&
-            data.releaseType == submitApprovedPremisesApplication.releaseType.toString() &&
-            data.age == Period.between(offenderDetails.dateOfBirth, LocalDate.now()).years &&
-            data.gender == ApplicationSubmitted.Gender.male &&
-            data.submittedBy == ApplicationSubmittedSubmittedBy(
-            staffMember = domainEventStaffMember,
-            probationArea = domainEventProbationArea,
-            team = Team(
-              code = caseDetails.case.manager.team.code,
-              name = caseDetails.case.manager.team.name,
-            ),
-            ldu = Ldu(
-              code = caseDetails.case.manager.team.ldu.code,
-              name = caseDetails.case.manager.team.ldu.name,
-            ),
-            region = Region(
-              code = staffUserDetails.probationArea.code,
-              name = staffUserDetails.probationArea.description,
-            ),
-          ) &&
-            data.mappa == risks.mappa.value!!.level &&
-            data.sentenceLengthInMonths == null &&
-            data.offenceId == application.offenceId
-        },
-      )
+            it.applicationId == application.id &&
+              it.crn == application.crn &&
+              data.applicationId == application.id &&
+              data.applicationUrl == "http://frontend/applications/${application.id}" &&
+              data.personReference == PersonReference(
+              crn = application.crn,
+              noms = application.nomsNumber!!,
+            ) &&
+              data.deliusEventNumber == application.eventNumber &&
+              data.withdrawalReason == "alternative_identified_placement_no_longer_required" &&
+              data.otherWithdrawalReason == "the other reason"
+          },
+          emit = emitted,
+        )
+      }
     }
   }
 }

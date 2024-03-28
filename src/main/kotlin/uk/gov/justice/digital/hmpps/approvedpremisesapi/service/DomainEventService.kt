@@ -184,7 +184,7 @@ class DomainEventService(
     )
 
   @Transactional
-  fun saveApplicationWithdrawnEvent(domainEvent: DomainEvent<ApplicationWithdrawnEnvelope>) =
+  fun saveApplicationWithdrawnEvent(domainEvent: DomainEvent<ApplicationWithdrawnEnvelope>, emit: Boolean) =
     saveAndEmit(
       domainEvent = domainEvent,
       typeName = "approved-premises.application.withdrawn",
@@ -192,6 +192,7 @@ class DomainEventService(
       detailUrl = applicationWithdrawnDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      emit = emit,
     )
 
   @Transactional
