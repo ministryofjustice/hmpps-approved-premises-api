@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ProbationAreaFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.Mappa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
@@ -46,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.time.Period
 import java.util.UUID
 
@@ -228,21 +230,41 @@ class Cas1ApplicationDomainEventServiceTest {
   @Nested
   inner class ApplicationWithdrawn {
 
-    @Test
-    fun `applicationWithdrawn success`() {
-      val user = UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .produce()
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .produce()
 
+    @Test
+    fun `applicationWithdrawn dont emit domain event if application no submitted`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
+        .withSubmittedAt(null)
         .withWithdrawalReason("alternative_identified_placement_no_longer_required")
         .withOtherWithdrawalReason("the other reason")
         .produce()
 
+      assertDomainEventCreated(application, emitted = false)
+    }
+
+    @Test
+    fun `applicationWithdrawn success`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .withWithdrawalReason("alternative_identified_placement_no_longer_required")
+        .withOtherWithdrawalReason("the other reason")
+        .produce()
+
+      assertDomainEventCreated(application, emitted = true)
+    }
+
+    private fun assertDomainEventCreated(
+      application: ApprovedPremisesApplicationEntity,
+      emitted: Boolean,
+    ) {
       val domainEventWithdrawnBy = WithdrawnByFactory().produce()
       every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
-      every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
+      every { mockDomainEventService.saveApplicationWithdrawnEvent(any(), any()) } just Runs
 
       service.applicationWithdrawn(application, user)
 
@@ -263,6 +285,7 @@ class Cas1ApplicationDomainEventServiceTest {
               data.withdrawalReason == "alternative_identified_placement_no_longer_required" &&
               data.otherWithdrawalReason == "the other reason"
           },
+          emit = emitted,
         )
       }
     }

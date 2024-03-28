@@ -133,6 +133,7 @@ class Cas1ApplicationDomainEventService(
           eventDetails = getApplicationWithdrawn(application, withdrawingUser, eventOccurredAt),
         ),
       ),
+      emit = application.isSubmitted(),
     )
   }
 
