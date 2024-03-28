@@ -1,11 +1,13 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity
 
+import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.converter.StringListConverter
+import java.time.OffsetDateTime
 import java.util.Objects
 import java.util.UUID
 import javax.persistence.Convert
@@ -259,6 +261,9 @@ data class UserEntity(
   var apArea: ApAreaEntity?,
   @Convert(converter = StringListConverter::class)
   var teamCodes: List<String>?,
+  val createdAt: OffsetDateTime?,
+  @UpdateTimestamp
+  var updatedAt: OffsetDateTime?,
 ) {
   fun hasRole(userRole: UserRole) = roles.any { it.role == userRole }
   fun hasAnyRole(vararg userRoles: UserRole) = userRoles.any(::hasRole)

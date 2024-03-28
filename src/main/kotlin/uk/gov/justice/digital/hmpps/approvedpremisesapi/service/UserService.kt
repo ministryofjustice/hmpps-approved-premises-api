@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.transformUserRoles
+import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
@@ -206,6 +207,8 @@ class UserService(
         }
       }
 
+      user.updatedAt = OffsetDateTime.now()
+
       user = userRepository.save(user)
     }
 
@@ -282,6 +285,8 @@ class UserService(
         isActive = true,
         apArea = null,
         teamCodes = null,
+        createdAt = OffsetDateTime.now(),
+        updatedAt = null,
       ),
     )
   }
