@@ -1,11 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
-import io.mockk.every
-import io.mockk.mockk
 import io.mockk.spyk
-import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
@@ -23,43 +19,32 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementAppl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TimeService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
 @SuppressWarnings("MagicNumber")
 class TaskDeadlineServiceTest {
-  private val workingDayCountService = mockk<WorkingDayCountService>()
-  private val taskDeadlineService = TaskDeadlineService(workingDayCountService)
-
-  // Set up a naive implementation of the workingDayCountService
-  @BeforeEach
-  fun setup() {
-    every {
-      workingDayCountService.addWorkingDays(any<LocalDate>(), any<Int>())
-    } answers {
-      firstArg<LocalDate>().plusDays(secondArg<Int>().toLong())
-    }
-  }
+  private val taskDeadlineService = TaskDeadlineService(
+    // this treats all weekends as non-working days with no bank holidays
+    WorkingDayCountService(
+      bankHolidaysProvider = { emptyList() },
+      timeService = TimeService(),
+    ),
+  )
 
   @Nested
   inner class GetAssessmentDeadline {
 
     @Test
     fun `getDeadline for a standard assessment returns created date plus 10 working days`() {
-      val createdAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
+      val createdAt = OffsetDateTime.parse("2023-01-02T15:00:00Z")
       val assessment =
         createAssessment(noticeType = Cas1ApplicationTimelinessCategory.standard, isEsap = false, createdAt = createdAt)
       val result = taskDeadlineService.getDeadline(assessment)
 
-      assertThat(result!!.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-11"))
-
-      verify(exactly = 1) {
-        workingDayCountService.addWorkingDays(
-          date = assessment.createdAt.toLocalDate(),
-          daysToAdd = 10,
-        )
-      }
+      assertThat(result!!.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-16"))
     }
 
     @Test
@@ -93,13 +78,6 @@ class TaskDeadlineServiceTest {
       val result = taskDeadlineService.getDeadline(assessment)
 
       assertThat(result!!.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-03"))
-
-      verify(exactly = 1) {
-        workingDayCountService.addWorkingDays(
-          date = assessment.createdAt.toLocalDate(),
-          daysToAdd = 2,
-        )
-      }
     }
 
     @Test
@@ -124,15 +102,9 @@ class TaskDeadlineServiceTest {
         createdAt = createdAt,
       )
 
-      every { workingDayCountService.nextWorkingDay(any()) } returns LocalDate.parse("2023-01-02")
-
       val result = taskDeadlineService.getDeadline(assessment)
 
       assertThat(result).isEqualTo(OffsetDateTime.parse("2023-01-02T11:00:00Z"))
-
-      verify(exactly = 1) {
-        workingDayCountService.nextWorkingDay(assessment.createdAt.toLocalDate())
-      }
     }
   }
 
@@ -147,13 +119,6 @@ class TaskDeadlineServiceTest {
       val result = taskDeadlineService.getDeadline(placementRequest)
 
       assertThat(result.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-06"))
-
-      verify(exactly = 1) {
-        workingDayCountService.addWorkingDays(
-          date = placementRequest.createdAt.toLocalDate(),
-          daysToAdd = 5,
-        )
-      }
     }
 
     @Test
@@ -167,13 +132,6 @@ class TaskDeadlineServiceTest {
       val result = taskDeadlineService.getDeadline(placementRequest)
 
       assertThat(result.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-03"))
-
-      verify(exactly = 1) {
-        workingDayCountService.addWorkingDays(
-          date = placementRequest.createdAt.toLocalDate(),
-          daysToAdd = 2,
-        )
-      }
     }
 
     @Test
@@ -207,7 +165,7 @@ class TaskDeadlineServiceTest {
 
     @Test
     fun `getDeadline for a standard placement application returns submitted date plus 10 working days`() {
-      val submittedAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
+      val submittedAt = OffsetDateTime.parse("2023-01-02T15:00:00Z")
 
       val placementApplication = createPlacementApplication(
         noticeType = Cas1ApplicationTimelinessCategory.standard,
@@ -217,19 +175,12 @@ class TaskDeadlineServiceTest {
 
       val result = taskDeadlineService.getDeadline(placementApplication)
 
-      assertThat(result.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-11"))
-
-      verify(exactly = 1) {
-        workingDayCountService.addWorkingDays(
-          date = submittedAt.toLocalDate(),
-          daysToAdd = 10,
-        )
-      }
+      assertThat(result.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-16"))
     }
 
     @Test
     fun `getDeadline for a short notice placement application returns submitted date plus 10 working days`() {
-      val submittedAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
+      val submittedAt = OffsetDateTime.parse("2023-01-02T15:00:00Z")
 
       val placementApplication = createPlacementApplication(
         noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
@@ -239,19 +190,12 @@ class TaskDeadlineServiceTest {
 
       val result = taskDeadlineService.getDeadline(placementApplication)
 
-      assertThat(result.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-11"))
-
-      verify(exactly = 1) {
-        workingDayCountService.addWorkingDays(
-          date = submittedAt.toLocalDate(),
-          daysToAdd = 10,
-        )
-      }
+      assertThat(result.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-16"))
     }
 
     @Test
     fun `getDeadline for an emergency placement application returns submitted date plus 10 working days`() {
-      val submittedAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
+      val submittedAt = OffsetDateTime.parse("2023-01-02T15:00:00Z")
 
       val placementApplication = createPlacementApplication(
         noticeType = Cas1ApplicationTimelinessCategory.standard,
@@ -261,14 +205,7 @@ class TaskDeadlineServiceTest {
 
       val result = taskDeadlineService.getDeadline(placementApplication)
 
-      assertThat(result.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-11"))
-
-      verify(exactly = 1) {
-        workingDayCountService.addWorkingDays(
-          date = submittedAt.toLocalDate(),
-          daysToAdd = 10,
-        )
-      }
+      assertThat(result.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-16"))
     }
   }
 
