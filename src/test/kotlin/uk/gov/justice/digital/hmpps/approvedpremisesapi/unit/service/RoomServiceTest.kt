@@ -532,16 +532,14 @@ class RoomServiceTest {
     val result = roomService.updateBedEndDate(premises, room.id, bedEndDate)
 
     result as AuthorisableActionResult.Success
-    assertThat(result.entity).isInstanceOf(ValidatableActionResult.FieldValidationError::class.java)
-    val resultEntity = result.entity as ValidatableActionResult.FieldValidationError
-    assertThat(resultEntity.validationMessages).contains(
-      entry("${bed.createdAt!!.toLocalDate()}", "afterBedspaceEndDate"),
-    )
+    assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+    val validationError = result.entity as ValidatableActionResult.GeneralValidationError
+    assertThat(validationError.message).isEqualTo("Bedspace end date cannot be prior to the Bedspace creation date: ${bed.createdAt!!.toLocalDate()}")
 
     verify(exactly = 1) {
       roomRepository.findByIdOrNull(any())
     }
-    verify(exactly = 1) {
+    verify(exactly = 0) {
       bookingRepository.findActiveOverlappingBookingByBed(any(), any())
     }
     verify(exactly = 0) {
@@ -619,6 +617,7 @@ class RoomServiceTest {
     assertThat(result.entity is ValidatableActionResult.ConflictError).isTrue
     val validationError = result.entity as ValidatableActionResult.ConflictError
     assertThat(validationError.message).isEqualTo("Conflict booking exists for the room with end date $bedEndDate")
+    assertThat(validationError.conflictingEntityId).isEqualTo(booking.id)
     verify(exactly = 1) {
       roomRepository.findByIdOrNull(any())
     }
