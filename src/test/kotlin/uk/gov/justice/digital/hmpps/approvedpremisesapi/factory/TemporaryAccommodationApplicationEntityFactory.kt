@@ -49,6 +49,8 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var personReleaseDate: Yielded<LocalDate?> = { null }
   private var pdu: Yielded<String?> = { null }
   private var name: Yielded<String?> = { null }
+  private var isHistoryOfSexualOffence: Yielded<Boolean?> = { null }
+  private var isConcerningSexualBehaviour: Yielded<Boolean?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -174,6 +176,14 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.name = { name }
   }
 
+  fun withIsHistoryOfSexualOffence(isHistoryOfSexualOffence: Boolean?) = apply {
+    this.isHistoryOfSexualOffence = { isHistoryOfSexualOffence }
+  }
+
+  fun withIsConcerningSexualBehaviour(isConcerningSexualBehaviour: Boolean?) = apply {
+    this.isConcerningSexualBehaviour = { isConcerningSexualBehaviour }
+  }
+
   override fun produce(): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -204,5 +214,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     personReleaseDate = this.personReleaseDate(),
     pdu = this.pdu(),
     name = this.name(),
+    isHistoryOfSexualOffence = this.isHistoryOfSexualOffence(),
+    isConcerningSexualBehaviour = this.isConcerningSexualBehaviour(),
   )
 }

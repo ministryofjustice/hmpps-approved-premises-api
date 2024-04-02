@@ -445,6 +445,8 @@ class TemporaryAccommodationApplicationEntity(
   var personReleaseDate: LocalDate?,
   var pdu: String?,
   var name: String?,
+  var isHistoryOfSexualOffence: Boolean?,
+  var isConcerningSexualBehaviour: Boolean?,
 ) : ApplicationEntity(
   id,
   crn,

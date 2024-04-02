@@ -2505,6 +2505,8 @@ class ApplicationTest : IntegrationTestBase() {
             withCreatedByUser(submittingUser)
             withProbationRegion(submittingUser.probationRegion)
             withPdu("Probation Delivery Unit Test")
+            withIsHistoryOfSexualOffence(true)
+            withIsConcerningSexualBehaviour(true)
             withData(
               """
               {}
@@ -2527,6 +2529,8 @@ class ApplicationTest : IntegrationTestBase() {
                 },
                 personReleaseDate = LocalDate.now(),
                 pdu = "Probation Delivery Unit Test",
+                isHistoryOfSexualOffence = true,
+                isConcerningSexualBehaviour = true,
               ),
             )
             .exchange()
