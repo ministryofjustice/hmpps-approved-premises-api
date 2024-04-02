@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
@@ -31,6 +32,7 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> "The placement had its arrival or departure date changed"
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> buildApplicationWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> buildAssessmentAppealedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED -> buildAssessmentAllocatedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> buildPlacementApplicationWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> buildMatchRequestWithdrawnDescription(domainEventSummary)
       else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
@@ -91,6 +93,15 @@ class DomainEventDescriber(
     return event.describe { "The assessment was appealed and ${it.eventDetails.decision.value}. The reason was: ${it.eventDetails.decisionDetail}" }
   }
 
+  private fun buildAssessmentAllocatedDescription(domainEventSummary: DomainEventSummary): String? {
+    val event = domainEventService.getAssessmentAllocatedEvent(domainEventSummary.id())
+    return event.describe { ev ->
+      val allocatedTo = ev.eventDetails.allocatedTo?.name ?: "an unknown user"
+      val allocatedDesc = ev.eventDetails.allocatedBy?.let { "by ${it.name}" } ?: "automatically"
+      "The assessment was allocated to $allocatedTo $allocatedDesc"
+    }
+  }
+
   private fun buildPlacementApplicationWithdrawnDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getPlacementApplicationWithdrawnEvent(domainEventSummary.id())
 
@@ -122,4 +133,6 @@ class DomainEventDescriber(
 
   private fun DomainEventSummary.id(): UUID = UUID.fromString(this.id)
   private fun <T> DomainEvent<T>?.describe(describe: (T) -> String?): String? = this?.let { describe(it.data) }
+  private val StaffMember.name: String
+    get() = "${this.forenames} ${this.surname}".trim()
 }

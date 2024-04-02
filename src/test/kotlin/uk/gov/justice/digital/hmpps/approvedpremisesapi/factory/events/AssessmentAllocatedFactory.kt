@@ -17,7 +17,7 @@ class AssessmentAllocatedFactory : Factory<AssessmentAllocated> {
   private var applicationUrl: Yielded<String> = { randomStringMultiCaseWithNumbers(10) }
   private var personReference: Yielded<PersonReference> = { PersonReferenceFactory().produce() }
   private var allocatedAt: Yielded<Instant> = { Instant.now().randomDateTimeBefore(7) }
-  private var allocatedBy: Yielded<StaffMember> = { StaffMemberFactory().produce() }
+  private var allocatedBy: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
   private var allocatedTo: Yielded<StaffMember?> = { StaffMemberFactory().produce() }
 
   fun withAssessmentId(assessmentId: UUID) = apply {
@@ -44,11 +44,11 @@ class AssessmentAllocatedFactory : Factory<AssessmentAllocated> {
     this.allocatedAt = { allocatedAt }
   }
 
-  fun withAllocatedBy(allocatedBy: StaffMember) = apply {
+  fun withAllocatedBy(allocatedBy: StaffMember?) = apply {
     this.allocatedBy = { allocatedBy }
   }
 
-  fun withAllocatedTo(allocatedTo: StaffMember) = apply {
+  fun withAllocatedTo(allocatedTo: StaffMember?) = apply {
     this.allocatedTo = { allocatedTo }
   }
 
