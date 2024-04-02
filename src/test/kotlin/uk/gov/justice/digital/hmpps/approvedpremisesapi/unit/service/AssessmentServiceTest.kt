@@ -2764,13 +2764,18 @@ class AssessmentServiceTest {
     }
   }
 
-  private fun assertStaffMemberDetailsMatch(staffMember: StaffMember, staffDetails: StaffUserDetails) = staffMember.staffCode == staffDetails.staffCode &&
-    staffMember.staffIdentifier == staffDetails.staffIdentifier &&
-    staffMember.forenames == staffDetails.staff.forenames &&
-    staffMember.surname == staffDetails.staff.surname &&
-    staffMember.username == staffDetails.username
+  private fun assertStaffMemberDetailsMatch(staffMember: StaffMember?, staffDetails: StaffUserDetails?) = when {
+    staffMember == null -> staffDetails == null
+    else ->
+      staffDetails != null &&
+        staffMember.staffCode == staffDetails.staffCode &&
+        staffMember.staffIdentifier == staffDetails.staffIdentifier &&
+        staffMember.forenames == staffDetails.staff.forenames &&
+        staffMember.surname == staffDetails.staff.surname &&
+        staffMember.username == staffDetails.username
+  }
 
-  private fun assertAllocationDomainEventSent(assessment: AssessmentEntity, actingUserStaffDetails: StaffUserDetails, assigneeUserStaffDetails: StaffUserDetails?) {
+  private fun assertAllocationDomainEventSent(assessment: AssessmentEntity, actingUserStaffDetails: StaffUserDetails?, assigneeUserStaffDetails: StaffUserDetails?) {
     verify(exactly = 1) {
       domainEventServiceMock.saveAssessmentAllocatedEvent(
         match {

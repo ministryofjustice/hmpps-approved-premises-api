@@ -2061,6 +2061,8 @@ class ApplicationTest : IntegrationTestBase() {
 
             GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
+            snsDomainEventListener.clearMessages()
+
             webTestClient.post()
               .uri("/applications/$applicationId/submission")
               .header("Authorization", "Bearer $jwt")
@@ -2106,12 +2108,17 @@ class ApplicationTest : IntegrationTestBase() {
             assertThat(createdAssessment.allocatedToUser!!.id).isEqualTo(assessorUser.id)
             assertThat(createdAssessment.createdFromAppeal).isFalse()
 
-            val persistedDomainEvent = domainEventRepository.findAll().firstOrNull { it.applicationId == applicationId }
+            val persistedDomainEvents = domainEventRepository.findAll().filter { it.applicationId == applicationId }
+            val persistedApplicationSubmittedEvent = persistedDomainEvents.firstOrNull { it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED }
+            val persistedAssessmentAllocatedEvent = persistedDomainEvents.firstOrNull { it.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED }
 
-            assertThat(persistedDomainEvent).isNotNull
-            assertThat(persistedDomainEvent!!.crn).isEqualTo(offenderDetails.otherIds.crn)
-            assertThat(persistedDomainEvent.type).isEqualTo(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
+            assertThat(persistedApplicationSubmittedEvent).isNotNull
+            assertThat(persistedApplicationSubmittedEvent!!.crn).isEqualTo(offenderDetails.otherIds.crn)
 
+            assertThat(persistedAssessmentAllocatedEvent).isNotNull
+            assertThat(persistedAssessmentAllocatedEvent!!.crn).isEqualTo(offenderDetails.otherIds.crn)
+
+            snsDomainEventListener.blockForMessage()
             val emittedMessage = snsDomainEventListener.blockForMessage()
 
             assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.submitted")
@@ -2404,7 +2411,11 @@ class ApplicationTest : IntegrationTestBase() {
 
             val persistedDomainEvents = domainEventRepository.findAll().filter { it.applicationId == applicationId }
 
-            assertThat(persistedDomainEvents).singleElement()
+            val persistedApplicationSubmittedEvents = persistedDomainEvents.filter { it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED }
+            val persistedAssessmentAllocatedEvents = persistedDomainEvents.filter { it.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED }
+
+            assertThat(persistedApplicationSubmittedEvents).singleElement()
+            assertThat(persistedAssessmentAllocatedEvents).singleElement()
             assertThat(responseStatuses.count { it.value() == 200 }).isEqualTo(1)
             assertThat(responseStatuses.count { it.value() == 400 }).isEqualTo(9)
           }
