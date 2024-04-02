@@ -11,15 +11,12 @@ import java.time.LocalDate
 
 @Service
 class WorkingDayCountService(
-  private val govUKBankHolidaysApiClient: GovUKBankHolidaysApiClient,
+  private val bankHolidaysProvider: BankHolidaysProvider,
   private val timeService: TimeService,
 ) {
 
   val bankHolidays: List<LocalDate> by lazy {
-    when (val govUKBankHolidaysResponse = this.govUKBankHolidaysApiClient.getUKBankHolidays()) {
-      is ClientResult.Success -> govUKBankHolidaysResponse.body.englandAndWales.events.map { it.date }
-      is ClientResult.Failure -> govUKBankHolidaysResponse.throwException()
-    }
+    bankHolidaysProvider.getUKBankHolidays()
   }
 
   fun getWorkingDaysCount(from: LocalDate, to: LocalDate): Int {
@@ -42,4 +39,19 @@ class WorkingDayCountService(
   fun nextWorkingDay(date: LocalDate): LocalDate {
     return date.getNextWorkingDay(bankHolidays)
   }
+}
+
+fun interface BankHolidaysProvider {
+  fun getUKBankHolidays(): List<LocalDate>
+}
+
+@Service
+class GovUkBankHolidaysProvider(
+  private val govUKBankHolidaysApiClient: GovUKBankHolidaysApiClient,
+) : BankHolidaysProvider {
+  override fun getUKBankHolidays() =
+    when (val govUKBankHolidaysResponse = this.govUKBankHolidaysApiClient.getUKBankHolidays()) {
+      is ClientResult.Success -> govUKBankHolidaysResponse.body.englandAndWales.events.map { it.date }
+      is ClientResult.Failure -> govUKBankHolidaysResponse.throwException()
+    }
 }
