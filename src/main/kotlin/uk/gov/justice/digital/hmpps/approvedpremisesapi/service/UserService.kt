@@ -28,7 +28,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.specification.hasQualificationsAndRoles
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
@@ -198,18 +197,15 @@ class UserService(
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
-    if (userHasChanged(user, deliusUser)) {
+    val resolvedProbationRegion = findProbationRegionFromArea(deliusUser)
+
+    if (userHasChanged(user, deliusUser, resolvedProbationRegion)) {
       user.name = deliusUser.staff.fullName
       user.email = deliusUser.email.toString()
       user.telephoneNumber = deliusUser.telephoneNumber
       user.deliusStaffCode = deliusUser.staffCode
       user.teamCodes = deliusUser.getTeamCodes()
-
-      deliusUser.probationArea.let { probationArea ->
-        findProbationRegionFromArea(probationArea)?.let { probationRegion ->
-          user.probationRegion = probationRegion
-        }
-      }
+      user.probationRegion = resolvedProbationRegion
 
       if (forService == ServiceName.approvedPremises) {
         user.apArea = cas1UserMappingService.determineApArea(user.probationRegion, deliusUser)
@@ -264,16 +260,7 @@ class UserService(
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
 
-    var staffProbationRegion = findProbationRegionFromArea(staffUserDetails.probationArea)
-
-    if (staffProbationRegion == null) {
-      if (assignDefaultRegionToUsersWithUnknownRegion) {
-        log.warn("Unknown probation region code '${staffUserDetails.probationArea.code}' for user '$normalisedUsername', assigning a default region of 'North West'.")
-        staffProbationRegion = probationRegionRepository.findByName("North West")!!
-      } else {
-        throw BadRequestProblem(errorDetail = "Unknown probation region code '${staffUserDetails.probationArea.code}' for user '$normalisedUsername'")
-      }
-    }
+    val staffProbationRegion = findProbationRegionFromArea(staffUserDetails)
 
     val apArea = if (forService == ServiceName.approvedPremises) {
       cas1UserMappingService.determineApArea(staffProbationRegion, staffUserDetails)
@@ -303,9 +290,17 @@ class UserService(
     )
   }
 
-  private fun findProbationRegionFromArea(probationArea: StaffProbationArea): ProbationRegionEntity? {
-    return probationAreaProbationRegionMappingRepository
+  private fun findProbationRegionFromArea(deliusUser: StaffUserDetails): ProbationRegionEntity {
+    val probationArea = deliusUser.probationArea
+    val probationRegion = probationAreaProbationRegionMappingRepository
       .findByProbationAreaDeliusCode(probationArea.code)?.probationRegion
+
+    return probationRegion ?: if (assignDefaultRegionToUsersWithUnknownRegion) {
+      log.warn("Unknown probation region code '${probationArea.code}' for user '${deliusUser.username}', assigning a default region of 'North West'.")
+      return probationRegionRepository.findByName("North West")!!
+    } else {
+      throw BadRequestProblem(errorDetail = "Unknown probation region code '${probationArea.code}' for user '${deliusUser.username}'")
+    }
   }
 
   fun addRoleToUser(user: UserEntity, role: UserRole) {
@@ -349,12 +344,12 @@ class UserService(
     user.qualifications.clear()
   }
 
-  private fun userHasChanged(user: UserEntity, deliusUser: StaffUserDetails): Boolean {
-    return (deliusUser.email !== user.email) ||
-      (deliusUser.telephoneNumber !== user.telephoneNumber) ||
+  private fun userHasChanged(user: UserEntity, deliusUser: StaffUserDetails, resolvedProbationRegion: ProbationRegionEntity?): Boolean {
+    return (deliusUser.email != user.email) ||
+      (deliusUser.telephoneNumber != user.telephoneNumber) ||
       (deliusUser.staff.fullName != user.name) ||
       (deliusUser.staffCode != user.deliusStaffCode) ||
-      (deliusUser.probationArea.code != user.probationRegion.deliusCode) ||
+      (resolvedProbationRegion != user.probationRegion) ||
       !CollectionUtils.isEqualCollection(deliusUser.getTeamCodes(), user.teamCodes ?: emptyList<String>())
   }
 }

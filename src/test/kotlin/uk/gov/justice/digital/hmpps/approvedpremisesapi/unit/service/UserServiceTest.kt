@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -58,7 +59,7 @@ class UserServiceTest {
   private val mockCas1UserMappingService = mockk<Cas1UserMappingService>()
 
   private val userService = UserService(
-    false,
+    assignDefaultRegionToUsersWithUnknownRegion = false,
     mockRequestContextService,
     mockHttpAuthService,
     mockOffenderService,
@@ -183,6 +184,41 @@ class UserServiceTest {
       verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
       verify(exactly = 1) { mockUserRepository.save(any()) }
       verify(exactly = 1) { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(any()) }
+    }
+
+    @Test
+    fun `getExistingUserOrCreate creates new user but errors if region mapping not found`() {
+      val username = "SOMEPERSON"
+
+      every { mockUserRepository.findByDeliusUsername(username) } returns null
+      every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
+
+      val deliusUser = StaffUserDetailsFactory()
+        .withUsername(username)
+        .withForenames("Jim")
+        .withSurname("Jimmerson")
+        .withStaffIdentifier(5678)
+        .withProbationAreaCode("AREACODE")
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory().withCode("TC1").produce(),
+            StaffUserTeamMembershipFactory().withCode("TC2").produce(),
+          ),
+        )
+        .produce()
+
+      every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
+        HttpStatus.OK,
+        deliusUser,
+      )
+
+      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode("AREACODE") } returns null
+
+      assertThatThrownBy {
+        userService.getExistingUserOrCreate(username, ServiceName.approvedPremises)
+      }.hasMessage("Bad Request: Unknown probation region code 'AREACODE' for user 'SOMEPERSON'")
+
+      verify(exactly = 0) { mockUserRepository.save(any()) }
     }
   }
 
@@ -420,6 +456,7 @@ class UserServiceTest {
     private val surname = "Jimmerson"
     private val staffIdentifier = 5678
     private val staffCode = "STAFF1"
+    private val probationAreaCode = "probationAreaCode"
 
     private val probationRegion = ProbationRegionEntityFactory()
       .withDefaults()
@@ -442,7 +479,7 @@ class UserServiceTest {
       .withEmail(email)
       .withTelephoneNumber(telephoneNumber)
       .withStaffCode(staffCode)
-      .withProbationAreaCode(probationRegion.deliusCode)
+      .withProbationAreaCode(probationAreaCode)
       .withStaffIdentifier(staffIdentifier.toLong())
 
     @BeforeEach
@@ -461,6 +498,13 @@ class UserServiceTest {
         deliusUser,
       )
 
+      every {
+        mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(probationAreaCode)
+      } returns ProbationAreaProbationRegionMappingEntityFactory()
+        .withProbationRegion(user.probationRegion)
+        .withProbationAreaDeliusCode(probationAreaCode)
+        .produce()
+
       val result = userService.updateUserFromCommunityApiById(id, ServiceName.approvedPremises)
 
       assertThat(result).isInstanceOf(AuthorisableActionResult.Success::class.java)
@@ -469,6 +513,29 @@ class UserServiceTest {
       assertThat(entity.id).isEqualTo(user.id)
 
       verify(exactly = 0) { mockUserRepository.save(any()) }
+    }
+
+    @Test
+    fun `it errors if no mapping found for new probation area code`() {
+      val user = userFactory.produce()
+
+      val deliusUser = staffUserDetailsFactory
+        .withProbationAreaCode("unexpectedProbationAreaCode")
+        .produce()
+
+      every { mockUserRepository.findByIdOrNull(id) } returns user
+      every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
+        HttpStatus.OK,
+        deliusUser,
+      )
+
+      every {
+        mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode("unexpectedProbationAreaCode")
+      } returns null
+
+      assertThatThrownBy {
+        userService.updateUserFromCommunityApiById(id, forService = ServiceName.approvedPremises)
+      }.hasMessage("Bad Request: Unknown probation region code 'unexpectedProbationAreaCode' for user 'SOMEPERSON'")
     }
 
     @ParameterizedTest
@@ -530,7 +597,7 @@ class UserServiceTest {
       val user = userFactory.produce()
 
       val deliusUser = staffUserDetailsFactory
-        .withProbationAreaCode(newProbationRegion.deliusCode)
+        .withProbationAreaCode(probationAreaCode)
         .produce()
 
       assertUserUpdated(user, deliusUser, newProbationRegion, forService)
@@ -566,10 +633,10 @@ class UserServiceTest {
       )
 
       every {
-        mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(probationRegion.deliusCode)
+        mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(deliusUser.probationArea.code)
       } returns ProbationAreaProbationRegionMappingEntityFactory()
         .withProbationRegion(probationRegion)
-        .withProbationAreaDeliusCode(probationRegion.deliusCode)
+        .withProbationAreaDeliusCode(deliusUser.probationArea.code)
         .produce()
 
       val newApAreaForCas1 = ApAreaEntityFactory().produce()
@@ -610,7 +677,7 @@ class UserServiceTest {
       val deliusUser = staffUserDetailsFactory
         .withTelephoneNumber("0123456789")
         .withoutEmail()
-        .withProbationAreaCode(user.probationRegion.deliusCode)
+        .withProbationAreaCode(probationAreaCode)
         .produce()
 
       every { mockUserRepository.findByIdOrNull(id) } returns user
@@ -618,9 +685,9 @@ class UserServiceTest {
         HttpStatus.OK,
         deliusUser,
       )
-      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(user.probationRegion.deliusCode) } returns ProbationAreaProbationRegionMappingEntityFactory()
+      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(probationAreaCode) } returns ProbationAreaProbationRegionMappingEntityFactory()
         .withProbationRegion(user.probationRegion)
-        .withProbationAreaDeliusCode(user.probationRegion.deliusCode)
+        .withProbationAreaDeliusCode(probationAreaCode)
         .produce()
 
       val result = userService.updateUserFromCommunityApiById(id, ServiceName.temporaryAccommodation)
