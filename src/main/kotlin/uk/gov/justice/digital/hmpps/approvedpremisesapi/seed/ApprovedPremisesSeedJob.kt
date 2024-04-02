@@ -219,6 +219,7 @@ class ApprovedPremisesSeedJob(
       this.longitude = row.longitude
       this.latitude = row.latitude
       this.notes = row.notes
+      this.emailAddress = row.emailAddress
       this.probationRegion = probationRegion
       this.localAuthorityArea = localAuthorityArea
       this.status = row.status

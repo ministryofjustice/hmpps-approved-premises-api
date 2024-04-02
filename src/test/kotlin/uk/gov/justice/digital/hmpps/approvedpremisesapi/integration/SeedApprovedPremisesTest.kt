@@ -300,6 +300,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
       .withApCode(existingApprovedPremises.apCode)
       .withProbationRegion(updatedProbationRegion.name)
       .withLocalAuthorityArea(updatedLocalAuthorityArea.name)
+      .withEmailAddress("updated@example.com")
       .withLatitude(12.5)
       .withLongitude(30.1)
       .produce()
@@ -322,6 +323,7 @@ class SeedApprovedPremisesTest : SeedTestBase() {
     assertThat(persistedApprovedPremises.addressLine1).isEqualTo(csvRow.addressLine1)
     assertThat(persistedApprovedPremises.postcode).isEqualTo(csvRow.postcode)
     assertThat(persistedApprovedPremises.notes).isEqualTo(csvRow.notes)
+    assertThat(persistedApprovedPremises.emailAddress).isEqualTo(csvRow.emailAddress)
     assertThat(persistedApprovedPremises.probationRegion.name).isEqualTo(csvRow.probationRegion)
     assertThat(persistedApprovedPremises.localAuthorityArea!!.name).isEqualTo(csvRow.localAuthorityArea)
     assertThat(persistedApprovedPremises.characteristics.map { it.name }).isEqualTo(csvRow.characteristics)
@@ -482,6 +484,10 @@ class ApprovedPremisesSeedCsvRowFactory : Factory<ApprovedPremisesSeedCsvRow> {
 
   fun withNotes(notes: String) = apply {
     this.notes = { notes }
+  }
+
+  fun withEmailAddress(emailAddress: String) = apply {
+    this.emailAddress = { emailAddress }
   }
 
   fun withProbationRegion(probationRegion: String) = apply {
