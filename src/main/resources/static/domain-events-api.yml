@@ -1416,7 +1416,6 @@ components:
         - applicationId
         - applicationUrl
         - personReference
-        - allocatedBy
         - allocatedAt
     AssessmentAppealedEnvelope:
       type: object
