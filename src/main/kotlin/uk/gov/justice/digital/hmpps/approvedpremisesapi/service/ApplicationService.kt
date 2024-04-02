@@ -480,6 +480,8 @@ class ApplicationService(
       personReleaseDate = null,
       pdu = null,
       name = "${offenderDetails.firstName} ${offenderDetails.surname}",
+      isHistoryOfSexualOffence = null,
+      isConcerningSexualBehaviour = null,
     )
   }
 
@@ -932,6 +934,8 @@ class ApplicationService(
       dutyToReferLocalAuthorityAreaName = submitApplication.dutyToReferLocalAuthorityAreaName
       personReleaseDate = submitApplication.personReleaseDate
       pdu = submitApplication.pdu
+      isHistoryOfSexualOffence = submitApplication.isHistoryOfSexualOffence
+      isConcerningSexualBehaviour = submitApplication.isConcerningSexualBehaviour
     }
 
     assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData)

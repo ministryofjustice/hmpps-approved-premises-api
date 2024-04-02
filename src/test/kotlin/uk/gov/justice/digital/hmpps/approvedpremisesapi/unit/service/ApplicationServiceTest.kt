@@ -2211,6 +2211,8 @@ class ApplicationServiceTest {
       dutyToReferLocalAuthorityAreaName = "Aberdeen City",
       personReleaseDate = LocalDate.now().plusDays(1),
       pdu = "Probation Delivery Unit Test",
+      isHistoryOfSexualOffence = true,
+      isConcerningSexualBehaviour = true,
     )
 
     @BeforeEach
@@ -2459,6 +2461,8 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.personReleaseDate).isEqualTo(submitTemporaryAccommodationApplicationWithMiReportingData.personReleaseDate)
       assertThat(persistedApplication.pdu).isEqualTo("Probation Delivery Unit Test")
       assertThat(persistedApplication.name).isEqualTo(user.name)
+      assertThat(persistedApplication.isHistoryOfSexualOffence).isEqualTo(true)
+      assertThat(persistedApplication.isConcerningSexualBehaviour).isEqualTo(true)
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) {

@@ -1,0 +1,2 @@
+ALTER TABLE temporary_accommodation_applications ADD COLUMN is_history_of_sexual_offence BOOLEAN;
+ALTER TABLE temporary_accommodation_applications ADD COLUMN is_concerning_sexual_behaviour BOOLEAN;
