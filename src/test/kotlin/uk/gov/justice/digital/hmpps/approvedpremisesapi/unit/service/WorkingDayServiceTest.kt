@@ -33,12 +33,21 @@ class WorkingDayServiceTest {
     mockTimeService,
   )
 
-  private val emptyBankHolidays = ClientResult.Success(
+  private val emptyBankHolidays = buildBankHolidays(emptyList())
+
+  private fun buildBankHolidays(dates: List<LocalDate>) = ClientResult.Success(
     HttpStatus.OK,
     UKBankHolidays(
       englandAndWales = CountryBankHolidays(
         division = "england-and-wales",
-        events = listOf(),
+        events = dates.map {
+          BankHolidayEvent(
+            title = "a bank holiday",
+            date = it,
+            notes = "",
+            bunting = true,
+          )
+        },
       ),
       scotland = CountryBankHolidays(
         division = "scotland",
@@ -67,30 +76,7 @@ class WorkingDayServiceTest {
   fun `getWorkingDaysCount returns 0 if from and to are the same date and it is a week day bank holiday`() {
     val weekDayBankHoliday = LocalDate.of(2023, 4, 27).with(TemporalAdjusters.next(DayOfWeek.TUESDAY))
 
-    val bankHolidays = ClientResult.Success(
-      HttpStatus.OK,
-      UKBankHolidays(
-        englandAndWales = CountryBankHolidays(
-          division = "england-and-wales",
-          events = listOf(
-            BankHolidayEvent(
-              title = "sunny bank holiday",
-              date = weekDayBankHoliday,
-              notes = "",
-              bunting = true,
-            ),
-          ),
-        ),
-        scotland = CountryBankHolidays(
-          division = "scotland",
-          events = listOf(),
-        ),
-        northernIreland = CountryBankHolidays(
-          division = "northern-ireland",
-          events = listOf(),
-        ),
-      ),
-    )
+    val bankHolidays = buildBankHolidays(listOf(weekDayBankHoliday))
 
     every {
       govUkBankHolidaysProvider.getUKBankHolidays()
@@ -128,34 +114,10 @@ class WorkingDayServiceTest {
     val aTuesdayBankHoliday = aMonday.plusDays(1)
     val aThursdayBankHoliday = aMonday.plusDays(3)
 
-    val bankHolidays = ClientResult.Success(
-      HttpStatus.OK,
-      UKBankHolidays(
-        englandAndWales = CountryBankHolidays(
-          division = "england-and-wales",
-          events = listOf(
-            BankHolidayEvent(
-              title = "sunny tuesday bank holiday",
-              date = aTuesdayBankHoliday,
-              notes = "",
-              bunting = true,
-            ),
-            BankHolidayEvent(
-              title = "sunny thursday bank holiday",
-              date = aThursdayBankHoliday,
-              notes = "",
-              bunting = true,
-            ),
-          ),
-        ),
-        scotland = CountryBankHolidays(
-          division = "scotland",
-          events = listOf(),
-        ),
-        northernIreland = CountryBankHolidays(
-          division = "northern-ireland",
-          events = listOf(),
-        ),
+    val bankHolidays = buildBankHolidays(
+      listOf(
+        aTuesdayBankHoliday,
+        aThursdayBankHoliday,
       ),
     )
 
@@ -191,36 +153,10 @@ class WorkingDayServiceTest {
 
   @Test
   fun `addWorkingDays correctly handles bank holidays`() {
-    val bankHolidays = ClientResult.Success(
-      HttpStatus.OK,
-      UKBankHolidays(
-        englandAndWales = CountryBankHolidays(
-          division = "england-and-wales",
-          events = listOf(
-            BankHolidayEvent(
-              title = "Early May bank holiday",
-              date = LocalDate.of(2023, 5, 1),
-              notes = "",
-              bunting = true,
-            ),
-            BankHolidayEvent(
-              title = "Bank holiday for the coronation of King Charles III",
-              date = LocalDate.of(2023, 5, 8),
-              notes = "",
-              bunting = true,
-            ),
-          ),
-        ),
-        scotland = CountryBankHolidays(
-          division = "scotland",
-          events = listOf(),
-        ),
-        northernIreland = CountryBankHolidays(
-          division = "northern-ireland",
-          events = listOf(),
-        ),
-      ),
-    )
+    val earlyMayBankHoliday = LocalDate.of(2023, 5, 1)
+    val coronationOfKingCharlesIII = LocalDate.of(2023, 5, 8)
+
+    val bankHolidays = buildBankHolidays(listOf(earlyMayBankHoliday, coronationOfKingCharlesIII))
 
     every {
       govUkBankHolidaysProvider.getUKBankHolidays()
@@ -285,30 +221,7 @@ class WorkingDayServiceTest {
 
       val aMondayBankHoliday = aThursday.with(TemporalAdjusters.next(DayOfWeek.MONDAY))
 
-      val bankHolidays = ClientResult.Success(
-        HttpStatus.OK,
-        UKBankHolidays(
-          englandAndWales = CountryBankHolidays(
-            division = "england-and-wales",
-            events = listOf(
-              BankHolidayEvent(
-                title = "bank holiday monday",
-                date = aMondayBankHoliday,
-                notes = "",
-                bunting = true,
-              ),
-            ),
-          ),
-          scotland = CountryBankHolidays(
-            division = "scotland",
-            events = listOf(),
-          ),
-          northernIreland = CountryBankHolidays(
-            division = "northern-ireland",
-            events = listOf(),
-          ),
-        ),
-      )
+      val bankHolidays = buildBankHolidays(listOf(aMondayBankHoliday))
 
       every {
         govUkBankHolidaysProvider.getUKBankHolidays()
@@ -327,36 +240,7 @@ class WorkingDayServiceTest {
       val aFridayBankHoliday = aThursday.with(TemporalAdjusters.next(DayOfWeek.FRIDAY))
       val aMondayBankHoliday = aThursday.with(TemporalAdjusters.next(DayOfWeek.MONDAY))
 
-      val bankHolidays = ClientResult.Success(
-        HttpStatus.OK,
-        UKBankHolidays(
-          englandAndWales = CountryBankHolidays(
-            division = "england-and-wales",
-            events = listOf(
-              BankHolidayEvent(
-                title = "good friday",
-                date = aFridayBankHoliday,
-                notes = "",
-                bunting = true,
-              ),
-              BankHolidayEvent(
-                title = "bank holiday monday",
-                date = aMondayBankHoliday,
-                notes = "",
-                bunting = true,
-              ),
-            ),
-          ),
-          scotland = CountryBankHolidays(
-            division = "scotland",
-            events = listOf(),
-          ),
-          northernIreland = CountryBankHolidays(
-            division = "northern-ireland",
-            events = listOf(),
-          ),
-        ),
-      )
+      val bankHolidays = buildBankHolidays(listOf(aFridayBankHoliday, aMondayBankHoliday))
 
       every {
         govUkBankHolidaysProvider.getUKBankHolidays()
