@@ -34,7 +34,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.TaskDueMigrati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserMappingService
 import javax.persistence.EntityManager
 
 @Service
@@ -112,7 +111,7 @@ class MigrationJobService(
 
         MigrationJobType.cas1BackfillUserApArea -> Cas1BackfillUserApArea(
           applicationContext.getBean(UserRepository::class.java),
-          applicationContext.getBean(Cas1UserMappingService::class.java),
+          applicationContext.getBean(UserService::class.java),
           applicationContext.getBean(CommunityApiClient::class.java),
           transactionTemplate,
         )

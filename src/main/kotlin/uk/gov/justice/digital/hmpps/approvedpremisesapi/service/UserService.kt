@@ -199,26 +199,34 @@ class UserService(
     }
 
     if (userHasChanged(user, deliusUser)) {
-      user.name = deliusUser.staff.fullName
-      user.email = deliusUser.email.toString()
-      user.telephoneNumber = deliusUser.telephoneNumber
-      user.deliusStaffCode = deliusUser.staffCode
-      user.teamCodes = deliusUser.getTeamCodes()
-
-      deliusUser.probationArea.let { probationArea ->
-        findProbationRegionFromArea(probationArea)?.let { probationRegion ->
-          user.probationRegion = probationRegion
-        }
-      }
-
-      if (forService == ServiceName.approvedPremises) {
-        user.apArea = cas1UserMappingService.determineApArea(user.probationRegion, deliusUser)
-      }
-
-      user = userRepository.save(user)
+      user = updateUser(user, deliusUser, forService)
     }
 
     return AuthorisableActionResult.Success(user)
+  }
+
+  fun updateUser(
+    user: UserEntity,
+    deliusUser: StaffUserDetails,
+    forService: ServiceName,
+  ): UserEntity {
+    user.name = deliusUser.staff.fullName
+    user.email = deliusUser.email.toString()
+    user.telephoneNumber = deliusUser.telephoneNumber
+    user.deliusStaffCode = deliusUser.staffCode
+    user.teamCodes = deliusUser.getTeamCodes()
+
+    deliusUser.probationArea.let { probationArea ->
+      findProbationRegionFromArea(probationArea)?.let { probationRegion ->
+        user.probationRegion = probationRegion
+      }
+    }
+
+    if (forService == ServiceName.approvedPremises) {
+      user.apArea = cas1UserMappingService.determineApArea(user.probationRegion, deliusUser)
+    }
+
+    return userRepository.save(user)
   }
 
   fun getUserWorkloads(userIds: List<UUID>): Map<UUID, UserWorkload> {
