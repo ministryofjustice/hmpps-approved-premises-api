@@ -70,8 +70,7 @@ class UsersSeedJob(
     log.info("Setting roles for ${row.deliusUsername} to exactly ${row.roles.joinToString(",")}, qualifications to exactly: ${row.qualifications.joinToString(",")}")
 
     val user = try {
-      // we assume we're seeding for CAS1 as this is the only service that populates additional fields (ap area, team code)
-      userService.getExistingUserOrCreate(row.deliusUsername, ServiceName.approvedPremises)
+      userService.getExistingUserOrCreate(row.deliusUsername)
     } catch (exception: Exception) {
       throw RuntimeException("Could not get user ${row.deliusUsername}", exception)
     }
