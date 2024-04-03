@@ -68,7 +68,7 @@ class UserService(
     val username = deliusPrincipal.name
     val serviceForRequest = requestContextService.getServiceForRequest()
 
-    val user = getExistingUserOrCreate(username, serviceForRequest)
+    val user = getExistingUserOrCreate(username)
 
     if (serviceForRequest == ServiceName.temporaryAccommodation) {
       if (!user.hasAnyRole(*UserRole.getAllRolesForService(ServiceName.temporaryAccommodation).toTypedArray())) {
@@ -243,7 +243,7 @@ class UserService(
     }
   }
 
-  fun getExistingUserOrCreate(username: String, forService: ServiceName?, throwProblemOn404: Boolean = false): UserEntity {
+  fun getExistingUserOrCreate(username: String, throwProblemOn404: Boolean = false): UserEntity {
     val normalisedUsername = username.uppercase()
 
     val existingUser = userRepository.findByDeliusUsername(normalisedUsername)
@@ -275,11 +275,7 @@ class UserService(
       }
     }
 
-    val apArea = if (forService == ServiceName.approvedPremises) {
-      cas1UserMappingService.determineApArea(staffProbationRegion, staffUserDetails)
-    } else {
-      null
-    }
+    val apArea = cas1UserMappingService.determineApArea(staffProbationRegion, staffUserDetails)
 
     return userRepository.save(
       UserEntity(

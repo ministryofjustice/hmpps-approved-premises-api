@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
-import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -84,58 +83,13 @@ class UserServiceTest {
 
       every { mockUserRepository.findByDeliusUsername(username) } returns user
 
-      assertThat(userService.getExistingUserOrCreate(username, ServiceName.approvedPremises)).isEqualTo(user)
+      assertThat(userService.getExistingUserOrCreate(username)).isEqualTo(user)
 
       verify(exactly = 0) { mockUserRepository.save(any()) }
     }
 
-    @ParameterizedTest
-    @EnumSource(value = ServiceName::class, mode = EnumSource.Mode.EXCLUDE, names = ["approvedPremises"])
-    fun `getExistingUserOrCreate creates new user, doesn't populate ap area if not CAS1`(
-      serviceName: ServiceName,
-    ) {
-      val username = "SOMEPERSON"
-
-      every { mockUserRepository.findByDeliusUsername(username) } returns null
-      every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
-
-      every { mockCommunityApiClient.getStaffUserDetails(username) } returns ClientResult.Success(
-        HttpStatus.OK,
-        StaffUserDetailsFactory()
-          .withUsername(username)
-          .withForenames("Jim")
-          .withSurname("Jimmerson")
-          .withStaffIdentifier(5678)
-          .withProbationAreaCode("AREACODE")
-          .withTeams(
-            listOf(
-              StaffUserTeamMembershipFactory().withCode("TC1").produce(),
-              StaffUserTeamMembershipFactory().withCode("TC2").produce(),
-            ),
-          )
-          .produce(),
-      )
-
-      every { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode("AREACODE") } returns ProbationAreaProbationRegionMappingEntityFactory()
-        .withDefaultProbationRegion()
-        .withProbationAreaDeliusCode("AREACODE")
-        .produce()
-
-      val result = userService.getExistingUserOrCreate(username, serviceName)
-
-      assertThat(result.name).isEqualTo("Jim Jimmerson")
-      assertThat(result.teamCodes).isEqualTo(listOf("TC1", "TC2"))
-      assertThat(result.apArea).isNull()
-      assertThat(result.createdAt).isWithinTheLastMinute()
-
-      verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
-      verify(exactly = 1) { mockUserRepository.save(any()) }
-      verify(exactly = 1) { mockProbationAreaProbationRegionMappingRepository.findByProbationAreaDeliusCode(any()) }
-      verify { mockCas1UserMappingService wasNot Called }
-    }
-
     @Test
-    fun `getExistingUserOrCreate creates new user, populate ap area if CAS1`() {
+    fun `getExistingUserOrCreate creates new user`() {
       val username = "SOMEPERSON"
 
       every { mockUserRepository.findByDeliusUsername(username) } returns null
@@ -173,7 +127,7 @@ class UserServiceTest {
 
       every { mockCas1UserMappingService.determineApArea(probationRegion, deliusUser) } returns apArea
 
-      val result = userService.getExistingUserOrCreate(username, ServiceName.approvedPremises)
+      val result = userService.getExistingUserOrCreate(username)
 
       assertThat(result.name).isEqualTo("Jim Jimmerson")
       assertThat(result.teamCodes).isEqualTo(listOf("TC1", "TC2"))
