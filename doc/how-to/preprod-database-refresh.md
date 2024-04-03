@@ -23,9 +23,15 @@ the production namespace of the application. The job then dumps the existing use
 (see prerequisite) to carry out a `pg_restore` of the production database, and then adds the
 preprod users back to the preprod database.
 
+### Known Issues
+
+#### Pre-Prod users not being re-inserted if column mismatch
+
+If there are additional columns on the users, user_qualification_assignments or user_role_assignments tables in pre-prod (when compared to prod), the restore of pre-prod specific users/permissions will fail
+
 ## Run an adhoc database refresh
 
-If you need to run the database refresh outside the schedule, you can run the follwing
+If you need to run the database refresh outside the schedule, you can run the following
 command:
 
 ```sh
