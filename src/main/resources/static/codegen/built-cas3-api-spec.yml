@@ -2326,12 +2326,8 @@ components:
               type: boolean
             isConcerningSexualBehaviour:
               type: boolean
-            isHistoryOfArsonOffence:
-              type: boolean
             isConcerningArsonBehaviour:
               type: boolean
-            concerningArsonBehaviour:
-              type: string
             summaryData:
               $ref: '#/components/schemas/AnyValue'
           required:

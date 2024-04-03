@@ -51,9 +51,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var name: Yielded<String?> = { null }
   private var isHistoryOfSexualOffence: Yielded<Boolean?> = { null }
   private var isConcerningSexualBehaviour: Yielded<Boolean?> = { null }
-  private var isHistoryOfArsonOffence: Yielded<Boolean?> = { null }
   private var isConcerningArsonBehaviour: Yielded<Boolean?> = { null }
-  private var concerningArsonBehaviour: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -185,17 +183,10 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
 
   fun withIsConcerningSexualBehaviour(isConcerningSexualBehaviour: Boolean?) = apply {
     this.isConcerningSexualBehaviour = { isConcerningSexualBehaviour }
-  
-  fun withIsHistoryOfArsonOffence(isHistoryOfArsonOffence: Boolean?) = apply {
-    this.isHistoryOfArsonOffence = { isHistoryOfArsonOffence }
   }
 
   fun withIsConcerningArsonBehaviour(isConcerningArsonBehaviour: Boolean?) = apply {
     this.isConcerningArsonBehaviour = { isConcerningArsonBehaviour }
-  }
-
-  fun withConcerningArsonBehaviour(concerningArsonBehaviour: String?) = apply {
-    this.concerningArsonBehaviour = { concerningArsonBehaviour }
   }
 
   override fun produce(): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
@@ -217,8 +208,11 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     nomsNumber = this.nomsNumber(),
     arrivalDate = this.arrivalDate(),
     isRegisteredSexOffender = this.isRegisteredSexOffender(),
+    isHistoryOfSexualOffence = this.isHistoryOfSexualOffence(),
+    isConcerningSexualBehaviour = this.isConcerningSexualBehaviour(),
     needsAccessibleProperty = this.needsAccessibleProperty(),
     hasHistoryOfArson = this.hasHistoryOfArson(),
+    isConcerningArsonBehaviour = this.isConcerningArsonBehaviour(),
     isDutyToReferSubmitted = this.isDutyToReferSubmitted(),
     dutyToReferSubmissionDate = this.dutyToReferSubmissionDate(),
     isEligible = this.isEligible(),
@@ -228,10 +222,5 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     personReleaseDate = this.personReleaseDate(),
     pdu = this.pdu(),
     name = this.name(),
-    isHistoryOfSexualOffence = this.isHistoryOfSexualOffence(),
-    isConcerningSexualBehaviour = this.isConcerningSexualBehaviour(),
-    isHistoryOfArsonOffence = this.isHistoryOfArsonOffence(),
-    isConcerningArsonBehaviour = this.isConcerningArsonBehaviour(),
-    concerningArsonBehaviour = this.concerningArsonBehaviour(),
   )
 }

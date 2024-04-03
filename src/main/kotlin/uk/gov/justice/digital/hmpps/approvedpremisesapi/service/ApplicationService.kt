@@ -470,9 +470,7 @@ class ApplicationService(
       name = "${offenderDetails.firstName} ${offenderDetails.surname}",
       isHistoryOfSexualOffence = null,
       isConcerningSexualBehaviour = null,
-      isHistoryOfArsonOffence = null,
       isConcerningArsonBehaviour = null,
-      concerningArsonBehaviour = null,
     )
   }
 
@@ -865,8 +863,11 @@ class ApplicationService(
       document = serializedTranslatedDocument
       arrivalDate = OffsetDateTime.of(submitApplication.arrivalDate, LocalTime.MIDNIGHT, ZoneOffset.UTC)
       isRegisteredSexOffender = submitApplication.isRegisteredSexOffender
+      isHistoryOfSexualOffence = submitApplication.isHistoryOfSexualOffence
+      isConcerningSexualBehaviour = submitApplication.isConcerningSexualBehaviour
       needsAccessibleProperty = submitApplication.needsAccessibleProperty
       hasHistoryOfArson = submitApplication.hasHistoryOfArson
+      isConcerningArsonBehaviour = submitApplication.isConcerningArsonBehaviour
       isDutyToReferSubmitted = submitApplication.isDutyToReferSubmitted
       dutyToReferSubmissionDate = submitApplication.dutyToReferSubmissionDate
       isEligible = submitApplication.isApplicationEligible
@@ -874,11 +875,6 @@ class ApplicationService(
       dutyToReferLocalAuthorityAreaName = submitApplication.dutyToReferLocalAuthorityAreaName
       personReleaseDate = submitApplication.personReleaseDate
       pdu = submitApplication.pdu
-      isHistoryOfSexualOffence = submitApplication.isHistoryOfSexualOffence
-      isConcerningSexualBehaviour = submitApplication.isConcerningSexualBehaviour
-      isHistoryOfArsonOffence = submitApplication.isHistoryOfArsonOffence
-      isConcerningArsonBehaviour = submitApplication.isConcerningArsonBehaviour
-      concerningArsonBehaviour = submitApplication.concerningArsonBehaviour
     }
 
     assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData)
