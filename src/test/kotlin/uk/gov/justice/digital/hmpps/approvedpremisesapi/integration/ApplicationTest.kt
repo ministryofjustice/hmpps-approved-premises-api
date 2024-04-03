@@ -3257,7 +3257,12 @@ class ApplicationTest : IntegrationTestBase() {
     @Test
     fun `Withdraw Application 200 withdraws application and sends an email to application creator`() {
       `Given a User` { user, jwt ->
-        val application = produceAndPersistBasicApplication("ABC123", user, "TEAM")
+        val application = produceAndPersistBasicApplication(
+          crn = "ABC123",
+          userEntity = user,
+          managingTeamCode = "TEAM",
+          submittedAt = OffsetDateTime.now(),
+        )
 
         val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
@@ -3300,7 +3305,12 @@ class ApplicationTest : IntegrationTestBase() {
     fun `Withdraw Application 200 withdraws application and sends an email to assessor if assessment is pending`() {
       `Given a User` { applicant, jwt ->
         `Given a User` { assessor, _ ->
-          val application = produceAndPersistBasicApplication("ABC123", applicant, "TEAM")
+          val application = produceAndPersistBasicApplication(
+            crn = "ABC123",
+            userEntity = applicant,
+            managingTeamCode = "TEAM",
+            submittedAt = OffsetDateTime.now(),
+          )
 
           val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -4188,6 +4198,7 @@ class ApplicationTest : IntegrationTestBase() {
     crn: String,
     userEntity: UserEntity,
     managingTeamCode: String,
+    submittedAt: OffsetDateTime? = null,
   ): ApplicationEntity {
     val jsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
@@ -4223,6 +4234,7 @@ class ApplicationTest : IntegrationTestBase() {
           }
           """,
         )
+        withSubmittedAt(submittedAt)
       }
 
     application.teamCodes += applicationTeamCodeRepository.save(

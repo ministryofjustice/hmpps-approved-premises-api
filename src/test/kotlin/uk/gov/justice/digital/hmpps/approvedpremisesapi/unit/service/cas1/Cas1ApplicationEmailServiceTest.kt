@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -15,6 +16,7 @@ class Cas1ApplicationEmailServiceTest {
 
   private object TestConstants {
     const val APPLICANT_EMAIL = "applicantEmail@test.com"
+    const val APPLICANT_NAME = "the applicant name"
     const val CRN = "CRN123"
   }
 
@@ -27,66 +29,124 @@ class Cas1ApplicationEmailServiceTest {
   private fun createService(aps530WithdrawalEmailImprovements: Boolean) = Cas1ApplicationEmailService(
     emailNotifier = mockEmailNotificationService,
     notifyConfig = notifyConfig,
+    applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
     aps530WithdrawalEmailImprovements = aps530WithdrawalEmailImprovements,
   )
 
-  @Test
-  fun `applicationWithdrawn doesnt send email to applicant if no email addresses defined`() {
-    val applicant = createUser(emailAddress = null)
-    val withdrawingUser = createUser(emailAddress = null)
+  @Nested
+  inner class ApplicationSubmitted {
 
-    val application = createApplicationForApplicant(applicant)
+    @Test
+    fun `applicationSubmitted doesnt send email to applicant if no email addresses defined`() {
+      val applicant = createUser(emailAddress = null)
 
-    service.applicationWithdrawn(application, withdrawingUser)
+      val application = createApplicationForApplicant(applicant)
 
-    mockEmailNotificationService.assertNoEmailsRequested()
+      service.applicationSubmitted(application)
+
+      mockEmailNotificationService.assertNoEmailsRequested()
+    }
+
+    @Test
+    fun `applicationSubmitted sends an email to applicant if email addresses defined`() {
+      val applicant = createUser(
+        name = TestConstants.APPLICANT_NAME,
+        emailAddress = TestConstants.APPLICANT_EMAIL,
+      )
+
+      val application = createApplicationForApplicant(applicant)
+
+      service.applicationSubmitted(application)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "name" to TestConstants.APPLICANT_NAME,
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "crn" to TestConstants.CRN,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        TestConstants.APPLICANT_EMAIL,
+        notifyConfig.templates.applicationSubmitted,
+        personalisation,
+      )
+    }
   }
 
-  @Test
-  fun `applicationWithdrawn sends an email to applicant if email addresses defined`() {
-    val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
-    val withdrawingUser = createUser(emailAddress = null)
+  @Nested
+  inner class ApplicationWithdrawn {
 
-    val application = createApplicationForApplicant(applicant)
+    @Test
+    fun `applicationWithdrawn doesnt send email to applicant if no email addresses defined`() {
+      val applicant = createUser(emailAddress = null)
+      val withdrawingUser = createUser(emailAddress = null)
 
-    service.applicationWithdrawn(application, withdrawingUser)
+      val application = createApplicationForApplicant(applicant)
 
-    mockEmailNotificationService.assertEmailRequestCount(1)
+      service.applicationWithdrawn(application, withdrawingUser)
 
-    val personalisation = mapOf(
-      "crn" to TestConstants.CRN,
-    )
+      mockEmailNotificationService.assertNoEmailsRequested()
+    }
 
-    mockEmailNotificationService.assertEmailRequested(
-      TestConstants.APPLICANT_EMAIL,
-      notifyConfig.templates.applicationWithdrawn,
-      personalisation,
-    )
-  }
+    @Test
+    fun `applicationWithdrawn doesnt send email to applicant if application not submitted`() {
+      val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
+      val withdrawingUser = createUser(emailAddress = null)
 
-  @Test
-  fun `applicationWithdrawn sends a V2 email to applicant if email addresses defined`() {
-    val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
-    val withdrawingUser = createUser(name = "the withdrawing user")
+      val application = createApplicationForApplicant(applicant, submittedAt = null)
 
-    val application = createApplicationForApplicant(applicant)
+      service.applicationWithdrawn(application, withdrawingUser)
 
-    serviceUsingAps530Improvements.applicationWithdrawn(application, withdrawingUser)
+      mockEmailNotificationService.assertNoEmailsRequested()
+    }
 
-    mockEmailNotificationService.assertEmailRequestCount(1)
+    @Test
+    fun `applicationWithdrawn sends an email to applicant if email addresses defined`() {
+      val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
+      val withdrawingUser = createUser(emailAddress = null)
 
-    val personalisation = mapOf(
-      "crn" to TestConstants.CRN,
-      "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
-      "withdrawnBy" to "the withdrawing user",
-    )
+      val application = createApplicationForApplicant(applicant)
 
-    mockEmailNotificationService.assertEmailRequested(
-      TestConstants.APPLICANT_EMAIL,
-      notifyConfig.templates.applicationWithdrawnV2,
-      personalisation,
-    )
+      service.applicationWithdrawn(application, withdrawingUser)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "crn" to TestConstants.CRN,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        TestConstants.APPLICANT_EMAIL,
+        notifyConfig.templates.applicationWithdrawn,
+        personalisation,
+      )
+    }
+
+    @Test
+    fun `applicationWithdrawn sends a V2 email to applicant if email addresses defined`() {
+      val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
+      val withdrawingUser = createUser(name = "the withdrawing user")
+
+      val application = createApplicationForApplicant(applicant)
+
+      serviceUsingAps530Improvements.applicationWithdrawn(application, withdrawingUser)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "crn" to TestConstants.CRN,
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "withdrawnBy" to "the withdrawing user",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        TestConstants.APPLICANT_EMAIL,
+        notifyConfig.templates.applicationWithdrawnV2,
+        personalisation,
+      )
+    }
   }
 
   private fun createUser(
@@ -98,10 +158,13 @@ class Cas1ApplicationEmailServiceTest {
     .withName(name)
     .produce()
 
-  private fun createApplicationForApplicant(applicant: UserEntity) = ApprovedPremisesApplicationEntityFactory()
+  private fun createApplicationForApplicant(
+    applicant: UserEntity,
+    submittedAt: OffsetDateTime? = OffsetDateTime.now(),
+  ) = ApprovedPremisesApplicationEntityFactory()
     .withCrn(TestConstants.CRN)
     .withCreatedByUser(applicant)
-    .withSubmittedAt(OffsetDateTime.now())
+    .withSubmittedAt(submittedAt)
     .withApArea(ApAreaEntityFactory().withName("test area").produce())
     .produce()
 }

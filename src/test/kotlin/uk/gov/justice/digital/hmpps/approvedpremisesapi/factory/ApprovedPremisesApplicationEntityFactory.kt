@@ -49,6 +49,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
   private var isInapplicable: Yielded<Boolean?> = { null }
   private var isWithdrawn: Yielded<Boolean> = { false }
   private var withdrawalReason: Yielded<String?> = { null }
+  private var otherWithdrawalReason: Yielded<String?> = { null }
   private var nomsNumber: Yielded<String?> = { randomStringUpperCase(6) }
   private var name: Yielded<String> = { "${randomStringUpperCase(4)} ${randomStringUpperCase(6)}" }
   private var targetLocation: Yielded<String?> = { null }
@@ -160,6 +161,10 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     this.withdrawalReason = { withdrawalReason }
   }
 
+  fun withOtherWithdrawalReason(otherWithdrawalReason: String) = apply {
+    this.otherWithdrawalReason = { otherWithdrawalReason }
+  }
+
   fun withNomsNumber(nomsNumber: String?) = apply {
     this.nomsNumber = { nomsNumber }
   }
@@ -234,7 +239,7 @@ class ApprovedPremisesApplicationEntityFactory : Factory<ApprovedPremisesApplica
     isInapplicable = this.isInapplicable(),
     isWithdrawn = this.isWithdrawn(),
     withdrawalReason = this.withdrawalReason(),
-    otherWithdrawalReason = null,
+    otherWithdrawalReason = otherWithdrawalReason(),
     nomsNumber = this.nomsNumber(),
     name = this.name(),
     targetLocation = this.targetLocation(),
