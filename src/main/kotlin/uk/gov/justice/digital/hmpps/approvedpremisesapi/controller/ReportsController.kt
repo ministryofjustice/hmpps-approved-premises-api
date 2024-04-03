@@ -24,12 +24,15 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Ref
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ReportService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas3.Cas3ReportService
 import java.io.ByteArrayOutputStream
+import java.time.LocalDate
 import java.util.UUID
 
 @Service
 class ReportsController(
   private val reportService: ReportService,
+  private val cas3ReportService: Cas3ReportService,
   private val userAccessService: UserAccessService,
   private val userService: UserService,
 ) : ReportsApiDelegate {
@@ -41,10 +44,12 @@ class ReportsController(
 
     validateParameters(probationRegionId, month)
 
-    val properties = BookingsReportProperties(xServiceName, probationRegionId, year, month)
+    val startDate = LocalDate.of(year, month, 1)
+    val endDate = LocalDate.of(year, month, startDate.month.length(startDate.isLeapYear))
+    val properties = BookingsReportProperties(xServiceName, probationRegionId, startDate, endDate)
     val outputStream = ByteArrayOutputStream()
 
-    reportService.createBookingsReport(properties, outputStream)
+    cas3ReportService.createBookingsReport(properties, outputStream)
 
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }
@@ -55,11 +60,12 @@ class ReportsController(
     }
 
     validateParameters(probationRegionId, month)
-
-    val properties = BedUsageReportProperties(xServiceName, probationRegionId, year, month)
+    val startDate = LocalDate.of(year, month, 1)
+    val endDate = LocalDate.of(year, month, startDate.month.length(startDate.isLeapYear))
+    val properties = BedUsageReportProperties(xServiceName, probationRegionId, startDate, endDate)
     val outputStream = ByteArrayOutputStream()
 
-    reportService.createBedUsageReport(properties, outputStream)
+    cas3ReportService.createBedUsageReport(properties, outputStream)
 
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }
@@ -70,11 +76,12 @@ class ReportsController(
     }
 
     validateParameters(probationRegionId, month)
-
-    val properties = BedUtilisationReportProperties(xServiceName, probationRegionId, year, month)
+    val startDate = LocalDate.of(year, month, 1)
+    val endDate = LocalDate.of(year, month, startDate.month.length(startDate.isLeapYear))
+    val properties = BedUtilisationReportProperties(xServiceName, probationRegionId, startDate, endDate)
     val outputStream = ByteArrayOutputStream()
 
-    reportService.createBedUtilisationReport(properties, outputStream)
+    cas3ReportService.createBedUtilisationReport(properties, outputStream)
 
     return ResponseEntity.ok(InputStreamResource(outputStream.toByteArray().inputStream()))
   }

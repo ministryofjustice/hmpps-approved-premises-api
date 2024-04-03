@@ -118,6 +118,8 @@ class ReportsTest : IntegrationTestBase() {
     fun `Get bookings report returns OK with correct body`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withProbationRegion(userEntity.probationRegion)
@@ -172,7 +174,7 @@ class ReportsTest : IntegrationTestBase() {
               bookings.toBookingsReportDataAndPersonInfo { crn ->
                 PersonSummaryInfoResult.Success.Full(crn, caseSummary)
               },
-              BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+              BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
 
           webTestClient.get()
@@ -198,6 +200,8 @@ class ReportsTest : IntegrationTestBase() {
     fun `Get bookings report returns OK with latest departure and arrivals when booking has updated with multiple departures and arrivals`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withProbationRegion(userEntity.probationRegion)
@@ -272,7 +276,7 @@ class ReportsTest : IntegrationTestBase() {
               bookings.toBookingsReportDataAndPersonInfo { crn ->
                 PersonSummaryInfoResult.Success.Full(crn, caseSummary)
               },
-              BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+              BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
 
           webTestClient.get()
@@ -298,6 +302,8 @@ class ReportsTest : IntegrationTestBase() {
     fun `Get bookings report returns OK for CAS3_REPORTER`() {
       `Given a User`(roles = listOf(UserRole.CAS3_REPORTER)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withProbationRegion(userEntity.probationRegion)
@@ -352,7 +358,7 @@ class ReportsTest : IntegrationTestBase() {
               bookings.toBookingsReportDataAndPersonInfo { crn ->
                 PersonSummaryInfoResult.Success.Full(crn, caseSummary)
               },
-              BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+              BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
 
           webTestClient.get()
@@ -378,6 +384,8 @@ class ReportsTest : IntegrationTestBase() {
     fun `Get bookings report returns OK for CAS3_REPORTER for all region`() {
       `Given a User`(roles = listOf(UserRole.CAS3_REPORTER)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val pdu = probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(userEntity.probationRegion)
           }
@@ -436,7 +444,7 @@ class ReportsTest : IntegrationTestBase() {
               bookings.toBookingsReportDataAndPersonInfo { crn ->
                 PersonSummaryInfoResult.Success.Full(crn, caseSummary)
               },
-              BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+              BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
 
           webTestClient.get()
@@ -476,6 +484,8 @@ class ReportsTest : IntegrationTestBase() {
     fun `Get bookings report returns OK with only Bookings with at least one day in month when year and month are specified`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withProbationRegion(userEntity.probationRegion)
@@ -555,7 +565,7 @@ class ReportsTest : IntegrationTestBase() {
               shouldBeIncludedBookings.toBookingsReportDataAndPersonInfo { crn ->
                 PersonSummaryInfoResult.Success.Full(crn, caseSummary)
               },
-              BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+              BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
 
           webTestClient.get()
@@ -581,6 +591,8 @@ class ReportsTest : IntegrationTestBase() {
     fun `Get bookings report returns OK with only bookings from the specified service`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withProbationRegion(userEntity.probationRegion)
@@ -649,7 +661,7 @@ class ReportsTest : IntegrationTestBase() {
               bookings.toBookingsReportDataAndPersonInfo { crn ->
                 PersonSummaryInfoResult.Success.Full(crn, caseSummary)
               },
-              BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+              BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
 
           webTestClient.get()
@@ -675,6 +687,8 @@ class ReportsTest : IntegrationTestBase() {
     fun `Get bookings report returns OK with only bookings from the specified probation region`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withProbationRegion(userEntity.probationRegion)
@@ -749,7 +763,7 @@ class ReportsTest : IntegrationTestBase() {
               bookings.toBookingsReportDataAndPersonInfo { crn ->
                 PersonSummaryInfoResult.Success.Full(crn, caseSummary)
               },
-              BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+              BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
 
           webTestClient.get()
@@ -775,6 +789,8 @@ class ReportsTest : IntegrationTestBase() {
     fun `Get bookings report returns OK with correct body and correct duty to refer local authority area name`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withProbationRegion(userEntity.probationRegion)
@@ -810,7 +826,7 @@ class ReportsTest : IntegrationTestBase() {
               bookings.toBookingsReportDataAndPersonInfo { crn ->
                 PersonSummaryInfoResult.Success.Full(crn, caseSummary)
               },
-              BookingsReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4),
+              BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
             )
 
           webTestClient.get()
@@ -893,6 +909,8 @@ class ReportsTest : IntegrationTestBase() {
     fun `Get bed usage report returns OK with correct body`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withProbationRegion(userEntity.probationRegion)
@@ -922,9 +940,8 @@ class ReportsTest : IntegrationTestBase() {
             realBookingRepository,
             realLostBedsRepository,
             realWorkingDayService,
-            0,
           )
-            .createReport(listOf(bed), BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+            .createReport(listOf(bed), BedUsageReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate))
 
           webTestClient.get()
             .uri("/reports/bed-usage?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
@@ -948,6 +965,8 @@ class ReportsTest : IntegrationTestBase() {
     fun `Get bed usage report returns OK with correct body with pdu and local authority`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
           val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(userEntity.probationRegion)
@@ -983,9 +1002,8 @@ class ReportsTest : IntegrationTestBase() {
             realBookingRepository,
             realLostBedsRepository,
             realWorkingDayService,
-            0,
           )
-            .createReport(listOf(bed), BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+            .createReport(listOf(bed), BedUsageReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate))
 
           webTestClient.get()
             .uri("/reports/bed-usage?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
@@ -1066,6 +1084,8 @@ class ReportsTest : IntegrationTestBase() {
     fun `Get bed utilisation report returns OK with correct body`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
             withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
             withProbationRegion(userEntity.probationRegion)
@@ -1097,9 +1117,8 @@ class ReportsTest : IntegrationTestBase() {
             realBookingRepository,
             realLostBedsRepository,
             realWorkingDayService,
-            0,
           )
-            .createReport(listOf(bed), BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+            .createReport(listOf(bed), BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate))
 
           webTestClient.get()
             .uri("/reports/bed-utilisation?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
@@ -1123,6 +1142,8 @@ class ReportsTest : IntegrationTestBase() {
     fun `Get bed utilisation report returns OK with correct body with pdu and local authority`() {
       `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
         `Given an Offender` { offenderDetails, inmateDetails ->
+          val startDate = LocalDate.of(2023, 4, 1)
+          val endDate = LocalDate.of(2023, 4, 30)
           val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
           val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
             withProbationRegion(userEntity.probationRegion)
@@ -1160,9 +1181,8 @@ class ReportsTest : IntegrationTestBase() {
             realBookingRepository,
             realLostBedsRepository,
             realWorkingDayService,
-            0,
           )
-            .createReport(listOf(bed), BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
+            .createReport(listOf(bed), BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate))
 
           webTestClient.get()
             .uri("/reports/bed-utilisation?year=2023&month=4&probationRegionId=${userEntity.probationRegion.id}")
