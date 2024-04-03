@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.util.UUID
 
+@SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.`Given a User`(
   id: UUID = UUID.randomUUID(),
   staffUserDetailsConfigBlock: (StaffUserDetailsFactory.() -> Unit)? = null,
@@ -19,6 +20,7 @@ fun IntegrationTestBase.`Given a User`(
   qualifications: List<UserQualification> = emptyList(),
   probationRegion: ProbationRegionEntity? = null,
   isActive: Boolean = true,
+  mockStaffUserDetailsCall: Boolean = true,
 ): Pair<UserEntity, String> {
   val staffUserDetailsFactory = StaffUserDetailsFactory()
 
@@ -64,13 +66,18 @@ fun IntegrationTestBase.`Given a User`(
 
   val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt(staffUserDetails.username)
 
-  CommunityAPI_mockSuccessfulStaffUserDetailsCall(
-    staffUserDetails,
-  )
+  if (mockStaffUserDetailsCall) {
+    CommunityAPI_mockSuccessfulStaffUserDetailsCall(
+      staffUserDetails,
+    )
+  } else {
+    mockOAuth2ClientCredentialsCallIfRequired {}
+  }
 
   return Pair(user, jwt)
 }
 
+@SuppressWarnings("LongParameterList")
 fun IntegrationTestBase.`Given a User`(
   id: UUID = UUID.randomUUID(),
   staffUserDetailsConfigBlock: (StaffUserDetailsFactory.() -> Unit)? = null,
@@ -78,6 +85,7 @@ fun IntegrationTestBase.`Given a User`(
   qualifications: List<UserQualification> = emptyList(),
   probationRegion: ProbationRegionEntity? = null,
   isActive: Boolean = true,
+  mockStaffUserDetailsCall: Boolean = true,
   block: (userEntity: UserEntity, jwt: String) -> Unit,
 ) {
   val (user, jwt) = `Given a User`(
@@ -87,6 +95,7 @@ fun IntegrationTestBase.`Given a User`(
     qualifications,
     probationRegion,
     isActive,
+    mockStaffUserDetailsCall = mockStaffUserDetailsCall,
   )
 
   return block(user, jwt)

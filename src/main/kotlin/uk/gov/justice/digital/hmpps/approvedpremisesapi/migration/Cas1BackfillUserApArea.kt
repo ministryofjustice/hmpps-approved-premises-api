@@ -2,9 +2,11 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
 
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserMappingService
@@ -36,24 +38,46 @@ class Cas1BackfillUserApArea(
     log.info("Update ap area and teams for user ${user.id}")
     try {
       val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
-      val staffDetails = when (staffDetailsResult) {
-        is ClientResult.Success -> staffDetailsResult.body
-        is ClientResult.Failure -> staffDetailsResult.throwException()
+
+      val apAreaAndTeamCodes = when (staffDetailsResult) {
+        is ClientResult.Success -> {
+          val staffDetails = staffDetailsResult.body
+          val apArea = cas1UserMappingService.determineApArea(
+            usersProbationRegion = user.probationRegion,
+            deliusUser = staffDetails,
+          )
+
+          AreaAndTeamCodes(apArea, staffDetails.getTeamCodes())
+        }
+        is ClientResult.Failure.StatusCode -> {
+          if (staffDetailsResult.status == HttpStatus.NOT_FOUND) {
+            log.warn("Could not find staff details for ${user.id}, will fall back to probationRegion.apArea")
+            AreaAndTeamCodes(user.probationRegion.apArea, emptyList())
+          } else {
+            staffDetailsResult.throwException()
+          }
+        }
+        is ClientResult.Failure -> {
+          staffDetailsResult.throwException()
+        }
       }
 
-      val apArea = cas1UserMappingService.determineApArea(
-        usersProbationRegion = user.probationRegion,
-        deliusUser = staffDetails,
-      )
+      val apArea = apAreaAndTeamCodes.apArea
+      val teamCodes = apAreaAndTeamCodes.teamCodes
 
-      log.info("Updating user ${user.id} AP Area to ${apArea.name} and team codes to ${staffDetails.getTeamCodes()}")
+      log.info("Updating user ${user.id} AP Area to ${apArea.name} and team codes to $teamCodes")
 
       val userToUpdate = userRepository.findByIdOrNull(user.id)!!
       userToUpdate.apArea = apArea
-      userToUpdate.teamCodes = staffDetails.getTeamCodes()
+      userToUpdate.teamCodes = teamCodes
       userRepository.save(userToUpdate)
     } catch (exception: Exception) {
       log.error("Unable to find ap area for user ${user.id}", exception)
     }
   }
 }
+
+data class AreaAndTeamCodes(
+  val apArea: ApAreaEntity,
+  val teamCodes: List<String>,
+)
