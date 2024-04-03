@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Staf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.LocalDate
 import java.util.UUID
 import java.util.stream.Stream
@@ -3020,7 +3021,7 @@ class PremisesTest : IntegrationTestBase() {
         withName("Floor level access")
       }.map { it.id }
 
-      bookingEntityFactory.produceAndPersist {
+      val bookingEntity = bookingEntityFactory.produceAndPersist {
         withPremises(premises)
         withArrivalDate(bedEndDate.minusDays(1))
         withDepartureDate(bedEndDate.plusDays(2))
@@ -3044,7 +3045,7 @@ class PremisesTest : IntegrationTestBase() {
         .expectBody()
         .jsonPath("title").isEqualTo("Conflict")
         .jsonPath("status").isEqualTo(409)
-        .jsonPath("detail").isEqualTo("Conflict booking exists for the room with end date $bedEndDate: ${room.id}")
+        .jsonPath("detail").isEqualTo("Conflict booking exists for the room with end date $bedEndDate: ${bookingEntity.id}")
     }
   }
 
@@ -3074,7 +3075,7 @@ class PremisesTest : IntegrationTestBase() {
         withName("Floor level access")
       }.map { it.id }
 
-      bookingEntityFactory.produceAndPersist {
+      val bookingEntity = bookingEntityFactory.produceAndPersist {
         withPremises(premises)
         withArrivalDate(bedEndDate.plusDays(1))
         withDepartureDate(bedEndDate.plusDays(2))
@@ -3098,7 +3099,7 @@ class PremisesTest : IntegrationTestBase() {
         .expectBody()
         .jsonPath("title").isEqualTo("Conflict")
         .jsonPath("status").isEqualTo(409)
-        .jsonPath("detail").isEqualTo("Conflict booking exists for the room with end date $bedEndDate: ${room.id}")
+        .jsonPath("detail").isEqualTo("Conflict booking exists for the room with end date $bedEndDate: ${bookingEntity.id}")
     }
   }
 
@@ -3128,7 +3129,7 @@ class PremisesTest : IntegrationTestBase() {
         withName("Floor level access")
       }.map { it.id }
 
-      bookingEntityFactory.produceAndPersist {
+      val bookingEntity = bookingEntityFactory.produceAndPersist {
         withPremises(premises)
         withArrivalDate(bedEndDate.minusDays(1))
         withDepartureDate(bedEndDate)
@@ -3152,7 +3153,7 @@ class PremisesTest : IntegrationTestBase() {
         .expectBody()
         .jsonPath("title").isEqualTo("Conflict")
         .jsonPath("status").isEqualTo(409)
-        .jsonPath("detail").isEqualTo("Conflict booking exists for the room with end date $bedEndDate: ${room.id}")
+        .jsonPath("detail").isEqualTo("Conflict booking exists for the room with end date $bedEndDate: ${bookingEntity.id}")
     }
   }
 
@@ -3182,7 +3183,7 @@ class PremisesTest : IntegrationTestBase() {
         withName("Floor level access")
       }.map { it.id }
 
-      bookingEntityFactory.produceAndPersist {
+      val bookingEntity = bookingEntityFactory.produceAndPersist {
         withPremises(premises)
         withArrivalDate(bedEndDate)
         withDepartureDate(bedEndDate.plusDays(1))
@@ -3206,7 +3207,7 @@ class PremisesTest : IntegrationTestBase() {
         .expectBody()
         .jsonPath("title").isEqualTo("Conflict")
         .jsonPath("status").isEqualTo(409)
-        .jsonPath("detail").isEqualTo("Conflict booking exists for the room with end date $bedEndDate: ${room.id}")
+        .jsonPath("detail").isEqualTo("Conflict booking exists for the room with end date $bedEndDate: ${bookingEntity.id}")
     }
   }
 
@@ -3506,6 +3507,55 @@ class PremisesTest : IntegrationTestBase() {
         .expectBody()
         .jsonPath("title").isEqualTo("Bad Request")
         .jsonPath("invalid-params[0].errorType").isEqualTo("bedEndDateCantBeModified")
+    }
+  }
+
+  @Test
+  fun `Updating a Temporary Accommodation room with bedpace end-date is before bed created date is throws bad request error`() {
+    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+      val bedEndDate = LocalDate.now()
+      val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      val room = roomEntityFactory.produceAndPersist {
+        withYieldedPremises { premises }
+        withName("old-room-name")
+      }
+      val bed = bedEntityFactory.produceAndPersist {
+        withRoom(room)
+        withCreatedAt { bedEndDate.plusDays(5).toLocalDateTime() }
+      }
+      bed.apply { createdAt = bedEndDate.plusDays(1).toLocalDateTime() }
+      bedRepository.save(bed)
+      room.beds.add(bed)
+
+      val characteristicIds = characteristicEntityFactory.produceAndPersistMultiple(5) {
+        withModelScope("room")
+        withServiceScope("temporary-accommodation")
+        withName("Floor level access")
+      }.map { it.id }
+
+      webTestClient.put()
+        .uri("/premises/${premises.id}/rooms/${room.id}")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          UpdateRoom(
+            notes = "test notes",
+            characteristicIds = characteristicIds,
+            name = "new-room-name",
+            bedEndDate = bedEndDate,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("$.detail")
+        .isEqualTo("Bedspace end date cannot be prior to the Bedspace creation date: ${bed.createdAt!!.toLocalDate()}")
     }
   }
 

@@ -12,6 +12,7 @@ class CancellationReasonEntityFactory : Factory<CancellationReasonEntity> {
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(6) }
   private var isActive: Yielded<Boolean> = { true }
   private var serviceScope: Yielded<String> = { randomStringUpperCase(4) }
+  private var sortOrder: Yielded<Int> = { 0 }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -34,5 +35,6 @@ class CancellationReasonEntityFactory : Factory<CancellationReasonEntity> {
     name = this.name(),
     isActive = this.isActive(),
     serviceScope = this.serviceScope(),
+    sortOrder = this.sortOrder(),
   )
 }

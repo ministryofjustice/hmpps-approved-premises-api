@@ -17,8 +17,6 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.NullSource
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
@@ -31,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationJsonSchemaEntityFactory
@@ -48,7 +45,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommodationAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.WithdrawnByFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
@@ -86,7 +82,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationTimel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApprovedPremisesApplicationAccessLevel
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -96,7 +91,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApplicationTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentClarificationNoteTransformer
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
@@ -121,12 +115,10 @@ class ApplicationServiceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApplicationTeamCodeRepository = mockk<ApplicationTeamCodeRepository>()
   private val mockUserAccessService = mockk<UserAccessService>()
-  private val mockEmailNotificationService = mockk<EmailNotificationService>()
   private val mockAssessmentClarificationNoteTransformer = mockk<AssessmentClarificationNoteTransformer>()
   private val mockObjectMapper = mockk<ObjectMapper>()
   private val mockApAreaRepository = mockk<ApAreaRepository>()
   private val applicationTimelineTransformerMock = mockk<ApplicationTimelineTransformer>()
-  private val mockDomainEventTransformer = mockk<DomainEventTransformer>()
   private val mockCas1ApplicationDomainEventService = mockk<Cas1ApplicationDomainEventService>()
   private val mockCas1ApplicationUserDetailsRepository = mockk<Cas1ApplicationUserDetailsRepository>()
   private val mockCas1ApplicationEmailService = mockk<Cas1ApplicationEmailService>()
@@ -145,15 +137,11 @@ class ApplicationServiceTest {
     mockCas3DomainEventService,
     mockApDeliusContextApiClient,
     mockApplicationTeamCodeRepository,
-    mockEmailNotificationService,
     mockUserAccessService,
-    NotifyConfig(),
     mockAssessmentClarificationNoteTransformer,
     mockObjectMapper,
-    "http://frontend/applications/#id",
     mockApAreaRepository,
     applicationTimelineTransformerMock,
-    mockDomainEventTransformer,
     mockCas1ApplicationDomainEventService,
     mockCas1ApplicationUserDetailsRepository,
     mockCas1ApplicationEmailService,
@@ -1697,7 +1685,7 @@ class ApplicationServiceTest {
     @EnumSource(value = SituationOption::class)
     @NullSource
     @Suppress("CyclomaticComplexMethod")
-    fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event, sends confirmation email`(
+    fun `submitApprovedPremisesApplication returns Success, creates assessment and stores event, triggers email`(
       situation: SituationOption?,
     ) {
       submitApprovedPremisesApplication = SubmitApprovedPremisesApplication(
@@ -1785,16 +1773,7 @@ class ApplicationServiceTest {
         )
       }
 
-      verify(exactly = 1) {
-        mockEmailNotificationService.sendEmail(
-          any(),
-          "c9944bd8-63c4-473c-8dce-b3636e47d3dd",
-          match {
-            it["name"] == user.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-          },
-        )
-      }
+      verify(exactly = 1) { mockCas1ApplicationEmailService.applicationSubmitted(application) }
     }
 
     @ParameterizedTest
@@ -1885,16 +1864,7 @@ class ApplicationServiceTest {
         )
       }
 
-      verify(exactly = 1) {
-        mockEmailNotificationService.sendEmail(
-          any(),
-          "c9944bd8-63c4-473c-8dce-b3636e47d3dd",
-          match {
-            it["name"] == user.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-          },
-        )
-      }
+      verify(exactly = 1) { mockCas1ApplicationEmailService.applicationSubmitted(application) }
     }
 
     @ParameterizedTest
@@ -1984,16 +1954,7 @@ class ApplicationServiceTest {
         )
       }
 
-      verify(exactly = 1) {
-        mockEmailNotificationService.sendEmail(
-          any(),
-          "c9944bd8-63c4-473c-8dce-b3636e47d3dd",
-          match {
-            it["name"] == user.name &&
-              (it["applicationUrl"] as String).matches(Regex("http://frontend/applications/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}"))
-          },
-        )
-      }
+      verify(exactly = 1) { mockCas1ApplicationEmailService.applicationSubmitted(application) }
     }
 
     @Test
@@ -2165,7 +2126,7 @@ class ApplicationServiceTest {
         )
       } returns Unit
 
-      every { mockEmailNotificationService.sendEmail(any(), any(), any()) } just Runs
+      every { mockCas1ApplicationEmailService.applicationSubmitted(any()) } just Runs
     }
   }
 
@@ -2211,6 +2172,8 @@ class ApplicationServiceTest {
       dutyToReferLocalAuthorityAreaName = "Aberdeen City",
       personReleaseDate = LocalDate.now().plusDays(1),
       pdu = "Probation Delivery Unit Test",
+      isHistoryOfSexualOffence = true,
+      isConcerningSexualBehaviour = true,
       isHistoryOfArsonOffence = true,
       isConcerningArsonBehaviour = true,
       concerningArsonBehaviour = "Concerning arson behaviour test",
@@ -2462,6 +2425,8 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.personReleaseDate).isEqualTo(submitTemporaryAccommodationApplicationWithMiReportingData.personReleaseDate)
       assertThat(persistedApplication.pdu).isEqualTo("Probation Delivery Unit Test")
       assertThat(persistedApplication.name).isEqualTo(user.name)
+      assertThat(persistedApplication.isHistoryOfSexualOffence).isEqualTo(true)
+      assertThat(persistedApplication.isConcerningSexualBehaviour).isEqualTo(true)
       assertThat(persistedApplication.isHistoryOfArsonOffence).isEqualTo(true)
       assertThat(persistedApplication.isConcerningArsonBehaviour).isEqualTo(true)
       assertThat(persistedApplication.concerningArsonBehaviour).isEqualTo("Concerning arson behaviour test")
@@ -2770,7 +2735,7 @@ class ApplicationServiceTest {
     }
 
     @Test
-    fun `withdrawApprovedPremisesApplication returns Success and saves Application with isWithdrawn set to true, emits domain event and email`() {
+    fun `withdrawApprovedPremisesApplication returns Success and saves Application with isWithdrawn set to true, triggers domain event and email`() {
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
@@ -2782,10 +2747,7 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
       every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-
-      val domainEventWithdrawnBy = WithdrawnByFactory().produce()
-      every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
-      every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
+      every { mockCas1ApplicationDomainEventService.applicationWithdrawn(any(), any()) } just Runs
       every { mockCas1ApplicationEmailService.applicationWithdrawn(any(), any()) } just Runs
 
       val result = applicationService.withdrawApprovedPremisesApplication(
@@ -2808,30 +2770,12 @@ class ApplicationServiceTest {
         )
       }
 
-      verify(exactly = 1) {
-        mockDomainEventService.saveApplicationWithdrawnEvent(
-          match {
-            val data = (it.data as ApplicationWithdrawnEnvelope).eventDetails
-
-            it.applicationId == application.id &&
-              it.crn == application.crn &&
-              data.applicationId == application.id &&
-              data.applicationUrl == "http://frontend/applications/${application.id}" &&
-              data.personReference == PersonReference(
-              crn = application.crn,
-              noms = application.nomsNumber!!,
-            ) &&
-              data.deliusEventNumber == application.eventNumber &&
-              data.withdrawalReason == "alternative_identified_placement_no_longer_required"
-          },
-        )
-      }
-
+      verify { mockCas1ApplicationDomainEventService.applicationWithdrawn(application, user) }
       verify { mockCas1ApplicationEmailService.applicationWithdrawn(application, user) }
     }
 
     @Test
-    fun `withdrawApprovedPremisesApplication returns Success and saves Application with isWithdrawn set to true, emits domain event when other reason is set`() {
+    fun `withdrawApprovedPremisesApplication returns Success and saves Application with isWithdrawn set to true, triggers domain event when other reason is set`() {
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .produce()
@@ -2843,10 +2787,7 @@ class ApplicationServiceTest {
       every { mockApplicationRepository.findByIdOrNull(application.id) } returns application
       every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
-
-      val domainEventWithdrawnBy = WithdrawnByFactory().produce()
-      every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
-      every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
+      every { mockCas1ApplicationDomainEventService.applicationWithdrawn(any(), any()) } just Runs
       every { mockCas1ApplicationEmailService.applicationWithdrawn(any(), any()) } just Runs
 
       val result =
@@ -2866,25 +2807,8 @@ class ApplicationServiceTest {
         )
       }
 
-      verify(exactly = 1) {
-        mockDomainEventService.saveApplicationWithdrawnEvent(
-          match {
-            val data = (it.data as ApplicationWithdrawnEnvelope).eventDetails
-
-            it.applicationId == application.id &&
-              it.crn == application.crn &&
-              data.applicationId == application.id &&
-              data.applicationUrl == "http://frontend/applications/${application.id}" &&
-              data.personReference == PersonReference(
-              crn = application.crn,
-              noms = application.nomsNumber!!,
-            ) &&
-              data.deliusEventNumber == application.eventNumber &&
-              data.withdrawalReason == "other" &&
-              data.otherWithdrawalReason == "Some other reason"
-          },
-        )
-      }
+      verify { mockCas1ApplicationDomainEventService.applicationWithdrawn(application, user) }
+      verify { mockCas1ApplicationEmailService.applicationWithdrawn(application, user) }
     }
 
     @Test
@@ -2901,10 +2825,7 @@ class ApplicationServiceTest {
       every { mockUserAccessService.userMayWithdrawApplication(user, application) } returns true
       every { mockApplicationRepository.save(any()) } answers { it.invocation.args[0] as ApplicationEntity }
       every { mockCas1ApplicationEmailService.applicationWithdrawn(any(), any()) } returns Unit
-
-      val domainEventWithdrawnBy = WithdrawnByFactory().produce()
-      every { mockDomainEventTransformer.toWithdrawnBy(user) } returns domainEventWithdrawnBy
-      every { mockDomainEventService.saveApplicationWithdrawnEvent(any()) } just Runs
+      every { mockCas1ApplicationDomainEventService.applicationWithdrawn(any(), any()) } just Runs
 
       applicationService.withdrawApprovedPremisesApplication(
         application.id,
@@ -2925,26 +2846,8 @@ class ApplicationServiceTest {
         )
       }
 
-      verify(exactly = 1) {
-        mockDomainEventService.saveApplicationWithdrawnEvent(
-          match {
-            val data = (it.data as ApplicationWithdrawnEnvelope).eventDetails
-
-            it.applicationId == application.id &&
-              it.crn == application.crn &&
-              data.applicationId == application.id &&
-              data.applicationUrl == "http://frontend/applications/${application.id}" &&
-              data.personReference == PersonReference(
-              crn = application.crn,
-              noms = application.nomsNumber!!,
-            ) &&
-              data.deliusEventNumber == application.eventNumber &&
-              data.withdrawalReason == "alternative_identified_placement_no_longer_required" &&
-              data.otherWithdrawalReason == null &&
-              data.withdrawnBy == domainEventWithdrawnBy
-          },
-        )
-      }
+      verify { mockCas1ApplicationDomainEventService.applicationWithdrawn(application, user) }
+      verify { mockCas1ApplicationEmailService.applicationWithdrawn(application, user) }
     }
   }
 

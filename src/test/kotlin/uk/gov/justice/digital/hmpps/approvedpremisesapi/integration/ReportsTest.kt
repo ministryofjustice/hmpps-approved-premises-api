@@ -36,7 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.Bed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.LostBedReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
@@ -56,7 +56,7 @@ class ReportsTest : IntegrationTestBase() {
   lateinit var realLostBedsRepository: LostBedsRepository
 
   @Autowired
-  lateinit var realWorkingDayCountService: WorkingDayCountService
+  lateinit var realWorkingDayService: WorkingDayService
 
   @Nested
   inner class GetBookingReport {
@@ -921,7 +921,7 @@ class ReportsTest : IntegrationTestBase() {
             bookingTransformer,
             realBookingRepository,
             realLostBedsRepository,
-            realWorkingDayCountService,
+            realWorkingDayService,
             0,
           )
             .createReport(listOf(bed), BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
@@ -982,7 +982,7 @@ class ReportsTest : IntegrationTestBase() {
             bookingTransformer,
             realBookingRepository,
             realLostBedsRepository,
-            realWorkingDayCountService,
+            realWorkingDayService,
             0,
           )
             .createReport(listOf(bed), BedUsageReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
@@ -1096,7 +1096,7 @@ class ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BedUtilisationReportGenerator(
             realBookingRepository,
             realLostBedsRepository,
-            realWorkingDayCountService,
+            realWorkingDayService,
             0,
           )
             .createReport(listOf(bed), BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))
@@ -1159,7 +1159,7 @@ class ReportsTest : IntegrationTestBase() {
           val expectedDataFrame = BedUtilisationReportGenerator(
             realBookingRepository,
             realLostBedsRepository,
-            realWorkingDayCountService,
+            realWorkingDayService,
             0,
           )
             .createReport(listOf(bed), BedUtilisationReportProperties(ServiceName.temporaryAccommodation, null, 2023, 4))

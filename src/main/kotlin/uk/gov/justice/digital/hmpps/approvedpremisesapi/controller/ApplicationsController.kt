@@ -343,7 +343,7 @@ class ApplicationsController(
 
         if (apAreaId == null) {
           val user = userService.getUserForRequest()
-          apAreaId = user.probationRegion.apArea.id
+          apAreaId = user.apArea!!.id
         }
         applicationService.submitApprovedPremisesApplication(
           applicationId,

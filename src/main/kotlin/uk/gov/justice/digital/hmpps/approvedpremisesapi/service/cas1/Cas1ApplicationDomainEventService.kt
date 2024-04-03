@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawn
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
@@ -14,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
@@ -107,6 +110,50 @@ class Cas1ApplicationDomainEventService(
           ),
         ),
       ),
+    )
+  }
+
+  fun applicationWithdrawn(
+    application: ApprovedPremisesApplicationEntity,
+    withdrawingUser: UserEntity,
+  ) {
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = Instant.now()
+
+    domainEventService.saveApplicationWithdrawnEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = eventOccurredAt,
+        data = ApplicationWithdrawnEnvelope(
+          id = domainEventId,
+          timestamp = eventOccurredAt,
+          eventType = "approved-premises.application.withdrawn",
+          eventDetails = getApplicationWithdrawn(application, withdrawingUser, eventOccurredAt),
+        ),
+      ),
+      emit = application.isSubmitted(),
+    )
+  }
+
+  private fun getApplicationWithdrawn(
+    application: ApprovedPremisesApplicationEntity,
+    user: UserEntity,
+    eventOccurredAt: Instant,
+  ): ApplicationWithdrawn {
+    return ApplicationWithdrawn(
+      applicationId = application.id,
+      applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+      personReference = PersonReference(
+        crn = application.crn,
+        noms = application.nomsNumber ?: "Unknown NOMS Number",
+      ),
+      deliusEventNumber = application.eventNumber,
+      withdrawnAt = eventOccurredAt,
+      withdrawnBy = domainEventTransformer.toWithdrawnBy(user),
+      withdrawalReason = application.withdrawalReason!!,
+      otherWithdrawalReason = application.otherWithdrawalReason,
     )
   }
 

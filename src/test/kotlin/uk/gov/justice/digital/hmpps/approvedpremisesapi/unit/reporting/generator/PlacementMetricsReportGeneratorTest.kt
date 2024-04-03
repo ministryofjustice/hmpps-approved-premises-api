@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Plac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PlacementMetricsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementMetricsReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import java.sql.Timestamp
@@ -20,7 +20,7 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 
 class PlacementMetricsReportGeneratorTest {
-  private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
+  private val mockWorkingDayService = mockk<WorkingDayService>()
 
   @Test
   fun `it returns a count of successful placements`() {
@@ -34,9 +34,9 @@ class PlacementMetricsReportGeneratorTest {
 
     entries += createTimelinessEntity("B1", LocalDateTime.now(), LocalDateTime.now(), null, null)
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 1
+    every { mockWorkingDayService.getWorkingDaysCount(any(), any()) } returns 1
 
-    val results = PlacementMetricsReportGenerator(entries.toList(), mockWorkingDayCountService).createReport(
+    val results = PlacementMetricsReportGenerator(entries.toList(), mockWorkingDayService).createReport(
       listOf(TierCategory.A1),
       PlacementMetricsReportProperties(1, 2023),
     )
@@ -59,9 +59,9 @@ class PlacementMetricsReportGeneratorTest {
       createTimelinessEntity("A1", LocalDateTime.now(), LocalDateTime.now(), null, null),
     )
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 1
+    every { mockWorkingDayService.getWorkingDaysCount(any(), any()) } returns 1
 
-    val results = PlacementMetricsReportGenerator(entries, mockWorkingDayCountService).createReport(
+    val results = PlacementMetricsReportGenerator(entries, mockWorkingDayService).createReport(
       listOf(TierCategory.A1),
       PlacementMetricsReportProperties(1, 2023),
     )
@@ -104,11 +104,11 @@ class PlacementMetricsReportGeneratorTest {
       timeliness366PlusCalendarDaysEntities,
     ).flatten()
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(any<LocalDate>(), any<LocalDate>()) } answers {
+    every { mockWorkingDayService.getWorkingDaysCount(any<LocalDate>(), any<LocalDate>()) } answers {
       Duration.between(LocalDateTime.of(firstArg(), LocalTime.MIDNIGHT), LocalDateTime.of(secondArg(), LocalTime.MIDNIGHT)).toDays().toInt()
     }
 
-    val results = PlacementMetricsReportGenerator(entries, mockWorkingDayCountService).createReport(
+    val results = PlacementMetricsReportGenerator(entries, mockWorkingDayService).createReport(
       listOf(TierCategory.A1),
       PlacementMetricsReportProperties(1, 2023),
     )

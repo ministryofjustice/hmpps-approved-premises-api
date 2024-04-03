@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as ApiUserQualification
 
 @Component
@@ -36,9 +37,10 @@ class UserTransformer(
       numTasksCompleted30Days = userWorkload.numTasksCompleted30Days,
       qualifications = jpa.qualifications.distinctBy { it.qualification }.map(::transformQualificationToApi),
       roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformApprovedPremisesRoleToApi),
-      apArea = apAreaTransformer.transformJpaToApi(jpa.probationRegion.apArea),
+      apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) },
     )
   }
+
   fun transformJpaToApi(jpa: UserEntity, serviceName: ServiceName) = when (serviceName) {
     ServiceName.approvedPremises -> ApprovedPremisesUser(
       id = jpa.id,
@@ -51,7 +53,7 @@ class UserTransformer(
       qualifications = jpa.qualifications.map(::transformQualificationToApi),
       region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
       service = "CAS1",
-      apArea = apAreaTransformer.transformJpaToApi(jpa.probationRegion.apArea),
+      apArea = jpa.apArea?.let { apAreaTransformer.transformJpaToApi(it) } ?: throw InternalServerErrorProblem("CAS1 user ${jpa.id} should have AP Area Set"),
     )
     ServiceName.temporaryAccommodation -> TemporaryAccommodationUser(
       id = jpa.id,

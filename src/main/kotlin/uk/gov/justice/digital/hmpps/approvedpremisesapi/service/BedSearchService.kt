@@ -25,7 +25,7 @@ class BedSearchService(
   private val postcodeDistrictRepository: PostcodeDistrictRepository,
   private val characteristicService: CharacteristicService,
   private val bookingRepository: BookingRepository,
-  private val workingDayCountService: WorkingDayCountService,
+  private val workingDayService: WorkingDayService,
 ) {
   fun findApprovedPremisesBeds(
     user: UserEntity,
@@ -118,7 +118,7 @@ class BedSearchService(
 
         val bedIds = candidateResults.map { it.bedId }
         val bedsWithABookingInTurnaround = bookingRepository.findClosestBookingBeforeDateForBeds(startDate, bedIds)
-          .filter { workingDayCountService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0) >= startDate }
+          .filter { workingDayService.addWorkingDays(it.departureDate, it.turnaround?.workingDayCount ?: 0) >= startDate }
           .map { it.bed!!.id }
 
         val results = candidateResults.filter { !bedsWithABookingInTurnaround.contains(it.bedId) }

@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.util
 
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -72,20 +71,6 @@ infix fun ClosedRange<LocalDate>.countOverlappingDays(other: ClosedRange<LocalDa
   val earliestEnd = minOf(this.endInclusive, other.endInclusive)
   val days = ChronoUnit.DAYS.between(latestStart, earliestEnd).toInt() + 1
   return if (days > 0) days else 0
-}
-
-fun LocalDate.isWorkingDay(bankHolidays: List<LocalDate>) =
-  this.dayOfWeek != DayOfWeek.SATURDAY &&
-    this.dayOfWeek != DayOfWeek.SUNDAY &&
-    !bankHolidays.contains(this)
-
-fun LocalDate.getNextWorkingDay(bankHolidays: List<LocalDate>): LocalDate {
-  var result = this.plusDays(1)
-  while (!result.isWorkingDay(bankHolidays)) {
-    result = result.plusDays(1)
-  }
-
-  return result
 }
 
 fun LocalDate.toUiFormat(): String = this.format(cas1UiExtendedDateFormat)

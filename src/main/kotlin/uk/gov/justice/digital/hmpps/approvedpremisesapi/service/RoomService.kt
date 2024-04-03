@@ -232,11 +232,11 @@ class RoomService(
           "$.roomId" hasValidationError "bedEndDateCantBeModified"
         }
         if (bed.createdAt != null && bedEndDate.isBefore(bed.createdAt!!.toLocalDate())) {
-          "${bed.createdAt!!.toLocalDate()}" hasValidationError "afterBedspaceEndDate"
+          return@validated generalError("Bedspace end date cannot be prior to the Bedspace creation date: ${bed.createdAt!!.toLocalDate()}")
         }
 
-        if (bookingRepository.findActiveOverlappingBookingByBed(bed.id, bedEndDate).isNotEmpty()) {
-          return@validated roomId hasConflictError "Conflict booking exists for the room with end date $bedEndDate"
+        bookingRepository.findActiveOverlappingBookingByBed(bed.id, bedEndDate).firstOrNull()?.let {
+          return@validated it.id hasConflictError "Conflict booking exists for the room with end date $bedEndDate"
         }
 
         if (validationErrors.any()) {

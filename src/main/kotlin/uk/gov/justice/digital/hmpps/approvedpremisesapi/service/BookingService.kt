@@ -107,7 +107,7 @@ class BookingService(
   private val cas3DomainEventService: Cas3DomainEventService,
   private val cruService: CruService,
   private val applicationService: ApplicationService,
-  private val workingDayCountService: WorkingDayCountService,
+  private val workingDayService: WorkingDayService,
   private val placementRequestService: PlacementRequestService,
   private val communityApiClient: CommunityApiClient,
   private val bookingRepository: BookingRepository,
@@ -681,7 +681,7 @@ class BookingService(
       }
 
       val expectedLastUnavailableDate =
-        workingDayCountService.addWorkingDays(departureDate, premises.turnaroundWorkingDayCount)
+        workingDayService.addWorkingDays(departureDate, premises.turnaroundWorkingDayCount)
       getBookingWithConflictingDates(arrivalDate, expectedLastUnavailableDate, null, bedId)?.let {
         return@validated it.id hasConflictError "A Booking already exists for dates from ${it.arrivalDate} to ${it.lastUnavailableDate} which overlaps with the desired dates"
       }
@@ -783,7 +783,7 @@ class BookingService(
       "$.workingDays" hasValidationError "isNotAPositiveInteger"
     }
 
-    val expectedLastUnavailableDate = workingDayCountService.addWorkingDays(booking.departureDate, workingDays)
+    val expectedLastUnavailableDate = workingDayService.addWorkingDays(booking.departureDate, workingDays)
     getBookingWithConflictingDates(
       booking.arrivalDate,
       expectedLastUnavailableDate,
@@ -1676,7 +1676,7 @@ class BookingService(
     notes: String?,
   ) = validated<ExtensionEntity> {
     val expectedLastUnavailableDate =
-      workingDayCountService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
+      workingDayService.addWorkingDays(newDepartureDate, booking.turnaround?.workingDayCount ?: 0)
 
     if (booking.service != ServiceName.approvedPremises.value) {
       val bedId = booking.bed?.id
@@ -1734,7 +1734,7 @@ class BookingService(
     val effectiveNewDepartureDate = newDepartureDate ?: booking.departureDate
 
     val expectedLastUnavailableDate =
-      workingDayCountService.addWorkingDays(effectiveNewDepartureDate, booking.turnaround?.workingDayCount ?: 0)
+      workingDayService.addWorkingDays(effectiveNewDepartureDate, booking.turnaround?.workingDayCount ?: 0)
 
     if (booking.service != ServiceName.approvedPremises.value) {
       val bedId = booking.bed?.id
@@ -1837,7 +1837,7 @@ class BookingService(
   ).firstOrNull()
 
   val BookingEntity.lastUnavailableDate: LocalDate
-    get() = workingDayCountService.addWorkingDays(this.departureDate, this.turnaround?.workingDayCount ?: 0)
+    get() = workingDayService.addWorkingDays(this.departureDate, this.turnaround?.workingDayCount ?: 0)
 
   fun getApplicationDetailsForBooking(booking: BookingEntity): Triple<UUID, String, OffsetDateTime> {
     val application = (booking.application as ApprovedPremisesApplicationEntity?)

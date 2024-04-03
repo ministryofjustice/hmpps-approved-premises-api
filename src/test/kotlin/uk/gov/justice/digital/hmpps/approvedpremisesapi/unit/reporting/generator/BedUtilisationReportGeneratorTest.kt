@@ -28,7 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.BedU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -36,12 +36,12 @@ import java.time.OffsetDateTime
 class BedUtilisationReportGeneratorTest {
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockLostBedsRepository = mockk<LostBedsRepository>()
-  private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
+  private val mockWorkingDayService = mockk<WorkingDayService>()
 
   private val bedUtilisationReportGenerator = BedUtilisationReportGenerator(
     mockBookingRepository,
     mockLostBedsRepository,
-    mockWorkingDayCountService,
+    mockWorkingDayService,
     0,
   )
 
@@ -176,7 +176,7 @@ class BedUtilisationReportGeneratorTest {
     val bedUtilisationReportGeneratorForThreeMonths = BedUtilisationReportGenerator(
       mockBookingRepository,
       mockLostBedsRepository,
-      mockWorkingDayCountService,
+      mockWorkingDayService,
       3,
     )
 
@@ -240,7 +240,7 @@ class BedUtilisationReportGeneratorTest {
     val bedUtilisationReportGeneratorForThreeMonths = BedUtilisationReportGenerator(
       mockBookingRepository,
       mockLostBedsRepository,
-      mockWorkingDayCountService,
+      mockWorkingDayService,
       3,
     )
 
@@ -578,13 +578,13 @@ class BedUtilisationReportGeneratorTest {
       }
 
     every {
-      mockWorkingDayCountService.addWorkingDays(
+      mockWorkingDayService.addWorkingDays(
         relevantBookingStraddlingStartOfMonth.departureDate,
         relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2023-04-10")
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(LocalDate.parse("2023-04-05"), LocalDate.parse("2023-04-10")) } returns 5
+    every { mockWorkingDayService.getWorkingDaysCount(LocalDate.parse("2023-04-05"), LocalDate.parse("2023-04-10")) } returns 5
 
     val relevantBookingStraddlingEndOfMonth = BookingEntityFactory()
       .withBed(bed)
@@ -600,13 +600,13 @@ class BedUtilisationReportGeneratorTest {
       }
 
     every {
-      mockWorkingDayCountService.addWorkingDays(
+      mockWorkingDayService.addWorkingDays(
         relevantBookingStraddlingEndOfMonth.departureDate,
         relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2023-05-01")
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(LocalDate.parse("2023-04-28"), LocalDate.parse("2023-04-30")) } returns 1
+    every { mockWorkingDayService.getWorkingDaysCount(LocalDate.parse("2023-04-28"), LocalDate.parse("2023-04-30")) } returns 1
 
     every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)
     every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns emptyList()
@@ -658,13 +658,13 @@ class BedUtilisationReportGeneratorTest {
       }
 
     every {
-      mockWorkingDayCountService.addWorkingDays(
+      mockWorkingDayService.addWorkingDays(
         relevantBookingStraddlingStartOfMonth.departureDate,
         relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2023-04-10")
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(LocalDate.parse("2023-04-05"), LocalDate.parse("2023-04-10")) } returns 4
+    every { mockWorkingDayService.getWorkingDaysCount(LocalDate.parse("2023-04-05"), LocalDate.parse("2023-04-10")) } returns 4
 
     val relevantBookingStraddlingEndOfMonth = BookingEntityFactory()
       .withBed(bed)
@@ -680,13 +680,13 @@ class BedUtilisationReportGeneratorTest {
       }
 
     every {
-      mockWorkingDayCountService.addWorkingDays(
+      mockWorkingDayService.addWorkingDays(
         relevantBookingStraddlingEndOfMonth.departureDate,
         relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2023-05-01")
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(LocalDate.parse("2023-04-28"), LocalDate.parse("2023-04-30")) } returns 1
+    every { mockWorkingDayService.getWorkingDaysCount(LocalDate.parse("2023-04-28"), LocalDate.parse("2023-04-30")) } returns 1
 
     every { mockBookingRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns listOf(relevantBookingStraddlingStartOfMonth, relevantBookingStraddlingEndOfMonth)
     every { mockLostBedsRepository.findAllByOverlappingDateForBed(LocalDate.parse("2023-04-01"), LocalDate.parse("2023-04-30"), bed) } returns emptyList()
@@ -804,13 +804,13 @@ class BedUtilisationReportGeneratorTest {
       }
 
     every {
-      mockWorkingDayCountService.addWorkingDays(
+      mockWorkingDayService.addWorkingDays(
         relevantBookingStraddlingStartOfMonth.departureDate,
         relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2023-04-09")
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(LocalDate.parse("2023-04-05"), LocalDate.parse("2023-04-09")) } returns 4
+    every { mockWorkingDayService.getWorkingDaysCount(LocalDate.parse("2023-04-05"), LocalDate.parse("2023-04-09")) } returns 4
 
     val relevantBookingStraddlingEndOfMonth = BookingEntityFactory()
       .withBed(bed)
@@ -836,13 +836,13 @@ class BedUtilisationReportGeneratorTest {
       }
 
     every {
-      mockWorkingDayCountService.addWorkingDays(
+      mockWorkingDayService.addWorkingDays(
         relevantBookingStraddlingEndOfMonth.departureDate,
         relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2023-05-01")
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(LocalDate.parse("2023-04-28"), LocalDate.parse("2023-04-30")) } returns 1
+    every { mockWorkingDayService.getWorkingDaysCount(LocalDate.parse("2023-04-28"), LocalDate.parse("2023-04-30")) } returns 1
 
     val relevantVoidStraddlingStartOfMonth = LostBedsEntityFactory()
       .withBed(bed)
@@ -1132,14 +1132,14 @@ class BedUtilisationReportGeneratorTest {
       }
 
     every {
-      mockWorkingDayCountService.addWorkingDays(
+      mockWorkingDayService.addWorkingDays(
         relevantBookingStraddlingStartOfMonth.departureDate,
         relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2024-02-14")
 
     every {
-      mockWorkingDayCountService.getWorkingDaysCount(
+      mockWorkingDayService.getWorkingDaysCount(
         LocalDate.parse("2024-02-13"),
         LocalDate.parse("2024-02-14"),
       )
@@ -1169,14 +1169,14 @@ class BedUtilisationReportGeneratorTest {
       }
 
     every {
-      mockWorkingDayCountService.addWorkingDays(
+      mockWorkingDayService.addWorkingDays(
         relevantBookingStraddlingEndOfMonth.departureDate,
         relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2024-02-27")
 
     every {
-      mockWorkingDayCountService.getWorkingDaysCount(
+      mockWorkingDayService.getWorkingDaysCount(
         LocalDate.parse("2024-02-23"),
         LocalDate.parse("2024-02-27"),
       )
@@ -1263,14 +1263,14 @@ class BedUtilisationReportGeneratorTest {
       }
 
     every {
-      mockWorkingDayCountService.addWorkingDays(
+      mockWorkingDayService.addWorkingDays(
         relevantBookingStraddlingStartOfMonth.departureDate,
         relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2024-02-14")
 
     every {
-      mockWorkingDayCountService.getWorkingDaysCount(
+      mockWorkingDayService.getWorkingDaysCount(
         LocalDate.parse("2024-02-13"),
         LocalDate.parse("2024-02-14"),
       )
@@ -1300,14 +1300,14 @@ class BedUtilisationReportGeneratorTest {
       }
 
     every {
-      mockWorkingDayCountService.addWorkingDays(
+      mockWorkingDayService.addWorkingDays(
         relevantBookingStraddlingEndOfMonth.departureDate,
         relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2024-02-27")
 
     every {
-      mockWorkingDayCountService.getWorkingDaysCount(
+      mockWorkingDayService.getWorkingDaysCount(
         LocalDate.parse("2024-02-23"),
         LocalDate.parse("2024-02-27"),
       )
@@ -1394,14 +1394,14 @@ class BedUtilisationReportGeneratorTest {
       }
 
     every {
-      mockWorkingDayCountService.addWorkingDays(
+      mockWorkingDayService.addWorkingDays(
         relevantBookingStraddlingStartOfMonth.departureDate,
         relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2024-02-09")
 
     every {
-      mockWorkingDayCountService.getWorkingDaysCount(
+      mockWorkingDayService.getWorkingDaysCount(
         LocalDate.parse("2024-02-08"),
         LocalDate.parse("2024-02-09"),
       )
@@ -1431,14 +1431,14 @@ class BedUtilisationReportGeneratorTest {
       }
 
     every {
-      mockWorkingDayCountService.addWorkingDays(
+      mockWorkingDayService.addWorkingDays(
         relevantBookingStraddlingEndOfMonth.departureDate,
         relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2024-02-20")
 
     every {
-      mockWorkingDayCountService.getWorkingDaysCount(
+      mockWorkingDayService.getWorkingDaysCount(
         LocalDate.parse("2024-02-16"),
         LocalDate.parse("2024-02-20"),
       )
@@ -1525,14 +1525,14 @@ class BedUtilisationReportGeneratorTest {
       }
 
     every {
-      mockWorkingDayCountService.addWorkingDays(
+      mockWorkingDayService.addWorkingDays(
         relevantBookingStraddlingStartOfMonth.departureDate,
         relevantBookingStraddlingStartOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2024-02-09")
 
     every {
-      mockWorkingDayCountService.getWorkingDaysCount(
+      mockWorkingDayService.getWorkingDaysCount(
         LocalDate.parse("2024-02-08"),
         LocalDate.parse("2024-02-09"),
       )
@@ -1562,14 +1562,14 @@ class BedUtilisationReportGeneratorTest {
       }
 
     every {
-      mockWorkingDayCountService.addWorkingDays(
+      mockWorkingDayService.addWorkingDays(
         relevantBookingStraddlingEndOfMonth.departureDate,
         relevantBookingStraddlingEndOfMonth.turnaround!!.workingDayCount,
       )
     } returns LocalDate.parse("2024-02-20")
 
     every {
-      mockWorkingDayCountService.getWorkingDaysCount(
+      mockWorkingDayService.getWorkingDaysCount(
         LocalDate.parse("2024-02-16"),
         LocalDate.parse("2024-02-20"),
       )

@@ -49,6 +49,8 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var personReleaseDate: Yielded<LocalDate?> = { null }
   private var pdu: Yielded<String?> = { null }
   private var name: Yielded<String?> = { null }
+  private var isHistoryOfSexualOffence: Yielded<Boolean?> = { null }
+  private var isConcerningSexualBehaviour: Yielded<Boolean?> = { null }
   private var isHistoryOfArsonOffence: Yielded<Boolean?> = { null }
   private var isConcerningArsonBehaviour: Yielded<Boolean?> = { null }
   private var concerningArsonBehaviour: Yielded<String?> = { null }
@@ -177,6 +179,13 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.name = { name }
   }
 
+  fun withIsHistoryOfSexualOffence(isHistoryOfSexualOffence: Boolean?) = apply {
+    this.isHistoryOfSexualOffence = { isHistoryOfSexualOffence }
+  }
+
+  fun withIsConcerningSexualBehaviour(isConcerningSexualBehaviour: Boolean?) = apply {
+    this.isConcerningSexualBehaviour = { isConcerningSexualBehaviour }
+  
   fun withIsHistoryOfArsonOffence(isHistoryOfArsonOffence: Boolean?) = apply {
     this.isHistoryOfArsonOffence = { isHistoryOfArsonOffence }
   }
@@ -219,6 +228,8 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     personReleaseDate = this.personReleaseDate(),
     pdu = this.pdu(),
     name = this.name(),
+    isHistoryOfSexualOffence = this.isHistoryOfSexualOffence(),
+    isConcerningSexualBehaviour = this.isConcerningSexualBehaviour(),
     isHistoryOfArsonOffence = this.isHistoryOfArsonOffence(),
     isConcerningArsonBehaviour = this.isConcerningArsonBehaviour(),
     concerningArsonBehaviour = this.concerningArsonBehaviour(),

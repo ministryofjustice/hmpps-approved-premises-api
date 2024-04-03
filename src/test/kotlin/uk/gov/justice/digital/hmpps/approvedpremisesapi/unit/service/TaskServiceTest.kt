@@ -115,7 +115,7 @@ class TaskServiceTest {
     every { userAccessServiceMock.userCanReallocateTask(any()) } returns true
 
     val assigneeUserId = UUID.fromString("55aa66be-0819-494e-955b-90b9aaa4f0c6")
-    every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId) } returns AuthorisableActionResult.NotFound()
+    every { userServiceMock.updateUserFromCommunityApiById(assigneeUserId, ServiceName.approvedPremises) } returns AuthorisableActionResult.NotFound()
 
     val result = taskService.reallocateTask(requestUserWithPermission, TaskType.assessment, assigneeUserId, UUID.randomUUID())
 
@@ -394,7 +394,7 @@ class TaskServiceTest {
       }
       .produce()
 
-    every { userServiceMock.updateUserFromCommunityApiById(user.id) } returns AuthorisableActionResult.Success(user)
+    every { userServiceMock.updateUserFromCommunityApiById(user.id, ServiceName.approvedPremises) } returns AuthorisableActionResult.Success(user)
 
     return user
   }
