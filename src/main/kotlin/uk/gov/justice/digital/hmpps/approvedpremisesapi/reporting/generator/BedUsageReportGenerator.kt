@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import java.time.LocalDate
@@ -18,7 +18,7 @@ class BedUsageReportGenerator(
   private val bookingTransformer: BookingTransformer,
   private val bookingRepository: BookingRepository,
   private val lostBedsRepository: LostBedsRepository,
-  private val workingDayCountService: WorkingDayCountService,
+  private val workingDayService: WorkingDayService,
   private val cas3EndDateOverride: Int,
 ) : ReportGenerator<BedEntity, BedUsageReportRow, BedUsageReportProperties>(BedUsageReportRow::class) {
   override fun filter(properties: BedUsageReportProperties): (BedEntity) -> Boolean = {
@@ -67,7 +67,7 @@ class BedUsageReportGenerator(
       val turnaround = booking.turnaround
       if (turnaround != null && turnaround.workingDayCount > 0) {
         val turnaroundStartDate = booking.departureDate.plusDays(1)
-        val endDate = workingDayCountService.addWorkingDays(booking.departureDate, turnaround.workingDayCount)
+        val endDate = workingDayService.addWorkingDays(booking.departureDate, turnaround.workingDayCount)
 
         resultRows += BedUsageReportRow(
           probationRegion = temporaryAccommodationPremisesEntity?.probationRegion?.name,

@@ -17,7 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonSummaryInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.InternalServerErrorProblem
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import java.time.LocalDate
 
 @Component
@@ -33,7 +33,7 @@ class BookingTransformer(
   private val bedTransformer: BedTransformer,
   private val turnaroundTransformer: TurnaroundTransformer,
   private val enumConverterFactory: EnumConverterFactory,
-  private val workingDayCountService: WorkingDayCountService,
+  private val workingDayService: WorkingDayService,
 ) {
 
   fun transformBookingSummary(jpa: BookingSummary, personInfo: PersonSummaryInfoResult): PremisesBooking {
@@ -78,8 +78,8 @@ class BookingTransformer(
       createdAt = jpa.createdAt.toInstant(),
       turnaround = jpa.turnaround?.let(turnaroundTransformer::transformJpaToApi),
       turnarounds = jpa.turnarounds.map(turnaroundTransformer::transformJpaToApi),
-      turnaroundStartDate = if (hasNonZeroDayTurnaround) workingDayCountService.addWorkingDays(jpa.departureDate, 1) else null,
-      effectiveEndDate = if (hasNonZeroDayTurnaround) workingDayCountService.addWorkingDays(jpa.departureDate, jpa.turnaround!!.workingDayCount) else jpa.departureDate,
+      turnaroundStartDate = if (hasNonZeroDayTurnaround) workingDayService.addWorkingDays(jpa.departureDate, 1) else null,
+      effectiveEndDate = if (hasNonZeroDayTurnaround) workingDayService.addWorkingDays(jpa.departureDate, jpa.turnaround!!.workingDayCount) else jpa.departureDate,
       applicationId = jpa.application?.id,
       assessmentId = jpa.application?.getLatestAssessment()?.id,
       premises = jpa.premises.let { BookingPremisesSummary(it.id, it.name) },
@@ -113,7 +113,7 @@ class BookingTransformer(
     val turnaroundPeriodEnded = if (!hasNonZeroDayTurnaround) {
       false
     } else {
-      workingDayCountService.addWorkingDays(jpa.departureDate, jpa.turnaround!!.workingDayCount).isBefore(LocalDate.now())
+      workingDayService.addWorkingDays(jpa.departureDate, jpa.turnaround!!.workingDayCount).isBefore(LocalDate.now())
     }
 
     return when {

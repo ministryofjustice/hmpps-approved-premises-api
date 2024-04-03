@@ -5,11 +5,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Applicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PlacementMetricsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementMetricsReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 
 class PlacementMetricsReportGenerator(
   applicationRows: List<ApplicationTimelinessEntity>,
-  private val workingDayCountService: WorkingDayCountService,
+  private val workingDayService: WorkingDayService,
 ) : ReportGenerator<TierCategory, PlacementMetricsReportRow, PlacementMetricsReportProperties>(PlacementMetricsReportRow::class) {
   private val timelinessEntries: List<ApplicationTimelinessDto>
 
@@ -51,7 +51,7 @@ class PlacementMetricsReportGenerator(
       val end = row.bookingMadeAt
 
       if (start != null && end != null) {
-        row.overallTimelinessInWorkingDays = workingDayCountService.getWorkingDaysCount(
+        row.overallTimelinessInWorkingDays = workingDayService.getWorkingDaysCount(
           start,
           end,
         )

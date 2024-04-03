@@ -1,12 +1,11 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
-import io.mockk.every
-import io.mockk.mockk
 import io.mockk.spyk
-import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
@@ -18,174 +17,289 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.TemporaryAccommo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
-import java.time.LocalDate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TimeService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import java.time.OffsetDateTime
 
+@SuppressWarnings("MagicNumber")
 class TaskDeadlineServiceTest {
-  private val workingDayCountService = mockk<WorkingDayCountService>()
-  private val taskDeadlineService = TaskDeadlineService(workingDayCountService)
+  private val taskDeadlineService = TaskDeadlineService(
+    // this treats all weekends as non-working days with no bank holidays
+    WorkingDayService(
+      bankHolidaysProvider = { emptyList() },
+      timeService = TimeService(),
+    ),
+  )
 
-  // Set up a naive implementation of the workingDayCountService
-  @BeforeEach
-  fun setup() {
-    every {
-      workingDayCountService.addWorkingDays(any<LocalDate>(), any<Int>())
-    } answers {
-      firstArg<LocalDate>().plusDays(secondArg<Int>().toLong())
+  @Nested
+  inner class GetAssessmentDeadline {
+
+    @Test
+    fun `getDeadline for a non-CAS1 assessment returns null`() {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val application = TemporaryAccommodationApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withProbationRegion(user.probationRegion)
+        .produce()
+
+      val assessment = TemporaryAccommodationAssessmentEntityFactory()
+        .withApplication(application)
+        .produce()
+
+      val result = taskDeadlineService.getDeadline(assessment)
+
+      assertThat(result).isNull()
     }
-  }
 
-  @Test
-  fun `getDeadline returns a deadline of the assessment's created date plus 10 working days for a standard assessment`() {
-    val createdAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
-    val assessment = createAssessment(noticeType = Cas1ApplicationTimelinessCategory.standard, isEsap = false, createdAt = createdAt)
-    val result = taskDeadlineService.getDeadline(assessment)
-
-    assertThat(result!!.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-11"))
-
-    verify(exactly = 1) {
-      workingDayCountService.addWorkingDays(
-        assessment.createdAt.toLocalDate(),
-        TaskDeadlineService.STANDARD_ASSESSMENT_TIMEFRAME,
+    @ParameterizedTest
+    @CsvSource(
+      // Monday 3pm. 14 days later, given two weekends
+      "2023-01-02T15:00:00Z,2023-01-16T00:00:00Z",
+      // Friday 3pm. 14 days later, given two weekends
+      "2023-01-06T15:00:00Z,2023-01-20T00:00:00Z",
+    )
+    fun `getDeadline for a standard assessment returns created date plus 10 working days`(
+      createdAt: OffsetDateTime,
+      expectedDeadline: OffsetDateTime,
+    ) {
+      val assessment = createAssessment(
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
+        isEsap = false,
+        createdAt = createdAt,
       )
+
+      val result = taskDeadlineService.getDeadline(assessment)
+
+      assertThat(result!!).isEqualTo(expectedDeadline)
     }
-  }
 
-  @Test
-  fun `getDeadline returns null for a non-CAS assessment`() {
-    val user = UserEntityFactory()
-      .withDefaultProbationRegion()
-      .produce()
-
-    val application = TemporaryAccommodationApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withProbationRegion(user.probationRegion)
-      .produce()
-
-    val assessment = TemporaryAccommodationAssessmentEntityFactory()
-      .withApplication(application)
-      .produce()
-
-    val result = taskDeadlineService.getDeadline(assessment)
-
-    assertThat(result).isNull()
-  }
-
-  @Test
-  fun `getDeadline returns a deadline of the assessment's created date plus 2 working days for a short notice assessment`() {
-    val createdAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
-    val assessment = createAssessment(noticeType = Cas1ApplicationTimelinessCategory.shortNotice, isEsap = false, createdAt = createdAt)
-    val result = taskDeadlineService.getDeadline(assessment)
-
-    assertThat(result!!.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-03"))
-
-    verify(exactly = 1) {
-      workingDayCountService.addWorkingDays(
-        assessment.createdAt.toLocalDate(),
-        TaskDeadlineService.SHORT_NOTICE_ASSESSMENT_TIMEFRAME,
+    @ParameterizedTest
+    @CsvSource(
+      // Monday 3pm. 2 days later
+      "2023-01-02T15:00:00Z,2023-01-04T00:00:00Z",
+      // Friday 3pm. 4 days later, given the weekend
+      "2023-01-06T15:00:00Z,2023-01-10T00:00:00Z",
+    )
+    fun `getDeadline for a short notice assessment returns created date plus 2 working days`(
+      createdAt: OffsetDateTime,
+      expectedDeadline: OffsetDateTime,
+    ) {
+      val assessment = createAssessment(
+        noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
+        isEsap = false,
+        createdAt = createdAt,
       )
+      val result = taskDeadlineService.getDeadline(assessment)
+
+      assertThat(result!!).isEqualTo(expectedDeadline)
     }
-  }
 
-  @Test
-  fun `getDeadline returns a deadline of within two hours for an emergency assessment created before 1pm`() {
-    val createdAt = OffsetDateTime.parse("2023-01-01T11:00:00Z")
-    val assessment = createAssessment(noticeType = Cas1ApplicationTimelinessCategory.emergency, isEsap = false, createdAt = createdAt)
-    val result = taskDeadlineService.getDeadline(assessment)
-
-    assertThat(result).isEqualTo(OffsetDateTime.parse("2023-01-01T13:00:00Z"))
-  }
-
-  @Test
-  fun `getDeadline returns a deadline of 11am on the next working day for an emergency assessment created after 1pm`() {
-    val createdAt = OffsetDateTime.parse("2023-01-01T14:00:00Z")
-    val assessment = createAssessment(noticeType = Cas1ApplicationTimelinessCategory.emergency, isEsap = false, createdAt = createdAt)
-
-    every { workingDayCountService.nextWorkingDay(any()) } returns LocalDate.parse("2023-01-02")
-
-    val result = taskDeadlineService.getDeadline(assessment)
-
-    assertThat(result).isEqualTo(OffsetDateTime.parse("2023-01-02T11:00:00Z"))
-
-    verify(exactly = 1) {
-      workingDayCountService.nextWorkingDay(assessment.createdAt.toLocalDate())
-    }
-  }
-
-  @Test
-  fun `getDeadline returns a deadline of the placement request's created date plus 5 working days for a standard placement request`() {
-    val createdAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
-    val placementRequest = createPlacementRequest(noticeType = Cas1ApplicationTimelinessCategory.standard, isEsap = false, createdAt)
-    val result = taskDeadlineService.getDeadline(placementRequest)
-
-    assertThat(result.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-06"))
-
-    verify(exactly = 1) {
-      workingDayCountService.addWorkingDays(
-        placementRequest.createdAt.toLocalDate(),
-        TaskDeadlineService.STANDARD_PLACEMENT_REQUEST_TIMEFRAME,
+    @ParameterizedTest
+    @CsvSource(
+      // Sunday 11am. Created date plus 2 hours
+      "2023-01-01T11:00:00Z,2023-01-01T13:00:00Z",
+      // Sunday 12:59am. Created date plus 2 hours
+      "2023-01-01T12:59:59Z,2023-01-01T14:59:59Z",
+      // Sunday 13:00pm. 11am Next working day
+      "2023-01-01T13:00:00Z,2023-01-02T11:00:00Z",
+      // Sunday 3pm. 11am Next working day
+      "2023-01-01T14:00:00Z,2023-01-02T11:00:00Z",
+      // Friday 3pm. 11am Next working day (after the weekend)
+      "2023-01-06T14:00:00Z,2023-01-09T11:00:00Z",
+    )
+    fun `getDeadline for an emergency assessment, 2 hours or 11am next working day if after 1pm`(
+      createdAt: OffsetDateTime,
+      expectedDeadline: OffsetDateTime,
+    ) {
+      val assessment = createAssessment(
+        noticeType = Cas1ApplicationTimelinessCategory.emergency,
+        isEsap = false,
+        createdAt = createdAt,
       )
+      val result = taskDeadlineService.getDeadline(assessment)
+
+      assertThat(result).isEqualTo(expectedDeadline)
     }
   }
 
-  @Test
-  fun `getDeadline returns a deadline of the placement request's created date plus 2 working days for a short notice placement request`() {
-    val createdAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
-    val placementRequest = createPlacementRequest(noticeType = Cas1ApplicationTimelinessCategory.shortNotice, isEsap = false, createdAt = createdAt)
-    val result = taskDeadlineService.getDeadline(placementRequest)
+  @Nested
+  inner class GetPlacementRequestDeadline {
 
-    assertThat(result.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-03"))
-
-    verify(exactly = 1) {
-      workingDayCountService.addWorkingDays(
-        placementRequest.createdAt.toLocalDate(),
-        TaskDeadlineService.SHORT_NOTICE_PLACEMENT_REQUEST_TIMEFRAME,
+    @ParameterizedTest
+    @CsvSource(
+      // Sunday 3pm, 5 days later
+      "2023-01-01T15:00:00Z,2023-01-06T00:00:00Z",
+      // Monday 3pm. 7 days later, given the weekend
+      "2023-01-02T15:00:00Z,2023-01-09T00:00:00Z",
+      // Tuesday 3pm. 7 days later, given the weekend
+      "2023-01-03T15:00:00Z,2023-01-10T00:00:00Z",
+    )
+    fun `getDeadline for a standard placement request returns created date plus 5 working days`(
+      createdAt: OffsetDateTime,
+      expectedDeadline: OffsetDateTime,
+    ) {
+      val placementRequest = createPlacementRequest(
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
+        isEsap = false,
+        createdAt = createdAt,
       )
+
+      val result = taskDeadlineService.getDeadline(placementRequest)
+
+      assertThat(result).isEqualTo(expectedDeadline)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      // Monday 3pm. 2 days later
+      "2023-01-02T15:00:00Z,2023-01-04T00:00:00Z",
+      // Tuesday 3pm. 2 days later
+      "2023-01-03T15:00:00Z,2023-01-05T00:00:00Z",
+      // Friday 3pm. 4 days later given the weekend
+      "2023-01-06T15:00:00Z,2023-01-10T00:00:00Z",
+    )
+    fun `getDeadline for a short notice placement request returns created date plus 2 working days `(
+      createdAt: OffsetDateTime,
+      expectedDeadline: OffsetDateTime,
+    ) {
+      val placementRequest = createPlacementRequest(
+        noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
+        isEsap = false,
+        createdAt = createdAt,
+      )
+
+      val result = taskDeadlineService.getDeadline(placementRequest)
+
+      assertThat(result).isEqualTo(expectedDeadline)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      // Monday 3pm. Same date/time
+      "2023-01-02T15:00:00Z,2023-01-02T15:00:00Z",
+      // Tuesday 3pm. Same date/time
+      "2023-01-03T15:00:00Z,2023-01-03T15:00:00Z",
+      // Friday 3pm. Same date/time
+      "2023-01-06T15:35:00Z,2023-01-06T15:35:00Z",
+      // Saturday 1pm. Same date/time
+      "2023-01-07T13:00:00Z,2023-01-07T13:00:00Z",
+    )
+    fun `getDeadline for an emergency placement request returns created date`(
+      createdAt: OffsetDateTime,
+      expectedDeadline: OffsetDateTime,
+    ) {
+      val placementRequest = createPlacementRequest(
+        noticeType = Cas1ApplicationTimelinessCategory.emergency,
+        isEsap = false,
+        createdAt = createdAt,
+      )
+
+      val result = taskDeadlineService.getDeadline(placementRequest)
+
+      assertThat(result).isEqualTo(expectedDeadline)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      // Monday 3pm. Same date/time
+      "2023-01-02T15:00:00Z,2023-01-02T15:00:00Z",
+      // Tuesday 3pm. Same date/time
+      "2023-01-03T15:00:00Z,2023-01-03T15:00:00Z",
+      // Friday 3pm. Same date/time
+      "2023-01-06T15:35:00Z,2023-01-06T15:35:00Z",
+      // Saturday 1pm. Same date/time
+      "2023-01-07T13:00:00Z,2023-01-07T13:00:00Z",
+    )
+    fun `getDeadline for an ESAP placement request returns created date`(
+      createdAt: OffsetDateTime,
+      expectedDeadline: OffsetDateTime,
+    ) {
+      val placementRequest = createPlacementRequest(
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
+        isEsap = true,
+        createdAt = createdAt,
+      )
+
+      val result = taskDeadlineService.getDeadline(placementRequest)
+
+      assertThat(result).isEqualTo(expectedDeadline)
     }
   }
 
-  @Test
-  fun `getDeadline returns a deadline of the placement request's created date for an emergency placement request`() {
-    val placementRequest = createPlacementRequest(noticeType = Cas1ApplicationTimelinessCategory.emergency, isEsap = false, createdAt = OffsetDateTime.now())
-    val result = taskDeadlineService.getDeadline(placementRequest)
+  @Nested
+  inner class GetPlacementApplicationDeadline {
 
-    assertThat(result).isEqualTo(placementRequest.createdAt)
-  }
-
-  @Test
-  fun `getDeadline returns a deadline of the placement request's created date for an ESAP placement request`() {
-    val placementRequest = createPlacementRequest(noticeType = Cas1ApplicationTimelinessCategory.standard, isEsap = true, createdAt = OffsetDateTime.now())
-
-    val result = taskDeadlineService.getDeadline(placementRequest)
-
-    assertThat(result).isEqualTo(placementRequest.createdAt)
-  }
-
-  @Test
-  fun `getDeadline returns a deadline of the placement application's submitted date plus 10 working days for a placement application`() {
-    val createdAt = OffsetDateTime.parse("2022-01-01T15:00:00Z")
-    val submittedAt = OffsetDateTime.parse("2023-01-01T15:00:00Z")
-    val placementRequest = createPlacementRequest(noticeType = Cas1ApplicationTimelinessCategory.shortNotice, isEsap = true, createdAt = createdAt)
-    val placementApplication = PlacementApplicationEntityFactory()
-      .withApplication(placementRequest.application)
-      .withCreatedByUser(placementRequest.application.createdByUser)
-      .withCreatedAt(createdAt)
-      .withSubmittedAt(submittedAt)
-      .produce()
-
-    val result = taskDeadlineService.getDeadline(placementApplication)
-
-    assertThat(result.toLocalDate()).isEqualTo(LocalDate.parse("2023-01-11"))
-
-    verify(exactly = 1) {
-      workingDayCountService.addWorkingDays(
-        submittedAt.toLocalDate(),
-        TaskDeadlineService.STANDARD_PLACEMENT_APPLICATION_TIMEFRAME,
+    @ParameterizedTest
+    @CsvSource(
+      // Monday 3pm. 14 days later, given two weekends
+      "2023-01-02T15:00:00Z,2023-01-16T00:00:00Z",
+      // Friday 3pm. 14 days later, given two weekends
+      "2023-01-06T15:00:00Z,2023-01-20T00:00:00Z",
+    )
+    fun `getDeadline for a standard placement application returns submitted date plus 10 working days`(
+      submittedAt: OffsetDateTime,
+      expectedDeadline: OffsetDateTime,
+    ) {
+      val placementApplication = createPlacementApplication(
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
+        isEsap = false,
+        submittedAt = submittedAt,
       )
+
+      val result = taskDeadlineService.getDeadline(placementApplication)
+
+      assertThat(result).isEqualTo(expectedDeadline)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      // Monday 3pm. 14 days later, given two weekends
+      "2023-01-02T15:00:00Z,2023-01-16T00:00:00Z",
+      // Friday 3pm. 14 days later, given two weekends
+      "2023-01-06T15:00:00Z,2023-01-20T00:00:00Z",
+    )
+    fun `getDeadline for a short notice placement application returns submitted date plus 10 working days`(
+      submittedAt: OffsetDateTime,
+      expectedDeadline: OffsetDateTime,
+    ) {
+      val placementApplication = createPlacementApplication(
+        noticeType = Cas1ApplicationTimelinessCategory.shortNotice,
+        isEsap = false,
+        submittedAt = submittedAt,
+      )
+
+      val result = taskDeadlineService.getDeadline(placementApplication)
+
+      assertThat(result).isEqualTo(expectedDeadline)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      // Monday 3pm. 14 days later, given two weekends
+      "2023-01-02T15:00:00Z,2023-01-16T00:00:00Z",
+      // Friday 3pm. 14 days later, given two weekends
+      "2023-01-06T15:00:00Z,2023-01-20T00:00:00Z",
+    )
+    fun `getDeadline for an emergency placement application returns submitted date plus 10 working days`(
+      submittedAt: OffsetDateTime,
+      expectedDeadline: OffsetDateTime,
+    ) {
+      val placementApplication = createPlacementApplication(
+        noticeType = Cas1ApplicationTimelinessCategory.standard,
+        isEsap = true,
+        submittedAt = submittedAt,
+      )
+
+      val result = taskDeadlineService.getDeadline(placementApplication)
+
+      assertThat(result).isEqualTo(expectedDeadline)
     }
   }
 
@@ -233,6 +347,21 @@ class TaskDeadlineServiceTest {
     return ApprovedPremisesAssessmentEntityFactory()
       .withApplication(application)
       .withCreatedAt(createdAt)
+      .produce()
+  }
+
+  private fun createPlacementApplication(
+    noticeType: Cas1ApplicationTimelinessCategory,
+    isEsap: Boolean,
+    submittedAt: OffsetDateTime,
+  ): PlacementApplicationEntity {
+    val application = createApplication(noticeType, isEsap)
+
+    return PlacementApplicationEntityFactory()
+      .withApplication(application)
+      .withCreatedByUser(application.createdByUser)
+      .withCreatedAt(submittedAt)
+      .withSubmittedAt(submittedAt)
       .produce()
   }
 }

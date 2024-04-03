@@ -16,7 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Referral
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ReferralsMetricsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ReferralsMetricsProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import java.time.LocalDate
 import java.time.Period
@@ -39,7 +39,7 @@ class ReferralsMetricsReportGeneratorTest {
     }
     .produce()
 
-  private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
+  private val mockWorkingDayService = mockk<WorkingDayService>()
 
   @Test
   fun `It groups referrals by Tier correctly`() {
@@ -55,9 +55,9 @@ class ReferralsMetricsReportGeneratorTest {
       noTierAssessments,
     ).flatten()
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 1
+    every { mockWorkingDayService.getWorkingDaysCount(any(), any()) } returns 1
 
-    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayCountService).createReport(
+    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayService).createReport(
       listOf(TierCategory.ALL, TierCategory.A0, TierCategory.A1, TierCategory.D2, TierCategory.NONE),
       ReferralsMetricsProperties(2023, 1),
     )
@@ -90,9 +90,9 @@ class ReferralsMetricsReportGeneratorTest {
       pipeAssessments,
     ).flatten()
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 1
+    every { mockWorkingDayService.getWorkingDaysCount(any(), any()) } returns 1
 
-    val results = ReferralsMetricsReportGenerator<ApTypeCategory>(assessments, mockWorkingDayCountService).createReport(
+    val results = ReferralsMetricsReportGenerator<ApTypeCategory>(assessments, mockWorkingDayService).createReport(
       listOf(ApTypeCategory.ALL, ApTypeCategory.ESAP, ApTypeCategory.NORMAL, ApTypeCategory.PIPE),
       ReferralsMetricsProperties(2023, 1),
     )
@@ -117,7 +117,7 @@ class ReferralsMetricsReportGeneratorTest {
     )
 
     assertThatThrownBy {
-      ReferralsMetricsReportGenerator<SomeOtherEnum>(assessments, mockWorkingDayCountService).createReport(
+      ReferralsMetricsReportGenerator<SomeOtherEnum>(assessments, mockWorkingDayService).createReport(
         listOf(SomeOtherEnum.Foo, SomeOtherEnum.Bar),
         ReferralsMetricsProperties(2023, 1),
       )
@@ -133,11 +133,11 @@ class ReferralsMetricsReportGeneratorTest {
       createDto(tier = "A0", applicationSubmittedAt = LocalDate.of(2023, 1, 3), assessmentSubmittedAt = LocalDate.of(2023, 1, 15)),
     )
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(any<LocalDate>(), any<LocalDate>()) } answers {
+    every { mockWorkingDayService.getWorkingDaysCount(any<LocalDate>(), any<LocalDate>()) } answers {
       Period.between(firstArg(), secondArg()).days
     }
 
-    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayCountService).createReport(
+    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayService).createReport(
       listOf(TierCategory.A0, TierCategory.A1),
       ReferralsMetricsProperties(2023, 1),
     )
@@ -156,9 +156,9 @@ class ReferralsMetricsReportGeneratorTest {
       rejectedAssessments,
     ).flatten()
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 1
+    every { mockWorkingDayService.getWorkingDaysCount(any(), any()) } returns 1
 
-    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayCountService).createReport(
+    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayService).createReport(
       listOf(TierCategory.A0),
       ReferralsMetricsProperties(2023, 1),
     )
@@ -196,9 +196,9 @@ class ReferralsMetricsReportGeneratorTest {
       assessmentsWithdrawn,
     ).flatten()
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 1
+    every { mockWorkingDayService.getWorkingDaysCount(any(), any()) } returns 1
 
-    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayCountService).createReport(
+    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayService).createReport(
       listOf(TierCategory.A0),
       ReferralsMetricsProperties(2023, 1),
     )
@@ -231,9 +231,9 @@ class ReferralsMetricsReportGeneratorTest {
       assessmentsWithRotlReleaseType,
     ).flatten()
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 1
+    every { mockWorkingDayService.getWorkingDaysCount(any(), any()) } returns 1
 
-    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayCountService).createReport(
+    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayService).createReport(
       listOf(TierCategory.A0),
       ReferralsMetricsProperties(2023, 1),
     )
@@ -254,9 +254,9 @@ class ReferralsMetricsReportGeneratorTest {
       assessmentsWithoutInformationRequests,
     ).flatten()
 
-    every { mockWorkingDayCountService.getWorkingDaysCount(any(), any()) } returns 1
+    every { mockWorkingDayService.getWorkingDaysCount(any(), any()) } returns 1
 
-    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayCountService).createReport(
+    val results = ReferralsMetricsReportGenerator<TierCategory>(assessments, mockWorkingDayService).createReport(
       listOf(TierCategory.A0),
       ReferralsMetricsProperties(2023, 1),
     )

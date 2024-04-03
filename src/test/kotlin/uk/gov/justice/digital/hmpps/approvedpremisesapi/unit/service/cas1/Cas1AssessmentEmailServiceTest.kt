@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactor
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService.Companion.DEFAULT_DEADLINE_COPY
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService.Companion.NEXT_WORKING_DAY_EMERGENCY_DEADLINE_COPY
@@ -36,7 +36,7 @@ class Cas1AssessmentEmailServiceTest {
 
   private val notifyConfig = NotifyConfig()
   private val mockEmailNotificationService = MockEmailNotificationService()
-  private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
+  private val mockWorkingDayService = mockk<WorkingDayService>()
 
   val service = createService(aps530WithdrawalEmailImprovements = false)
   val serviceUsingAps530Improvements = createService(aps530WithdrawalEmailImprovements = true)
@@ -47,7 +47,7 @@ class Cas1AssessmentEmailServiceTest {
     assessmentUrlTemplate = UrlTemplate("http://frontend/assessments/#id"),
     applicationUrlTemplate = UrlTemplate("http://frontend/application/#id"),
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/application/#applicationId?tab=timeline"),
-    workingDayCountService = mockWorkingDayCountService,
+    workingDayService = mockWorkingDayService,
     aps530WithdrawalEmailImprovements = aps530WithdrawalEmailImprovements,
     sendNewWithdrawalNotifications = true,
   )
@@ -102,7 +102,7 @@ class Cas1AssessmentEmailServiceTest {
 
     @Test
     fun `assessmentAllocated sends an email to a user if they have an email address and an emergency assessment with a deadline of next working day`() {
-      every { mockWorkingDayCountService.getCompleteWorkingDaysFromNowUntil(any()) } returns 2
+      every { mockWorkingDayService.getCompleteWorkingDaysFromNowUntil(any()) } returns 2
       val deadline = OffsetDateTime.now().plusDays(2)
 
       service.assessmentAllocated(applicant, assessmentID, CRN, deadline, true)
@@ -124,7 +124,7 @@ class Cas1AssessmentEmailServiceTest {
 
     @Test
     fun `assessmentAllocated sends an email to a user if they have an email address and a standard deadline`() {
-      every { mockWorkingDayCountService.getCompleteWorkingDaysFromNowUntil(any()) } returns 10
+      every { mockWorkingDayService.getCompleteWorkingDaysFromNowUntil(any()) } returns 10
       val deadline = OffsetDateTime.now().plusDays(10)
 
       service.assessmentAllocated(applicant, assessmentID, CRN, deadline, false)

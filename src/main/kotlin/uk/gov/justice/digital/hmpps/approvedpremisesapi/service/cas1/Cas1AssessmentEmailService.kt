@@ -6,7 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotifier
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormattedHourOfDay
@@ -18,7 +18,7 @@ import java.util.UUID
 class Cas1AssessmentEmailService(
   private val emailNotificationService: EmailNotifier,
   private val notifyConfig: NotifyConfig,
-  private val workingDayCountService: WorkingDayCountService,
+  private val workingDayService: WorkingDayService,
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
@@ -113,7 +113,7 @@ class Cas1AssessmentEmailService(
     }
 
     return STANDARD_DEADLINE_COPY.format(
-      workingDayCountService.getCompleteWorkingDaysFromNowUntil(deadline.toLocalDate()).toString(),
+      workingDayService.getCompleteWorkingDaysFromNowUntil(deadline.toLocalDate()).toString(),
     )
   }
 

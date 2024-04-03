@@ -8,7 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUtilisationReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.earliestDateOf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.latestDateOf
@@ -17,7 +17,7 @@ import java.time.LocalDate
 class BedUtilisationReportGenerator(
   private val bookingRepository: BookingRepository,
   private val lostBedsRepository: LostBedsRepository,
-  private val workingDayCountService: WorkingDayCountService,
+  private val workingDayService: WorkingDayService,
   private val cas3EndDateOverride: Int,
 ) : ReportGenerator<BedEntity, BedUtilisationReportRow, BedUtilisationReportProperties>(BedUtilisationReportRow::class) {
   override fun filter(properties: BedUtilisationReportProperties): (BedEntity) -> Boolean = {
@@ -62,11 +62,11 @@ class BedUtilisationReportGenerator(
 
         if (booking.turnaround != null) {
           val turnaroundStartDate = booking.departureDate.plusDays(1)
-          val turnaroundEndDate = workingDayCountService.addWorkingDays(booking.departureDate, booking.turnaround!!.workingDayCount)
+          val turnaroundEndDate = workingDayService.addWorkingDays(booking.departureDate, booking.turnaround!!.workingDayCount)
           val firstDayOfTurnaroundInMonth = latestDateOf(turnaroundStartDate, startOfMonth)
           val lastDayOfTurnaroundInMonth = earliestDateOf(turnaroundEndDate, endOfMonth)
 
-          scheduledTurnaroundDays += workingDayCountService.getWorkingDaysCount(firstDayOfTurnaroundInMonth, lastDayOfTurnaroundInMonth)
+          scheduledTurnaroundDays += workingDayService.getWorkingDaysCount(firstDayOfTurnaroundInMonth, lastDayOfTurnaroundInMonth)
           effectiveTurnaroundDays += firstDayOfTurnaroundInMonth
             .getDaysUntilInclusive(lastDayOfTurnaroundInMonth)
             .count()
