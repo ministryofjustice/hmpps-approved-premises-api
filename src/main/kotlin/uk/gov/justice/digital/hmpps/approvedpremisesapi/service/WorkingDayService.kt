@@ -5,12 +5,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.GovUKBankHolidaysApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilExclusiveEnd
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getDaysUntilInclusive
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNextWorkingDay
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWorkingDay
+import java.time.DayOfWeek
 import java.time.LocalDate
 
 @Service
-class WorkingDayCountService(
+class WorkingDayService(
   private val bankHolidaysProvider: BankHolidaysProvider,
   private val timeService: TimeService,
 ) {
@@ -27,6 +26,7 @@ class WorkingDayCountService(
     return timeService.nowAsLocalDate().getDaysUntilExclusiveEnd(to).filter { it.isWorkingDay(bankHolidays) }.size
   }
 
+  @SuppressWarnings("UnusedPrivateProperty")
   fun addWorkingDays(date: LocalDate, daysToAdd: Int): LocalDate {
     var result = date
     for (i in 0 until daysToAdd) {
@@ -54,4 +54,18 @@ class GovUkBankHolidaysProvider(
       is ClientResult.Success -> govUKBankHolidaysResponse.body.englandAndWales.events.map { it.date }
       is ClientResult.Failure -> govUKBankHolidaysResponse.throwException()
     }
+}
+
+fun LocalDate.isWorkingDay(bankHolidays: List<LocalDate>) =
+  this.dayOfWeek != DayOfWeek.SATURDAY &&
+    this.dayOfWeek != DayOfWeek.SUNDAY &&
+    !bankHolidays.contains(this)
+
+fun LocalDate.getNextWorkingDay(bankHolidays: List<LocalDate>): LocalDate {
+  var result = this.plusDays(1)
+  while (!result.isWorkingDay(bankHolidays)) {
+    result = result.plusDays(1)
+  }
+
+  return result
 }

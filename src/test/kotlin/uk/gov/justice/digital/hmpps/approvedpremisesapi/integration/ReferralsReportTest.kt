@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Referral
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ReferralsMetricsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ReferralsMetricsProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -32,7 +32,7 @@ import java.time.ZoneOffset
 
 class ReferralsReportTest : IntegrationTestBase() {
   @Autowired
-  lateinit var realWorkingDayCountService: WorkingDayCountService
+  lateinit var realWorkingDayService: WorkingDayService
 
   @Test
   fun `Get referrals report returns 403 Forbidden if user does not have access`() {
@@ -133,10 +133,10 @@ class ReferralsReportTest : IntegrationTestBase() {
       }
 
       val expectedDataFrame = if (reportType == "referrals-by-tier") {
-        ReferralsMetricsReportGenerator<TierCategory>(expectedDTOs, realWorkingDayCountService)
+        ReferralsMetricsReportGenerator<TierCategory>(expectedDTOs, realWorkingDayService)
           .createReport(TierCategory.entries, ReferralsMetricsProperties(year, month))
       } else {
-        ReferralsMetricsReportGenerator<ApTypeCategory>(expectedDTOs, realWorkingDayCountService)
+        ReferralsMetricsReportGenerator<ApTypeCategory>(expectedDTOs, realWorkingDayService)
           .createReport(ApTypeCategory.entries, ReferralsMetricsProperties(year, month))
       }
 

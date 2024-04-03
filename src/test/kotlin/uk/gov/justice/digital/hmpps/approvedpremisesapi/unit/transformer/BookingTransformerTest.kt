@@ -56,7 +56,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TurnaroundEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMemberName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ArrivalTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BedTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
@@ -85,7 +85,7 @@ class BookingTransformerTest {
   private val mockBedTransformer = mockk<BedTransformer>()
   private val mockTurnaroundTransformer = mockk<TurnaroundTransformer>()
   private val enumConverterFactory = EnumConverterFactory()
-  private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
+  private val mockWorkingDayService = mockk<WorkingDayService>()
 
   private val bookingTransformer = BookingTransformer(
     mockPersonTransformer,
@@ -99,7 +99,7 @@ class BookingTransformerTest {
     mockBedTransformer,
     mockTurnaroundTransformer,
     enumConverterFactory,
-    mockWorkingDayCountService,
+    mockWorkingDayService,
   )
 
   private val premisesEntity = TemporaryAccommodationPremisesEntity(
@@ -1230,8 +1230,8 @@ class BookingTransformerTest {
       bookingId = bookingId,
     )
 
-    every { mockWorkingDayCountService.addWorkingDays(departedAt.toLocalDate(), 1) } returns departedAt.toLocalDate().plusDays(1)
-    every { mockWorkingDayCountService.addWorkingDays(departedAt.toLocalDate(), 2) } returns expectedEffectiveEndDate
+    every { mockWorkingDayService.addWorkingDays(departedAt.toLocalDate(), 1) } returns departedAt.toLocalDate().plusDays(1)
+    every { mockWorkingDayService.addWorkingDays(departedAt.toLocalDate(), 2) } returns expectedEffectiveEndDate
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       departedBooking,
@@ -1449,8 +1449,8 @@ class BookingTransformerTest {
       bookingId = bookingId,
     )
 
-    every { mockWorkingDayCountService.addWorkingDays(departedAt.toLocalDate(), 1) } returns departedAt.toLocalDate().plusDays(1)
-    every { mockWorkingDayCountService.addWorkingDays(departedAt.toLocalDate(), 2) } returns expectedEffectiveEndDate
+    every { mockWorkingDayService.addWorkingDays(departedAt.toLocalDate(), 1) } returns departedAt.toLocalDate().plusDays(1)
+    every { mockWorkingDayService.addWorkingDays(departedAt.toLocalDate(), 2) } returns expectedEffectiveEndDate
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       departedBooking,
@@ -1949,8 +1949,8 @@ class BookingTransformerTest {
       createdAt = Instant.parse("2022-07-03T09:08:07.654Z"),
     )
 
-    every { mockWorkingDayCountService.addWorkingDays(LocalDate.parse("2022-08-30"), 1) } returns LocalDate.parse("2022-08-31")
-    every { mockWorkingDayCountService.addWorkingDays(LocalDate.parse("2022-08-30"), 4) } returns LocalDate.parse("2022-09-05")
+    every { mockWorkingDayService.addWorkingDays(LocalDate.parse("2022-08-30"), 1) } returns LocalDate.parse("2022-08-31")
+    every { mockWorkingDayService.addWorkingDays(LocalDate.parse("2022-08-30"), 4) } returns LocalDate.parse("2022-09-05")
 
     val transformedBooking = bookingTransformer.transformJpaToApi(
       awaitingArrivalBooking,

@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.generator.Plac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.PlacementMetricsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.PlacementMetricsReportProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.OffsetDateTime
@@ -33,7 +33,7 @@ class PlacementMetricsTest : IntegrationTestBase() {
   lateinit var applicationTimelinessEntityRepository: ApplicationTimelinessEntityRepository
 
   @Autowired
-  lateinit var realWorkingDayCountService: WorkingDayCountService
+  lateinit var realWorkingDayService: WorkingDayService
 
   @Test
   fun `It returns 403 Forbidden if a user does not have the correct role`() {
@@ -113,7 +113,7 @@ class PlacementMetricsTest : IntegrationTestBase() {
 
       GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
 
-      val expectedDataFrame = PlacementMetricsReportGenerator(timelinessEntities, realWorkingDayCountService)
+      val expectedDataFrame = PlacementMetricsReportGenerator(timelinessEntities, realWorkingDayService)
         .createReport(TierCategory.entries, PlacementMetricsReportProperties(month, year))
 
       webTestClient.get()

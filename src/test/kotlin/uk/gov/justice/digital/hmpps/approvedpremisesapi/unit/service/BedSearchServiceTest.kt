@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BedSearchService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CharacteristicService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import java.time.LocalDate
 import java.util.UUID
 
@@ -36,14 +36,14 @@ class BedSearchServiceTest {
   private val mockPostcodeDistrictRepository = mockk<PostcodeDistrictRepository>()
   private val mockCharacteristicService = mockk<CharacteristicService>()
   private val mockBookingRepository = mockk<BookingRepository>()
-  private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
+  private val mockWorkingDayService = mockk<WorkingDayService>()
 
   private val bedSearchService = BedSearchService(
     mockBedSearchRepository,
     mockPostcodeDistrictRepository,
     mockCharacteristicService,
     mockBookingRepository,
-    mockWorkingDayCountService,
+    mockWorkingDayService,
   )
 
   @Test
@@ -556,7 +556,7 @@ class BedSearchServiceTest {
     } returns repositorySearchResults
 
     every { mockBookingRepository.findClosestBookingBeforeDateForBeds(any(), any()) } returns listOf()
-    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+    every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
     every { mockBookingRepository.findAllNotCancelledByPremisesIdsAndOverlappingDate(any(), any(), any()) } returns listOf()
 
     val authorisableResult = bedSearchService.findTemporaryAccommodationBeds(
@@ -726,7 +726,7 @@ class BedSearchServiceTest {
       unexpectedResultBooking,
     )
 
-    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers {
+    every { mockWorkingDayService.addWorkingDays(any(), any()) } answers {
       (it.invocation.args[0] as LocalDate).plusDays((it.invocation.args[1] as Int).toLong())
     }
 

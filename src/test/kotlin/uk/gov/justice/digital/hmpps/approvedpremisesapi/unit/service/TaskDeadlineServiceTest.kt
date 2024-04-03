@@ -22,14 +22,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TimeService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import java.time.OffsetDateTime
 
 @SuppressWarnings("MagicNumber")
 class TaskDeadlineServiceTest {
   private val taskDeadlineService = TaskDeadlineService(
     // this treats all weekends as non-working days with no bank holidays
-    WorkingDayCountService(
+    WorkingDayService(
       bankHolidaysProvider = { emptyList() },
       timeService = TimeService(),
     ),
@@ -39,7 +39,7 @@ class TaskDeadlineServiceTest {
   inner class GetAssessmentDeadline {
 
     @Test
-    fun `getDeadline for a non-CAS1 assessment returns null `() {
+    fun `getDeadline for a non-CAS1 assessment returns null`() {
       val user = UserEntityFactory()
         .withDefaultProbationRegion()
         .produce()

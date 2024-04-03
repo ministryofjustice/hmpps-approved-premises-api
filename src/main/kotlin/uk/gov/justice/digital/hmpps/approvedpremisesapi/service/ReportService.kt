@@ -55,7 +55,7 @@ class ReportService(
   private val bedRepository: BedRepository,
   private val lostBedsRepository: LostBedsRepository,
   private val bookingTransformer: BookingTransformer,
-  private val workingDayCountService: WorkingDayCountService,
+  private val workingDayService: WorkingDayService,
   private val applicationEntityReportRowRepository: ApplicationEntityReportRowRepository,
   private val offenderService: OffenderService,
   private val userService: UserService,
@@ -101,7 +101,7 @@ class ReportService(
   }
 
   fun createBedUsageReport(properties: BedUsageReportProperties, outputStream: OutputStream) {
-    BedUsageReportGenerator(bookingTransformer, bookingRepository, lostBedsRepository, workingDayCountService, cas3EndDateOverride)
+    BedUsageReportGenerator(bookingTransformer, bookingRepository, lostBedsRepository, workingDayService, cas3EndDateOverride)
       .createReport(bedRepository.findAll(), properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
@@ -109,7 +109,7 @@ class ReportService(
   }
 
   fun createBedUtilisationReport(properties: BedUtilisationReportProperties, outputStream: OutputStream) {
-    BedUtilisationReportGenerator(bookingRepository, lostBedsRepository, workingDayCountService, cas3EndDateOverride)
+    BedUtilisationReportGenerator(bookingRepository, lostBedsRepository, workingDayService, cas3EndDateOverride)
       .createReport(bedRepository.findAll(), properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
@@ -176,7 +176,7 @@ class ReportService(
       )
     }
 
-    ReferralsMetricsReportGenerator<T>(referrals, workingDayCountService)
+    ReferralsMetricsReportGenerator<T>(referrals, workingDayService)
       .createReport(categories, properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)
@@ -187,7 +187,7 @@ class ReportService(
     val timelinessEntities = timelinessEntityRepository.findAllForMonthAndYear(properties.month, properties.year)
     val tiers = TierCategory.entries
 
-    PlacementMetricsReportGenerator(timelinessEntities, workingDayCountService)
+    PlacementMetricsReportGenerator(timelinessEntities, workingDayService)
       .createReport(tiers, properties)
       .writeExcel(outputStream) {
         WorkbookFactory.create(true)

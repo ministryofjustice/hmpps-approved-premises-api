@@ -130,7 +130,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
@@ -149,7 +149,7 @@ class BookingServiceTest {
   private val mockCas3DomainEventService = mockk<Cas3DomainEventService>()
   private val mockCruService = mockk<CruService>()
   private val mockApplicationService = mockk<ApplicationService>()
-  private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
+  private val mockWorkingDayService = mockk<WorkingDayService>()
 
   private val mockPlacementRequestService = mockk<PlacementRequestService>()
   private val mockCommunityApiClient = mockk<CommunityApiClient>()
@@ -187,7 +187,7 @@ class BookingServiceTest {
       cas3DomainEventService = mockCas3DomainEventService,
       cruService = mockCruService,
       applicationService = mockApplicationService,
-      workingDayCountService = mockWorkingDayCountService,
+      workingDayService = mockWorkingDayService,
       placementRequestService = mockPlacementRequestService,
       communityApiClient = mockCommunityApiClient,
       bookingRepository = mockBookingRepository,
@@ -3491,7 +3491,7 @@ class BookingServiceTest {
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockExtensionRepository.save(any()) } answers { it.invocation.args[0] as ExtensionEntity }
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
       every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
     }
@@ -3768,7 +3768,7 @@ class BookingServiceTest {
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every { mockExtensionRepository.save(any()) } answers { it.invocation.args[0] as ExtensionEntity }
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
       every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
 
@@ -4711,7 +4711,7 @@ class BookingServiceTest {
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
@@ -4762,7 +4762,7 @@ class BookingServiceTest {
       } returns listOf()
       every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       val user = UserEntityFactory()
         .withUnitTestControlProbationRegion()
@@ -4832,7 +4832,7 @@ class BookingServiceTest {
       every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
       every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       val authorisableResult = bookingService.createTemporaryAccommodationBooking(
         user,
@@ -4903,7 +4903,7 @@ class BookingServiceTest {
 
       every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
@@ -4988,7 +4988,7 @@ class BookingServiceTest {
 
       every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
@@ -5078,7 +5078,7 @@ class BookingServiceTest {
 
       every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
@@ -5171,7 +5171,7 @@ class BookingServiceTest {
 
       every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
@@ -5262,7 +5262,7 @@ class BookingServiceTest {
 
       every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
@@ -5360,7 +5360,7 @@ class BookingServiceTest {
 
       every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
@@ -5455,7 +5455,7 @@ class BookingServiceTest {
 
       every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
@@ -5541,7 +5541,7 @@ class BookingServiceTest {
       every { mockAssessmentRepository.findByIdOrNull(assessmentId) } returns null
       every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       val authorisableResult = bookingService.createTemporaryAccommodationBooking(
         user,
@@ -5612,7 +5612,7 @@ class BookingServiceTest {
 
       every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
@@ -5707,7 +5707,7 @@ class BookingServiceTest {
 
       every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       every { mockCas3DomainEventService.saveBookingProvisionallyMadeEvent(any(), user) } just Runs
 
@@ -6166,7 +6166,7 @@ class BookingServiceTest {
       )
       every { mockLostBedsRepository.findByBedIdAndOverlappingDate(bed.id, arrivalDate, departureDate, null) } returns listOf()
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       val result = bookingService.createApprovedPremisesBookingFromPlacementRequest(
         user = user,
@@ -6621,7 +6621,7 @@ class BookingServiceTest {
       .withBed(bed)
       .produce()
 
-    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+    every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
     every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
     every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
     every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
@@ -6670,7 +6670,7 @@ class BookingServiceTest {
       .withBed(bed)
       .produce()
 
-    every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+    every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
     every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(any(), any(), any()) } returns listOf()
     every { mockLostBedsRepository.findByBedIdAndOverlappingDate(any(), any(), any(), any()) } returns listOf()
     every { mockTurnaroundRepository.save(any()) } answers { it.invocation.args[0] as TurnaroundEntity }
@@ -7036,7 +7036,7 @@ class BookingServiceTest {
         .withDepartureDate(LocalDate.parse("2023-07-12"))
         .produce()
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-14"), booking.id) } returns listOf(conflictingBooking)
 
       val result = bookingService.createDateChange(
@@ -7067,7 +7067,7 @@ class BookingServiceTest {
         .withYieldedReason { LostBedReasonEntityFactory().produce() }
         .produce()
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-14"), booking.id) } returns emptyList()
       every { mockLostBedsRepository.findByBedIdAndOverlappingDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-12"), LocalDate.parse("2023-07-14"), null) } returns listOf(conflictingLostBed)
 
@@ -7091,7 +7091,7 @@ class BookingServiceTest {
         .withServiceName(ServiceName.temporaryAccommodation)
         .produce()
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockBookingRepository.findByBedIdAndArrivingBeforeDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-14"), booking.id) } returns emptyList()
       every { mockLostBedsRepository.findByBedIdAndOverlappingDate(temporaryAccommodationBed.id, LocalDate.parse("2023-07-16"), LocalDate.parse("2023-07-14"), null) } returns emptyList()
 
@@ -7122,7 +7122,7 @@ class BookingServiceTest {
             .produce()
         }
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
 
       val result = bookingService.createDateChange(
         booking = booking,
@@ -7151,7 +7151,7 @@ class BookingServiceTest {
             .produce()
         }
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
@@ -7199,7 +7199,7 @@ class BookingServiceTest {
         .withDepartureDate(LocalDate.parse("2023-07-16"))
         .produce()
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
@@ -7267,7 +7267,7 @@ class BookingServiceTest {
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
       every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
@@ -7367,7 +7367,7 @@ class BookingServiceTest {
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
       every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 
@@ -7444,7 +7444,7 @@ class BookingServiceTest {
       every { mockOffenderService.getOffenderByCrn(application.crn, user.deliusUsername, true) } returns AuthorisableActionResult.Success(offenderDetails)
       every { mockCommunityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffUserDetails)
 
-      every { mockWorkingDayCountService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
+      every { mockWorkingDayService.addWorkingDays(any(), any()) } answers { it.invocation.args[0] as LocalDate }
       every { mockDateChangeRepository.save(any()) } answers { it.invocation.args[0] as DateChangeEntity }
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
 

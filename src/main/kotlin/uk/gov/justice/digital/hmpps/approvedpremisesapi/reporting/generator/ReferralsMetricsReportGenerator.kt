@@ -6,11 +6,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Referral
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.ReferralsMetricsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TierCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.ReferralsMetricsProperties
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 
 class ReferralsMetricsReportGenerator<T : Any>(
   private val referralsData: List<ReferralsDataDto>,
-  private val workingDayCountService: WorkingDayCountService,
+  private val workingDayService: WorkingDayService,
 ) : ReportGenerator<T, ReferralsMetricsReportRow, ReferralsMetricsProperties>(ReferralsMetricsReportRow::class) {
   override fun filter(properties: ReferralsMetricsProperties): (T) -> Boolean = {
     true
@@ -83,7 +83,7 @@ class ReferralsMetricsReportGenerator<T : Any>(
       val startDate = it.applicationSubmittedAt
       val endDate = it.assessmentSubmittedAt
 
-      (startDate !== null && endDate !== null && workingDayCountService.getWorkingDaysCount(startDate, endDate) <= 10)
+      (startDate !== null && endDate !== null && workingDayService.getWorkingDaysCount(startDate, endDate) <= 10)
     }.size
 
     val percentage = (totalCompletedInTime.toDouble() / totalReferrals) * 100

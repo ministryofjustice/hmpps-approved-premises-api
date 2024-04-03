@@ -14,7 +14,7 @@ import kotlin.time.toJavaDuration
 
 @Service
 class TaskDeadlineService(
-  private val workingDayCountService: WorkingDayCountService,
+  private val workingDayService: WorkingDayService,
 ) {
   fun getDeadline(assessment: AssessmentEntity): OffsetDateTime? {
     val application = assessment.application
@@ -40,13 +40,13 @@ class TaskDeadlineService(
     return addWorkingDays(placementApplication.submittedAt!!, PLACEMENT_APPLICATION_TIMEFRAME)
   }
 
-  fun addWorkingDays(date: OffsetDateTime, workingDays: Int): OffsetDateTime = workingDayCountService.addWorkingDays(date.toLocalDate(), workingDays).toLocalDateTime()
+  fun addWorkingDays(date: OffsetDateTime, workingDays: Int): OffsetDateTime = workingDayService.addWorkingDays(date.toLocalDate(), workingDays).toLocalDateTime()
 
   private fun emergencyAssessmentDueDateTime(assessment: AssessmentEntity): OffsetDateTime {
     return if (assessment.createdAt.hour < 13) {
       assessment.createdAt.plus(2.hours.toJavaDuration()).toInstant().atOffset(ZoneOffset.UTC)
     } else {
-      val nextWorkingDay = workingDayCountService.nextWorkingDay(assessment.createdAt.toLocalDate())
+      val nextWorkingDay = workingDayService.nextWorkingDay(assessment.createdAt.toLocalDate())
       nextWorkingDay.atTime(11, 0).atOffset(ZoneOffset.UTC)
     }
   }

@@ -16,19 +16,19 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.Co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.bankholidaysapi.UKBankHolidays
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GovUkBankHolidaysProvider
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TimeService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getNextWorkingDay
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.getNextWorkingDay
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 import java.util.stream.Stream
 
-class WorkingDayCountServiceTest {
+class WorkingDayServiceTest {
 
   private val govUkBankHolidaysProvider = mockk<GovUKBankHolidaysApiClient>()
   private val mockTimeService = mockk<TimeService>()
 
-  private val workingDayCountService = WorkingDayCountService(
+  private val workingDayService = WorkingDayService(
     GovUkBankHolidaysProvider(govUkBankHolidaysProvider),
     mockTimeService,
   )
@@ -60,7 +60,7 @@ class WorkingDayCountServiceTest {
       govUkBankHolidaysProvider.getUKBankHolidays()
     } returns emptyBankHolidays
 
-    assertThat(workingDayCountService.getWorkingDaysCount(from, from)).isEqualTo(0)
+    assertThat(workingDayService.getWorkingDaysCount(from, from)).isEqualTo(0)
   }
 
   @Test
@@ -96,7 +96,7 @@ class WorkingDayCountServiceTest {
       govUkBankHolidaysProvider.getUKBankHolidays()
     } returns bankHolidays
 
-    assertThat(workingDayCountService.getWorkingDaysCount(weekDayBankHoliday, weekDayBankHoliday)).isEqualTo(0)
+    assertThat(workingDayService.getWorkingDaysCount(weekDayBankHoliday, weekDayBankHoliday)).isEqualTo(0)
   }
 
   @Test
@@ -107,7 +107,7 @@ class WorkingDayCountServiceTest {
 
     val weekDay = LocalDate.of(2023, 4, 27).with(TemporalAdjusters.next(DayOfWeek.TUESDAY))
 
-    assertThat(workingDayCountService.getWorkingDaysCount(weekDay, weekDay)).isEqualTo(1)
+    assertThat(workingDayService.getWorkingDaysCount(weekDay, weekDay)).isEqualTo(1)
   }
 
   private companion object {
@@ -163,7 +163,7 @@ class WorkingDayCountServiceTest {
       govUkBankHolidaysProvider.getUKBankHolidays()
     } returns bankHolidays
 
-    assertThat(workingDayCountService.getWorkingDaysCount(aMonday, aSunday)).isEqualTo(3)
+    assertThat(workingDayService.getWorkingDaysCount(aMonday, aSunday)).isEqualTo(3)
   }
 
   @Test
@@ -174,7 +174,7 @@ class WorkingDayCountServiceTest {
 
     val saturday = LocalDate.of(2023, 5, 2).with(TemporalAdjusters.next(DayOfWeek.SATURDAY))
 
-    assertThat(workingDayCountService.addWorkingDays(saturday, 0)).isEqualTo(saturday)
+    assertThat(workingDayService.addWorkingDays(saturday, 0)).isEqualTo(saturday)
   }
 
   @Test
@@ -186,7 +186,7 @@ class WorkingDayCountServiceTest {
     val saturday = LocalDate.of(2023, 5, 2).with(TemporalAdjusters.next(DayOfWeek.SATURDAY))
     val monday = LocalDate.of(2023, 5, 2).with(TemporalAdjusters.next(DayOfWeek.MONDAY))
 
-    assertThat(workingDayCountService.addWorkingDays(saturday, 1)).isEqualTo(monday)
+    assertThat(workingDayService.addWorkingDays(saturday, 1)).isEqualTo(monday)
   }
 
   @Test
@@ -229,7 +229,7 @@ class WorkingDayCountServiceTest {
     val thursday = LocalDate.of(2023, 4, 27)
     val expected = LocalDate.of(2023, 5, 15)
 
-    assertThat(workingDayCountService.addWorkingDays(thursday, 10)).isEqualTo(expected)
+    assertThat(workingDayService.addWorkingDays(thursday, 10)).isEqualTo(expected)
   }
 
   @Test
@@ -241,9 +241,9 @@ class WorkingDayCountServiceTest {
     val date = LocalDate.now()
 
     assertThat(
-      workingDayCountService.nextWorkingDay(date),
+      workingDayService.nextWorkingDay(date),
     ).isEqualTo(
-      date.getNextWorkingDay(workingDayCountService.bankHolidays),
+      date.getNextWorkingDay(workingDayService.bankHolidays),
     )
   }
 
@@ -261,7 +261,7 @@ class WorkingDayCountServiceTest {
 
       every { mockTimeService.nowAsLocalDate() } returns aMonday
 
-      assertThat(workingDayCountService.getCompleteWorkingDaysFromNowUntil(aFriday)).isEqualTo(4)
+      assertThat(workingDayService.getCompleteWorkingDaysFromNowUntil(aFriday)).isEqualTo(4)
     }
 
     @Test
@@ -275,7 +275,7 @@ class WorkingDayCountServiceTest {
 
       every { mockTimeService.nowAsLocalDate() } returns aMonday
 
-      assertThat(workingDayCountService.getCompleteWorkingDaysFromNowUntil(nextMonday)).isEqualTo(5)
+      assertThat(workingDayService.getCompleteWorkingDaysFromNowUntil(nextMonday)).isEqualTo(5)
     }
 
     @Test
@@ -316,7 +316,7 @@ class WorkingDayCountServiceTest {
 
       every { mockTimeService.nowAsLocalDate() } returns aThursday
 
-      assertThat(workingDayCountService.getCompleteWorkingDaysFromNowUntil(nextTuesday)).isEqualTo(2)
+      assertThat(workingDayService.getCompleteWorkingDaysFromNowUntil(nextTuesday)).isEqualTo(2)
     }
 
     @Test
@@ -364,7 +364,7 @@ class WorkingDayCountServiceTest {
 
       every { mockTimeService.nowAsLocalDate() } returns aThursday
 
-      assertThat(workingDayCountService.getCompleteWorkingDaysFromNowUntil(nextTuesday)).isEqualTo(1)
+      assertThat(workingDayService.getCompleteWorkingDaysFromNowUntil(nextTuesday)).isEqualTo(1)
     }
   }
 }

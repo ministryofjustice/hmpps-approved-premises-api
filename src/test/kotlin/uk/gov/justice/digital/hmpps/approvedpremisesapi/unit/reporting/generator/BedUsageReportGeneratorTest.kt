@@ -27,7 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BedUsageType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayCountService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import java.time.LocalDate
 
@@ -35,13 +35,13 @@ class BedUsageReportGeneratorTest {
   private val mockBookingTransformer = mockk<BookingTransformer>()
   private val mockBookingRepository = mockk<BookingRepository>()
   private val mockLostBedsRepository = mockk<LostBedsRepository>()
-  private val mockWorkingDayCountService = mockk<WorkingDayCountService>()
+  private val mockWorkingDayService = mockk<WorkingDayService>()
 
   private val bedUsageReportGenerator = BedUsageReportGenerator(
     mockBookingTransformer,
     mockBookingRepository,
     mockLostBedsRepository,
-    mockWorkingDayCountService,
+    mockWorkingDayService,
     0,
   )
 
@@ -177,7 +177,7 @@ class BedUsageReportGeneratorTest {
       mockBookingTransformer,
       mockBookingRepository,
       mockLostBedsRepository,
-      mockWorkingDayCountService,
+      mockWorkingDayService,
       3,
     )
 
@@ -246,7 +246,7 @@ class BedUsageReportGeneratorTest {
       mockBookingTransformer,
       mockBookingRepository,
       mockLostBedsRepository,
-      mockWorkingDayCountService,
+      mockWorkingDayService,
       3,
     )
 
@@ -523,7 +523,7 @@ class BedUsageReportGeneratorTest {
 
     every { mockBookingTransformer.determineStatus(temporaryAccommodationBooking) } returns BookingStatus.closed
 
-    every { mockWorkingDayCountService.addWorkingDays(LocalDate.parse("2023-04-07"), 2) } returns LocalDate.parse("2023-04-09")
+    every { mockWorkingDayService.addWorkingDays(LocalDate.parse("2023-04-07"), 2) } returns LocalDate.parse("2023-04-09")
 
     val result = bedUsageReportGenerator.createReport(
       listOf(temporaryAccommodationBed),
