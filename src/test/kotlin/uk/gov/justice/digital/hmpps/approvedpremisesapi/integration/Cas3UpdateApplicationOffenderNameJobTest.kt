@@ -9,12 +9,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NameFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addListCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.MigrationJobService
 
-class Cas3UpdateApplicationOffenderNameJobTest : IntegrationTestBase() {
-
-  @Autowired
-  lateinit var migrationJobService: MigrationJobService
+class Cas3UpdateApplicationOffenderNameJobTest : MigrationJobTestBase() {
 
   @Autowired
   lateinit var applicationRepository: ApplicationRepository
@@ -122,6 +118,53 @@ class Cas3UpdateApplicationOffenderNameJobTest : IntegrationTestBase() {
         val offenderName = "${offendersCrnAndName[it.crn]?.forename} ${offendersCrnAndName[it.crn]?.surname}"
         Assertions.assertThat(application.name).isEqualTo(offenderName)
       }
+    }
+  }
+
+  @Test
+  fun `when offender is not found in Community Api throws an exception`() {
+    `Given an Offender`(
+      offenderDetailsConfigBlock = {
+        withNomsNumber(null)
+      },
+    ) { offenderDetails, _ ->
+
+      val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withPermissiveSchema()
+      }
+
+      val probationRegion = probationRegionEntityFactory.produceAndPersist {
+        withApArea(apAreaEntityFactory.produceAndPersist())
+      }
+
+      val user = userEntityFactory.produceAndPersist {
+        withProbationRegion(probationRegion)
+      }
+
+      val temporaryAccommodationApplication = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withProbationRegion(probationRegion)
+        withCreatedByUser(user)
+      }
+
+      ApDeliusContext_addListCaseSummaryToBulkResponse(listOf())
+
+      mockOffenderUserAccessCommunityApiCall("", temporaryAccommodationApplication.crn, true, true)
+
+      migrationJobService.runMigrationJob(MigrationJobType.cas3ApplicationOffenderName, 10)
+
+      Assertions.assertThat(logEntries)
+        .withFailMessage("-> logEntries actually contains: $logEntries")
+        .anyMatch {
+          it.level == "error" &&
+            it.message == "Unable to update offender name with crn ${temporaryAccommodationApplication.crn} for the application ${temporaryAccommodationApplication.id}" &&
+            it.throwable != null &&
+            it.throwable.message == "Offender not found"
+        }
+
+      val application =
+        applicationRepository.findTemporaryAccommodationApplicationById(temporaryAccommodationApplication.id)!!
+      Assertions.assertThat(application.name).isNull()
     }
   }
 }

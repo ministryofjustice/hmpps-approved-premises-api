@@ -122,6 +122,7 @@ class MigrationJobService(
           applicationContext.getBean(OffenderService::class.java),
           applicationContext.getBean(EntityManager::class.java),
           pageSize,
+          applicationContext.getBean(MigrationLogger::class.java),
         )
       }
 
