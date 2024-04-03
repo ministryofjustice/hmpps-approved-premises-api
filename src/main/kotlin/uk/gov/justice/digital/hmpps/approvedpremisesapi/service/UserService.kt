@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import org.apache.commons.collections4.CollectionUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Sort
@@ -32,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserMappingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
@@ -53,6 +55,7 @@ class UserService(
   private val userQualificationAssignmentRepository: UserQualificationAssignmentRepository,
   private val probationRegionRepository: ProbationRegionRepository,
   private val probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingRepository,
+  private val cas1UserMappingService: Cas1UserMappingService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -63,10 +66,11 @@ class UserService(
   fun getUserForRequest(): UserEntity {
     val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val username = deliusPrincipal.name
+    val serviceForRequest = requestContextService.getServiceForRequest()
 
-    val user = getExistingUserOrCreate(username)
+    val user = getExistingUserOrCreate(username, serviceForRequest)
 
-    if (requestContextService.getServiceForRequest() == ServiceName.temporaryAccommodation) {
+    if (serviceForRequest == ServiceName.temporaryAccommodation) {
       if (!user.hasAnyRole(*UserRole.getAllRolesForService(ServiceName.temporaryAccommodation).toTypedArray())) {
         user.roles += userRoleAssignmentRepository.save(
           UserRoleAssignmentEntity(
@@ -186,11 +190,10 @@ class UserService(
     return AuthorisableActionResult.Success(user)
   }
 
-  fun updateUserFromCommunityApiById(id: UUID): AuthorisableActionResult<UserEntity> {
+  fun updateUserFromCommunityApiById(id: UUID, forService: ServiceName): AuthorisableActionResult<UserEntity> {
     var user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
-    val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)
 
-    val deliusUser = when (staffUserDetailsResponse) {
+    val deliusUser = when (val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
       is ClientResult.Success -> staffUserDetailsResponse.body
       is ClientResult.Failure -> staffUserDetailsResponse.throwException()
     }
@@ -200,6 +203,7 @@ class UserService(
       user.email = deliusUser.email.toString()
       user.telephoneNumber = deliusUser.telephoneNumber
       user.deliusStaffCode = deliusUser.staffCode
+      user.teamCodes = deliusUser.getTeamCodes()
 
       deliusUser.probationArea.let { probationArea ->
         findProbationRegionFromArea(probationArea)?.let { probationRegion ->
@@ -207,7 +211,9 @@ class UserService(
         }
       }
 
-      user.updatedAt = OffsetDateTime.now()
+      if (forService == ServiceName.approvedPremises) {
+        user.apArea = cas1UserMappingService.determineApArea(user.probationRegion, deliusUser)
+      }
 
       user = userRepository.save(user)
     }
@@ -237,7 +243,7 @@ class UserService(
     }
   }
 
-  fun getExistingUserOrCreate(username: String, throwProblemOn404: Boolean = false): UserEntity {
+  fun getExistingUserOrCreate(username: String, forService: ServiceName?, throwProblemOn404: Boolean = false): UserEntity {
     val normalisedUsername = username.uppercase()
 
     val existingUser = userRepository.findByDeliusUsername(normalisedUsername)
@@ -269,6 +275,12 @@ class UserService(
       }
     }
 
+    val apArea = if (forService == ServiceName.approvedPremises) {
+      cas1UserMappingService.determineApArea(staffProbationRegion, staffUserDetails)
+    } else {
+      null
+    }
+
     return userRepository.save(
       UserEntity(
         id = UUID.randomUUID(),
@@ -283,8 +295,8 @@ class UserService(
         qualifications = mutableListOf(),
         probationRegion = staffProbationRegion,
         isActive = true,
-        apArea = null,
-        teamCodes = null,
+        apArea = apArea,
+        teamCodes = staffUserDetails.getTeamCodes(),
         createdAt = OffsetDateTime.now(),
         updatedAt = null,
       ),
@@ -342,7 +354,8 @@ class UserService(
       (deliusUser.telephoneNumber !== user.telephoneNumber) ||
       (deliusUser.staff.fullName != user.name) ||
       (deliusUser.staffCode != user.deliusStaffCode) ||
-      (deliusUser.probationArea.code != user.probationRegion.deliusCode)
+      (deliusUser.probationArea.code != user.probationRegion.deliusCode) ||
+      !CollectionUtils.isEqualCollection(deliusUser.getTeamCodes(), user.teamCodes ?: emptyList<String>())
   }
 }
 

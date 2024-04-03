@@ -298,7 +298,7 @@ class UsersTest : IntegrationTestBase() {
 
     @Test
     fun `GET to users with no internal role (aka the Applicant pseudo-role) is forbidden`() {
-      `Given a User`() { _, jwt ->
+      `Given a User` { _, jwt ->
         webTestClient.get()
           .uri("/users")
           .header("Authorization", "Bearer $jwt")
@@ -348,17 +348,19 @@ class UsersTest : IntegrationTestBase() {
         `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
           `Given a User` { userWithNoRole, _ ->
             `Given a User`(roles = listOf(role)) { requestUser, jwt ->
-
+              val apArea = apAreaEntityFactory.produceAndPersist()
               val probationRegion = probationRegionEntityFactory.produceAndPersist {
-                withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
+                withApArea(apArea)
               }
 
               val userOne = userEntityFactory.produceAndPersist {
                 withProbationRegion(probationRegion)
+                withApArea(apArea)
               }
 
               val userTwo = userEntityFactory.produceAndPersist {
                 withProbationRegion(probationRegion)
+                withApArea(apArea)
               }
 
               webTestClient.get()
@@ -388,23 +390,26 @@ class UsersTest : IntegrationTestBase() {
 
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_ADMIN", "CAS1_WORKFLOW_MANAGER"])
-    fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns list filtered by AP area`(role: UserRole) {
+    fun `GET to users with a role of either ROLE_ADMIN or WORKFLOW_MANAGER returns list filtered by user's AP area`(role: UserRole) {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER)) { matcher, _ ->
         `Given a User`(roles = listOf(UserRole.CAS1_MANAGER)) { manager, _ ->
           `Given a User` { userWithNoRole, _ ->
             `Given a User`(roles = listOf(role)) { requestUser, jwt ->
               val apArea = apAreaEntityFactory.produceAndPersist()
 
+              val probationRegionApArea = apAreaEntityFactory.produceAndPersist()
               val probationRegion = probationRegionEntityFactory.produceAndPersist {
-                withApArea(apArea)
+                withApArea(probationRegionApArea)
               }
 
               val userOne = userEntityFactory.produceAndPersist {
                 withProbationRegion(probationRegion)
+                withApArea(apArea)
               }
 
               val userTwo = userEntityFactory.produceAndPersist {
                 withProbationRegion(probationRegion)
+                withApArea(apArea)
               }
 
               webTestClient.get()
@@ -820,6 +825,7 @@ class UsersTest : IntegrationTestBase() {
         withId(id)
         withIsActive(false)
         withYieldedProbationRegion { region }
+        withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
       }
 
       `Given a User`(roles = listOf(role)) { _, jwt ->
