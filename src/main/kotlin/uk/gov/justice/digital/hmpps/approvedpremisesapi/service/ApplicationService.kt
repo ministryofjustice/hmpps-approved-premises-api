@@ -480,6 +480,9 @@ class ApplicationService(
       personReleaseDate = null,
       pdu = null,
       name = "${offenderDetails.firstName} ${offenderDetails.surname}",
+      isHistoryOfArsonOffence = null,
+      isConcerningArsonBehaviour = null,
+      concerningArsonBehaviour = null,
     )
   }
 
@@ -932,6 +935,9 @@ class ApplicationService(
       dutyToReferLocalAuthorityAreaName = submitApplication.dutyToReferLocalAuthorityAreaName
       personReleaseDate = submitApplication.personReleaseDate
       pdu = submitApplication.pdu
+      isHistoryOfArsonOffence = submitApplication.isHistoryOfArsonOffence
+      isConcerningArsonBehaviour = submitApplication.isConcerningArsonBehaviour
+      concerningArsonBehaviour = submitApplication.concerningArsonBehaviour
     }
 
     assessmentService.createTemporaryAccommodationAssessment(application, submitApplication.summaryData)

@@ -49,6 +49,9 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var personReleaseDate: Yielded<LocalDate?> = { null }
   private var pdu: Yielded<String?> = { null }
   private var name: Yielded<String?> = { null }
+  private var isHistoryOfArsonOffence: Yielded<Boolean?> = { null }
+  private var isConcerningArsonBehaviour: Yielded<Boolean?> = { null }
+  private var concerningArsonBehaviour: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -174,6 +177,18 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.name = { name }
   }
 
+  fun withIsHistoryOfArsonOffence(isHistoryOfArsonOffence: Boolean?) = apply {
+    this.isHistoryOfArsonOffence = { isHistoryOfArsonOffence }
+  }
+
+  fun withIsConcerningArsonBehaviour(isConcerningArsonBehaviour: Boolean?) = apply {
+    this.isConcerningArsonBehaviour = { isConcerningArsonBehaviour }
+  }
+
+  fun withConcerningArsonBehaviour(concerningArsonBehaviour: String?) = apply {
+    this.concerningArsonBehaviour = { concerningArsonBehaviour }
+  }
+
   override fun produce(): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -204,5 +219,8 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     personReleaseDate = this.personReleaseDate(),
     pdu = this.pdu(),
     name = this.name(),
+    isHistoryOfArsonOffence = this.isHistoryOfArsonOffence(),
+    isConcerningArsonBehaviour = this.isConcerningArsonBehaviour(),
+    concerningArsonBehaviour = this.concerningArsonBehaviour(),
   )
 }

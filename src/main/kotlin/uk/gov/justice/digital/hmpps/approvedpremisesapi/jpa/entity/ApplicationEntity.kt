@@ -445,6 +445,9 @@ class TemporaryAccommodationApplicationEntity(
   var personReleaseDate: LocalDate?,
   var pdu: String?,
   var name: String?,
+  var isHistoryOfArsonOffence: Boolean?,
+  var isConcerningArsonBehaviour: Boolean?,
+  var concerningArsonBehaviour: String?,
 ) : ApplicationEntity(
   id,
   crn,

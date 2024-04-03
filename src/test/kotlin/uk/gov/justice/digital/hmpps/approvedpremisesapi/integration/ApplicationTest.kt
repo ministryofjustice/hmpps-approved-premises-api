@@ -2505,6 +2505,9 @@ class ApplicationTest : IntegrationTestBase() {
             withCreatedByUser(submittingUser)
             withProbationRegion(submittingUser.probationRegion)
             withPdu("Probation Delivery Unit Test")
+            withIsHistoryOfArsonOffence(true)
+            withIsConcerningArsonBehaviour(true)
+            withConcerningArsonBehaviour("Concerning arson behaviour test")
             withData(
               """
               {}
@@ -2527,6 +2530,9 @@ class ApplicationTest : IntegrationTestBase() {
                 },
                 personReleaseDate = LocalDate.now(),
                 pdu = "Probation Delivery Unit Test",
+                isHistoryOfArsonOffence = true,
+                isConcerningArsonBehaviour = true,
+                concerningArsonBehaviour = "Concerning arson behaviour test",
               ),
             )
             .exchange()
