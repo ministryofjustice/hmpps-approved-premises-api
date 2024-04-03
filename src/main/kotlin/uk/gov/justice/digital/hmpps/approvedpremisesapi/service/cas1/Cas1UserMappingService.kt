@@ -30,6 +30,8 @@ class Cas1UserMappingService(
     DeliusTeamMapping("N41EFT", "NE"),
     DeliusTeamMapping("N41EXM", "NE"),
     DeliusTeamMapping("N41EP4", "NE"),
+    DeliusTeamMapping("XXXNAT", "NE"),
+    DeliusTeamMapping("XXXYOS", "NE"),
   )
 
   private val noTeamsApArea = "NE"
@@ -44,7 +46,7 @@ class Cas1UserMappingService(
     deliusUser: StaffUserDetails,
   ): ApAreaEntity {
     val deliusProbationAreaCode = deliusUser.probationArea.code
-    val isInNationalProbationArea = listOf("N43", "N41", "XX").contains(deliusProbationAreaCode)
+    val isInNationalProbationArea = listOf("N43", "N41", "XXX").contains(deliusProbationAreaCode)
     if (isInNationalProbationArea) {
       val deliusUserTeamCodes = deliusUser.getTeamCodes()
 
