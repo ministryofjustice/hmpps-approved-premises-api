@@ -193,6 +193,7 @@ class Cas1PlacementRequestEmailServiceTest {
         "applicationArea" to AREA_NAME,
         "startDate" to placementRequest.expectedArrival.toString(),
         "endDate" to placementRequest.expectedDeparture().toString(),
+        "additionalDatesSet" to "no",
       ),
     )
   }
@@ -227,6 +228,7 @@ class Cas1PlacementRequestEmailServiceTest {
         "startDate" to placementRequest.expectedArrival.toString(),
         "endDate" to placementRequest.expectedDeparture().toString(),
         "withdrawnBy" to WITHDRAWING_USER_NAME,
+        "additionalDatesSet" to "no",
       ),
     )
   }
