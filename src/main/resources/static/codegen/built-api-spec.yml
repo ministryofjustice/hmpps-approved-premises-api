@@ -6376,6 +6376,8 @@ components:
               format: uuid
             status:
               $ref: '#/components/schemas/ApplicationStatus'
+            latestStatusUpdate:
+              type: string
             risks:
               $ref: '#/components/schemas/PersonRisks'
             hdcEligibilityDate:
