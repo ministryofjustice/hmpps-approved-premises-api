@@ -5,7 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.CancellationRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
 
 @Component
-class CancellationReasonTransformer() {
+class CancellationReasonTransformer {
   fun transformJpaToApi(jpa: CancellationReasonEntity) = CancellationReason(
     id = jpa.id,
     name = jpa.name,
