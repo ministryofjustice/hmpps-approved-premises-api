@@ -36,7 +36,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.Assigne
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.AssessmentService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
@@ -56,7 +55,6 @@ class ApplicationServiceTest {
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
-  private val mockUserService = mockk<NomisUserService>()
   private val mockUserAccessService = mockk<UserAccessService>()
   private val mockDomainEventService = mockk<DomainEventService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
@@ -69,7 +67,6 @@ class ApplicationServiceTest {
     mockApplicationRepository,
     mockJsonSchemaService,
     mockOffenderService,
-    mockUserService,
     mockUserAccessService,
     mockDomainEventService,
     mockEmailNotificationService,
@@ -352,7 +349,6 @@ class ApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
         application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
@@ -394,7 +390,6 @@ class ApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
         application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
@@ -454,7 +449,6 @@ class ApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
         application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
@@ -520,29 +514,26 @@ class ApplicationServiceTest {
 
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns null
 
-      assertThat(applicationService.submitApplication(submitCas2Application) is AuthorisableActionResult.NotFound).isTrue
+      assertThat(applicationService.submitApplication(submitCas2Application, user) is AuthorisableActionResult.NotFound).isTrue
 
       assertEmailAndAssessmentsWereNotCreated()
     }
 
     @Test
     fun `returns Unauthorised when application doesn't belong to request user`() {
-      val user = NomisUserEntityFactory()
+      val differentUser = NomisUserEntityFactory()
         .produce()
 
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
-        .withCreatedByUser(user)
+        .withCreatedByUser(differentUser)
         .produce()
 
-      every { mockUserService.getUserForRequest() } returns NomisUserEntityFactory()
-        .withNomisUsername(username)
-        .produce()
       every { mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId) } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
         application
 
-      assertThat(applicationService.submitApplication(submitCas2Application) is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(applicationService.submitApplication(submitCas2Application, user) is AuthorisableActionResult.Unauthorised).isTrue
 
       assertEmailAndAssessmentsWereNotCreated()
     }
@@ -558,13 +549,12 @@ class ApplicationServiceTest {
           schemaUpToDate = false
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every {
         mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId)
       } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      val result = applicationService.submitApplication(submitCas2Application)
+      val result = applicationService.submitApplication(submitCas2Application, user)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -591,13 +581,12 @@ class ApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every {
         mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId)
       } returns application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns application
 
-      val result = applicationService.submitApplication(submitCas2Application)
+      val result = applicationService.submitApplication(submitCas2Application, user)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
@@ -624,7 +613,6 @@ class ApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every {
         mockApplicationRepository.findByIdOrNullWithWriteLock(any())
       } returns application
@@ -673,7 +661,6 @@ class ApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every {
         mockApplicationRepository.findByIdOrNullWithWriteLock(any())
       } returns application
@@ -709,7 +696,7 @@ class ApplicationServiceTest {
     }
 
     private fun assertGeneralValidationError(message: String) {
-      val result = applicationService.submitApplication(submitCas2Application)
+      val result = applicationService.submitApplication(submitCas2Application, user)
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
 
@@ -738,7 +725,6 @@ class ApplicationServiceTest {
           schemaUpToDate = true
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every {
         mockApplicationRepository.findByIdOrNullWithWriteLock(applicationId)
       } returns application
@@ -785,7 +771,7 @@ class ApplicationServiceTest {
 
       every { mockAssessmentService.createCas2Assessment(any()) } returns any()
 
-      val result = applicationService.submitApplication(submitCas2Application)
+      val result = applicationService.submitApplication(submitCas2Application, user)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success

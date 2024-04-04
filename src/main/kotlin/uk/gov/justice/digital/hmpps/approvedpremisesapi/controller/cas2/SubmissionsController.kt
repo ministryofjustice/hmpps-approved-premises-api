@@ -93,8 +93,8 @@ class SubmissionsController(
   override fun submissionsPost(
     submitApplication: SubmitCas2Application,
   ): ResponseEntity<Unit> {
-    httpAuthService.getNomisPrincipalOrThrow()
-    val submitResult = applicationService.submitApplication(submitApplication)
+    val user = nomisUserService.getUserForRequest()
+    val submitResult = applicationService.submitApplication(submitApplication, user)
 
     val validationResult = when (submitResult) {
       is AuthorisableActionResult.NotFound -> throw NotFoundProblem(submitApplication.applicationId, "Application")

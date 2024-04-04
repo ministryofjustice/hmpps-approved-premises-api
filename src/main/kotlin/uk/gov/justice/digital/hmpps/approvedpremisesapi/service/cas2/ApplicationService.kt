@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.validated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiException
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
@@ -40,7 +39,6 @@ class ApplicationService(
   private val applicationRepository: Cas2ApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
-  private val userService: NomisUserService,
   private val userAccessService: UserAccessService,
   private val domainEventService: DomainEventService,
   private val emailNotificationService: EmailNotificationService,
@@ -186,14 +184,13 @@ class ApplicationService(
   @Transactional
   fun submitApplication(
     submitApplication: SubmitCas2Application,
+    user: NomisUserEntity,
   ): AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
     var application = applicationRepository.findByIdOrNullWithWriteLock(submitApplication.applicationId)
       ?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
 
     val serializedTranslatedDocument = objectMapper.writeValueAsString(submitApplication.translatedDocument)
-
-    val user = userService.getUserForRequest()
 
     if (application.createdByUser != user) {
       return AuthorisableActionResult.Unauthorised()
