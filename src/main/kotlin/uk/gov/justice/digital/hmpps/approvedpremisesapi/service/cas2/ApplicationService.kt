@@ -30,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UpstreamApiExcep
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
-import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.transaction.Transactional
@@ -285,7 +284,7 @@ class ApplicationService(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate
               .replace("#id", application.id.toString()),
-            submittedAt = Instant.now(),
+            submittedAt = eventOccurredAt.toInstant(),
             personReference = PersonReference(
               noms = application.nomsNumber ?: "Unknown NOMS Number",
               crn = application.crn,
