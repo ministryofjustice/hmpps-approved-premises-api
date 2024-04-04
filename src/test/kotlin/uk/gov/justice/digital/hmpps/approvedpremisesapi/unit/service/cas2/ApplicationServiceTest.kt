@@ -22,13 +22,11 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.InmateDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
@@ -262,10 +260,11 @@ class ApplicationServiceTest {
 
   @Nested
   inner class UpdateApplication {
+    val user = NomisUserEntityFactory().produce()
+
     @Test
     fun `returns NotFound when application doesn't exist`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-      val username = "SOMEPERSON"
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
@@ -273,7 +272,7 @@ class ApplicationServiceTest {
         applicationService.updateApplication(
           applicationId = applicationId,
           data = "{}",
-          username = username,
+          user = user,
         ) is AuthorisableActionResult.NotFound,
       ).isTrue
     }
@@ -281,11 +280,7 @@ class ApplicationServiceTest {
     @Test
     fun `returns Unauthorised when application doesn't belong to request user`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-      val username = "SOMEPERSON"
 
-      val probationRegion = ProbationRegionEntityFactory()
-        .withYieldedApArea { ApAreaEntityFactory().produce() }
-        .produce()
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
         .withYieldedCreatedByUser {
@@ -294,9 +289,6 @@ class ApplicationServiceTest {
         }
         .produce()
 
-      every { mockUserService.getUserForRequest() } returns NomisUserEntityFactory()
-        .withNomisUsername(username)
-        .produce()
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
         application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
@@ -306,7 +298,7 @@ class ApplicationServiceTest {
         applicationService.updateApplication(
           applicationId = applicationId,
           data = "{}",
-          username = username,
+          user = user,
         ) is AuthorisableActionResult.Unauthorised,
       ).isTrue
     }
@@ -314,11 +306,6 @@ class ApplicationServiceTest {
     @Test
     fun `returns GeneralValidationError when application schema is outdated`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-      val username = "SOMEPERSON"
-
-      val user = NomisUserEntityFactory()
-        .withNomisUsername(username)
-        .produce()
 
       val application = Cas2ApplicationEntityFactory()
         .withId(applicationId)
@@ -329,7 +316,6 @@ class ApplicationServiceTest {
           schemaUpToDate = false
         }
 
-      every { mockUserService.getUserForRequest() } returns user
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns
         application
       every { mockJsonSchemaService.checkSchemaOutdated(application) } returns
@@ -338,7 +324,7 @@ class ApplicationServiceTest {
       val result = applicationService.updateApplication(
         applicationId = applicationId,
         data = "{}",
-        username = username,
+        user = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -353,13 +339,8 @@ class ApplicationServiceTest {
     @Test
     fun `returns GeneralValidationError when application has already been submitted`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-      val username = "SOMEPERSON"
 
       val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
-
-      val user = NomisUserEntityFactory()
-        .withNomisUsername(username)
-        .produce()
 
       val application = Cas2ApplicationEntityFactory()
         .withApplicationSchema(newestSchema)
@@ -380,7 +361,7 @@ class ApplicationServiceTest {
       val result = applicationService.updateApplication(
         applicationId = applicationId,
         data = "{}",
-        username = username,
+        user = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -396,11 +377,6 @@ class ApplicationServiceTest {
     @ValueSource(strings = ["<", "＜", "〈", "〈", ">", "＞", "〉", "〉", "<＜〈〈>＞〉〉"])
     fun `returns Success when an application, that contains removed malicious characters, is updated`(str: String) {
       val applicationId = UUID.fromString("dced02b1-8e3b-4ea5-bf99-1fba0ca1b87c")
-      val username = "SOMEPERSON"
-
-      val user = NomisUserEntityFactory()
-        .withNomisUsername(username)
-        .produce()
 
       val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
       val updatedData = """
@@ -438,7 +414,7 @@ class ApplicationServiceTest {
       val result = applicationService.updateApplication(
         applicationId = applicationId,
         data = updatedData,
-        username = username,
+        user = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -461,11 +437,6 @@ class ApplicationServiceTest {
     @Test
     fun `returns Success with updated Application`() {
       val applicationId = UUID.fromString("fa6e97ce-7b9e-473c-883c-83b1c2af773d")
-      val username = "SOMEPERSON"
-
-      val user = NomisUserEntityFactory()
-        .withNomisUsername(username)
-        .produce()
 
       val newestSchema = Cas2ApplicationJsonSchemaEntityFactory().produce()
       val updatedData = """
@@ -503,7 +474,7 @@ class ApplicationServiceTest {
       val result = applicationService.updateApplication(
         applicationId = applicationId,
         data = updatedData,
-        username = username,
+        user = user,
       )
 
       assertThat(result is AuthorisableActionResult.Success).isTrue

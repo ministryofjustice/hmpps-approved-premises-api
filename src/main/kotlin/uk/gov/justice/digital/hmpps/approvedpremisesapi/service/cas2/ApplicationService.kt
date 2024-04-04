@@ -145,7 +145,7 @@ class ApplicationService(
       return success(createdApplication.apply { schemaUpToDate = true })
     }
 
-  fun updateApplication(applicationId: UUID, data: String?, username: String?):
+  fun updateApplication(applicationId: UUID, data: String?, user: NomisUserEntity):
     AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
       ?: return AuthorisableActionResult.NotFound()
@@ -155,8 +155,6 @@ class ApplicationService(
         ValidatableActionResult.GeneralValidationError("onlyCas2Supported"),
       )
     }
-
-    val user = userService.getUserForRequest()
 
     if (application.createdByUser != user) {
       return AuthorisableActionResult.Unauthorised()

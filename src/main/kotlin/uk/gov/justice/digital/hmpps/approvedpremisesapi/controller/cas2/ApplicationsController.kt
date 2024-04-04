@@ -115,7 +115,7 @@ class ApplicationsController(
       applicationId =
       applicationId,
       data = serializedData,
-      username = user.nomisUsername,
+      user,
     )
 
     val validationResult = when (applicationResult) {
