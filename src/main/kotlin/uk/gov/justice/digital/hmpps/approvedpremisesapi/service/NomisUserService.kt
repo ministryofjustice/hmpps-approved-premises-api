@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesApiClient
@@ -14,8 +13,6 @@ class NomisUserService(
   private val nomisUserRolesApiClient: NomisUserRolesApiClient,
   private val userRepository: NomisUserRepository,
 ) {
-  private val log = LoggerFactory.getLogger(this::class.java)
-
   fun getUserForRequest(): NomisUserEntity {
     val authenticatedPrincipal = httpAuthService.getNomisPrincipalOrThrow()
     val username = authenticatedPrincipal.name
