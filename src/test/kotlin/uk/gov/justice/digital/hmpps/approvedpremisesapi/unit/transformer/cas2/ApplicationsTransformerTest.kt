@@ -156,6 +156,7 @@ class ApplicationsTransformerTest {
         override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
         override fun getSubmittedAt() = null
         override fun getHdcEligibilityDate() = null
+        override fun getLatestStatusUpdate() = null
       }
 
       val result = applicationsTransformer.transformJpaSummaryToSummary(
@@ -167,6 +168,7 @@ class ApplicationsTransformerTest {
       assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
       assertThat(result.risks).isNull()
       assertThat(result.hdcEligibilityDate).isNull()
+      assertThat(result.latestStatusUpdate).isNull()
     }
 
     @Test
@@ -179,6 +181,7 @@ class ApplicationsTransformerTest {
         override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
         override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
         override fun getHdcEligibilityDate() = LocalDate.parse("2023-04-29")
+        override fun getLatestStatusUpdate(): String = "my latest status update"
       }
 
       val result = applicationsTransformer.transformJpaSummaryToSummary(
@@ -189,6 +192,7 @@ class ApplicationsTransformerTest {
       assertThat(result.id).isEqualTo(application.getId())
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
       assertThat(result.hdcEligibilityDate).isEqualTo("2023-04-29")
+      assertThat(result.latestStatusUpdate).isEqualTo("my latest status update")
     }
   }
 }

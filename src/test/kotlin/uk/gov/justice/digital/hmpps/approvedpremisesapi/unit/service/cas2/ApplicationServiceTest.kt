@@ -86,6 +86,7 @@ class ApplicationServiceTest {
         override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
         override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
         override fun getHdcEligibilityDate() = LocalDate.parse("2023-04-29")
+        override fun getLatestStatusUpdate(): String? = null
       }
 
       PaginationConfig(defaultPageSize = 10).postInit()

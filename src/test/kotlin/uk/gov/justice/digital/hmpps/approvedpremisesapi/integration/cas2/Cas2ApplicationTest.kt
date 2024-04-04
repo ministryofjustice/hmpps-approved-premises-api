@@ -436,6 +436,19 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 )
               }
 
+              // add two status updates to the first submitted application
+              cas2StatusUpdateEntityFactory.produceAndPersist {
+                withLabel("older status update")
+                withApplication(cas2ApplicationRepository.findById(submittedIds.first()).get())
+                withAssessor(assessor)
+              }
+              // this is the one that should be returned as lastStatusUpdate
+              cas2StatusUpdateEntityFactory.produceAndPersist {
+                withLabel("more recent status update")
+                withApplication(cas2ApplicationRepository.findById(submittedIds.first()).get())
+                withAssessor(assessor)
+              }
+
               // create 4 x un-submitted in-progress applications for this user
               repeat(4) {
                 unSubmittedIds.add(
@@ -510,6 +523,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       val uuids = responseBody.map { it.id }.toSet()
       Assertions.assertThat(uuids).isEqualTo(submittedIds)
+      Assertions.assertThat(responseBody[0].latestStatusUpdate).isEqualTo("more recent status update")
     }
 
     @Test
