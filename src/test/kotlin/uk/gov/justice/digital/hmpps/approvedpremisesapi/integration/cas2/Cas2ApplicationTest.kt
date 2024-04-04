@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
@@ -403,58 +404,79 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   @Nested
   inner class GetToIndexUsingIsSubmitted {
 
-    var username: String? = null
+    var jwtForUser: String? = null
     val submittedIds = mutableSetOf<UUID>()
     val unSubmittedIds = mutableSetOf<UUID>()
 
     @BeforeEach
     fun setup() {
-      `Given a CAS2 User` { userEntity, jwt ->
-        `Given an Offender` { offenderDetails, _ ->
-          cas2ApplicationJsonSchemaRepository.deleteAll()
+      `Given a CAS2 Assessor` { assessor, _ ->
+        `Given a CAS2 User` { userEntity, jwt ->
+          `Given a CAS2 User` { otherUser, _ ->
+            `Given an Offender` { offenderDetails, _ ->
+              cas2ApplicationJsonSchemaRepository.deleteAll()
 
-          val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-          }
+              val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.now())
+                withId(UUID.randomUUID())
+              }
 
-          // create 3 x submitted applications for this user
-          repeat(3) {
-            submittedIds.add(
+              // create 3 x submitted applications for this user
+              // with most recent first
+              repeat(3) {
+                submittedIds.add(
+                  cas2ApplicationEntityFactory.produceAndPersist {
+                    withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
+                    withApplicationSchema(applicationSchema)
+                    withCreatedByUser(userEntity)
+                    withCrn(offenderDetails.otherIds.crn)
+                    withData("{}")
+                    withSubmittedAt(OffsetDateTime.now().minusDays(it.toLong()))
+                  }.id,
+                )
+              }
+
+              // create 4 x un-submitted in-progress applications for this user
+              repeat(4) {
+                unSubmittedIds.add(
+                  cas2ApplicationEntityFactory.produceAndPersist {
+                    withApplicationSchema(applicationSchema)
+                    withCreatedByUser(userEntity)
+                    withCrn(offenderDetails.otherIds.crn)
+                    withData("{}")
+                  }.id,
+                )
+              }
+
+              // create a submitted application by another user which should not be in results
               cas2ApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(applicationSchema)
-                withCreatedByUser(userEntity)
+                withCreatedByUser(otherUser)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
-                withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(30))
-              }.id,
-            )
-          }
+                withSubmittedAt(OffsetDateTime.now())
+              }
 
-          // create 4 x un-submitted in-progress applications for this user
-          repeat(4) {
-            unSubmittedIds.add(
+              // create an unsubmitted application by another user which should not be in results
               cas2ApplicationEntityFactory.produceAndPersist {
                 withApplicationSchema(applicationSchema)
-                withCreatedByUser(userEntity)
+                withCreatedByUser(otherUser)
                 withCrn(offenderDetails.otherIds.crn)
                 withData("{}")
-              }.id,
-            )
-          }
+              }
 
-          username = userEntity.nomisUsername
+              jwtForUser = jwt
+            }
+          }
         }
       }
     }
 
     @Test
     fun `returns all applications for user when isSubmitted is null`() {
-      val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(username!!)
-
       val rawResponseBody = webTestClient.get()
         .uri("/cas2/applications")
-        .header("Authorization", "Bearer $jwt")
+        .header("Authorization", "Bearer $jwtForUser")
         .header("X-Service-Name", ServiceName.cas2.value)
         .exchange()
         .expectStatus()
@@ -472,11 +494,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `returns submitted applications for user when isSubmitted is true`() {
-      val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(username!!)
-
       val rawResponseBody = webTestClient.get()
         .uri("/cas2/applications?isSubmitted=true")
-        .header("Authorization", "Bearer $jwt")
+        .header("Authorization", "Bearer $jwtForUser")
         .header("X-Service-Name", ServiceName.cas2.value)
         .exchange()
         .expectStatus()
@@ -494,11 +514,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `returns unsubmitted applications for user when isSubmitted is false`() {
-      val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(username!!)
-
       val rawResponseBody = webTestClient.get()
         .uri("/cas2/applications?isSubmitted=false")
-        .header("Authorization", "Bearer $jwt")
+        .header("Authorization", "Bearer $jwtForUser")
         .header("X-Service-Name", ServiceName.cas2.value)
         .exchange()
         .expectStatus()
