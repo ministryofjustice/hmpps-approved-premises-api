@@ -18,10 +18,15 @@ class NomisUserEntityFactory : Factory<NomisUserEntity> {
   private var accountType: Yielded<String> = { "GENERAL" }
   private var isEnabled: Yielded<Boolean> = { true }
   private var isActive: Yielded<Boolean> = { true }
+  private var activeCaseloadId: Yielded<String?> = { null }
   private var applications: Yielded<MutableList<Cas2ApplicationEntity>> = { mutableListOf() }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
+  }
+
+  fun withActiveCaseloadId(activeCaseloadId: String) = apply {
+    this.activeCaseloadId = { activeCaseloadId }
   }
 
   fun withName(name: String) = apply {
@@ -58,5 +63,6 @@ class NomisUserEntityFactory : Factory<NomisUserEntity> {
     isActive = this.isActive(),
     email = this.email(),
     applications = this.applications(),
+    activeCaseloadId = this.activeCaseloadId(),
   )
 }

@@ -33,7 +33,7 @@ data class NomisUserEntity(
   private val createdAt: OffsetDateTime? = null,
 
   @OneToMany(mappedBy = "createdByUser")
-  val applications: MutableList<Cas2ApplicationEntity>,
+  val applications: MutableList<Cas2ApplicationEntity> = mutableListOf(),
 ) : Cas2User {
   override fun toString() = "Nomis user $id"
 }
