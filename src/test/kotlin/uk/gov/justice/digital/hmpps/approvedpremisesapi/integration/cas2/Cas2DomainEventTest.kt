@@ -138,52 +138,91 @@ class Cas2DomainEventTest : IntegrationTestBase() {
         .isForbidden
     }
 
-    @Test
-    fun `returns 200 with correct body`() {
+    @Nested
+    inner class WhenSuccessful {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         roles = listOf("ROLE_CAS2_EVENTS"),
       )
 
-      val eventId = UUID.randomUUID()
+      @Nested
+      inner class WithStatusDetails {
+        @Test
+        fun `returns 200 with correct body`() {
+          val eventId = UUID.randomUUID()
 
-      val statusDetails = listOf(
-        Cas2StatusDetail("exclusionZonesAndAreas", "Exclusion zones and preferred areas"),
-        Cas2StatusDetail("riskOfSeriousHarm", "Risk of serious harm"),
-        Cas2StatusDetail("hdcAndCpp", "HDC licence and CPP details"),
-      )
+          val statusDetails = listOf(
+            Cas2StatusDetail("exclusionZonesAndAreas", "Exclusion zones and preferred areas"),
+            Cas2StatusDetail("riskOfSeriousHarm", "Risk of serious harm"),
+            Cas2StatusDetail("hdcAndCpp", "HDC licence and CPP details"),
+          )
 
-      val eventStatus = Cas2StatusFactory()
-        .withStatusDetails(statusDetails)
-        .produce()
+          val eventStatus = Cas2StatusFactory()
+            .withStatusDetails(statusDetails)
+            .produce()
 
-      val eventDetails = Cas2ApplicationStatusUpdatedEventDetailsFactory()
-        .withStatus(eventStatus)
-        .produce()
+          val eventDetails = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+            .withStatus(eventStatus)
+            .produce()
 
-      val eventToSave = Cas2ApplicationStatusUpdatedEvent(
-        id = eventId,
-        timestamp = Instant.now(),
-        eventType = EventType.applicationStatusUpdated,
-        eventDetails = eventDetails,
-      )
+          val eventToSave = Cas2ApplicationStatusUpdatedEvent(
+            id = eventId,
+            timestamp = Instant.now(),
+            eventType = EventType.applicationStatusUpdated,
+            eventDetails = eventDetails,
+          )
 
-      val event = domainEventFactory.produceAndPersist {
-        withId(eventId)
-        withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
-        withData(objectMapper.writeValueAsString(eventToSave))
+          val event = domainEventFactory.produceAndPersist {
+            withId(eventId)
+            withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
+            withData(objectMapper.writeValueAsString(eventToSave))
+          }
+
+          val response = webTestClient.get()
+            .uri("/events/cas2/application-status-updated/${event.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody(Cas2ApplicationStatusUpdatedEvent::class.java)
+            .returnResult()
+
+          assertThat(response.responseBody).isEqualTo(eventToSave)
+        }
       }
 
-      val response = webTestClient.get()
-        .uri("/events/cas2/application-status-updated/${event.id}")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody(Cas2ApplicationStatusUpdatedEvent::class.java)
-        .returnResult()
+      @Nested
+      inner class WithoutStatusDetails {
+        @Test
+        fun `returns 200 with correct body`() {
+          val eventId = UUID.randomUUID()
 
-      assertThat(response.responseBody).isEqualTo(eventToSave)
+          val eventToSave = Cas2ApplicationStatusUpdatedEvent(
+            id = eventId,
+            timestamp = Instant.now(),
+            eventType = EventType.applicationStatusUpdated,
+            eventDetails = Cas2ApplicationStatusUpdatedEventDetailsFactory()
+              .produce(),
+          )
+
+          val event = domainEventFactory.produceAndPersist {
+            withId(eventId)
+            withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
+            withData(objectMapper.writeValueAsString(eventToSave))
+          }
+
+          val response = webTestClient.get()
+            .uri("/events/cas2/application-status-updated/${event.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody(Cas2ApplicationStatusUpdatedEvent::class.java)
+            .returnResult()
+
+          assertThat(response.responseBody).isEqualTo(eventToSave)
+        }
+      }
     }
   }
 }
