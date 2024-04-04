@@ -68,7 +68,7 @@ class UserService(
     val username = deliusPrincipal.name
     val serviceForRequest = requestContextService.getServiceForRequest()
 
-    val user = getExistingUserOrCreate(username, serviceForRequest)
+    val user = getExistingUserOrCreate(username)
 
     if (serviceForRequest == ServiceName.temporaryAccommodation) {
       if (!user.hasAnyRole(*UserRole.getAllRolesForService(ServiceName.temporaryAccommodation).toTypedArray())) {
@@ -199,26 +199,34 @@ class UserService(
     }
 
     if (userHasChanged(user, deliusUser)) {
-      user.name = deliusUser.staff.fullName
-      user.email = deliusUser.email.toString()
-      user.telephoneNumber = deliusUser.telephoneNumber
-      user.deliusStaffCode = deliusUser.staffCode
-      user.teamCodes = deliusUser.getTeamCodes()
-
-      deliusUser.probationArea.let { probationArea ->
-        findProbationRegionFromArea(probationArea)?.let { probationRegion ->
-          user.probationRegion = probationRegion
-        }
-      }
-
-      if (forService == ServiceName.approvedPremises) {
-        user.apArea = cas1UserMappingService.determineApArea(user.probationRegion, deliusUser)
-      }
-
-      user = userRepository.save(user)
+      user = updateUser(user, deliusUser, forService)
     }
 
     return AuthorisableActionResult.Success(user)
+  }
+
+  fun updateUser(
+    user: UserEntity,
+    deliusUser: StaffUserDetails,
+    forService: ServiceName,
+  ): UserEntity {
+    user.name = deliusUser.staff.fullName
+    user.email = deliusUser.email.toString()
+    user.telephoneNumber = deliusUser.telephoneNumber
+    user.deliusStaffCode = deliusUser.staffCode
+    user.teamCodes = deliusUser.getTeamCodes()
+
+    deliusUser.probationArea.let { probationArea ->
+      findProbationRegionFromArea(probationArea)?.let { probationRegion ->
+        user.probationRegion = probationRegion
+      }
+    }
+
+    if (forService == ServiceName.approvedPremises) {
+      user.apArea = cas1UserMappingService.determineApArea(user.probationRegion, deliusUser)
+    }
+
+    return userRepository.save(user)
   }
 
   fun getUserWorkloads(userIds: List<UUID>): Map<UUID, UserWorkload> {
@@ -243,7 +251,7 @@ class UserService(
     }
   }
 
-  fun getExistingUserOrCreate(username: String, forService: ServiceName?, throwProblemOn404: Boolean = false): UserEntity {
+  fun getExistingUserOrCreate(username: String, throwProblemOn404: Boolean = false): UserEntity {
     val normalisedUsername = username.uppercase()
 
     val existingUser = userRepository.findByDeliusUsername(normalisedUsername)
@@ -275,11 +283,7 @@ class UserService(
       }
     }
 
-    val apArea = if (forService == ServiceName.approvedPremises) {
-      cas1UserMappingService.determineApArea(staffProbationRegion, staffUserDetails)
-    } else {
-      null
-    }
+    val apArea = cas1UserMappingService.determineApArea(staffProbationRegion, staffUserDetails)
 
     return userRepository.save(
       UserEntity(

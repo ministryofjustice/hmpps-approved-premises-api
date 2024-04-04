@@ -34,6 +34,7 @@ class Cas1PlacementRequestEmailService(
       "applicationArea" to application.apArea?.name,
       "startDate" to placementRequest.expectedArrival.toString(),
       "endDate" to placementRequest.expectedDeparture().toString(),
+      "additionalDatesSet" to "no",
     )
 
     if (withdrawingUser != null) {

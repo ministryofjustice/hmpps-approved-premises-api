@@ -2,17 +2,18 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.migration
 
 import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.http.HttpStatus
 import org.springframework.transaction.support.TransactionTemplate
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserMappingService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.getTeamCodes
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 
 class Cas1BackfillUserApArea(
   private val userRepository: UserRepository,
-  private val cas1UserMappingService: Cas1UserMappingService,
+  private val userService: UserService,
   private val communityApiClient: CommunityApiClient,
   private val transactionTemplate: TransactionTemplate,
 ) : MigrationJob() {
@@ -36,22 +37,44 @@ class Cas1BackfillUserApArea(
     log.info("Update ap area and teams for user ${user.id}")
     try {
       val staffDetailsResult = communityApiClient.getStaffUserDetails(user.deliusUsername)
-      val staffDetails = when (staffDetailsResult) {
-        is ClientResult.Success -> staffDetailsResult.body
-        is ClientResult.Failure -> staffDetailsResult.throwException()
+
+      when (staffDetailsResult) {
+        is ClientResult.Success -> {
+          log.info("Updating user ${user.id} using the user update service")
+
+          val updatedUser = userService.updateUser(
+            user,
+            staffDetailsResult.body,
+            ServiceName.approvedPremises,
+          )
+
+          log.info(
+            "Updated user ${updatedUser.id} probation region to ${updatedUser.probationRegion.name}, " +
+              "AP Area to ${updatedUser.apArea?.name} " +
+              "and team codes to ${updatedUser.teamCodes}",
+          )
+        }
+        is ClientResult.Failure.StatusCode -> {
+          if (staffDetailsResult.status == HttpStatus.NOT_FOUND) {
+            log.warn("Could not find staff details for ${user.id}, will fall back to probationRegion.apArea")
+
+            val apArea = user.probationRegion.apArea
+            val teamCodes = emptyList<String>()
+
+            log.info("Updating user ${user.id} AP Area to ${apArea.name} and team codes to $teamCodes")
+
+            val userToUpdate = userRepository.findByIdOrNull(user.id)!!
+            userToUpdate.apArea = apArea
+            userToUpdate.teamCodes = teamCodes
+            userRepository.save(userToUpdate)
+          } else {
+            staffDetailsResult.throwException()
+          }
+        }
+        is ClientResult.Failure -> {
+          staffDetailsResult.throwException()
+        }
       }
-
-      val apArea = cas1UserMappingService.determineApArea(
-        usersProbationRegion = user.probationRegion,
-        deliusUser = staffDetails,
-      )
-
-      log.info("Updating user ${user.id} AP Area to ${apArea.name} and team codes to ${staffDetails.getTeamCodes()}")
-
-      val userToUpdate = userRepository.findByIdOrNull(user.id)!!
-      userToUpdate.apArea = apArea
-      userToUpdate.teamCodes = staffDetails.getTeamCodes()
-      userRepository.save(userToUpdate)
     } catch (exception: Exception) {
       log.error("Unable to find ap area for user ${user.id}", exception)
     }

@@ -16,6 +16,7 @@ class EmailNotificationService(
   @Qualifier("normalNotificationClient") private val normalNotificationClient: NotificationClient?,
   @Qualifier("guestListNotificationClient") private val guestListNotificationClient: NotificationClient?,
   private val applicationEventPublisher: ApplicationEventPublisher,
+  private val sentryService: SentryService,
 ) : EmailNotifier {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -52,6 +53,12 @@ class EmailNotificationService(
       }
     } catch (notificationClientException: NotificationClientException) {
       log.error("Unable to send template $templateId to user $recipientEmailAddress", notificationClientException)
+
+      notificationClientException.message?.let { exceptionMessage ->
+        if (exceptionMessage.contains("Missing personalisation")) {
+          sentryService.captureException(notificationClientException)
+        }
+      }
     }
   }
 
