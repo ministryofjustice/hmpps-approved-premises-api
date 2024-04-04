@@ -2174,6 +2174,7 @@ class ApplicationServiceTest {
       pdu = "Probation Delivery Unit Test",
       isHistoryOfSexualOffence = true,
       isConcerningSexualBehaviour = true,
+      isConcerningArsonBehaviour = true,
     )
 
     @BeforeEach
@@ -2424,6 +2425,7 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.name).isEqualTo(user.name)
       assertThat(persistedApplication.isHistoryOfSexualOffence).isEqualTo(true)
       assertThat(persistedApplication.isConcerningSexualBehaviour).isEqualTo(true)
+      assertThat(persistedApplication.isConcerningArsonBehaviour).isEqualTo(true)
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) {

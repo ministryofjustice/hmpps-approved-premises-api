@@ -1,0 +1,1 @@
+ALTER TABLE temporary_accommodation_applications ADD COLUMN is_concerning_arson_behaviour BOOLEAN;

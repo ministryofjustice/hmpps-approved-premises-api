@@ -2507,6 +2507,7 @@ class ApplicationTest : IntegrationTestBase() {
             withPdu("Probation Delivery Unit Test")
             withIsHistoryOfSexualOffence(true)
             withIsConcerningSexualBehaviour(true)
+            withIsConcerningArsonBehaviour(true)
             withData(
               """
               {}
@@ -2531,6 +2532,7 @@ class ApplicationTest : IntegrationTestBase() {
                 pdu = "Probation Delivery Unit Test",
                 isHistoryOfSexualOffence = true,
                 isConcerningSexualBehaviour = true,
+                isConcerningArsonBehaviour = true,
               ),
             )
             .exchange()

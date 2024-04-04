@@ -2369,6 +2369,8 @@ components:
               type: boolean
             isConcerningSexualBehaviour:
               type: boolean
+            isConcerningArsonBehaviour:
+              type: boolean
             summaryData:
               $ref: '#/components/schemas/AnyValue'
           required:
