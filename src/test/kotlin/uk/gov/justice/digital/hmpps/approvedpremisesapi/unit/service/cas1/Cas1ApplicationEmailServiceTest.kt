@@ -5,9 +5,11 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1ApplicationEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1ApplicationEmailServiceTest.TestConstants.CASE_MANAGER_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockEmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.OffsetDateTime
@@ -17,6 +19,7 @@ class Cas1ApplicationEmailServiceTest {
   private object TestConstants {
     const val APPLICANT_EMAIL = "applicantEmail@test.com"
     const val APPLICANT_NAME = "the applicant name"
+    const val CASE_MANAGER_EMAIL = "caseManagerEmail@test.com"
     const val CRN = "CRN123"
   }
 
@@ -147,6 +150,35 @@ class Cas1ApplicationEmailServiceTest {
         personalisation,
       )
     }
+
+    @Test
+    fun `applicationWithdrawn sends a email to applicant and case manager if case manager not applicant`() {
+      val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
+      val withdrawingUser = createUser(name = "the withdrawing user")
+
+      val application = createApplicationForApplicant(applicant, caseManagerNotApplicant = true)
+
+      serviceUsingAps530Improvements.applicationWithdrawn(application, withdrawingUser)
+
+      mockEmailNotificationService.assertEmailRequestCount(2)
+
+      val personalisation = mapOf(
+        "crn" to TestConstants.CRN,
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "withdrawnBy" to "the withdrawing user",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        TestConstants.APPLICANT_EMAIL,
+        notifyConfig.templates.applicationWithdrawnV2,
+        personalisation,
+      )
+      mockEmailNotificationService.assertEmailRequested(
+        CASE_MANAGER_EMAIL,
+        notifyConfig.templates.applicationWithdrawnV2,
+        personalisation,
+      )
+    }
   }
 
   private fun createUser(
@@ -160,11 +192,20 @@ class Cas1ApplicationEmailServiceTest {
 
   private fun createApplicationForApplicant(
     applicant: UserEntity,
+    caseManagerNotApplicant: Boolean = false,
     submittedAt: OffsetDateTime? = OffsetDateTime.now(),
   ) = ApprovedPremisesApplicationEntityFactory()
     .withCrn(TestConstants.CRN)
     .withCreatedByUser(applicant)
     .withSubmittedAt(submittedAt)
+    .withCaseManagerIsNotApplicant(caseManagerNotApplicant)
+    .withCaseManagerUserDetails(
+      if (caseManagerNotApplicant) {
+        Cas1ApplicationUserDetailsEntityFactory().withEmailAddress(CASE_MANAGER_EMAIL).produce()
+      } else {
+        null
+      },
+    )
     .withApArea(ApAreaEntityFactory().withName("test area").produce())
     .produce()
 }

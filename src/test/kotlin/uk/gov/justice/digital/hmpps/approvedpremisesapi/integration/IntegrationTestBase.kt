@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFac
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingNotMadeEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CancellationReasonEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationJsonSchemaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2AssessmentEntityFactory
@@ -111,6 +112,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingNotMadeEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.CancellationReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2AssessmentEntity
@@ -500,6 +503,9 @@ abstract class IntegrationTestBase {
   lateinit var appealTestRepository: AppealTestRepository
 
   @Autowired
+  lateinit var cas1ApplicationUserDetailsRepository: Cas1ApplicationUserDetailsRepository
+
+  @Autowired
   lateinit var emailAsserter: EmailNotificationAsserter
 
   @Autowired
@@ -570,6 +576,7 @@ abstract class IntegrationTestBase {
   lateinit var probationAreaProbationRegionMappingFactory: PersistedFactory<ProbationAreaProbationRegionMappingEntity, UUID, ProbationAreaProbationRegionMappingEntityFactory>
   lateinit var applicationTimelineNoteEntityFactory: PersistedFactory<ApplicationTimelineNoteEntity, UUID, ApplicationTimelineNoteEntityFactory>
   lateinit var appealEntityFactory: PersistedFactory<AppealEntity, UUID, AppealEntityFactory>
+  lateinit var cas1ApplicationUserDetailsEntityFactory: PersistedFactory<Cas1ApplicationUserDetailsEntity, UUID, Cas1ApplicationUserDetailsEntityFactory>
 
   private var clientCredentialsCallMocked = false
 
@@ -657,6 +664,7 @@ abstract class IntegrationTestBase {
     probationAreaProbationRegionMappingFactory = PersistedFactory({ ProbationAreaProbationRegionMappingEntityFactory() }, probationAreaProbationRegionMappingRepository)
     applicationTimelineNoteEntityFactory = PersistedFactory({ ApplicationTimelineNoteEntityFactory() }, applicationTimelineNoteRepository)
     appealEntityFactory = PersistedFactory({ AppealEntityFactory() }, appealTestRepository)
+    cas1ApplicationUserDetailsEntityFactory = PersistedFactory({ Cas1ApplicationUserDetailsEntityFactory() }, cas1ApplicationUserDetailsRepository)
   }
 
   fun mockClientCredentialsJwtRequest(

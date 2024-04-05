@@ -41,24 +41,20 @@ class Cas1ApplicationEmailService(
       return
     }
 
-    val applicationCreatedByUser = application.createdByUser
-
     val templateId = if (aps530WithdrawalEmailImprovements) {
       notifyConfig.templates.applicationWithdrawnV2
     } else {
       notifyConfig.templates.applicationWithdrawn
     }
 
-    applicationCreatedByUser.email?.let { email ->
-      emailNotifier.sendEmail(
-        recipientEmailAddress = email,
-        templateId = templateId,
-        personalisation = mapOf(
-          "crn" to application.crn,
-          "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", application.id.toString()),
-          "withdrawnBy" to withdrawingUser.name,
-        ),
-      )
-    }
+    emailNotifier.sendEmails(
+      recipientEmailAddresses = application.interestedPartiesEmailAddresses(),
+      templateId = templateId,
+      personalisation = mapOf(
+        "crn" to application.crn,
+        "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", application.id.toString()),
+        "withdrawnBy" to withdrawingUser.name,
+      ),
+    )
   }
 }
