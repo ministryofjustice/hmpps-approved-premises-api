@@ -77,7 +77,7 @@ class EmailNotificationServiceTest {
   }
 
   @Test
-  fun `sendEmail NotifyMode TEST_AND_GUEST_LIST sends email using the guest list if user is in guest list`() {
+  fun `sendEmail NotifyMode TEST_AND_GUEST_LIST sends email using the guest list`() {
     val emailNotificationService = createService(NotifyMode.TEST_AND_GUEST_LIST)
 
     every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
@@ -118,7 +118,7 @@ class EmailNotificationServiceTest {
   }
 
   @Test
-  fun `sendEmail NotifyMode ENABLED sends email using the normal client, does not check if Guest List User`() {
+  fun `sendEmail NotifyMode ENABLED sends email using the normal client`() {
     val emailNotificationService = createService(NotifyMode.ENABLED)
 
     val templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888"
@@ -238,6 +238,54 @@ class EmailNotificationServiceTest {
       verify { mockSentryService.captureException(exception) }
     } else {
       verify { mockSentryService wasNot Called }
+    }
+  }
+
+  @Nested
+  inner class SendEmails {
+
+    @Test
+    fun `sendEmails sends an email for each recipient, filtering out duplicates()`() {
+      val emailNotificationService = createService(NotifyMode.ENABLED)
+
+      val templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888"
+      val personalisation = mapOf(
+        "name" to "Jim",
+        "assessmentUrl" to "https://frontend/assessment/73eff3e8-d2f0-434f-a776-4f975b891444",
+      )
+
+      every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
+      every {
+        mockNormalNotificationClient.sendEmail(any(), any(), any(), any(), any())
+      } returns mockk()
+
+      emailNotificationService.sendEmails(
+        recipientEmailAddresses = listOf("test1@here.com", "test2@here.com", "test1@here.com"),
+        templateId = templateId,
+        personalisation = personalisation,
+      )
+
+      verify(exactly = 1) {
+        mockNormalNotificationClient.sendEmail(
+          "f3d78814-383f-4b5f-a681-9bd3ab912888",
+          "test1@here.com",
+          personalisation,
+          null,
+          null,
+        )
+      }
+
+      verify(exactly = 1) {
+        mockNormalNotificationClient.sendEmail(
+          "f3d78814-383f-4b5f-a681-9bd3ab912888",
+          "test2@here.com",
+          personalisation,
+          null,
+          null,
+        )
+      }
+
+      verify { mockGuestListNotificationClient wasNot Called }
     }
   }
 
