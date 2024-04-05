@@ -2505,7 +2505,7 @@ class ApplicationTest : IntegrationTestBase() {
             withCreatedByUser(submittingUser)
             withProbationRegion(submittingUser.probationRegion)
             withPdu("Probation Delivery Unit Test")
-            withIsHistoryOfSexualOffence(true)
+            withHasHistoryOfSexualOffence(true)
             withIsConcerningSexualBehaviour(true)
             withIsConcerningArsonBehaviour(true)
             withData(

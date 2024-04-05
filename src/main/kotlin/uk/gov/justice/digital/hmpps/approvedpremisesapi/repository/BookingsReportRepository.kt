@@ -15,9 +15,12 @@ interface BookingsReportRepository : JpaRepository<BookingEntity, UUID> {
       CAST(app.id AS VARCHAR) AS referralId,
       app.submitted_at AS referralDate,
       cas3_app.risk_ratings->'roshRisks'->'value'->>'overallRisk' AS riskOfSeriousHarm,
-      cas3_app.is_registered_sex_offender AS sexOffender,
+      cas3_app.is_registered_sex_offender AS registeredSexOffender,
+      cas3_app.is_history_of_sexual_offence as historyOfSexualOffence,
+      cas3_app.is_concerning_sexual_behaviour as concerningSexualBehaviour,  
       cas3_app.needs_accessible_property AS needForAccessibleProperty,
       cas3_app.has_history_of_arson AS historyOfArsonOffence,
+      cas3_app.is_concerning_arson_behaviour as concerningArsonBehaviour,
       cas3_app.is_duty_to_refer_submitted AS dutyToReferMade,
       cas3_app.duty_to_refer_submission_date AS dateDutyToReferMade,
       cas3_app.is_eligible AS isReferralEligibleForCas3,
@@ -86,9 +89,12 @@ interface BookingsReportData {
   val referralId: String?
   val referralDate: LocalDate?
   val riskOfSeriousHarm: String?
-  val sexOffender: Boolean?
+  val registeredSexOffender: Boolean?
+  val historyOfSexualOffence: Boolean?
+  val concerningSexualBehaviour: Boolean?
   val needForAccessibleProperty: Boolean?
   val historyOfArsonOffence: Boolean?
+  val concerningArsonBehaviour: Boolean?
   val dutyToReferMade: Boolean?
   val dateDutyToReferMade: LocalDate?
   val referralEligibleForCas3: Boolean?

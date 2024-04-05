@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Case
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TransitionalAccommodationReferralReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.TransitionalAccommodationReferralReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.TransitionalAccommodationReferralReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
 
 class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
   TransitionalAccommodationReferralReportDataAndPersonInfo,
@@ -32,9 +33,12 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
         ethnicity = personInfo.tryGetDetails { it.profile?.ethnicity },
         dateOfBirth = personInfo.tryGetDetails { it.dateOfBirth },
         riskOfSeriousHarm = referralData.riskOfSeriousHarm,
-        sexOffender = referralData.sexOffender,
+        registeredSexOffender = referralData.registeredSexOffender.toYesNo(),
+        historyOfSexualOffence = referralData.historyOfSexualOffence.toYesNo(),
+        concerningSexualBehaviour = referralData.concerningSexualBehaviour.toYesNo(),
         needForAccessibleProperty = referralData.needForAccessibleProperty,
-        historyOfArsonOffence = referralData.historyOfArsonOffence,
+        historyOfArsonOffence = referralData.historyOfArsonOffence.toYesNo(),
+        concerningArsonBehaviour = referralData.concerningArsonBehaviour.toYesNo(),
         dutyToReferMade = referralData.dutyToReferMade,
         dateDutyToReferMade = referralData.dateDutyToReferMade,
         dutyToReferLocalAuthorityAreaName = referralData.dutyToReferLocalAuthorityAreaName,

@@ -617,7 +617,7 @@ class BookingsReportGeneratorTest {
     assertThat(actual[0][BookingsReportRow::referralId]).isNull()
     assertThat(actual[0][BookingsReportRow::referralDate]).isNull()
     assertThat(actual[0][BookingsReportRow::riskOfSeriousHarm]).isNull()
-    assertThat(actual[0][BookingsReportRow::sexOffender]).isNull()
+    assertThat(actual[0][BookingsReportRow::registeredSexOffender]).isNull()
     assertThat(actual[0][BookingsReportRow::needForAccessibleProperty]).isNull()
     assertThat(actual[0][BookingsReportRow::historyOfArsonOffence]).isNull()
     assertThat(actual[0][BookingsReportRow::dutyToReferMade]).isNull()
@@ -654,9 +654,12 @@ class BookingsReportGeneratorTest {
           ),
         )
       }
-      .withIsRegisteredSexOffender(true)
+      .withHasRegisteredSexOffender(true)
+      .withHasHistoryOfSexualOffence(false)
+      .withIsConcerningSexualBehaviour(null)
       .withNeedsAccessibleProperty(true)
       .withHasHistoryOfArson(false)
+      .withIsConcerningArsonBehaviour(true)
       .withIsDutyToReferSubmitted(true)
       .withDutyToReferSubmissionDate(LocalDate.now())
       .withIsEligible(true)
@@ -683,9 +686,12 @@ class BookingsReportGeneratorTest {
     assertThat(actual[0][BookingsReportRow::referralId]).isEqualTo(application.id.toString())
     assertThat(actual[0][BookingsReportRow::referralDate]).isEqualTo(application.submittedAt!!.toLocalDate())
     assertThat(actual[0][BookingsReportRow::riskOfSeriousHarm]).isEqualTo("High")
-    assertThat(actual[0][BookingsReportRow::sexOffender]).isTrue
+    assertThat(actual[0][BookingsReportRow::registeredSexOffender]).isEqualTo("Yes")
+    assertThat(actual[0][BookingsReportRow::historyOfSexualOffence]).isEqualTo("No")
+    assertThat(actual[0][BookingsReportRow::concerningSexualBehaviour]).isNull()
     assertThat(actual[0][BookingsReportRow::needForAccessibleProperty]).isTrue
-    assertThat(actual[0][BookingsReportRow::historyOfArsonOffence]).isFalse
+    assertThat(actual[0][BookingsReportRow::historyOfArsonOffence]).isEqualTo("No")
+    assertThat(actual[0][BookingsReportRow::concerningArsonBehaviour]).isEqualTo("Yes")
     assertThat(actual[0][BookingsReportRow::dutyToReferMade]).isTrue
     assertThat(actual[0][BookingsReportRow::dateDutyToReferMade]).isEqualTo(LocalDate.now())
     assertThat(actual[0][BookingsReportRow::isReferralEligibleForCas3]).isTrue
@@ -721,9 +727,12 @@ class BookingsReportGeneratorTest {
           ),
         )
       }
-      .withIsRegisteredSexOffender(true)
+      .withHasRegisteredSexOffender(true)
+      .withHasHistoryOfSexualOffence(null)
+      .withIsConcerningSexualBehaviour(false)
       .withNeedsAccessibleProperty(true)
       .withHasHistoryOfArson(false)
+      .withIsConcerningArsonBehaviour(null)
       .withIsDutyToReferSubmitted(true)
       .withDutyToReferSubmissionDate(LocalDate.now())
       .withIsEligible(true)
@@ -749,9 +758,12 @@ class BookingsReportGeneratorTest {
     assertThat(actual[0][BookingsReportRow::referralId]).isEqualTo(application.id.toString())
     assertThat(actual[0][BookingsReportRow::referralDate]).isEqualTo(application.submittedAt!!.toLocalDate())
     assertThat(actual[0][BookingsReportRow::riskOfSeriousHarm]).isEqualTo("High")
-    assertThat(actual[0][BookingsReportRow::sexOffender]).isTrue
+    assertThat(actual[0][BookingsReportRow::registeredSexOffender]).isEqualTo("Yes")
+    assertThat(actual[0][BookingsReportRow::historyOfSexualOffence]).isNull()
+    assertThat(actual[0][BookingsReportRow::concerningSexualBehaviour]).isEqualTo("No")
     assertThat(actual[0][BookingsReportRow::needForAccessibleProperty]).isTrue
-    assertThat(actual[0][BookingsReportRow::historyOfArsonOffence]).isFalse
+    assertThat(actual[0][BookingsReportRow::historyOfArsonOffence]).isEqualTo("No")
+    assertThat(actual[0][BookingsReportRow::concerningArsonBehaviour]).isNull()
     assertThat(actual[0][BookingsReportRow::dutyToReferMade]).isTrue
     assertThat(actual[0][BookingsReportRow::dateDutyToReferMade]).isEqualTo(LocalDate.now())
     assertThat(actual[0][BookingsReportRow::isReferralEligibleForCas3]).isTrue
