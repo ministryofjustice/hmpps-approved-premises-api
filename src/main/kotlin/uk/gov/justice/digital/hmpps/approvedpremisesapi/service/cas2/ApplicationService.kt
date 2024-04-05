@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ValidationErrors
@@ -35,7 +34,6 @@ import javax.transaction.Transactional
 
 @Service("Cas2ApplicationService")
 class ApplicationService(
-  private val userRepository: NomisUserRepository,
   private val applicationRepository: Cas2ApplicationRepository,
   private val jsonSchemaService: JsonSchemaService,
   private val offenderService: OffenderService,
@@ -87,14 +85,11 @@ class ApplicationService(
     )
   }
 
-  fun getApplicationForUsername(applicationId: UUID, userDistinguishedName: String): AuthorisableActionResult<Cas2ApplicationEntity> {
+  fun getApplicationForUser(applicationId: UUID, user: NomisUserEntity): AuthorisableActionResult<Cas2ApplicationEntity> {
     val applicationEntity = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
-    val userEntity = userRepository.findByNomisUsername(userDistinguishedName)
-      ?: throw RuntimeException("Could not get user")
-
-    val canAccess = userAccessService.userCanViewApplication(userEntity, applicationEntity)
+    val canAccess = userAccessService.userCanViewApplication(user, applicationEntity)
 
     return if (canAccess) {
       AuthorisableActionResult.Success(

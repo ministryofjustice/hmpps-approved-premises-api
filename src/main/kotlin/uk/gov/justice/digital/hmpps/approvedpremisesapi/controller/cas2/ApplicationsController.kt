@@ -62,7 +62,7 @@ class ApplicationsController(
 
     val application = when (
       val applicationResult = applicationService
-        .getApplicationForUsername(applicationId, user.nomisUsername)
+        .getApplicationForUser(applicationId, user)
     ) {
       is AuthorisableActionResult.NotFound -> null
       is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()

@@ -31,7 +31,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationJsonSchemaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.AssignedLivingUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
@@ -51,7 +50,6 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 class ApplicationServiceTest {
-  private val mockUserRepository = mockk<NomisUserRepository>()
   private val mockApplicationRepository = mockk<Cas2ApplicationRepository>()
   private val mockJsonSchemaService = mockk<JsonSchemaService>()
   private val mockOffenderService = mockk<OffenderService>()
@@ -63,7 +61,6 @@ class ApplicationServiceTest {
   private val mockNotifyConfig = mockk<NotifyConfig>()
 
   private val applicationService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationService(
-    mockUserRepository,
     mockApplicationRepository,
     mockJsonSchemaService,
     mockOffenderService,
@@ -123,25 +120,22 @@ class ApplicationServiceTest {
   }
 
   @Nested
-  inner class GetApplicationForUsername {
+  inner class GetApplicationForUser {
     @Test
     fun `where application does not exist returns NotFound result`() {
-      val distinguishedName = "SOMEPERSON"
+      val user = NomisUserEntityFactory().produce()
       val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
       every { mockApplicationRepository.findByIdOrNull(applicationId) } returns null
 
-      assertThat(applicationService.getApplicationForUsername(applicationId, distinguishedName) is AuthorisableActionResult.NotFound).isTrue
+      assertThat(applicationService.getApplicationForUser(applicationId, user) is AuthorisableActionResult.NotFound).isTrue
     }
 
     @Test
     fun `where user cannot access the application returns Unauthorised result`() {
-      val distinguishedName = "SOMEPERSON"
-      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
-
-      every { mockUserRepository.findByNomisUsername(any()) } returns NomisUserEntityFactory()
-        .withNomisUsername(distinguishedName)
+      val user = NomisUserEntityFactory()
         .produce()
+      val applicationId = UUID.fromString("c1750938-19fc-48a1-9ae9-f2e119ffc1f4")
 
       every { mockApplicationRepository.findByIdOrNull(any()) } returns
         Cas2ApplicationEntityFactory()
@@ -153,7 +147,7 @@ class ApplicationServiceTest {
 
       every { mockUserAccessService.userCanViewApplication(any(), any()) } returns false
 
-      assertThat(applicationService.getApplicationForUsername(applicationId, distinguishedName) is AuthorisableActionResult.Unauthorised).isTrue
+      assertThat(applicationService.getApplicationForUser(applicationId, user) is AuthorisableActionResult.Unauthorised).isTrue
     }
 
     @Test
@@ -181,10 +175,9 @@ class ApplicationServiceTest {
           .args[0] as Cas2ApplicationEntity
       }
       every { mockApplicationRepository.findByIdOrNull(any()) } returns applicationEntity
-      every { mockUserRepository.findByNomisUsername(any()) } returns userEntity
       every { mockUserAccessService.userCanViewApplication(any(), any()) } returns true
 
-      val result = applicationService.getApplicationForUsername(applicationId, distinguishedName)
+      val result = applicationService.getApplicationForUser(applicationId, userEntity)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
       result as AuthorisableActionResult.Success
