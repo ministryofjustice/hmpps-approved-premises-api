@@ -29,16 +29,15 @@ class EmailNotificationServiceTest {
   private val mockNotifyGuestListUserRepository = mockk<NotifyGuestListUserRepository>()
   private val mockApplicationEventPublisher = mockk<ApplicationEventPublisher>()
   private val mockSentryService = mockk<SentryService>()
+  private val logger = mockk<Logger>()
+
+  private val user = UserEntityFactory()
+    .withUnitTestControlProbationRegion()
+    .produce()
 
   @Test
-  fun `sendEmail does not send an email if feature flag is set to DISABLED`() {
-    val emailNotificationService = createServiceWithConfig {
-      mode = NotifyMode.DISABLED
-    }
-
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
+  fun `sendEmail NotifyMode DISABLED does not send an email if `() {
+    val emailNotificationService = createService(NotifyMode.DISABLED)
 
     every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
 
@@ -51,19 +50,13 @@ class EmailNotificationServiceTest {
       ),
     )
 
-    verify(exactly = 0) { mockGuestListNotificationClient.sendEmail(any(), any(), any(), any(), any()) }
-    verify(exactly = 0) { mockNormalNotificationClient.sendEmail(any(), any(), any(), any()) }
+    verify { mockGuestListNotificationClient wasNot Called }
+    verify { mockNormalNotificationClient wasNot Called }
   }
 
   @Test
-  fun `sendEmail raises a Send Email Requested event even if feature flag is set to DISABLED`() {
-    val emailNotificationService = createServiceWithConfig {
-      mode = NotifyMode.DISABLED
-    }
-
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
+  fun `sendEmail NotifyMode DISABLED still raises a Send Email Requested event`() {
+    val emailNotificationService = createService(NotifyMode.DISABLED)
 
     every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
 
@@ -93,14 +86,8 @@ class EmailNotificationServiceTest {
   }
 
   @Test
-  fun `sendEmail sends email using the guest list client if feature flag is set to TEST_AND_GUEST_LIST and user is in guest list`() {
-    val emailNotificationService = createServiceWithConfig {
-      mode = NotifyMode.TEST_AND_GUEST_LIST
-    }
-
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
+  fun `sendEmail NotifyMode TEST_AND_GUEST_LIST sends email using the guest list if user is in guest list`() {
+    val emailNotificationService = createService(NotifyMode.TEST_AND_GUEST_LIST)
 
     every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
     every { mockNotifyGuestListUserRepository.findByIdOrNull(user.id) } returns NotifyGuestListUserEntity(user.id)
@@ -139,18 +126,12 @@ class EmailNotificationServiceTest {
       )
     }
 
-    verify(exactly = 0) { mockNormalNotificationClient.sendEmail(any(), any(), any(), any()) }
+    verify { mockNormalNotificationClient wasNot Called }
   }
 
   @Test
-  fun `sendEmail sends email using the normal client if feature flag is set to ENABLED, does not check if Guest List User`() {
-    val emailNotificationService = createServiceWithConfig {
-      mode = NotifyMode.ENABLED
-    }
-
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
+  fun `sendEmail NotifyMode ENABLED sends email using the normal client, does not check if Guest List User`() {
+    val emailNotificationService = createService(NotifyMode.ENABLED)
 
     val templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888"
     val personalisation = mapOf(
@@ -187,20 +168,13 @@ class EmailNotificationServiceTest {
       )
     }
 
-    verify(exactly = 0) { mockGuestListNotificationClient.sendEmail(any(), any(), any(), any(), any()) }
-
-    verify(exactly = 0) { mockNotifyGuestListUserRepository.findByIdOrNull(user.id) }
+    verify { mockGuestListNotificationClient wasNot Called }
+    verify { mockNotifyGuestListUserRepository wasNot Called }
   }
 
   @Test
-  fun `sendEmail sends two emails if premises has email using the normal client if feature flag is set to ENABLED, does not check if Guest List User`() {
-    val emailNotificationService = createServiceWithConfig {
-      mode = NotifyMode.ENABLED
-    }
-
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
+  fun `sendEmail NotifyMode ENABLED sends two emails if premises has email using the normal client , does not check if Guest List User`() {
+    val emailNotificationService = createService(NotifyMode.ENABLED)
 
     val templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888"
     val personalisation = mapOf(
@@ -218,6 +192,7 @@ class EmailNotificationServiceTest {
         null,
       )
     } returns mockk()
+
     if (user.email != null) {
       emailNotificationService.sendEmail(
         recipientEmailAddress = user.email!!,
@@ -236,22 +211,14 @@ class EmailNotificationServiceTest {
       )
     }
 
-    verify(exactly = 0) { mockGuestListNotificationClient.sendEmail(any(), any(), any(), any(), any()) }
-    verify(exactly = 0) { mockNotifyGuestListUserRepository.findByIdOrNull(user.id) }
+    verify { mockGuestListNotificationClient wasNot Called }
+    verify { mockNotifyGuestListUserRepository wasNot Called }
   }
 
   @Test
   fun `sendEmail logs an error if the notification fails`() {
-    val logger = mockk<Logger>()
     val exception = NotificationClientException("oh dear")
-    val emailNotificationService = createServiceWithConfig {
-      mode = NotifyMode.ENABLED
-    }
-    emailNotificationService.log = logger
-
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
+    val emailNotificationService = createService(NotifyMode.ENABLED)
 
     val templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888"
     val personalisation = mapOf(
@@ -296,16 +263,8 @@ class EmailNotificationServiceTest {
     message: String,
     shouldRaiseInSentry: Boolean,
   ) {
-    val logger = mockk<Logger>()
     val exception = NotificationClientException(message)
-    val emailNotificationService = createServiceWithConfig {
-      mode = NotifyMode.ENABLED
-    }
-    emailNotificationService.log = logger
-
-    val user = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .produce()
+    val emailNotificationService = createService(NotifyMode.ENABLED)
 
     val templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888"
     val personalisation = mapOf(
@@ -354,9 +313,7 @@ class EmailNotificationServiceTest {
     inner class FeatureFlagNotifyEnabled {
       @Test
       fun `sendEmail sends replyToEmailId using the normal client`() {
-        val emailNotificationService = createServiceWithConfig {
-          mode = NotifyMode.ENABLED
-        }
+        val emailNotificationService = createService(NotifyMode.ENABLED)
 
         every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
         every {
@@ -392,9 +349,7 @@ class EmailNotificationServiceTest {
     inner class FeatureFlagTestAndGuestListEnabled {
       @Test
       fun `sendEmail sends replyToEmailId using the guest client`() {
-        val emailNotificationService = createServiceWithConfig {
-          mode = NotifyMode.TEST_AND_GUEST_LIST
-        }
+        val emailNotificationService = createService(NotifyMode.TEST_AND_GUEST_LIST)
 
         every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
         every {
@@ -429,11 +384,20 @@ class EmailNotificationServiceTest {
     }
   }
 
-  private fun createServiceWithConfig(configBlock: NotifyConfig.() -> Unit) = EmailNotificationService(
-    notifyConfig = NotifyConfig().apply(configBlock),
-    normalNotificationClient = mockNormalNotificationClient,
-    guestListNotificationClient = mockGuestListNotificationClient,
-    applicationEventPublisher = mockApplicationEventPublisher,
-    sentryService = mockSentryService,
-  )
+  private fun createService(notifyMode: NotifyMode): EmailNotificationService {
+    val service = EmailNotificationService(
+      notifyConfig = NotifyConfig().apply {
+        mode = notifyMode
+      },
+      normalNotificationClient = mockNormalNotificationClient,
+      guestListNotificationClient = mockGuestListNotificationClient,
+      applicationEventPublisher = mockApplicationEventPublisher,
+      sentryService = mockSentryService,
+    )
+    service.log = logger
+
+    every { logger.info(any<String>()) } returns Unit
+
+    return service
+  }
 }
