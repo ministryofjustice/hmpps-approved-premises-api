@@ -10,12 +10,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.slf4j.Logger
 import org.springframework.context.ApplicationEventPublisher
-import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyMode
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NotifyGuestListUserEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NotifyGuestListUserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SendEmailRequestedEvent
@@ -26,14 +22,9 @@ import uk.gov.service.notify.NotificationClientException
 class EmailNotificationServiceTest {
   private val mockNormalNotificationClient = mockk<NotificationClient>()
   private val mockGuestListNotificationClient = mockk<NotificationClient>()
-  private val mockNotifyGuestListUserRepository = mockk<NotifyGuestListUserRepository>()
   private val mockApplicationEventPublisher = mockk<ApplicationEventPublisher>()
   private val mockSentryService = mockk<SentryService>()
   private val logger = mockk<Logger>()
-
-  private val user = UserEntityFactory()
-    .withUnitTestControlProbationRegion()
-    .produce()
 
   @Test
   fun `sendEmail NotifyMode DISABLED does not send an email if `() {
@@ -42,7 +33,7 @@ class EmailNotificationServiceTest {
     every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
 
     emailNotificationService.sendEmail(
-      recipientEmailAddress = user.email!!,
+      recipientEmailAddress = "test@here.com",
       templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888",
       personalisation = mapOf(
         "name" to "Jim",
@@ -61,7 +52,7 @@ class EmailNotificationServiceTest {
     every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
 
     emailNotificationService.sendEmail(
-      recipientEmailAddress = user.email!!,
+      recipientEmailAddress = "test@here.com",
       templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888",
       personalisation = mapOf(
         "name" to "Jim",
@@ -73,7 +64,7 @@ class EmailNotificationServiceTest {
       mockApplicationEventPublisher.publishEvent(
         SendEmailRequestedEvent(
           EmailRequest(
-            user.email!!,
+            "test@here.com",
             "f3d78814-383f-4b5f-a681-9bd3ab912888",
             mapOf(
               "name" to "Jim",
@@ -90,7 +81,6 @@ class EmailNotificationServiceTest {
     val emailNotificationService = createService(NotifyMode.TEST_AND_GUEST_LIST)
 
     every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
-    every { mockNotifyGuestListUserRepository.findByIdOrNull(user.id) } returns NotifyGuestListUserEntity(user.id)
 
     val templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888"
     val personalisation = mapOf(
@@ -101,25 +91,23 @@ class EmailNotificationServiceTest {
     every {
       mockGuestListNotificationClient.sendEmail(
         "f3d78814-383f-4b5f-a681-9bd3ab912888",
-        user.email,
+        "test@here.com",
         personalisation,
         null,
         null,
       )
     } returns mockk()
 
-    if (user.email != null) {
-      emailNotificationService.sendEmail(
-        recipientEmailAddress = user.email!!,
-        templateId = templateId,
-        personalisation = personalisation,
-      )
-    }
+    emailNotificationService.sendEmail(
+      recipientEmailAddress = "test@here.com",
+      templateId = templateId,
+      personalisation = personalisation,
+    )
 
     verify(exactly = 1) {
       mockGuestListNotificationClient.sendEmail(
         "f3d78814-383f-4b5f-a681-9bd3ab912888",
-        user.email,
+        "test@here.com",
         personalisation,
         null,
         null,
@@ -143,25 +131,23 @@ class EmailNotificationServiceTest {
     every {
       mockNormalNotificationClient.sendEmail(
         "f3d78814-383f-4b5f-a681-9bd3ab912888",
-        user.email,
+        "test@here.com",
         personalisation,
         null,
         null,
       )
     } returns mockk()
 
-    if (user.email != null) {
-      emailNotificationService.sendEmail(
-        recipientEmailAddress = user.email!!,
-        templateId = templateId,
-        personalisation = personalisation,
-      )
-    }
+    emailNotificationService.sendEmail(
+      recipientEmailAddress = "test@here.com",
+      templateId = templateId,
+      personalisation = personalisation,
+    )
 
     verify(exactly = 1) {
       mockNormalNotificationClient.sendEmail(
         "f3d78814-383f-4b5f-a681-9bd3ab912888",
-        user.email,
+        "test@here.com",
         personalisation,
         null,
         null,
@@ -169,7 +155,6 @@ class EmailNotificationServiceTest {
     }
 
     verify { mockGuestListNotificationClient wasNot Called }
-    verify { mockNotifyGuestListUserRepository wasNot Called }
   }
 
   @Test
@@ -187,7 +172,7 @@ class EmailNotificationServiceTest {
     every {
       mockNormalNotificationClient.sendEmail(
         "f3d78814-383f-4b5f-a681-9bd3ab912888",
-        user.email,
+        "test@here.com",
         personalisation,
         null,
         null,
@@ -197,13 +182,13 @@ class EmailNotificationServiceTest {
     every { logger.error(any<String>(), any()) } returns Unit
 
     emailNotificationService.sendEmail(
-      recipientEmailAddress = user.email!!,
+      recipientEmailAddress = "test@here.com",
       templateId = templateId,
       personalisation = personalisation,
     )
 
     verify {
-      logger.error("Unable to send template $templateId to user ${user.email}", exception)
+      logger.error("Unable to send template $templateId to user test@here.com", exception)
     }
   }
 
@@ -233,7 +218,7 @@ class EmailNotificationServiceTest {
     every {
       mockNormalNotificationClient.sendEmail(
         "f3d78814-383f-4b5f-a681-9bd3ab912888",
-        user.email,
+        "test@here.com",
         personalisation,
         null,
         null,
@@ -244,7 +229,7 @@ class EmailNotificationServiceTest {
     every { logger.error(any<String>(), any()) } returns Unit
 
     emailNotificationService.sendEmail(
-      recipientEmailAddress = user.email!!,
+      recipientEmailAddress = "test@here.com",
       templateId = templateId,
       personalisation = personalisation,
     )
