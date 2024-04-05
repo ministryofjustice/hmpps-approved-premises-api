@@ -54,7 +54,7 @@ class Cas1AppealDomainEventService(
             ),
             personReference = PersonReference(
               crn = appeal.application.crn,
-              noms = appeal.application.nomsNumber!!,
+              noms = appeal.application.nomsNumber ?: "Unknown NOMS Number",
             ),
             deliusEventNumber = (appeal.application as ApprovedPremisesApplicationEntity).eventNumber,
             createdAt = timestamp,

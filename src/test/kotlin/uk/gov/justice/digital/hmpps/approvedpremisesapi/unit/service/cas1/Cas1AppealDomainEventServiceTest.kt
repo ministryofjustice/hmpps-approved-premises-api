@@ -6,6 +6,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.verify
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
@@ -20,11 +21,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealDomainEventService
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.withinSeconds
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
@@ -69,12 +68,10 @@ class Cas1AppealDomainEventServiceTest {
 
   private val appealId = UUID.randomUUID()
 
-  @Test
-  fun appealRecordCreated() {
-    createdByUser.addRoleForUnitTest(UserRole.CAS1_APPEALS_MANAGER)
+  val now = LocalDate.now()
 
-    val now = LocalDate.now()
-
+  @BeforeEach
+  fun setupMocks() {
     every { domainEventService.saveAssessmentAppealedEvent(any()) } just Runs
     every { communityApiClient.getStaffUserDetails(createdByUser.deliusUsername) } returns ClientResult.Success(
       HttpStatus.OK,
@@ -82,7 +79,10 @@ class Cas1AppealDomainEventServiceTest {
     )
     every { applicationUrlTemplate.resolve(any(), any()) } returns "http://frontend/applications/${application.id}"
     every { applicationAppealUrlTemplate.resolve(any()) } returns "http://frontend/applications/${application.id}/appeals/$appealId"
+  }
 
+  @Test
+  fun `appealRecordCreated creates domain event`() {
     mockkStatic(UUID::class) {
       every { UUID.randomUUID() } returns appealId
 
@@ -102,6 +102,35 @@ class Cas1AppealDomainEventServiceTest {
         domainEventService.saveAssessmentAppealedEvent(
           match {
             it.matches()
+          },
+        )
+      }
+    }
+  }
+
+  @Test
+  fun `appealRecordCreated noms is optional`() {
+    application.nomsNumber = null
+
+    mockkStatic(UUID::class) {
+      every { UUID.randomUUID() } returns appealId
+
+      service.appealRecordCreated(
+        AppealEntityFactory()
+          .withApplication(application)
+          .withAssessment(assessment)
+          .withAppealDate(now)
+          .withDecision(AppealDecision.accepted)
+          .withCreatedBy(createdByUser)
+          .withAppealDetail("Some information about why the appeal is being made")
+          .withDecisionDetail("Some information about the decision made")
+          .produce(),
+      )
+
+      verify(exactly = 1) {
+        domainEventService.saveAssessmentAppealedEvent(
+          match {
+            it.data.eventDetails.personReference.noms == "Unknown NOMS Number"
           },
         )
       }
