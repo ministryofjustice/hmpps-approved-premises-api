@@ -27,6 +27,7 @@ data class NomisUserEntity(
   var isEnabled: Boolean,
   var isActive: Boolean,
   override var email: String?,
+  var activeCaseloadId: String? = null,
 
   @CreationTimestamp
   private val createdAt: OffsetDateTime? = null,
