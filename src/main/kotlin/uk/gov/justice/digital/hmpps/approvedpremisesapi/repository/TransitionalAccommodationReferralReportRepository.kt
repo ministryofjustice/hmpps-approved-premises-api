@@ -16,9 +16,12 @@ interface TransitionalAccommodationReferralReportRepository : JpaRepository<Book
       ap.crn AS crn,
       ap.submitted_at AS referralSubmittedDate,
       taa.risk_ratings->'roshRisks'->'value'->>'overallRisk' AS riskOfSeriousHarm,
-      taa.is_registered_sex_offender AS sexOffender,
+      taa.is_registered_sex_offender AS registeredSexOffender,
+      taa.is_history_of_sexual_offence as historyOfSexualOffence,
+      taa.is_concerning_sexual_behaviour as concerningSexualBehaviour,     
       taa.needs_accessible_property AS needForAccessibleProperty,
       taa.has_history_of_arson AS historyOfArsonOffence,
+      taa.is_concerning_arson_behaviour as concerningArsonBehaviour,      
       taa.is_duty_to_refer_submitted AS dutyToReferMade,
       taa.duty_to_refer_submission_date AS dateDutyToReferMade,
       taa.duty_to_refer_local_authority_area_name AS dutyToReferLocalAuthorityAreaName,
@@ -66,9 +69,12 @@ interface TransitionalAccommodationReferralReportData {
   val crn: String
   val referralSubmittedDate: LocalDate?
   val riskOfSeriousHarm: String?
-  val sexOffender: Boolean?
+  val registeredSexOffender: Boolean?
+  val historyOfSexualOffence: Boolean?
+  val concerningSexualBehaviour: Boolean?
   val needForAccessibleProperty: Boolean?
   val historyOfArsonOffence: Boolean?
+  val concerningArsonBehaviour: Boolean?
   val dutyToReferMade: Boolean?
   val dateDutyToReferMade: LocalDate?
   val probationRegionName: String

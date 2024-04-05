@@ -22,12 +22,18 @@ fun List<BookingEntity>.toBookingsReportData(): List<BookingsReportData> = this
         get() = application?.submittedAt?.toLocalDate()
       override val riskOfSeriousHarm: String?
         get() = application?.riskRatings?.roshRisks?.value?.overallRisk
-      override val sexOffender: Boolean?
+      override val registeredSexOffender: Boolean?
         get() = application?.isRegisteredSexOffender
+      override val historyOfSexualOffence: Boolean?
+        get() = application?.isHistoryOfSexualOffence
+      override val concerningSexualBehaviour: Boolean?
+        get() = application?.isConcerningSexualBehaviour
       override val needForAccessibleProperty: Boolean?
         get() = application?.needsAccessibleProperty
       override val historyOfArsonOffence: Boolean?
         get() = application?.hasHistoryOfArson
+      override val concerningArsonBehaviour: Boolean?
+        get() = application?.isConcerningArsonBehaviour
       override val dutyToReferMade: Boolean?
         get() = application?.isDutyToReferSubmitted
       override val dateDutyToReferMade: LocalDate?

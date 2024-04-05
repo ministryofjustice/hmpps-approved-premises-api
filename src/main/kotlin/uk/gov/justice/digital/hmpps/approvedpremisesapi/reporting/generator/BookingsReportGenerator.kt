@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Case
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportDataAndPersonInfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.BookingsReportRow
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -30,9 +31,12 @@ class BookingsReportGenerator : ReportGenerator<BookingsReportDataAndPersonInfo,
         ethnicity = personInfo.tryGetDetails { it.profile?.ethnicity },
         dateOfBirth = personInfo.tryGetDetails { it.dateOfBirth },
         riskOfSeriousHarm = booking.riskOfSeriousHarm,
-        sexOffender = booking.sexOffender,
+        registeredSexOffender = booking.registeredSexOffender.toYesNo(),
+        historyOfSexualOffence = booking.historyOfSexualOffence.toYesNo(),
+        concerningSexualBehaviour = booking.concerningSexualBehaviour.toYesNo(),
         needForAccessibleProperty = booking.needForAccessibleProperty,
-        historyOfArsonOffence = booking.historyOfArsonOffence,
+        historyOfArsonOffence = booking.historyOfArsonOffence.toYesNo(),
+        concerningArsonBehaviour = booking.concerningArsonBehaviour.toYesNo(),
         dutyToReferMade = booking.dutyToReferMade,
         dateDutyToReferMade = booking.dateDutyToReferMade,
         dutyToReferLocalAuthorityAreaName = booking.dutyToReferLocalAuthorityAreaName,

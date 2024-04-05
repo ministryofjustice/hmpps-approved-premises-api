@@ -18,3 +18,11 @@ fun UUID.toShortBase58(): String {
 
   return sb.reverse().toString()
 }
+
+fun Boolean?.toYesNo(): String? {
+  return when (this) {
+    null -> null
+    true -> "Yes"
+    false -> "No"
+  }
+}

@@ -37,7 +37,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
   private var nomsNumber: Yielded<String> = { randomStringUpperCase(6) }
   private var arrivalDate: Yielded<OffsetDateTime?> = { null }
-  private var isRegisteredSexOffender: Yielded<Boolean?> = { null }
+  private var hasRegisteredSexOffender: Yielded<Boolean?> = { null }
   private var needsAccessibleProperty: Yielded<Boolean?> = { null }
   private var hasHistoryOfArson: Yielded<Boolean?> = { null }
   private var isDutyToReferSubmitted: Yielded<Boolean?> = { null }
@@ -49,7 +49,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var personReleaseDate: Yielded<LocalDate?> = { null }
   private var pdu: Yielded<String?> = { null }
   private var name: Yielded<String?> = { null }
-  private var isHistoryOfSexualOffence: Yielded<Boolean?> = { null }
+  private var hasHistoryOfSexualOffence: Yielded<Boolean?> = { null }
   private var isConcerningSexualBehaviour: Yielded<Boolean?> = { null }
   private var isConcerningArsonBehaviour: Yielded<Boolean?> = { null }
 
@@ -125,8 +125,8 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.arrivalDate = { arrivalDate?.let { OffsetDateTime.of(it, LocalTime.MIDNIGHT, ZoneOffset.UTC) } }
   }
 
-  fun withIsRegisteredSexOffender(isRegisteredSexOffender: Boolean?) = apply {
-    this.isRegisteredSexOffender = { isRegisteredSexOffender }
+  fun withHasRegisteredSexOffender(hasRegisteredSexOffender: Boolean?) = apply {
+    this.hasRegisteredSexOffender = { hasRegisteredSexOffender }
   }
 
   fun withNeedsAccessibleProperty(needsAccessibleProperty: Boolean?) = apply {
@@ -177,8 +177,8 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.name = { name }
   }
 
-  fun withIsHistoryOfSexualOffence(isHistoryOfSexualOffence: Boolean?) = apply {
-    this.isHistoryOfSexualOffence = { isHistoryOfSexualOffence }
+  fun withHasHistoryOfSexualOffence(hasHistoryOfSexualOffence: Boolean?) = apply {
+    this.hasHistoryOfSexualOffence = { hasHistoryOfSexualOffence }
   }
 
   fun withIsConcerningSexualBehaviour(isConcerningSexualBehaviour: Boolean?) = apply {
@@ -207,8 +207,8 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided"),
     nomsNumber = this.nomsNumber(),
     arrivalDate = this.arrivalDate(),
-    isRegisteredSexOffender = this.isRegisteredSexOffender(),
-    isHistoryOfSexualOffence = this.isHistoryOfSexualOffence(),
+    isRegisteredSexOffender = this.hasRegisteredSexOffender(),
+    isHistoryOfSexualOffence = this.hasHistoryOfSexualOffence(),
     isConcerningSexualBehaviour = this.isConcerningSexualBehaviour(),
     needsAccessibleProperty = this.needsAccessibleProperty(),
     hasHistoryOfArson = this.hasHistoryOfArson(),

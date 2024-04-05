@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.reporting.util
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toShortBase58
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
 import java.util.UUID
 
 class ReportingUtilsTest {
@@ -33,5 +34,23 @@ class ReportingUtilsTest {
 
     assertThat(specificUUID.toShortBase58()).isNotBlank()
     assertThat(specificUUID.toShortBase58()).isEqualTo(specificHash)
+  }
+
+  @Test
+  fun `toYesNo should return null when boolean value is null`() {
+    val boolean: Boolean? = null
+    assertThat(boolean.toYesNo()).isNull()
+  }
+
+  @Test
+  fun `toYesNo should return Yes when boolean value is true`() {
+    val boolean = true
+    assertThat(boolean.toYesNo()).isEqualTo("Yes")
+  }
+
+  @Test
+  fun `toYesNo should return No when boolean value is false`() {
+    val boolean = false
+    assertThat(boolean.toYesNo()).isEqualTo("No")
   }
 }

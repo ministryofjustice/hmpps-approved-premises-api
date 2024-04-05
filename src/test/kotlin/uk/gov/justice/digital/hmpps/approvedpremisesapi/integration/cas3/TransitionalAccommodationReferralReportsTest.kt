@@ -56,6 +56,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.model.Transiti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUsageReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BedUtilisationReportProperties
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.properties.BookingsReportProperties
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.reporting.util.toYesNo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
@@ -316,9 +317,12 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
             withCreatedAt(OffsetDateTime.now())
             withDutyToReferLocalAuthorityAreaName("London")
             withDutyToReferSubmissionDate(LocalDate.now())
-            withHasHistoryOfArson(true)
+            withHasHistoryOfArson(false)
+            withIsConcerningArsonBehaviour(true)
             withIsDutyToReferSubmitted(true)
-            withIsRegisteredSexOffender(true)
+            withHasRegisteredSexOffender(null)
+            withHasHistoryOfSexualOffence(false)
+            withIsConcerningSexualBehaviour(true)
             withNeedsAccessibleProperty(true)
             withRiskRatings {
               withRoshRisks(
@@ -712,8 +716,11 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
             withDutyToReferLocalAuthorityAreaName("London")
             withDutyToReferSubmissionDate(LocalDate.now())
             withHasHistoryOfArson(true)
+            withIsConcerningArsonBehaviour(false)
             withIsDutyToReferSubmitted(true)
-            withIsRegisteredSexOffender(true)
+            withHasRegisteredSexOffender(true)
+            withHasHistoryOfSexualOffence(false)
+            withIsConcerningSexualBehaviour(null)
             withNeedsAccessibleProperty(true)
             withRiskRatings {
               withRoshRisks(
@@ -1977,11 +1984,14 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
     assertThat(actualReferralReportRow.dutyToReferMade).isEqualTo(application.isDutyToReferSubmitted)
     assertThat(actualReferralReportRow.dateDutyToReferMade).isEqualTo(application.dutyToReferSubmissionDate)
     assertThat(actualReferralReportRow.dutyToReferLocalAuthorityAreaName).isEqualTo(application.dutyToReferLocalAuthorityAreaName)
-    assertThat(actualReferralReportRow.historyOfArsonOffence).isEqualTo(application.hasHistoryOfArson)
+    assertThat(actualReferralReportRow.historyOfArsonOffence).isEqualTo(application.hasHistoryOfArson.toYesNo())
+    assertThat(actualReferralReportRow.concerningArsonBehaviour).isEqualTo(application.isConcerningArsonBehaviour.toYesNo())
     assertThat(actualReferralReportRow.needForAccessibleProperty).isEqualTo(application.needsAccessibleProperty)
     assertThat(actualReferralReportRow.referralDate).isEqualTo(application.createdAt.toLocalDate())
     assertThat(actualReferralReportRow.referralSubmittedDate).isEqualTo(application.submittedAt?.toLocalDate())
-    assertThat(actualReferralReportRow.sexOffender).isEqualTo(application.isRegisteredSexOffender)
+    assertThat(actualReferralReportRow.registeredSexOffender).isEqualTo(application.isRegisteredSexOffender.toYesNo())
+    assertThat(actualReferralReportRow.historyOfSexualOffence).isEqualTo(application.isHistoryOfSexualOffence.toYesNo())
+    assertThat(actualReferralReportRow.concerningSexualBehaviour).isEqualTo(application.isConcerningSexualBehaviour.toYesNo())
     assertThat(actualReferralReportRow.referralRejected).isEqualTo(isAssessmentRejected)
     assertThat(actualReferralReportRow.rejectionDate).isEqualTo(rejectedDate?.toLocalDate())
     assertThat(actualReferralReportRow.rejectionReason).isEqualTo(expectedAssessment.rejectionRationale)
@@ -2082,7 +2092,7 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
       withDutyToReferSubmissionDate(LocalDate.now())
       withHasHistoryOfArson(true)
       withIsDutyToReferSubmitted(true)
-      withIsRegisteredSexOffender(true)
+      withHasRegisteredSexOffender(true)
       withNeedsAccessibleProperty(true)
       withRiskRatings {
         withRoshRisks(
