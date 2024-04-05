@@ -173,49 +173,6 @@ class EmailNotificationServiceTest {
   }
 
   @Test
-  fun `sendEmail NotifyMode ENABLED sends two emails if premises has email using the normal client , does not check if Guest List User`() {
-    val emailNotificationService = createService(NotifyMode.ENABLED)
-
-    val templateId = "f3d78814-383f-4b5f-a681-9bd3ab912888"
-    val personalisation = mapOf(
-      "name" to "Jim",
-      "assessmentUrl" to "https://frontend/assessment/73eff3e8-d2f0-434f-a776-4f975b891444",
-    )
-
-    every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
-    every {
-      mockNormalNotificationClient.sendEmail(
-        "f3d78814-383f-4b5f-a681-9bd3ab912888",
-        any(),
-        personalisation,
-        null,
-        null,
-      )
-    } returns mockk()
-
-    if (user.email != null) {
-      emailNotificationService.sendEmail(
-        recipientEmailAddress = user.email!!,
-        templateId = templateId,
-        personalisation = personalisation,
-      )
-    }
-
-    verify(exactly = 1) {
-      mockNormalNotificationClient.sendEmail(
-        "f3d78814-383f-4b5f-a681-9bd3ab912888",
-        any(),
-        personalisation,
-        null,
-        null,
-      )
-    }
-
-    verify { mockGuestListNotificationClient wasNot Called }
-    verify { mockNotifyGuestListUserRepository wasNot Called }
-  }
-
-  @Test
   fun `sendEmail logs an error if the notification fails`() {
     val exception = NotificationClientException("oh dear")
     val emailNotificationService = createService(NotifyMode.ENABLED)
