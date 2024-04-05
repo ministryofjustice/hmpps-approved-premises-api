@@ -52,7 +52,7 @@ class ApplicationsTransformer(
         createdAt = jpaSummary.getCreatedAt().toInstant(),
         submittedAt = jpaSummary.getSubmittedAt()?.toInstant(),
         status = getStatusFromSummary(jpaSummary),
-        latestStatusUpdate = jpaSummary.getLatestStatusUpdate(),
+        latestStatusUpdate = statusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(jpaSummary),
         type = "CAS2",
         hdcEligibilityDate = jpaSummary.getHdcEligibilityDate(),
       )

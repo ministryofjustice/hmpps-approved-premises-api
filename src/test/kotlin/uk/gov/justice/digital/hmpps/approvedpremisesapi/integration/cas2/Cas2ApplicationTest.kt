@@ -444,6 +444,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               }
               // this is the one that should be returned as lastStatusUpdate
               cas2StatusUpdateEntityFactory.produceAndPersist {
+                withStatusId(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
                 withLabel("more recent status update")
                 withApplication(cas2ApplicationRepository.findById(submittedIds.first()).get())
                 withAssessor(assessor)
@@ -523,7 +524,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       val uuids = responseBody.map { it.id }.toSet()
       Assertions.assertThat(uuids).isEqualTo(submittedIds)
-      Assertions.assertThat(responseBody[0].latestStatusUpdate).isEqualTo("more recent status update")
+      Assertions.assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("more recent status update")
+      Assertions.assertThat(responseBody[0].latestStatusUpdate?.statusId).isEqualTo(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
     }
 
     @Test
