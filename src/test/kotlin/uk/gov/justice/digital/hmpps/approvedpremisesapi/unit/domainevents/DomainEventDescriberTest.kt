@@ -19,6 +19,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationWithdrawnFactory
@@ -31,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNotArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationWithdrawnFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -349,6 +352,61 @@ class DomainEventDescriberTest {
     assertThat(result).isEqualTo(
       "A request for placement was withdrawn for dates Tuesday 2 January 2024 to Monday 4 March 2024. " +
         "The reason was: 'No capacity due to placement prioritisation'",
+    )
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+    "rotl,Release directed following parole board or other hearing/decision",
+    "releaseFollowingDecisions,Release on Temporary Licence (ROTL)",
+    "additionalPlacement,An additional placement on an existing application",
+  )
+  fun `Returns expected description for request for placement created event, for additional requests`(type: RequestForPlacementType, expectedTypeDescription: String) {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
+
+    every { mockDomainEventService.getRequestForPlacementCreatedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
+      RequestForPlacementCreatedEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = "approved-premises.request-for-placement.created",
+        eventDetails = RequestForPlacementCreatedFactory()
+          .withRequestForPlacementType(type)
+          .withExpectedArrival(LocalDate.of(2025, 3, 12))
+          .withDuration(7)
+          .produce(),
+      )
+    }
+
+    val result = domainEventDescriber.getDescription(domainEventSummary)
+
+    assertThat(result).isEqualTo(
+      "A request for placement was created with the reason '$expectedTypeDescription' with expected arrival date " +
+        "Wednesday 12 March 2025 and length of stay of 7 days (Wednesday 19 March 2025)",
+    )
+  }
+
+  @Test
+  fun `Returns expected description for request for placement created event, for initial request`() {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
+
+    every { mockDomainEventService.getRequestForPlacementCreatedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
+      RequestForPlacementCreatedEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = "approved-premises.request-for-placement.created",
+        eventDetails = RequestForPlacementCreatedFactory()
+          .withRequestForPlacementType(RequestForPlacementType.initial)
+          .withExpectedArrival(LocalDate.of(2025, 3, 12))
+          .withDuration(7)
+          .produce(),
+      )
+    }
+
+    val result = domainEventDescriber.getDescription(domainEventSummary)
+
+    assertThat(result).isEqualTo(
+      "An initial request for placement was created with expected arrival date " +
+        "Wednesday 12 March 2025 and length of stay of 7 days (Wednesday 19 March 2025)",
     )
   }
 

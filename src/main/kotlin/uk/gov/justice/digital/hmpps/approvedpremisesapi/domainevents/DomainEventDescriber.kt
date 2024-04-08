@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
@@ -33,6 +34,7 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> buildAssessmentAppealedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> buildPlacementApplicationWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> buildMatchRequestWithdrawnDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED -> buildRequestForPlacementCreatedDescription(domainEventSummary)
       else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
     }
   }
@@ -114,6 +116,26 @@ class DomainEventDescriber(
 
       "A request for placement was withdrawn for dates ${dates.startDate.toUiFormat()} to ${dates.endDate.toUiFormat()}. " +
         "The reason was: '$reasonDescription'"
+    }
+  }
+
+  private fun buildRequestForPlacementCreatedDescription(domainEventSummary: DomainEventSummary): String? {
+    val event = domainEventService.getRequestForPlacementCreatedEvent(domainEventSummary.id())
+
+    return event.describe { data ->
+      val details = data.eventDetails
+      val endDate = details.expectedArrival.plusDays(details.duration.toLong())
+
+      val prelude = when (details.requestForPlacementType) {
+        RequestForPlacementType.initial -> "An initial request for placement was created"
+        RequestForPlacementType.rotl -> "A request for placement was created with the reason 'Release directed following parole board or other hearing/decision'"
+        RequestForPlacementType.releaseFollowingDecisions -> "A request for placement was created with the reason 'Release on Temporary Licence (ROTL)'"
+        RequestForPlacementType.additionalPlacement -> "A request for placement was created with the reason 'An additional placement on an existing application'"
+      }
+
+      "$prelude with expected arrival" +
+        " date ${details.expectedArrival.toUiFormat()} and length of stay of ${details.duration} days " +
+        "(${endDate.toUiFormat()})"
     }
   }
 

@@ -382,6 +382,33 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /events/request-for-placement-created/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "'Manage' events"
+      summary: A 'request-for-placement-created' event
+      responses:
+        '200':
+          description: The 'request-for-placement-created' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequestForPlacementCreatedEnvelope'
+        404:
+          description: No 'request-for-placement-created' event found for the provided `eventId`
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
 components:
   responses:
     500Response:
@@ -428,6 +455,11 @@ components:
       type: string
       format: uuid
       example: 14c80733-4b6d-4f35-b724-66955aac320c
+    RequestForPlacementId:
+      description: The UUID of a request for placement. Currently a proxy for PlacementApplicationId
+      type: string
+      format: uuid
+      example: 484b8b5e-6c3b-4400-b200-425bbe410713
     LegacyApCode:
       description: The 'Q code' used in Delius to identify an Approved Premises
       type: string
@@ -1392,6 +1424,70 @@ components:
         - appealDetail
         - decision
         - decisionDetail
+    RequestForPlacementCreatedEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          type: string
+          example: approved-premises.request-for-placement.created
+        eventDetails:
+          $ref: '#/components/schemas/RequestForPlacementCreated'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
+    RequestForPlacementCreated:
+      type: object
+      properties:
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        deliusEventNumber:
+          $ref: '#/components/schemas/DeliusEventNumber'
+        requestForPlacementId:
+          $ref: '#/components/schemas/RequestForPlacementId'
+        createdAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+        createdBy:
+          $ref: '#/components/schemas/StaffMember'
+        expectedArrival:
+          type: string
+          example: '2023-01-30'
+          format: date
+        duration:
+          type: integer
+          example: 7
+        requestForPlacementType:
+          $ref: '#/components/schemas/RequestForPlacementType'
+      required:
+        - applicationId
+        - applicationUrl
+        - createdAt
+        - personReference
+        - deliusEventNumber
+        - createdBy
+        - expectedArrival
+        - duration
+        - requestForPlacementType
+    RequestForPlacementType:
+      type: string
+      enum:
+        - initial
+        - rotl
+        - releaseFollowingDecisions
+        - additionalPlacement
     AppealDecision:
       type: string
       enum:

@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -52,6 +53,7 @@ class DomainEventService(
   @Value("\${url-templates.api.cas1.assessment-appealed-event-detail}") private val assessmentAppealedDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas1.placement-application-withdrawn-event-detail}") private val placementApplicationWithdrawnDetailUrlTemplate: UrlTemplate,
   @Value("\${url-templates.api.cas1.match-request-withdrawn-event-detail}") private val matchRequestWithdrawnDetailUrlTemplate: UrlTemplate,
+  @Value("\${url-templates.api.cas1.request-for-placement-created/#eventId}") private val requestForPlacementCreatedUrlTemplate: UrlTemplate,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -68,6 +70,7 @@ class DomainEventService(
   fun getPlacementApplicationWithdrawnEvent(id: UUID) = get<PlacementApplicationWithdrawnEnvelope>(id)
   fun getMatchRequestWithdrawnEvent(id: UUID) = get<MatchRequestWithdrawnEnvelope>(id)
   fun getAssessmentAppealedEvent(id: UUID) = get<AssessmentAppealedEnvelope>(id)
+  fun getRequestForPlacementCreatedEvent(id: UUID) = get<RequestForPlacementCreatedEnvelope>(id)
 
   private inline fun <reified T> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
@@ -228,6 +231,18 @@ class DomainEventService(
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
+  @Transactional
+  fun saveRequestForPlacementCreatedEvent(domainEvent: DomainEvent<RequestForPlacementCreatedEnvelope>, emit: Boolean) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "approved-premises.request-for-placement.created",
+      typeDescription = "An Approved Premises Request for Placement has been created",
+      detailUrl = requestForPlacementCreatedUrlTemplate.resolve("eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      emit = emit,
+    )
+
   fun getAllDomainEventsForApplication(applicationId: UUID) =
     domainEventRepository.findAllTimelineEventsByApplicationId(applicationId).distinctBy { it.id }
 
@@ -302,6 +317,7 @@ class DomainEventService(
     AssessmentAppealedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED
     PlacementApplicationWithdrawnEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN
     MatchRequestWithdrawnEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN
+    RequestForPlacementCreatedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED
     else -> throw RuntimeException("Unrecognised domain event type: ${type.name}")
   }
 }
