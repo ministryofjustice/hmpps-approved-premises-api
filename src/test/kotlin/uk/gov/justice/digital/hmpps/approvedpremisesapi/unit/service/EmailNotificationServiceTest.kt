@@ -27,7 +27,7 @@ class EmailNotificationServiceTest {
   private val logger = mockk<Logger>()
 
   @Test
-  fun `sendEmail NotifyMode DISABLED does not send an email if `() {
+  fun `sendEmail NotifyMode DISABLED does not send an email`() {
     val emailNotificationService = createService(NotifyMode.DISABLED)
 
     every { mockApplicationEventPublisher.publishEvent(any(SendEmailRequestedEvent::class)) } returns Unit
@@ -260,7 +260,7 @@ class EmailNotificationServiceTest {
       } returns mockk()
 
       emailNotificationService.sendEmails(
-        recipientEmailAddresses = listOf("test1@here.com", "test2@here.com", "test1@here.com"),
+        recipientEmailAddresses = setOf("test1@here.com", "test2@here.com"),
         templateId = templateId,
         personalisation = personalisation,
       )

@@ -18,7 +18,7 @@ class MockEmailNotificationService : EmailNotifier {
   }
 
   override fun sendEmails(
-    recipientEmailAddresses: List<String>,
+    recipientEmailAddresses: Set<String>,
     templateId: String,
     personalisation: Map<String, *>,
     replyToEmailId: String?,

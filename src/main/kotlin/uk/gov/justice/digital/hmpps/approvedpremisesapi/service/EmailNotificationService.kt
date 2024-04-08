@@ -76,17 +76,17 @@ class EmailNotificationService(
   }
 
   override fun sendEmails(
-    recipientEmailAddresses: List<String>,
+    recipientEmailAddresses: Set<String>,
     templateId: String,
     personalisation: Map<String, *>,
     replyToEmailId: String?,
-  ) = recipientEmailAddresses.toSet().forEach { sendEmail(it, templateId, personalisation, replyToEmailId) }
+  ) = recipientEmailAddresses.forEach { sendEmail(it, templateId, personalisation, replyToEmailId) }
 }
 
 interface EmailNotifier {
   fun sendEmail(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>, replyToEmailId: String? = null)
 
-  fun sendEmails(recipientEmailAddresses: List<String>, templateId: String, personalisation: Map<String, *>, replyToEmailId: String? = null)
+  fun sendEmails(recipientEmailAddresses: Set<String>, templateId: String, personalisation: Map<String, *>, replyToEmailId: String? = null)
 
   fun sendCas2Email(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>)
 }
