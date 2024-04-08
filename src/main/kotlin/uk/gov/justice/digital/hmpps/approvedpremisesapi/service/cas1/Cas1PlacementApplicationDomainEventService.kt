@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationAllocated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreated
@@ -13,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
@@ -122,6 +125,49 @@ class Cas1PlacementApplicationDomainEventService(
           timestamp = eventOccurredAt,
           eventType = "approved-premises.placement-application.withdrawn",
           eventDetails = eventDetails,
+        ),
+      ),
+    )
+  }
+
+  fun placementApplicationAllocated(placementApplication: PlacementApplicationEntity, allocatedByUser: UserEntity) {
+    val allocatedAt = requireNotNull(placementApplication.allocatedAt)
+    val allocatedToUser = requireNotNull(placementApplication.allocatedToUser)
+
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = Instant.now()
+    val application = placementApplication.application
+
+    val placementApplicationAllocated = PlacementApplicationAllocated(
+      applicationId = application.id,
+      applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+      placementApplicationId = placementApplication.id,
+      personReference = PersonReference(
+        crn = application.crn,
+        noms = application.nomsNumber ?: "Unknown NOMS Number",
+      ),
+      allocatedAt = allocatedAt.toInstant(),
+      allocatedTo = domainEventTransformer.toStaffMember(allocatedToUser),
+      allocatedBy = domainEventTransformer.toStaffMember(allocatedByUser),
+      placementDates = placementApplication.placementDates.map {
+        DatePeriod(
+          it.expectedArrival,
+          it.expectedDeparture(),
+        )
+      },
+    )
+
+    domainEventService.savePlacementApplicationAllocatedEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = eventOccurredAt,
+        data = PlacementApplicationAllocatedEnvelope(
+          id = domainEventId,
+          timestamp = eventOccurredAt,
+          eventType = "approved-premises.placement-application.allocated",
+          eventDetails = placementApplicationAllocated,
         ),
       ),
     )

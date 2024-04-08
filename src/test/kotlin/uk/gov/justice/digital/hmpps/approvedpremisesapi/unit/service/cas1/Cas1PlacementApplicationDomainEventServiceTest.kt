@@ -6,9 +6,12 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -180,6 +183,164 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             assertThat(eventDetails.placementDates).hasSize(1)
             assertThat(eventDetails.placementDates!![0].startDate).isEqualTo(LocalDate.of(2024, 5, 3))
             assertThat(eventDetails.placementDates!![0].endDate).isEqualTo(LocalDate.of(2024, 5, 10))
+          },
+        )
+      }
+    }
+  }
+
+  @Nested
+  inner class PlacementApplicationAllocated {
+    @Test
+    fun `allocatedAt cannot be null`() {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCrn(TestConstants.CRN)
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(UserEntityFactory().withDefaultProbationRegion().produce())
+        .withDecision(null)
+        .withCreatedByUser(user)
+        .withWithdrawalReason(PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withPlacementApplication(placementApplication)
+          .withExpectedArrival(LocalDate.of(2024, 5, 3))
+          .withDuration(7)
+          .produce(),
+        PlacementDateEntityFactory()
+          .withPlacementApplication(placementApplication)
+          .withExpectedArrival(LocalDate.of(2025, 2, 2))
+          .withDuration(14)
+          .produce(),
+      )
+
+      assertThrows<IllegalArgumentException> { service.placementApplicationAllocated(placementApplication, user) }
+    }
+
+    @Test
+    fun `allocatedToUser cannot be null`() {
+      val user = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCrn(TestConstants.CRN)
+        .withCreatedByUser(user)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(null)
+        .withDecision(null)
+        .withCreatedByUser(user)
+        .withWithdrawalReason(PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED)
+        .produce()
+        .apply {
+          allocatedAt = OffsetDateTime.now()
+        }
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withPlacementApplication(placementApplication)
+          .withExpectedArrival(LocalDate.of(2024, 5, 3))
+          .withDuration(7)
+          .produce(),
+        PlacementDateEntityFactory()
+          .withPlacementApplication(placementApplication)
+          .withExpectedArrival(LocalDate.of(2025, 2, 2))
+          .withDuration(14)
+          .produce(),
+      )
+
+      assertThrows<IllegalArgumentException> { service.placementApplicationAllocated(placementApplication, user) }
+    }
+
+    @Test
+    fun `it creates a domain event`() {
+      val allocatedByUser = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .produce()
+
+      val allocatedToUser = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCrn(TestConstants.CRN)
+        .withCreatedByUser(allocatedByUser)
+        .withSubmittedAt(OffsetDateTime.now())
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withAllocatedToUser(allocatedToUser)
+        .withDecision(null)
+        .withCreatedByUser(allocatedByUser)
+        .withWithdrawalReason(PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED)
+        .produce()
+        .apply {
+          allocatedAt = OffsetDateTime.now()
+        }
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withPlacementApplication(placementApplication)
+          .withExpectedArrival(LocalDate.of(2024, 5, 3))
+          .withDuration(7)
+          .produce(),
+        PlacementDateEntityFactory()
+          .withPlacementApplication(placementApplication)
+          .withExpectedArrival(LocalDate.of(2025, 2, 2))
+          .withDuration(14)
+          .produce(),
+      )
+
+      val allocatedBy = StaffMemberFactory().produce()
+      val allocatedTo = StaffMemberFactory().produce()
+      every { domainEventTransformer.toStaffMember(allocatedByUser) } returns allocatedBy
+      every { domainEventTransformer.toStaffMember(allocatedToUser) } returns allocatedTo
+      every { domainEventService.savePlacementApplicationAllocatedEvent(any()) } returns Unit
+
+      service.placementApplicationAllocated(placementApplication, allocatedByUser)
+
+      verify(exactly = 1) {
+        domainEventService.savePlacementApplicationAllocatedEvent(
+          match {
+            val data = it.data.eventDetails
+            println(data)
+
+            it.applicationId == application.id &&
+              it.crn == application.crn &&
+              data.applicationId == application.id &&
+              data.applicationUrl == "http://frontend/applications/${application.id}" &&
+              data.placementApplicationId == placementApplication.id &&
+              data.personReference == PersonReference(
+              crn = application.crn,
+              noms = application.nomsNumber!!,
+            ) &&
+              data.allocatedBy == allocatedBy &&
+              data.allocatedTo == allocatedTo &&
+              data.placementDates == listOf(
+              DatePeriod(
+                LocalDate.of(2024, 5, 3),
+                LocalDate.of(2024, 5, 10),
+              ),
+              DatePeriod(
+                LocalDate.of(2025, 2, 2),
+                LocalDate.of(2025, 2, 16),
+              ),
+            )
           },
         )
       }
