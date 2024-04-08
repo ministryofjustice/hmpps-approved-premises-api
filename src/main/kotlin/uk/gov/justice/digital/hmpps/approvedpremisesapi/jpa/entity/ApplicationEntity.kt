@@ -372,6 +372,7 @@ class ApprovedPremisesApplicationEntity(
     when (apType) {
       ApprovedPremisesType.PIPE -> requiredQualifications += UserQualification.PIPE
       ApprovedPremisesType.ESAP -> requiredQualifications += UserQualification.ESAP
+      ApprovedPremisesType.RFAP -> requiredQualifications += UserQualification.RECOVERY_FOCUSED
       else -> {}
     }
 
