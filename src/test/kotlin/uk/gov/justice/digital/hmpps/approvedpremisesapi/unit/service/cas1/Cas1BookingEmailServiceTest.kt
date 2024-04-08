@@ -55,7 +55,6 @@ class Cas1BookingEmailServiceTest {
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
     bookingUrlTemplate = UrlTemplate("http://frontend/premises/#premisesId/bookings/#bookingId"),
-    sendNewWithdrawalNotifications = true,
     aps530WithdrawalEmailImprovements = aps530WithdrawalEmailImprovements,
   )
 

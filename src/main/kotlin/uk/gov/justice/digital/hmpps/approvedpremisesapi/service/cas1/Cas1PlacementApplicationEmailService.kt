@@ -14,22 +14,15 @@ class Cas1PlacementApplicationEmailService(
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
-  @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val sendNewWithdrawalNotifications: Boolean,
   @Value("\${feature-flags.cas1-aps530-withdrawal-email-improvements}") private val aps530WithdrawalEmailImprovements: Boolean,
 ) {
 
   fun placementApplicationSubmitted(placementApplication: PlacementApplicationEntity) {
-    val templateId = if (sendNewWithdrawalNotifications) {
-      notifyConfig.templates.placementRequestSubmittedV2
-    } else {
-      notifyConfig.templates.placementRequestSubmitted
-    }
-
     val createdByUser = placementApplication.createdByUser
     createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = templateId,
+        templateId = notifyConfig.templates.placementRequestSubmittedV2,
         personalisation = getCommonPersonalisation(placementApplication),
       )
     }
@@ -85,10 +78,6 @@ class Cas1PlacementApplicationEmailService(
     wasBeingAssessedBy: UserEntity?,
     withdrawingUser: UserEntity?,
   ) {
-    if (!sendNewWithdrawalNotifications) {
-      return
-    }
-
     val personalisation = getCommonPersonalisation(placementApplication)
 
     if (withdrawingUser != null) {

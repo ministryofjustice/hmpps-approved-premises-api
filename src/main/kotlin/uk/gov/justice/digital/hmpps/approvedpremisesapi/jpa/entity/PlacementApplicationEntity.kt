@@ -108,7 +108,7 @@ data class PlacementApplicationEntity(
 
   /**
    * Supporting multiple dates in a single Placement Application is legacy behaviour. Any new
-   * placement application should only ever have a single date set on this collection
+   * placement application will only ever one and only one date in this collection
    */
   @OneToMany(mappedBy = "placementApplication")
   var placementDates: MutableList<PlacementDateEntity>,

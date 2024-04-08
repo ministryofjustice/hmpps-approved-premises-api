@@ -23,7 +23,6 @@ class Cas1AssessmentEmailService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
   @Value("\${feature-flags.cas1-aps530-withdrawal-email-improvements}") private val aps530WithdrawalEmailImprovements: Boolean,
-  @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val sendNewWithdrawalNotifications: Boolean,
 ) {
 
   fun assessmentAllocated(allocatedUser: UserEntity, assessmentId: UUID, crn: String, deadline: OffsetDateTime?, isEmergency: Boolean) {
@@ -74,9 +73,7 @@ class Cas1AssessmentEmailService(
     isAssessmentPending: Boolean,
     withdrawingUser: UserEntity,
   ) {
-    if (sendNewWithdrawalNotifications &&
-      isAssessmentPending
-    ) {
+    if (isAssessmentPending) {
       val templateId = if (aps530WithdrawalEmailImprovements) {
         notifyConfig.templates.assessmentWithdrawnV2
       } else {
