@@ -118,7 +118,7 @@ class BookingsReportGeneratorTest {
       BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
     assertThat(actual.count()).isEqualTo(1)
-    assertThat(actual[0][BookingsReportRow::offerAccepted]).isTrue
+    assertThat(actual[0][BookingsReportRow::offerAccepted]).isEqualTo("Yes")
   }
 
   @Test
@@ -142,7 +142,7 @@ class BookingsReportGeneratorTest {
       BookingsReportProperties(ServiceName.temporaryAccommodation, null, startDate, endDate),
     )
     assertThat(actual.count()).isEqualTo(1)
-    assertThat(actual[0][BookingsReportRow::offerAccepted]).isFalse
+    assertThat(actual[0][BookingsReportRow::offerAccepted]).isEqualTo("No")
   }
 
   @Test
@@ -177,7 +177,7 @@ class BookingsReportGeneratorTest {
       BookingsReportProperties(ServiceName.approvedPremises, null, startDate, endDate),
     )
     assertThat(actual.count()).isEqualTo(1)
-    assertThat(actual[0][BookingsReportRow::isCancelled]).isTrue
+    assertThat(actual[0][BookingsReportRow::isCancelled]).isEqualTo("Yes")
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::cancellationReason]).isEqualTo("House exploded")
   }
@@ -203,7 +203,7 @@ class BookingsReportGeneratorTest {
       BookingsReportProperties(ServiceName.approvedPremises, null, startDate, endDate),
     )
     assertThat(actual.count()).isEqualTo(1)
-    assertThat(actual[0][BookingsReportRow::isCancelled]).isFalse
+    assertThat(actual[0][BookingsReportRow::isCancelled]).isEqualTo("No")
     assertThat(actual.count()).isEqualTo(1)
     assertThat(actual[0][BookingsReportRow::cancellationReason]).isNull()
   }
@@ -689,12 +689,12 @@ class BookingsReportGeneratorTest {
     assertThat(actual[0][BookingsReportRow::registeredSexOffender]).isEqualTo("Yes")
     assertThat(actual[0][BookingsReportRow::historyOfSexualOffence]).isEqualTo("No")
     assertThat(actual[0][BookingsReportRow::concerningSexualBehaviour]).isNull()
-    assertThat(actual[0][BookingsReportRow::needForAccessibleProperty]).isTrue
+    assertThat(actual[0][BookingsReportRow::needForAccessibleProperty]).isEqualTo("Yes")
     assertThat(actual[0][BookingsReportRow::historyOfArsonOffence]).isEqualTo("No")
     assertThat(actual[0][BookingsReportRow::concerningArsonBehaviour]).isEqualTo("Yes")
-    assertThat(actual[0][BookingsReportRow::dutyToReferMade]).isTrue
+    assertThat(actual[0][BookingsReportRow::dutyToReferMade]).isEqualTo("Yes")
     assertThat(actual[0][BookingsReportRow::dateDutyToReferMade]).isEqualTo(LocalDate.now())
-    assertThat(actual[0][BookingsReportRow::isReferralEligibleForCas3]).isTrue
+    assertThat(actual[0][BookingsReportRow::isReferralEligibleForCas3]).isEqualTo("Yes")
     assertThat(actual[0][BookingsReportRow::referralEligibilityReason]).isEqualTo("Some reason")
     assertThat(actual[0][BookingsReportRow::dutyToReferLocalAuthorityAreaName]).isEqualTo("London")
   }
@@ -761,12 +761,12 @@ class BookingsReportGeneratorTest {
     assertThat(actual[0][BookingsReportRow::registeredSexOffender]).isEqualTo("Yes")
     assertThat(actual[0][BookingsReportRow::historyOfSexualOffence]).isNull()
     assertThat(actual[0][BookingsReportRow::concerningSexualBehaviour]).isEqualTo("No")
-    assertThat(actual[0][BookingsReportRow::needForAccessibleProperty]).isTrue
+    assertThat(actual[0][BookingsReportRow::needForAccessibleProperty]).isEqualTo("Yes")
     assertThat(actual[0][BookingsReportRow::historyOfArsonOffence]).isEqualTo("No")
     assertThat(actual[0][BookingsReportRow::concerningArsonBehaviour]).isNull()
-    assertThat(actual[0][BookingsReportRow::dutyToReferMade]).isTrue
+    assertThat(actual[0][BookingsReportRow::dutyToReferMade]).isEqualTo("Yes")
     assertThat(actual[0][BookingsReportRow::dateDutyToReferMade]).isEqualTo(LocalDate.now())
-    assertThat(actual[0][BookingsReportRow::isReferralEligibleForCas3]).isTrue
+    assertThat(actual[0][BookingsReportRow::isReferralEligibleForCas3]).isEqualTo("Yes")
     assertThat(actual[0][BookingsReportRow::referralEligibilityReason]).isEqualTo("Some reason")
     assertThat(actual[0][BookingsReportRow::dutyToReferLocalAuthorityAreaName]).isNull()
   }
