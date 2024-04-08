@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -1081,6 +1082,188 @@ class TasksTest : IntegrationTestBase() {
           .json(
             objectMapper.writeValueAsString(
               expectedTasks,
+            ),
+          )
+      }
+    }
+
+    @Nested
+    inner class FilterByCompleted {
+      lateinit var jwt: String
+      lateinit var crn: String
+
+      private lateinit var incompleteTasks: List<Task>
+      private lateinit var completeTasks: List<Task>
+
+      @BeforeEach
+      fun setup() {
+        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+          `Given a User` { otherUser, _ ->
+            `Given an Offender` { offenderDetails, _ ->
+              this.jwt = jwt
+              this.crn = offenderDetails.otherIds.crn
+
+              val (assessment1, _) = `Given an Assessment for Approved Premises`(
+                allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              )
+
+              val (assessment2, _) = `Given an Assessment for Approved Premises`(
+                allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+              )
+
+              val (placementRequest1, _) = `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+              )
+
+              val (placementRequest2, _) = `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+                booking = bookingEntityFactory.produceAndPersist {
+                  withPremises(
+                    approvedPremisesEntityFactory.produceAndPersist {
+                      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                      withYieldedProbationRegion {
+                        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+                      }
+                    },
+                  )
+                },
+              )
+
+              val (placementRequest3, _) = `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+              )
+
+              placementRequest3.bookingNotMades = mutableListOf(
+                bookingNotMadeFactory.produceAndPersist {
+                  withPlacementRequest(placementRequest3)
+                },
+              )
+
+              val placementApplication1 = `Given a Placement Application`(
+                createdByUser = otherUser,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+              )
+
+              val placementApplication2 = `Given a Placement Application`(
+                createdByUser = otherUser,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+                decision = PlacementApplicationDecision.ACCEPTED,
+              )
+
+              incompleteTasks = listOf(
+                taskTransformer.transformAssessmentToTask(
+                  assessment1,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+                taskTransformer.transformPlacementRequestToTask(
+                  placementRequest1,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+                taskTransformer.transformPlacementApplicationToTask(
+                  placementApplication1,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+              )
+
+              completeTasks = listOf(
+                taskTransformer.transformAssessmentToTask(
+                  assessment2,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+                taskTransformer.transformAssessmentToTask(
+                  placementRequest1.assessment,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+                taskTransformer.transformAssessmentToTask(
+                  placementRequest2.assessment,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+                taskTransformer.transformAssessmentToTask(
+                  placementRequest3.assessment,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+                taskTransformer.transformAssessmentToTask(
+                  assessmentTestRepository.findAllByApplication(placementApplication1.application)[0],
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+                taskTransformer.transformAssessmentToTask(
+                  assessmentTestRepository.findAllByApplication(placementApplication2.application)[0],
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+                taskTransformer.transformPlacementRequestToTask(
+                  placementRequest2,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+                taskTransformer.transformPlacementRequestToTask(
+                  placementRequest3,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+                taskTransformer.transformPlacementApplicationToTask(
+                  placementApplication2,
+                  "${offenderDetails.firstName} ${offenderDetails.surname}",
+                ),
+              )
+            }
+          }
+        }
+      }
+
+      @Test
+      fun `Get all tasks shows incomplete tasks by default`() {
+        val url = "/tasks"
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              incompleteTasks,
+            ),
+          )
+      }
+
+      @Test
+      fun `Get all tasks shows allows showing completed tasks`() {
+        val url = "/tasks?isCompleted=true"
+
+        webTestClient.get()
+          .uri(url)
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              completeTasks,
             ),
           )
       }

@@ -52,6 +52,7 @@ class TaskService(
     val allocatedToUserId: UUID?,
     val requiredQualification: UserQualification?,
     val crnOrName: String?,
+    val isCompleted: Boolean,
   )
 
   fun getAll(
@@ -136,6 +137,7 @@ class TaskService(
       filterCriteria.allocatedToUserId,
       filterCriteria.requiredQualification?.value,
       filterCriteria.crnOrName,
+      filterCriteria.isCompleted,
       pageable,
     )
   }

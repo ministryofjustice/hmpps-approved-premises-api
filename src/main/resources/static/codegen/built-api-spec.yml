@@ -2849,6 +2849,11 @@ paths:
           description: search by CRN or name
           schema:
             type: string
+        - name: isCompleted
+          in: query
+          description: filter by if the tasks are completed (defaults to `false`)
+          schema:
+            type: boolean
       responses:
         200:
           description: successfully retrieved tasks

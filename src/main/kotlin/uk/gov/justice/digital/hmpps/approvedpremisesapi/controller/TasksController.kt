@@ -77,6 +77,7 @@ class TasksController(
     allocatedToUserId: UUID?,
     requiredQualification: ApiUserQualification?,
     crnOrName: String?,
+    isCompleted: Boolean?,
   ): ResponseEntity<List<Task>> {
     val user = userService.getUserForRequest()
 
@@ -100,6 +101,7 @@ class TasksController(
         allocatedToUserId = allocatedToUserId,
         requiredQualification = requiredQualification,
         crnOrName = crnOrName,
+        isCompleted = isCompleted ?: false,
       ),
       PageCriteria(
         sortBy = sortBy ?: TaskSortField.createdAt,
