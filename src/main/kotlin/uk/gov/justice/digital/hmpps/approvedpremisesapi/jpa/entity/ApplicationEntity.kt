@@ -373,6 +373,8 @@ class ApprovedPremisesApplicationEntity(
       ApprovedPremisesType.PIPE -> requiredQualifications += UserQualification.PIPE
       ApprovedPremisesType.ESAP -> requiredQualifications += UserQualification.ESAP
       ApprovedPremisesType.RFAP -> requiredQualifications += UserQualification.RECOVERY_FOCUSED
+      ApprovedPremisesType.MHAP_ST_JOSEPHS -> requiredQualifications += UserQualification.MENTAL_HEALTH_SPECIALIST
+      ApprovedPremisesType.MHAP_ELLIOTT_HOUSE -> requiredQualifications += UserQualification.MENTAL_HEALTH_SPECIALIST
       else -> {}
     }
 

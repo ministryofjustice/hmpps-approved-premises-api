@@ -79,7 +79,13 @@ class ApprovedPremisesApplicationEntityTest {
     }
 
     @ParameterizedTest
-    @CsvSource("PIPE,PIPE", "ESAP,ESAP", "RFAP,RECOVERY_FOCUSED")
+    @CsvSource(
+      "PIPE,PIPE",
+      "ESAP,ESAP",
+      "RFAP,RECOVERY_FOCUSED",
+      "MHAP_ST_JOSEPHS,MENTAL_HEALTH_SPECIALIST",
+      "MHAP_ELLIOTT_HOUSE,MENTAL_HEALTH_SPECIALIST",
+    )
     fun `returns matching qualification for an application made to that type of premises`(apType: ApprovedPremisesType, qualification: UserQualification?) {
       val user = UserEntityFactory()
         .withDefaultProbationRegion()
