@@ -593,11 +593,11 @@ class WithdrawalTest : IntegrationTestBase() {
      * | ---------------------------------- | --------- | --- | ------------ | --- | --- | -------- |
      * | Application                        | YES       | YES | YES          | -   | -   | -        |
      * | -> Assessment                      | YES       | -   | -            | -   | -   | -        |
-     * | -> Request for placement 1         | YES       | YES | -            | -   | -   | -        |
+     * | -> Request for placement 1         | YES       | YES | YES          | -   | -   | -        |
      * | ---> Match request 1               | YES       | -   | -            | -   | -   | -        |
      * | -----> Booking 1 arrival pending   | YES       | YES | -            | YES | YES | -        |
      * | ---> Match request 2               | YES       | -   | -            | -   | YES | -        |
-     * | -> Request for placement 2         | YES       | YES | -            | -   | -   | YES      |
+     * | -> Request for placement 2         | YES       | YES | YES          | -   | -   | YES      |
      * | -> Match request 2                 | YES       | YES | YES          | -   | -   | -        |
      * | ---> Booking 2 arrival pending     | YES       | YES | -            | YES | YES | -        |
      * | -> Adhoc Booking 1 arrival pending | YES       | YES | -            | YES | YES | -        |
@@ -718,17 +718,19 @@ class WithdrawalTest : IntegrationTestBase() {
             val cruEmail = application.apArea!!.emailAddress!!
             val requestForPlacementAssessorEmail = requestForPlacementAssessor.email!!
 
-            emailAsserter.assertEmailsRequestedCount(19)
+            emailAsserter.assertEmailsRequestedCount(21)
             assertApplicationWithdrawnEmail(applicantEmail, application)
             assertApplicationWithdrawnEmail(caseManagerEmail, application)
 
             assertPlacementRequestWithdrawnEmail(applicantEmail, placementApplication1)
+            assertPlacementRequestWithdrawnEmail(caseManagerEmail, placementApplication1)
 
             assertBookingWithdrawnEmail(applicantEmail, booking1NoArrival)
             assertBookingWithdrawnEmail(booking1NoArrival.premises.emailAddress!!, booking1NoArrival)
             assertBookingWithdrawnEmail(cruEmail, booking1NoArrival)
 
             assertPlacementRequestWithdrawnEmail(applicantEmail, placementApplication2NoBookingBeingAssessed)
+            assertPlacementRequestWithdrawnEmail(caseManagerEmail, placementApplication2NoBookingBeingAssessed)
             assertPlacementRequestWithdrawnEmail(requestForPlacementAssessorEmail, placementApplication2NoBookingBeingAssessed)
 
             assertPlacementRequestWithdrawnEmail(applicantEmail, placementRequest2)

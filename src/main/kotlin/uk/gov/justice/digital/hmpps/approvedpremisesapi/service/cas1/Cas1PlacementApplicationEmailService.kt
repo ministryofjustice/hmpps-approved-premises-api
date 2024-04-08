@@ -90,14 +90,11 @@ class Cas1PlacementApplicationEmailService(
       notifyConfig.templates.placementRequestWithdrawn
     }
 
-    val createdByUserEmail = placementApplication.createdByUser.email
-    createdByUserEmail?.let { email ->
-      emailNotifier.sendEmail(
-        recipientEmailAddress = email,
-        templateId = template,
-        personalisation = personalisation,
-      )
-    }
+    emailNotifier.sendEmails(
+      recipientEmailAddresses = placementApplication.interestedPartiesEmailAddresses(),
+      templateId = template,
+      personalisation = personalisation,
+    )
 
     val assessorEmail = wasBeingAssessedBy?.email
     assessorEmail?.let { email ->
