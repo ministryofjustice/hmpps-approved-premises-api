@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.APPLICANT_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.AP_AREA_EMAIL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.CASE_MANAGER_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.CRN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.PREMISES_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.PREMISES_NAME
@@ -37,6 +39,7 @@ class Cas1BookingEmailServiceTest {
     const val PREMISES_NAME = "The Premises Name"
     const val REGION_NAME = "The Region Name"
     const val WITHDRAWING_USER_NAME = "the withdrawing user"
+    const val CASE_MANAGER_EMAIL = "caseManager@test.com"
   }
 
   private val notifyConfig = NotifyConfig()
@@ -187,7 +190,6 @@ class Cas1BookingEmailServiceTest {
         expectedPersonalisation,
       )
     }
-
   }
 
   @Nested
@@ -239,7 +241,7 @@ class Cas1BookingEmailServiceTest {
     }
 
     @Test
-    fun `bookingWithdrawn sends email V2 to applicant, premises and CRU if emails are defined`() {
+    fun `bookingWithdrawn sends email V2 to applicant, premises, case manager and CRU if emails are defined`() {
       val applicant = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .withEmail(APPLICANT_EMAIL)
@@ -250,6 +252,7 @@ class Cas1BookingEmailServiceTest {
         premises,
         arrivalDate = LocalDate.of(2023, 2, 1),
         departureDate = LocalDate.of(2023, 2, 14),
+        caseManagerNotApplicant = true,
       )
 
       serviceUsingAps530Improvements.bookingWithdrawn(application, booking, withdrawingUser)
@@ -265,9 +268,15 @@ class Cas1BookingEmailServiceTest {
         "withdrawnBy" to TestConstants.WITHDRAWING_USER_NAME,
       )
 
-      mockEmailNotificationService.assertEmailRequestCount(3)
+      mockEmailNotificationService.assertEmailRequestCount(4)
       mockEmailNotificationService.assertEmailRequested(
         APPLICANT_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        CASE_MANAGER_EMAIL,
         notifyConfig.templates.bookingWithdrawnV2,
         expectedPersonalisation,
       )
@@ -286,7 +295,7 @@ class Cas1BookingEmailServiceTest {
     }
 
     @Test
-    fun `bookingWithdrawn doesn't send email to applicant, premises or CRU if email not defined`() {
+    fun `bookingWithdrawn doesn't send email to applicant, premises, case manager or CRU if email not defined`() {
       val applicant = UserEntityFactory()
         .withUnitTestControlProbationRegion()
         .withEmail(null)
@@ -311,21 +320,30 @@ class Cas1BookingEmailServiceTest {
 
       mockEmailNotificationService.assertNoEmailsRequested()
     }
-
   }
 
+  @SuppressWarnings("LongParameterList")
   private fun createApplicationAndBooking(
     applicant: UserEntity,
     premises: ApprovedPremisesEntity,
     apArea: ApAreaEntity = ApAreaEntityFactory().withEmailAddress(AP_AREA_EMAIL).produce(),
     arrivalDate: LocalDate,
     departureDate: LocalDate,
+    caseManagerNotApplicant: Boolean = false,
   ): Pair<ApprovedPremisesApplicationEntity, BookingEntity> {
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCrn(CRN)
       .withCreatedByUser(applicant)
       .withSubmittedAt(OffsetDateTime.now())
       .withApArea(apArea)
+      .withCaseManagerIsNotApplicant(caseManagerNotApplicant)
+      .withCaseManagerUserDetails(
+        if (caseManagerNotApplicant) {
+          Cas1ApplicationUserDetailsEntityFactory().withEmailAddress(CASE_MANAGER_EMAIL).produce()
+        } else {
+          null
+        },
+      )
       .produce()
 
     val booking = BookingEntityFactory()

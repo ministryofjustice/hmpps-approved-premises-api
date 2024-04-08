@@ -595,13 +595,13 @@ class WithdrawalTest : IntegrationTestBase() {
      * | -> Assessment                      | YES       | -   | -            | -   | -   | -        |
      * | -> Request for placement 1         | YES       | YES | YES          | -   | -   | -        |
      * | ---> Match request 1               | YES       | -   | -            | -   | -   | -        |
-     * | -----> Booking 1 arrival pending   | YES       | YES | -            | YES | YES | -        |
+     * | -----> Booking 1 arrival pending   | YES       | YES | YES          | YES | YES | -        |
      * | ---> Match request 2               | YES       | -   | -            | -   | YES | -        |
      * | -> Request for placement 2         | YES       | YES | YES          | -   | -   | YES      |
      * | -> Match request 2                 | YES       | YES | YES          | -   | -   | -        |
-     * | ---> Booking 2 arrival pending     | YES       | YES | -            | YES | YES | -        |
-     * | -> Adhoc Booking 1 arrival pending | YES       | YES | -            | YES | YES | -        |
-     * | -> Adhoc Booking 2 arrival pending | YES       | YES | -            | YES | YES | -        |
+     * | ---> Booking 2 arrival pending     | YES       | YES | YES          | YES | YES | -        |
+     * | -> Adhoc Booking 1 arrival pending | YES       | YES | YES          | YES | YES | -        |
+     * | -> Adhoc Booking 2 arrival pending | YES       | YES | YES          | YES | YES | -        |
      * ```
      */
     @Test
@@ -718,7 +718,7 @@ class WithdrawalTest : IntegrationTestBase() {
             val cruEmail = application.apArea!!.emailAddress!!
             val requestForPlacementAssessorEmail = requestForPlacementAssessor.email!!
 
-            emailAsserter.assertEmailsRequestedCount(21)
+            emailAsserter.assertEmailsRequestedCount(25)
             assertApplicationWithdrawnEmail(applicantEmail, application)
             assertApplicationWithdrawnEmail(caseManagerEmail, application)
 
@@ -726,6 +726,7 @@ class WithdrawalTest : IntegrationTestBase() {
             assertPlacementRequestWithdrawnEmail(caseManagerEmail, placementApplication1)
 
             assertBookingWithdrawnEmail(applicantEmail, booking1NoArrival)
+            assertBookingWithdrawnEmail(caseManagerEmail, booking1NoArrival)
             assertBookingWithdrawnEmail(booking1NoArrival.premises.emailAddress!!, booking1NoArrival)
             assertBookingWithdrawnEmail(cruEmail, booking1NoArrival)
 
@@ -737,14 +738,17 @@ class WithdrawalTest : IntegrationTestBase() {
             assertPlacementRequestWithdrawnEmail(caseManagerEmail, placementRequest2)
 
             assertBookingWithdrawnEmail(applicantEmail, booking2NoArrival)
+            assertBookingWithdrawnEmail(caseManagerEmail, booking2NoArrival)
             assertBookingWithdrawnEmail(booking2NoArrival.premises.emailAddress!!, booking2NoArrival)
             assertBookingWithdrawnEmail(cruEmail, booking2NoArrival)
 
             assertBookingWithdrawnEmail(applicantEmail, adhocBooking1NoArrival)
+            assertBookingWithdrawnEmail(caseManagerEmail, adhocBooking1NoArrival)
             assertBookingWithdrawnEmail(adhocBooking1NoArrival.premises.emailAddress!!, adhocBooking1NoArrival)
             assertBookingWithdrawnEmail(cruEmail, adhocBooking1NoArrival)
 
             assertBookingWithdrawnEmail(applicantEmail, adhocBooking2NoArrival)
+            assertBookingWithdrawnEmail(caseManagerEmail, adhocBooking2NoArrival)
             assertBookingWithdrawnEmail(adhocBooking1NoArrival.premises.emailAddress!!, adhocBooking2NoArrival)
             assertBookingWithdrawnEmail(cruEmail, adhocBooking2NoArrival)
           }

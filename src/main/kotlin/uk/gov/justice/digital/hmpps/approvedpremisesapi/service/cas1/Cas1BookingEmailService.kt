@@ -18,7 +18,7 @@ object Constants {
 
 @Service
 class Cas1BookingEmailService(
-  private val emailNotificationService: EmailNotifier,
+  private val emailNotifier: EmailNotifier,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
@@ -35,7 +35,7 @@ class Cas1BookingEmailService(
     )
 
     if (applicationSubmittedByUser.email != null) {
-      emailNotificationService.sendEmail(
+      emailNotifier.sendEmail(
         recipientEmailAddress = applicationSubmittedByUser.email!!,
         templateId = notifyConfig.templates.bookingMade,
         personalisation = emailPersonalisation,
@@ -43,7 +43,7 @@ class Cas1BookingEmailService(
     }
 
     if (booking.premises.emailAddress != null) {
-      emailNotificationService.sendEmail(
+      emailNotifier.sendEmail(
         recipientEmailAddress = booking.premises.emailAddress!!,
         templateId = notifyConfig.templates.bookingMadePremises,
         personalisation = emailPersonalisation,
@@ -70,18 +70,15 @@ class Cas1BookingEmailService(
       notifyConfig.templates.bookingWithdrawn
     }
 
-    val applicationSubmittedByUser = application.createdByUser
-    applicationSubmittedByUser.email?.let { email ->
-      emailNotificationService.sendEmail(
-        recipientEmailAddress = email,
-        templateId = template,
-        personalisation = allPersonalisation,
-      )
-    }
+    emailNotifier.sendEmails(
+      recipientEmailAddresses = application.interestedPartiesEmailAddresses(),
+      templateId = template,
+      personalisation = allPersonalisation,
+    )
 
     val premises = booking.premises
     premises.emailAddress?.let { email ->
-      emailNotificationService.sendEmail(
+      emailNotifier.sendEmail(
         recipientEmailAddress = email,
         templateId = template,
         personalisation = allPersonalisation,
@@ -90,7 +87,7 @@ class Cas1BookingEmailService(
 
     val area = application.apArea
     area?.emailAddress?.let { cruEmail ->
-      emailNotificationService.sendEmail(
+      emailNotifier.sendEmail(
         recipientEmailAddress = cruEmail,
         templateId = template,
         personalisation = allPersonalisation,
