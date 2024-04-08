@@ -1659,8 +1659,7 @@ class PlacementRequestsTest : IntegrationTestBase() {
             assertThat(persistedPlacementRequest.isWithdrawn).isTrue
             assertThat(persistedPlacementRequest.withdrawalReason).isEqualTo(PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST)
 
-            val emittedMessage = snsDomainEventListener.blockForMessage()
-            assertThat(emittedMessage.eventType).isEqualTo("approved-premises.match-request.withdrawn")
+            snsDomainEventListener.blockForMessage("approved-premises.match-request.withdrawn")
 
             emailAsserter.assertEmailsRequestedCount(2)
             emailAsserter.assertEmailRequested(
