@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -49,7 +50,7 @@ class Cas1BookingEmailServiceTest {
     .withName(TestConstants.WITHDRAWING_USER_NAME)
     .produce()
 
-  fun buildService(aps530WithdrawalEmailImprovements: Boolean) = Cas1BookingEmailService(
+  private fun buildService(aps530WithdrawalEmailImprovements: Boolean) = Cas1BookingEmailService(
     mockEmailNotificationService,
     notifyConfig = notifyConfig,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
@@ -70,27 +71,63 @@ class Cas1BookingEmailServiceTest {
     mockEmailNotificationService.reset()
   }
 
-  @Test
-  fun `bookingMade doesnt send email to applicant if no email address defined`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
+  @Nested
+  inner class BookingMade {
 
-    val (application, booking) = createApplicationAndBooking(
-      applicant,
-      premises,
-      arrivalDate = LocalDate.of(2023, 2, 1),
-      departureDate = LocalDate.of(2023, 2, 14),
-    )
+    @Test
+    fun `bookingMade doesnt send email to applicant if no email address defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
 
-    service.bookingMade(application, booking)
+      val (application, booking) = createApplicationAndBooking(
+        applicant,
+        premises,
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
+      )
 
-    mockEmailNotificationService.assertEmailRequestCount(1)
-    mockEmailNotificationService.assertEmailRequested(
-      PREMISES_EMAIL,
-      notifyConfig.templates.bookingMadePremises,
-      mapOf(
+      service.bookingMade(application, booking)
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+      mockEmailNotificationService.assertEmailRequested(
+        PREMISES_EMAIL,
+        notifyConfig.templates.bookingMadePremises,
+        mapOf(
+          "name" to applicant.name,
+          "apName" to PREMISES_NAME,
+          "applicationUrl" to "http://frontend/applications/${application.id}",
+          "bookingUrl" to "http://frontend/premises/${premises.id}/bookings/${booking.id}",
+          "crn" to CRN,
+          "startDate" to "2023-02-01",
+          "endDate" to "2023-02-14",
+          "lengthStay" to 2,
+          "lengthStayUnit" to "weeks",
+        ),
+      )
+    }
+
+    @SuppressWarnings("CyclomaticComplexMethod")
+    @Test
+    fun `bookingMade sends email to applicant and premises email addresses when defined, when length of stay whole number of weeks`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
+
+      val (application, booking) = createApplicationAndBooking(
+        applicant,
+        premises,
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
+      )
+
+      service.bookingMade(application, booking)
+
+      mockEmailNotificationService.assertEmailRequestCount(2)
+
+      val personalisation = mapOf(
         "name" to applicant.name,
         "apName" to PREMISES_NAME,
         "applicationUrl" to "http://frontend/applications/${application.id}",
@@ -100,207 +137,181 @@ class Cas1BookingEmailServiceTest {
         "endDate" to "2023-02-14",
         "lengthStay" to 2,
         "lengthStayUnit" to "weeks",
-      ),
-    )
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.bookingMade,
+        personalisation,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        PREMISES_EMAIL,
+        notifyConfig.templates.bookingMadePremises,
+        personalisation,
+      )
+    }
+
+    @Test
+    fun `bookingMade sends email to applicant and premises email addresses when defined, when length of stay not whole number of weeks`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
+
+      val (application, booking) = createApplicationAndBooking(
+        applicant,
+        premises,
+        arrivalDate = LocalDate.of(2023, 2, 22),
+        departureDate = LocalDate.of(2023, 2, 27),
+      )
+
+      service.bookingMade(application, booking)
+
+      mockEmailNotificationService.assertEmailRequestCount(2)
+
+      val expectedPersonalisation = mapOf(
+        "lengthStay" to 6,
+        "lengthStayUnit" to "days",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.bookingMade,
+        expectedPersonalisation,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        PREMISES_EMAIL,
+        notifyConfig.templates.bookingMadePremises,
+        expectedPersonalisation,
+      )
+    }
+
   }
 
-  @SuppressWarnings("CyclomaticComplexMethod")
-  @Test
-  fun `bookingMade sends email to applicant and premises email addresses when defined, when length of stay whole number of weeks`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(APPLICANT_EMAIL)
-      .produce()
+  @Nested
+  inner class BookingWithdrawn {
 
-    val (application, booking) = createApplicationAndBooking(
-      applicant,
-      premises,
-      arrivalDate = LocalDate.of(2023, 2, 1),
-      departureDate = LocalDate.of(2023, 2, 14),
-    )
+    @Test
+    fun `bookingWithdrawn sends email to applicant, premises and CRU if emails are defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
 
-    service.bookingMade(application, booking)
+      val (application, booking) = createApplicationAndBooking(
+        applicant,
+        premises,
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
+      )
 
-    mockEmailNotificationService.assertEmailRequestCount(2)
+      service.bookingWithdrawn(application, booking, withdrawingUser)
 
-    val personalisation = mapOf(
-      "name" to applicant.name,
-      "apName" to PREMISES_NAME,
-      "applicationUrl" to "http://frontend/applications/${application.id}",
-      "bookingUrl" to "http://frontend/premises/${premises.id}/bookings/${booking.id}",
-      "crn" to CRN,
-      "startDate" to "2023-02-01",
-      "endDate" to "2023-02-14",
-      "lengthStay" to 2,
-      "lengthStayUnit" to "weeks",
-    )
+      val expectedPersonalisation = mapOf(
+        "apName" to PREMISES_NAME,
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "crn" to CRN,
+        "startDate" to "2023-02-01",
+        "endDate" to "2023-02-14",
+        "region" to REGION_NAME,
+      )
 
-    mockEmailNotificationService.assertEmailRequested(
-      APPLICANT_EMAIL,
-      notifyConfig.templates.bookingMade,
-      personalisation,
-    )
+      mockEmailNotificationService.assertEmailRequestCount(3)
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.bookingWithdrawn,
+        expectedPersonalisation,
+      )
 
-    mockEmailNotificationService.assertEmailRequested(
-      PREMISES_EMAIL,
-      notifyConfig.templates.bookingMadePremises,
-      personalisation,
-    )
-  }
+      mockEmailNotificationService.assertEmailRequested(
+        PREMISES_EMAIL,
+        notifyConfig.templates.bookingWithdrawn,
+        expectedPersonalisation,
+      )
 
-  @Test
-  fun `bookingMade sends email to applicant and premises email addresses when defined, when length of stay not whole number of weeks`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(APPLICANT_EMAIL)
-      .produce()
+      mockEmailNotificationService.assertEmailRequested(
+        AP_AREA_EMAIL,
+        notifyConfig.templates.bookingWithdrawn,
+        expectedPersonalisation,
+      )
+    }
 
-    val (application, booking) = createApplicationAndBooking(
-      applicant,
-      premises,
-      arrivalDate = LocalDate.of(2023, 2, 22),
-      departureDate = LocalDate.of(2023, 2, 27),
-    )
+    @Test
+    fun `bookingWithdrawn sends email V2 to applicant, premises and CRU if emails are defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
 
-    service.bookingMade(application, booking)
+      val (application, booking) = createApplicationAndBooking(
+        applicant,
+        premises,
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
+      )
 
-    mockEmailNotificationService.assertEmailRequestCount(2)
+      serviceUsingAps530Improvements.bookingWithdrawn(application, booking, withdrawingUser)
 
-    val expectedPersonalisation = mapOf(
-      "lengthStay" to 6,
-      "lengthStayUnit" to "days",
-    )
+      val expectedPersonalisation = mapOf(
+        "apName" to PREMISES_NAME,
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to CRN,
+        "startDate" to "2023-02-01",
+        "endDate" to "2023-02-14",
+        "region" to REGION_NAME,
+        "withdrawnBy" to TestConstants.WITHDRAWING_USER_NAME,
+      )
 
-    mockEmailNotificationService.assertEmailRequested(
-      APPLICANT_EMAIL,
-      notifyConfig.templates.bookingMade,
-      expectedPersonalisation,
-    )
+      mockEmailNotificationService.assertEmailRequestCount(3)
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+      )
 
-    mockEmailNotificationService.assertEmailRequested(
-      PREMISES_EMAIL,
-      notifyConfig.templates.bookingMadePremises,
-      expectedPersonalisation,
-    )
-  }
+      mockEmailNotificationService.assertEmailRequested(
+        PREMISES_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+      )
 
-  @Test
-  fun `bookingWithdrawn sends email to applicant, premises and CRU if emails are defined`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(APPLICANT_EMAIL)
-      .produce()
+      mockEmailNotificationService.assertEmailRequested(
+        AP_AREA_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+      )
+    }
 
-    val (application, booking) = createApplicationAndBooking(
-      applicant,
-      premises,
-      arrivalDate = LocalDate.of(2023, 2, 1),
-      departureDate = LocalDate.of(2023, 2, 14),
-    )
+    @Test
+    fun `bookingWithdrawn doesn't send email to applicant, premises or CRU if email not defined`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(null)
+        .produce()
 
-    service.bookingWithdrawn(application, booking, withdrawingUser)
+      val premises = ApprovedPremisesEntityFactory()
+        .withDefaults()
+        .withEmailAddress(null)
+        .withName(PREMISES_NAME)
+        .withProbationRegion(ProbationRegionEntityFactory().withDefaults().withName(REGION_NAME).produce())
+        .produce()
 
-    val expectedPersonalisation = mapOf(
-      "apName" to PREMISES_NAME,
-      "applicationUrl" to "http://frontend/applications/${application.id}",
-      "crn" to CRN,
-      "startDate" to "2023-02-01",
-      "endDate" to "2023-02-14",
-      "region" to REGION_NAME,
-    )
+      val (application, booking) = createApplicationAndBooking(
+        applicant,
+        premises,
+        apArea = ApAreaEntityFactory().withEmailAddress(null).produce(),
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
+      )
 
-    mockEmailNotificationService.assertEmailRequestCount(3)
-    mockEmailNotificationService.assertEmailRequested(
-      APPLICANT_EMAIL,
-      notifyConfig.templates.bookingWithdrawn,
-      expectedPersonalisation,
-    )
+      service.bookingWithdrawn(application, booking, withdrawingUser)
 
-    mockEmailNotificationService.assertEmailRequested(
-      PREMISES_EMAIL,
-      notifyConfig.templates.bookingWithdrawn,
-      expectedPersonalisation,
-    )
+      mockEmailNotificationService.assertNoEmailsRequested()
+    }
 
-    mockEmailNotificationService.assertEmailRequested(
-      AP_AREA_EMAIL,
-      notifyConfig.templates.bookingWithdrawn,
-      expectedPersonalisation,
-    )
-  }
-
-  @Test
-  fun `bookingWithdrawn sends email V2 to applicant, premises and CRU if emails are defined`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(APPLICANT_EMAIL)
-      .produce()
-
-    val (application, booking) = createApplicationAndBooking(
-      applicant,
-      premises,
-      arrivalDate = LocalDate.of(2023, 2, 1),
-      departureDate = LocalDate.of(2023, 2, 14),
-    )
-
-    serviceUsingAps530Improvements.bookingWithdrawn(application, booking, withdrawingUser)
-
-    val expectedPersonalisation = mapOf(
-      "apName" to PREMISES_NAME,
-      "applicationUrl" to "http://frontend/applications/${application.id}",
-      "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
-      "crn" to CRN,
-      "startDate" to "2023-02-01",
-      "endDate" to "2023-02-14",
-      "region" to REGION_NAME,
-      "withdrawnBy" to TestConstants.WITHDRAWING_USER_NAME,
-    )
-
-    mockEmailNotificationService.assertEmailRequestCount(3)
-    mockEmailNotificationService.assertEmailRequested(
-      APPLICANT_EMAIL,
-      notifyConfig.templates.bookingWithdrawnV2,
-      expectedPersonalisation,
-    )
-
-    mockEmailNotificationService.assertEmailRequested(
-      PREMISES_EMAIL,
-      notifyConfig.templates.bookingWithdrawnV2,
-      expectedPersonalisation,
-    )
-
-    mockEmailNotificationService.assertEmailRequested(
-      AP_AREA_EMAIL,
-      notifyConfig.templates.bookingWithdrawnV2,
-      expectedPersonalisation,
-    )
-  }
-
-  @Test
-  fun `bookingWithdrawn doesn't send email to applicant, premises or CRU if email not defined`() {
-    val applicant = UserEntityFactory()
-      .withUnitTestControlProbationRegion()
-      .withEmail(null)
-      .produce()
-
-    val premises = ApprovedPremisesEntityFactory()
-      .withDefaults()
-      .withEmailAddress(null)
-      .withName(PREMISES_NAME)
-      .withProbationRegion(ProbationRegionEntityFactory().withDefaults().withName(REGION_NAME).produce())
-      .produce()
-
-    val (application, booking) = createApplicationAndBooking(
-      applicant,
-      premises,
-      apArea = ApAreaEntityFactory().withEmailAddress(null).produce(),
-      arrivalDate = LocalDate.of(2023, 2, 1),
-      departureDate = LocalDate.of(2023, 2, 14),
-    )
-
-    service.bookingWithdrawn(application, booking, withdrawingUser)
-
-    mockEmailNotificationService.assertNoEmailsRequested()
   }
 
   private fun createApplicationAndBooking(
