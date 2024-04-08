@@ -9024,3 +9024,18 @@ components:
         - submitted-applications
         - application-status-updates
         - unsubmitted-applications
+    Cas3DutyToReferRejectionReason:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Accepted – Prevention/ Relief Duty
+        isActive:
+          type: boolean
+      required:
+        - id
+        - name
+        - isActive

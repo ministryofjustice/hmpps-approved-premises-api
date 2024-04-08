@@ -87,3 +87,23 @@ paths:
               schema:
                 type: string
                 format: binary
+  /reference-data/duty-to-refer-rejection-reasons:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists active duty to refer rejection reasons
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/Cas3DutyToReferRejectionReason'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
