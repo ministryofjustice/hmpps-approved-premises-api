@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AppealE
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import javax.transaction.Transactional
 
 @Service
 class AppealService(
@@ -35,6 +36,7 @@ class AppealService(
     return AuthorisableActionResult.Success(appeal)
   }
 
+  @Transactional
   fun createAppeal(
     appealDate: LocalDate,
     appealDetail: String,
