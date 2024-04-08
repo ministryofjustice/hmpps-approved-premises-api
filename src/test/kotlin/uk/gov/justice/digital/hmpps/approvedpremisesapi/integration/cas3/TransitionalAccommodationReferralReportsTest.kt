@@ -514,7 +514,7 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
 
               assertThat(actual.size).isEqualTo(1)
               assertCorrectPersonDetail(caseSummary, actual[0])
-              assertThat(actual[0].bookingOffered).isTrue()
+              assertThat(actual[0].bookingOffered).isEqualTo("Yes")
               assertThat(actual[0].town).isEqualTo(premises.town)
               assertThat(actual[0].postCode).isEqualTo(premises.postcode)
             }
@@ -577,7 +577,7 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
 
               assertThat(actual.size).isEqualTo(2)
               assertCorrectPersonDetail(caseSummary, actual[0])
-              assertThat(actual[0].bookingOffered).isTrue()
+              assertThat(actual[0].bookingOffered).isEqualTo("Yes")
             }
         }
       }
@@ -912,7 +912,7 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
 
               assertThat(actual.size).isEqualTo(1)
               assertCorrectPersonDetail(caseSummary, actual[0])
-              assertThat(actual[0].bookingOffered).isTrue()
+              assertThat(actual[0].bookingOffered).isEqualTo("Yes")
               assertThat(actual[0].town).isEqualTo(premises.town)
               assertThat(actual[0].postCode).isEqualTo(premises.postcode)
             }
@@ -975,7 +975,7 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
 
               assertThat(actual.size).isEqualTo(2)
               assertCorrectPersonDetail(caseSummary, actual[0])
-              assertThat(actual[0].bookingOffered).isTrue()
+              assertThat(actual[0].bookingOffered).isEqualTo("Yes")
             }
         }
       }
@@ -1981,18 +1981,18 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
     val rejectedDate = if (isAssessmentRejected) expectedAssessment.submittedAt else null
     assertThat(actualReferralReportRow.referralId).isEqualTo(expectedAssessment.application.id.toString())
     assertThat(actualReferralReportRow.crn).isEqualTo(expectedAssessment.application.crn)
-    assertThat(actualReferralReportRow.dutyToReferMade).isEqualTo(application.isDutyToReferSubmitted)
+    assertThat(actualReferralReportRow.dutyToReferMade).isEqualTo(application.isDutyToReferSubmitted.toYesNo())
     assertThat(actualReferralReportRow.dateDutyToReferMade).isEqualTo(application.dutyToReferSubmissionDate)
     assertThat(actualReferralReportRow.dutyToReferLocalAuthorityAreaName).isEqualTo(application.dutyToReferLocalAuthorityAreaName)
     assertThat(actualReferralReportRow.historyOfArsonOffence).isEqualTo(application.hasHistoryOfArson.toYesNo())
     assertThat(actualReferralReportRow.concerningArsonBehaviour).isEqualTo(application.isConcerningArsonBehaviour.toYesNo())
-    assertThat(actualReferralReportRow.needForAccessibleProperty).isEqualTo(application.needsAccessibleProperty)
+    assertThat(actualReferralReportRow.needForAccessibleProperty).isEqualTo(application.needsAccessibleProperty.toYesNo())
     assertThat(actualReferralReportRow.referralDate).isEqualTo(application.createdAt.toLocalDate())
     assertThat(actualReferralReportRow.referralSubmittedDate).isEqualTo(application.submittedAt?.toLocalDate())
     assertThat(actualReferralReportRow.registeredSexOffender).isEqualTo(application.isRegisteredSexOffender.toYesNo())
     assertThat(actualReferralReportRow.historyOfSexualOffence).isEqualTo(application.isHistoryOfSexualOffence.toYesNo())
     assertThat(actualReferralReportRow.concerningSexualBehaviour).isEqualTo(application.isConcerningSexualBehaviour.toYesNo())
-    assertThat(actualReferralReportRow.referralRejected).isEqualTo(isAssessmentRejected)
+    assertThat(actualReferralReportRow.referralRejected).isEqualTo(isAssessmentRejected.toYesNo())
     assertThat(actualReferralReportRow.rejectionDate).isEqualTo(rejectedDate?.toLocalDate())
     assertThat(actualReferralReportRow.rejectionReason).isEqualTo(expectedAssessment.rejectionRationale)
     assertThat(actualReferralReportRow.accommodationRequiredDate).isEqualTo(application.arrivalDate?.toLocalDate())
