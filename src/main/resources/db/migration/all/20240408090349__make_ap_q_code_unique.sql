@@ -1,0 +1,1 @@
+ALTER TABLE approved_premises ADD CONSTRAINT approved_premises_q_code_unique UNIQUE (q_code);
