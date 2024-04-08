@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas3ReportType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenderDetailsSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
@@ -62,6 +63,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTrans
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateAfter
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.roundNanosToMillisToAccountForLossOfPrecisionInPostgres
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toBookingsReportDataAndPersonInfo
 import java.time.LocalDate
@@ -1042,6 +1044,74 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
         }
       }
     }
+
+    @Test
+    fun `Get CAS3 referral report successfully when offender gender identity is Prefer to self-describe`() {
+      `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            OffenderDetailsSummaryFactory()
+              .withGenderIdentity("Prefer to self-describe")
+              .withSelfDescribedGenderIdentity(randomStringLowerCase(10))
+              .produce()
+          },
+        ) { offenderDetails, _ ->
+
+          val (premises, application) = createReferralAndAssessment(user, offenderDetails)
+
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+          temporaryAccommodationAssessmentEntityFactory.produceAndPersist {
+            withApplication(application)
+            withAssessmentSchema(applicationSchema)
+            withDecision(REJECTED)
+            withCreatedAt(OffsetDateTime.now().roundNanosToMillisToAccountForLossOfPrecisionInPostgres())
+            withSubmittedAt(OffsetDateTime.now())
+          }
+
+          bookingEntityFactory.produceAndPersist {
+            withPremises(premises)
+            withServiceName(ServiceName.temporaryAccommodation)
+            withCrn(offenderDetails.otherIds.crn)
+            withArrivalDate(LocalDate.of(2024, 1, 1))
+            withDepartureDate(LocalDate.of(2024, 1, 1))
+            withApplication(application)
+          }
+
+          val caseSummary = CaseSummaryFactory()
+            .fromOffenderDetails(offenderDetails)
+            .withPnc(offenderDetails.otherIds.pncNumber)
+            .produce()
+
+          ApDeliusContext_addResponseToUserAccessCall(
+            CaseAccessFactory()
+              .withCrn(offenderDetails.otherIds.crn)
+              .produce(),
+            user.deliusUsername,
+          )
+
+          webTestClient.get()
+            .uri("/cas3/reports/referral?startDate=2024-01-01&endDate=2024-01-30&probationRegionId=${user.probationRegion.id}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .consumeWith {
+              val actual = DataFrame
+                .readExcel(it.responseBody!!.inputStream())
+                .convertTo<TransitionalAccommodationReferralReportRow>(Remove)
+                .toList()
+
+              assertThat(actual.size).isEqualTo(2)
+              assertCorrectPersonDetail(caseSummary, actual[0])
+              assertThat(actual[0].bookingOffered).isEqualTo("Yes")
+            }
+        }
+      }
+    }
   }
 
   @Nested
@@ -1964,8 +2034,11 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
         " ",
       )
 
+    val expectedGenderIdentity = if (actualReferralRow.genderIdentity == "Prefer to self-describe") expectedCaseSummary.profile?.selfDescribedGender else expectedCaseSummary.profile?.genderIdentity
+
     assertThat(actualReferralRow.crn).isEqualTo(expectedCaseSummary.crn)
-    assertThat(actualReferralRow.gender).isEqualTo(expectedCaseSummary.gender)
+    assertThat(actualReferralRow.sex).isEqualTo(expectedCaseSummary.gender)
+    assertThat(actualReferralRow.genderIdentity).isEqualTo(expectedGenderIdentity)
     assertThat(actualReferralRow.dateOfBirth).isEqualTo(expectedCaseSummary.dateOfBirth)
     assertThat(actualReferralRow.ethnicity).isEqualTo(expectedCaseSummary.profile?.ethnicity)
     assertThat(actualReferralRow.pncNumber).isEqualTo(expectedCaseSummary.pnc)

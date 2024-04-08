@@ -27,7 +27,7 @@ class OffenderDetailsSummaryFactory : Factory<OffenderDetailSummary> {
   private var ethnicity: Yielded<String> = { randomStringUpperCase(6) }
   private var nationality: Yielded<String> = { randomStringUpperCase(6) }
   private var religionOrBelief: Yielded<String?> = { randomStringUpperCase(12) }
-  private var genderIdentity: Yielded<String?> = { null }
+  private var genderIdentity: Yielded<String?> = { randomOf(listOf("Male", "Female", "Non-binary", "Prefer not to say", "Prefer to self-describe")) }
   private var selfDescribedGenderIdentity: Yielded<String?> = { null }
 
   fun withOffenderId(id: Long) = apply {
