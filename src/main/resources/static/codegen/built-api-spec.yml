@@ -6378,6 +6378,9 @@ components:
               $ref: '#/components/schemas/ApplicationStatus'
             risks:
               $ref: '#/components/schemas/PersonRisks'
+            hdcEligibilityDate:
+              type: string
+              format: date
           required:
             - createdByUserId
             - status
