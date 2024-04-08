@@ -28,7 +28,7 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> buildPersonDepartedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> buildBookingNotMadeDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> buildBookingCancelledDescription(domainEventSummary)
-      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> "The booking had its arrival or departure date changed"
+      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> "The placement had its arrival or departure date changed"
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> buildApplicationWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> buildAssessmentAppealedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> buildPlacementApplicationWithdrawnDescription(domainEventSummary)
@@ -55,7 +55,10 @@ class DomainEventDescriber(
 
   private fun buildBookingMadeDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getBookingMadeEvent(domainEventSummary.id())
-    return event.describe { "A booking was made for between ${it.eventDetails.arrivalOn} and ${it.eventDetails.departureOn}" }
+    return event.describe {
+      "A placement at ${it.eventDetails.premises.name} was booked for " +
+        "${it.eventDetails.arrivalOn.toUiFormat()} to ${it.eventDetails.departureOn.toUiFormat()}"
+    }
   }
 
   private fun buildPersonArrivedDescription(domainEventSummary: DomainEventSummary): String? {
@@ -75,12 +78,12 @@ class DomainEventDescriber(
 
   private fun buildBookingNotMadeDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getBookingNotMadeEvent(domainEventSummary.id())
-    return event.describe { "A booking was not made for the placement request. The reason was: ${it.eventDetails.failureDescription}" }
+    return event.describe { "A placement was not made for the placement request. The reason was: ${it.eventDetails.failureDescription}" }
   }
 
   private fun buildBookingCancelledDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getBookingCancelledEvent(domainEventSummary.id())
-    return event.describe { "The booking was cancelled. The reason was: '${it.eventDetails.cancellationReason}'" }
+    return event.describe { "The placement was cancelled. The reason was: '${it.eventDetails.cancellationReason}'" }
   }
 
   private fun buildAssessmentAppealedDescription(domainEventSummary: DomainEventSummary): String? {
