@@ -97,5 +97,7 @@ class UserTransformer(
     UserQualification.LAO -> ApiUserQualification.lao
     UserQualification.ESAP -> ApiUserQualification.esap
     UserQualification.EMERGENCY -> ApiUserQualification.emergency
+    UserQualification.MENTAL_HEALTH_SPECIALIST -> ApiUserQualification.mentalHealthSpecialist
+    UserQualification.RECOVERY_FOCUSED -> ApiUserQualification.recoveryFocused
   }
 }

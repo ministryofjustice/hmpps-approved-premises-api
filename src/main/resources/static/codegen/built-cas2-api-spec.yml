@@ -3538,6 +3538,8 @@ components:
         - lao
         - emergency
         - esap
+        - recovery_focused
+        - mental_health_specialist
     ServiceName:
       type: string
       enum:

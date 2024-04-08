@@ -336,6 +336,8 @@ enum class UserQualification {
   LAO,
   ESAP,
   EMERGENCY,
+  RECOVERY_FOCUSED,
+  MENTAL_HEALTH_SPECIALIST,
 }
 
 interface UserWorkload {
