@@ -32,24 +32,32 @@ fun IntegrationTestBase.`Given a Placement Application`(
   requiredQualification: UserQualification? = null,
   noticeType: Cas1ApplicationTimelinessCategory? = null,
 ): PlacementApplicationEntity {
+  val userApArea = apAreaEntityFactory.produceAndPersist()
+
+  val assessmentAllocatedToUser = userEntityFactory.produceAndPersist {
+    withYieldedProbationRegion {
+      probationRegionEntityFactory.produceAndPersist {
+        withApArea(userApArea)
+      }
+    }
+    withApArea(userApArea)
+  }
+
+  val assessmentCreatedByUser = userEntityFactory.produceAndPersist {
+    withYieldedProbationRegion {
+      probationRegionEntityFactory.produceAndPersist {
+        withApArea(userApArea)
+      }
+    }
+    withApArea(userApArea)
+  }
+
   val (_, application) = `Given an Assessment for Approved Premises`(
     decision = assessmentDecision,
     submittedAt = OffsetDateTime.now(),
     crn = crn,
-    allocatedToUser = userEntityFactory.produceAndPersist {
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
-    },
-    createdByUser = userEntityFactory.produceAndPersist {
-      withYieldedProbationRegion {
-        probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
-      }
-    },
+    allocatedToUser = assessmentAllocatedToUser,
+    createdByUser = assessmentCreatedByUser,
     apArea = apArea,
     name = name,
     requiredQualification = requiredQualification,

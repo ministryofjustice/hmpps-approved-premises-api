@@ -352,6 +352,7 @@ class TaskServiceTest {
     val allocatedToUserId = UUID.randomUUID()
     val requiredQualification = UserQualification.pipe
     val crnOrName = "CRN123"
+    val isCompleted = false
 
     every { page.content } returns tasks
     every {
@@ -362,6 +363,7 @@ class TaskServiceTest {
         allocatedToUserId,
         requiredQualification.value,
         crnOrName,
+        isCompleted,
         PageRequest.of(0, 10, Sort.by("created_at").ascending()),
       )
     } returns page
@@ -373,7 +375,18 @@ class TaskServiceTest {
 
     every { getMetadata(page, pageCriteria) } returns metadata
 
-    val result = taskService.getAll(TaskService.TaskFilterCriteria(AllocatedFilter.allocated, apAreaId, taskEntityTypes, allocatedToUserId, requiredQualification, crnOrName), pageCriteria)
+    val result = taskService.getAll(
+      TaskService.TaskFilterCriteria(
+        AllocatedFilter.allocated,
+        apAreaId,
+        taskEntityTypes,
+        allocatedToUserId,
+        requiredQualification,
+        crnOrName,
+        isCompleted,
+      ),
+      pageCriteria,
+    )
 
     val expectedTasks = listOf(
       assessments.map { TypedTask.Assessment(it) },

@@ -56,7 +56,9 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         'ASSESSMENT' in :taskTypes AND
         assessment.is_withdrawn IS NOT TRUE
         AND assessment.reallocated_at IS NULL
-        AND assessment.submitted_at IS NULL
+        AND (
+          (:completed = true AND assessment.submitted_at IS NOT NULL) OR (:completed = false AND assessment.submitted_at IS NULL)
+        )
         AND (
           (:isAllocated IS NULL) OR 
           (
@@ -94,7 +96,9 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         'PLACEMENT_APPLICATION' in :taskTypes AND
         placement_application.submitted_at IS NOT NULL
         AND placement_application.reallocated_at IS NULL
-        AND placement_application.decision IS NULL
+        AND (
+          (:completed = true AND placement_application.decision IS NOT NULL) OR (:completed = false AND placement_application.decision IS NULL)
+        )
         AND (
           (:isAllocated IS NULL) OR 
           (
@@ -130,11 +134,13 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         LEFT JOIN ap_areas area ON area.id = apa.ap_area_id
         LEFT JOIN users u ON u.id = placement_request.allocated_to_user_id
       WHERE
-        'PLACEMENT_REQUEST' IN :taskTypes AND
-        placement_request.booking_id IS NULL
+        'PLACEMENT_REQUEST' IN :taskTypes
         AND placement_request.reallocated_at IS NULL
         AND placement_request.is_withdrawn IS FALSE
-        AND booking_not_made.id IS NULL
+        AND (
+          (:completed = true AND (placement_request.booking_id IS NOT NULL OR booking_not_made.id IS NOT NULL)) OR 
+          (:completed = false AND placement_request.booking_id IS NULL AND booking_not_made.id IS NULL)
+        )
         AND (
           (:isAllocated IS NULL) OR 
           (
@@ -175,6 +181,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
     allocatedToUserId: UUID?,
     requiredQualification: String?,
     crnOrName: String?,
+    completed: Boolean,
     pageable: Pageable?,
   ): Page<Task>
 
@@ -190,6 +197,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
     allocatedToUserId: UUID?,
     requiredQualification: String?,
     crnOrName: String?,
+    completed: Boolean,
     pageable: Pageable?,
   ): Page<Task>
 
@@ -205,6 +213,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
     allocatedToUserId: UUID?,
     requiredQualification: String?,
     crnOrName: String?,
+    completed: Boolean,
     pageable: Pageable?,
   ): Page<Task>
 
@@ -220,6 +229,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
     allocatedToUserId: UUID?,
     requiredQualification: String?,
     crnOrName: String?,
+    completed: Boolean,
     pageable: Pageable?,
   ): Page<Task>
 }
