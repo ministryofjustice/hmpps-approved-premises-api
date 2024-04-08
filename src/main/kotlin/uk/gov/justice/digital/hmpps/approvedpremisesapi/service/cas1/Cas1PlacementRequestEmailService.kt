@@ -37,24 +37,21 @@ class Cas1PlacementRequestEmailService(
     }
 
     if (placementRequest.isForApplicationsArrivalDate()) {
+      /**
+       * For information on why we send a request for placement email
+       * instead of match request, see [PlacementRequestEntity.isForApplicationsArrivalDate]
+       **/
       val template = if (aps530WithdrawalEmailImprovements) {
         notifyConfig.templates.placementRequestWithdrawnV2
       } else {
         notifyConfig.templates.placementRequestWithdrawn
       }
 
-      val applicant = application.createdByUser
-      applicant.email?.let { applicantEmail ->
-        emailNotifier.sendEmail(
-          recipientEmailAddress = applicantEmail,
-          /**
-           * For information on why we send a request for placement email
-           * instead of match request, see [PlacementRequestEntity.isForApplicationsArrivalDate]
-           **/
-          templateId = template,
-          personalisation = personalisation,
-        )
-      }
+      emailNotifier.sendEmails(
+        recipientEmailAddresses = application.interestedPartiesEmailAddresses(),
+        templateId = template,
+        personalisation = personalisation,
+      )
     }
 
     if (!placementRequest.hasActiveBooking()) {
