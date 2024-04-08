@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.entity
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -59,18 +60,21 @@ class ApprovedPremisesApplicationEntityTest {
     assertThat(application.isShortNoticeApplication()).isNull()
   }
 
-  @ParameterizedTest
-  @CsvSource("emergency,EMERGENCY", "shortNotice,EMERGENCY", "standard,")
-  fun `getRequiredQualifications returns correctly for timeliness categories`(noticeType: Cas1ApplicationTimelinessCategory, qualification: UserQualification?) {
-    val user = UserEntityFactory()
-      .withDefaultProbationRegion()
-      .produce()
+  @Nested
+  inner class GetRequiredQualifications {
+    @ParameterizedTest
+    @CsvSource("emergency,EMERGENCY", "shortNotice,EMERGENCY", "standard,")
+    fun `returns correctly for timeliness categories`(noticeType: Cas1ApplicationTimelinessCategory, qualification: UserQualification?) {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
 
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(user)
-      .withNoticeType(noticeType)
-      .produce()
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withNoticeType(noticeType)
+        .produce()
 
-    assertThat(application.getRequiredQualifications()).isEqualTo(listOfNotNull(qualification))
+      assertThat(application.getRequiredQualifications()).isEqualTo(listOfNotNull(qualification))
+    }
   }
 }
