@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1Applicatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
 import java.time.OffsetDateTime
 
 class ApprovedPremisesApplicationEntityTest {
@@ -72,6 +73,21 @@ class ApprovedPremisesApplicationEntityTest {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(user)
         .withNoticeType(noticeType)
+        .produce()
+
+      assertThat(application.getRequiredQualifications()).isEqualTo(listOfNotNull(qualification))
+    }
+
+    @ParameterizedTest
+    @CsvSource("PIPE,PIPE", "ESAP,ESAP")
+    fun `returns matching qualification for an application made to that type of premises`(apType: ApprovedPremisesType, qualification: UserQualification?) {
+      val user = UserEntityFactory()
+        .withDefaultProbationRegion()
+        .produce()
+
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .withApType(apType)
         .produce()
 
       assertThat(application.getRequiredQualifications()).isEqualTo(listOfNotNull(qualification))
