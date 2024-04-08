@@ -2111,9 +2111,8 @@ class ApplicationTest : IntegrationTestBase() {
             assertThat(persistedDomainEvent!!.crn).isEqualTo(offenderDetails.otherIds.crn)
             assertThat(persistedDomainEvent.type).isEqualTo(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
 
-            val emittedMessage = snsDomainEventListener.blockForMessage()
+            val emittedMessage = snsDomainEventListener.blockForMessage("approved-premises.application.submitted")
 
-            assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.submitted")
             val emittedMessageDescription = "An application has been submitted for an Approved Premises placement"
             assertThat(emittedMessage.description).isEqualTo(emittedMessageDescription)
             assertThat(emittedMessage.detailUrl).matches("http://api/events/application-submitted/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")

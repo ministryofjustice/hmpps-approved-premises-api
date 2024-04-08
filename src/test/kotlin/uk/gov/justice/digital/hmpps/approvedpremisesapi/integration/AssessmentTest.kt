@@ -2070,9 +2070,8 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
             assertThat(persistedAssessment.submittedAt).isNotNull
 
-            val emittedMessage = snsDomainEventListener.blockForMessage()
+            val emittedMessage = snsDomainEventListener.blockForMessage("approved-premises.application.assessed")
 
-            assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
             assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
             assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
             assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
@@ -2162,9 +2161,8 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
             assertThat(persistedAssessment.submittedAt).isNotNull
 
-            val emittedMessage = snsDomainEventListener.blockForMessage()
+            val emittedMessage = snsDomainEventListener.blockForMessage("approved-premises.application.assessed")
 
-            assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
             assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
             assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
             assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
@@ -2307,9 +2305,8 @@ class AssessmentTest : IntegrationTestBase() {
         assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
         assertThat(persistedAssessment.submittedAt).isNotNull
 
-        val emittedMessage = snsDomainEventListener.blockForMessage()
+        val emittedMessage = snsDomainEventListener.blockForMessage("approved-premises.application.assessed")
 
-        assertThat(emittedMessage.eventType).isEqualTo("approved-premises.application.assessed")
         assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
         assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
         assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)

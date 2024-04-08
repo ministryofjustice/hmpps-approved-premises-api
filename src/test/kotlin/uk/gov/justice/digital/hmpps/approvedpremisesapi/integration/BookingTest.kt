@@ -753,9 +753,8 @@ class BookingTest : IntegrationTestBase() {
               .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
               .jsonPath("$.bed.name").isEqualTo(bed.name)
 
-            val emittedMessage = snsDomainEventListener.blockForMessage()
+            val emittedMessage = snsDomainEventListener.blockForMessage("approved-premises.booking.made")
 
-            assertThat(emittedMessage.eventType).isEqualTo("approved-premises.booking.made")
             assertThat(emittedMessage.description).isEqualTo("An Approved Premises booking has been made")
             assertThat(emittedMessage.detailUrl).matches("http://api/events/booking-made/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
             assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(linkedApplication.id)
@@ -4493,9 +4492,8 @@ class BookingTest : IntegrationTestBase() {
     eventDescription: String,
     detailUrl: String,
   ) {
-    val emittedMessage = snsDomainEventListener.blockForMessage()
+    val emittedMessage = snsDomainEventListener.blockForMessage(eventType)
 
-    assertThat(emittedMessage.eventType).isEqualTo(eventType)
     assertThat(emittedMessage.description).isEqualTo(eventDescription)
     assertThat(emittedMessage.detailUrl).matches("$detailUrl/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
     assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
