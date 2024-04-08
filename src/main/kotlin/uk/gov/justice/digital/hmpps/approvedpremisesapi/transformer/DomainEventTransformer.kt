@@ -30,6 +30,12 @@ class DomainEventTransformer(private val communityApiClient: CommunityApiClient)
     )
   }
 
+  fun toStaffMember(user: UserEntity) =
+    when (val result = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
+      is ClientResult.Success -> toStaffMember(result.body)
+      is ClientResult.Failure -> result.throwException()
+    }
+
   fun toStaffMember(staffDetails: StaffUserDetails): StaffMember {
     return StaffMember(
       staffCode = staffDetails.staffCode,
