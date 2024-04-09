@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Assessmen
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCancelledFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventPremisesFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MatchRequestWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
@@ -79,10 +80,11 @@ class DomainEventDescriberTest {
     assertThat(result).isEqualTo("The application was assessed and $decision")
   }
 
-  @ParameterizedTest
-  @CsvSource(value = ["2024-01-01,2024-04-01", "2024-01-02,2024-04-02"])
-  fun `Returns expected description for booking made event`(arrivalDate: LocalDate, departureDate: LocalDate) {
+  @Test
+  fun `Returns expected description for booking made event`() {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
+    val arrivalDate = LocalDate.of(2024, 1, 1)
+    val departureDate = LocalDate.of(2024, 4, 1)
 
     every { mockDomainEventService.getBookingMadeEvent(any()) } returns buildDomainEvent {
       BookingMadeEnvelope(
@@ -92,13 +94,18 @@ class DomainEventDescriberTest {
         eventDetails = BookingMadeFactory()
           .withArrivalOn(arrivalDate)
           .withDepartureOn(departureDate)
+          .withPremises(
+            EventPremisesFactory()
+              .withName("The Premises Name")
+              .produce(),
+          )
           .produce(),
       )
     }
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("A booking was made for between $arrivalDate and $departureDate")
+    assertThat(result).isEqualTo("A placement at The Premises Name was booked for Monday 1 January 2024 to Monday 1 April 2024")
   }
 
   @ParameterizedTest
@@ -182,7 +189,7 @@ class DomainEventDescriberTest {
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("A booking was not made for the placement request. The reason was: $reason")
+    assertThat(result).isEqualTo("A placement was not made for the placement request. The reason was: $reason")
   }
 
   @ParameterizedTest
@@ -203,7 +210,7 @@ class DomainEventDescriberTest {
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("The booking was cancelled. The reason was: '$reason'")
+    assertThat(result).isEqualTo("The placement was cancelled. The reason was: '$reason'")
   }
 
   @Test
@@ -212,7 +219,7 @@ class DomainEventDescriberTest {
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("The booking had its arrival or departure date changed")
+    assertThat(result).isEqualTo("The placement had its arrival or departure date changed")
   }
 
   @Test

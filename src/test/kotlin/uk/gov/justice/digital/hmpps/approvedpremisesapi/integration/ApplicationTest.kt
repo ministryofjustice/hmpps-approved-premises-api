@@ -78,6 +78,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingChangedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventPremisesFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNotArrivedFactory
@@ -2706,13 +2707,13 @@ class ApplicationTest : IntegrationTestBase() {
         val domainEventDescriptions = listOf(
           "The application was submitted",
           "The application was assessed and accepted",
-          "A booking was made for between 2024-01-01 and 2024-04-01",
+          "A placement at The Premises was booked for Monday 1 January 2024 to Monday 1 April 2024",
           "The person moved into the premises on 2024-01-01",
           "The person was due to move into the premises on 2024-01-01 but did not arrive",
           "The person moved out of the premises on 2024-04-01",
-          "A booking was not made for the placement request. The reason was: no suitable premises",
-          "The booking was cancelled. The reason was: 'additional sentencing'",
-          "The booking had its arrival or departure date changed",
+          "A placement was not made for the placement request. The reason was: no suitable premises",
+          "The placement was cancelled. The reason was: 'additional sentencing'",
+          "The placement had its arrival or departure date changed",
           "The application was assessed and accepted",
         )
 
@@ -2751,13 +2752,13 @@ class ApplicationTest : IntegrationTestBase() {
         val domainEventDescriptions = listOf(
           "The application was submitted",
           "The application was assessed and accepted",
-          "A booking was made for between 2024-01-01 and 2024-04-01",
+          "A placement at The Premises was booked for Monday 1 January 2024 to Monday 1 April 2024",
           "The person moved into the premises on 2024-01-01",
           "The person was due to move into the premises on 2024-01-01 but did not arrive",
           "The person moved out of the premises on 2024-04-01",
-          "A booking was not made for the placement request. The reason was: no suitable premises",
-          "The booking was cancelled. The reason was: 'additional sentencing'",
-          "The booking had its arrival or departure date changed",
+          "A placement was not made for the placement request. The reason was: no suitable premises",
+          "The placement was cancelled. The reason was: 'additional sentencing'",
+          "The placement had its arrival or departure date changed",
           "The application was assessed and accepted",
         )
 
@@ -2906,6 +2907,7 @@ class ApplicationTest : IntegrationTestBase() {
                 .withBookingId(booking.id)
                 .withArrivalOn(LocalDate.parse("2024-01-01"))
                 .withDepartureOn(LocalDate.parse("2024-04-01"))
+                .withPremises(EventPremisesFactory().withName("The Premises").produce())
                 .produce(),
             ),
           )
@@ -2930,7 +2932,7 @@ class ApplicationTest : IntegrationTestBase() {
             TimelineEventAssociatedUrl(type = TimelineEventUrlType.application, url = "http://frontend/applications/$applicationId"),
             TimelineEventAssociatedUrl(type = TimelineEventUrlType.booking, url = "http://frontend/premises/${premises.id}/bookings/${booking.id}"),
           ),
-          content = "A booking was made for between 2024-01-01 and 2024-04-01",
+          content = "A placement at The Premises was booked for Monday 1 January 2024 to Monday 1 April 2024",
         )
 
         val expected = listOf(
@@ -3060,6 +3062,11 @@ class ApplicationTest : IntegrationTestBase() {
                 .withApplicationId(applicationId)
                 .withArrivalOn(LocalDate.parse("2024-01-01"))
                 .withDepartureOn(LocalDate.parse("2024-04-01"))
+                .withPremises(
+                  EventPremisesFactory()
+                    .withName("The Premises")
+                    .produce(),
+                )
                 .produce(),
             ),
           )
