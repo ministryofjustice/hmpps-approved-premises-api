@@ -138,6 +138,7 @@ class ApplicationService(
       return success(createdApplication.apply { schemaUpToDate = true })
     }
 
+  @SuppressWarnings("ReturnCount")
   fun updateApplication(applicationId: UUID, data: String?, user: NomisUserEntity):
     AuthorisableActionResult<ValidatableActionResult<Cas2ApplicationEntity>> {
     val application = applicationRepository.findByIdOrNull(applicationId)?.let(jsonSchemaService::checkSchemaOutdated)
@@ -176,6 +177,7 @@ class ApplicationService(
     )
   }
 
+  @SuppressWarnings("ReturnCount")
   @Transactional
   fun submitApplication(
     submitApplication: SubmitCas2Application,
