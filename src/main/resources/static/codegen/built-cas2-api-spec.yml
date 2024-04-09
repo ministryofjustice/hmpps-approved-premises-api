@@ -832,6 +832,9 @@ components:
           $ref: '#/components/schemas/TaskStatus'
         apArea:
           $ref: '#/components/schemas/ApArea'
+        outcomeRecordedAt:
+          type: string
+          format: date-time
       discriminator:
         propertyName: taskType
         mapping:
@@ -868,6 +871,8 @@ components:
           properties:
             createdFromAppeal:
               type: boolean
+            outcome:
+              $ref: '#/components/schemas/AssessmentDecision'
           required:
             - createdFromAppeal
     PlacementRequestTask:
@@ -882,6 +887,8 @@ components:
               $ref: '#/components/schemas/ReleaseTypeOption'
             placementRequestStatus:
               $ref: '#/components/schemas/PlacementRequestStatus'
+            outcome:
+              $ref: '#/components/schemas/PlacementRequestTaskOutcome'
           required:
             - tier
             - releaseType
@@ -901,11 +908,18 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/PlacementDates'
+            outcome:
+              $ref: '#/components/schemas/PlacementApplicationDecision'
           required:
             - id
             - tier
             - releaseType
             - placementType
+    PlacementRequestTaskOutcome:
+      type: string
+      enum:
+        - matched
+        - unable_to_match
     BookingAppealTask:
       allOf:
         - $ref: '#/components/schemas/Task'

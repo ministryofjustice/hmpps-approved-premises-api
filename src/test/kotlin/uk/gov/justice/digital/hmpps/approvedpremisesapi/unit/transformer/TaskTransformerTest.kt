@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTaskOutcome
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RiskTierEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingNotMadeEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.LocalAuthorityEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
@@ -39,6 +41,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AssessmentTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PlacementRequestTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
@@ -54,6 +57,7 @@ class TaskTransformerTest {
   private val mockRisksTransformer = mockk<RisksTransformer>()
   private val mockPlacementRequestTransformer = mockk<PlacementRequestTransformer>()
   private val mockApAreaTransformer = mockk<ApAreaTransformer>()
+  private val mockAssessmentTransformer = mockk<AssessmentTransformer>()
 
   private val mockUser = mockk<ApprovedPremisesUser>()
 
@@ -113,6 +117,7 @@ class TaskTransformerTest {
     mockRisksTransformer,
     mockPlacementRequestTransformer,
     mockApAreaTransformer,
+    mockAssessmentTransformer,
   )
 
   @BeforeEach
@@ -125,11 +130,13 @@ class TaskTransformerTest {
   inner class TransformAssessmentsTest {
     @Test
     fun `Not started assessment is correctly transformed`() {
-      var assessment = assessmentFactory.produce()
+      val assessment = assessmentFactory
+        .withDecision(null)
+        .produce()
 
       assessment.data = null
 
-      var result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
+      val result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
 
       assertThat(result.id).isEqualTo(assessment.id)
       assertThat(result.status).isEqualTo(TaskStatus.notStarted)
@@ -144,26 +151,34 @@ class TaskTransformerTest {
 
     @Test
     fun `In Progress assessment is correctly transformed`() {
-      var assessment = assessmentFactory
+      val assessment = assessmentFactory
         .withDecision(null)
         .withData("{\"test\": \"data\"}")
         .produce()
 
-      var result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
+      val result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.inProgress)
     }
 
     @Test
     fun `Complete assessment is correctly transformed`() {
-      var assessment = assessmentFactory
+      val submittedAt = OffsetDateTime.now()
+      val assessment = assessmentFactory
         .withDecision(AssessmentDecision.ACCEPTED)
+        .withSubmittedAt(submittedAt)
         .withData("{\"test\": \"data\"}")
         .produce()
 
-      var result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
+      val apiDecision = uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.accepted
+
+      every { mockAssessmentTransformer.transformJpaDecisionToApi(assessment.decision) } returns apiDecision
+
+      val result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.complete)
+      assertThat(result.outcome).isEqualTo(apiDecision)
+      assertThat(result.outcomeRecordedAt).isEqualTo(submittedAt.toInstant())
     }
 
     @Test
@@ -172,6 +187,7 @@ class TaskTransformerTest {
       val application = applicationFactory.withApArea(apArea).produce()
       val assessment = assessmentFactory
         .withApplication(application)
+        .withDecision(null)
         .produce()
 
       val result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
@@ -186,7 +202,7 @@ class TaskTransformerTest {
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
     fun `assessment with createdFromAppeal is transformed correctly`(createdFromAppeal: Boolean) {
-      val assessment = assessmentFactory.withCreatedFromAppeal(createdFromAppeal).produce()
+      val assessment = assessmentFactory.withDecision(null).withCreatedFromAppeal(createdFromAppeal).produce()
 
       val result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
 
@@ -198,6 +214,7 @@ class TaskTransformerTest {
       val assessment = TemporaryAccommodationAssessmentEntityFactory()
         .withApplication(application)
         .withAllocatedToUser(user)
+        .withDecision(null)
         .withCreatedAt(OffsetDateTime.parse("2022-12-07T10:40:00Z"))
         .withDueAt(OffsetDateTime.now())
         .produce()
@@ -287,15 +304,21 @@ class TaskTransformerTest {
 
     @Test
     fun `Completed placement application is correctly transformed`() {
+      val decisionMadeAt = OffsetDateTime.now()
+      val decision = PlacementApplicationDecision.ACCEPTED
+
       val placementApplication = placementApplicationFactory
         .withData("{}")
         .withPlacementType(PlacementType.ADDITIONAL_PLACEMENT)
-        .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .withDecision(decision)
+        .withDecisionMadeAt(decisionMadeAt)
         .produce()
 
       val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.complete)
+      assertThat(result.outcome).isEqualTo(decision.convertToApi())
+      assertThat(result.outcomeRecordedAt).isEqualTo(decisionMadeAt.toInstant())
     }
 
     @Test
@@ -350,20 +373,19 @@ class TaskTransformerTest {
     }
 
     @Test
-    fun `Complete placement request is correctly transformed`() {
-      val placementRequest = placementRequestFactory
-        .withBooking(
-          BookingEntityFactory()
-            .withPremises(
-              ApprovedPremisesEntityFactory()
-                .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-                .withYieldedProbationRegion {
-                  ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
-                }
-                .produce(),
-            )
+    fun `Complete placement request is correctly transformed when a booking has been made`() {
+      val booking = BookingEntityFactory()
+        .withPremises(
+          ApprovedPremisesEntityFactory()
+            .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory().withYieldedApArea { ApAreaEntityFactory().produce() }.produce()
+            }
             .produce(),
         )
+        .produce()
+      val placementRequest = placementRequestFactory
+        .withBooking(booking)
         .produce()
 
       every { mockPlacementRequestTransformer.getStatus(placementRequest) } returns placementRequestStatus
@@ -371,6 +393,26 @@ class TaskTransformerTest {
       val result = taskTransformer.transformPlacementRequestToTask(placementRequest, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.complete)
+      assertThat(result.outcome).isEqualTo(PlacementRequestTaskOutcome.matched)
+      assertThat(result.outcomeRecordedAt).isEqualTo(booking.createdAt.toInstant())
+    }
+
+    @Test
+    fun `Complete placement request is correctly transformed when a placement request has been marked as booking not made`() {
+      val placementRequest = placementRequestFactory
+        .produce()
+      val bookingNotMade = BookingNotMadeEntityFactory()
+        .withPlacementRequest(placementRequest)
+        .produce()
+
+      placementRequest.bookingNotMades.add(bookingNotMade)
+
+      every { mockPlacementRequestTransformer.getStatus(any()) } returns placementRequestStatus
+
+      val result = taskTransformer.transformPlacementRequestToTask(placementRequest, "First Last")
+
+      assertThat(result.outcome).isEqualTo(PlacementRequestTaskOutcome.unableToMatch)
+      assertThat(result.outcomeRecordedAt).isEqualTo(bookingNotMade.createdAt.toInstant())
     }
 
     @Test

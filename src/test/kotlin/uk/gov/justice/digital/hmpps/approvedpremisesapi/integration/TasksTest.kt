@@ -1,6 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
+import com.fasterxml.jackson.core.type.TypeReference
 import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -10,6 +13,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewReallocation
@@ -35,7 +39,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.TaskTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.math.ceil
 
@@ -1107,6 +1114,7 @@ class TasksTest : IntegrationTestBase() {
                 allocatedToUser = otherUser,
                 createdByUser = otherUser,
                 crn = offenderDetails.otherIds.crn,
+                createdAt = OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS),
               )
 
               val (assessment2, _) = `Given an Assessment for Approved Premises`(
@@ -1254,18 +1262,28 @@ class TasksTest : IntegrationTestBase() {
       fun `Get all tasks shows allows showing completed tasks`() {
         val url = "/tasks?isCompleted=true"
 
-        webTestClient.get()
+        objectMapper.setDateFormat(SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss"))
+
+        val rawResponseBody = webTestClient.get()
           .uri(url)
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              completeTasks,
-            ),
+          .returnResult<String>()
+          .responseBody
+          .blockFirst()
+
+        val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Task>>() {})
+
+        assertThat(responseBody)
+          .usingRecursiveFieldByFieldElementComparator(
+            RecursiveComparisonConfiguration.builder().withComparatorForType(
+              { a: Instant, b: Instant -> a.truncatedTo(ChronoUnit.MILLIS).compareTo(b.truncatedTo(ChronoUnit.MILLIS)) },
+              Instant::class.java,
+            ).build(),
           )
+          .hasSameElementsAs(completeTasks)
       }
     }
 
