@@ -9,12 +9,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import java.util.UUID
 
 @Component
 class UserAllocator(
   private val userAllocatorRules: List<UserAllocatorRule>,
   private val userRepository: UserRepository,
+  private val sentryService: SentryService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -64,7 +66,9 @@ class UserAllocator(
   private fun allocateToUser(userName: String, ruleName: String): AllocationResult =
     when (val user = userRepository.findByDeliusUsername(userName)) {
       null -> {
-        log.warn("Rule '$ruleName' attempted to allocate a task to user '$userName', but they could not be found. This rule has been skipped.")
+        val message = "Rule '$ruleName' attempted to allocate a task to user '$userName', but they could not be found. This rule has been skipped."
+        log.warn(message)
+        sentryService.captureErrorMessage(message)
         AllocationResult.Failed
       }
 

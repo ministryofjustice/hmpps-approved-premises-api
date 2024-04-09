@@ -33,12 +33,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SentryService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addQualificationForUnitTest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.util.stream.Stream
 
 class UserAllocatorTest {
   private val mockUserRepository = mockk<UserRepository>()
+  private val mockSentryService = mockk<SentryService>()
 
   @BeforeEach
   fun beforeEach() {
@@ -59,7 +61,7 @@ class UserAllocatorTest {
   inner class GetUserForAssessmentAllocation {
     @Test
     fun `Returns null when no rules are active`() {
-      val userAllocator = UserAllocator(listOf(), mockUserRepository)
+      val userAllocator = UserAllocator(listOf(), mockUserRepository, mockSentryService)
 
       val result = userAllocator.getUserForAssessmentAllocation(assessment)
 
@@ -72,7 +74,7 @@ class UserAllocatorTest {
       rules: List<UserAllocatorRule>,
       expectedUserEntity: UserEntity?,
     ) {
-      val userAllocator = UserAllocator(rules, mockUserRepository)
+      val userAllocator = UserAllocator(rules, mockUserRepository, mockSentryService)
 
       if (expectedUserEntity != null) {
         every { mockUserRepository.findByDeliusUsername(expectedUserEntity.deliusUsername) } returns expectedUserEntity
@@ -104,8 +106,9 @@ class UserAllocatorTest {
 
       every { mockUserRepository.findByDeliusUsername(user1.deliusUsername) } returns null
       every { mockUserRepository.findByDeliusUsername(user2.deliusUsername) } returns user2
+      every { mockSentryService.captureErrorMessage(any()) } returns Unit
 
-      val userAllocator = UserAllocator(rules, mockUserRepository)
+      val userAllocator = UserAllocator(rules, mockUserRepository, mockSentryService)
 
       val result = userAllocator.getUserForAssessmentAllocation(assessment)
 
@@ -119,6 +122,8 @@ class UserAllocatorTest {
           it.message.contains("skipped") &&
           it.level == Level.WARN
       }
+
+      verify { mockSentryService.captureErrorMessage("Rule 'unknown-user-rule' attempted to allocate a task to user 'USER-1', but they could not be found. This rule has been skipped.") }
     }
   }
 
@@ -126,7 +131,7 @@ class UserAllocatorTest {
   inner class GetUserForPlacementRequestAllocation {
     @Test
     fun `Returns null when no rules are active`() {
-      val userAllocator = UserAllocator(listOf(), mockUserRepository)
+      val userAllocator = UserAllocator(listOf(), mockUserRepository, mockSentryService)
 
       val result = userAllocator.getUserForPlacementRequestAllocation(placementRequest)
 
@@ -139,7 +144,7 @@ class UserAllocatorTest {
       rules: List<UserAllocatorRule>,
       expectedUserEntity: UserEntity?,
     ) {
-      val userAllocator = UserAllocator(rules, mockUserRepository)
+      val userAllocator = UserAllocator(rules, mockUserRepository, mockSentryService)
 
       if (expectedUserEntity != null) {
         every { mockUserRepository.findByDeliusUsername(expectedUserEntity.deliusUsername) } returns expectedUserEntity
@@ -171,8 +176,9 @@ class UserAllocatorTest {
 
       every { mockUserRepository.findByDeliusUsername(user1.deliusUsername) } returns null
       every { mockUserRepository.findByDeliusUsername(user2.deliusUsername) } returns user2
+      every { mockSentryService.captureErrorMessage(any()) } returns Unit
 
-      val userAllocator = UserAllocator(rules, mockUserRepository)
+      val userAllocator = UserAllocator(rules, mockUserRepository, mockSentryService)
 
       val result = userAllocator.getUserForPlacementRequestAllocation(placementRequest)
 
@@ -186,6 +192,8 @@ class UserAllocatorTest {
           it.message.contains("skipped") &&
           it.level == Level.WARN
       }
+
+      verify { mockSentryService.captureErrorMessage("Rule 'unknown-user-rule' attempted to allocate a task to user 'USER-1', but they could not be found. This rule has been skipped.") }
     }
   }
 
@@ -193,7 +201,7 @@ class UserAllocatorTest {
   inner class GetUserForPlacementApplicationAllocation {
     @Test
     fun `Returns null when no rules are active`() {
-      val userAllocator = UserAllocator(listOf(), mockUserRepository)
+      val userAllocator = UserAllocator(listOf(), mockUserRepository, mockSentryService)
 
       val result = userAllocator.getUserForPlacementApplicationAllocation(placementApplication)
 
@@ -206,7 +214,7 @@ class UserAllocatorTest {
       rules: List<UserAllocatorRule>,
       expectedUserEntity: UserEntity?,
     ) {
-      val userAllocator = UserAllocator(rules, mockUserRepository)
+      val userAllocator = UserAllocator(rules, mockUserRepository, mockSentryService)
 
       if (expectedUserEntity != null) {
         every { mockUserRepository.findByDeliusUsername(expectedUserEntity.deliusUsername) } returns expectedUserEntity
@@ -238,8 +246,9 @@ class UserAllocatorTest {
 
       every { mockUserRepository.findByDeliusUsername(user1.deliusUsername) } returns null
       every { mockUserRepository.findByDeliusUsername(user2.deliusUsername) } returns user2
+      every { mockSentryService.captureErrorMessage(any()) } returns Unit
 
-      val userAllocator = UserAllocator(rules, mockUserRepository)
+      val userAllocator = UserAllocator(rules, mockUserRepository, mockSentryService)
 
       val result = userAllocator.getUserForPlacementApplicationAllocation(placementApplication)
 
@@ -253,6 +262,7 @@ class UserAllocatorTest {
           it.message.contains("skipped") &&
           it.level == Level.WARN
       }
+      verify { mockSentryService.captureErrorMessage("Rule 'unknown-user-rule' attempted to allocate a task to user 'USER-1', but they could not be found. This rule has been skipped.") }
     }
   }
 
