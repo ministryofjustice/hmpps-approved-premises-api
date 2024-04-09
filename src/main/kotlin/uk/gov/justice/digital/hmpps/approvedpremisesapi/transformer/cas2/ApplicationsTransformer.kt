@@ -53,6 +53,7 @@ class ApplicationsTransformer(
         submittedAt = jpaSummary.getSubmittedAt()?.toInstant(),
         status = getStatusFromSummary(jpaSummary),
         type = "CAS2",
+        hdcEligibilityDate = jpaSummary.getHdcEligibilityDate(),
       )
   }
 

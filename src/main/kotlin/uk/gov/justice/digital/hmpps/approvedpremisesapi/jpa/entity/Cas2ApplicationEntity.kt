@@ -176,6 +176,7 @@ interface AppSummary {
   fun getCreatedByUserId(): UUID
   fun getCreatedAt(): Timestamp
   fun getSubmittedAt(): Timestamp?
+  fun getHdcEligibilityDate(): LocalDate?
 }
 
 interface Cas2ApplicationSummary : AppSummary
