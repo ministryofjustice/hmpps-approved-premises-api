@@ -33,6 +33,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var telephoneNumber: Yielded<String?> = { randomNumberChars(12) }
   private var notes: Yielded<MutableList<Cas2ApplicationNoteEntity>> = { mutableListOf() }
   private var assessment: Yielded<Cas2AssessmentEntity?> = { null }
+  private var referringPrisonCode: Yielded<String?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -94,6 +95,10 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.assessment = { assessmentEntity }
   }
 
+  fun withReferringPrisonCode(referringPrisonCode: String) = apply {
+    this.referringPrisonCode = { referringPrisonCode }
+  }
+
   override fun produce(): Cas2ApplicationEntity = Cas2ApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -109,5 +114,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     telephoneNumber = this.telephoneNumber(),
     notes = this.notes(),
     assessment = this.assessment(),
+    referringPrisonCode = this.referringPrisonCode(),
   )
 }
