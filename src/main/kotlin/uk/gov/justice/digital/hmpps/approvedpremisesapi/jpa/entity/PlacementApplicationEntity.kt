@@ -19,6 +19,8 @@ import javax.persistence.JoinColumn
 import javax.persistence.ManyToOne
 import javax.persistence.OneToMany
 import javax.persistence.Table
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiPlacementApplicationDecision
+
 @Service
 @Suppress("FunctionNaming")
 @Repository
@@ -153,6 +155,14 @@ enum class PlacementApplicationDecision {
   REJECTED,
   WITHDRAW,
   WITHDRAWN_BY_PP,
+  ;
+
+  fun convertToApi() = when (this) {
+    ACCEPTED -> ApiPlacementApplicationDecision.accepted
+    REJECTED -> ApiPlacementApplicationDecision.rejected
+    WITHDRAW -> ApiPlacementApplicationDecision.withdraw
+    WITHDRAWN_BY_PP -> ApiPlacementApplicationDecision.withdrawnByPp
+  }
 }
 
 enum class PlacementApplicationWithdrawalReason {

@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationTask
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTask
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestTaskOutcome
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TaskType
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
+import java.time.Instant
 import java.time.OffsetDateTime
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementType as ApiPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType as JpaPlacementType
@@ -27,6 +29,7 @@ class TaskTransformer(
   private val risksTransformer: RisksTransformer,
   private val placementRequestTransformer: PlacementRequestTransformer,
   private val apAreaTransformer: ApAreaTransformer,
+  private val assessmentTransformer: AssessmentTransformer,
 ) {
   fun transformAssessmentToTask(assessment: AssessmentEntity, personName: String) = AssessmentTask(
     id = assessment.id,
@@ -43,25 +46,32 @@ class TaskTransformer(
       is ApprovedPremisesAssessmentEntity -> assessment.createdFromAppeal
       else -> false
     },
+    outcomeRecordedAt = assessment.submittedAt?.toInstant(),
+    outcome = assessment.decision?.let { assessmentTransformer.transformJpaDecisionToApi(assessment.decision) },
   )
 
-  fun transformPlacementRequestToTask(placementRequest: PlacementRequestEntity, personName: String) = PlacementRequestTask(
-    id = placementRequest.id,
-    applicationId = placementRequest.application.id,
-    personName = personName,
-    crn = placementRequest.application.crn,
-    dueDate = transformDueAtToDate(placementRequest.dueAt),
-    dueAt = transformDueAtToInstant(placementRequest.dueAt),
-    allocatedToStaffMember = transformUserOrNull(placementRequest.allocatedToUser),
-    status = getPlacementRequestStatus(placementRequest),
-    taskType = TaskType.placementRequest,
-    tier = risksTransformer.transformTierDomainToApi(placementRequest.application.riskRatings!!.tier),
-    expectedArrival = placementRequest.expectedArrival,
-    duration = placementRequest.duration,
-    placementRequestStatus = placementRequestTransformer.getStatus(placementRequest),
-    releaseType = placementRequestTransformer.getReleaseType(placementRequest.application.releaseType),
-    apArea = getApArea(placementRequest.application),
-  )
+  fun transformPlacementRequestToTask(placementRequest: PlacementRequestEntity, personName: String): PlacementRequestTask {
+    val (outcomeRecordedAt, outcome) = getPlacementRequestOutcomeDetails(placementRequest)
+    return PlacementRequestTask(
+      id = placementRequest.id,
+      applicationId = placementRequest.application.id,
+      personName = personName,
+      crn = placementRequest.application.crn,
+      dueDate = transformDueAtToDate(placementRequest.dueAt),
+      dueAt = transformDueAtToInstant(placementRequest.dueAt),
+      allocatedToStaffMember = transformUserOrNull(placementRequest.allocatedToUser),
+      status = getPlacementRequestStatus(placementRequest),
+      taskType = TaskType.placementRequest,
+      tier = risksTransformer.transformTierDomainToApi(placementRequest.application.riskRatings!!.tier),
+      expectedArrival = placementRequest.expectedArrival,
+      duration = placementRequest.duration,
+      placementRequestStatus = placementRequestTransformer.getStatus(placementRequest),
+      releaseType = placementRequestTransformer.getReleaseType(placementRequest.application.releaseType),
+      apArea = getApArea(placementRequest.application),
+      outcomeRecordedAt = outcomeRecordedAt,
+      outcome = outcome,
+    )
+  }
 
   fun transformPlacementApplicationToTask(placementApplication: PlacementApplicationEntity, personName: String) = PlacementApplicationTask(
     id = placementApplication.id,
@@ -83,6 +93,8 @@ class TaskTransformer(
     releaseType = placementRequestTransformer.getReleaseType(placementApplication.application.releaseType),
     placementType = getPlacementType(placementApplication.placementType!!),
     apArea = getApArea(placementApplication.application),
+    outcomeRecordedAt = placementApplication.decisionMadeAt?.toInstant(),
+    outcome = placementApplication.decision?.convertToApi(),
   )
 
   private fun getApArea(application: ApplicationEntity): ApArea? {
@@ -118,6 +130,20 @@ class TaskTransformer(
     } else {
       userTransformer.transformJpaToApi(userEntity, ServiceName.approvedPremises) as ApprovedPremisesUser
     }
+  }
+
+  private fun getPlacementRequestOutcomeDetails(placementRequest: PlacementRequestEntity): Pair<Instant?, PlacementRequestTaskOutcome?> {
+    val bookingNotMades = placementRequest.bookingNotMades
+
+    if (bookingNotMades.size > 0) {
+      return Pair(bookingNotMades.last().createdAt.toInstant(), PlacementRequestTaskOutcome.unableToMatch)
+    }
+
+    if (placementRequest.hasActiveBooking()) {
+      return Pair(placementRequest.booking!!.createdAt.toInstant(), PlacementRequestTaskOutcome.matched)
+    }
+
+    return Pair(null, null)
   }
 
   // Use the sure operator here as entities will definitely have a `dueAt` value by the time they're surfaced as tasks
