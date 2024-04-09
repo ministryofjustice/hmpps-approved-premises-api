@@ -69,6 +69,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.CruService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
@@ -166,6 +167,7 @@ class PlacementRequestServiceTest {
     )
 
     val placementRequest = placementRequestService.createPlacementRequest(
+      source = PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
       placementRequirements,
       placementDates,
       "Some notes",

@@ -217,7 +217,14 @@ class PlacementRequestService(
       )
       val isParole = placementApplicationEntity.placementType == PlacementType.RELEASE_FOLLOWING_DECISION
       val placementRequest =
-        this.createPlacementRequest(placementRequirements, placementDates, notes, isParole, placementApplicationEntity)
+        this.createPlacementRequest(
+          source = PlacementRequestSource.ASSESSMENT_OF_PLACEMENT_APPLICATION,
+          placementRequirements = placementRequirements,
+          placementDates = placementDates,
+          notes = notes,
+          isParole = isParole,
+          placementApplicationEntity = placementApplicationEntity,
+        )
 
       placementDateRepository.save(
         placementDateEntity.apply {
@@ -232,6 +239,7 @@ class PlacementRequestService(
   }
 
   fun createPlacementRequest(
+    source: PlacementRequestSource,
     placementRequirements: PlacementRequirementsEntity,
     placementDates: PlacementDates,
     notes: String?,
@@ -469,4 +477,10 @@ class PlacementRequestService(
     val placementRequest: PlacementRequestEntity,
     val cancellations: List<CancellationEntity>,
   )
+}
+
+enum class PlacementRequestSource {
+  ASSESSMENT_OF_APPLICATION,
+  ASSESSMENT_OF_PLACEMENT_APPLICATION,
+  APPEAL,
 }

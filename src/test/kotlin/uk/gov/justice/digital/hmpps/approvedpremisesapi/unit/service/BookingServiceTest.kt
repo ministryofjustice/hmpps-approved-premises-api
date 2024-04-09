@@ -126,6 +126,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.GetBookingForPremisesResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PremisesService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.StaffMemberService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -2657,6 +2658,7 @@ class BookingServiceTest {
       every { mockBookingRepository.save(any()) } answers { it.invocation.args[0] as BookingEntity }
       every {
         mockPlacementRequestService.createPlacementRequest(
+          source = PlacementRequestSource.APPEAL,
           placementRequirements = originalPlacementRequirements,
           placementDates = PlacementDates(
             expectedArrival = originalPlacementRequest.expectedArrival,
@@ -2667,7 +2669,7 @@ class BookingServiceTest {
           null,
         )
       } answers {
-        val placementRequirementsArgument = it.invocation.args[0] as PlacementRequirementsEntity
+        val placementRequirementsArgument = it.invocation.args[1] as PlacementRequirementsEntity
         PlacementRequestEntityFactory()
           .withPlacementRequirements(placementRequirementsArgument)
           .withApplication(application)
@@ -2698,6 +2700,7 @@ class BookingServiceTest {
 
       verify(exactly = 1) {
         mockPlacementRequestService.createPlacementRequest(
+          source = PlacementRequestSource.APPEAL,
           placementRequirements = originalPlacementRequirements,
           placementDates = PlacementDates(
             expectedArrival = originalPlacementRequest.expectedArrival,
