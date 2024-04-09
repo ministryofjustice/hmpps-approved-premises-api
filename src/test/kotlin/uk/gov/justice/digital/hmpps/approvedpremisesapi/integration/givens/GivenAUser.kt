@@ -4,6 +4,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserDetailF
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulStaffUserDetailsCall
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.NomisUserRoles_mockSuccessfulGetUserDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -123,6 +124,8 @@ fun IntegrationTestBase.`Given a CAS2 User`(
 
   val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username)
 
+  NomisUserRoles_mockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
+
   block(user, jwt)
 }
 
@@ -161,6 +164,8 @@ fun IntegrationTestBase.`Given a CAS2 Admin`(
   }
 
   val jwt = jwtAuthHelper.createValidAdminAuthorisationCodeJwt(nomisUserDetails.username)
+
+  NomisUserRoles_mockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
 
   block(user, jwt)
 }
