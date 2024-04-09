@@ -39,7 +39,7 @@ class SnsDomainEventListener(private val objectMapper: ObjectMapper) {
     var waitedCount = 0
     while (!contains(eventType)) {
       if (waitedCount >= Duration.ofSeconds(15).toMillis()) {
-        fail<Any>("Did not receive SQS message of type $eventType from SNS topic after 15s")
+        fail<Any>("Did not receive SQS message of type $eventType from SNS topic after 15s. Have messages of type ${messages.map { m -> m.eventType }}")
       }
 
       Thread.sleep(100)
@@ -51,13 +51,7 @@ class SnsDomainEventListener(private val objectMapper: ObjectMapper) {
     }
   }
 
-  fun isEmpty(): Boolean {
-    synchronized(messages) {
-      return messages.isEmpty()
-    }
-  }
-
-  fun contains(eventType: String): Boolean {
+  private fun contains(eventType: String): Boolean {
     synchronized(messages) {
       return messages.firstOrNull { it.eventType == eventType } != null
     }

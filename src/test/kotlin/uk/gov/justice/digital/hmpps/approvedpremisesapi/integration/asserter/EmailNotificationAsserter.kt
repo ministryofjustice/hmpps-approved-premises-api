@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.notification
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.asserter
 
 import org.assertj.core.api.Assertions.assertThat
 import org.slf4j.Logger
