@@ -46,6 +46,7 @@ fun OffenderDetailSummary.asCaseSummary() = CaseSummary(
   profile = Profile(
     ethnicity = this.offenderProfile.ethnicity,
     genderIdentity = this.offenderProfile.genderIdentity,
+    selfDescribedGender = this.offenderProfile.selfDescribedGender,
     nationality = this.offenderProfile.nationality,
     religion = this.offenderProfile.religion,
   ),

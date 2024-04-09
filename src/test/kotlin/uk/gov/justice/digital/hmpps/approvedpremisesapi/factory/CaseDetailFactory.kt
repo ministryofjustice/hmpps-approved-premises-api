@@ -147,6 +147,7 @@ class CaseSummaryFactory : Factory<CaseSummary> {
       ProfileFactory()
         .withEthnicity(offenderDetails.offenderProfile.ethnicity)
         .withGenderIdentity(offenderDetails.offenderProfile.genderIdentity)
+        .withSelfDescribedGender(offenderDetails.offenderProfile.selfDescribedGender)
         .withNationality(offenderDetails.offenderProfile.nationality)
         .withReligion(offenderDetails.offenderProfile.religion)
         .produce(),
@@ -172,6 +173,7 @@ class CaseSummaryFactory : Factory<CaseSummary> {
 class ProfileFactory : Factory<Profile> {
   var ethnicity: Yielded<String?> = { randomStringLowerCase(10) }
   var genderIdentity: Yielded<String?> = { randomStringLowerCase(10) }
+  var selfDescribedGender: Yielded<String?> = { randomStringLowerCase(10) }
   var nationality: Yielded<String?> = { randomStringLowerCase(10) }
   var religion: Yielded<String?> = { randomStringLowerCase(10) }
 
@@ -180,6 +182,9 @@ class ProfileFactory : Factory<Profile> {
   }
   fun withGenderIdentity(genderIdentity: String?) = apply {
     this.genderIdentity = { genderIdentity }
+  }
+  fun withSelfDescribedGender(selfDescribedGender: String?) = apply {
+    this.selfDescribedGender = { selfDescribedGender }
   }
   fun withNationality(nationality: String?) = apply {
     this.nationality = { nationality }
@@ -191,6 +196,7 @@ class ProfileFactory : Factory<Profile> {
   override fun produce(): Profile = Profile(
     ethnicity = this.ethnicity(),
     genderIdentity = this.genderIdentity(),
+    selfDescribedGender = this.selfDescribedGender(),
     nationality = this.nationality(),
     religion = this.religion(),
   )

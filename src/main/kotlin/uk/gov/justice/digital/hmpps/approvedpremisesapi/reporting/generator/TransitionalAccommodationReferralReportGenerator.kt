@@ -29,7 +29,11 @@ class TransitionalAccommodationReferralReportGenerator : ReportGenerator<
         },
         pncNumber = personInfo.tryGetDetails { it.pnc },
         crn = referralData.crn,
-        gender = personInfo.tryGetDetails { it.gender },
+        sex = personInfo.tryGetDetails { it.gender },
+        genderIdentity = when (personInfo.tryGetDetails { it.profile?.genderIdentity }) {
+          "Prefer to self-describe" -> personInfo.tryGetDetails { it.profile?.selfDescribedGender }
+          else -> personInfo.tryGetDetails { it.profile?.genderIdentity }
+        }.toString(),
         ethnicity = personInfo.tryGetDetails { it.profile?.ethnicity },
         dateOfBirth = personInfo.tryGetDetails { it.dateOfBirth },
         riskOfSeriousHarm = referralData.riskOfSeriousHarm,

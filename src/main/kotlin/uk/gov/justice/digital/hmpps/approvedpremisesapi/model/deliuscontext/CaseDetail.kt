@@ -47,6 +47,7 @@ data class Ldu(
 data class Profile(
   val ethnicity: String?,
   val genderIdentity: String?,
+  val selfDescribedGender: String?,
   val nationality: String?,
   val religion: String?,
 )
