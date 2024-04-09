@@ -215,6 +215,7 @@ url-templates:
       placement-application-withdrawn-event-detail: http://localhost:3000/events/placement-application-withdrawn/#eventId
       match-request-withdrawn-event-detail: http://localhost:3000/events/match-request-withdrawn/#eventId
       assessment-allocated-event-detail: http://localhost:3000/events/assessment-allocated/#eventId
+      request-for-placement-created-event-detail: http://localhost:3000/events/request-for-placement-created/#eventId
     cas2:
       application-submitted-event-detail: http://localhost:3000/events/cas2/application-submitted/#eventId
       application-status-updated-event-detail: http://localhost:3000/events/cas2/application-status-updated/#eventId
