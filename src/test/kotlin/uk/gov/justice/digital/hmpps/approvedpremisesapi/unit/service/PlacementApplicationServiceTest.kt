@@ -68,10 +68,7 @@ class PlacementApplicationServiceTest {
   private val cas1PlacementApplicationDomainEventService = mockk<Cas1PlacementApplicationDomainEventService>()
   private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
 
-  private val placementApplicationService = buildService(useNewWithdrawalLogic = true)
-  private val placementApplicationServiceLegacyWithdrawalLogic = buildService(useNewWithdrawalLogic = false)
-
-  private fun buildService(useNewWithdrawalLogic: Boolean) = PlacementApplicationService(
+  private val placementApplicationService = PlacementApplicationService(
     placementApplicationRepository,
     jsonSchemaService,
     userService,
@@ -82,7 +79,6 @@ class PlacementApplicationServiceTest {
     cas1PlacementApplicationEmailService,
     cas1PlacementApplicationDomainEventService,
     taskDeadlineServiceMock,
-    useNewWithdrawalLogic = useNewWithdrawalLogic,
   )
 
   @Nested
@@ -282,49 +278,6 @@ class PlacementApplicationServiceTest {
       assertThat(updatedPlacementApp3.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp3) }
       verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp3) }
-    }
-
-    @Test
-    fun `Submitting an application saves multiple dates to a single placement application (legacy logic) and triggers a single set of emails`() {
-      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
-      every { jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java) } returns placementApplication.schemaVersion
-      every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
-      every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
-      every { placementDateRepository.saveAll(any<List<PlacementDateEntity>>()) } answers { emptyList() }
-
-      every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } returns Unit
-      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } returns Unit
-
-      val result = placementApplicationServiceLegacyWithdrawalLogic.submitApplication(
-        placementApplication.id,
-        "translatedDocument",
-        PlacementType.releaseFollowingDecision,
-        listOf(
-          PlacementDates(expectedArrival = LocalDate.of(2024, 4, 1), duration = 5),
-          PlacementDates(expectedArrival = LocalDate.of(2024, 5, 2), duration = 10),
-          PlacementDates(expectedArrival = LocalDate.of(2024, 6, 3), duration = 15),
-        ),
-      )
-
-      assertThat(result is CasResult.Success).isTrue
-      val updatedPlacementApplications = extractEntityFromCasResult(result)
-
-      assertThat(updatedPlacementApplications).hasSize(1)
-
-      val updatedPlacementApp = updatedPlacementApplications[0]
-      assertThat(updatedPlacementApp.submissionGroupId).isNotNull()
-
-      val dates = updatedPlacementApp.placementDates
-      assertThat(dates).hasSize(3)
-      assertThat(dates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
-      assertThat(dates[0].duration).isEqualTo(5)
-      assertThat(dates[1].expectedArrival).isEqualTo(LocalDate.of(2024, 5, 2))
-      assertThat(dates[1].duration).isEqualTo(10)
-      assertThat(dates[2].expectedArrival).isEqualTo(LocalDate.of(2024, 6, 3))
-      assertThat(dates[2].duration).isEqualTo(15)
-
-      verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
-      verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp) }
     }
   }
 

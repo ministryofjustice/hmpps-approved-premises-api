@@ -14,17 +14,12 @@ class Cas1PlacementRequestEmailService(
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
-  @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val sendNewWithdrawalNotifications: Boolean,
   @Value("\${feature-flags.cas1-aps530-withdrawal-email-improvements}") private val aps530WithdrawalEmailImprovements: Boolean,
 ) {
   fun placementRequestWithdrawn(
     placementRequest: PlacementRequestEntity,
     withdrawingUser: UserEntity?,
   ) {
-    if (!sendNewWithdrawalNotifications) {
-      return
-    }
-
     val application = placementRequest.application
 
     val personalisation = mutableMapOf(

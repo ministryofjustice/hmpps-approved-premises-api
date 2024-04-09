@@ -48,7 +48,6 @@ class Cas1PlacementRequestEmailServiceTest {
     notifyConfig = notifyConfig,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
-    sendNewWithdrawalNotifications = true,
     aps530WithdrawalEmailImprovements = aps530WithdrawalEmailImprovements,
   )
 

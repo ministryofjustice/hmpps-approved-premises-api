@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 import arrow.core.Either
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocator
@@ -34,7 +33,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
 import java.time.OffsetDateTime
 import java.util.UUID
-import javax.annotation.PostConstruct
 import javax.transaction.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision as ApiPlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates as ApiPlacementDates
@@ -54,20 +52,9 @@ class PlacementApplicationService(
   private val cas1PlacementApplicationEmailService: Cas1PlacementApplicationEmailService,
   private val cas1PlacementApplicationDomainEventService: Cas1PlacementApplicationDomainEventService,
   private val taskDeadlineService: TaskDeadlineService,
-  @Value("\${feature-flags.cas1-use-new-withdrawal-logic}") private val useNewWithdrawalLogic: Boolean,
 ) {
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
-
-  @PostConstruct
-  fun init() {
-    if (!useNewWithdrawalLogic) {
-      log.warn(
-        "Old withdrawal logic is being used. This will add multiple dates to the same placement application " +
-          "on submission which limits potential withdrawal options. This behaviour is deprecated.",
-      )
-    }
-  }
 
   fun getAllPlacementApplicationEntitiesForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
     return placementApplicationRepository.findAllSubmittedNonReallocatedAndNonWithdrawnApplicationsForApplicationId(
@@ -299,11 +286,7 @@ class PlacementApplicationService(
 
     val baselinePlacementApplication = placementApplicationRepository.save(submittedPlacementApplication)
 
-    val placementApplicationsWithDates = if (useNewWithdrawalLogic) {
-      saveDatesOnSubmissionToAnAppPerDate(baselinePlacementApplication, apiPlacementDates)
-    } else {
-      saveDatesOnSubmissionToASingleApp(baselinePlacementApplication, apiPlacementDates)
-    }
+    val placementApplicationsWithDates = saveDatesOnSubmissionToAnAppPerDate(baselinePlacementApplication, apiPlacementDates)
 
     placementApplicationsWithDates.forEach { placementApplication ->
       cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication)
@@ -313,26 +296,6 @@ class PlacementApplicationService(
     }
 
     return CasResult.Success(placementApplicationsWithDates)
-  }
-
-  @Deprecated("This is legacy behaviour that will be removed once the new withdrawals functionality has been released")
-  private fun saveDatesOnSubmissionToASingleApp(
-    baselinePlacementApplication: PlacementApplicationEntity,
-    apiPlacementDates: List<ApiPlacementDates>,
-  ): List<PlacementApplicationEntity> {
-    val placementDates = apiPlacementDates.map {
-      PlacementDateEntity(
-        id = UUID.randomUUID(),
-        expectedArrival = it.expectedArrival,
-        duration = it.duration,
-        placementApplication = baselinePlacementApplication,
-        createdAt = OffsetDateTime.now(),
-      )
-    }.toMutableList()
-
-    placementDateRepository.saveAll(placementDates)
-    baselinePlacementApplication.placementDates = placementDates
-    return listOf(baselinePlacementApplication)
   }
 
   private fun saveDatesOnSubmissionToAnAppPerDate(

@@ -49,7 +49,6 @@ class Cas1AssessmentEmailServiceTest {
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/application/#applicationId?tab=timeline"),
     workingDayService = mockWorkingDayService,
     aps530WithdrawalEmailImprovements = aps530WithdrawalEmailImprovements,
-    sendNewWithdrawalNotifications = true,
   )
 
   @BeforeEach
