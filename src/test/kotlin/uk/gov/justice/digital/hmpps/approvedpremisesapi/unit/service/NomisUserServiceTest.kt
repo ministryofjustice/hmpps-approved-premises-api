@@ -6,8 +6,8 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.any
 import org.springframework.http.HttpStatus
-import org.springframework.security.oauth2.jwt.Jwt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.NomisUserRolesApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
@@ -31,57 +31,129 @@ class NomisUserServiceTest {
 
   @Nested
   inner class GetUserForRequest {
-    @Test
-    fun `returns existing User when exists, does not call Nomis-User-Roles API or save`
-    () {
-      val username = "SOMEPERSON"
-      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
 
-      every { mockHttpAuthService.getNomisPrincipalOrThrow() } returns mockPrincipal
-      every { mockPrincipal.name } returns username
+    @Nested
+    inner class WhenExistingUser {
 
-      val user = NomisUserEntityFactory().produce()
+      @Test
+      fun `does not update user if Nomis-User-Roles API returns same email and activeCaseLoadId`() {
+        val username = "SOMEPERSON"
+        // setup auth service
+        val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+        every { mockHttpAuthService.getNomisPrincipalOrThrow() } returns mockPrincipal
+        every { mockPrincipal.token.tokenValue } returns "abc123"
+        every { mockPrincipal.name } returns username
 
-      every { mockUserRepository.findByNomisUsername(username) } returns user
+        // setup nomis roles api
+        val oldUserData = NomisUserEntityFactory()
+          .withNomisUsername(username)
+          .withName("Bob Robson")
+          .withEmail("same@example.com")
+          .withActiveCaseloadId("123")
+          .produce()
 
-      assertThat(userService.getUserForRequest()).isEqualTo(user)
+        val newUserData = NomisUserDetailFactory()
+          .withFirstName("Jim")
+          .withLastName("Jimmerson")
+          .withEmail("same@example.com")
+          .withActiveCaseloadId("123")
+          .produce()
 
-      verify(exactly = 0) { mockNomisUserRolesApiClient.getUserDetails(any()) }
-      verify(exactly = 0) { mockUserRepository.save(any()) }
+        every { mockNomisUserRolesApiClient.getUserDetails("abc123") } returns ClientResult.Success(
+          HttpStatus.OK,
+          newUserData,
+        )
+        // setup repository
+        every { mockUserRepository.findByNomisUsername(username) } returns oldUserData
+        verify(exactly = 0) { mockUserRepository.save(any()) }
+
+        assertThat(userService.getUserForRequest()).matches {
+          it.nomisUsername == username &&
+            it.email == "same@example.com" &&
+            it.activeCaseloadId == "123"
+        }
+      }
+
+      @Test
+      fun `updates user if Nomis-User-Roles API returns new data`() {
+        val username = "SOMEPERSON"
+        // setup auth service
+        val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+        every { mockHttpAuthService.getNomisPrincipalOrThrow() } returns mockPrincipal
+        every { mockPrincipal.token.tokenValue } returns "abc123"
+        every { mockPrincipal.name } returns username
+
+        // setup nomis roles api
+        val oldUserData = NomisUserEntityFactory()
+          .withNomisUsername(username)
+          .withEmail("old@example.com")
+          .withActiveCaseloadId("DEF")
+          .produce()
+        val newUserData = NomisUserDetailFactory()
+          .withUsername(username)
+          .withEmail("new@example.com")
+          .withActiveCaseloadId("ABC")
+          .produce()
+
+        every { mockNomisUserRolesApiClient.getUserDetails("abc123") } returns ClientResult.Success(
+          HttpStatus.OK,
+          newUserData,
+        )
+        // setup repository
+        every { mockUserRepository.findByNomisUsername(username) } returns oldUserData
+        every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as NomisUserEntity }
+
+        assertThat(userService.getUserForRequest()).matches {
+          it.nomisUsername == username &&
+            it.email == "new@example.com" &&
+            it.activeCaseloadId == "ABC"
+        }
+      }
     }
 
-    @Test
-    fun `returns new User when one does not already exist, does call Nomis-User-Roles API and save`() {
-      val username = "SOMEPERSON"
-      val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
-      val mockToken = mockk<Jwt>()
+    @Nested
+    inner class WhenNewUser {
+      @Test
+      fun `saves and returns new User with details from Nomis-User-Roles API`() {
+        val username = "SOMEPERSON"
+        // setup auth service
+        val mockPrincipal = mockk<AuthAwareAuthenticationToken>()
+        every { mockHttpAuthService.getNomisPrincipalOrThrow() } returns mockPrincipal
+        every { mockPrincipal.token.tokenValue } returns "abc123"
+        every { mockPrincipal.name } returns username
 
-      every { mockHttpAuthService.getNomisPrincipalOrThrow() } returns mockPrincipal
-      every { mockPrincipal.name } returns username
-      every { mockPrincipal.token } returns mockToken
-      every { mockToken.tokenValue } returns "abc123"
-
-      every { mockUserRepository.findByNomisUsername(username) } returns null
-      every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as NomisUserEntity }
-
-      every { mockNomisUserRolesApiClient.getUserDetails("abc123") } returns ClientResult.Success(
-        HttpStatus.OK,
-        NomisUserDetailFactory()
+        // setup nomis roles api
+        val newUserData = NomisUserDetailFactory()
           .withUsername(username)
           .withFirstName("Jim")
           .withLastName("Jimmerson")
           .withStaffId(5678)
-          .produce(),
-      )
+          .withAccountType("CLOSED")
+          .withEmail("example@example.com")
+          .withEnabled(false)
+          .withActive(false)
+          .withActiveCaseloadId("456")
+          .produce()
 
-      assertThat(userService.getUserForRequest()).matches {
-        it.name == "Jim Jimmerson"
-        it.nomisStaffId.toInt() == 5678
-        it.nomisUsername == "SOMEPERSON"
+        every { mockNomisUserRolesApiClient.getUserDetails("abc123") } returns ClientResult.Success(
+          HttpStatus.OK,
+          newUserData,
+        )
+        // setup repository
+        every { mockUserRepository.findByNomisUsername(username) } returns null
+        every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as NomisUserEntity }
+
+        assertThat(userService.getUserForRequest()).matches {
+          it.nomisUsername == username &&
+            it.name == "Jim Jimmerson" &&
+            it.accountType == "CLOSED" &&
+            it.nomisStaffId.toInt() == 5678 &&
+            it.email == "example@example.com" &&
+            !it.isEnabled &&
+            !it.isActive &&
+            it.activeCaseloadId == "456"
+        }
       }
-
-      verify(exactly = 1) { mockNomisUserRolesApiClient.getUserDetails("abc123") }
-      verify(exactly = 1) { mockUserRepository.save(any()) }
     }
   }
 }

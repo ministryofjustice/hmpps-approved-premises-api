@@ -40,6 +40,26 @@ class NomisUserDetailFactory : Factory<NomisUserDetail> {
     this.staffId = { staffId }
   }
 
+  fun withAccountType(accountType: String) = apply {
+    this.accountType = { accountType }
+  }
+
+  fun withEmail(email: String) = apply {
+    this.primaryEmail = { email }
+  }
+
+  fun withEnabled(enabled: Boolean) = apply {
+    this.enabled = { enabled }
+  }
+
+  fun withActive(active: Boolean) = apply {
+    this.active = { active }
+  }
+
+  fun withActiveCaseloadId(activeCaseloadId: String) = apply {
+    this.activeCaseloadId = { activeCaseloadId }
+  }
+
   override fun produce(): NomisUserDetail = NomisUserDetail(
     username = this.username(),
     staffId = this.staffId(),
