@@ -139,13 +139,15 @@ class PlacementRequestServiceTest {
     PaginationConfig(defaultPageSize = 10).postInit()
   }
 
-  @Test
-  fun `createPlacementRequest creates a placement request with the correct deadline`() {
+  @ParameterizedTest
+  @EnumSource(PlacementRequestSource::class)
+  fun `createPlacementRequest creates a placement request with the correct deadline`(source: PlacementRequestSource) {
     val dueAt = OffsetDateTime.now()
 
     every { taskDeadlineServiceMock.getDeadline(any<PlacementRequestEntity>()) } returns dueAt
     every { userAllocator.getUserForPlacementRequestAllocation(any()) } returns assigneeUser
     every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+    every { cas1PlacementRequestDomainEventService.placementRequestCreated(any(), any()) } returns Unit
 
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(assigneeUser)
@@ -167,7 +169,7 @@ class PlacementRequestServiceTest {
     )
 
     val placementRequest = placementRequestService.createPlacementRequest(
-      source = PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
+      source,
       placementRequirements,
       placementDates,
       "Some notes",
@@ -183,6 +185,8 @@ class PlacementRequestServiceTest {
     assertThat(placementRequest.isParole).isFalse()
     assertThat(placementRequest.dueAt).isEqualTo(dueAt)
     assertThat(placementRequest.allocatedToUser!!.id).isEqualTo(assigneeUser.id)
+
+    verify { cas1PlacementRequestDomainEventService.placementRequestCreated(placementRequest, source) }
   }
 
   @Test

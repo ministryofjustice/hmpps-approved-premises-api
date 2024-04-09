@@ -6,9 +6,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DatePer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.Instant
@@ -20,6 +24,59 @@ class Cas1PlacementRequestDomainEventService(
   private val domainEventTransformer: DomainEventTransformer,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
 ) {
+
+  fun placementRequestCreated(
+    placementRequest: PlacementRequestEntity,
+    source: PlacementRequestSource,
+  ) {
+    /**
+     * We only raise domain events for the match request [PlacementRequestEntity] that was created
+     * automatically when the application was assessed (i.e. the one created to fulfill the arrival
+     * date specified on the application).
+     *
+     * For more information on why we do this, see [PlacementRequestEntity.isForApplicationsArrivalDate]
+     *
+     */
+    if (source != PlacementRequestSource.ASSESSMENT_OF_APPLICATION) {
+      return
+    }
+
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = Instant.now()
+    val application = placementRequest.application
+
+    val eventDetails = RequestForPlacementCreated(
+      applicationId = application.id,
+      applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+      requestForPlacementId = placementRequest.id,
+      personReference = PersonReference(
+        crn = application.crn,
+        noms = application.nomsNumber ?: "Unknown NOMS Number",
+      ),
+      deliusEventNumber = application.eventNumber,
+      createdAt = eventOccurredAt,
+      createdBy = null,
+      expectedArrival = placementRequest.expectedArrival,
+      duration = placementRequest.duration,
+      requestForPlacementType = RequestForPlacementType.initial,
+    )
+
+    domainEventService.saveRequestForPlacementCreatedEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = eventOccurredAt,
+        data = RequestForPlacementCreatedEnvelope(
+          id = domainEventId,
+          timestamp = eventOccurredAt,
+          eventType = "approved-premises.request-for-placement.created",
+          eventDetails = eventDetails,
+        ),
+      ),
+      emit = false,
+    )
+  }
 
   fun placementRequestWithdrawn(placementRequest: PlacementRequestEntity, withdrawalContext: WithdrawalContext) {
     /**

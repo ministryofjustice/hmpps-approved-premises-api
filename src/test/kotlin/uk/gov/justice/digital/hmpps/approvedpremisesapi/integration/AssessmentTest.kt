@@ -64,6 +64,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.COMPLETED
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.IN_PROGRESS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainAssessmentSummaryStatus.NOT_STARTED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ReferralHistorySystemNoteType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
@@ -2006,7 +2007,7 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Accept assessment returns 200, persists decision, creates and allocates a placement request, and emits SNS domain event message when requirements provided`() {
+  fun `Accept assessment with placement date returns 200, persists decision, creates and allocates a placement request, and emits domain events`() {
     `Given a User`(
       staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
     ) { userEntity, jwt ->
@@ -2070,7 +2071,7 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
             assertThat(persistedAssessment.submittedAt).isNotNull
 
-            val emittedMessage = snsDomainEventListener.blockForMessage("approved-premises.application.assessed")
+            val emittedMessage = domainEventAsserter.blockForEmittedDomainEvent("approved-premises.application.assessed")
 
             assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
             assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
@@ -2079,6 +2080,8 @@ class AssessmentTest : IntegrationTestBase() {
               SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
               SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
             )
+
+            domainEventAsserter.assertDomainEventOfTypeStored(application.id, DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
 
             val persistedPlacementRequest = placementRequestTestRepository.findByApplication(application)!!
 
@@ -2104,7 +2107,7 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Accept assessment returns 200, persists decision, does not create a Placement Request, creates Placement Requirements and emits SNS domain event message when placement date information not provided`() {
+  fun `Accept assessment without placement date returns 200, persists decision, does not create a Placement Request, creates Placement Requirements and emits domain event`() {
     `Given a User`(
       staffUserDetailsConfigBlock = { withProbationAreaCode("N21") },
     ) { userEntity, jwt ->
@@ -2161,7 +2164,7 @@ class AssessmentTest : IntegrationTestBase() {
             assertThat(persistedAssessment.document).isEqualTo("{\"document\":\"value\"}")
             assertThat(persistedAssessment.submittedAt).isNotNull
 
-            val emittedMessage = snsDomainEventListener.blockForMessage("approved-premises.application.assessed")
+            val emittedMessage = domainEventAsserter.blockForEmittedDomainEvent("approved-premises.application.assessed")
 
             assertThat(emittedMessage.description).isEqualTo("An application has been assessed for an Approved Premises placement")
             assertThat(emittedMessage.detailUrl).matches("http://api/events/application-assessed/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
@@ -2170,6 +2173,8 @@ class AssessmentTest : IntegrationTestBase() {
               SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
               SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
             )
+
+            domainEventAsserter.assertDomainEventOfTypeNotStored(application.id, DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
 
             assertThat(placementRequestTestRepository.findByApplication(application)).isNull()
 

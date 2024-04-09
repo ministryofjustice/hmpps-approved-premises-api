@@ -271,7 +271,11 @@ class PlacementRequestService(
     placementRequest.allocatedToUser = allocatedUser
     placementRequest.dueAt = taskDeadlineService.getDeadline(placementRequest)
 
-    return placementRequestRepository.save(placementRequest)
+    val updatedPlacementRequest = placementRequestRepository.save(placementRequest)
+
+    cas1PlacementRequestDomainEventService.placementRequestCreated(updatedPlacementRequest, source)
+
+    return updatedPlacementRequest
   }
 
   @Transactional
