@@ -16,7 +16,20 @@ class PlacementApplicationEntityTest {
       "WITHDRAWN_BY_PP,withdrawnByPp",
     ],
   )
-  fun `PlacementApplicationDecision#convertToApi converts to the API enum values correctly`(decision: PlacementApplicationDecision, apiDecision: ApiPlacementApplicationDecision) {
-    assertThat(decision.convertToApi()).isEqualTo(apiDecision)
+  fun `PlacementApplicationDecision#apiValue converts to the API enum values correctly`(decision: PlacementApplicationDecision, apiDecision: ApiPlacementApplicationDecision) {
+    assertThat(decision.apiValue).isEqualTo(apiDecision)
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+    value = [
+      "accepted,ACCEPTED",
+      "rejected,REJECTED",
+      "withdraw,WITHDRAW",
+      "withdrawnByPp,WITHDRAWN_BY_PP",
+    ],
+  )
+  fun `PlacementApplicationDecision#valueOf gets the enum value from the API value`(apiDecision: ApiPlacementApplicationDecision, decision: PlacementApplicationDecision) {
+    assertThat(PlacementApplicationDecision.valueOf(apiDecision)).isEqualTo(decision)
   }
 }

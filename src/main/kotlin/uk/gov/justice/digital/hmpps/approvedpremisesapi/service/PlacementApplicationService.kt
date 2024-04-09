@@ -361,7 +361,7 @@ class PlacementApplicationService(
     }
 
     placementApplicationEntity.apply {
-      decision = mapToJpaDecision(placementApplicationDecisionEnvelope.decision)
+      decision = JpaPlacementApplicationDecision.valueOf(placementApplicationDecisionEnvelope.decision)
       decisionMadeAt = OffsetDateTime.now()
     }
 
@@ -375,13 +375,6 @@ class PlacementApplicationService(
     }
 
     return CasResult.Success(savedApplication)
-  }
-
-  private fun mapToJpaDecision(decision: uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplicationDecision) = when (decision) {
-    ApiPlacementApplicationDecision.accepted -> JpaPlacementApplicationDecision.ACCEPTED
-    ApiPlacementApplicationDecision.rejected -> JpaPlacementApplicationDecision.REJECTED
-    ApiPlacementApplicationDecision.withdraw -> JpaPlacementApplicationDecision.WITHDRAW
-    ApiPlacementApplicationDecision.withdrawnByPp -> JpaPlacementApplicationDecision.WITHDRAWN_BY_PP
   }
 
   private fun getPlacementType(apiPlacementType: ApiPlacementType): PlacementType {

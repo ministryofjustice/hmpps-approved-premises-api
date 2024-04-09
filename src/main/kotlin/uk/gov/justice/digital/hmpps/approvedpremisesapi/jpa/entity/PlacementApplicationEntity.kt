@@ -150,18 +150,22 @@ enum class PlacementType {
   ADDITIONAL_PLACEMENT,
 }
 
-enum class PlacementApplicationDecision {
-  ACCEPTED,
-  REJECTED,
-  WITHDRAW,
-  WITHDRAWN_BY_PP,
+enum class PlacementApplicationDecision(val apiValue: ApiPlacementApplicationDecision) {
+  ACCEPTED(ApiPlacementApplicationDecision.accepted),
+  REJECTED(ApiPlacementApplicationDecision.rejected),
+  WITHDRAW(ApiPlacementApplicationDecision.withdraw),
+  WITHDRAWN_BY_PP(ApiPlacementApplicationDecision.withdrawnByPp),
   ;
 
-  fun convertToApi() = when (this) {
-    ACCEPTED -> ApiPlacementApplicationDecision.accepted
-    REJECTED -> ApiPlacementApplicationDecision.rejected
-    WITHDRAW -> ApiPlacementApplicationDecision.withdraw
-    WITHDRAWN_BY_PP -> ApiPlacementApplicationDecision.withdrawnByPp
+  companion object {
+    fun valueOf(apiValue: ApiPlacementApplicationDecision): PlacementApplicationDecision? {
+      for (e in entries) {
+        if (e.apiValue == apiValue) {
+          return e
+        }
+      }
+      return null
+    }
   }
 }
 

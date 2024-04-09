@@ -94,7 +94,7 @@ class TaskTransformer(
     placementType = getPlacementType(placementApplication.placementType!!),
     apArea = getApArea(placementApplication.application),
     outcomeRecordedAt = placementApplication.decisionMadeAt?.toInstant(),
-    outcome = placementApplication.decision?.convertToApi(),
+    outcome = placementApplication.decision?.apiValue,
   )
 
   private fun getApArea(application: ApplicationEntity): ApArea? {
