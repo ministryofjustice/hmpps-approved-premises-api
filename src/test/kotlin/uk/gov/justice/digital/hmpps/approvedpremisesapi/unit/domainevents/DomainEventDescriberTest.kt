@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
@@ -22,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationWithdrawnFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAllocatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAppealedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCancelledFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
@@ -32,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonNotArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationWithdrawnFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -284,6 +287,49 @@ class DomainEventDescriberTest {
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
     assertThat(result).isEqualTo("The assessment was appealed and $decision. The reason was: $reason")
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+    value = [
+      ",,an unknown user,automatically",
+      "Alan,,Alan A,automatically",
+      ",Brenda,an unknown user,by Brenda B",
+      "Carol,Derek,Carol C,by Derek D",
+    ],
+  )
+  fun `Returns expected description for assessment allocated event`(allocatedTo: String?, allocatedBy: String?, expectedTo: String, expectedBy: String) {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED)
+
+    every { mockDomainEventService.getAssessmentAllocatedEvent(any()) } returns buildDomainEvent {
+      AssessmentAllocatedEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = "approved-premises.assessment.appealed",
+        eventDetails = AssessmentAllocatedFactory()
+          .withAllocatedTo(
+            allocatedTo?.let { allocatedTo ->
+              StaffMemberFactory()
+                .withForenames(allocatedTo)
+                .withSurname(allocatedTo.first().toString())
+                .produce()
+            },
+          )
+          .withAllocatedBy(
+            allocatedBy?.let { allocatedBy ->
+              StaffMemberFactory()
+                .withForenames(allocatedBy)
+                .withSurname(allocatedBy.first().toString())
+                .produce()
+            },
+          )
+          .produce(),
+      )
+    }
+
+    val result = domainEventDescriber.getDescription(domainEventSummary)
+
+    assertThat(result).isEqualTo("The assessment was allocated to $expectedTo $expectedBy")
   }
 
   @Test

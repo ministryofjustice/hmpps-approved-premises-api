@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationSubmittedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationWithdrawnFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAllocatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAppealedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCancelledFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingChangedFactory
@@ -725,6 +727,53 @@ class DomainEventTest : IntegrationTestBase() {
       .expectStatus()
       .isOk
       .expectBody(PlacementApplicationWithdrawnEnvelope::class.java)
+      .returnResult()
+
+    assertThat(response.responseBody).isEqualTo(envelopedData)
+  }
+
+  fun `Get Assessment Allocated event without ROLE_APPROVED_PREMISES_EVENTS returns 403`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+    )
+
+    webTestClient.get()
+      .uri("/events/assessment-allocated/e4b004f8-bdb2-4bf6-9958-db602be71ed3")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isForbidden
+  }
+
+  @Test
+  fun `Get Assessment Allocated Event returns 200 with correct body`() {
+    val jwt = jwtAuthHelper.createClientCredentialsJwt(
+      username = "username",
+      roles = listOf("ROLE_APPROVED_PREMISES_EVENTS"),
+    )
+
+    val eventId = UUID.randomUUID()
+
+    val envelopedData = AssessmentAllocatedEnvelope(
+      id = eventId,
+      timestamp = Instant.now(),
+      eventType = "approved-premises.assessment.allocated",
+      eventDetails = AssessmentAllocatedFactory().produce(),
+    )
+
+    val event = domainEventFactory.produceAndPersist {
+      withId(eventId)
+      withType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED)
+      withData(objectMapper.writeValueAsString(envelopedData))
+    }
+
+    val response = webTestClient.get()
+      .uri("/events/assessment-allocated/${event.id}")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(AssessmentAllocatedEnvelope::class.java)
       .returnResult()
 
     assertThat(response.responseBody).isEqualTo(envelopedData)

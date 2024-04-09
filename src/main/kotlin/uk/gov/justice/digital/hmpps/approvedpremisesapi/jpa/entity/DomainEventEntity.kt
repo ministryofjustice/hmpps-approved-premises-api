@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingCancelledEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
@@ -107,6 +108,8 @@ data class DomainEventEntity(
         objectMapper.readValue(this.data, T::class.java)
       T::class == MatchRequestWithdrawnEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN ->
         objectMapper.readValue(this.data, T::class.java)
+      T::class == AssessmentAllocatedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED ->
+        objectMapper.readValue(this.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${this.type.name}")
     }
 
@@ -134,6 +137,7 @@ enum class DomainEventType {
   APPROVED_PREMISES_BOOKING_CHANGED,
   APPROVED_PREMISES_APPLICATION_WITHDRAWN,
   APPROVED_PREMISES_ASSESSMENT_APPEALED,
+  APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
   APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
   APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
   CAS2_APPLICATION_SUBMITTED,

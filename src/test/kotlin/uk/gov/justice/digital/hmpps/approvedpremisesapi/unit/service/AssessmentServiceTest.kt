@@ -67,6 +67,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -127,6 +128,7 @@ class AssessmentServiceTest {
     UrlTemplate("http://frontend/applications/#id"),
     taskDeadlineServiceMock,
     assessmentEmailServiceMock,
+    UrlTemplate("http://frontend/assessments/#id"),
   )
 
   @Test
@@ -1896,6 +1898,7 @@ class AssessmentServiceTest {
   @ValueSource(booleans = [true, false])
   fun `reallocateAssessment for Approved Premises returns Success, deallocates old assessment and creates a new one, sends allocation email & deallocation email`(createdFromAppeal: Boolean) {
     val assigneeUser = UserEntityFactory()
+      .withDeliusUsername("Assignee User")
       .withYieldedProbationRegion {
         ProbationRegionEntityFactory()
           .withYieldedApArea { ApAreaEntityFactory().produce() }
@@ -1944,6 +1947,17 @@ class AssessmentServiceTest {
 
     val dueAt = OffsetDateTime.now()
 
+    val actingUser = UserEntityFactory()
+      .withDeliusUsername("Acting User")
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }.produce()
+
+    val assigneeUserStaffDetails = StaffUserDetailsFactory().produce()
+    val actingUserStaffDetails = StaffUserDetailsFactory().produce()
+
     every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -1959,6 +1973,14 @@ class AssessmentServiceTest {
     every { assessmentEmailServiceMock.assessmentDeallocated(any(), any(), any()) } just Runs
 
     every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
+
+    every { communityApiClientMock.getStaffUserDetails(assigneeUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, assigneeUserStaffDetails)
+
+    every { userServiceMock.getUserForRequest() } returns actingUser
+
+    every { communityApiClientMock.getStaffUserDetails(actingUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, actingUserStaffDetails)
+
+    every { domainEventServiceMock.saveAssessmentAllocatedEvent(any()) } just Runs
 
     val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
 
@@ -1991,6 +2013,8 @@ class AssessmentServiceTest {
         application.crn,
       )
     }
+
+    assertAllocationDomainEventSent(newAssessment, actingUserStaffDetails, assigneeUserStaffDetails)
   }
 
   @Test
@@ -2236,6 +2260,7 @@ class AssessmentServiceTest {
       UrlTemplate("http://frontend/applications/#id"),
       taskDeadlineServiceMock,
       assessmentEmailServiceMock,
+      UrlTemplate("http://frontend/assessments/#id"),
     )
 
     private val user = UserEntityFactory()
@@ -2424,6 +2449,37 @@ class AssessmentServiceTest {
 
       assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
     }
+  }
+
+  @Nested
+  inner class CreateAssessments {
+    private val apSchema = ApprovedPremisesAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    private val taSchema = TemporaryAccommodationAssessmentJsonSchemaEntity(
+      id = UUID.randomUUID(),
+      addedAt = OffsetDateTime.now(),
+      schema = "{}",
+    )
+
+    private val actingUser = UserEntityFactory()
+      .withDeliusUsername("Acting User")
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }.produce()
+
+    @BeforeEach
+    fun setup() {
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns apSchema
+      every { jsonSchemaServiceMock.getNewestSchema(TemporaryAccommodationAssessmentJsonSchemaEntity::class.java) } returns taSchema
+
+      every { jsonSchemaServiceMock.validate(apSchema, "{\"test\": \"data\"}") } returns true
+    }
 
     @ParameterizedTest
     @CsvSource(
@@ -2475,6 +2531,9 @@ class AssessmentServiceTest {
 
       val dueAt = OffsetDateTime.now()
 
+      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce()
+      val actingUserStaffDetails = StaffUserDetailsFactory().produce()
+
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
       every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns userWithLeastAllocatedAssessments
@@ -2487,9 +2546,18 @@ class AssessmentServiceTest {
         every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
       }
 
-      assessmentService.createApprovedPremisesAssessment(application, createdFromAppeal)
+      every { communityApiClientMock.getStaffUserDetails(userWithLeastAllocatedAssessments.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, assigneeUserStaffDetails)
+
+      every { userServiceMock.getUserForRequest() } returns actingUser
+
+      every { communityApiClientMock.getStaffUserDetails(actingUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, actingUserStaffDetails)
+
+      every { domainEventServiceMock.saveAssessmentAllocatedEvent(any()) } just Runs
+
+      val assessment = assessmentService.createApprovedPremisesAssessment(application, createdFromAppeal)
 
       verify { assessmentRepositoryMock.save(match { it.allocatedToUser == userWithLeastAllocatedAssessments && it.dueAt == dueAt }) }
+
       if (createdFromAppeal) {
         verify(exactly = 1) {
           assessmentEmailServiceMock.appealedAssessmentAllocated(
@@ -2509,6 +2577,8 @@ class AssessmentServiceTest {
           )
         }
       }
+
+      assertAllocationDomainEventSent(assessment, actingUserStaffDetails, assigneeUserStaffDetails)
     }
 
     @Test
@@ -2528,7 +2598,7 @@ class AssessmentServiceTest {
 
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as TemporaryAccommodationAssessmentEntity }
 
-      every { userServiceMock.getUserForRequest() } returns user
+      every { userServiceMock.getUserForRequest() } returns actingUser
       every { assessmentReferralHistoryNoteRepositoryMock.save(any()) } returnsArgument 0
 
       val summaryData = object {
@@ -2538,7 +2608,7 @@ class AssessmentServiceTest {
 
       val result = assessmentService.createTemporaryAccommodationAssessment(application, summaryData)
 
-      assertAssessmentHasSystemNote(result, user, ReferralHistorySystemNoteType.SUBMITTED)
+      assertAssessmentHasSystemNote(result, actingUser, ReferralHistorySystemNoteType.SUBMITTED)
       assertThat(result.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
 
       verify { assessmentRepositoryMock.save(match { it.application == application }) }
@@ -2691,6 +2761,53 @@ class AssessmentServiceTest {
           withdrawingUser = withdrawingUser,
         )
       }
+    }
+  }
+
+  private fun assertStaffMemberDetailsMatch(staffMember: StaffMember?, staffDetails: StaffUserDetails?) = when {
+    staffMember == null -> staffDetails == null
+    else ->
+      staffDetails != null &&
+        staffMember.staffCode == staffDetails.staffCode &&
+        staffMember.staffIdentifier == staffDetails.staffIdentifier &&
+        staffMember.forenames == staffDetails.staff.forenames &&
+        staffMember.surname == staffDetails.staff.surname &&
+        staffMember.username == staffDetails.username
+  }
+
+  private fun assertAllocationDomainEventSent(assessment: AssessmentEntity, actingUserStaffDetails: StaffUserDetails?, assigneeUserStaffDetails: StaffUserDetails?) {
+    verify(exactly = 1) {
+      domainEventServiceMock.saveAssessmentAllocatedEvent(
+        match {
+          val envelope = it.data
+          val eventDetails = envelope.eventDetails
+
+          val rootDomainEventDataMatches = (
+            it.assessmentId == assessment.id &&
+              it.applicationId == assessment.application.id &&
+              it.crn == assessment.application.crn
+            )
+
+          val envelopeMatches = envelope.eventType == "approved-premises.assessment.allocated"
+
+          val allocatedToUserDetailsMatch = assigneeUserStaffDetails?.let {
+            assertStaffMemberDetailsMatch(eventDetails.allocatedTo!!, assigneeUserStaffDetails)
+          } ?: true
+
+          val allocatedByUserDetailsMatch = assertStaffMemberDetailsMatch(eventDetails.allocatedBy, actingUserStaffDetails)
+
+          val eventDetailsMatch = (
+            eventDetails.assessmentId == assessment.id &&
+              eventDetails.assessmentUrl == "http://frontend/assessments/${assessment.id}" &&
+              eventDetails.personReference.crn == assessment.application.crn &&
+              eventDetails.personReference.noms == assessment.application.nomsNumber!! &&
+              allocatedToUserDetailsMatch &&
+              allocatedByUserDetailsMatch
+            )
+
+          rootDomainEventDataMatches && envelopeMatches && eventDetailsMatch
+        },
+      )
     }
   }
 }

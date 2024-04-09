@@ -44,7 +44,7 @@ class SnsDomainEventListener(private val objectMapper: ObjectMapper) {
     }
 
     synchronized(messages) {
-      return messages.first()
+      return messages.removeFirst()
     }
   }
 
