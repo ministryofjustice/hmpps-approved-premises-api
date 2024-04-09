@@ -63,9 +63,10 @@ class UserService(
     return userRepository.findByNameContainingIgnoreCase(name)
   }
 
+  fun getDeliusUserNameForRequest() = httpAuthService.getDeliusPrincipalOrThrow().name
+
   fun getUserForRequest(): UserEntity {
-    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
-    val username = deliusPrincipal.name
+    val username = getDeliusUserNameForRequest()
     val serviceForRequest = requestContextService.getServiceForRequest()
 
     val user = getExistingUserOrCreate(username)

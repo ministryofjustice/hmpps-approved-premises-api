@@ -289,6 +289,10 @@ class PlacementApplicationService(
     val placementApplicationsWithDates = saveDatesOnSubmissionToAnAppPerDate(baselinePlacementApplication, apiPlacementDates)
 
     placementApplicationsWithDates.forEach { placementApplication ->
+      cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(
+        placementApplication,
+        userService.getDeliusUserNameForRequest(),
+      )
       cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication)
       if (baselinePlacementApplication.allocatedToUser != null) {
         cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication)

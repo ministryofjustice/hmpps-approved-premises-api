@@ -6,7 +6,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DatePer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreated
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
@@ -18,8 +24,65 @@ import java.util.UUID
 class Cas1PlacementApplicationDomainEventService(
   private val domainEventService: DomainEventService,
   private val domainEventTransformer: DomainEventTransformer,
+  private val communityApiClient: CommunityApiClient,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
 ) {
+
+  fun placementApplicationSubmitted(
+    placementApplication: PlacementApplicationEntity,
+    username: String,
+  ) {
+    checkNotNull(placementApplication.placementType)
+    require(placementApplication.placementDates.size == 1)
+
+    val domainEventId = UUID.randomUUID()
+    val eventOccurredAt = Instant.now()
+    val application = placementApplication.application
+    val dates = placementApplication.placementDates[0]
+
+    val placementType = when (placementApplication.placementType!!) {
+      PlacementType.ROTL -> RequestForPlacementType.rotl
+      PlacementType.RELEASE_FOLLOWING_DECISION -> RequestForPlacementType.releaseFollowingDecisions
+      PlacementType.ADDITIONAL_PLACEMENT -> RequestForPlacementType.additionalPlacement
+    }
+
+    val staffDetails = when (val staffDetailsResult = communityApiClient.getStaffUserDetails(username)) {
+      is ClientResult.Success -> staffDetailsResult.body
+      is ClientResult.Failure -> staffDetailsResult.throwException()
+    }
+
+    val eventDetails = RequestForPlacementCreated(
+      applicationId = application.id,
+      applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
+      requestForPlacementId = placementApplication.id,
+      personReference = PersonReference(
+        crn = application.crn,
+        noms = application.nomsNumber ?: "Unknown NOMS Number",
+      ),
+      deliusEventNumber = application.eventNumber,
+      createdAt = eventOccurredAt,
+      createdBy = domainEventTransformer.toStaffMember(staffDetails),
+      expectedArrival = dates.expectedArrival,
+      duration = dates.duration,
+      requestForPlacementType = placementType,
+    )
+
+    domainEventService.saveRequestForPlacementCreatedEvent(
+      DomainEvent(
+        id = domainEventId,
+        applicationId = application.id,
+        crn = application.crn,
+        occurredAt = eventOccurredAt,
+        data = RequestForPlacementCreatedEnvelope(
+          id = domainEventId,
+          timestamp = eventOccurredAt,
+          eventType = "approved-premises.request-for-placement.created",
+          eventDetails = eventDetails,
+        ),
+      ),
+      emit = false,
+    )
+  }
 
   fun placementApplicationWithdrawn(placementApplication: PlacementApplicationEntity, withdrawalContext: WithdrawalContext) {
     val user = requireNotNull(withdrawalContext.triggeringUser)
@@ -28,7 +91,7 @@ class Cas1PlacementApplicationDomainEventService(
     val eventOccurredAt = Instant.now()
     val application = placementApplication.application
 
-    val placementApplicationWithdrawn = PlacementApplicationWithdrawn(
+    val eventDetails = PlacementApplicationWithdrawn(
       applicationId = application.id,
       applicationUrl = applicationUrlTemplate.resolve("id", application.id.toString()),
       placementApplicationId = placementApplication.id,
@@ -58,7 +121,7 @@ class Cas1PlacementApplicationDomainEventService(
           id = domainEventId,
           timestamp = eventOccurredAt,
           eventType = "approved-premises.placement-application.withdrawn",
-          eventDetails = placementApplicationWithdrawn,
+          eventDetails = eventDetails,
         ),
       ),
     )

@@ -175,6 +175,8 @@ class PlacementApplicationServiceTest {
       every { placementDateRepository.saveAll(any<List<PlacementDateEntity>>()) } answers { emptyList() }
       every { placementDateRepository.save(any()) } answers { it.invocation.args[0] as PlacementDateEntity }
 
+      every { userService.getDeliusUserNameForRequest() } returns "theUsername"
+      every { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(any(), any()) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } returns Unit
 
@@ -195,13 +197,15 @@ class PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `Submitting an application saves a single date to a placement application and triggers emails`() {
+    fun `Submitting an application saves a single date to a placement application, triggers emails and domain event`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java) } returns placementApplication.schemaVersion
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { placementDateRepository.save(any()) } answers { it.invocation.args[0] as PlacementDateEntity }
 
+      every { userService.getDeliusUserNameForRequest() } returns "theUsername"
+      every { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(any(), any()) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } returns Unit
 
@@ -225,18 +229,21 @@ class PlacementApplicationServiceTest {
       assertThat(updatedPlacementApp.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
       assertThat(updatedPlacementApp.placementDates[0].duration).isEqualTo(5)
 
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
       verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp) }
     }
 
     @Test
-    fun `Submitting an application saves multiple dates to individual placement applications and triggers emails per resultant placement application`() {
+    fun `Submitting an application saves multiple dates to individual placement applications and triggers emails and domain event per resultant placement application`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java) } returns placementApplication.schemaVersion
       every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
       every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
       every { placementDateRepository.save(any()) } answers { it.invocation.args[0] as PlacementDateEntity }
 
+      every { userService.getDeliusUserNameForRequest() } returns "theUsername"
+      every { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(any(), any()) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(any()) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationAllocated(any()) } returns Unit
 
@@ -262,6 +269,7 @@ class PlacementApplicationServiceTest {
       assertThat(updatedPlacementApp1.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 4, 1))
       assertThat(updatedPlacementApp1.placementDates[0].duration).isEqualTo(5)
       assertThat(updatedPlacementApp1.submissionGroupId).isEqualTo(firstSubmissionGroupId)
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp1, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp1) }
       verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp1) }
 
@@ -269,6 +277,7 @@ class PlacementApplicationServiceTest {
       assertThat(updatedPlacementApp2.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 5, 2))
       assertThat(updatedPlacementApp2.placementDates[0].duration).isEqualTo(10)
       assertThat(updatedPlacementApp2.submissionGroupId).isEqualTo(firstSubmissionGroupId)
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp2, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp2) }
       verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp2) }
 
@@ -276,6 +285,7 @@ class PlacementApplicationServiceTest {
       assertThat(updatedPlacementApp3.placementDates[0].expectedArrival).isEqualTo(LocalDate.of(2024, 6, 3))
       assertThat(updatedPlacementApp3.placementDates[0].duration).isEqualTo(15)
       assertThat(updatedPlacementApp3.submissionGroupId).isEqualTo(firstSubmissionGroupId)
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp3, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp3) }
       verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp3) }
     }

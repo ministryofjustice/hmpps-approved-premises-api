@@ -33,6 +33,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequirementsEntity
@@ -657,7 +658,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `submitting a placement application with a single date returns successfully, sends emails and updates the application`() {
+    fun `submitting a placement application with a single date returns successfully, sends emails, raises domain event and updates the application`() {
       `Given a User`(roles = listOf(UserRole.CAS1_MATCHER), qualifications = listOf()) { matcherUser, _ ->
         `Given a User` { user, jwt ->
           `Given a Placement Application`(
@@ -675,7 +676,7 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
               val placementDates = listOf(
                 PlacementDates(
-                  expectedArrival = LocalDate.now(),
+                  expectedArrival = LocalDate.of(2025, 3, 10),
                   duration = 12,
                 ),
               )
@@ -728,6 +729,18 @@ class PlacementApplicationsTest : IntegrationTestBase() {
               assertThat(createdPlacementDates[0].placementApplication.id).isEqualTo(placementApplicationEntity.id)
               assertThat(createdPlacementDates[0].duration).isEqualTo(placementDates[0].duration)
               assertThat(createdPlacementDates[0].expectedArrival).isEqualTo(placementDates[0].expectedArrival)
+
+              domainEventAsserter.assertDomainEventOfTypeStored(
+                placementApplicationEntity.application.id,
+                DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
+              )
+
+              val recipient = placementApplicationEntity.createdByUser.email!!
+              val templates = notifyConfig.templates
+
+              emailAsserter.assertEmailsRequestedCount(2)
+              emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2025-03-10"))
+              emailAsserter.assertEmailRequested(recipient, templates.placementRequestAllocatedV2, mapOf("startDate" to "2025-03-10"))
             }
           }
         }
@@ -815,6 +828,12 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
               val recipient = placementApplicationEntity.createdByUser.email!!
               val templates = notifyConfig.templates
+
+              domainEventAsserter.assertDomainEventsOfTypeStored(
+                applicationId = placementApplicationEntity.application.id,
+                eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
+                expectedCount = 3,
+              )
 
               emailAsserter.assertEmailsRequestedCount(6)
               emailAsserter.assertEmailRequested(recipient, templates.placementRequestSubmittedV2, mapOf("startDate" to "2024-01-02"))
