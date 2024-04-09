@@ -50,7 +50,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -155,27 +155,45 @@ class PlacementApplicationServiceTest {
     }
 
     @Test
-    fun `Submitting an application triggers allocation and sets a due date`() {
+    fun `Submitting an application returns validation error if no dates defined`() {
       every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
       every { jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java) } returns placementApplication.schemaVersion
-      every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
-      every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
-      every { placementDateRepository.saveAll(any<List<PlacementDateEntity>>()) } answers { emptyList() }
 
-      every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } returns Unit
-      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } returns Unit
-
-      val result = placementApplicationServiceLegacyWithdrawalLogic.submitApplication(
+      val result = placementApplicationService.submitApplication(
         placementApplication.id,
         "translatedDocument",
         PlacementType.releaseFollowingDecision,
         emptyList(),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
+      assertThat(result is CasResult.GeneralValidationError).isTrue
+      assertThat((result as CasResult.GeneralValidationError).message).isEqualTo("At least one placement date is required")
+    }
 
-      val validatableActionResult = (result as AuthorisableActionResult.Success).entity
-      val updatedApplication = (validatableActionResult as ValidatableActionResult.Success).entity
+    @Test
+    fun `Submitting an application triggers allocation and sets a due date`() {
+      every { placementApplicationRepository.findByIdOrNull(placementApplication.id) } returns placementApplication
+      every { jsonSchemaService.getNewestSchema(ApprovedPremisesPlacementApplicationJsonSchemaEntity::class.java) } returns placementApplication.schemaVersion
+      every { userAllocator.getUserForPlacementApplicationAllocation(placementApplication) } returns assigneeUser
+      every { placementApplicationRepository.save(any()) } answers { it.invocation.args[0] as PlacementApplicationEntity }
+      every { placementDateRepository.saveAll(any<List<PlacementDateEntity>>()) } answers { emptyList() }
+      every { placementDateRepository.save(any()) } answers { it.invocation.args[0] as PlacementDateEntity }
+
+      every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } returns Unit
+
+      val result = placementApplicationService.submitApplication(
+        placementApplication.id,
+        "translatedDocument",
+        PlacementType.releaseFollowingDecision,
+        listOf(
+          PlacementDates(expectedArrival = LocalDate.of(2024, 4, 1), duration = 5),
+        ),
+      )
+
+      assertThat(result is CasResult.Success).isTrue
+
+      val updatedApplication = (result as CasResult.Success).value
 
       assertThat(updatedApplication[0].dueAt).isEqualTo(dueAt)
     }
@@ -200,8 +218,8 @@ class PlacementApplicationServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val updatedPlacementApplications = extractEntityFromNestedAuthorisableValidatableActionResult(result)
+      assertThat(result is CasResult.Success).isTrue
+      val updatedPlacementApplications = extractEntityFromCasResult(result)
 
       assertThat(updatedPlacementApplications).hasSize(1)
 
@@ -237,8 +255,8 @@ class PlacementApplicationServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val updatedPlacementApplications = extractEntityFromNestedAuthorisableValidatableActionResult(result)
+      assertThat(result is CasResult.Success).isTrue
+      val updatedPlacementApplications = extractEntityFromCasResult(result)
 
       assertThat(updatedPlacementApplications).hasSize(3)
 
@@ -288,8 +306,8 @@ class PlacementApplicationServiceTest {
         ),
       )
 
-      assertThat(result is AuthorisableActionResult.Success).isTrue
-      val updatedPlacementApplications = extractEntityFromNestedAuthorisableValidatableActionResult(result)
+      assertThat(result is CasResult.Success).isTrue
+      val updatedPlacementApplications = extractEntityFromCasResult(result)
 
       assertThat(updatedPlacementApplications).hasSize(1)
 
