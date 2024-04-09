@@ -1,4 +1,4 @@
-CREATE TABLE cas_3_duty_to_refer_rejection_reasons (
+CREATE TABLE cas_3_duty_to_refer_outcome (
     id UUID NOT NULL,
     name TEXT NOT NULL,
     is_active BOOLEAN NOT NULL,
@@ -6,7 +6,7 @@ CREATE TABLE cas_3_duty_to_refer_rejection_reasons (
     UNIQUE (name)
 );
 
-INSERT INTO cas_3_duty_to_refer_rejection_reasons(id, name, is_active)
+INSERT INTO cas_3_duty_to_refer_outcome(id, name, is_active)
 VALUES
       ('7346f068-c7a7-4fff-848a-1b14aa811f23', 'Accepted – Prevention/ Relief Duty', true),
       ('208c9a23-05a4-44da-8ea4-8a93c5598620', 'Accepted – Priority Need', true),

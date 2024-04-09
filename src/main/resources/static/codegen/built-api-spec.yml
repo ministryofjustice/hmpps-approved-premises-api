@@ -9024,7 +9024,7 @@ components:
         - submitted-applications
         - application-status-updates
         - unsubmitted-applications
-    Cas3DutyToReferRejectionReason:
+    Cas3DutyToReferOutcome:
       type: object
       properties:
         id:
