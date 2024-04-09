@@ -658,93 +658,91 @@ class Cas2SubmissionTest(
       val telephoneNumber = "123 456 7891"
 
       `Given a CAS2 User`() { submittingUser, jwt ->
-        `Given a CAS2 User` { userEntity, _ ->
-          `Given an Offender`(
-            inmateDetailsConfigBlock = {
-              withAssignedLivingUnit(
-                AssignedLivingUnit(
-                  agencyId = "agency_id",
-                  locationId = 123.toLong(),
-                  agencyName = "agency_name",
-                  description = null,
-                ),
+        `Given an Offender`(
+          inmateDetailsConfigBlock = {
+            withAssignedLivingUnit(
+              AssignedLivingUnit(
+                agencyId = "agency_id",
+                locationId = 123.toLong(),
+                agencyName = "agency_name",
+                description = null,
+              ),
+            )
+          },
+        ) { offenderDetails, _ ->
+
+          val applicationSchema =
+            cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(
+                schema,
               )
-            },
-          ) { offenderDetails, _ ->
+            }
 
-            val applicationSchema =
-              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-                withSchema(
-                  schema,
-                )
-              }
-
-            cas2ApplicationEntityFactory.produceAndPersist {
-              withCrn(offenderDetails.otherIds.crn)
-              withNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
-              withId(applicationId)
-              withApplicationSchema(applicationSchema)
-              withCreatedByUser(submittingUser)
-              withData(
-                """
+          cas2ApplicationEntityFactory.produceAndPersist {
+            withCrn(offenderDetails.otherIds.crn)
+            withNomsNumber(offenderDetails.otherIds.nomsNumber.toString())
+            withId(applicationId)
+            withApplicationSchema(applicationSchema)
+            withCreatedByUser(submittingUser)
+            withData(
+              """
                         {
                            "thingId": 123
                         }
                """,
-              )
-            }
-
-            Assertions.assertThat(realAssessmentRepository.count()).isEqualTo(0)
-
-            webTestClient.post()
-              .uri("/cas2/submissions")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.cas2.value)
-              .bodyValue(
-                SubmitCas2Application(
-                  applicationId = applicationId,
-                  translatedDocument = {},
-                  preferredAreas = "Leeds | Bradford",
-                  hdcEligibilityDate = LocalDate.parse("2023-03-30"),
-                  conditionalReleaseDate = LocalDate.parse("2023-04-29"),
-                  telephoneNumber = telephoneNumber,
-                ),
-              )
-              .exchange()
-              .expectStatus()
-              .isOk
+            )
           }
 
-          // verify that generated 'application.submitted' domain event links to the CAS2 domain
-          val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", applicationId.toString())
-          val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
-          val domainEventFromJson = objectMapper.readValue(
-            persistedDomainEvent!!.data,
-            Cas2ApplicationSubmittedEvent::class.java,
-          )
-          Assertions.assertThat(domainEventFromJson.eventDetails.applicationUrl)
-            .isEqualTo(expectedFrontEndUrl)
+          Assertions.assertThat(realAssessmentRepository.count()).isEqualTo(0)
 
-          val persistedAssessment = realAssessmentRepository.findAll().first()
-          Assertions.assertThat(persistedAssessment!!.application.id).isEqualTo(applicationId)
-
-          val expectedEmailUrl = submittedApplicationUrlTemplate.replace("#applicationId", applicationId.toString())
-          emailAsserter.assertEmailsRequestedCount(1)
-          emailAsserter.assertEmailRequested(
-            notifyConfig.emailAddresses.cas2Assessors,
-            notifyConfig.templates.cas2ApplicationSubmitted,
-            personalisation = mapOf(
-              "name" to submittingUser.name,
-              "email" to submittingUser.email!!,
-              "prisonNumber" to persistedAssessment.application.nomsNumber!!,
-              "telephoneNumber" to telephoneNumber,
-              "applicationUrl" to expectedEmailUrl,
-            ),
-            replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
-          )
+          webTestClient.post()
+            .uri("/cas2/submissions")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.cas2.value)
+            .bodyValue(
+              SubmitCas2Application(
+                applicationId = applicationId,
+                translatedDocument = {},
+                preferredAreas = "Leeds | Bradford",
+                hdcEligibilityDate = LocalDate.parse("2023-03-30"),
+                conditionalReleaseDate = LocalDate.parse("2023-04-29"),
+                telephoneNumber = telephoneNumber,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isOk
         }
+
+        // verify that generated 'application.submitted' domain event links to the CAS2 domain
+        val expectedFrontEndUrl = applicationUrlTemplate.replace("#id", applicationId.toString())
+        val persistedDomainEvent = domainEventRepository.findFirstByOrderByCreatedAtDesc()
+        val domainEventFromJson = objectMapper.readValue(
+          persistedDomainEvent!!.data,
+          Cas2ApplicationSubmittedEvent::class.java,
+        )
+        Assertions.assertThat(domainEventFromJson.eventDetails.applicationUrl)
+          .isEqualTo(expectedFrontEndUrl)
+
+        val persistedAssessment = realAssessmentRepository.findAll().first()
+        Assertions.assertThat(persistedAssessment!!.application.id).isEqualTo(applicationId)
+
+        val expectedEmailUrl = submittedApplicationUrlTemplate.replace("#applicationId", applicationId.toString())
+        emailAsserter.assertEmailsRequestedCount(1)
+        emailAsserter.assertEmailRequested(
+          notifyConfig.emailAddresses.cas2Assessors,
+          notifyConfig.templates.cas2ApplicationSubmitted,
+          personalisation = mapOf(
+            "name" to submittingUser.name,
+            "email" to submittingUser.email!!,
+            "prisonNumber" to persistedAssessment.application.nomsNumber!!,
+            "telephoneNumber" to telephoneNumber,
+            "applicationUrl" to expectedEmailUrl,
+          ),
+          replyToEmailId = notifyConfig.emailAddresses.cas2ReplyToId,
+        )
       }
     }
 
