@@ -317,7 +317,7 @@ class TaskTransformerTest {
       val result = taskTransformer.transformPlacementApplicationToTask(placementApplication, "First Last")
 
       assertThat(result.status).isEqualTo(TaskStatus.complete)
-      assertThat(result.outcome).isEqualTo(decision.convertToApi())
+      assertThat(result.outcome).isEqualTo(decision.apiValue)
       assertThat(result.outcomeRecordedAt).isEqualTo(decisionMadeAt.toInstant())
     }
 
