@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2TimelineEvent
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.LatestCas2StatusUpdate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NomisUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationEntityFactory
@@ -68,6 +69,7 @@ class ApplicationsTransformerTest {
       isActive = user.isActive,
     )
     every { mockStatusUpdateTransformer.transformJpaToApi(any()) } returns mockk<Cas2StatusUpdate>()
+    every { mockStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns mockk<LatestCas2StatusUpdate>()
     every { mockTimelineEventsTransformer.transformApplicationToTimelineEvents(any()) } returns listOf()
   }
 
@@ -156,7 +158,11 @@ class ApplicationsTransformerTest {
         override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
         override fun getSubmittedAt() = null
         override fun getHdcEligibilityDate() = null
+        override fun getLatestStatusUpdateLabel() = null
+        override fun getLatestStatusUpdateStatusId() = null
       }
+
+      every { mockStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns null
 
       val result = applicationsTransformer.transformJpaSummaryToSummary(
         application,
@@ -167,6 +173,7 @@ class ApplicationsTransformerTest {
       assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
       assertThat(result.risks).isNull()
       assertThat(result.hdcEligibilityDate).isNull()
+      assertThat(result.latestStatusUpdate).isNull()
     }
 
     @Test
@@ -179,7 +186,14 @@ class ApplicationsTransformerTest {
         override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
         override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
         override fun getHdcEligibilityDate() = LocalDate.parse("2023-04-29")
+        override fun getLatestStatusUpdateStatusId() = UUID.fromString("ae544aee-7170-4794-99fb-703090cbc7db")
+        override fun getLatestStatusUpdateLabel() = "my latest status update"
       }
+
+      every { mockStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns LatestCas2StatusUpdate(
+        statusId = application.getLatestStatusUpdateStatusId(),
+        label = application.getLatestStatusUpdateLabel(),
+      )
 
       val result = applicationsTransformer.transformJpaSummaryToSummary(
         application,
@@ -189,6 +203,8 @@ class ApplicationsTransformerTest {
       assertThat(result.id).isEqualTo(application.getId())
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
       assertThat(result.hdcEligibilityDate).isEqualTo("2023-04-29")
+      assertThat(result.latestStatusUpdate?.label).isEqualTo("my latest status update")
+      assertThat(result.latestStatusUpdate?.statusId).isEqualTo(UUID.fromString("ae544aee-7170-4794-99fb-703090cbc7db"))
     }
   }
 }

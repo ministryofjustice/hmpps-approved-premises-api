@@ -1965,6 +1965,8 @@ components:
               format: uuid
             status:
               $ref: '#/components/schemas/ApplicationStatus'
+            latestStatusUpdate:
+              $ref: '#/components/schemas/LatestCas2StatusUpdate'
             risks:
               $ref: '#/components/schemas/PersonRisks'
             hdcEligibilityDate:
@@ -2135,6 +2137,18 @@ components:
       required:
         - id
         - name
+        - label
+    LatestCas2StatusUpdate:
+      type: object
+      properties:
+        statusId:
+          type: string
+          format: uuid
+        label:
+          type: string
+          example: 'More information requested'
+      required:
+        - statusId
         - label
     ApplicationStatus:
       type: string

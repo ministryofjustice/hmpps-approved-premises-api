@@ -49,8 +49,16 @@ SELECT
     a.crn,
     CAST(a.created_by_user_id AS TEXT) as createdByUserId,
     a.created_at as createdAt,
-    a.submitted_at as submittedAt
+    a.submitted_at as submittedAt,
+    asu.label as latestStatusUpdateLabel,
+    CAST(asu.status_id AS TEXT) as latestStatusUpdateStatusId
 FROM cas_2_applications a
+LEFT JOIN
+    (SELECT DISTINCT ON (application_id) su.application_id, 
+      su.label, su.status_id
+    FROM cas_2_status_updates su
+    ORDER BY su.application_id, su.created_at DESC) as asu
+ON a.id = asu.application_id
 WHERE a.created_by_user_id = :userId
 AND a.submitted_at IS NOT NULL
 ORDER BY createdAt DESC
@@ -177,6 +185,8 @@ interface AppSummary {
   fun getCreatedAt(): Timestamp
   fun getSubmittedAt(): Timestamp?
   fun getHdcEligibilityDate(): LocalDate?
+  fun getLatestStatusUpdateLabel(): String?
+  fun getLatestStatusUpdateStatusId(): UUID?
 }
 
 interface Cas2ApplicationSummary : AppSummary
