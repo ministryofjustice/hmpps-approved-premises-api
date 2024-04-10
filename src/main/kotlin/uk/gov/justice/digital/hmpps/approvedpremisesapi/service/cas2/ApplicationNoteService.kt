@@ -45,17 +45,17 @@ class ApplicationNoteService(
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
+    if (application.submittedAt == null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.GeneralValidationError("This application has not been submitted"),
+      )
+    }
+
     val isExternalUser = httpAuthService.getCas2AuthenticatedPrincipalOrThrow().isExternalUser()
     val user = getCas2User(isExternalUser)
 
     if (!isExternalUser && !isApplicationCreatedByUser(application, user as NomisUserEntity)) {
       return AuthorisableActionResult.Unauthorised()
-    }
-
-    if (application.submittedAt == null) {
-      return AuthorisableActionResult.Success(
-        ValidatableActionResult.GeneralValidationError("This application has not been submitted"),
-      )
     }
 
     val savedNote = saveNote(application, note.note, user)
