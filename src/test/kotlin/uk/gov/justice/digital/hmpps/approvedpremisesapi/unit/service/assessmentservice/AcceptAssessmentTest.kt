@@ -60,6 +60,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.JsonSchemaService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequirementsService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
@@ -372,7 +373,7 @@ class AcceptAssessmentTest {
     verifyDomainEventSent(offenderDetails, staffUserDetails, assessment)
 
     verify(exactly = 0) {
-      placementRequestServiceMock.createPlacementRequest(any(), any(), any(), false, null)
+      placementRequestServiceMock.createPlacementRequest(any(), any(), any(), any(), false, null)
     }
 
     verify(exactly = 1) {
@@ -415,7 +416,7 @@ class AcceptAssessmentTest {
 
     every { placementRequirementsServiceMock.createPlacementRequirements(assessment, placementRequirements) } returns ValidatableActionResult.Success(placementRequirementEntity)
 
-    every { placementRequestServiceMock.createPlacementRequest(placementRequirementEntity, placementDates, notes, false, null) } returns PlacementRequestEntityFactory()
+    every { placementRequestServiceMock.createPlacementRequest(any(), any(), any(), any(), any(), any()) } returns PlacementRequestEntityFactory()
       .withPlacementRequirements(
         PlacementRequirementsEntityFactory()
           .withApplication(assessment.application as ApprovedPremisesApplicationEntity)
@@ -458,7 +459,14 @@ class AcceptAssessmentTest {
     verifyDomainEventSent(offenderDetails, staffUserDetails, assessment)
 
     verify(exactly = 1) {
-      placementRequestServiceMock.createPlacementRequest(placementRequirementEntity, placementDates, notes, false, null)
+      placementRequestServiceMock.createPlacementRequest(
+        source = PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
+        placementRequirements = placementRequirementEntity,
+        placementDates = placementDates,
+        notes = notes,
+        isParole = false,
+        placementApplicationEntity = null,
+      )
     }
 
     verify(exactly = 1) {

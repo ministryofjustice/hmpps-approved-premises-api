@@ -404,6 +404,7 @@ class AssessmentService(
 
       if (createPlacementRequest) {
         placementRequestService.createPlacementRequest(
+          PlacementRequestSource.ASSESSMENT_OF_APPLICATION,
           placementRequirementsValidationResult.entity,
           placementDates!!,
           notes,

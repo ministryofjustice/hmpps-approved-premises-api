@@ -103,3 +103,31 @@ fun latestDateOf(date1: LocalDate, date2: LocalDate): LocalDate {
 
   return date2
 }
+
+@SuppressWarnings("MagicNumber")
+fun toWeekAndDayDurationString(durationInDays: Int): String {
+  if (durationInDays < 7) {
+    return toDaysString(durationInDays)
+  } else if (durationInDays % 7 == 0) {
+    val weeks = durationInDays / 7
+    return toWeeksString(weeks)
+  } else {
+    val weeks = durationInDays / 7
+    val days = durationInDays % 7
+    return "${toWeeksString(weeks)} and ${toDaysString(days)}"
+  }
+}
+
+@SuppressWarnings("MagicNumber")
+private fun toDaysString(days: Int) = if (days != 1) {
+  "$days days"
+} else {
+  "1 day"
+}
+
+@SuppressWarnings("MagicNumber")
+private fun toWeeksString(weeks: Int) = if (weeks != 1) {
+  "$weeks weeks"
+} else {
+  "1 week"
+}

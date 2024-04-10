@@ -7,6 +7,7 @@ import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
 import org.springframework.test.context.event.annotation.BeforeTestMethod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
+import java.time.Duration
 
 @Service
 class SnsDomainEventListener(private val objectMapper: ObjectMapper) {
@@ -34,23 +35,25 @@ class SnsDomainEventListener(private val objectMapper: ObjectMapper) {
   @BeforeTestMethod
   fun clearMessages() = messages.clear()
 
-  fun blockForMessage(): SnsEvent {
+  fun blockForMessage(eventType: String): SnsEvent {
     var waitedCount = 0
-    while (isEmpty()) {
-      if (waitedCount == 300) fail<Any>("Never received SQS message from SNS topic after 30s")
+    while (!contains(eventType)) {
+      if (waitedCount >= Duration.ofSeconds(15).toMillis()) {
+        fail<Any>("Did not receive SQS message of type $eventType from SNS topic after 15s. Have messages of type ${messages.map { m -> m.eventType }}")
+      }
 
       Thread.sleep(100)
-      waitedCount += 1
+      waitedCount += 100
     }
 
     synchronized(messages) {
-      return messages.removeFirst()
+      return messages.first { it.eventType == eventType }
     }
   }
 
-  fun isEmpty(): Boolean {
+  private fun contains(eventType: String): Boolean {
     synchronized(messages) {
-      return messages.isEmpty()
+      return messages.firstOrNull { it.eventType == eventType } != null
     }
   }
 }

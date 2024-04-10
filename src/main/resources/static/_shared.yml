@@ -3465,6 +3465,7 @@ components:
         - approved_premises_assessment_allocated
         - approved_premises_placement_application_withdrawn
         - approved_premises_match_request_withdrawn
+        - approved_premises_request_for_placement_created
         - cas3_person_arrived
         - cas3_person_departed
         - application_timeline_note

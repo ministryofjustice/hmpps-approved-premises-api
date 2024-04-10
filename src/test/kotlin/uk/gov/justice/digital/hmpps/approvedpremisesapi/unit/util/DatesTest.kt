@@ -1,11 +1,15 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util
 
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.countOverlappingDays
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.overlaps
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormattedHourOfDay
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toWeekAndDayDurationString
 import java.time.LocalDate
 import java.time.OffsetDateTime
 
@@ -117,5 +121,34 @@ class DatesTest {
     val dateTime = OffsetDateTime.parse("2024-01-01T11:15:00Z")
 
     assertThat(dateTime.toUiFormattedHourOfDay()).isEqualTo("11am")
+  }
+
+  @Nested
+  inner class ToWeekAndDayDurationString {
+
+    @ParameterizedTest
+    @CsvSource(
+      "0, 0 days",
+      "1, 1 day",
+      "2, 2 days",
+      "3, 3 days",
+      "4, 4 days",
+      "5, 5 days",
+      "6, 6 days",
+      "7, 1 week",
+      "8, 1 week and 1 day",
+      "9, 1 week and 2 days",
+      "10, 1 week and 3 days",
+      "11, 1 week and 4 days",
+      "12, 1 week and 5 days",
+      "13, 1 week and 6 days",
+      "14, 2 weeks",
+      "15, 2 weeks and 1 day",
+      "23, 3 weeks and 2 days",
+      "365, 52 weeks and 1 day",
+    )
+    fun `toWeekAndDayDurationString 0 days`(days: Int, expectedResult: String) {
+      assertThat(toWeekAndDayDurationString(days)).isEqualTo(expectedResult)
+    }
   }
 }

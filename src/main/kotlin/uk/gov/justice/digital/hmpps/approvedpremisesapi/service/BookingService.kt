@@ -1266,6 +1266,7 @@ class BookingService(
     if (reason.id == approvedPremisesBookingAppealedCancellationReasonId && booking.placementRequest != null) {
       val placementRequest = booking.placementRequest!!
       placementRequestService.createPlacementRequest(
+        source = PlacementRequestSource.APPEAL,
         placementRequirements = placementRequest.placementRequirements,
         placementDates = PlacementDates(
           expectedArrival = placementRequest.expectedArrival,
