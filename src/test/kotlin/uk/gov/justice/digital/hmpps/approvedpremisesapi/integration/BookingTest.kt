@@ -1152,7 +1152,7 @@ class BookingTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create Temporary Accommodation Booking returns 409 Conflict when bed archived date is exactly on departure date`() {
+  fun `Create Temporary Accommodation Booking returns OK response when bed archived date is exactly on departure date`() {
     `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val arrivalDate = LocalDate.parse("2022-08-12")
@@ -1215,12 +1215,26 @@ class BookingTest : IntegrationTestBase() {
           )
           .exchange()
           .expectStatus()
-          .is4xxClientError
+          .isOk
           .expectBody()
-          .jsonPath("title").isEqualTo("Conflict")
-          .jsonPath("status").isEqualTo(409)
-          .jsonPath("detail")
-          .isEqualTo("BedSpace is archived from ${bed.endDate} which overlaps with the desired dates: ${bed.id}")
+          .jsonPath("$.person.crn").isEqualTo(offenderDetails.otherIds.crn)
+          .jsonPath("$.person.name").isEqualTo("${offenderDetails.firstName} ${offenderDetails.surname}")
+          .jsonPath("$.arrivalDate").isEqualTo("2022-08-12")
+          .jsonPath("$.departureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.originalArrivalDate").isEqualTo("2022-08-12")
+          .jsonPath("$.originalDepartureDate").isEqualTo("2022-08-30")
+          .jsonPath("$.keyWorker").isEqualTo(null)
+          .jsonPath("$.status").isEqualTo("provisional")
+          .jsonPath("$.arrival").isEqualTo(null)
+          .jsonPath("$.departure").isEqualTo(null)
+          .jsonPath("$.nonArrival").isEqualTo(null)
+          .jsonPath("$.cancellation").isEqualTo(null)
+          .jsonPath("$.confirmation").isEqualTo(null)
+          .jsonPath("$.serviceName").isEqualTo(ServiceName.temporaryAccommodation.value)
+          .jsonPath("$.createdAt").value(withinSeconds(5L), OffsetDateTime::class.java)
+          .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
+          .jsonPath("$.bed.name").isEqualTo("test-bed")
+          .jsonPath("$.assessmentId").isEqualTo("${assessment.id}")
       }
     }
   }

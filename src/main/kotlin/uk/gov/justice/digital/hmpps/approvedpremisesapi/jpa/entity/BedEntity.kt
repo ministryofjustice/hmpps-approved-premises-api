@@ -32,7 +32,7 @@ interface BedRepository : JpaRepository<BedEntity, UUID> {
     SELECT b 
     FROM BedEntity b 
     WHERE b.id = :bedId AND 
-    b.endDate IS NOT NULL AND b.endDate <= :endDate
+    b.endDate IS NOT NULL AND b.endDate < :endDate
   """,
   )
   fun findArchivedBedByBedIdAndDate(bedId: UUID, endDate: LocalDate): BedEntity?
