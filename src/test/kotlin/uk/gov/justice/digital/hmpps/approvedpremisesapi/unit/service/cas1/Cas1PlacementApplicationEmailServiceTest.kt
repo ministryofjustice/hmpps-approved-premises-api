@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementDateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.APPLICANT_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.AREA_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.ASSESSOR_EMAIL
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.CASE_MANAGER_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockEmailNotificationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.LocalDate
@@ -24,6 +26,7 @@ class Cas1PlacementApplicationEmailServiceTest {
     const val AREA_NAME = "theAreaName"
     const val CRN = "CRN123"
     const val ASSESSOR_EMAIL = "matcherEmail@test.com"
+    const val CASE_MANAGER_EMAIL = "caseManager@test.com"
   }
 
   private val notifyConfig = NotifyConfig()
@@ -647,6 +650,56 @@ class Cas1PlacementApplicationEmailServiceTest {
     }
 
     @Test
+    fun `placementApplicationWithdrawn sends a V2 email to applicant and case manager if case manager not applicant`() {
+      val applicant = createUser(emailAddress = APPLICANT_EMAIL)
+      val application = createApplicationForApplicant(applicant = applicant, caseManagerNotApplicant = true)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(applicant)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      serviceUsingAps530Improvements.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        wasBeingAssessedBy = null,
+        withdrawingUser = withdrawnByUser,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(2)
+
+      val personalisation = mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to "2020-03-12",
+        "endDate" to "2020-03-22",
+        "additionalDatesSet" to "no",
+        "withdrawnBy" to "withdrawingUser",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.placementRequestWithdrawnV2,
+        personalisation,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        CASE_MANAGER_EMAIL,
+        notifyConfig.templates.placementRequestWithdrawnV2,
+        personalisation,
+      )
+    }
+
+    @Test
     fun `placementApplicationWithdrawn sends a V2 email to assessor if email address defined`() {
       val applicant = createUser(emailAddress = null)
       val assessor = createUser(emailAddress = ASSESSOR_EMAIL)
@@ -748,10 +801,21 @@ class Cas1PlacementApplicationEmailServiceTest {
     .withName(name)
     .produce()
 
-  private fun createApplicationForApplicant(applicant: UserEntity) = ApprovedPremisesApplicationEntityFactory()
+  private fun createApplicationForApplicant(
+    applicant: UserEntity,
+    caseManagerNotApplicant: Boolean = false,
+  ) = ApprovedPremisesApplicationEntityFactory()
     .withCrn(TestConstants.CRN)
     .withCreatedByUser(applicant)
     .withSubmittedAt(OffsetDateTime.now())
     .withApArea(ApAreaEntityFactory().withName(AREA_NAME).produce())
+    .withCaseManagerIsNotApplicant(caseManagerNotApplicant)
+    .withCaseManagerUserDetails(
+      if (caseManagerNotApplicant) {
+        Cas1ApplicationUserDetailsEntityFactory().withEmailAddress(CASE_MANAGER_EMAIL).produce()
+      } else {
+        null
+      },
+    )
     .produce()
 }

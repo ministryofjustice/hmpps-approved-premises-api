@@ -17,6 +17,15 @@ class MockEmailNotificationService : EmailNotifier {
     requestedEmails.add(EmailRequest(recipientEmailAddress, templateId, personalisation))
   }
 
+  override fun sendEmails(
+    recipientEmailAddresses: Set<String>,
+    templateId: String,
+    personalisation: Map<String, *>,
+    replyToEmailId: String?,
+  ) {
+    recipientEmailAddresses.forEach { sendEmail(it, templateId, personalisation, replyToEmailId) }
+  }
+
   override fun sendCas2Email(recipientEmailAddress: String, templateId: String, personalisation: Map<String, *>) {
     requestedEmails.add(EmailRequest(recipientEmailAddress, templateId, personalisation, replyToEmailId = "cbe00c2d-387b-4283-9b9c-13c8b7a61444"))
   }

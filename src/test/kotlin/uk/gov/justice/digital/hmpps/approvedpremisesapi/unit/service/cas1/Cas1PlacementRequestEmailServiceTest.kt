@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFact
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationUserDetailsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequ
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.APPLICANT_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.AREA_NAME
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.CASE_MANAGER_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.CRU_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.WITHDRAWING_USER_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.MockEmailNotificationService
@@ -30,6 +32,7 @@ class Cas1PlacementRequestEmailServiceTest {
     const val CRN = "CRN123"
     const val CRU_EMAIL = "cruEmail@test.com"
     const val WITHDRAWING_USER_NAME = "the withdrawing user"
+    const val CASE_MANAGER_EMAIL = "caseManager@test.com"
   }
 
   private val notifyConfig = NotifyConfig()
@@ -232,9 +235,60 @@ class Cas1PlacementRequestEmailServiceTest {
     )
   }
 
+  @Test
+  fun `placementRequestWithdrawn sends placement request withdrawn email to applicant and case manager if case manager not applicant`() {
+    val application = createApplication(
+      applicantEmail = APPLICANT_EMAIL,
+      caseManagerNotApplicant = true,
+    )
+    val booking = BookingEntityFactory()
+      .withApplication(application)
+      .withDefaultPremises()
+      .produce()
+
+    val placementRequest = createPlacementRequest(
+      application,
+      booking,
+      hasPlacementApplication = false,
+    )
+
+    serviceUsingAps530Improvements.placementRequestWithdrawn(placementRequest, withdrawingUser)
+
+    mockEmailNotificationService.assertEmailRequestCount(2)
+    mockEmailNotificationService.assertEmailRequested(
+      APPLICANT_EMAIL,
+      notifyConfig.templates.placementRequestWithdrawnV2,
+      mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to placementRequest.expectedArrival.toString(),
+        "endDate" to placementRequest.expectedDeparture().toString(),
+        "withdrawnBy" to WITHDRAWING_USER_NAME,
+        "additionalDatesSet" to "no",
+      ),
+    )
+    mockEmailNotificationService.assertEmailRequested(
+      CASE_MANAGER_EMAIL,
+      notifyConfig.templates.placementRequestWithdrawnV2,
+      mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to placementRequest.expectedArrival.toString(),
+        "endDate" to placementRequest.expectedDeparture().toString(),
+        "withdrawnBy" to WITHDRAWING_USER_NAME,
+        "additionalDatesSet" to "no",
+      ),
+    )
+  }
+
   private fun createApplication(
     applicantEmail: String? = null,
     apAreaEmail: String? = null,
+    caseManagerNotApplicant: Boolean = false,
   ): ApprovedPremisesApplicationEntity {
     val applicant = UserEntityFactory()
       .withUnitTestControlProbationRegion()
@@ -250,6 +304,14 @@ class Cas1PlacementRequestEmailServiceTest {
           .withName(AREA_NAME)
           .withEmailAddress(apAreaEmail)
           .produce(),
+      )
+      .withCaseManagerIsNotApplicant(caseManagerNotApplicant)
+      .withCaseManagerUserDetails(
+        if (caseManagerNotApplicant) {
+          Cas1ApplicationUserDetailsEntityFactory().withEmailAddress(CASE_MANAGER_EMAIL).produce()
+        } else {
+          null
+        },
       )
       .produce()
   }

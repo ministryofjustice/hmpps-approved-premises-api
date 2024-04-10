@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationTe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
@@ -75,7 +76,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * ```
      */
     @Test
-    fun `Get withdrawables returns application only for a sparse application if user is not the application creator`() {
+    fun `Get withdrawables returns application only for a sparse application if user is not the applicant`() {
       `Given a User` { applicationCreator, _ ->
         `Given a User` { _, jwt ->
           `Given an Offender` { offenderDetails, _ ->
@@ -103,7 +104,7 @@ class WithdrawalTest : IntegrationTestBase() {
      * ```
      */
     @Test
-    fun `Get withdrawables returns application only for a sparse application if user is application creator`() {
+    fun `Get withdrawables returns application only for a sparse application if user is applicant`() {
       `Given a User` { applicationCreator, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, applicationCreator, "TEAM")
@@ -540,10 +541,11 @@ class WithdrawalTest : IntegrationTestBase() {
 
     /**
      * ```
-     * | Entities                         | Withdrawn | Email PP | Email Assessor |
-     * | -------------------------------- | --------- | -------- | -------------- |
-     * | Application                      | YES       | YES      | -              |
-     * | -> Assessment (pending)          | YES       | -        | YES            |
+     * |                                  |           |         Receive Email          |
+     * | Entities                         | Withdrawn | PP   | Case Manager | Assessor |
+     * | -------------------------------- | --------- | ---- | ------------ | -------- |
+     * | Application                      | YES       | YES  | YES          | -        |
+     * | -> Assessment (pending)          | YES       | -    | -            | YES      |
      * ```
      */
     @Test
@@ -551,12 +553,17 @@ class WithdrawalTest : IntegrationTestBase() {
       `Given a User` { applicant, jwt ->
         `Given a User` { assessor, _ ->
           `Given an Offender` { offenderDetails, _ ->
+            val caseManagerEmail = "caseManager@test.com"
+
             val (application, assessment) = createApplicationAndAssessment(
               applicant = applicant,
               assignee = applicant,
               offenderDetails = offenderDetails,
               assessmentSubmitted = false,
               assessmentAllocatedTo = assessor,
+              caseManager = cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
+                withEmailAddress(caseManagerEmail)
+              },
             )
 
             withdrawApplication(application, jwt)
@@ -567,8 +574,9 @@ class WithdrawalTest : IntegrationTestBase() {
             val applicantEmail = applicant.email!!
             val assessorEmail = assessment.allocatedToUser!!.email!!
 
-            emailAsserter.assertEmailsRequestedCount(2)
+            emailAsserter.assertEmailsRequestedCount(3)
             assertApplicationWithdrawnEmail(applicantEmail, application)
+            assertApplicationWithdrawnEmail(caseManagerEmail, application)
             assertAssessmentWithdrawnEmail(assessorEmail)
           }
         }
@@ -576,20 +584,24 @@ class WithdrawalTest : IntegrationTestBase() {
     }
 
     /**
+     * For this test the applicant is not the same person as the case manager, meaning
+     * emails typically sent to the applicant will also be sent to the case manager
+     *
      * ```
-     * | Entities                           | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
-     * | ---------------------------------- | --------- | -------- | -------- | --------- | -------------- |
-     * | Application                        | YES       | YES      | -        | -         | -              |
-     * | -> Assessment                      | YES       | -        | -        | -         | -              |
-     * | -> Request for placement 1         | YES       | YES      | -        | -         | -              |
-     * | ---> Match request 1               | YES       | -        | -        | -         | -              |
-     * | -----> Booking 1 arrival pending   | YES       | YES      | YES      | YES       | -              |
-     * | ---> Match request 2               | YES       | -        | -        | YES       | -              |
-     * | -> Request for placement 2         | YES       | YES      | -        | -         | YES            |
-     * | -> Match request 2                 | YES       | YES      | -        | -         | -              |
-     * | ---> Booking 2 arrival pending     | YES       | YES      | YES      | YES       | -              |
-     * | -> Adhoc Booking 1 arrival pending | YES       | YES      | YES      | YES       | -              |
-     * | -> Adhoc Booking 2 arrival pending | YES       | YES      | YES      | YES       | -              |
+     * |                                                |             Receive Email                 |
+     * | Entities                           | Withdrawn | PP  | Case Manager | AP  | CRU | Assessor |
+     * | ---------------------------------- | --------- | --- | ------------ | --- | --- | -------- |
+     * | Application                        | YES       | YES | YES          | -   | -   | -        |
+     * | -> Assessment                      | YES       | -   | -            | -   | -   | -        |
+     * | -> Request for placement 1         | YES       | YES | YES          | -   | -   | -        |
+     * | ---> Match request 1               | YES       | -   | -            | -   | -   | -        |
+     * | -----> Booking 1 arrival pending   | YES       | YES | YES          | YES | YES | -        |
+     * | ---> Match request 2               | YES       | -   | -            | -   | YES | -        |
+     * | -> Request for placement 2         | YES       | YES | YES          | -   | -   | YES      |
+     * | -> Match request 2                 | YES       | YES | YES          | -   | -   | -        |
+     * | ---> Booking 2 arrival pending     | YES       | YES | YES          | YES | YES | -        |
+     * | -> Adhoc Booking 1 arrival pending | YES       | YES | YES          | YES | YES | -        |
+     * | -> Adhoc Booking 2 arrival pending | YES       | YES | YES          | YES | YES | -        |
      * ```
      */
     @Test
@@ -597,7 +609,16 @@ class WithdrawalTest : IntegrationTestBase() {
       `Given a User` { applicant, jwt ->
         `Given a User` { requestForPlacementAssessor, _ ->
           `Given an Offender` { offenderDetails, _ ->
-            val (application, assessment) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
+            val caseManagerEmail = "caseManager@test.com"
+
+            val (application, assessment) = createApplicationAndAssessment(
+              applicant = applicant,
+              assignee = applicant,
+              offenderDetails = offenderDetails,
+              caseManager = cas1ApplicationUserDetailsEntityFactory.produceAndPersist {
+                withEmailAddress(caseManagerEmail)
+              },
+            )
             val (otherApplication, _) = createApplicationAndAssessment(applicant, applicant, offenderDetails)
 
             val placementApplication1 = createPlacementApplication(application, listOf(LocalDate.now() to 2))
@@ -697,29 +718,37 @@ class WithdrawalTest : IntegrationTestBase() {
             val cruEmail = application.apArea!!.emailAddress!!
             val requestForPlacementAssessorEmail = requestForPlacementAssessor.email!!
 
-            emailAsserter.assertEmailsRequestedCount(17)
+            emailAsserter.assertEmailsRequestedCount(25)
             assertApplicationWithdrawnEmail(applicantEmail, application)
+            assertApplicationWithdrawnEmail(caseManagerEmail, application)
 
             assertPlacementRequestWithdrawnEmail(applicantEmail, placementApplication1)
+            assertPlacementRequestWithdrawnEmail(caseManagerEmail, placementApplication1)
 
             assertBookingWithdrawnEmail(applicantEmail, booking1NoArrival)
+            assertBookingWithdrawnEmail(caseManagerEmail, booking1NoArrival)
             assertBookingWithdrawnEmail(booking1NoArrival.premises.emailAddress!!, booking1NoArrival)
             assertBookingWithdrawnEmail(cruEmail, booking1NoArrival)
 
             assertPlacementRequestWithdrawnEmail(applicantEmail, placementApplication2NoBookingBeingAssessed)
+            assertPlacementRequestWithdrawnEmail(caseManagerEmail, placementApplication2NoBookingBeingAssessed)
             assertPlacementRequestWithdrawnEmail(requestForPlacementAssessorEmail, placementApplication2NoBookingBeingAssessed)
 
             assertPlacementRequestWithdrawnEmail(applicantEmail, placementRequest2)
+            assertPlacementRequestWithdrawnEmail(caseManagerEmail, placementRequest2)
 
             assertBookingWithdrawnEmail(applicantEmail, booking2NoArrival)
+            assertBookingWithdrawnEmail(caseManagerEmail, booking2NoArrival)
             assertBookingWithdrawnEmail(booking2NoArrival.premises.emailAddress!!, booking2NoArrival)
             assertBookingWithdrawnEmail(cruEmail, booking2NoArrival)
 
             assertBookingWithdrawnEmail(applicantEmail, adhocBooking1NoArrival)
+            assertBookingWithdrawnEmail(caseManagerEmail, adhocBooking1NoArrival)
             assertBookingWithdrawnEmail(adhocBooking1NoArrival.premises.emailAddress!!, adhocBooking1NoArrival)
             assertBookingWithdrawnEmail(cruEmail, adhocBooking1NoArrival)
 
             assertBookingWithdrawnEmail(applicantEmail, adhocBooking2NoArrival)
+            assertBookingWithdrawnEmail(caseManagerEmail, adhocBooking2NoArrival)
             assertBookingWithdrawnEmail(adhocBooking1NoArrival.premises.emailAddress!!, adhocBooking2NoArrival)
             assertBookingWithdrawnEmail(cruEmail, adhocBooking2NoArrival)
           }
@@ -728,6 +757,8 @@ class WithdrawalTest : IntegrationTestBase() {
     }
 
     /**
+     * For this test the applicant is also the case manager
+     *
      * ```
      * | Entities                         | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
      * | ---------------------------------| --------- | -------- | -------- | --------- | -------------- |
@@ -771,6 +802,8 @@ class WithdrawalTest : IntegrationTestBase() {
     }
 
     /**
+     * For this test the applicant is also the case manager
+     *
      * ```
      * | Entities                         | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
      * | -------------------------------- | --------- | -------- | -------- | --------- | -------------- |
@@ -876,6 +909,8 @@ class WithdrawalTest : IntegrationTestBase() {
     }
 
     /**
+     * For this test the applicant is also the case manager
+     *
      * ```
      * | Entities                           | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
      * | ---------------------------------- | --------- | -------- | -------- | --------- | -------------- |
@@ -980,6 +1015,8 @@ class WithdrawalTest : IntegrationTestBase() {
     }
 
     /**
+     * For this test the applicant is also the case manager
+     *
      * ```
      * | Entities                         | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
      * | -------------------------------- | --------- | -------- | -------- | --------- | -------------- |
@@ -1027,6 +1064,8 @@ class WithdrawalTest : IntegrationTestBase() {
     }
 
     /**
+     * For this test the applicant is also the case manager
+     *
      * ```
      * | Entities                         | Withdrawn | Email PP | Email AP | Email CRU | Email Assessor |
      * | -------------------------------- | --------- | -------- | -------- | --------- | -------------- |
@@ -1240,12 +1279,14 @@ class WithdrawalTest : IntegrationTestBase() {
     assertThat(updatedBooking2WithArrival.isCancelled).isFalse()
   }
 
+  @SuppressWarnings("LongParameterList")
   private fun createApplicationAndAssessment(
     applicant: UserEntity,
     assignee: UserEntity,
     offenderDetails: OffenderDetailSummary,
     assessmentSubmitted: Boolean = true,
     assessmentAllocatedTo: UserEntity? = null,
+    caseManager: Cas1ApplicationUserDetailsEntity? = null,
   ): Pair<ApprovedPremisesApplicationEntity, AssessmentEntity> {
     val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()
@@ -1267,6 +1308,8 @@ class WithdrawalTest : IntegrationTestBase() {
       withSubmittedAt(OffsetDateTime.now())
       withApArea(apArea)
       withReleaseType("licence")
+      withCaseManagerUserDetails(caseManager)
+      withCaseManagerIsNotApplicant(caseManager != null)
     }
 
     val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
