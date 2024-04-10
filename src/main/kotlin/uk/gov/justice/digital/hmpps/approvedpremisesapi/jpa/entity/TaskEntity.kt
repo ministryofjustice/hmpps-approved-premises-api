@@ -24,6 +24,8 @@ interface TaskRepository : JpaRepository<Task, UUID> {
           WHEN :requiredQualification = 'pipe' THEN apa.ap_type = 'PIPE'
           WHEN :requiredQualification = 'emergency' THEN (apa.notice_type = 'emergency' OR apa.notice_type = 'shortNotice')
           WHEN :requiredQualification = 'esap' THEN apa.ap_type = 'ESAP'
+          WHEN :requiredQualification = 'recovery_focused' THEN apa.ap_type = 'RFAP'
+          WHEN :requiredQualification = 'mental_health_specialist' THEN (apa.ap_type = 'MHAP_ST_JOSEPHS' OR apa.ap_type = 'MHAP_ELLIOTT_HOUSE')
           ELSE true
         END
       )

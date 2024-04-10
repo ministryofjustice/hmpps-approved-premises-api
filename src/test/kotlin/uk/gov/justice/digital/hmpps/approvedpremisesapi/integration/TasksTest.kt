@@ -821,6 +821,8 @@ class TasksTest : IntegrationTestBase() {
                 UserQualification.WOMENS,
                 UserQualification.ESAP,
                 UserQualification.PIPE,
+                UserQualification.RECOVERY_FOCUSED,
+                UserQualification.MENTAL_HEALTH_SPECIALIST,
               ).forEach { qualification ->
                 assessmentTasks[qualification] = listOf(
                   createAssessmentTask(qualification),
@@ -858,9 +860,26 @@ class TasksTest : IntegrationTestBase() {
 
       @ParameterizedTest
       @CsvSource(
-        "assessment,WOMENS", "assessment,PIPE", "assessment,ESAP", "assessment,EMERGENCY",
-        "placementRequest,WOMENS", "placementRequest,PIPE", "placementRequest,ESAP", "placementRequest,EMERGENCY",
-        "placementApplication,WOMENS", "placementApplication,PIPE", "placementApplication,ESAP", "placementApplication,EMERGENCY",
+        "assessment,WOMENS",
+        "assessment,PIPE",
+        "assessment,ESAP",
+        "assessment,EMERGENCY",
+        "assessment,RECOVERY_FOCUSED",
+        "assessment,MENTAL_HEALTH_SPECIALIST",
+
+        "placementRequest,WOMENS",
+        "placementRequest,PIPE",
+        "placementRequest,ESAP",
+        "placementRequest,EMERGENCY",
+        "placementRequest,RECOVERY_FOCUSED",
+        "placementRequest,MENTAL_HEALTH_SPECIALIST",
+
+        "placementApplication,WOMENS",
+        "placementApplication,PIPE",
+        "placementApplication,ESAP",
+        "placementApplication,EMERGENCY",
+        "placementApplication,RECOVERY_FOCUSED",
+        "placementApplication,MENTAL_HEALTH_SPECIALIST",
       )
       fun `Get all tasks filters by task type and required qualification`(taskType: TaskType, qualification: UserQualification) {
         val url = "/tasks?type=${taskType.value}&requiredQualification=${qualification.name.lowercase()}"
@@ -881,7 +900,7 @@ class TasksTest : IntegrationTestBase() {
       }
 
       @ParameterizedTest
-      @EnumSource(value = UserQualification::class, names = ["WOMENS", "EMERGENCY", "ESAP", "PIPE"])
+      @EnumSource(value = UserQualification::class, names = ["WOMENS", "EMERGENCY", "ESAP", "PIPE", "RECOVERY_FOCUSED", "MENTAL_HEALTH_SPECIALIST"])
       fun `Get all tasks required qualification`(qualification: UserQualification) {
         val url = "/tasks?requiredQualification=${qualification.name.lowercase()}"
         val expectedTasks = listOf(
