@@ -12,7 +12,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.EnumSource
 import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.NullSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationStatus
@@ -21,6 +23,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremis
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ReleaseTypeOption
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
@@ -342,6 +345,7 @@ class ApplicationsTransformerTest {
       override fun getTier(): String? = null
       override fun getStatus(): String = jpaStatus.toString()
       override fun getIsWithdrawn(): Boolean = true
+      override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
     }
     every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson
 
@@ -362,6 +366,41 @@ class ApplicationsTransformerTest {
     assertThat(result.type).isEqualTo("CAS1")
     assertThat(result.tier).isEqualTo(application.getTier())
     assertThat(result.isWithdrawn).isEqualTo(true)
+  }
+
+  @ParameterizedTest
+  @EnumSource(ReleaseTypeOption::class)
+  @NullSource
+  fun `transformJpaToApiSummary transforms an Approved Premises application's release type correctly`(releaseTypeOption: ReleaseTypeOption?) {
+    val mockPersonInfoResult = mockk<PersonInfoResult>()
+    val mockPerson = mockk<Person>()
+
+    val application = object : DomainApprovedPremisesApplicationSummary {
+      override fun getIsWomensApplication() = false
+      override fun getIsEmergencyApplication() = true
+      override fun getIsEsapApplication() = true
+      override fun getIsPipeApplication() = true
+      override fun getArrivalDate() = Timestamp(Instant.parse("2023-04-19T14:25:00+01:00").toEpochMilli())
+      override fun getRiskRatings() = objectMapper.writeValueAsString(PersonRisksFactory().produce())
+      override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
+      override fun getCrn() = randomStringMultiCaseWithNumbers(6)
+      override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
+      override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
+      override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
+      override fun getTier(): String? = null
+      override fun getStatus(): String = ApprovedPremisesApplicationStatus.SUBMITTED.toString()
+      override fun getIsWithdrawn(): Boolean = true
+      override fun getReleaseType(): String? = releaseTypeOption?.let { releaseTypeOption.toString() }
+    }
+
+    every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson
+
+    val result = applicationsTransformer.transformDomainToApiSummary(
+      application,
+      mockPersonInfoResult,
+    ) as ApprovedPremisesApplicationSummary
+
+    assertThat(result.releaseType).isEqualTo(releaseTypeOption)
   }
 
   @Test

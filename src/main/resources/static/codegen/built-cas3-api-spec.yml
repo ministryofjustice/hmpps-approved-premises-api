@@ -1936,6 +1936,8 @@ components:
               type: string
             isWithdrawn:
               type: boolean
+            releaseType:
+              $ref: '#/components/schemas/ReleaseTypeOption'
           required:
             - createdByUserId
             - status

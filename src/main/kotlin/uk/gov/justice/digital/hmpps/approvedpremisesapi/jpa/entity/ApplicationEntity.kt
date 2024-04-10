@@ -60,7 +60,8 @@ SELECT
     CAST(apa.risk_ratings AS TEXT) as riskRatings,
     apa.status as status,
     apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
-    apa.is_withdrawn as isWithdrawn
+    apa.is_withdrawn as isWithdrawn,
+    apa.release_type as releaseType
 FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
 WHERE apa.is_inapplicable IS NOT TRUE 
@@ -485,6 +486,7 @@ interface ApprovedPremisesApplicationSummary : ApplicationSummary {
   fun getTier(): String?
   fun getStatus(): String
   fun getIsWithdrawn(): Boolean
+  fun getReleaseType(): String?
 }
 
 interface TemporaryAccommodationApplicationSummary : ApplicationSummary {
