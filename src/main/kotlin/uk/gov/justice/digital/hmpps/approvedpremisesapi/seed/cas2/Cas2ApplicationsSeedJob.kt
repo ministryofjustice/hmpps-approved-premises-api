@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.insertHdcDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaService
 import java.io.IOException
 import java.io.InputStreamReader
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -50,6 +51,7 @@ class Cas2ApplicationsSeedJob(
     submittedAt = parseDateIfNotNull(emptyToNull(columns["submittedAt"])),
     statusUpdates = columns["statusUpdates"]!!.trim(),
     location = columns["location"]!!.trim(),
+    referringPrisonCode = columns["referringPrisonCode"]!!.trim(),
   )
 
   override fun processRow(row: Cas2ApplicationSeedCsvRow) {
@@ -86,8 +88,22 @@ class Cas2ApplicationsSeedJob(
       repeat(row.statusUpdates.toInt()) { idx -> createStatusUpdate(idx, application) }
     }
     if (row.submittedAt != null) {
+      applyFirstClassFields(application, row)
+
       createAssessment(application)
     }
+  }
+
+  private fun applyFirstClassFields(application: Cas2ApplicationEntity, row: Cas2ApplicationSeedCsvRow) {
+    repository.saveAndFlush(
+      application.apply {
+        referringPrisonCode = row.referringPrisonCode
+        preferredAreas = "Bristol | Newcastle"
+        hdcEligibilityDate = LocalDate.parse("2024-02-28")
+        conditionalReleaseDate = LocalDate.parse("2024-02-22")
+        telephoneNumber = "0800 123 456"
+      },
+    )
   }
 
   private fun createStatusUpdate(idx: Int, application: Cas2ApplicationEntity) {
@@ -172,4 +188,5 @@ data class Cas2ApplicationSeedCsvRow(
   val submittedAt: OffsetDateTime?,
   val statusUpdates: String,
   val location: String,
+  val referringPrisonCode: String?,
 )
