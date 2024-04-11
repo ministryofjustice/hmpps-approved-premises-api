@@ -467,6 +467,7 @@ class ApplicationService(
       isEligible = null,
       eligibilityReason = null,
       dutyToReferLocalAuthorityAreaName = null,
+      dutyToReferOutcome = null,
       prisonNameOnCreation = prisonName,
       personReleaseDate = null,
       pdu = null,
@@ -873,6 +874,7 @@ class ApplicationService(
       isConcerningArsonBehaviour = submitApplication.isConcerningArsonBehaviour
       isDutyToReferSubmitted = submitApplication.isDutyToReferSubmitted
       dutyToReferSubmissionDate = submitApplication.dutyToReferSubmissionDate
+      dutyToReferOutcome = submitApplication.dutyToReferOutcome
       isEligible = submitApplication.isApplicationEligible
       eligibilityReason = submitApplication.eligibilityReason
       dutyToReferLocalAuthorityAreaName = submitApplication.dutyToReferLocalAuthorityAreaName
