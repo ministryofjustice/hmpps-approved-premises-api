@@ -14,7 +14,6 @@ class Cas1PlacementRequestEmailService(
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
-  @Value("\${feature-flags.cas1-aps530-withdrawal-email-improvements}") private val aps530WithdrawalEmailImprovements: Boolean,
 ) {
   fun placementRequestWithdrawn(
     placementRequest: PlacementRequestEntity,
@@ -41,31 +40,19 @@ class Cas1PlacementRequestEmailService(
        * For information on why we send a request for placement email
        * instead of match request, see [PlacementRequestEntity.isForApplicationsArrivalDate]
        **/
-      val template = if (aps530WithdrawalEmailImprovements) {
-        notifyConfig.templates.placementRequestWithdrawnV2
-      } else {
-        notifyConfig.templates.placementRequestWithdrawn
-      }
-
       emailNotifier.sendEmails(
         recipientEmailAddresses = application.interestedPartiesEmailAddresses(),
-        templateId = template,
+        templateId = notifyConfig.templates.placementRequestWithdrawnV2,
         personalisation = personalisation,
       )
     }
 
     if (!placementRequest.hasActiveBooking()) {
-      val template = if (aps530WithdrawalEmailImprovements) {
-        notifyConfig.templates.matchRequestWithdrawnV2
-      } else {
-        notifyConfig.templates.matchRequestWithdrawn
-      }
-
       val area = application.apArea
       area?.emailAddress?.let { cruEmail ->
         emailNotifier.sendEmail(
           recipientEmailAddress = cruEmail,
-          templateId = template,
+          templateId = notifyConfig.templates.matchRequestWithdrawnV2,
           personalisation = personalisation,
         )
       }

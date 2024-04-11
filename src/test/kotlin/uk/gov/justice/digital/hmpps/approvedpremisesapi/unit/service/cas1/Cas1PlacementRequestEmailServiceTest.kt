@@ -38,21 +38,17 @@ class Cas1PlacementRequestEmailServiceTest {
   private val notifyConfig = NotifyConfig()
   private val mockEmailNotificationService = MockEmailNotificationService()
 
-  private val service = buildService(aps530WithdrawalEmailImprovements = false)
-  private val serviceUsingAps530Improvements = buildService(aps530WithdrawalEmailImprovements = true)
+  private val service = Cas1PlacementRequestEmailService(
+    mockEmailNotificationService,
+    notifyConfig = notifyConfig,
+    applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
+    applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
+  )
 
   private val withdrawingUser = UserEntityFactory()
     .withDefaults()
     .withName(WITHDRAWING_USER_NAME)
     .produce()
-
-  fun buildService(aps530WithdrawalEmailImprovements: Boolean) = Cas1PlacementRequestEmailService(
-    mockEmailNotificationService,
-    notifyConfig = notifyConfig,
-    applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
-    applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
-    aps530WithdrawalEmailImprovements = aps530WithdrawalEmailImprovements,
-  )
 
   @Test
   fun `placementRequestWithdrawn doesnt send email to CRU if no email addresses defined`() {
@@ -84,28 +80,6 @@ class Cas1PlacementRequestEmailServiceTest {
     val placementRequest = createPlacementRequest(application, booking = null)
 
     service.placementRequestWithdrawn(placementRequest, withdrawingUser)
-
-    mockEmailNotificationService.assertEmailRequestCount(1)
-
-    mockEmailNotificationService.assertEmailRequested(
-      CRU_EMAIL,
-      notifyConfig.templates.matchRequestWithdrawn,
-      mapOf(
-        "applicationUrl" to "http://frontend/applications/${application.id}",
-        "crn" to TestConstants.CRN,
-        "applicationArea" to AREA_NAME,
-        "startDate" to placementRequest.expectedArrival.toString(),
-        "endDate" to placementRequest.expectedDeparture().toString(),
-      ),
-    )
-  }
-
-  @Test
-  fun `placementRequestWithdrawn sends match request withdrawn email V2 to CRU if email addresses defined and no booking`() {
-    val application = createApplication(apAreaEmail = CRU_EMAIL)
-    val placementRequest = createPlacementRequest(application, booking = null)
-
-    serviceUsingAps530Improvements.placementRequestWithdrawn(placementRequest, withdrawingUser)
 
     mockEmailNotificationService.assertEmailRequestCount(1)
 
@@ -188,39 +162,6 @@ class Cas1PlacementRequestEmailServiceTest {
     mockEmailNotificationService.assertEmailRequestCount(1)
     mockEmailNotificationService.assertEmailRequested(
       APPLICANT_EMAIL,
-      notifyConfig.templates.placementRequestWithdrawn,
-      mapOf(
-        "applicationUrl" to "http://frontend/applications/${application.id}",
-        "crn" to TestConstants.CRN,
-        "applicationArea" to AREA_NAME,
-        "startDate" to placementRequest.expectedArrival.toString(),
-        "endDate" to placementRequest.expectedDeparture().toString(),
-        "additionalDatesSet" to "no",
-      ),
-    )
-  }
-
-  @Test
-  fun `placementRequestWithdrawn sends placement request withdrawn email V2 to applicant if placement request not linked to placement application `() {
-    val application = createApplication(
-      applicantEmail = APPLICANT_EMAIL,
-    )
-    val booking = BookingEntityFactory()
-      .withApplication(application)
-      .withDefaultPremises()
-      .produce()
-
-    val placementRequest = createPlacementRequest(
-      application,
-      booking,
-      hasPlacementApplication = false,
-    )
-
-    serviceUsingAps530Improvements.placementRequestWithdrawn(placementRequest, withdrawingUser)
-
-    mockEmailNotificationService.assertEmailRequestCount(1)
-    mockEmailNotificationService.assertEmailRequested(
-      APPLICANT_EMAIL,
       notifyConfig.templates.placementRequestWithdrawnV2,
       mapOf(
         "applicationUrl" to "http://frontend/applications/${application.id}",
@@ -252,7 +193,7 @@ class Cas1PlacementRequestEmailServiceTest {
       hasPlacementApplication = false,
     )
 
-    serviceUsingAps530Improvements.placementRequestWithdrawn(placementRequest, withdrawingUser)
+    service.placementRequestWithdrawn(placementRequest, withdrawingUser)
 
     mockEmailNotificationService.assertEmailRequestCount(2)
     mockEmailNotificationService.assertEmailRequested(

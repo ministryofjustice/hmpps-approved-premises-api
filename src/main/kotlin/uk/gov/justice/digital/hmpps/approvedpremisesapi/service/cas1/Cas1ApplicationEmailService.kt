@@ -14,7 +14,6 @@ class Cas1ApplicationEmailService(
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
-  @Value("\${feature-flags.cas1-aps530-withdrawal-email-improvements}") private val aps530WithdrawalEmailImprovements: Boolean,
 ) {
 
   fun applicationSubmitted(
@@ -41,15 +40,9 @@ class Cas1ApplicationEmailService(
       return
     }
 
-    val templateId = if (aps530WithdrawalEmailImprovements) {
-      notifyConfig.templates.applicationWithdrawnV2
-    } else {
-      notifyConfig.templates.applicationWithdrawn
-    }
-
     emailNotifier.sendEmails(
       recipientEmailAddresses = application.interestedPartiesEmailAddresses(),
-      templateId = templateId,
+      templateId = notifyConfig.templates.applicationWithdrawnV2,
       personalisation = mapOf(
         "crn" to application.crn,
         "applicationTimelineUrl" to applicationTimelineUrlTemplate.resolve("applicationId", application.id.toString()),

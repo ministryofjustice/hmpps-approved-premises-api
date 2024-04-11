@@ -26,15 +26,11 @@ class Cas1ApplicationEmailServiceTest {
   private val notifyConfig = NotifyConfig()
   private val mockEmailNotificationService = MockEmailNotificationService()
 
-  private val service = createService(aps530WithdrawalEmailImprovements = false)
-  private val serviceUsingAps530Improvements = createService(aps530WithdrawalEmailImprovements = true)
-
-  private fun createService(aps530WithdrawalEmailImprovements: Boolean) = Cas1ApplicationEmailService(
+  private val service = Cas1ApplicationEmailService(
     emailNotifier = mockEmailNotificationService,
     notifyConfig = notifyConfig,
     applicationUrlTemplate = UrlTemplate("http://frontend/applications/#id"),
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/applications/#applicationId?tab=timeline"),
-    aps530WithdrawalEmailImprovements = aps530WithdrawalEmailImprovements,
   )
 
   @Nested
@@ -106,35 +102,13 @@ class Cas1ApplicationEmailServiceTest {
     }
 
     @Test
-    fun `applicationWithdrawn sends an email to applicant if email addresses defined`() {
-      val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
-      val withdrawingUser = createUser(emailAddress = null)
-
-      val application = createApplicationForApplicant(applicant)
-
-      service.applicationWithdrawn(application, withdrawingUser)
-
-      mockEmailNotificationService.assertEmailRequestCount(1)
-
-      val personalisation = mapOf(
-        "crn" to TestConstants.CRN,
-      )
-
-      mockEmailNotificationService.assertEmailRequested(
-        TestConstants.APPLICANT_EMAIL,
-        notifyConfig.templates.applicationWithdrawn,
-        personalisation,
-      )
-    }
-
-    @Test
-    fun `applicationWithdrawn sends a V2 email to applicant if email addresses defined`() {
+    fun `applicationWithdrawn sends email to applicant if email addresses defined`() {
       val applicant = createUser(emailAddress = TestConstants.APPLICANT_EMAIL)
       val withdrawingUser = createUser(name = "the withdrawing user")
 
       val application = createApplicationForApplicant(applicant)
 
-      serviceUsingAps530Improvements.applicationWithdrawn(application, withdrawingUser)
+      service.applicationWithdrawn(application, withdrawingUser)
 
       mockEmailNotificationService.assertEmailRequestCount(1)
 
@@ -158,7 +132,7 @@ class Cas1ApplicationEmailServiceTest {
 
       val application = createApplicationForApplicant(applicant, caseManagerNotApplicant = true)
 
-      serviceUsingAps530Improvements.applicationWithdrawn(application, withdrawingUser)
+      service.applicationWithdrawn(application, withdrawingUser)
 
       mockEmailNotificationService.assertEmailRequestCount(2)
 
