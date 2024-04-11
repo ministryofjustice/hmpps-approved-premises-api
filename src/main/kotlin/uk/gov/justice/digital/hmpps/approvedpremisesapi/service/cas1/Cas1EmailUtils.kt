@@ -12,6 +12,7 @@ fun ApprovedPremisesApplicationEntity.interestedPartiesEmailAddresses(): Set<Str
 
 fun PlacementApplicationEntity.interestedPartiesEmailAddresses(): Set<String> {
   return setOfNotNull(
+    application.createdByUser.email,
     createdByUser.email,
     if (application.caseManagerIsNotApplicant == true) { application.caseManagerUserDetails?.email } else { null },
   )

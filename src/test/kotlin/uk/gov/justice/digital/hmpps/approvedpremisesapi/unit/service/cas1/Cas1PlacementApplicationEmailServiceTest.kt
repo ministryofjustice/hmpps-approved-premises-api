@@ -9,7 +9,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas1ApplicationU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementDateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.APPLICANT_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.AREA_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.ASSESSOR_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.CASE_MANAGER_EMAIL
@@ -21,7 +23,8 @@ import java.time.OffsetDateTime
 
 class Cas1PlacementApplicationEmailServiceTest {
   private object TestConstants {
-    const val CREATOR_EMAIL = "applicantEmail@test.com"
+    const val APPLICANT_EMAIL = "applicantEmail@test.com"
+    const val CREATOR_EMAIL = "placmentAppCreator@test.com"
     const val AREA_NAME = "theAreaName"
     const val CRN = "CRN123"
     const val ASSESSOR_EMAIL = "matcherEmail@test.com"
@@ -649,6 +652,51 @@ class Cas1PlacementApplicationEmailServiceTest {
     }
 
     @Test
+    fun `placementApplicationWithdrawn sends a V2 email to application creator if email addresses defined`() {
+      val creator = createUser(emailAddress = null)
+      val applicant = createUser(emailAddress = APPLICANT_EMAIL)
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(creator)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      serviceUsingAps530Improvements.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        wasBeingAssessedBy = null,
+        withdrawingUser = withdrawnByUser,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to "2020-03-12",
+        "endDate" to "2020-03-22",
+        "additionalDatesSet" to "no",
+        "withdrawnBy" to "withdrawingUser",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.placementRequestWithdrawnV2,
+        personalisation,
+      )
+    }
+
+    @Test
     fun `placementApplicationWithdrawn sends a V2 email to placement app creator and case manager if case manager not applicant`() {
       val creator = createUser(emailAddress = CREATOR_EMAIL)
       val application = createApplicationForApplicant(caseManagerNotApplicant = true)
@@ -801,15 +849,14 @@ class Cas1PlacementApplicationEmailServiceTest {
     .produce()
 
   private fun createApplicationForApplicant(
+    applicant: UserEntity = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .withEmail(null)
+      .produce(),
     caseManagerNotApplicant: Boolean = false,
   ) = ApprovedPremisesApplicationEntityFactory()
     .withCrn(TestConstants.CRN)
-    .withCreatedByUser(
-      UserEntityFactory()
-        .withUnitTestControlProbationRegion()
-        .withEmail(null)
-        .produce(),
-    )
+    .withCreatedByUser(applicant)
     .withSubmittedAt(OffsetDateTime.now())
     .withApArea(ApAreaEntityFactory().withName(AREA_NAME).produce())
     .withCaseManagerIsNotApplicant(caseManagerNotApplicant)
