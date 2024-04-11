@@ -1,0 +1,292 @@
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.service
+
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
+import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSortField
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
+import java.sql.Timestamp
+import java.time.Instant
+import java.time.LocalDate
+import java.time.OffsetDateTime
+import kotlin.random.Random
+
+class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBase() {
+  @Autowired
+  private lateinit var applicationService: ApplicationService
+
+  private lateinit var crn1: String
+  private lateinit var crn2: String
+  private lateinit var apArea: ApAreaEntity
+
+  var name = "Search by name"
+
+  private lateinit var allApplications: MutableList<ApprovedPremisesApplicationEntity>
+
+  @BeforeAll
+  fun setup() {
+    `Given a User` { userEntity, _ ->
+      `Given an Offender` { offenderDetails, _ ->
+        `Given an Offender` { offenderDetails2, _ ->
+          crn1 = offenderDetails.otherIds.crn
+          crn2 = offenderDetails2.otherIds.crn
+
+          apArea = apAreaEntityFactory.produceAndPersist()
+
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          allApplications = mutableListOf(
+            approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCrn(crn1)
+              withCreatedByUser(userEntity)
+              withCreatedAt(OffsetDateTime.now().minusDays(6))
+              withArrivalDate(OffsetDateTime.now().plusDays(12))
+              withRiskRatings(
+                PersonRisksFactory().withTier(
+                  RiskWithStatus(
+                    RiskTier("Z", LocalDate.now()),
+                  ),
+                ).produce(),
+              )
+            },
+            approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCrn(crn2)
+              withCreatedByUser(userEntity)
+              withCreatedAt(OffsetDateTime.now().minusDays(3))
+              withArrivalDate(OffsetDateTime.now().plusDays(26))
+              withRiskRatings(
+                PersonRisksFactory().withTier(
+                  RiskWithStatus(
+                    RiskTier("B", LocalDate.now()),
+                  ),
+                ).produce(),
+              )
+            },
+            approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withName(name)
+              withCreatedByUser(userEntity)
+              withCreatedAt(OffsetDateTime.now().minusDays(12))
+              withArrivalDate(OffsetDateTime.now().plusDays(9))
+              withRiskRatings(
+                PersonRisksFactory().withTier(
+                  RiskWithStatus(
+                    RiskTier("G", LocalDate.now()),
+                  ),
+                ).produce(),
+              )
+            },
+            approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withApArea(apArea)
+              withCreatedByUser(userEntity)
+              withCreatedAt(OffsetDateTime.now().minusDays(9))
+              withArrivalDate(OffsetDateTime.now().plusDays(4))
+              withRiskRatings(
+                PersonRisksFactory().withTier(
+                  RiskWithStatus(
+                    RiskTier("F", LocalDate.now()),
+                  ),
+                ).produce(),
+              )
+            },
+          )
+
+          ApprovedPremisesApplicationStatus.entries.forEach {
+            allApplications.add(
+              approvedPremisesApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(applicationSchema)
+                withCreatedByUser(userEntity)
+                withStatus(it)
+                withCreatedAt(OffsetDateTime.now().minusDays(Random.nextLong(1, 25)))
+                withArrivalDate(OffsetDateTime.now().plusDays(Random.nextLong(1, 25)))
+                withRiskRatings(
+                  PersonRisksFactory().withTier(
+                    RiskWithStatus(
+                      RiskTier(('A'..'Z').random().toString(), LocalDate.now()),
+                    ),
+                  ).produce(),
+                )
+              },
+            )
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `findAllApprovedPremisesSummaries returns all applications`() {
+    allApplications.sortBy { it.createdAt }
+    val chunkedApplications = allApplications.chunked(10)
+
+    chunkedApplications.forEachIndexed { page, chunk ->
+      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(page + 1, null, null, null, null, null)
+
+      assertThat(metadata).isNotNull()
+      assertThat(metadata!!.currentPage).isEqualTo(page + 1)
+      assertThat(metadata.totalPages).isEqualTo(chunkedApplications.size)
+      assertThat(metadata.totalResults).isEqualTo(allApplications.size.toLong())
+      assertThat(metadata.pageSize).isEqualTo(10)
+
+      result.forEachIndexed { index, summary ->
+        assertThat(summary.matches(chunk[index]))
+      }
+    }
+  }
+
+  @Test
+  fun `findAllApprovedPremisesSummaries filters by CRN`() {
+    val expectedApplications = allApplications.filter { it.crn == crn1 }
+    val result = applicationService.getAllApprovedPremisesApplications(1, crn1, null, null, null, null)
+
+    result.first.forEachIndexed { index, summary ->
+      assertThat(summary.matches(expectedApplications[index]))
+    }
+  }
+
+  @Test
+  fun `findAllApprovedPremisesSummaries filters by name`() {
+    val expectedApplications = allApplications.filter { it.name == name }
+    val result = applicationService.getAllApprovedPremisesApplications(1, name, null, null, null, null)
+
+    result.first.forEachIndexed { index, summary ->
+      assertThat(summary.matches(expectedApplications[index]))
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(ApprovedPremisesApplicationStatus::class)
+  fun `findAllApprovedPremisesSummaries filters by status`(status: ApprovedPremisesApplicationStatus) {
+    val expectedApplications = allApplications.filter { it.status == status }
+
+    val result = applicationService.getAllApprovedPremisesApplications(1, null, null, status, null, null)
+
+    result.first.forEachIndexed { index, summary ->
+      assertThat(summary.matches(expectedApplications[index]))
+    }
+  }
+
+  @Test
+  fun `findAllApprovedPremisesSummaries filters by AP Area`() {
+    val expectedApplications = allApplications.filter { it.apArea?.id == apArea.id }
+
+    val result = applicationService.getAllApprovedPremisesApplications(1, null, null, null, null, apArea.id)
+
+    result.first.forEachIndexed { index, summary ->
+      assertThat(summary.matches(expectedApplications[index]))
+    }
+  }
+
+  @Test
+  fun `findAllApprovedPremisesSummaries handles pagination`() {
+    allApplications.forEachIndexed { index, application ->
+      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(index + 1, null, null, null, null, null, 1)
+
+      assertThat(metadata).isNotNull()
+      assertThat(metadata!!.currentPage).isEqualTo(index + 1)
+      assertThat(metadata.totalPages).isEqualTo(allApplications.size)
+      assertThat(metadata.totalResults).isEqualTo(allApplications.size.toLong())
+      assertThat(metadata.pageSize).isEqualTo(1)
+
+      assertThat(result.size).isEqualTo(1)
+      assertThat(result[0].matches(application))
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(ApplicationSortField::class)
+  fun `findAllApprovedPremisesSummaries sorts by a given field in ascending order`(sortField: ApplicationSortField) {
+    allApplications.sort(SortDirection.asc, sortField)
+    val chunkedApplications = allApplications.chunked(10)
+
+    chunkedApplications.forEachIndexed { page, chunk ->
+      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(page + 1, null, SortDirection.asc, null, sortField, null)
+
+      assertThat(metadata).isNotNull()
+      assertThat(metadata!!.currentPage).isEqualTo(page + 1)
+      assertThat(metadata.totalPages).isEqualTo(chunkedApplications.size)
+      assertThat(metadata.totalResults).isEqualTo(allApplications.size.toLong())
+      assertThat(metadata.pageSize).isEqualTo(10)
+
+      result.forEachIndexed { index, summary ->
+        assertThat(summary.matches(chunk[index]))
+      }
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(ApplicationSortField::class)
+  fun `findAllApprovedPremisesSummaries sorts by a given field in descending order`(sortField: ApplicationSortField) {
+    allApplications.sort(SortDirection.desc, sortField)
+    val chunkedApplications = allApplications.chunked(10)
+
+    chunkedApplications.forEachIndexed { page, chunk ->
+      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(page + 1, null, SortDirection.desc, null, sortField, null)
+
+      assertThat(metadata).isNotNull()
+      assertThat(metadata!!.currentPage).isEqualTo(page + 1)
+      assertThat(metadata.totalPages).isEqualTo(chunkedApplications.size)
+      assertThat(metadata.totalResults).isEqualTo(allApplications.size.toLong())
+      assertThat(metadata.pageSize).isEqualTo(10)
+
+      result.forEachIndexed { index, summary ->
+        assertThat(summary.matches(chunk[index]))
+      }
+    }
+  }
+
+  private fun List<ApprovedPremisesApplicationEntity>.sort(sortDirection: SortDirection, sortField: ApplicationSortField): List<ApprovedPremisesApplicationEntity> {
+    val comparator = Comparator<ApprovedPremisesApplicationEntity> { a, b ->
+      val ascendingCompare = when (sortField) {
+        ApplicationSortField.createdAt -> compareValues(a.createdAt, b.createdAt)
+        ApplicationSortField.arrivalDate -> compareValues(a.arrivalDate, b.arrivalDate)
+        ApplicationSortField.tier -> compareValues(a.riskRatings?.tier?.status, b.riskRatings?.tier?.status)
+      }
+
+      when (sortDirection) {
+        SortDirection.asc, null -> ascendingCompare
+        SortDirection.desc -> -ascendingCompare
+      }
+    }
+
+    return this.sortedWith(comparator)
+  }
+
+  private fun ApprovedPremisesApplicationSummary.matches(applicationEntity: ApprovedPremisesApplicationEntity): Boolean {
+    return this.getIsWomensApplication() == applicationEntity.isWomensApplication &&
+      (this.getIsEmergencyApplication() == (applicationEntity.noticeType == Cas1ApplicationTimelinessCategory.emergency)) &&
+      (this.getIsEsapApplication() == applicationEntity.isEsapApplication) &&
+      (this.getIsPipeApplication() == applicationEntity.isPipeApplication) &&
+      (this.getArrivalDate() == Timestamp(Instant.parse(applicationEntity.arrivalDate.toString()).toEpochMilli())) &&
+      (this.getRiskRatings() == objectMapper.writeValueAsString(applicationEntity.riskRatings)) &&
+      (this.getId() == applicationEntity.id) &&
+      (this.getCrn() == applicationEntity.crn) &&
+      (this.getCreatedByUserId() == applicationEntity.createdByUser.id) &&
+      (this.getCreatedAt() == Timestamp(Instant.parse(applicationEntity.createdAt.toString()).toEpochMilli())) &&
+      (this.getSubmittedAt() == Timestamp(Instant.parse(applicationEntity.submittedAt.toString()).toEpochMilli())) &&
+      this.getTier() == applicationEntity.riskRatings?.tier?.value.toString() &&
+      this.getStatus() == applicationEntity.status.toString() &&
+      this.getIsWithdrawn() == applicationEntity.isWithdrawn &&
+      this.getReleaseType() == applicationEntity.releaseType.toString()
+  }
+}

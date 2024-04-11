@@ -38,9 +38,19 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
       val dataSource = getDatasource(applicationContext)
       getInitialDatabaseState(dataSource)
     }
+
+    if (isPerClass(context)) {
+      setupDatabase(context)
+    }
   }
 
   override fun beforeEach(context: ExtensionContext?) {
+    if (!isPerClass(context)) {
+      setupDatabase(context)
+    }
+  }
+
+  private fun setupDatabase(context: ExtensionContext?) {
     val applicationContext = SpringExtension.getApplicationContext(context!!)
     val dataSource = getDatasource(applicationContext)
     cleanDatabase(dataSource)

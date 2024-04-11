@@ -10,9 +10,13 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.TestInfo
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -581,7 +585,20 @@ abstract class IntegrationTestBase {
   private var clientCredentialsCallMocked = false
 
   @BeforeEach
-  fun beforeEach() {
+  fun beforeEach(info: TestInfo) {
+    if (!info.tags.contains("isPerClass")) {
+      this.setupTests()
+    }
+  }
+
+  @AfterEach
+  fun afterEach(info: TestInfo) {
+    if (!info.tags.contains("isPerClass")) {
+      this.teardownTests()
+    }
+  }
+
+  fun setupTests() {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
 
     webTestClient = webTestClient.mutate()
@@ -596,14 +613,13 @@ abstract class IntegrationTestBase {
     }
 
     redisTemplate.keys("$preemptiveCacheKeyPrefix-**").forEach(redisTemplate::delete)
+    this.setupFactories()
   }
 
-  @AfterEach
-  fun stopMockServer() {
+  fun teardownTests() {
     wiremockServer.stop()
   }
 
-  @BeforeEach
   fun setupFactories() {
     probationRegionEntityFactory = PersistedFactory({ ProbationRegionEntityFactory() }, probationRegionRepository)
     apAreaEntityFactory = PersistedFactory({ ApAreaEntityFactory() }, apAreaRepository)
@@ -931,4 +947,18 @@ abstract class IntegrationTestBase {
 
   fun loadPreemptiveCacheForOffenderDetails(crn: String) = communityApiClient.getOffenderDetailSummaryWithCall(crn)
   fun loadPreemptiveCacheForInmateDetails(nomsNumber: String) = prisonsApiClient.getInmateDetailsWithCall(nomsNumber)
+}
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Tag("isPerClass")
+abstract class InitialiseDatabasePerClassTestBase : IntegrationTestBase() {
+  @BeforeAll
+  fun beforeAll() {
+    this.setupTests()
+  }
+
+  @AfterAll
+  fun afterAll() {
+    this.teardownTests()
+  }
 }
