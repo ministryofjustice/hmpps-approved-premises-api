@@ -1328,7 +1328,11 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
             snsDomainEventListener.blockForMessage("approved-premises.placement-application.withdrawn")
 
-            emailAsserter.assertEmailsRequestedCount(2)
+            emailAsserter.assertEmailsRequestedCount(3)
+            emailAsserter.assertEmailRequested(
+              placementApplicationEntity.application.createdByUser.email!!,
+              notifyConfig.templates.placementRequestWithdrawnV2,
+            )
             emailAsserter.assertEmailRequested(
               placementApplicationEntity.createdByUser.email!!,
               notifyConfig.templates.placementRequestWithdrawnV2,
@@ -1391,7 +1395,11 @@ class PlacementApplicationsTest : IntegrationTestBase() {
 
               snsDomainEventListener.blockForMessage("approved-premises.placement-application.withdrawn")
 
-              emailAsserter.assertEmailsRequestedCount(2)
+              emailAsserter.assertEmailsRequestedCount(3)
+              emailAsserter.assertEmailRequested(
+                placementApplicationEntity.application.createdByUser.email!!,
+                notifyConfig.templates.placementRequestWithdrawnV2,
+              )
               emailAsserter.assertEmailRequested(
                 placementApplicationEntity.createdByUser.email!!,
                 notifyConfig.templates.placementRequestWithdrawnV2,
