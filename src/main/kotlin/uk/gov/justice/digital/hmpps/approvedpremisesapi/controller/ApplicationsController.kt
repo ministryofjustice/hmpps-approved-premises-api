@@ -102,6 +102,7 @@ class ApplicationsController(
     sortDirection: SortDirection?,
     status: ApprovedPremisesApplicationStatus?,
     sortBy: ApplicationSortField?,
+    apAreaId: UUID?,
   ): ResponseEntity<List<ApplicationSummary>> {
     if (xServiceName != ServiceName.approvedPremises) {
       throw ForbiddenProblem()
@@ -116,6 +117,7 @@ class ApplicationsController(
         sortDirection,
         statusTransformed,
         sortBy,
+        apAreaId,
       )
 
     return ResponseEntity.ok().headers(

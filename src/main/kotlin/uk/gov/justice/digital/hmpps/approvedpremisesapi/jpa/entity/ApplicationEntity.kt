@@ -74,6 +74,9 @@ AND (
 AND (
     :status IS NULL OR (apa.status = :#{#status?.toString()})
 )
+AND (
+    (CAST(:apAreaId AS uuid) IS NULL) OR (apa.ap_area_id = :apAreaId)
+)
 """,
     countQuery = """
     SELECT COUNT(*)
@@ -89,6 +92,9 @@ AND (
       AND (
           :status IS NULL OR (apa.status = :#{#status?.toString()})
       )
+      AND (
+          (CAST(:apAreaId AS uuid) IS NULL) OR (apa.ap_area_id = :apAreaId)
+      )
     """,
     nativeQuery = true,
   )
@@ -96,6 +102,7 @@ AND (
     pageable: Pageable?,
     crnOrName: String?,
     status: ApprovedPremisesApplicationStatus?,
+    apAreaId: UUID?,
   ): Page<ApprovedPremisesApplicationSummary>
 
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")

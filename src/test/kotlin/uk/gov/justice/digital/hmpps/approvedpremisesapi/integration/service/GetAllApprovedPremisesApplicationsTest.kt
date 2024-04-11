@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PersonRisksFacto
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.InitialiseDatabasePerClassTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
@@ -31,6 +32,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
 
   private lateinit var crn1: String
   private lateinit var crn2: String
+  private lateinit var apArea: ApAreaEntity
 
   var name = "Search by name"
 
@@ -43,6 +45,8 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
         `Given an Offender` { offenderDetails2, _ ->
           crn1 = offenderDetails.otherIds.crn
           crn2 = offenderDetails2.otherIds.crn
+
+          apArea = apAreaEntityFactory.produceAndPersist()
 
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
@@ -87,6 +91,20 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
                 PersonRisksFactory().withTier(
                   RiskWithStatus(
                     RiskTier("G", LocalDate.now()),
+                  ),
+                ).produce(),
+              )
+            },
+            approvedPremisesApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withApArea(apArea)
+              withCreatedByUser(userEntity)
+              withCreatedAt(OffsetDateTime.now().minusDays(9))
+              withArrivalDate(OffsetDateTime.now().plusDays(4))
+              withRiskRatings(
+                PersonRisksFactory().withTier(
+                  RiskWithStatus(
+                    RiskTier("F", LocalDate.now()),
                   ),
                 ).produce(),
               )
@@ -169,9 +187,20 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   }
 
   @Test
+  fun `findAllApprovedPremisesSummaries filters by AP Area`() {
+    val expectedApplications = allApplications.filter { it.apArea?.id == apArea.id }
+
+    val result = applicationService.getAllApprovedPremisesApplications(1, null, null, null, null, apArea.id)
+
+    result.first.forEachIndexed { index, summary ->
+      assertThat(summary.matches(expectedApplications[index]))
+    }
+  }
+
+  @Test
   fun `findAllApprovedPremisesSummaries handles pagination`() {
     allApplications.forEachIndexed { index, application ->
-      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(index + 1, null, null, null, null, 1)
+      val (result, metadata) = applicationService.getAllApprovedPremisesApplications(index + 1, null, null, null, null, null, 1)
 
       assertThat(metadata).isNotNull()
       assertThat(metadata!!.currentPage).isEqualTo(index + 1)
