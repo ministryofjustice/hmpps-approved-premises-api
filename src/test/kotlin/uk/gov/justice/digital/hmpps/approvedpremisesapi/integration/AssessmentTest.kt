@@ -2104,6 +2104,11 @@ class AssessmentTest : IntegrationTestBase() {
                 DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
               )
 
+              domainEventAsserter.assertDomainEventOfTypeStored(
+                application.id,
+                DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
+              )
+
               val persistedPlacementRequest = placementRequestTestRepository.findByApplication(application)!!
 
               assertThat(persistedPlacementRequest.allocatedToUser!!.id).isIn(listOf(matcher1.id, matcher2.id))
@@ -2210,6 +2215,11 @@ class AssessmentTest : IntegrationTestBase() {
               domainEventAsserter.assertDomainEventOfTypeNotStored(
                 application.id,
                 DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
+              )
+
+              domainEventAsserter.assertDomainEventOfTypeStored(
+                application.id,
+                DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
               )
 
               assertThat(placementRequestTestRepository.findByApplication(application)).isNull()
