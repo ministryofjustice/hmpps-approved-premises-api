@@ -37,7 +37,7 @@ class Cas1EmailUtilsTest {
     }
 
     @Test
-    fun `interestedPartiesEmailAddresses applicant is not case manager`() {
+    fun `interestedPartiesEmailAddresses applicant is not case manager, case manager also receives email`() {
       val result = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withDefaults().withEmail("applicantEmail@here.com").produce())
         .withCaseManagerIsNotApplicant(true)
@@ -57,7 +57,7 @@ class Cas1EmailUtilsTest {
   inner class PlacementApplicationInterestedPartiesEmailAddresses {
 
     @Test
-    fun `interestedPartiesEmailAddresses applicant is case manager, has no email`() {
+    fun `interestedPartiesEmailAddresses placement app creator receives email`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withDefaults().withEmail(null).produce())
         .withCaseManagerIsNotApplicant(false)
@@ -73,7 +73,7 @@ class Cas1EmailUtilsTest {
     }
 
     @Test
-    fun `interestedPartiesEmailAddresses applicant is case manager, has email`() {
+    fun `interestedPartiesEmailAddresses applicant is case manager, receives email`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withDefaults().withEmail("applicantEmail@here.com").produce())
         .withCaseManagerIsNotApplicant(false)
@@ -85,11 +85,14 @@ class Cas1EmailUtilsTest {
         .produce()
         .interestedPartiesEmailAddresses()
 
-      assertThat(result).containsOnly("placementRequestCreator@here.com")
+      assertThat(result).contains(
+        "applicantEmail@here.com",
+        "placementRequestCreator@here.com",
+      )
     }
 
     @Test
-    fun `interestedPartiesEmailAddresses applicant is not case manager`() {
+    fun `interestedPartiesEmailAddresses applicant is not case manager, case manager also receives email`() {
       val application = ApprovedPremisesApplicationEntityFactory()
         .withCreatedByUser(UserEntityFactory().withDefaults().withEmail("applicantEmail@here.com").produce())
         .withCaseManagerIsNotApplicant(true)
@@ -106,7 +109,11 @@ class Cas1EmailUtilsTest {
         .produce()
         .interestedPartiesEmailAddresses()
 
-      assertThat(result).containsOnly("placementRequestCreator@here.com", "caseManager@here.com")
+      assertThat(result).containsOnly(
+        "applicantEmail@here.com",
+        "placementRequestCreator@here.com",
+        "caseManager@here.com",
+      )
     }
   }
 }
