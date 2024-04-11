@@ -160,6 +160,20 @@ class AssessmentTransformerTest {
     }
 
     @Test
+    fun `transformJpaToApi for CAS1 handles minimum null values`() {
+      val assessment = approvedPremisesAssessmentFactory
+        .withAllocatedAt(null)
+        .withAllocatedToUser(null)
+        .produce()
+
+      val result = assessmentTransformer.transformJpaToApi(assessment, mockk()) as ApprovedPremisesAssessment
+
+      assertThat(result.id).isEqualTo(UUID.fromString("7d0d3b38-5bc3-45c7-95eb-4d714cbd0db1"))
+      assertThat(result.allocatedAt).isNull()
+      assertThat(result.allocatedToStaffMember).isNull()
+    }
+
+    @Test
     fun `transformJpaToApi for Approved Premises sets a pending status when there is a clarification note with no response`() {
       val assessment = approvedPremisesAssessmentFactory.withDecision(null).produce()
 

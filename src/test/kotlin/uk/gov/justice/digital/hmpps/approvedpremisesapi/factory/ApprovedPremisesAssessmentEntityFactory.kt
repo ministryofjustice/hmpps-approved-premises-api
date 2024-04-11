@@ -28,7 +28,7 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     )
   }
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
-  private var allocatedAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
+  private var allocatedAt: Yielded<OffsetDateTime?> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var reallocatedAt: Yielded<OffsetDateTime?> = { null }
   private var submittedAt: Yielded<OffsetDateTime?> = { null }
   private var decision: Yielded<AssessmentDecision?> = { AssessmentDecision.ACCEPTED }
@@ -68,7 +68,7 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     this.createdAt = { createdAt }
   }
 
-  fun withAllocatedAt(allocatedAt: OffsetDateTime) = apply {
+  fun withAllocatedAt(allocatedAt: OffsetDateTime?) = apply {
     this.allocatedAt = { allocatedAt }
   }
 
