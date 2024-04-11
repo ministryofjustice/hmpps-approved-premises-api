@@ -328,7 +328,27 @@ data class UserQualificationAssignmentEntity(
   val user: UserEntity,
   @Enumerated(value = EnumType.STRING)
   val qualification: UserQualification,
-)
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (javaClass != other?.javaClass) return false
+
+    other as UserQualificationAssignmentEntity
+
+    if (id != other.id) return false
+    if (user.id != other.user.id) return false
+    if (qualification != other.qualification) return false
+
+    return true
+  }
+
+  override fun hashCode(): Int {
+    var result = id.hashCode()
+    result = 31 * result + user.id.hashCode()
+    result = 31 * result + qualification.hashCode()
+    return result
+  }
+}
 
 enum class UserQualification {
   WOMENS,
