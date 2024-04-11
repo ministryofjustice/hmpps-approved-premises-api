@@ -79,8 +79,8 @@ fun <T> wrapWithMetadata(page: Page<T>, pageCriteria: PageCriteria<*>): Pair<Lis
 fun <T> getMetadata(response: Page<T>, pageCriteria: PageCriteria<*>): PaginationMetadata? =
   getMetadataWithSize(response, pageCriteria.page, pageCriteria.perPage)
 
-fun <T> getMetadata(response: Page<T>, page: Int?): PaginationMetadata? {
-  return getMetadataWithSize(response, page, 10)
+fun <T> getMetadata(response: Page<T>, page: Int?, size: Int? = 10): PaginationMetadata? {
+  return getMetadataWithSize(response, page, size)
 }
 
 fun <T> getMetadataWithSize(response: Page<T>, page: Int?, pageSize: Int?): PaginationMetadata? {
