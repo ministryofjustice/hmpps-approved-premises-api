@@ -14,7 +14,6 @@ class Cas1PlacementApplicationEmailService(
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
-  @Value("\${feature-flags.cas1-aps530-withdrawal-email-improvements}") private val aps530WithdrawalEmailImprovements: Boolean,
 ) {
 
   fun placementApplicationSubmitted(placementApplication: PlacementApplicationEntity) {
@@ -33,11 +32,7 @@ class Cas1PlacementApplicationEmailService(
     createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = if (aps530WithdrawalEmailImprovements) {
-          notifyConfig.templates.placementRequestAllocatedV2
-        } else {
-          notifyConfig.templates.placementRequestAllocated
-        },
+        templateId = notifyConfig.templates.placementRequestAllocatedV2,
         personalisation = getCommonPersonalisation(placementApplication),
       )
     }
@@ -48,11 +43,7 @@ class Cas1PlacementApplicationEmailService(
     createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = if (aps530WithdrawalEmailImprovements) {
-          notifyConfig.templates.placementRequestDecisionAcceptedV2
-        } else {
-          notifyConfig.templates.placementRequestDecisionAccepted
-        },
+        templateId = notifyConfig.templates.placementRequestDecisionAcceptedV2,
         personalisation = getCommonPersonalisation(placementApplication),
       )
     }
@@ -63,11 +54,7 @@ class Cas1PlacementApplicationEmailService(
     createdByUser.email?.let { email ->
       emailNotifier.sendEmail(
         recipientEmailAddress = email,
-        templateId = if (aps530WithdrawalEmailImprovements) {
-          notifyConfig.templates.placementRequestDecisionRejectedV2
-        } else {
-          notifyConfig.templates.placementRequestDecisionRejected
-        },
+        templateId = notifyConfig.templates.placementRequestDecisionRejectedV2,
         personalisation = getCommonPersonalisation(placementApplication),
       )
     }
@@ -84,11 +71,7 @@ class Cas1PlacementApplicationEmailService(
       personalisation["withdrawnBy"] = withdrawingUser.name
     }
 
-    val template = if (aps530WithdrawalEmailImprovements) {
-      notifyConfig.templates.placementRequestWithdrawnV2
-    } else {
-      notifyConfig.templates.placementRequestWithdrawn
-    }
+    val template = notifyConfig.templates.placementRequestWithdrawnV2
 
     emailNotifier.sendEmails(
       recipientEmailAddresses = placementApplication.interestedPartiesEmailAddresses(),

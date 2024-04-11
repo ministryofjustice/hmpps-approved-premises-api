@@ -38,17 +38,13 @@ class Cas1AssessmentEmailServiceTest {
   private val mockEmailNotificationService = MockEmailNotificationService()
   private val mockWorkingDayService = mockk<WorkingDayService>()
 
-  val service = createService(aps530WithdrawalEmailImprovements = false)
-  val serviceUsingAps530Improvements = createService(aps530WithdrawalEmailImprovements = true)
-
-  private fun createService(aps530WithdrawalEmailImprovements: Boolean) = Cas1AssessmentEmailService(
+  val service = Cas1AssessmentEmailService(
     mockEmailNotificationService,
     notifyConfig,
     assessmentUrlTemplate = UrlTemplate("http://frontend/assessments/#id"),
     applicationUrlTemplate = UrlTemplate("http://frontend/application/#id"),
     applicationTimelineUrlTemplate = UrlTemplate("http://frontend/application/#applicationId?tab=timeline"),
     workingDayService = mockWorkingDayService,
-    aps530WithdrawalEmailImprovements = aps530WithdrawalEmailImprovements,
   )
 
   @BeforeEach
@@ -252,31 +248,10 @@ class Cas1AssessmentEmailServiceTest {
       .produce()
 
     @Test
-    fun `assessmentWithdrawn sends an email when the user has an email address and assessment is pending`() {
+    fun `assessmentWithdrawn sends email when the user has an email address and assessment is pending`() {
       val assessment = createAssessment(allocatedUserEmail = ALLOCATED_EMAIL)
 
       service.assessmentWithdrawn(
-        assessment = assessment,
-        isAssessmentPending = true,
-        withdrawingUser = withdrawingUser,
-      )
-
-      mockEmailNotificationService.assertEmailRequestCount(1)
-      mockEmailNotificationService.assertEmailRequested(
-        ALLOCATED_EMAIL,
-        notifyConfig.templates.assessmentWithdrawn,
-        mapOf(
-          "crn" to CRN,
-          "applicationUrl" to "http://frontend/application/${assessment.application.id}",
-        ),
-      )
-    }
-
-    @Test
-    fun `assessmentWithdrawn sends a V2 email when the user has an email address and assessment is pending`() {
-      val assessment = createAssessment(allocatedUserEmail = ALLOCATED_EMAIL)
-
-      serviceUsingAps530Improvements.assessmentWithdrawn(
         assessment = assessment,
         isAssessmentPending = true,
         withdrawingUser = withdrawingUser,

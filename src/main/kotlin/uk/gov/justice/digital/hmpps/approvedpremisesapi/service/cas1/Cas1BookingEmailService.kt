@@ -23,7 +23,6 @@ class Cas1BookingEmailService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.application-timeline}") private val applicationTimelineUrlTemplate: UrlTemplate,
   @Value("\${url-templates.frontend.booking}") private val bookingUrlTemplate: UrlTemplate,
-  @Value("\${feature-flags.cas1-aps530-withdrawal-email-improvements}") private val aps530WithdrawalEmailImprovements: Boolean,
 ) {
 
   fun bookingMade(application: ApplicationEntity, booking: BookingEntity) {
@@ -64,11 +63,7 @@ class Cas1BookingEmailService(
       allPersonalisation["withdrawnBy"] = withdrawingUser.name
     }
 
-    val template = if (aps530WithdrawalEmailImprovements) {
-      notifyConfig.templates.bookingWithdrawnV2
-    } else {
-      notifyConfig.templates.bookingWithdrawn
-    }
+    val template = notifyConfig.templates.bookingWithdrawnV2
 
     emailNotifier.sendEmails(
       recipientEmailAddresses = application.interestedPartiesEmailAddresses(),

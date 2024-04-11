@@ -263,4 +263,3 @@ pagination:
     booking-search-page-size: 10
 
 feature-flags:
-  cas1-aps530-withdrawal-email-improvements: false

@@ -73,4 +73,3 @@ user-allocations:
       enabled: true
 
 feature-flags:
-  cas1-aps530-withdrawal-email-improvements: true
