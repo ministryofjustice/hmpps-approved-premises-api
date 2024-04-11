@@ -25,7 +25,6 @@ class Cas1AssessmentDomainEventService(
 ) {
 
   fun assessmentAllocated(assessment: AssessmentEntity, allocatedToUser: UserEntity?, actingUser: UserEntity) {
-
     val allocatedToStaffDetails = allocatedToUser?.let {
       when (val result = communityApiClient.getStaffUserDetails(allocatedToUser.deliusUsername)) {
         is ClientResult.Success -> result.body
