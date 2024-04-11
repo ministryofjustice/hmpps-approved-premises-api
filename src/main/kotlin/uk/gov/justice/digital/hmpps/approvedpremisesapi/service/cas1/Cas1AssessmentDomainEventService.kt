@@ -24,15 +24,17 @@ class Cas1AssessmentDomainEventService(
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
 ) {
 
-  fun assessmentAllocated(assessment: AssessmentEntity, allocatedToUser: UserEntity, actingUser: UserEntity) {
+  fun assessmentAllocated(assessment: AssessmentEntity, allocatedToUser: UserEntity, allocatingUser: UserEntity?) {
     val allocatedToStaffDetails = when (val result = communityApiClient.getStaffUserDetails(allocatedToUser.deliusUsername)) {
       is ClientResult.Success -> result.body
       is ClientResult.Failure -> result.throwException()
     }
 
-    val actingUserStaffDetails = when (val result = communityApiClient.getStaffUserDetails(actingUser.deliusUsername)) {
-      is ClientResult.Success -> result.body
-      is ClientResult.Failure -> result.throwException()
+    val allocatingUserStaffDetails = allocatingUser?.let {
+      when (val result = communityApiClient.getStaffUserDetails(allocatingUser.deliusUsername)) {
+        is ClientResult.Success -> result.body
+        is ClientResult.Failure -> result.throwException()
+      }
     }
 
     val id = UUID.randomUUID()
@@ -59,22 +61,22 @@ class Cas1AssessmentDomainEventService(
               crn = assessment.application.crn,
               noms = assessment.application.nomsNumber ?: "Unknown NOMS Number",
             ),
-            allocatedTo = allocatedToStaffDetails?.let {
+            allocatedTo = StaffMember(
+              staffCode = allocatedToStaffDetails.staffCode,
+              staffIdentifier = allocatedToStaffDetails.staffIdentifier,
+              forenames = allocatedToStaffDetails.staff.forenames,
+              surname = allocatedToStaffDetails.staff.surname,
+              username = allocatedToStaffDetails.username,
+            ),
+            allocatedBy = allocatingUserStaffDetails?.let {
               StaffMember(
-                staffCode = allocatedToStaffDetails.staffCode,
-                staffIdentifier = allocatedToStaffDetails.staffIdentifier,
-                forenames = allocatedToStaffDetails.staff.forenames,
-                surname = allocatedToStaffDetails.staff.surname,
-                username = allocatedToStaffDetails.username,
+                staffCode = allocatingUserStaffDetails.staffCode,
+                staffIdentifier = allocatingUserStaffDetails.staffIdentifier,
+                forenames = allocatingUserStaffDetails.staff.forenames,
+                surname = allocatingUserStaffDetails.staff.surname,
+                username = allocatingUserStaffDetails.username,
               )
             },
-            allocatedBy = StaffMember(
-              staffCode = actingUserStaffDetails.staffCode,
-              staffIdentifier = actingUserStaffDetails.staffIdentifier,
-              forenames = actingUserStaffDetails.staff.forenames,
-              surname = actingUserStaffDetails.staff.surname,
-              username = actingUserStaffDetails.username,
-            ),
           ),
         ),
       ),

@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
@@ -46,53 +47,53 @@ class Cas1AssessmentDomainEventServiceTest {
   @Nested
   inner class AssessmentAllocated {
 
+    private val assessment = createAssessment()
+
+    private val assigneeUser = UserEntityFactory()
+      .withDeliusUsername("Assignee User")
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }
+      .produce()
+      .apply {
+        roles += UserRoleAssignmentEntityFactory()
+          .withUser(this)
+          .withRole(UserRole.CAS1_ASSESSOR)
+          .produce()
+
+        qualifications += UserQualificationAssignmentEntityFactory()
+          .withUser(this)
+          .withQualification(UserQualification.PIPE)
+          .produce()
+      }
+
+    private val allocatingUser = UserEntityFactory()
+      .withDeliusUsername("Acting User")
+      .withYieldedProbationRegion {
+        ProbationRegionEntityFactory()
+          .withYieldedApArea { ApAreaEntityFactory().produce() }
+          .produce()
+      }.produce()
+
     @Test
     fun `assessmentAllocated raises domain event`() {
-      val assessment = createAssessment()
-
-      val assigneeUser = UserEntityFactory()
-        .withDeliusUsername("Assignee User")
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }
-        .produce()
-        .apply {
-          roles += UserRoleAssignmentEntityFactory()
-            .withUser(this)
-            .withRole(UserRole.CAS1_ASSESSOR)
-            .produce()
-
-          qualifications += UserQualificationAssignmentEntityFactory()
-            .withUser(this)
-            .withQualification(UserQualification.PIPE)
-            .produce()
-        }
-
-      val actingUser = UserEntityFactory()
-        .withDeliusUsername("Acting User")
-        .withYieldedProbationRegion {
-          ProbationRegionEntityFactory()
-            .withYieldedApArea { ApAreaEntityFactory().produce() }
-            .produce()
-        }.produce()
-
       val assigneeUserStaffDetails = StaffUserDetailsFactory().produce()
       every { communityApiClient.getStaffUserDetails(assigneeUser.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
         assigneeUserStaffDetails,
       )
 
-      val actingUserStaffDetails = StaffUserDetailsFactory().produce()
-      every { communityApiClient.getStaffUserDetails(actingUser.deliusUsername) } returns ClientResult.Success(
+      val allocatingUserStaffDetails = StaffUserDetailsFactory().produce()
+      every { communityApiClient.getStaffUserDetails(allocatingUser.deliusUsername) } returns ClientResult.Success(
         HttpStatus.OK,
-        actingUserStaffDetails,
+        allocatingUserStaffDetails,
       )
 
       every { domainEventService.saveAssessmentAllocatedEvent(any()) } just Runs
 
-      service.assessmentAllocated(assessment, assigneeUser, actingUser)
+      service.assessmentAllocated(assessment, assigneeUser, allocatingUser)
 
       verify(exactly = 1) {
         domainEventService.saveAssessmentAllocatedEvent(
@@ -108,8 +109,10 @@ class Cas1AssessmentDomainEventServiceTest {
 
             val envelopeMatches = envelope.eventType == "approved-premises.assessment.allocated"
 
-            val allocatedToUserDetailsMatch = assertStaffMemberDetailsMatch(eventDetails.allocatedTo, assigneeUserStaffDetails)
-            val allocatedByUserDetailsMatch = assertStaffMemberDetailsMatch(eventDetails.allocatedBy, actingUserStaffDetails)
+            val allocatedToUserDetailsMatch =
+              assertStaffMemberDetailsMatch(eventDetails.allocatedTo, assigneeUserStaffDetails)
+            val allocatedByUserDetailsMatch =
+              assertStaffMemberDetailsMatch(eventDetails.allocatedBy, allocatingUserStaffDetails)
 
             val eventDetailsMatch = (
               eventDetails.assessmentId == assessment.id &&
@@ -121,6 +124,27 @@ class Cas1AssessmentDomainEventServiceTest {
               )
 
             rootDomainEventDataMatches && envelopeMatches && eventDetailsMatch
+          },
+        )
+      }
+    }
+
+    @Test
+    fun `assessmentAllocated allocating user is optional`() {
+      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce()
+      every { communityApiClient.getStaffUserDetails(assigneeUser.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        assigneeUserStaffDetails,
+      )
+
+      every { domainEventService.saveAssessmentAllocatedEvent(any()) } just Runs
+
+      service.assessmentAllocated(assessment, assigneeUser, allocatingUser = null)
+
+      verify(exactly = 1) {
+        domainEventService.saveAssessmentAllocatedEvent(
+          withArg {
+            Assertions.assertThat(it.data.eventDetails.allocatedBy).isNull()
           },
         )
       }

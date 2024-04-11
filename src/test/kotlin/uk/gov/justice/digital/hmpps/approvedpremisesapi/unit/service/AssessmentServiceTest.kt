@@ -2570,7 +2570,11 @@ class AssessmentServiceTest {
       }
 
       verify {
-        cas1AssessmentDomainEventService.assessmentAllocated(assessment, userWithLeastAllocatedAssessments, actingUser)
+        cas1AssessmentDomainEventService.assessmentAllocated(
+          assessment,
+          allocatedToUser = userWithLeastAllocatedAssessments,
+          allocatingUser = null,
+        )
       }
     }
 
