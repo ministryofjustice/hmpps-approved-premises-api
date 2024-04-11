@@ -231,9 +231,8 @@ class AssessmentService(
       } else {
         assessmentEmailService.assessmentAllocated(allocatedUser, assessment.id, application.crn, assessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.emergency)
       }
+      cas1AssessmentDomainEventService.assessmentAllocated(assessment, allocatedUser, userService.getUserForRequest())
     }
-
-    cas1AssessmentDomainEventService.assessmentAllocated(assessment, allocatedUser, userService.getUserForRequest())
 
     return assessment
   }

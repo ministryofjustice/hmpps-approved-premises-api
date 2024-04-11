@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.mockk.Called
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -2008,7 +2009,9 @@ class AssessmentServiceTest {
       )
     }
 
-    assertAllocationDomainEventSent(newAssessment, assigneeUser, actingUser)
+    verify {
+      cas1AssessmentDomainEventService.assessmentAllocated(any(), assigneeUser, actingUser)
+    }
   }
 
   @Test
@@ -2483,7 +2486,7 @@ class AssessmentServiceTest {
         "emergency,false", "standard,false", "shortNotice,false",
       ],
     )
-    fun `createApprovedPremisesAssessment creates an Assessment, sends allocation email and allocated domain event`(timelinessCategory: Cas1ApplicationTimelinessCategory, createdFromAppeal: Boolean) {
+    fun `create CAS1 Assessment creates an Assessment, sends allocation email and allocated domain event`(timelinessCategory: Cas1ApplicationTimelinessCategory, createdFromAppeal: Boolean) {
       val userWithLeastAllocatedAssessments = UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -2566,11 +2569,48 @@ class AssessmentServiceTest {
         }
       }
 
-      assertAllocationDomainEventSent(assessment, userWithLeastAllocatedAssessments, actingUser)
+      verify {
+        cas1AssessmentDomainEventService.assessmentAllocated(assessment, userWithLeastAllocatedAssessments, actingUser)
+      }
     }
 
     @Test
-    fun `createTemporaryAccommodationAssessment creates an Assessment`() {
+    fun `create CAS1 Assessment doesn't create allocated domain event if no suitable allocation found`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce(),
+        )
+        .withApType(ApprovedPremisesType.PIPE)
+        .withNoticeType(Cas1ApplicationTimelinessCategory.shortNotice)
+        .produce()
+
+      val dueAt = OffsetDateTime.now()
+
+      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+
+      every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns null
+
+      every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
+
+      every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
+
+      every { userServiceMock.getUserForRequest() } returns actingUser
+
+      every { cas1AssessmentDomainEventService.assessmentAllocated(any(), any(), any()) } just Runs
+
+      assessmentService.createApprovedPremisesAssessment(application, createdFromAppeal = false)
+
+      verify { cas1AssessmentDomainEventService wasNot Called }
+    }
+
+    @Test
+    fun `create CAS3 Assessment`() {
       val probationRegion = ProbationRegionEntityFactory()
         .withYieldedApArea { ApAreaEntityFactory().produce() }
         .produce()
@@ -2749,12 +2789,6 @@ class AssessmentServiceTest {
           withdrawingUser = withdrawingUser,
         )
       }
-    }
-  }
-
-  private fun assertAllocationDomainEventSent(assessment: AssessmentEntity, assigneeUser: UserEntity, actingUser: UserEntity) {
-    verify {
-      cas1AssessmentDomainEventService.assessmentAllocated(assessment, assigneeUser, actingUser)
     }
   }
 }

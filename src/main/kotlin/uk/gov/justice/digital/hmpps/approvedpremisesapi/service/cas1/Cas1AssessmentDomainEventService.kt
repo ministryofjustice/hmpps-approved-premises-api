@@ -24,12 +24,10 @@ class Cas1AssessmentDomainEventService(
   @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
 ) {
 
-  fun assessmentAllocated(assessment: AssessmentEntity, allocatedToUser: UserEntity?, actingUser: UserEntity) {
-    val allocatedToStaffDetails = allocatedToUser?.let {
-      when (val result = communityApiClient.getStaffUserDetails(allocatedToUser.deliusUsername)) {
-        is ClientResult.Success -> result.body
-        is ClientResult.Failure -> result.throwException()
-      }
+  fun assessmentAllocated(assessment: AssessmentEntity, allocatedToUser: UserEntity, actingUser: UserEntity) {
+    val allocatedToStaffDetails = when (val result = communityApiClient.getStaffUserDetails(allocatedToUser.deliusUsername)) {
+      is ClientResult.Success -> result.body
+      is ClientResult.Failure -> result.throwException()
     }
 
     val actingUserStaffDetails = when (val result = communityApiClient.getStaffUserDetails(actingUser.deliusUsername)) {
