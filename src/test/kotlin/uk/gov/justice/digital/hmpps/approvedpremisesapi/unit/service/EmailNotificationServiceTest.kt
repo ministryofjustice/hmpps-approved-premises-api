@@ -182,6 +182,7 @@ class EmailNotificationServiceTest {
         )
       } throws exception
 
+      every { mockSentryService.captureException(any()) } returns Unit
       every { logger.error(any<String>(), any()) } returns Unit
 
       emailNotificationService.sendEmail(
@@ -201,10 +202,12 @@ class EmailNotificationServiceTest {
       textBlock = """
     'Status code: 400 {"errors":[{"error":"BadRequestError","message":"Missing personalisation: applicationUrl"}],"status_code":400}', true
     'Status code: 400 {"errors":[{"error":"BadRequestError","message":"Missing personalisation: additionalDatesSet"}],"status_code":400}', true
+    '"Unable to send template xyz to user test@here.com',true
+    'Status code: 400 {"errors":[{"error":"BadRequestError","message":"Something unexpected"}],"status_code":400}', true
     'Status code: 400 {"errors":[{"error":"BadRequestError","message":"Can\\u2019t send to this recipient using a team-only API key"}],"status_code":400}', false
     'Status code: 400 {"errors":[{"error":"ValidationError","message":"email_address Not a valid email address"}],"status_code":400}',false""",
     )
-    fun `sendEmail logs exception in sentry if there is a personalisation error`(
+    fun `sendEmail logs exception in sentry unless in ignore list`(
       message: String,
       shouldRaiseInSentry: Boolean,
     ) {

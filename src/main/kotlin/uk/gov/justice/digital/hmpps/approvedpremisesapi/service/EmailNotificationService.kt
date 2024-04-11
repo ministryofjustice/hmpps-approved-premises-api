@@ -20,6 +20,13 @@ class EmailNotificationService(
 ) : EmailNotifier {
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
+  val errorSuppressionList = listOf(
+    // full message is 'Can`t send to this recipient using a team-only API key'. Have excluded part
+    // with non-ascii characters to avoid complications
+    "this recipient using a team-only API key",
+    "Not a valid email address",
+  )
+
   override fun sendEmail(
     recipientEmailAddress: String,
     templateId: String,
@@ -55,7 +62,9 @@ class EmailNotificationService(
       log.error("Unable to send template $templateId to user $recipientEmailAddress", notificationClientException)
 
       notificationClientException.message?.let { exceptionMessage ->
-        if (exceptionMessage.contains("Missing personalisation")) {
+        val suppress = errorSuppressionList.any { exceptionMessage.lowercase().contains(it.lowercase()) }
+
+        if (!suppress) {
           sentryService.captureException(notificationClientException)
         }
       }
