@@ -99,9 +99,16 @@ class DomainEventDescriber(
   private fun buildAssessmentAllocatedDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getAssessmentAllocatedEvent(domainEventSummary.id())
     return event.describe { ev ->
-      val allocatedTo = ev.eventDetails.allocatedTo?.name ?: "an unknown user"
-      val allocatedDesc = ev.eventDetails.allocatedBy?.let { "by ${it.name}" } ?: "automatically"
-      "The assessment was allocated to $allocatedTo $allocatedDesc"
+      val eventDetails = ev.eventDetails
+      val automatic = eventDetails.allocatedBy == null
+      val prelude = if (automatic) {
+        "The assessment was automatically allocated to"
+      } else {
+        "The assessment was allocated to"
+      }
+      val allocatedTo = eventDetails.allocatedTo?.name ?: "an unknown user"
+      val allocatedBy = eventDetails.allocatedBy?.let { "by ${it.name}" } ?: ""
+      "$prelude $allocatedTo $allocatedBy".trim()
     }
   }
 

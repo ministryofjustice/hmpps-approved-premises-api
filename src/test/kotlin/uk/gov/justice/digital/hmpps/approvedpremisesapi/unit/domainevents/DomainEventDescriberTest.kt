@@ -295,8 +295,8 @@ class DomainEventDescriberTest {
   @ParameterizedTest
   @CsvSource(
     value = [
-      ",,The assessment was allocated to an unknown user automatically",
-      "Alan,,The assessment was allocated to Alan A automatically",
+      ",,The assessment was automatically allocated to an unknown user",
+      "Alan,,The assessment was automatically allocated to Alan A",
       ",Brenda,The assessment was allocated to an unknown user by Brenda B",
       "Carol,Derek,The assessment was allocated to Carol C by Derek D",
     ],
@@ -305,7 +305,7 @@ class DomainEventDescriberTest {
     allocatedTo: String?,
     allocatedBy: String?,
     expectedDescription: String,
-    ) {
+  ) {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED)
 
     every { mockDomainEventService.getAssessmentAllocatedEvent(any()) } returns buildDomainEvent {
