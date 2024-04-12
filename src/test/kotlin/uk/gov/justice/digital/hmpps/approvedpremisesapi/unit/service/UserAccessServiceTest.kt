@@ -349,32 +349,11 @@ class UserAccessServiceTest {
       .withPremises(temporaryAccommodationPremisesInUserRegion)
       .produce()
 
-    @ParameterizedTest
-    @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
-    fun `userCanViewBooking returns true if the given premises is a CAS1 premises and the user has either the MANAGER or MATCHER user role`(
-      role: UserRole,
-    ) {
+    @Test
+    fun `userCanViewBooking CAS1 always returns true`() {
       currentRequestIsFor(ServiceName.approvedPremises)
-
-      user.addRoleForUnitTest(role)
 
       assertThat(userAccessService.userCanViewBooking(user, cas1Booking)).isTrue
-    }
-
-    @Test
-    fun `userCanViewBooking returns true if the given premises is a CAS1 premises and the user created the application`() {
-      currentRequestIsFor(ServiceName.approvedPremises)
-
-      val application = ApprovedPremisesApplicationEntityFactory().withCreatedByUser(user).produce()
-
-      assertThat(userAccessService.userCanViewBooking(user, cas1Booking.copy(application = application))).isTrue
-    }
-
-    @Test
-    fun `userCanViewBooking returns false if the given premises is a CAS1 premises and the user has no suitable role`() {
-      currentRequestIsFor(ServiceName.approvedPremises)
-
-      assertThat(userAccessService.userCanViewBooking(user, cas1Booking)).isFalse
     }
 
     @Test

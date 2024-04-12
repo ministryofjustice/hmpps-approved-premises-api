@@ -69,41 +69,6 @@ class BookingTest : IntegrationTestBase() {
         .isUnauthorized
     }
 
-    @Test
-    fun `Get a booking returns 401 if user doesnt have correct roles`() {
-      `Given a User` { applicant, _ ->
-        `Given a User` { userEntity, jwt ->
-          `Given an Offender` { offenderDetails, inmateDetails ->
-            val premises = approvedPremisesEntityFactory.produceAndPersist {
-              withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-              withYieldedProbationRegion { probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } } }
-            }
-
-            val application = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-              withCreatedByUser(applicant)
-              withCrn(offenderDetails.otherIds.crn)
-              withProbationRegion(userEntity.probationRegion)
-              withApplicationSchema(approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist())
-            }
-
-            val booking = bookingEntityFactory.produceAndPersist {
-              withPremises(premises)
-              withCrn(offenderDetails.otherIds.crn)
-              withServiceName(ServiceName.approvedPremises)
-              withApplication(application)
-            }
-
-            webTestClient.get()
-              .uri("/bookings/${booking.id}")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isForbidden
-          }
-        }
-      }
-    }
-
     @ParameterizedTest
     @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER"])
     fun `Get a booking returns OK with the correct body when user has one of roles MANAGER, MATCHER`(

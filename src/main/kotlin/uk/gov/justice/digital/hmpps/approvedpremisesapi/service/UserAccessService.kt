@@ -65,7 +65,7 @@ class UserAccessService(
     userCanManagePremisesBookings(userService.getUserForRequest(), premises)
 
   fun userCanViewBooking(user: UserEntity, booking: BookingEntity) = when (booking.premises) {
-    is ApprovedPremisesEntity -> userCanManagePremisesBookings(user, booking.premises) || booking.application?.createdByUser == user
+    is ApprovedPremisesEntity -> true
     is TemporaryAccommodationPremisesEntity -> userCanManagePremisesBookings(user, booking.premises)
     else -> false
   }
