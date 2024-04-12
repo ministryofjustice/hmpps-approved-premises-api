@@ -1,0 +1,1 @@
+ALTER TABLE temporary_accommodation_applications ADD COLUMN duty_to_refer_outcome TEXT ;

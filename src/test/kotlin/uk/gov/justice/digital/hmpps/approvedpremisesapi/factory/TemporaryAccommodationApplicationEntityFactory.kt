@@ -52,7 +52,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
   private var hasHistoryOfSexualOffence: Yielded<Boolean?> = { null }
   private var isConcerningSexualBehaviour: Yielded<Boolean?> = { null }
   private var isConcerningArsonBehaviour: Yielded<Boolean?> = { null }
-
+  private var dutyToReferOutcome: Yielded<String?> = { null }
   fun withId(id: UUID) = apply {
     this.id = { id }
   }
@@ -189,6 +189,10 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     this.isConcerningArsonBehaviour = { isConcerningArsonBehaviour }
   }
 
+  fun withDutyToReferOutcome(dutyToReferOutcome: String?) = apply {
+    this.dutyToReferOutcome = { dutyToReferOutcome }
+  }
+
   override fun produce(): TemporaryAccommodationApplicationEntity = TemporaryAccommodationApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -215,6 +219,7 @@ class TemporaryAccommodationApplicationEntityFactory : Factory<TemporaryAccommod
     isConcerningArsonBehaviour = this.isConcerningArsonBehaviour(),
     isDutyToReferSubmitted = this.isDutyToReferSubmitted(),
     dutyToReferSubmissionDate = this.dutyToReferSubmissionDate(),
+    dutyToReferOutcome = this.dutyToReferOutcome(),
     isEligible = this.isEligible(),
     eligibilityReason = this.eligibilityReason(),
     dutyToReferLocalAuthorityAreaName = this.dutyToReferLocalAuthorityAreaName(),

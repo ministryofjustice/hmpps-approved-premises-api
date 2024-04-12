@@ -2544,6 +2544,7 @@ class ApplicationTest : IntegrationTestBase() {
                 isHistoryOfSexualOffence = true,
                 isConcerningSexualBehaviour = true,
                 isConcerningArsonBehaviour = true,
+                dutyToReferOutcome = "Accepted – Prevention/ Relief Duty",
               ),
             )
             .exchange()
@@ -2555,6 +2556,7 @@ class ApplicationTest : IntegrationTestBase() {
 
           assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
           assertThat(persistedApplication.personReleaseDate).isEqualTo(LocalDate.now())
+          assertThat(persistedApplication.dutyToReferOutcome).isEqualTo("Accepted – Prevention/ Relief Duty")
         }
       }
     }

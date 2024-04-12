@@ -452,6 +452,7 @@ class TemporaryAccommodationApplicationEntity(
   var isConcerningArsonBehaviour: Boolean?,
   var isDutyToReferSubmitted: Boolean?,
   var dutyToReferSubmissionDate: LocalDate?,
+  var dutyToReferOutcome: String?,
   var isEligible: Boolean?,
   var eligibilityReason: String?,
   var dutyToReferLocalAuthorityAreaName: String?,

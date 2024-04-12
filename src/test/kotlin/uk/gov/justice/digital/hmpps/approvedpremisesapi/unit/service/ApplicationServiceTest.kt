@@ -2168,6 +2168,7 @@ class ApplicationServiceTest {
       hasHistoryOfArson = true,
       isDutyToReferSubmitted = true,
       dutyToReferSubmissionDate = LocalDate.now().minusDays(7),
+      dutyToReferOutcome = "Accepted – Prevention/ Relief Duty",
       isApplicationEligible = true,
       eligibilityReason = "homelessFromApprovedPremises",
       dutyToReferLocalAuthorityAreaName = "Aberdeen City",
@@ -2427,6 +2428,7 @@ class ApplicationServiceTest {
       assertThat(persistedApplication.isHistoryOfSexualOffence).isEqualTo(true)
       assertThat(persistedApplication.isConcerningSexualBehaviour).isEqualTo(true)
       assertThat(persistedApplication.isConcerningArsonBehaviour).isEqualTo(true)
+      assertThat(persistedApplication.dutyToReferOutcome).isEqualTo("Accepted – Prevention/ Relief Duty")
 
       verify { mockApplicationRepository.save(any()) }
       verify(exactly = 1) {

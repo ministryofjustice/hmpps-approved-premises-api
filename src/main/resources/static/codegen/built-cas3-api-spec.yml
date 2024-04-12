@@ -2386,6 +2386,9 @@ components:
             dutyToReferSubmissionDate:
               type: string
               format: date
+            dutyToReferOutcome:
+              type: string
+              example: 'Pending'
             isApplicationEligible:
               type: boolean
             eligibilityReason:
