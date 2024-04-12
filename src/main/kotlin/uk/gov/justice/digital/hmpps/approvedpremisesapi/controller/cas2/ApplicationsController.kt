@@ -51,18 +51,7 @@ class ApplicationsController(
 
     val pageCriteria = PageCriteria("created_at", SortDirection.desc, page)
 
-    val (applications, metadata) = when (prisonCode) {
-      null -> when (isSubmitted) {
-        true -> applicationService.getSubmittedApplicationsForUser(user, pageCriteria)
-        false -> applicationService.getUnsubmittedApplicationsForUser(user, pageCriteria)
-        null -> applicationService.getAllApplicationsForUser(user, pageCriteria)
-      }
-      else -> when (isSubmitted) {
-        true -> applicationService.getSubmittedApplicationsByPrison(prisonCode, pageCriteria)
-        false -> applicationService.getUnsubmittedApplicationsByPrison(prisonCode, pageCriteria)
-        null -> applicationService.getAllApplicationsByPrison(prisonCode, pageCriteria)
-      }
-    }
+    val (applications, metadata) = applicationService.getApplications(prisonCode, isSubmitted, user, pageCriteria)
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
