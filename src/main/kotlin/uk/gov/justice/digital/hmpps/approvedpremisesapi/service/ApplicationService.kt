@@ -783,10 +783,11 @@ class ApplicationService(
       this.noticeType = getNoticeType(submitApplication.noticeType, submitApplication.isEmergencyApplication, this)
     }
 
+    cas1ApplicationDomainEventService.applicationSubmitted(application, submitApplication, username, jwt)
     assessmentService.createApprovedPremisesAssessment(application)
+
     application = applicationRepository.save(application)
 
-    cas1ApplicationDomainEventService.applicationSubmitted(application, submitApplication, username, jwt)
     cas1ApplicationEmailService.applicationSubmitted(application)
 
     return AuthorisableActionResult.Success(
