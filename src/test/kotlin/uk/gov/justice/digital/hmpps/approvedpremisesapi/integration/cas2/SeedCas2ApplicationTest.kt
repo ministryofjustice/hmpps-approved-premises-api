@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.CsvBuilder
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -107,7 +108,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
   }
 
   @Test
-  fun `A SUBMITTED application has _data_ AND _document_ AND an Assessment`() {
+  fun `A SUBMITTED application has _data_ AND _document_ AND an Assessment AND first class fields`() {
     cas2ApplicationRepository.deleteAll()
 
     nomisUserEntityFactory.produceAndPersist {
@@ -132,6 +133,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
             .withState("SUBMITTED")
             .withStatusUpdates("0")
             .withLocation(null)
+            .withReferringPrisonCode("EXAMPLE_CODE")
             .produce(),
         ),
       ),
@@ -146,6 +148,11 @@ class SeedCas2ApplicationTest : SeedTestBase() {
     assertThat(serializableToJsonNode(persistedApplication.data)).isNotEmpty()
     assertThat(serializableToJsonNode(persistedApplication.document)).isNotEmpty()
     assertThat(persistedApplication.assessment).isNotNull()
+    assertThat(persistedApplication.referringPrisonCode).isEqualTo("EXAMPLE_CODE")
+    assertThat(persistedApplication.preferredAreas).isEqualTo("Bristol | Newcastle")
+    assertThat(persistedApplication.hdcEligibilityDate).isEqualTo(LocalDate.parse("2024-02-28"))
+    assertThat(persistedApplication.conditionalReleaseDate).isEqualTo(LocalDate.parse("2024-02-22"))
+    assertThat(persistedApplication.telephoneNumber).isEqualTo("0800 123 456")
   }
 
   @Test
@@ -213,6 +220,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
         "state",
         "statusUpdates",
         "location",
+        "referringPrisonCode",
       )
       .newRow()
 
@@ -227,6 +235,7 @@ class SeedCas2ApplicationTest : SeedTestBase() {
         .withQuotedField(it.state)
         .withQuotedField(it.statusUpdates)
         .withQuotedField(it.location ?: "")
+        .withQuotedField(it.referringPrisonCode ?: "")
         .newRow()
     }
 
@@ -251,6 +260,7 @@ data class Cas2ApplicationSeedUntypedEnumsCsvRow(
   val state: String, // NOT_STARTED | IN-PROGRESS | SUBMITTED | IN_REVIEW
   val statusUpdates: String,
   val location: String?,
+  val referringPrisonCode: String?,
 )
 
 class Cas2ApplicationSeedCsvRowFactory : Factory<Cas2ApplicationSeedUntypedEnumsCsvRow> {
@@ -263,6 +273,7 @@ class Cas2ApplicationSeedCsvRowFactory : Factory<Cas2ApplicationSeedUntypedEnums
   private var statusUpdates: Yielded<String> = { "0" }
   private var location: Yielded<String?> = { "Leeds" }
   private var state: Yielded<String> = { listOf("NOT_STARTED", "IN_PROGRESS", "SUBMITTED", "IN_REVIEW").random() }
+  private var referringPrisonCode: Yielded<String?> = { null }
 
   fun withId(id: String) = apply {
     this.id = { id }
@@ -300,6 +311,10 @@ class Cas2ApplicationSeedCsvRowFactory : Factory<Cas2ApplicationSeedUntypedEnums
     this.state = { state }
   }
 
+  fun withReferringPrisonCode(referringPrisonCode: String) = apply {
+    this.referringPrisonCode = { referringPrisonCode }
+  }
+
   override fun produce() = Cas2ApplicationSeedUntypedEnumsCsvRow(
     id = UUID.fromString(this.id()),
     crn = this.crn(),
@@ -310,5 +325,6 @@ class Cas2ApplicationSeedCsvRowFactory : Factory<Cas2ApplicationSeedUntypedEnums
     statusUpdates = this.statusUpdates(),
     location = this.location(),
     state = this.state(),
+    referringPrisonCode = this.referringPrisonCode(),
   )
 }

@@ -120,6 +120,7 @@ fun IntegrationTestBase.`Given a CAS2 User`(
     withNomisUsername(nomisUserDetails.username)
     withEmail(nomisUserDetails.primaryEmail)
     withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
+    withActiveCaseloadId(nomisUserDetails.activeCaseloadId!!)
   }
 
   val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username)

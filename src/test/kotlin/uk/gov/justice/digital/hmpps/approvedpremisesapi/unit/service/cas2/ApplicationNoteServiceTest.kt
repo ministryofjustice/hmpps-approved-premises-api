@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotificatio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ExternalUserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.NomisUserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormattedHourOfDay
@@ -43,6 +44,7 @@ class ApplicationNoteServiceTest {
   private val mockExternalUserService = mockk<ExternalUserService>()
   private val mockHttpAuthService = mockk<HttpAuthService>()
   private val mockEmailNotificationService = mockk<EmailNotificationService>()
+  private val mockUserAccessService = mockk<UserAccessService>()
   private val mockNotifyConfig = mockk<NotifyConfig>()
 
   private val applicationNoteService = uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.ApplicationNoteService(
@@ -52,6 +54,7 @@ class ApplicationNoteServiceTest {
     mockExternalUserService,
     mockHttpAuthService,
     mockEmailNotificationService,
+    mockUserAccessService,
     mockNotifyConfig,
     "http://frontend/applications/#id/overview",
     "http://frontend/assess/applications/#applicationId/overview",
@@ -60,7 +63,56 @@ class ApplicationNoteServiceTest {
   @Nested
   inner class CreateApplicationNote {
 
-    private val referrer = NomisUserEntityFactory().produce()
+    private val referrer = NomisUserEntityFactory().withActiveCaseloadId("my-prison").produce()
+
+    @Nested
+    inner class WhenApplicationIsNotFound {
+      @Test
+      fun `returns Not Found`() {
+        every { mockApplicationRepository.findByIdOrNull(any()) } answers
+          {
+            null
+          }
+
+        Assertions.assertThat(
+          applicationNoteService.createApplicationNote(
+            applicationId = UUID.randomUUID(),
+            note = NewCas2ApplicationNote(note = "note for missing app"),
+          ) is AuthorisableActionResult.NotFound,
+        ).isTrue
+      }
+    }
+
+    @Nested
+    inner class WhenApplicationIsNotSubmitted {
+      @Test
+      fun `returns Validation error when application is not submitted`() {
+        val applicationNotSubmitted = Cas2ApplicationEntityFactory()
+          .withCreatedByUser(referrer)
+          .withCrn("CRN123")
+          .withNomsNumber("NOMSABC")
+          .produce()
+
+        every { mockApplicationRepository.findByIdOrNull(any()) } answers
+          {
+            applicationNotSubmitted
+          }
+
+        every { mockUserService.getUserForRequest() } returns referrer
+
+        val result = applicationNoteService.createApplicationNote(
+          applicationId = applicationNotSubmitted.id,
+          note = NewCas2ApplicationNote(note = "note for in progress app"),
+        )
+        Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
+        result as AuthorisableActionResult.Success
+
+        Assertions.assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
+        val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+
+        Assertions.assertThat(validatableActionResult.message).isEqualTo("This application has not been submitted")
+      }
+    }
 
     @Nested
     inner class AsNomisUser {
@@ -72,39 +124,39 @@ class ApplicationNoteServiceTest {
         every { mockPrincipal.isExternalUser() } returns false
         every { mockNotifyConfig.emailAddresses.cas2Assessors } returns "assessors@example.com"
         every { mockNotifyConfig.templates.cas2NoteAddedForAssessor } returns "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1"
+        every { mockUserService.getUserForRequest() } returns referrer
+        every { mockApplicationNoteRepository.save(any()) } answers
+          {
+            noteEntity
+          }
       }
 
-      @Nested
-      inner class WhenSuccessful {
-        private val submittedApplication = Cas2ApplicationEntityFactory()
-          .withCreatedByUser(referrer)
-          .withCrn("CRN123")
-          .withNomsNumber("NOMSABC")
-          .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
-          .withAssessment(
-            Cas2AssessmentEntityFactory()
-              .withAssessorName("Anne Assessor").withNacroReferralId("OH123").produce(),
-          )
-          .produce()
-        private val applicationId = submittedApplication.id
-        private val noteEntity = Cas2ApplicationNoteEntity(
-          id = UUID.randomUUID(),
-          createdByUser = referrer,
-          application = submittedApplication,
-          body = "new note",
-          createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
+      private val submittedApplication = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(referrer)
+        .withCrn("CRN123")
+        .withNomsNumber("NOMSABC")
+        .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
+        .withAssessment(
+          Cas2AssessmentEntityFactory()
+            .withAssessorName("Anne Assessor").withNacroReferralId("OH123").produce(),
         )
+        .produce()
+      private val applicationId = submittedApplication.id
+      private val noteEntity = Cas2ApplicationNoteEntity(
+        id = UUID.randomUUID(),
+        createdByUser = referrer,
+        application = submittedApplication,
+        body = "new note",
+        createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
+      )
 
+      @Nested
+      inner class WhenApplicationCreatedByUser {
         @Test
         fun `returns Success result with entity from db`() {
           every { mockApplicationRepository.findByIdOrNull(applicationId) } answers
             {
               submittedApplication
-            }
-          every { mockUserService.getUserForRequest() } returns referrer
-          every { mockApplicationNoteRepository.save(any()) } answers
-            {
-              noteEntity
             }
 
           every {
@@ -157,11 +209,6 @@ class ApplicationNoteServiceTest {
               {
                 submittedApplicationWithoutAssessorDetails
               }
-            every { mockUserService.getUserForRequest() } returns referrer
-            every { mockApplicationNoteRepository.save(any()) } answers
-              {
-                noteEntity
-              }
 
             every {
               mockEmailNotificationService.sendCas2Email(
@@ -193,72 +240,89 @@ class ApplicationNoteServiceTest {
       }
 
       @Nested
-      inner class WhenUnsuccessful {
-        @Test
-        fun `returns Not Found when application not found`() {
-          every { mockApplicationRepository.findByIdOrNull(any()) } answers
-            {
-              null
-            }
-
-          Assertions.assertThat(
-            applicationNoteService.createApplicationNote(
-              applicationId = UUID.randomUUID(),
-              note = NewCas2ApplicationNote(note = "note for missing app"),
-            ) is AuthorisableActionResult.NotFound,
-          ).isTrue
-        }
-
-        @Test
-        fun `returns Not Authorised when application was not created by user`() {
-          val applicationCreatedByOtherUser = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(NomisUserEntityFactory().produce())
-            .withCrn("CRN123")
-            .withNomsNumber("NOMSABC")
-            .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
-            .produce()
-
-          every { mockApplicationRepository.findByIdOrNull(applicationCreatedByOtherUser.id) } answers
-            {
-              applicationCreatedByOtherUser
-            }
-
-          every { mockUserService.getUserForRequest() } returns referrer
-
-          Assertions.assertThat(
-            applicationNoteService.createApplicationNote(
-              applicationId = applicationCreatedByOtherUser.id,
-              note = NewCas2ApplicationNote(note = "note for unauthorised app"),
-            ) is AuthorisableActionResult.Unauthorised,
-          ).isTrue
-        }
-
-        @Test
-        fun `returns Validation error when application is not submitted`() {
-          val applicationNotSubmitted = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(referrer)
-            .withCrn("CRN123")
-            .withNomsNumber("NOMSABC")
-            .produce()
-
-          every { mockApplicationRepository.findByIdOrNull(any()) } answers
-            {
-              applicationNotSubmitted
-            }
-
-          every { mockUserService.getUserForRequest() } returns referrer
-
-          val result = applicationNoteService.createApplicationNote(
-            applicationId = applicationNotSubmitted.id,
-            note = NewCas2ApplicationNote(note = "note for in progress app"),
+      inner class WhenApplicationCreatedByOtherUser {
+        val applicationCreatedByOtherUser = Cas2ApplicationEntityFactory()
+          .withCreatedByUser(NomisUserEntityFactory().produce())
+          .withCrn("CRN123")
+          .withNomsNumber("NOMSABC")
+          .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
+          .withReferringPrisonCode("other-prison")
+          .withAssessment(
+            Cas2AssessmentEntityFactory()
+              .withAssessorName("Anne Prison Assessor").withNacroReferralId("OH456").produce(),
           )
-          Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
-          result as AuthorisableActionResult.Success
+          .produce()
 
-          Assertions.assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-          val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
+        @Nested
+        inner class WhenDifferentPrison {
+          @Test
+          fun `returns Not Authorised`() {
+            every { mockApplicationRepository.findByIdOrNull(applicationCreatedByOtherUser.id) } answers
+              {
+                applicationCreatedByOtherUser
+              }
 
-          Assertions.assertThat(validatableActionResult.message).isEqualTo("This application has not been submitted")
+            every {
+              mockUserAccessService.offenderIsFromSamePrisonAsUser("other-prison", "my-prison")
+            } returns false
+
+            Assertions.assertThat(
+              applicationNoteService.createApplicationNote(
+                applicationId = applicationCreatedByOtherUser.id,
+                note = NewCas2ApplicationNote(note = "note for unauthorised app"),
+              ) is AuthorisableActionResult.Unauthorised,
+            ).isTrue
+          }
+        }
+
+        @Nested
+        inner class WhenSamePrison {
+          @Test
+          fun `returns Success result with entity from db`() {
+            every { mockApplicationRepository.findByIdOrNull(applicationCreatedByOtherUser.id) } answers
+              {
+                applicationCreatedByOtherUser
+              }
+
+            every {
+              mockUserAccessService.offenderIsFromSamePrisonAsUser("other-prison", "my-prison")
+            } returns true
+
+            every {
+              mockEmailNotificationService.sendCas2Email(
+                recipientEmailAddress = "assessors@example.com",
+                templateId = "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1",
+                personalisation = mapOf(
+                  "nacroReferenceId" to "OH456",
+                  "nacroReferenceIdInSubject" to "(OH456)",
+                  "dateNoteAdded" to noteEntity.createdAt.toLocalDate().toCas2UiFormat(),
+                  "timeNoteAdded" to noteEntity.createdAt.toCas2UiFormattedHourOfDay(),
+                  "assessorName" to "Anne Prison Assessor",
+                  "applicationType" to "Home Detention Curfew (HDC)",
+                  "applicationUrl" to "http://frontend/assess/applications/${applicationCreatedByOtherUser.id}/overview",
+                ),
+              )
+            } just Runs
+
+            val result = applicationNoteService.createApplicationNote(
+              applicationId = applicationCreatedByOtherUser.id,
+              NewCas2ApplicationNote(note = "new note"),
+            )
+
+            verify(exactly = 1) { mockApplicationNoteRepository.save(any()) }
+
+            Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
+            result as AuthorisableActionResult.Success
+
+            Assertions.assertThat(result.entity is ValidatableActionResult.Success).isTrue
+            val validatableActionResult = result.entity as ValidatableActionResult.Success
+
+            val createdNote = validatableActionResult.entity
+
+            Assertions.assertThat(createdNote).isEqualTo(noteEntity)
+
+            verify(exactly = 1) { mockEmailNotificationService.sendCas2Email(any(), any(), any()) }
+          }
         }
       }
     }
@@ -274,160 +338,102 @@ class ApplicationNoteServiceTest {
         every { mockPrincipal.isExternalUser() } returns true
         every { mockNotifyConfig.templates.cas2NoteAddedForReferrer } returns "abc123"
         every { mockNotifyConfig.emailAddresses.cas2Assessors } returns "assessors@example.com"
+        every { mockApplicationNoteRepository.save(any()) } answers
+          {
+            noteEntity
+          }
       }
 
-      @Nested
-      inner class WhenSuccessful {
-        private val submittedApplication = Cas2ApplicationEntityFactory()
-          .withCreatedByUser(referrer)
+      private val submittedApplication = Cas2ApplicationEntityFactory()
+        .withCreatedByUser(referrer)
+        .withCrn("CRN123")
+        .withNomsNumber("NOMSABC")
+        .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
+        .produce()
+      private val applicationId = submittedApplication.id
+      private val noteEntity = Cas2ApplicationNoteEntity(
+        id = UUID.randomUUID(),
+        createdByUser = externalUser,
+        application = submittedApplication,
+        body = "new note",
+        createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
+      )
+
+      @Test
+      fun `returns Success result with entity from db`() {
+        every { mockApplicationRepository.findByIdOrNull(applicationId) } answers
+          {
+            submittedApplication
+          }
+        every { mockExternalUserService.getUserForRequest() } returns externalUser
+
+        every {
+          mockEmailNotificationService.sendCas2Email(
+            recipientEmailAddress = referrer.email!!,
+            templateId = "abc123",
+            personalisation = mapOf(
+              "dateNoteAdded" to noteEntity.createdAt.toLocalDate().toCas2UiFormat(),
+              "timeNoteAdded" to noteEntity.createdAt.toCas2UiFormattedHourOfDay(),
+              "nomsNumber" to "NOMSABC",
+              "applicationType" to "Home Detention Curfew (HDC)",
+              "applicationUrl" to "http://frontend/applications/$applicationId/overview",
+            ),
+          )
+        } just Runs
+
+        val result = applicationNoteService.createApplicationNote(
+          applicationId = applicationId,
+          NewCas2ApplicationNote(note = "new note"),
+        )
+
+        verify(exactly = 1) { mockApplicationNoteRepository.save(any()) }
+
+        Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
+        result as AuthorisableActionResult.Success
+
+        Assertions.assertThat(result.entity is ValidatableActionResult.Success).isTrue
+        val validatableActionResult = result.entity as ValidatableActionResult.Success
+
+        val createdNote = validatableActionResult.entity
+
+        Assertions.assertThat(createdNote).isEqualTo(noteEntity)
+      }
+
+      @Test
+      fun `alerts Sentry when the Referrer does not have an email`() {
+        val submittedApplicationWithNoReferrerEmail = Cas2ApplicationEntityFactory()
+          .withCreatedByUser(NomisUserEntityFactory().withEmail(null).produce())
           .withCrn("CRN123")
           .withNomsNumber("NOMSABC")
           .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
           .produce()
-        private val applicationId = submittedApplication.id
-        private val noteEntity = Cas2ApplicationNoteEntity(
-          id = UUID.randomUUID(),
-          createdByUser = externalUser,
-          application = submittedApplication,
-          body = "new note",
-          createdAt = OffsetDateTime.now().randomDateTimeBefore(1),
+
+        every { mockApplicationRepository.findByIdOrNull(applicationId) } answers
+          {
+            submittedApplicationWithNoReferrerEmail
+          }
+        every { mockExternalUserService.getUserForRequest() } returns externalUser
+        mockkStatic(Sentry::class)
+
+        every {
+          Sentry.captureException(
+            RuntimeException(
+              "Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}. " +
+                "Unable to send email for Note ${noteEntity.id} on Application ${submittedApplicationWithNoReferrerEmail.id}",
+              NotFoundException("Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}"),
+            ),
+          )
+        } returns SentryId.EMPTY_ID
+
+        applicationNoteService.createApplicationNote(
+          applicationId = applicationId,
+          NewCas2ApplicationNote(note = "new note"),
         )
 
-        @Test
-        fun `returns Success result with entity from db`() {
-          every { mockApplicationRepository.findByIdOrNull(applicationId) } answers
-            {
-              submittedApplication
-            }
-          every { mockExternalUserService.getUserForRequest() } returns externalUser
-          every { mockApplicationNoteRepository.save(any()) } answers
-            {
-              noteEntity
-            }
-          every {
-            mockEmailNotificationService.sendCas2Email(
-              recipientEmailAddress = referrer.email!!,
-              templateId = "abc123",
-              personalisation = mapOf(
-                "dateNoteAdded" to noteEntity.createdAt.toLocalDate().toCas2UiFormat(),
-                "timeNoteAdded" to noteEntity.createdAt.toCas2UiFormattedHourOfDay(),
-                "nomsNumber" to "NOMSABC",
-                "applicationType" to "Home Detention Curfew (HDC)",
-                "applicationUrl" to "http://frontend/applications/$applicationId/overview",
-              ),
-            )
-          } just Runs
-
-          val result = applicationNoteService.createApplicationNote(
-            applicationId = applicationId,
-            NewCas2ApplicationNote(note = "new note"),
+        verify(exactly = 1) {
+          Sentry.captureException(
+            any(),
           )
-
-          verify(exactly = 1) { mockApplicationNoteRepository.save(any()) }
-
-          Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
-          result as AuthorisableActionResult.Success
-
-          Assertions.assertThat(result.entity is ValidatableActionResult.Success).isTrue
-          val validatableActionResult = result.entity as ValidatableActionResult.Success
-
-          val createdNote = validatableActionResult.entity
-
-          Assertions.assertThat(createdNote).isEqualTo(noteEntity)
-        }
-
-        @Test
-        fun `alerts Sentry when the Referrer does not have an email`() {
-          val submittedApplicationWithNoReferrerEmail = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(NomisUserEntityFactory().withEmail(null).produce())
-            .withCrn("CRN123")
-            .withNomsNumber("NOMSABC")
-            .withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore(2))
-            .produce()
-
-          every { mockApplicationRepository.findByIdOrNull(applicationId) } answers
-            {
-              submittedApplicationWithNoReferrerEmail
-            }
-          every { mockExternalUserService.getUserForRequest() } returns externalUser
-          every { mockApplicationNoteRepository.save(any()) } answers
-            {
-              noteEntity
-            }
-          mockkStatic(Sentry::class)
-
-          every {
-            Sentry.captureException(
-              RuntimeException(
-                "Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}. " +
-                  "Unable to send email for Note ${noteEntity.id} on Application ${submittedApplicationWithNoReferrerEmail.id}",
-                NotFoundException("Email not found for User ${submittedApplicationWithNoReferrerEmail.createdByUser.id}"),
-              ),
-            )
-          } returns SentryId.EMPTY_ID
-
-          applicationNoteService.createApplicationNote(
-            applicationId = applicationId,
-            NewCas2ApplicationNote(note = "new note"),
-          )
-
-          verify(exactly = 1) {
-            Sentry.captureException(
-              any(),
-            )
-          }
-        }
-      }
-
-      @Nested
-      inner class WhenUnsuccessful {
-        @Test
-        fun `returns Not Found when application not found`() {
-          every { mockApplicationRepository.findByIdOrNull(any()) } answers
-            {
-              null
-            }
-
-          every { mockExternalUserService.getUserForRequest() } returns externalUser
-
-          Assertions.assertThat(
-            applicationNoteService.createApplicationNote(
-              applicationId = UUID.randomUUID(),
-              note = NewCas2ApplicationNote(note = "note for missing app"),
-            ) is AuthorisableActionResult.NotFound,
-          ).isTrue
-
-          verify(exactly = 0) { mockEmailNotificationService.sendCas2Email(any(), any(), any()) }
-        }
-
-        @Test
-        fun `returns Validation error when application is not submitted`() {
-          val applicationNotSubmitted = Cas2ApplicationEntityFactory()
-            .withCreatedByUser(referrer)
-            .withCrn("CRN123")
-            .withNomsNumber("NOMSABC")
-            .produce()
-
-          every { mockApplicationRepository.findByIdOrNull(any()) } answers
-            {
-              applicationNotSubmitted
-            }
-
-          every { mockExternalUserService.getUserForRequest() } returns externalUser
-
-          val result = applicationNoteService.createApplicationNote(
-            applicationId = applicationNotSubmitted.id,
-            note = NewCas2ApplicationNote(note = "note for in progress app"),
-          )
-          Assertions.assertThat(result is AuthorisableActionResult.Success).isTrue
-          result as AuthorisableActionResult.Success
-
-          Assertions.assertThat(result.entity is ValidatableActionResult.GeneralValidationError).isTrue
-          val validatableActionResult = result.entity as ValidatableActionResult.GeneralValidationError
-
-          Assertions.assertThat(validatableActionResult.message).isEqualTo("This application has not been submitted")
-
-          verify(exactly = 0) { mockEmailNotificationService.sendCas2Email(any(), any(), any()) }
         }
       }
     }

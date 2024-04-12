@@ -34,6 +34,7 @@ class ApplicationNoteService(
   private val externalUserService: ExternalUserService,
   private val httpAuthService: HttpAuthService,
   private val emailNotificationService: EmailNotificationService,
+  private val userAccessService: UserAccessService,
   private val notifyConfig: NotifyConfig,
   @Value("\${url-templates.frontend.cas2.application-overview}") private val applicationUrlTemplate: String,
   @Value("\${url-templates.frontend.cas2.submitted-application-overview}") private val assessmentUrlTemplate: String,
@@ -45,17 +46,17 @@ class ApplicationNoteService(
     val application = applicationRepository.findByIdOrNull(applicationId)
       ?: return AuthorisableActionResult.NotFound()
 
-    val isExternalUser = httpAuthService.getCas2AuthenticatedPrincipalOrThrow().isExternalUser()
-    val user = getCas2User(isExternalUser)
-
-    if (!isExternalUser && !isApplicationCreatedByUser(application, user as NomisUserEntity)) {
-      return AuthorisableActionResult.Unauthorised()
-    }
-
     if (application.submittedAt == null) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("This application has not been submitted"),
       )
+    }
+
+    val isExternalUser = httpAuthService.getCas2AuthenticatedPrincipalOrThrow().isExternalUser()
+    val user = getCas2User(isExternalUser)
+
+    if (!isExternalUser && !nomisUserCanAddNote(application, user as NomisUserEntity)) {
+      return AuthorisableActionResult.Unauthorised()
     }
 
     val savedNote = saveNote(application, note.note, user)
@@ -155,8 +156,14 @@ class ApplicationNoteService(
     }
   }
 
-  private fun isApplicationCreatedByUser(application: Cas2ApplicationEntity, user: NomisUserEntity) =
-    application.createdByUser.id == user.id
+  private fun nomisUserCanAddNote(application: Cas2ApplicationEntity, user: NomisUserEntity):
+    Boolean {
+    return if (user.id == application.createdByUser.id) {
+      true
+    } else {
+      userAccessService.offenderIsFromSamePrisonAsUser(application.referringPrisonCode, user.activeCaseloadId)
+    }
+  }
 
   private fun saveNote(application: Cas2ApplicationEntity, body: String, user: Cas2User): Cas2ApplicationNoteEntity {
     val newNote = Cas2ApplicationNoteEntity(
