@@ -295,13 +295,17 @@ class DomainEventDescriberTest {
   @ParameterizedTest
   @CsvSource(
     value = [
-      ",,an unknown user,automatically",
-      "Alan,,Alan A,automatically",
-      ",Brenda,an unknown user,by Brenda B",
-      "Carol,Derek,Carol C,by Derek D",
+      ",,The assessment was allocated to an unknown user automatically",
+      "Alan,,The assessment was allocated to Alan A automatically",
+      ",Brenda,The assessment was allocated to an unknown user by Brenda B",
+      "Carol,Derek,The assessment was allocated to Carol C by Derek D",
     ],
   )
-  fun `Returns expected description for assessment allocated event`(allocatedTo: String?, allocatedBy: String?, expectedTo: String, expectedBy: String) {
+  fun `Returns expected description for assessment allocated event`(
+    allocatedTo: String?,
+    allocatedBy: String?,
+    expectedDescription: String,
+    ) {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED)
 
     every { mockDomainEventService.getAssessmentAllocatedEvent(any()) } returns buildDomainEvent {
@@ -332,7 +336,7 @@ class DomainEventDescriberTest {
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("The assessment was allocated to $expectedTo $expectedBy")
+    assertThat(result).isEqualTo(expectedDescription)
   }
 
   @Test
