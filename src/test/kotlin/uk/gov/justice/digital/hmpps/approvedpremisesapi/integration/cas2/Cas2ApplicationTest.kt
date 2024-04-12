@@ -399,6 +399,241 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       }
       return allDescending == 1
     }
+
+    @Nested
+    inner class WithPrisonCode {
+      @Test
+      fun `Get all applications using prisonCode returns 200 with correct body`() {
+        `Given a CAS2 User` { userAPrisonA, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+            cas2ApplicationJsonSchemaRepository.deleteAll()
+
+            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+            }
+
+            val userAPrisonAApplicationIds = mutableListOf<UUID>()
+
+            repeat(5) {
+              userAPrisonAApplicationIds.add(
+                cas2ApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(applicationSchema)
+                  withCreatedByUser(userAPrisonA)
+                  withCrn(offenderDetails.otherIds.crn)
+                  withData("{}")
+                  withCreatedAt(OffsetDateTime.now().randomDateTimeBefore())
+                  withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                }.id,
+              )
+            }
+
+            val userBPrisonA = nomisUserEntityFactory.produceAndPersist {
+              withActiveCaseloadId(userAPrisonA.activeCaseloadId!!)
+            }
+
+            val userBPrisonAApplicationIds = mutableListOf<UUID>()
+
+            repeat(6) {
+              userBPrisonAApplicationIds.add(
+                cas2ApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(applicationSchema)
+                  withCreatedByUser(userBPrisonA)
+                  withCrn(offenderDetails.otherIds.crn)
+                  withData("{}")
+                  withCreatedAt(OffsetDateTime.now().randomDateTimeBefore())
+                  withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                }.id,
+              )
+            }
+
+            val userCPrisonB = nomisUserEntityFactory.produceAndPersist {
+              withActiveCaseloadId("another prison")
+            }
+
+            val otherPrisonApplication = cas2ApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(userCPrisonB)
+              withCrn(offenderDetails.otherIds.crn)
+              withData("{}")
+              withCreatedAt(OffsetDateTime.now().randomDateTimeBefore())
+              withReferringPrisonCode(userCPrisonB.activeCaseloadId!!)
+            }
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/cas2/applications?prisonCode=${userAPrisonA.activeCaseloadId}")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.cas2.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+            val returnedApplicationIds = responseBody.map { it.id }.toSet()
+
+            Assertions.assertThat(returnedApplicationIds).isEqualTo(
+              userAPrisonAApplicationIds.toSet().union(userBPrisonAApplicationIds.toSet()),
+            )
+
+            Assertions.assertThat(responseBody).noneMatch {
+              otherPrisonApplication.id == it.id
+            }
+          }
+        }
+      }
+
+      @Test
+      fun `Get all submitted applications using prisonCode returns 200 with correct body`() {
+        `Given a CAS2 User` { userAPrisonA, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+            cas2ApplicationJsonSchemaRepository.deleteAll()
+
+            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+            }
+
+            val userAPrisonAApplicationIds = mutableListOf<UUID>()
+
+            repeat(5) {
+              userAPrisonAApplicationIds.add(
+                cas2ApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(applicationSchema)
+                  withCreatedByUser(userAPrisonA)
+                  withCrn(offenderDetails.otherIds.crn)
+                  withData("{}")
+                  withCreatedAt(OffsetDateTime.now().randomDateTimeBefore())
+                  withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                }.id,
+              )
+            }
+
+            val userBPrisonA = nomisUserEntityFactory.produceAndPersist {
+              withActiveCaseloadId(userAPrisonA.activeCaseloadId!!)
+            }
+
+            val userBPrisonAApplicationIds = mutableListOf<UUID>()
+
+            repeat(6) {
+              userBPrisonAApplicationIds.add(
+                cas2ApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(applicationSchema)
+                  withCreatedByUser(userBPrisonA)
+                  withCrn(offenderDetails.otherIds.crn)
+                  withData("{}")
+                  withCreatedAt(OffsetDateTime.now().randomDateTimeBefore())
+                  withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
+                  withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                }.id,
+              )
+            }
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/cas2/applications?isSubmitted=true&prisonCode=${userAPrisonA.activeCaseloadId}")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.cas2.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+            val returnedApplicationIds = responseBody.map { it.id }.toSet()
+
+            Assertions.assertThat(returnedApplicationIds).isEqualTo(userBPrisonAApplicationIds.toSet())
+          }
+        }
+      }
+
+      @Test
+      fun `Get all unsubmitted applications using prisonCode returns 200 with correct body`() {
+        `Given a CAS2 User` { userAPrisonA, jwt ->
+          `Given an Offender` { offenderDetails, _ ->
+            cas2ApplicationJsonSchemaRepository.deleteAll()
+
+            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+            }
+
+            val userAPrisonAApplicationIds = mutableListOf<UUID>()
+
+            repeat(5) {
+              userAPrisonAApplicationIds.add(
+                cas2ApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(applicationSchema)
+                  withCreatedByUser(userAPrisonA)
+                  withCrn(offenderDetails.otherIds.crn)
+                  withData("{}")
+                  withCreatedAt(OffsetDateTime.now().randomDateTimeBefore())
+                  withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                }.id,
+              )
+            }
+
+            val userBPrisonA = nomisUserEntityFactory.produceAndPersist {
+              withActiveCaseloadId(userAPrisonA.activeCaseloadId!!)
+            }
+
+            val userBPrisonAApplicationIds = mutableListOf<UUID>()
+
+            repeat(6) {
+              userBPrisonAApplicationIds.add(
+                cas2ApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(applicationSchema)
+                  withCreatedByUser(userBPrisonA)
+                  withCrn(offenderDetails.otherIds.crn)
+                  withData("{}")
+                  withCreatedAt(OffsetDateTime.now().randomDateTimeBefore())
+                  withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
+                  withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                }.id,
+              )
+            }
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/cas2/applications?isSubmitted=false&prisonCode=${userAPrisonA.activeCaseloadId}")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.cas2.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody =
+              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+            val returnedApplicationIds = responseBody.map { it.id }.toSet()
+
+            Assertions.assertThat(returnedApplicationIds).isEqualTo(userAPrisonAApplicationIds.toSet())
+          }
+        }
+      }
+
+      @Test
+      fun `Get applications using another prisonCode returns Forbidden 403`() {
+        `Given a CAS2 User` { userAPrisonA, jwt ->
+          val rawResponseBody = webTestClient.get()
+            .uri("/cas2/applications?prisonCode=${userAPrisonA.activeCaseloadId!!.reversed()}")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.cas2.value)
+            .exchange()
+            .expectStatus()
+            .isForbidden()
+        }
+      }
+    }
   }
 
   @Nested
