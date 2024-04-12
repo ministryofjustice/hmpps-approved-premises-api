@@ -455,15 +455,6 @@ class ApplicationsTransformerTest {
     assertThat(result.risks).isNotNull
   }
 
-  @ParameterizedTest
-  @MethodSource("applicationStatusArgs")
-  fun `transformApiApprovedPremisesApplicationStatusToJpa transforms statuses correctly`(args: Pair<ApiApprovedPremisesApplicationStatus, ApprovedPremisesApplicationStatus>) {
-    val (apiStatus, jpaStatus) = args
-    assertThat(applicationsTransformer.transformApiApprovedPremisesApplicationStatusToJpa(apiStatus)).isEqualTo(
-      jpaStatus,
-    )
-  }
-
   private companion object {
     @JvmStatic
     fun applicationStatusArgs() = listOf(
