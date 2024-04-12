@@ -60,6 +60,11 @@ paths:
           description: Page number of results to return.  If blank, returns all results
           schema:
             type: integer
+        - name: prisonCode
+          in: query
+          description: Prison code of applications to return.  If blank, returns all results.
+          schema:
+            type: string
       responses:
         200:
           description: successful operation

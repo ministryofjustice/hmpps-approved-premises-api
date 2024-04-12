@@ -40,15 +40,28 @@ class ApplicationsController(
   private val userService: NomisUserService,
 ) : ApplicationsCas2Delegate {
 
-  override fun applicationsGet(isSubmitted: Boolean?, page: Int?): ResponseEntity<List<ApplicationSummary>> {
+  override fun applicationsGet(
+    isSubmitted: Boolean?,
+    page: Int?,
+    prisonCode: String?,
+  ): ResponseEntity<List<ApplicationSummary>> {
     val user = userService.getUserForRequest()
+
+    prisonCode?.let { if (prisonCode != user.activeCaseloadId) throw ForbiddenProblem() }
 
     val pageCriteria = PageCriteria("created_at", SortDirection.desc, page)
 
-    val (applications, metadata) = when (isSubmitted) {
-      true -> applicationService.getSubmittedApplicationsForUser(user, pageCriteria)
-      false -> applicationService.getUnsubmittedApplicationsForUser(user, pageCriteria)
-      null -> applicationService.getAllApplicationsForUser(user, pageCriteria)
+    val (applications, metadata) = when (prisonCode) {
+      null -> when (isSubmitted) {
+        true -> applicationService.getSubmittedApplicationsForUser(user, pageCriteria)
+        false -> applicationService.getUnsubmittedApplicationsForUser(user, pageCriteria)
+        null -> applicationService.getAllApplicationsForUser(user, pageCriteria)
+      }
+      else -> when (isSubmitted) {
+        true -> applicationService.getSubmittedApplicationsByPrison(prisonCode, pageCriteria)
+        false -> applicationService.getUnsubmittedApplicationsByPrison(prisonCode, pageCriteria)
+        null -> applicationService.getAllApplicationsByPrison(prisonCode, pageCriteria)
+      }
     }
 
     return ResponseEntity.ok().headers(
