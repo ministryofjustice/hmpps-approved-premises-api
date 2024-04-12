@@ -10,6 +10,7 @@ import java.util.UUID
 class ProbationDeliveryUnitEntityFactory : Factory<ProbationDeliveryUnitEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var name: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
+  private var deliusCode: Yielded<String> = { randomStringMultiCaseWithNumbers(8) }
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
 
   fun withId(id: UUID) = apply {
@@ -18,6 +19,10 @@ class ProbationDeliveryUnitEntityFactory : Factory<ProbationDeliveryUnitEntity> 
 
   fun withName(name: String) = apply {
     this.name = { name }
+  }
+
+  fun withDeliusCode(deliusCode: String) = apply {
+    this.deliusCode = { deliusCode }
   }
 
   fun withYieldedProbationRegion(probationRegion: Yielded<ProbationRegionEntity>) = apply {
@@ -31,6 +36,7 @@ class ProbationDeliveryUnitEntityFactory : Factory<ProbationDeliveryUnitEntity> 
   override fun produce(): ProbationDeliveryUnitEntity = ProbationDeliveryUnitEntity(
     id = this.id(),
     name = this.name(),
+    deliusCode = this.deliusCode(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("Must provide a Probation Region"),
   )
 }

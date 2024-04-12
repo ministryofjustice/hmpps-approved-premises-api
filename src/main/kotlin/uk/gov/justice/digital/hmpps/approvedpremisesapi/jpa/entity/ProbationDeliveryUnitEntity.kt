@@ -24,6 +24,7 @@ data class ProbationDeliveryUnitEntity(
   @Id
   val id: UUID,
   val name: String,
+  val deliusCode: String?,
   @ManyToOne
   @JoinColumn(name = "probation_region_id")
   val probationRegion: ProbationRegionEntity,
