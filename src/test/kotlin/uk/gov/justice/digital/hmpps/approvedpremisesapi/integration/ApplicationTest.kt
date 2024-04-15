@@ -63,7 +63,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UnknownPerson
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApprovedPremisesApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.User
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
@@ -2846,10 +2845,37 @@ class ApplicationTest : IntegrationTestBase() {
           withBody("note3")
           withId(note3Id)
           withCreatedAt(note3CreatedAt)
-          withCreatedBy(user)
+          withCreatedBy(null)
         }
 
-        val notes = createThreeTimelineEventsOfType(userTransformer.transformJpaToApi(user, ServiceName.approvedPremises))
+        val user = userTransformer.transformJpaToApi(user, ServiceName.approvedPremises)
+
+        val expectedNotes = listOf(
+          TimelineEvent(
+            TimelineEventType.applicationTimelineNote,
+            note1Id.toString(),
+            note1CreatedAt.toInstant(),
+            "note1",
+            user,
+            associatedUrls = emptyList(),
+          ),
+          TimelineEvent(
+            TimelineEventType.applicationTimelineNote,
+            note2Id.toString(),
+            note2CreatedAt.toInstant(),
+            "note2",
+            user,
+            associatedUrls = emptyList(),
+          ),
+          TimelineEvent(
+            TimelineEventType.applicationTimelineNote,
+            note3Id.toString(),
+            note3CreatedAt.toInstant(),
+            "note3",
+            createdBy = null,
+            associatedUrls = emptyList(),
+          ),
+        )
 
         webTestClient.get()
           .uri("/applications/$applicationId/timeline")
@@ -2859,7 +2885,7 @@ class ApplicationTest : IntegrationTestBase() {
           .expectStatus()
           .isOk
           .expectBody()
-          .json(objectMapper.writeValueAsString(notes))
+          .json(objectMapper.writeValueAsString(expectedNotes))
       }
     }
 
@@ -2962,35 +2988,6 @@ class ApplicationTest : IntegrationTestBase() {
           .expectBody()
           .jsonForObject(expected)
       }
-    }
-
-    private fun createThreeTimelineEventsOfType(user: User): List<TimelineEvent> {
-      return listOf(
-        TimelineEvent(
-          TimelineEventType.applicationTimelineNote,
-          note1Id.toString(),
-          note1CreatedAt.toInstant(),
-          "note1",
-          user,
-          associatedUrls = emptyList(),
-        ),
-        TimelineEvent(
-          TimelineEventType.applicationTimelineNote,
-          note2Id.toString(),
-          note2CreatedAt.toInstant(),
-          "note2",
-          user,
-          associatedUrls = emptyList(),
-        ),
-        TimelineEvent(
-          TimelineEventType.applicationTimelineNote,
-          note3Id.toString(),
-          note3CreatedAt.toInstant(),
-          "note3",
-          user,
-          associatedUrls = emptyList(),
-        ),
-      )
     }
 
     private fun createAssessment(user: UserEntity): ApprovedPremisesAssessmentEntity {
@@ -3255,7 +3252,7 @@ class ApplicationTest : IntegrationTestBase() {
         savedNote.map {
           assertThat(it.body).isEqualTo("some note")
           assertThat(it.applicationId).isEqualTo(applicationId)
-          assertThat(it.createdBy.id).isEqualTo(user.id)
+          assertThat(it.createdBy!!.id).isEqualTo(user.id)
         }
       }
     }

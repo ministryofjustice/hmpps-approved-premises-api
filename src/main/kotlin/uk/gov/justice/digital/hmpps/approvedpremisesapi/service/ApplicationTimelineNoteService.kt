@@ -15,7 +15,7 @@ class ApplicationTimelineNoteService(
   fun getApplicationTimelineNotesByApplicationId(applicationId: UUID): List<ApplicationTimelineNoteEntity> =
     applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(applicationId)
 
-  fun saveApplicationTimelineNote(applicationId: UUID, note: String, user: UserEntity):
+  fun saveApplicationTimelineNote(applicationId: UUID, note: String, user: UserEntity?):
     ApplicationTimelineNoteEntity {
     return applicationTimelineNoteRepository.save(
       ApplicationTimelineNoteEntity(
