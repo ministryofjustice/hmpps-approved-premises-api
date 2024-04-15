@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import java.util.UUID
+import javax.transaction.Transactional
 
 @Service
 class TaskService(
@@ -144,6 +145,8 @@ class TaskService(
 
   private fun List<Task>.idsForType(type: TaskEntityType) = this.filter { it.type == type }.map { it.id }
 
+  @SuppressWarnings("ReturnCount", "CyclomaticComplexMethod")
+  @Transactional
   fun reallocateTask(requestUser: UserEntity, taskType: TaskType, userToAllocateToId: UUID, id: UUID): AuthorisableActionResult<ValidatableActionResult<Reallocation>> {
     if (!userAccessService.userCanReallocateTask(requestUser)) {
       return AuthorisableActionResult.Unauthorised()
