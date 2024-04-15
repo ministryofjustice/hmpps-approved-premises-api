@@ -1857,6 +1857,25 @@ class AssessmentServiceTest {
       assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingQualifications")
     }
 
+    @Test
+    fun `reallocateAssessment for Approved Premises returns Conflict Error when assessment has already been reallocated`() {
+      previousAssessment.apply {
+        reallocatedAt = OffsetDateTime.now()
+      }
+
+      every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
+
+      val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      val validationResult = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(validationResult is ValidatableActionResult.ConflictError).isTrue
+      validationResult as ValidatableActionResult.ConflictError
+      assertThat(validationResult.conflictingEntityId).isEqualTo(previousAssessment.id)
+      assertThat(validationResult.message).isEqualTo("This assessment has already been reallocated")
+    }
+
     @ParameterizedTest
     @ValueSource(booleans = [true, false])
     fun `reallocateAssessment for Approved Premises returns Success, deallocates old assessment and creates a new one, sends allocation & deallocation emails and domain events`(createdFromAppeal: Boolean) {

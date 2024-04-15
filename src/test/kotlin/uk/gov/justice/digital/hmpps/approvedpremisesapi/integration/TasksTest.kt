@@ -1929,6 +1929,45 @@ class TasksTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `Reallocate assessment to different assessor returns an error if the assessment has already been allocated`() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { _, jwt ->
+        `Given a User`(roles = listOf(UserRole.CAS1_ASSESSOR)) { user, _ ->
+          `Given a User`(
+            roles = listOf(UserRole.CAS1_ASSESSOR),
+          ) { assigneeUser, _ ->
+            `Given an Offender` { offenderDetails, _ ->
+              `Given an Assessment for Approved Premises`(
+                allocatedToUser = user,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+                reallocated = true,
+              ) { existingAssessment, application ->
+
+                webTestClient.post()
+                  .uri("/tasks/assessment/${existingAssessment.id}/allocations")
+                  .header("Authorization", "Bearer $jwt")
+                  .header("X-Service-Name", ServiceName.approvedPremises.value)
+                  .bodyValue(
+                    NewReallocation(
+                      userId = assigneeUser.id,
+                    ),
+                  )
+                  .exchange()
+                  .expectStatus()
+                  .is4xxClientError()
+                  .expectBody()
+                  .jsonPath("title").isEqualTo("Conflict")
+                  .jsonPath("status").isEqualTo(409)
+                  .jsonPath("detail")
+                  .isEqualTo("This assessment has already been reallocated: ${existingAssessment.id}")
+              }
+            }
+          }
+        }
+      }
+    }
+
+    @Test
     fun `Reallocating a placement request to different assessor returns 201, creates new placement request, deallocates old one`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
         `Given a User`(

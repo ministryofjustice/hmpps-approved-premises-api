@@ -244,6 +244,25 @@ class PlacementRequestServiceTest {
     }
 
     @Test
+    fun `reallocatePlacementRequest returns Conflict Error when placement request has already been reallocated`() {
+      previousPlacementRequest.apply {
+        reallocatedAt = OffsetDateTime.now()
+      }
+
+      every { placementRequestRepository.findByIdOrNull(previousPlacementRequest.id) } returns previousPlacementRequest
+
+      val result = placementRequestService.reallocatePlacementRequest(assigneeUser, previousPlacementRequest.id)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      val validationResult = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(validationResult is ValidatableActionResult.ConflictError).isTrue
+      validationResult as ValidatableActionResult.ConflictError
+      assertThat(validationResult.conflictingEntityId).isEqualTo(previousPlacementRequest.id)
+      assertThat(validationResult.message).isEqualTo("This placement request has already been reallocated")
+    }
+
+    @Test
     fun `reallocatePlacementRequest returns Field Validation Error when user to assign to is not a MATCHER`() {
       assigneeUser.apply {
         roles = mutableListOf()

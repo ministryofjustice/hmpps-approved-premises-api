@@ -148,6 +148,15 @@ class PlacementRequestService(
     val currentPlacementRequest = placementRequestRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
+    if (currentPlacementRequest.reallocatedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.ConflictError(
+          currentPlacementRequest.id,
+          "This placement request has already been reallocated",
+        ),
+      )
+    }
+
     if (currentPlacementRequest.booking != null) {
       return AuthorisableActionResult.Success(
         ValidatableActionResult.GeneralValidationError("This placement request has already been completed"),

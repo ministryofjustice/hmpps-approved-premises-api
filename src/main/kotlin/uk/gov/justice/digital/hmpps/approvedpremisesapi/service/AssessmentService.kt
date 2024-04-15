@@ -699,6 +699,15 @@ class AssessmentService(
     val currentAssessment = assessmentRepository.findByIdOrNull(id)
       ?: return AuthorisableActionResult.NotFound()
 
+    if (currentAssessment.reallocatedAt != null) {
+      return AuthorisableActionResult.Success(
+        ValidatableActionResult.ConflictError(
+          currentAssessment.id,
+          "This assessment has already been reallocated",
+        ),
+      )
+    }
+
     return when (currentAssessment) {
       is ApprovedPremisesAssessmentEntity -> reallocateApprovedPremisesAssessment(assigneeUser, currentAssessment)
       is TemporaryAccommodationAssessmentEntity -> reallocateTemporaryAccommodationAssessment(
