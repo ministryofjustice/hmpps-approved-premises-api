@@ -9,8 +9,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.allocations.UserAllocato
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedAssessedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAllocated
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
@@ -50,13 +48,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Offender
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageableOrAllPages
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
-import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -83,7 +81,7 @@ class AssessmentService(
   @Value("\${url-templates.frontend.application}") private val applicationUrlTemplate: UrlTemplate,
   private val taskDeadlineService: TaskDeadlineService,
   private val assessmentEmailService: Cas1AssessmentEmailService,
-  @Value("\${url-templates.frontend.assessment}") private val assessmentUrlTemplate: UrlTemplate,
+  private val cas1AssessmentDomainEventService: Cas1AssessmentDomainEventService,
 ) {
   fun getVisibleAssessmentSummariesForUserCAS1(
     user: UserEntity,
@@ -233,9 +231,8 @@ class AssessmentService(
       } else {
         assessmentEmailService.assessmentAllocated(allocatedUser, assessment.id, application.crn, assessment.dueAt, application.noticeType == Cas1ApplicationTimelinessCategory.emergency)
       }
+      cas1AssessmentDomainEventService.assessmentAllocated(assessment, allocatedUser, allocatingUser = null)
     }
-
-    createAllocatedDomainEvent(assessment, allocatedUser)
 
     return assessment
   }
@@ -783,7 +780,7 @@ class AssessmentService(
       if (allocatedToUser != null) {
         assessmentEmailService.assessmentDeallocated(allocatedToUser, newAssessment.id, application.crn)
       }
-      createAllocatedDomainEvent(newAssessment, assigneeUser)
+      cas1AssessmentDomainEventService.assessmentAllocated(newAssessment, assigneeUser, userService.getUserForRequest())
     }
 
     return AuthorisableActionResult.Success(
@@ -961,62 +958,6 @@ class AssessmentService(
         message = "",
         createdByUser = user,
         type = type,
-      ),
-    )
-  }
-
-  private fun createAllocatedDomainEvent(assessment: AssessmentEntity, allocatedToUser: UserEntity?) {
-    val allocatedToStaffDetails = allocatedToUser?.let {
-      when (val result = communityApiClient.getStaffUserDetails(allocatedToUser.deliusUsername)) {
-        is ClientResult.Success -> result.body
-        is ClientResult.Failure -> result.throwException()
-      }
-    }
-    val actingUserStaffDetails = when (val result = communityApiClient.getStaffUserDetails(userService.getUserForRequest().deliusUsername)) {
-      is ClientResult.Success -> result.body
-      is ClientResult.Failure -> result.throwException()
-    }
-    val id = UUID.randomUUID()
-    val occurredAt = Instant.now()
-    domainEventService.saveAssessmentAllocatedEvent(
-      DomainEvent(
-        id = id,
-        applicationId = assessment.application.id,
-        assessmentId = assessment.id,
-        crn = assessment.application.crn,
-        occurredAt = occurredAt,
-        data = AssessmentAllocatedEnvelope(
-          id = id,
-          timestamp = occurredAt,
-          eventType = "approved-premises.assessment.allocated",
-          eventDetails = AssessmentAllocated(
-            assessmentId = assessment.id,
-            assessmentUrl = assessmentUrlTemplate.resolve("id", assessment.id.toString()),
-            applicationId = assessment.application.id,
-            applicationUrl = applicationUrlTemplate.resolve("id", assessment.application.id.toString()),
-            allocatedAt = Instant.now(),
-            personReference = PersonReference(
-              crn = assessment.application.crn,
-              noms = assessment.application.nomsNumber ?: "Unknown NOMS Number",
-            ),
-            allocatedTo = allocatedToStaffDetails?.let {
-              StaffMember(
-                staffCode = allocatedToStaffDetails.staffCode,
-                staffIdentifier = allocatedToStaffDetails.staffIdentifier,
-                forenames = allocatedToStaffDetails.staff.forenames,
-                surname = allocatedToStaffDetails.staff.surname,
-                username = allocatedToStaffDetails.username,
-              )
-            },
-            allocatedBy = StaffMember(
-              staffCode = actingUserStaffDetails.staffCode,
-              staffIdentifier = actingUserStaffDetails.staffIdentifier,
-              forenames = actingUserStaffDetails.staff.forenames,
-              surname = actingUserStaffDetails.staff.surname,
-              username = actingUserStaffDetails.username,
-            ),
-          ),
-        ),
       ),
     )
   }

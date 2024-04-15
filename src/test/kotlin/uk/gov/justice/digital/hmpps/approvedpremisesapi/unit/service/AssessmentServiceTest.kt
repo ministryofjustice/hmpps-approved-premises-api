@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import io.mockk.Called
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
@@ -67,7 +68,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.ValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.AssessmentService
@@ -81,6 +81,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequire
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.TaskDeadlineService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.assertAssessmentHasSystemNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
@@ -107,6 +108,7 @@ class AssessmentServiceTest {
   private val objectMapperMock = spyk<ObjectMapper>()
   private val taskDeadlineServiceMock = mockk<TaskDeadlineService>()
   private val assessmentEmailServiceMock = mockk<Cas1AssessmentEmailService>()
+  private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
 
   private val assessmentService = AssessmentService(
     userServiceMock,
@@ -128,7 +130,7 @@ class AssessmentServiceTest {
     UrlTemplate("http://frontend/applications/#id"),
     taskDeadlineServiceMock,
     assessmentEmailServiceMock,
-    UrlTemplate("http://frontend/assessments/#id"),
+    cas1AssessmentDomainEventService,
   )
 
   @Test
@@ -1896,7 +1898,7 @@ class AssessmentServiceTest {
 
   @ParameterizedTest
   @ValueSource(booleans = [true, false])
-  fun `reallocateAssessment for Approved Premises returns Success, deallocates old assessment and creates a new one, sends allocation email & deallocation email`(createdFromAppeal: Boolean) {
+  fun `reallocateAssessment for Approved Premises returns Success, deallocates old assessment and creates a new one, sends allocation & deallocation emails and domain events`(createdFromAppeal: Boolean) {
     val assigneeUser = UserEntityFactory()
       .withDeliusUsername("Assignee User")
       .withYieldedProbationRegion {
@@ -1955,9 +1957,6 @@ class AssessmentServiceTest {
           .produce()
       }.produce()
 
-    val assigneeUserStaffDetails = StaffUserDetailsFactory().produce()
-    val actingUserStaffDetails = StaffUserDetailsFactory().produce()
-
     every { assessmentRepositoryMock.findByIdOrNull(previousAssessment.id) } returns previousAssessment
 
     every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesAssessmentJsonSchemaEntity(
@@ -1974,13 +1973,9 @@ class AssessmentServiceTest {
 
     every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
 
-    every { communityApiClientMock.getStaffUserDetails(assigneeUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, assigneeUserStaffDetails)
-
     every { userServiceMock.getUserForRequest() } returns actingUser
 
-    every { communityApiClientMock.getStaffUserDetails(actingUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, actingUserStaffDetails)
-
-    every { domainEventServiceMock.saveAssessmentAllocatedEvent(any()) } just Runs
+    every { cas1AssessmentDomainEventService.assessmentAllocated(any(), any(), any()) } just Runs
 
     val result = assessmentService.reallocateAssessment(assigneeUser, previousAssessment.id)
 
@@ -2014,7 +2009,9 @@ class AssessmentServiceTest {
       )
     }
 
-    assertAllocationDomainEventSent(newAssessment, actingUserStaffDetails, assigneeUserStaffDetails)
+    verify {
+      cas1AssessmentDomainEventService.assessmentAllocated(any(), assigneeUser, actingUser)
+    }
   }
 
   @Test
@@ -2239,6 +2236,7 @@ class AssessmentServiceTest {
     private val placementRequirementsServiceMock = mockk<PlacementRequirementsService>()
     private val userAllocatorMock = mockk<UserAllocator>()
     private val objectMapperMock = spyk<ObjectMapper>()
+    private val cas1AssessmentDomainEventService = mockk<Cas1AssessmentDomainEventService>()
 
     private val assessmentService = AssessmentService(
       userServiceMock,
@@ -2260,7 +2258,7 @@ class AssessmentServiceTest {
       UrlTemplate("http://frontend/applications/#id"),
       taskDeadlineServiceMock,
       assessmentEmailServiceMock,
-      UrlTemplate("http://frontend/assessments/#id"),
+      cas1AssessmentDomainEventService,
     )
 
     private val user = UserEntityFactory()
@@ -2488,7 +2486,7 @@ class AssessmentServiceTest {
         "emergency,false", "standard,false", "shortNotice,false",
       ],
     )
-    fun `createApprovedPremisesAssessment creates an Assessment and sends allocation email`(timelinessCategory: Cas1ApplicationTimelinessCategory, createdFromAppeal: Boolean) {
+    fun `create CAS1 Assessment creates an Assessment, sends allocation email and allocated domain event`(timelinessCategory: Cas1ApplicationTimelinessCategory, createdFromAppeal: Boolean) {
       val userWithLeastAllocatedAssessments = UserEntityFactory()
         .withYieldedProbationRegion {
           ProbationRegionEntityFactory()
@@ -2531,9 +2529,6 @@ class AssessmentServiceTest {
 
       val dueAt = OffsetDateTime.now()
 
-      val assigneeUserStaffDetails = StaffUserDetailsFactory().produce()
-      val actingUserStaffDetails = StaffUserDetailsFactory().produce()
-
       every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
 
       every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns userWithLeastAllocatedAssessments
@@ -2546,13 +2541,9 @@ class AssessmentServiceTest {
         every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
       }
 
-      every { communityApiClientMock.getStaffUserDetails(userWithLeastAllocatedAssessments.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, assigneeUserStaffDetails)
-
       every { userServiceMock.getUserForRequest() } returns actingUser
 
-      every { communityApiClientMock.getStaffUserDetails(actingUser.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, actingUserStaffDetails)
-
-      every { domainEventServiceMock.saveAssessmentAllocatedEvent(any()) } just Runs
+      every { cas1AssessmentDomainEventService.assessmentAllocated(any(), any(), any()) } just Runs
 
       val assessment = assessmentService.createApprovedPremisesAssessment(application, createdFromAppeal)
 
@@ -2578,11 +2569,52 @@ class AssessmentServiceTest {
         }
       }
 
-      assertAllocationDomainEventSent(assessment, actingUserStaffDetails, assigneeUserStaffDetails)
+      verify {
+        cas1AssessmentDomainEventService.assessmentAllocated(
+          assessment,
+          allocatedToUser = userWithLeastAllocatedAssessments,
+          allocatingUser = null,
+        )
+      }
     }
 
     @Test
-    fun `createTemporaryAccommodationAssessment creates an Assessment`() {
+    fun `create CAS1 Assessment doesn't create allocated domain event if no suitable allocation found`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce(),
+        )
+        .withApType(ApprovedPremisesType.PIPE)
+        .withNoticeType(Cas1ApplicationTimelinessCategory.shortNotice)
+        .produce()
+
+      val dueAt = OffsetDateTime.now()
+
+      every { assessmentRepositoryMock.save(any()) } answers { it.invocation.args[0] as ApprovedPremisesAssessmentEntity }
+
+      every { userAllocatorMock.getUserForAssessmentAllocation(any()) } returns null
+
+      every { taskDeadlineServiceMock.getDeadline(any<ApprovedPremisesAssessmentEntity>()) } returns dueAt
+
+      every { assessmentEmailServiceMock.assessmentAllocated(any(), any(), any(), any(), any()) } just Runs
+
+      every { userServiceMock.getUserForRequest() } returns actingUser
+
+      every { cas1AssessmentDomainEventService.assessmentAllocated(any(), any(), any()) } just Runs
+
+      assessmentService.createApprovedPremisesAssessment(application, createdFromAppeal = false)
+
+      verify { cas1AssessmentDomainEventService wasNot Called }
+    }
+
+    @Test
+    fun `create CAS3 Assessment`() {
       val probationRegion = ProbationRegionEntityFactory()
         .withYieldedApArea { ApAreaEntityFactory().produce() }
         .produce()
@@ -2761,53 +2793,6 @@ class AssessmentServiceTest {
           withdrawingUser = withdrawingUser,
         )
       }
-    }
-  }
-
-  private fun assertStaffMemberDetailsMatch(staffMember: StaffMember?, staffDetails: StaffUserDetails?) = when {
-    staffMember == null -> staffDetails == null
-    else ->
-      staffDetails != null &&
-        staffMember.staffCode == staffDetails.staffCode &&
-        staffMember.staffIdentifier == staffDetails.staffIdentifier &&
-        staffMember.forenames == staffDetails.staff.forenames &&
-        staffMember.surname == staffDetails.staff.surname &&
-        staffMember.username == staffDetails.username
-  }
-
-  private fun assertAllocationDomainEventSent(assessment: AssessmentEntity, actingUserStaffDetails: StaffUserDetails?, assigneeUserStaffDetails: StaffUserDetails?) {
-    verify(exactly = 1) {
-      domainEventServiceMock.saveAssessmentAllocatedEvent(
-        match {
-          val envelope = it.data
-          val eventDetails = envelope.eventDetails
-
-          val rootDomainEventDataMatches = (
-            it.assessmentId == assessment.id &&
-              it.applicationId == assessment.application.id &&
-              it.crn == assessment.application.crn
-            )
-
-          val envelopeMatches = envelope.eventType == "approved-premises.assessment.allocated"
-
-          val allocatedToUserDetailsMatch = assigneeUserStaffDetails?.let {
-            assertStaffMemberDetailsMatch(eventDetails.allocatedTo!!, assigneeUserStaffDetails)
-          } ?: true
-
-          val allocatedByUserDetailsMatch = assertStaffMemberDetailsMatch(eventDetails.allocatedBy, actingUserStaffDetails)
-
-          val eventDetailsMatch = (
-            eventDetails.assessmentId == assessment.id &&
-              eventDetails.assessmentUrl == "http://frontend/assessments/${assessment.id}" &&
-              eventDetails.personReference.crn == assessment.application.crn &&
-              eventDetails.personReference.noms == assessment.application.nomsNumber!! &&
-              allocatedToUserDetailsMatch &&
-              allocatedByUserDetailsMatch
-            )
-
-          rootDomainEventDataMatches && envelopeMatches && eventDetailsMatch
-        },
-      )
     }
   }
 }

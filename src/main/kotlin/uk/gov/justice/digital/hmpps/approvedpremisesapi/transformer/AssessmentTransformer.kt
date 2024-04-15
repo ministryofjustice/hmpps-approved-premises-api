@@ -44,11 +44,13 @@ class AssessmentTransformer(
       schemaVersion = jpa.schemaVersion.id,
       outdatedSchema = jpa.schemaUpToDate,
       createdAt = jpa.createdAt.toInstant(),
-      allocatedAt = jpa.allocatedAt!!.toInstant(),
+      allocatedAt = jpa.allocatedAt?.toInstant(),
       data = if (jpa.data != null) objectMapper.readTree(jpa.data) else null,
       clarificationNotes = jpa.clarificationNotes.map(assessmentClarificationNoteTransformer::transformJpaToApi),
       referralHistoryNotes = jpa.referralHistoryNotes.map(assessmentReferralHistoryNoteTransformer::transformJpaToApi),
-      allocatedToStaffMember = userTransformer.transformJpaToApi(jpa.allocatedToUser!!, ServiceName.approvedPremises) as ApprovedPremisesUser,
+      allocatedToStaffMember = jpa.allocatedToUser?.let {
+        userTransformer.transformJpaToApi(it, ServiceName.approvedPremises) as ApprovedPremisesUser
+      },
       submittedAt = jpa.submittedAt?.toInstant(),
       decision = transformJpaDecisionToApi(jpa.decision),
       rejectionRationale = jpa.rejectionRationale,
