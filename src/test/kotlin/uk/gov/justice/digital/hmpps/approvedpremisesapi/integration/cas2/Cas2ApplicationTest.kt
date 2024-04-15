@@ -196,6 +196,13 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withCrn(offenderDetails.otherIds.crn)
               withData("{}")
               withCreatedAt(OffsetDateTime.parse("2024-02-29T09:00:00+01:00"))
+              withSubmittedAt(OffsetDateTime.now())
+            }
+
+            val statusUpdate = cas2StatusUpdateEntityFactory.produceAndPersist {
+              withLabel("older status update")
+              withApplication(secondApplicationEntity)
+              withAssessor(externalUserEntityFactory.produceAndPersist())
             }
 
             val otherCas2ApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
@@ -234,6 +241,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
             Assertions.assertThat(responseBody[0].createdAt)
               .isEqualTo(secondApplicationEntity.createdAt.toInstant())
+
+            Assertions.assertThat(responseBody[0].latestStatusUpdate!!.label)
+              .isEqualTo(statusUpdate.label)
 
             Assertions.assertThat(responseBody[1].createdAt)
               .isEqualTo(firstApplicationEntity.createdAt.toInstant())

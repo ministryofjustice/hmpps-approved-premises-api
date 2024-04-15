@@ -27,16 +27,35 @@ interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID>
 
   @Query(
     """
-SELECT
-    CAST(a.id AS TEXT) as id,
-    a.crn,
-    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
-    a.created_at as createdAt,
-    a.submitted_at as submittedAt
-FROM cas_2_applications a
-WHERE a.created_by_user_id = :userId
-ORDER BY createdAt DESC
-""",
+    SELECT 
+        CAST(apps.id AS TEXT) as id,
+        apps.crn,
+        CAST(apps.created_by_user_id AS TEXT) as createdByUserId,
+        apps.created_at as createdAt,
+        apps.submitted_at as submittedAt,
+        asu.latestStatusUpdateLabel,
+        asu.latestStatusUpdateStatusId
+    FROM (
+    SELECT *
+    FROM cas_2_applications a
+    WHERE a.created_by_user_id = :userId
+    ) AS apps
+    LEFT JOIN
+      (SELECT DISTINCT ON (application_id)
+        su.application_id,
+        su.label as latestStatusUpdateLabel, 
+        CAST(su.status_id AS TEXT) as latestStatusUpdateStatusId
+      FROM cas_2_status_updates su
+      ORDER BY su.application_id, su.created_at DESC) as asu
+    ON apps.id = asu.application_id
+    ORDER BY createdAt DESC
+    """,
+    countQuery =
+    """
+    SELECT COUNT(*)
+      FROM cas_2_applications a
+    WHERE a.created_by_user_id = :userId
+    """,
     nativeQuery = true,
   )
   fun findAllCas2ApplicationSummariesCreatedByUser(userId: UUID, pageable: Pageable?):
@@ -44,25 +63,37 @@ ORDER BY createdAt DESC
 
   @Query(
     """
-SELECT
-    CAST(a.id AS TEXT) as id,
-    a.crn,
-    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
-    a.created_at as createdAt,
-    a.submitted_at as submittedAt,
-    asu.label as latestStatusUpdateLabel,
-    CAST(asu.status_id AS TEXT) as latestStatusUpdateStatusId
-FROM cas_2_applications a
-LEFT JOIN
-    (SELECT DISTINCT ON (application_id) su.application_id, 
-      su.label, su.status_id
-    FROM cas_2_status_updates su
-    ORDER BY su.application_id, su.created_at DESC) as asu
-ON a.id = asu.application_id
-WHERE a.created_by_user_id = :userId
-AND a.submitted_at IS NOT NULL
-ORDER BY createdAt DESC
+    SELECT 
+        CAST(apps.id AS TEXT) as id,
+        apps.crn,
+        CAST(apps.created_by_user_id AS TEXT) as createdByUserId,
+        apps.created_at as createdAt,
+        apps.submitted_at as submittedAt,
+        asu.latestStatusUpdateLabel,
+        asu.latestStatusUpdateStatusId
+    FROM (
+    SELECT *
+    FROM cas_2_applications a
+    WHERE a.created_by_user_id = :userId
+    AND a.submitted_at IS NOT NULL
+    ) AS apps
+    LEFT JOIN
+      (SELECT DISTINCT ON (application_id)
+        su.application_id,
+        su.label as latestStatusUpdateLabel, 
+        CAST(su.status_id AS TEXT) as latestStatusUpdateStatusId
+      FROM cas_2_status_updates su
+      ORDER BY su.application_id, su.created_at DESC) as asu
+    ON apps.id = asu.application_id
+    ORDER BY createdAt DESC
 """,
+    countQuery =
+    """
+    SELECT COUNT(*)
+      FROM cas_2_applications a
+    WHERE a.created_by_user_id = :userId
+    AND a.submitted_at IS NOT NULL
+    """,
     nativeQuery = true,
   )
   fun findSubmittedCas2ApplicationSummariesCreatedByUser(userId: UUID, pageable: Pageable?):
