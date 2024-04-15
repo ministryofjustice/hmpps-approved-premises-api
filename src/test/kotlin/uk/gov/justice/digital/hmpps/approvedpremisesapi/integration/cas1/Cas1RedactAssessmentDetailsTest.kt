@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.cas1
 
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.data.repository.findByIdOrNull
@@ -45,17 +45,30 @@ class Cas1RedactAssessmentDetailsTest : SeedTestBase() {
 
     val expectedJson = """{"sufficient-information":{"sufficient-information":{"sufficientInformation":"yes","query":""}}}"""
 
-    Assertions.assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment1NoJson.id)!!.data).isNull()
-    Assertions.assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment1NoJson.id)!!.document).isNull()
+    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment1NoJson.id)!!.data).isNull()
+    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment1NoJson.id)!!.document).isNull()
+    assertThat(
+      applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(assessment1NoJson.id).none {
+        it.body == "Assessment details redacted"
+      },
+    )
 
-    Assertions.assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment2HasJson.id)!!.data).isEqualTo(expectedJson)
-    Assertions.assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment2HasJson.id)!!.document).isEqualTo(expectedJson)
+    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment2HasJson.id)!!.data).isEqualTo(expectedJson)
+    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment2HasJson.id)!!.document).isEqualTo(expectedJson)
+    assertThat(
+      applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(assessment2HasJson.id).any {
+        it.body == "Assessment details redacted"
+      },
+    )
 
-    Assertions.assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment3Unmodified.id)!!.data).isEqualTo(sampleJson)
-    Assertions.assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment3Unmodified.id)!!.document).isEqualTo(sampleJson)
+    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment3Unmodified.id)!!.data).isEqualTo(sampleJson)
+    assertThat(approvedPremisesAssessmentRepository.findByIdOrNull(assessment3Unmodified.id)!!.document).isEqualTo(sampleJson)
+    assertThat(
+      applicationTimelineNoteRepository.findApplicationTimelineNoteEntitiesByApplicationId(assessment3Unmodified.id).none {
+        it.body == "Assessment details redacted"
+      },
+    )
   }
-
-  fun removeLineBreaks(input: String) = input.replace(Regex("""(\r\n)|\n"""), "")
 
   private fun createAssessment(data: String?): AssessmentEntity {
     val (user) = `Given a User`()

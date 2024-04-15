@@ -6,12 +6,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import java.util.UUID
 
 class Cas1RemoveAssessmentDetailsSeedJob(
   fileName: String,
   private val assessmentRepository: AssessmentRepository,
   private val objectMapper: ObjectMapper,
+  private val applicationService: ApplicationService,
 ) : SeedJob<Cas1RemoveAssessmentDetailsSeedCsvRow>(
   id = UUID.randomUUID(),
   fileName = fileName,
@@ -33,6 +35,14 @@ class Cas1RemoveAssessmentDetailsSeedJob(
     assessment.document = removeAllButSufficientInformation(assessment.document)
 
     assessmentRepository.save(assessment)
+
+    if (assessment.data != null || assessment.document != null) {
+      applicationService.addNoteToApplication(
+        applicationId = assessment.application.id,
+        note = "Assessment details redacted",
+        user = null,
+      )
+    }
 
     log.info("Updated JSON for assessment ${assessment.id}")
   }

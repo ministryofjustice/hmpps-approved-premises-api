@@ -58,7 +58,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
 import java.io.File
 import java.io.IOException
+import java.nio.file.Path
 import javax.annotation.PostConstruct
+import kotlin.io.path.absolutePathString
 
 @Service
 class SeedService(
@@ -241,6 +243,7 @@ class SeedService(
           filename,
           applicationContext.getBean(AssessmentRepository::class.java),
           applicationContext.getBean(ObjectMapper::class.java),
+          applicationContext.getBean(ApplicationService::class.java),
         )
       }
 
@@ -256,6 +259,7 @@ class SeedService(
     // During processing, the CSV file is processed one row at a time to avoid OOM issues.
     // It is preferable to fail fast rather than processing half of a file before stopping,
     // so we first do a full pass but only deserializing each row
+    seedLogger.info("Processing CSV file ${Path.of(job.resolveCsvPath()).absolutePathString()}")
     enforcePresenceOfRequiredHeaders(job, resolveCsvPath)
     ensureCsvCanBeDeserialized(job, resolveCsvPath)
     processCsv(job, resolveCsvPath)

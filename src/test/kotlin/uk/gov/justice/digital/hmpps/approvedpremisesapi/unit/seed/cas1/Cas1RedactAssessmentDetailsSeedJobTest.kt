@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1RemoveAssessmentDetailsSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 
 class Cas1RedactAssessmentDetailsSeedJobTest {
 
@@ -13,6 +14,7 @@ class Cas1RedactAssessmentDetailsSeedJobTest {
     fileName = "theFileName",
     assessmentRepository = mockk<AssessmentRepository>(),
     objectMapper = ObjectMapper(),
+    applicationService = mockk<ApplicationService>(),
   )
 
   @SuppressWarnings("MaxLineLength")
