@@ -189,21 +189,8 @@ class PlacementRequestServiceTest {
     verify { cas1PlacementRequestDomainEventService.placementRequestCreated(placementRequest, source) }
   }
 
-  @Test
-  fun `reallocatePlacementRequest returns General Validation Error when request already has an associated booking`() {
-    val premisesEntity = ApprovedPremisesEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
-      .produce()
-
-    val booking = BookingEntityFactory()
-      .withYieldedPremises { premisesEntity }
-      .produce()
-
+  @Nested
+  inner class ReallocatePlacementRequest {
     val application = ApprovedPremisesApplicationEntityFactory()
       .withCreatedByUser(assigneeUser)
       .produce()
@@ -213,43 +200,7 @@ class PlacementRequestServiceTest {
       .withAllocatedToUser(assigneeUser)
       .produce()
 
-    val previousPlacementRequest = PlacementRequestEntityFactory()
-      .withPlacementRequirements(
-        PlacementRequirementsEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .produce(),
-      )
-      .withApplication(application)
-      .withBooking(booking)
-      .withAssessment(assessment)
-      .withAllocatedToUser(previousUser)
-      .produce()
-
-    every { placementRequestRepository.findByIdOrNull(previousPlacementRequest.id) } returns previousPlacementRequest
-
-    val result = placementRequestService.reallocatePlacementRequest(assigneeUser, previousPlacementRequest.id)
-
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-
-    assertThat(validationResult is ValidatableActionResult.GeneralValidationError).isTrue
-    validationResult as ValidatableActionResult.GeneralValidationError
-    assertThat(validationResult.message).isEqualTo("This placement request has already been completed")
-  }
-
-  @Test
-  fun `reallocatePlacementRequest returns Field Validation Error when user to assign to is not a MATCHER`() {
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(assigneeUser)
-      .produce()
-
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(application)
-      .withAllocatedToUser(assigneeUser)
-      .produce()
-
-    val previousPlacementRequest = PlacementRequestEntityFactory()
+    private val previousPlacementRequest = PlacementRequestEntityFactory()
       .withPlacementRequirements(
         PlacementRequirementsEntityFactory()
           .withApplication(application)
@@ -261,88 +212,117 @@ class PlacementRequestServiceTest {
       .withAllocatedToUser(previousUser)
       .produce()
 
-    every { placementRequestRepository.findByIdOrNull(previousPlacementRequest.id) } returns previousPlacementRequest
+    @Test
+    fun `reallocatePlacementRequest returns General Validation Error when request already has an associated booking`() {
+      val premisesEntity = ApprovedPremisesEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .withYieldedLocalAuthorityArea { LocalAuthorityEntityFactory().produce() }
+        .produce()
 
-    val result = placementRequestService.reallocatePlacementRequest(assigneeUser, previousPlacementRequest.id)
+      val booking = BookingEntityFactory()
+        .withYieldedPremises { premisesEntity }
+        .produce()
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
-
-    assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
-    validationResult as ValidatableActionResult.FieldValidationError
-    assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingMatcherRole")
-  }
-
-  @Test
-  fun `reallocatePlacementRequest returns Success, deallocates old placementRequest and creates a new one`() {
-    val assigneeUser = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
+      previousPlacementRequest.apply {
+        this.booking = booking
       }
-      .produce()
-      .apply {
+
+      every { placementRequestRepository.findByIdOrNull(previousPlacementRequest.id) } returns previousPlacementRequest
+
+      val result = placementRequestService.reallocatePlacementRequest(assigneeUser, previousPlacementRequest.id)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      val validationResult = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(validationResult is ValidatableActionResult.GeneralValidationError).isTrue
+      validationResult as ValidatableActionResult.GeneralValidationError
+      assertThat(validationResult.message).isEqualTo("This placement request has already been completed")
+    }
+
+    @Test
+    fun `reallocatePlacementRequest returns Conflict Error when placement request has already been reallocated`() {
+      previousPlacementRequest.apply {
+        reallocatedAt = OffsetDateTime.now()
+      }
+
+      every { placementRequestRepository.findByIdOrNull(previousPlacementRequest.id) } returns previousPlacementRequest
+
+      val result = placementRequestService.reallocatePlacementRequest(assigneeUser, previousPlacementRequest.id)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      val validationResult = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(validationResult is ValidatableActionResult.ConflictError).isTrue
+      validationResult as ValidatableActionResult.ConflictError
+      assertThat(validationResult.conflictingEntityId).isEqualTo(previousPlacementRequest.id)
+      assertThat(validationResult.message).isEqualTo("This placement request has already been reallocated")
+    }
+
+    @Test
+    fun `reallocatePlacementRequest returns Field Validation Error when user to assign to is not a MATCHER`() {
+      assigneeUser.apply {
+        roles = mutableListOf()
+      }
+
+      every { placementRequestRepository.findByIdOrNull(previousPlacementRequest.id) } returns previousPlacementRequest
+
+      val result = placementRequestService.reallocatePlacementRequest(assigneeUser, previousPlacementRequest.id)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      val validationResult = (result as AuthorisableActionResult.Success).entity
+
+      assertThat(validationResult is ValidatableActionResult.FieldValidationError).isTrue
+      validationResult as ValidatableActionResult.FieldValidationError
+      assertThat(validationResult.validationMessages).containsEntry("$.userId", "lackingMatcherRole")
+    }
+
+    @Test
+    fun `reallocatePlacementRequest returns Success, deallocates old placementRequest and creates a new one`() {
+      assigneeUser.apply {
         roles += UserRoleAssignmentEntityFactory()
           .withUser(this)
           .withRole(UserRole.CAS1_MATCHER)
           .produce()
       }
 
-    val application = ApprovedPremisesApplicationEntityFactory()
-      .withCreatedByUser(assigneeUser)
-      .produce()
+      val dueAt = OffsetDateTime.now()
 
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(application)
-      .withAllocatedToUser(assigneeUser)
-      .produce()
+      every { taskDeadlineServiceMock.getDeadline(any<PlacementRequestEntity>()) } returns dueAt
+      every { placementRequestRepository.findByIdOrNull(previousPlacementRequest.id) } returns previousPlacementRequest
 
-    val previousPlacementRequest = PlacementRequestEntityFactory()
-      .withPlacementRequirements(
-        PlacementRequirementsEntityFactory()
-          .withApplication(application)
-          .withAssessment(assessment)
-          .produce(),
-      )
-      .withApplication(application)
-      .withAssessment(assessment)
-      .withAllocatedToUser(previousUser)
-      .produce()
+      every { placementRequestRepository.save(previousPlacementRequest) } answers { it.invocation.args[0] as PlacementRequestEntity }
+      every { placementRequestRepository.save(match { it.allocatedToUser == assigneeUser }) } answers { it.invocation.args[0] as PlacementRequestEntity }
 
-    val dueAt = OffsetDateTime.now()
+      val result = placementRequestService.reallocatePlacementRequest(assigneeUser, previousPlacementRequest.id)
 
-    every { taskDeadlineServiceMock.getDeadline(any<PlacementRequestEntity>()) } returns dueAt
-    every { placementRequestRepository.findByIdOrNull(previousPlacementRequest.id) } returns previousPlacementRequest
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      val validationResult = (result as AuthorisableActionResult.Success).entity
 
-    every { placementRequestRepository.save(previousPlacementRequest) } answers { it.invocation.args[0] as PlacementRequestEntity }
-    every { placementRequestRepository.save(match { it.allocatedToUser == assigneeUser }) } answers { it.invocation.args[0] as PlacementRequestEntity }
+      assertThat(validationResult is ValidatableActionResult.Success).isTrue
+      validationResult as ValidatableActionResult.Success
 
-    val result = placementRequestService.reallocatePlacementRequest(assigneeUser, previousPlacementRequest.id)
+      assertThat(previousPlacementRequest.reallocatedAt).isNotNull
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
-    val validationResult = (result as AuthorisableActionResult.Success).entity
+      verify { placementRequestRepository.save(match { it.allocatedToUser == assigneeUser }) }
 
-    assertThat(validationResult is ValidatableActionResult.Success).isTrue
-    validationResult as ValidatableActionResult.Success
+      val newPlacementRequest = validationResult.entity
 
-    assertThat(previousPlacementRequest.reallocatedAt).isNotNull
-
-    verify { placementRequestRepository.save(match { it.allocatedToUser == assigneeUser }) }
-
-    val newPlacementRequest = validationResult.entity
-
-    assertThat(newPlacementRequest.application).isEqualTo(application)
-    assertThat(newPlacementRequest.allocatedToUser).isEqualTo(assigneeUser)
-    assertThat(newPlacementRequest.placementRequirements.radius).isEqualTo(previousPlacementRequest.placementRequirements.radius)
-    assertThat(newPlacementRequest.placementRequirements.postcodeDistrict).isEqualTo(previousPlacementRequest.placementRequirements.postcodeDistrict)
-    assertThat(newPlacementRequest.placementRequirements.gender).isEqualTo(previousPlacementRequest.placementRequirements.gender)
-    assertThat(newPlacementRequest.expectedArrival).isEqualTo(previousPlacementRequest.expectedArrival)
-    assertThat(newPlacementRequest.placementRequirements.apType).isEqualTo(previousPlacementRequest.placementRequirements.apType)
-    assertThat(newPlacementRequest.duration).isEqualTo(previousPlacementRequest.duration)
-    assertThat(newPlacementRequest.placementRequirements.desirableCriteria).isEqualTo(previousPlacementRequest.placementRequirements.desirableCriteria)
-    assertThat(newPlacementRequest.placementRequirements.essentialCriteria).isEqualTo(previousPlacementRequest.placementRequirements.essentialCriteria)
-    assertThat(newPlacementRequest.dueAt).isEqualTo(dueAt)
+      assertThat(newPlacementRequest.application).isEqualTo(application)
+      assertThat(newPlacementRequest.allocatedToUser).isEqualTo(assigneeUser)
+      assertThat(newPlacementRequest.placementRequirements.radius).isEqualTo(previousPlacementRequest.placementRequirements.radius)
+      assertThat(newPlacementRequest.placementRequirements.postcodeDistrict).isEqualTo(previousPlacementRequest.placementRequirements.postcodeDistrict)
+      assertThat(newPlacementRequest.placementRequirements.gender).isEqualTo(previousPlacementRequest.placementRequirements.gender)
+      assertThat(newPlacementRequest.expectedArrival).isEqualTo(previousPlacementRequest.expectedArrival)
+      assertThat(newPlacementRequest.placementRequirements.apType).isEqualTo(previousPlacementRequest.placementRequirements.apType)
+      assertThat(newPlacementRequest.duration).isEqualTo(previousPlacementRequest.duration)
+      assertThat(newPlacementRequest.placementRequirements.desirableCriteria).isEqualTo(previousPlacementRequest.placementRequirements.desirableCriteria)
+      assertThat(newPlacementRequest.placementRequirements.essentialCriteria).isEqualTo(previousPlacementRequest.placementRequirements.essentialCriteria)
+      assertThat(newPlacementRequest.dueAt).isEqualTo(dueAt)
+    }
   }
 
   @Test

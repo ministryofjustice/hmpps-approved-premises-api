@@ -295,7 +295,7 @@ class ApprovedPremisesAssessmentEntity(
   schemaUpToDate: Boolean,
   isWithdrawn: Boolean,
   dueAt: OffsetDateTime?,
-  val createdFromAppeal: Boolean,
+  var createdFromAppeal: Boolean,
 ) : AssessmentEntity(
   id,
   application,

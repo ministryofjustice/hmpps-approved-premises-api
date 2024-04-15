@@ -37,6 +37,8 @@
     <ID>TooGenericExceptionThrown:TasksTest.kt$TasksTest.GetAllReallocatableTest$throw RuntimeException("Unexpected sortField $sortBy")</ID>
     <ID>LongParameterList:GivenAnAssessment.kt$( allocatedToUser: UserEntity?, createdByUser: UserEntity, crn: String = randomStringMultiCaseWithNumbers(8), reallocated: Boolean = false, data: String? = "{ \"some\": \"data\"}", createdAt: OffsetDateTime? = null, block: ((assessment: AssessmentEntity, application: TemporaryAccommodationApplicationEntity) -> Unit)? = null, )</ID>
     <ID>CyclomaticComplexMethod:GetAllApprovedPremisesApplicationsTest.kt$GetAllApprovedPremisesApplicationsTest$private fun ApprovedPremisesApplicationSummary.matches(applicationEntity: ApprovedPremisesApplicationEntity): Boolean</ID>
+    <ID>MaxLineLength:AssessmentServiceTest.kt$AssessmentServiceTest.ReallocateAssessment$fun</ID>
+    <ID>ReturnCount:PlacementRequestService.kt$PlacementRequestService$fun reallocatePlacementRequest( assigneeUser: UserEntity, id: UUID, ): AuthorisableActionResult&lt;ValidatableActionResult&lt;PlacementRequestEntity>></ID>
   </ManuallySuppressedIssues>
   <CurrentIssues>
     <ID>ComplexCondition:BookingService.kt$BookingService$booking.service == ServiceName.approvedPremises.value &amp;&amp; booking.application != null &amp;&amp; user != null &amp;&amp; !arrivedAndDepartedDomainEventsDisabled</ID>
