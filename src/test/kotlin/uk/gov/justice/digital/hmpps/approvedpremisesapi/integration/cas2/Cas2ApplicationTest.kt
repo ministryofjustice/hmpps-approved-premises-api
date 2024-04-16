@@ -229,7 +229,6 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
             Assertions.assertThat(responseBody).anyMatch {
               firstApplicationEntity.id == it.id &&
-                firstApplicationEntity.crn == it.person.crn &&
                 firstApplicationEntity.createdAt.toInstant() == it.createdAt &&
                 firstApplicationEntity.createdByUser.id == it.createdByUserId &&
                 firstApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
@@ -239,6 +238,10 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             Assertions.assertThat(responseBody).noneMatch {
               otherCas2ApplicationEntity.id == it.id
             }
+
+            Assertions.assertThat(responseBody[0].personName)
+              .isEqualTo(responseBody[1].personName)
+              .isEqualTo(offenderDetails.firstName + " " + offenderDetails.surname)
 
             Assertions.assertThat(responseBody[0].createdAt)
               .isEqualTo(secondApplicationEntity.createdAt.toInstant())
@@ -322,7 +325,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get list of applications returns 500 when a person cannot be found`() {
+    fun `Get list of applications returns 200 and name is Person Not Found`() {
       `Given a CAS2 User`() { userEntity, jwt ->
         val crn = "X1234"
 
@@ -335,9 +338,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
-          .is5xxServerError
+          .isOk
           .expectBody()
-          .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
+          .jsonPath("$[0].personName").isEqualTo("Person Not Found")
       }
     }
 
@@ -375,13 +378,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             )
 
           Assertions.assertThat(responseBody).matches {
-            val person = it[0].person as FullPerson
-
-            application.id == it[0].id &&
-              application.crn == person.crn &&
-              person.nomsNumber == null &&
-              person.status == PersonStatus.unknown &&
-              person.prisonName == null
+            application.id == it[0].id
           }
         }
       }
