@@ -114,6 +114,13 @@ WHERE a.referring_prison_code = :prisonCode
 AND a.submitted_at IS NOT NULL
 ORDER BY createdAt DESC
 """,
+    countQuery =
+    """
+    SELECT COUNT(*)
+      FROM cas_2_applications a
+    WHERE a.referring_prison_code = :prisonCode
+    AND a.submitted_at IS NOT NULL
+    """,
     nativeQuery = true,
   )
   fun findSubmittedCas2ApplicationSummariesByPrison(prisonCode: String, pageable: Pageable?):

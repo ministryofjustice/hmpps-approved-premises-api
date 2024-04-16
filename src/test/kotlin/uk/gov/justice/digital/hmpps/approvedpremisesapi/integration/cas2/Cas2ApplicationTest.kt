@@ -489,67 +489,85 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       @Test
       fun `Get all submitted applications using prisonCode returns 200 with correct body`() {
-        `Given a CAS2 User` { userAPrisonA, jwt ->
-          `Given an Offender` { offenderDetails, _ ->
-            cas2ApplicationJsonSchemaRepository.deleteAll()
+        `Given a CAS2 Assessor` { assessor, _ ->
+          `Given a CAS2 User` { userAPrisonA, jwt ->
+            `Given an Offender` { offenderDetails, _ ->
+              cas2ApplicationJsonSchemaRepository.deleteAll()
 
-            val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
+              val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.now())
+                withId(UUID.randomUUID())
+              }
+
+              val userAPrisonAApplicationIds = mutableListOf<UUID>()
+
+              repeat(5) {
+                userAPrisonAApplicationIds.add(
+                  cas2ApplicationEntityFactory.produceAndPersist {
+                    withApplicationSchema(applicationSchema)
+                    withCreatedByUser(userAPrisonA)
+                    withCrn(offenderDetails.otherIds.crn)
+                    withData("{}")
+                    withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
+                    withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                  }.id,
+                )
+              }
+
+              val userBPrisonA = nomisUserEntityFactory.produceAndPersist {
+                withActiveCaseloadId(userAPrisonA.activeCaseloadId!!)
+              }
+
+              val userBPrisonAApplicationIds = mutableListOf<UUID>()
+
+              repeat(6) {
+                userBPrisonAApplicationIds.add(
+                  cas2ApplicationEntityFactory.produceAndPersist {
+                    withApplicationSchema(applicationSchema)
+                    withCreatedByUser(userBPrisonA)
+                    withCrn(offenderDetails.otherIds.crn)
+                    withData("{}")
+                    withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
+                    withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
+                    withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
+                  }.id,
+                )
+              }
+
+              // add two status updates to the first submitted application
+              cas2StatusUpdateEntityFactory.produceAndPersist {
+                withLabel("older status update")
+                withApplication(cas2ApplicationRepository.findById(userBPrisonAApplicationIds.first()).get())
+                withAssessor(assessor)
+              }
+              // this is the one that should be returned as lastStatusUpdate
+              cas2StatusUpdateEntityFactory.produceAndPersist {
+                withStatusId(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
+                withLabel("more recent status update")
+                withApplication(cas2ApplicationRepository.findById(userBPrisonAApplicationIds.first()).get())
+                withAssessor(assessor)
+              }
+
+              val rawResponseBody = webTestClient.get()
+                .uri("/cas2/applications?isSubmitted=true&prisonCode=${userAPrisonA.activeCaseloadId}")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.cas2.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .returnResult<String>()
+                .responseBody
+                .blockFirst()
+
+              val responseBody =
+                objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+              val returnedApplicationIds = responseBody.map { it.id }.toSet()
+
+              Assertions.assertThat(returnedApplicationIds).isEqualTo(userBPrisonAApplicationIds.toSet())
+              Assertions.assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("more recent status update")
+              Assertions.assertThat(responseBody[0].latestStatusUpdate?.statusId).isEqualTo(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
             }
-
-            val userAPrisonAApplicationIds = mutableListOf<UUID>()
-
-            repeat(5) {
-              userAPrisonAApplicationIds.add(
-                cas2ApplicationEntityFactory.produceAndPersist {
-                  withApplicationSchema(applicationSchema)
-                  withCreatedByUser(userAPrisonA)
-                  withCrn(offenderDetails.otherIds.crn)
-                  withData("{}")
-                  withCreatedAt(OffsetDateTime.now().randomDateTimeBefore())
-                  withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
-                }.id,
-              )
-            }
-
-            val userBPrisonA = nomisUserEntityFactory.produceAndPersist {
-              withActiveCaseloadId(userAPrisonA.activeCaseloadId!!)
-            }
-
-            val userBPrisonAApplicationIds = mutableListOf<UUID>()
-
-            repeat(6) {
-              userBPrisonAApplicationIds.add(
-                cas2ApplicationEntityFactory.produceAndPersist {
-                  withApplicationSchema(applicationSchema)
-                  withCreatedByUser(userBPrisonA)
-                  withCrn(offenderDetails.otherIds.crn)
-                  withData("{}")
-                  withCreatedAt(OffsetDateTime.now().randomDateTimeBefore())
-                  withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
-                  withReferringPrisonCode(userAPrisonA.activeCaseloadId!!)
-                }.id,
-              )
-            }
-
-            val rawResponseBody = webTestClient.get()
-              .uri("/cas2/applications?isSubmitted=true&prisonCode=${userAPrisonA.activeCaseloadId}")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.cas2.value)
-              .exchange()
-              .expectStatus()
-              .isOk
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val responseBody =
-              objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
-
-            val returnedApplicationIds = responseBody.map { it.id }.toSet()
-
-            Assertions.assertThat(returnedApplicationIds).isEqualTo(userBPrisonAApplicationIds.toSet())
           }
         }
       }
