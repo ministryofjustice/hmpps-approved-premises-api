@@ -81,6 +81,13 @@ WHERE a.created_by_user_id = :userId
 AND a.submitted_at IS NOT NULL
 ORDER BY createdAt DESC
 """,
+    countQuery =
+    """
+    SELECT COUNT(*)
+      FROM cas_2_applications a
+    WHERE a.created_by_user_id = :userId
+    AND a.submitted_at IS NOT NULL
+    """,
     nativeQuery = true,
   )
   fun findSubmittedCas2ApplicationSummariesCreatedByUser(userId: UUID, pageable: Pageable?):

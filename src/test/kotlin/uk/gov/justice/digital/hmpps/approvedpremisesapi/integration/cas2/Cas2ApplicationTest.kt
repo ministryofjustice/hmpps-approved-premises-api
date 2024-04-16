@@ -764,6 +764,28 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
+    fun `returns submitted applications for user when isSubmitted is true and page specified`() {
+      val rawResponseBody = webTestClient.get()
+        .uri("/cas2/applications?isSubmitted=true&page=1")
+        .header("Authorization", "Bearer $jwtForUser")
+        .header("X-Service-Name", ServiceName.cas2.value)
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult<String>()
+        .responseBody
+        .blockFirst()
+
+      val responseBody =
+        objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+      val uuids = responseBody.map { it.id }.toSet()
+      Assertions.assertThat(uuids).isEqualTo(submittedIds)
+      Assertions.assertThat(responseBody[0].latestStatusUpdate?.label).isEqualTo("more recent status update")
+      Assertions.assertThat(responseBody[0].latestStatusUpdate?.statusId).isEqualTo(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
+    }
+
+    @Test
     fun `returns unsubmitted applications for user when isSubmitted is false`() {
       val rawResponseBody = webTestClient.get()
         .uri("/cas2/applications?isSubmitted=false")
