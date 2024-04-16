@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -35,8 +36,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
@@ -49,207 +52,196 @@ import kotlin.random.Random
 
 class PremisesTest {
   @Nested
-  inner class CreatePremises : IntegrationTestBase() {
+  inner class CreatePremises : InitialiseDatabasePerClassTestBase() {
+    private lateinit var user: UserEntity
+    private lateinit var probationDeliveryUnit: ProbationDeliveryUnitEntity
+    private lateinit var jwt: String
+
+    @BeforeAll
+    fun setup() {
+      val userArgs = `Given a User`()
+
+      user = userArgs.first
+      jwt = userArgs.second
+      probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+        withProbationRegion(user.probationRegion)
+      }
+    }
+
     @Test
     fun `Create new premises returns 201`() {
-      `Given a User` { user, jwt ->
-        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
-          withProbationRegion(user.probationRegion)
-        }
-
-        webTestClient.post()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewPremises(
-              name = "test-premises",
-              addressLine1 = "1 somewhere",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              postcode = "AB123CD",
-              localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-              probationRegionId = user.probationRegion.id,
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.pending,
-              probationDeliveryUnitId = probationDeliveryUnit.id,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isCreated
-      }
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            name = "test-premises",
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.pending,
+            probationDeliveryUnitId = probationDeliveryUnit.id,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isCreated
     }
 
     @Test
     fun `When a new premises is created then all field data is persisted`() {
-      `Given a User` { user, jwt ->
-        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
-          withProbationRegion(user.probationRegion)
-        }
-
-        webTestClient.post()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewPremises(
-              addressLine1 = "1 somewhere",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              postcode = "AB123CD",
-              notes = "some arbitrary notes",
-              name = "some arbitrary name",
-              localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-              probationRegionId = user.probationRegion.id,
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.pending,
-              probationDeliveryUnitId = probationDeliveryUnit.id,
-              turnaroundWorkingDayCount = 5,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isCreated
-          .expectBody()
-          .jsonPath("addressLine1").isEqualTo("1 somewhere")
-          .jsonPath("addressLine2").isEqualTo("Some district")
-          .jsonPath("town").isEqualTo("Somewhere")
-          .jsonPath("postcode").isEqualTo("AB123CD")
-          .jsonPath("service").isEqualTo(ServiceName.temporaryAccommodation.value)
-          .jsonPath("notes").isEqualTo("some arbitrary notes")
-          .jsonPath("name").isEqualTo("some arbitrary name")
-          .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
-          .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
-          .jsonPath("status").isEqualTo("pending")
-          .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
-          .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
-          .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
-          .jsonPath("turnaroundWorkingDayCount").isEqualTo(5)
-      }
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            notes = "some arbitrary notes",
+            name = "new premises",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.pending,
+            probationDeliveryUnitId = probationDeliveryUnit.id,
+            turnaroundWorkingDayCount = 5,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isCreated
+        .expectBody()
+        .jsonPath("addressLine1").isEqualTo("1 somewhere")
+        .jsonPath("addressLine2").isEqualTo("Some district")
+        .jsonPath("town").isEqualTo("Somewhere")
+        .jsonPath("postcode").isEqualTo("AB123CD")
+        .jsonPath("service").isEqualTo(ServiceName.temporaryAccommodation.value)
+        .jsonPath("notes").isEqualTo("some arbitrary notes")
+        .jsonPath("name").isEqualTo("new premises")
+        .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
+        .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
+        .jsonPath("status").isEqualTo("pending")
+        .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
+        .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("turnaroundWorkingDayCount").isEqualTo(5)
     }
 
     @Test
     fun `When a new Temporary Accommodation premises is created with a legacy PDU name then all field data is persisted`() {
-      `Given a User` { user, jwt ->
-        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
-          withProbationRegion(user.probationRegion)
-        }
-
-        webTestClient.post()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewPremises(
-              addressLine1 = "1 somewhere",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              postcode = "AB123CD",
-              notes = "some arbitrary notes",
-              name = "some arbitrary name",
-              localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-              probationRegionId = user.probationRegion.id,
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.pending,
-              pdu = probationDeliveryUnit.name,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isCreated
-          .expectBody()
-          .jsonPath("addressLine1").isEqualTo("1 somewhere")
-          .jsonPath("addressLine2").isEqualTo("Some district")
-          .jsonPath("town").isEqualTo("Somewhere")
-          .jsonPath("postcode").isEqualTo("AB123CD")
-          .jsonPath("service").isEqualTo(ServiceName.temporaryAccommodation.value)
-          .jsonPath("notes").isEqualTo("some arbitrary notes")
-          .jsonPath("name").isEqualTo("some arbitrary name")
-          .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
-          .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
-          .jsonPath("status").isEqualTo("pending")
-          .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
-          .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
-          .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
-      }
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            notes = "some arbitrary notes",
+            name = "legacy pdu name",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.pending,
+            pdu = probationDeliveryUnit.name,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isCreated
+        .expectBody()
+        .jsonPath("addressLine1").isEqualTo("1 somewhere")
+        .jsonPath("addressLine2").isEqualTo("Some district")
+        .jsonPath("town").isEqualTo("Somewhere")
+        .jsonPath("postcode").isEqualTo("AB123CD")
+        .jsonPath("service").isEqualTo(ServiceName.temporaryAccommodation.value)
+        .jsonPath("notes").isEqualTo("some arbitrary notes")
+        .jsonPath("name").isEqualTo("legacy pdu name")
+        .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
+        .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
+        .jsonPath("status").isEqualTo("pending")
+        .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
+        .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
     }
 
     @Test
     fun `Trying to create a new premises without a name returns 400`() {
-      `Given a User` { user, jwt ->
-        webTestClient.post()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewPremises(
-              name = "",
-              addressLine1 = "1 somewhere",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              postcode = "AB123CD",
-              notes = "some arbitrary notes",
-              localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-              probationRegionId = user.probationRegion.id,
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.active,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Bad Request")
-          .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
-      }
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            name = "",
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            notes = "some arbitrary notes",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.active,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
     }
 
     @Test
     fun `When a new Temporary Accommodation premises is created with no turnaround working day count then it defaults to 2`() {
-      `Given a User` { user, jwt ->
-        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
-          withProbationRegion(user.probationRegion)
-        }
-
-        webTestClient.post()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewPremises(
-              addressLine1 = "1 somewhere",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              postcode = "AB123CD",
-              notes = "some arbitrary notes",
-              name = "some arbitrary name",
-              localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-              probationRegionId = user.probationRegion.id,
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.pending,
-              probationDeliveryUnitId = probationDeliveryUnit.id,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isCreated
-          .expectBody()
-          .jsonPath("addressLine1").isEqualTo("1 somewhere")
-          .jsonPath("addressLine2").isEqualTo("Some district")
-          .jsonPath("town").isEqualTo("Somewhere")
-          .jsonPath("postcode").isEqualTo("AB123CD")
-          .jsonPath("service").isEqualTo(ServiceName.temporaryAccommodation.value)
-          .jsonPath("notes").isEqualTo("some arbitrary notes")
-          .jsonPath("name").isEqualTo("some arbitrary name")
-          .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
-          .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
-          .jsonPath("status").isEqualTo("pending")
-          .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
-          .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
-          .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
-          .jsonPath("turnaroundWorkingDayCount").isEqualTo(2)
-      }
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            notes = "some arbitrary notes",
+            name = "premises with no turnaround working day count",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.pending,
+            probationDeliveryUnitId = probationDeliveryUnit.id,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isCreated
+        .expectBody()
+        .jsonPath("addressLine1").isEqualTo("1 somewhere")
+        .jsonPath("addressLine2").isEqualTo("Some district")
+        .jsonPath("town").isEqualTo("Somewhere")
+        .jsonPath("postcode").isEqualTo("AB123CD")
+        .jsonPath("service").isEqualTo(ServiceName.temporaryAccommodation.value)
+        .jsonPath("notes").isEqualTo("some arbitrary notes")
+        .jsonPath("name").isEqualTo("premises with no turnaround working day count")
+        .jsonPath("localAuthorityArea.id").isEqualTo("a5f52443-6b55-498c-a697-7c6fad70cc3f")
+        .jsonPath("probationRegion.id").isEqualTo(user.probationRegion.id.toString())
+        .jsonPath("status").isEqualTo("pending")
+        .jsonPath("pdu").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("probationDeliveryUnit.id").isEqualTo(probationDeliveryUnit.id.toString())
+        .jsonPath("probationDeliveryUnit.name").isEqualTo(probationDeliveryUnit.name)
+        .jsonPath("turnaroundWorkingDayCount").isEqualTo(2)
     }
 
     @ParameterizedTest(name = "Trying to create a new Temporary Accommodation premises with turnaround working day count = {0} returns 400 and errorType = {1}")
@@ -261,383 +253,351 @@ class PremisesTest {
       turnaroundWorkingDayCount: Int,
       expectedErrorType: String,
     ) {
-      `Given a User` { user, jwt ->
-        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
-          withProbationRegion(user.probationRegion)
-        }
-
-        webTestClient.post()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewPremises(
-              addressLine1 = "1 somewhere",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              postcode = "AB123CD",
-              notes = "some arbitrary notes",
-              name = "some arbitrary name",
-              localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-              probationRegionId = user.probationRegion.id,
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.pending,
-              probationDeliveryUnitId = probationDeliveryUnit.id,
-              turnaroundWorkingDayCount = turnaroundWorkingDayCount,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Bad Request")
-          .jsonPath("invalid-params[0].propertyName").isEqualTo("$.turnaroundWorkingDayCount")
-          .jsonPath("invalid-params[0].errorType").isEqualTo(expectedErrorType)
-      }
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            notes = "some arbitrary notes",
+            name = "with turnaround working day count less than 1",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.pending,
+            probationDeliveryUnitId = probationDeliveryUnit.id,
+            turnaroundWorkingDayCount = turnaroundWorkingDayCount,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.turnaroundWorkingDayCount")
+        .jsonPath("invalid-params[0].errorType").isEqualTo(expectedErrorType)
     }
 
     @Test
     fun `Trying to create a new premises with a non-unique name returns 400`() {
-      `Given a User` { user, jwt ->
-        temporaryAccommodationPremisesEntityFactory.produceAndPersist {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-          withName("premises-name-conflict")
+      temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
         }
-
-        webTestClient.post()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewPremises(
-              name = "premises-name-conflict",
-              addressLine1 = "1 somewhere",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              postcode = "AB123CD",
-              notes = "some arbitrary notes",
-              localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-              probationRegionId = user.probationRegion.id,
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.active,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Bad Request")
-          .jsonPath("invalid-params[0].errorType").isEqualTo("notUnique")
+        withName("premises-name-conflict")
       }
+
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            name = "premises-name-conflict",
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            notes = "some arbitrary notes",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.active,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("notUnique")
     }
 
     @Test
     fun `When a new premises is created with no notes then it defaults to empty`() {
-      `Given a User` { user, jwt ->
-        val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
-          withProbationRegion(user.probationRegion)
-        }
-
-        webTestClient.post()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewPremises(
-              addressLine1 = "1 somewhere",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              postcode = "AB123CD",
-              name = "some arbitrary name",
-              localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-              probationRegionId = user.probationRegion.id,
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.active,
-              probationDeliveryUnitId = probationDeliveryUnit.id,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isCreated
-          .expectBody()
-          .jsonPath("notes").isEqualTo("")
-      }
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            name = "Premises with no notes",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.active,
+            probationDeliveryUnitId = probationDeliveryUnit.id,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isCreated
+        .expectBody()
+        .jsonPath("notes").isEqualTo("")
     }
 
     @Test
     fun `Trying to create a new premises without an address returns 400`() {
-      `Given a User` { user, jwt ->
-        webTestClient.post()
-          .uri("/premises?service=temporary-accommodation")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewPremises(
-              name = "arbitrary_test_name",
-              postcode = "AB123CD",
-              addressLine1 = "",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-              probationRegionId = user.probationRegion.id,
-              notes = "some notes",
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.active,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Bad Request")
-          .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
-      }
+      webTestClient.post()
+        .uri("/premises?service=temporary-accommodation")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            name = "arbitrary_test_name",
+            postcode = "AB123CD",
+            addressLine1 = "",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            notes = "some notes",
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.active,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
     }
 
     @Test
     fun `Trying to create a new premises without a postcode returns 400`() {
-      `Given a User` { user, jwt ->
-        webTestClient.post()
-          .uri("/premises?service=temporary-accommodation")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewPremises(
-              name = "arbitrary_test_name",
-              postcode = "",
-              addressLine1 = "FIRST LINE OF THE ADDRESS",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-              probationRegionId = user.probationRegion.id,
-              notes = "some notes",
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.active,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Bad Request")
-          .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
-      }
+      webTestClient.post()
+        .uri("/premises?service=temporary-accommodation")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            name = "arbitrary_test_name",
+            postcode = "",
+            addressLine1 = "FIRST LINE OF THE ADDRESS",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            notes = "some notes",
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.active,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
     }
 
     @Test
     fun `Trying to create a new premises without a service returns 400`() {
-      `Given a User` { _, jwt ->
-        webTestClient.post()
-          .uri("/premises?service=temporary-accommodation")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewPremises(
-              name = "arbitrary_test_name",
-              postcode = "AB123CD",
-              addressLine1 = "FIRST LINE OF THE ADDRESS",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-              probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
-              notes = "some notes",
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.active,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Bad Request")
-          .jsonPath("invalid-params[0].errorType").isEqualTo("onlyCas3Supported")
-      }
+      webTestClient.post()
+        .uri("/premises?service=temporary-accommodation")
+        .header("Authorization", "Bearer $jwt")
+        .bodyValue(
+          NewPremises(
+            name = "arbitrary_test_name",
+            postcode = "AB123CD",
+            addressLine1 = "FIRST LINE OF THE ADDRESS",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
+            notes = "some notes",
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.active,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("onlyCas3Supported")
     }
 
     @Test
     fun `Trying to create a new premises with an invalid local authority area id returns 400`() {
-      `Given a User` { user, jwt ->
-        webTestClient.post()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewPremises(
-              name = "arbitrary_test_name",
-              addressLine1 = "1 somewhere",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              postcode = "AB456CD",
-              notes = "some arbitrary notes",
-              localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"), // not in db
-              probationRegionId = user.probationRegion.id,
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.active,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Bad Request")
-          .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
-      }
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            name = "arbitrary_test_name",
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB456CD",
+            notes = "some arbitrary notes",
+            localAuthorityAreaId = UUID.fromString("878217f0-6db5-49d8-a5a1-c40fdecd6060"), // not in db
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.active,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
     }
 
     @Test
     fun `Trying to create a new Approved Premises with no local authority area id returns 400`() {
-      `Given a User` { _, jwt ->
-        webTestClient.post()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.approvedPremises.value)
-          .bodyValue(
-            NewPremises(
-              name = "arbitrary_test_name",
-              addressLine1 = "1 somewhere",
-              postcode = "AB456CD",
-              notes = "some arbitrary notes",
-              localAuthorityAreaId = null,
-              probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.active,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Bad Request")
-          .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
-      }
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.approvedPremises.value)
+        .bodyValue(
+          NewPremises(
+            name = "arbitrary_test_name",
+            addressLine1 = "1 somewhere",
+            postcode = "AB456CD",
+            notes = "some arbitrary notes",
+            localAuthorityAreaId = null,
+            probationRegionId = UUID.fromString("c5acff6c-d0d2-4b89-9f4d-89a15cfa3891"),
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.active,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
     }
 
     @Test
     fun `Trying to create a new Temporary Accommodation premises with a probation region that's not the user's region returns 403 Forbidden`() {
-      `Given a User` { _, jwt ->
-        webTestClient.post()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewPremises(
-              name = "arbitrary_test_name",
-              addressLine1 = "1 somewhere",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              postcode = "AB456CD",
-              notes = "some arbitrary notes",
-              localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
-              probationRegionId = UUID.fromString("48f96076-e911-4419-bceb-95a3e7f417eb"), // not in db
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.active,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            name = "arbitrary_test_name",
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB456CD",
+            notes = "some arbitrary notes",
+            localAuthorityAreaId = UUID.fromString("d1bd139b-7b90-4aae-87aa-9f93e183a7ff"),
+            probationRegionId = UUID.fromString("48f96076-e911-4419-bceb-95a3e7f417eb"), // not in db
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.active,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .isForbidden
     }
 
     @Test
     fun `Trying to create a Temporary Accommodation Premises without a PDU returns 400`() {
-      `Given a User` { user, jwt ->
-        webTestClient.post()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewPremises(
-              addressLine1 = "1 somewhere",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              postcode = "AB123CD",
-              notes = "some arbitrary notes",
-              name = "some arbitrary name",
-              localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-              probationRegionId = user.probationRegion.id,
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.pending,
-              pdu = null,
-              probationDeliveryUnitId = null,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Bad Request")
-          .jsonPath("invalid-params[0].propertyName").isEqualTo("$.probationDeliveryUnitId")
-          .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
-      }
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            notes = "some arbitrary notes",
+            name = "premises without a pdu",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.pending,
+            pdu = null,
+            probationDeliveryUnitId = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.probationDeliveryUnitId")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("empty")
     }
 
     @Test
     fun `Trying to create a Temporary Accommodation Premises with an invalid probation delivery unit ID returns 400`() {
-      `Given a User` { user, jwt ->
-        webTestClient.post()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewPremises(
-              addressLine1 = "1 somewhere",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              postcode = "AB123CD",
-              notes = "some arbitrary notes",
-              name = "some arbitrary name",
-              localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-              probationRegionId = user.probationRegion.id,
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.pending,
-              pdu = null,
-              probationDeliveryUnitId = UUID.randomUUID(),
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Bad Request")
-          .jsonPath("invalid-params[0].propertyName").isEqualTo("$.probationDeliveryUnitId")
-          .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
-      }
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            notes = "some arbitrary notes",
+            name = "premises with an invalid probation delivery unit",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.pending,
+            pdu = null,
+            probationDeliveryUnitId = UUID.randomUUID(),
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.probationDeliveryUnitId")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
     }
 
     @Test
     fun `Trying to create a Temporary Accommodation Premises with an invalid PDU name returns 400`() {
-      `Given a User` { user, jwt ->
-        webTestClient.post()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewPremises(
-              addressLine1 = "1 somewhere",
-              addressLine2 = "Some district",
-              town = "Somewhere",
-              postcode = "AB123CD",
-              notes = "some arbitrary notes",
-              name = "some arbitrary name",
-              localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
-              probationRegionId = user.probationRegion.id,
-              characteristicIds = mutableListOf(),
-              status = PropertyStatus.pending,
-              pdu = "Non-existent PDU",
-              probationDeliveryUnitId = null,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is4xxClientError
-          .expectBody()
-          .jsonPath("title").isEqualTo("Bad Request")
-          .jsonPath("invalid-params[0].propertyName").isEqualTo("$.pdu")
-          .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
-      }
+      webTestClient.post()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .bodyValue(
+          NewPremises(
+            addressLine1 = "1 somewhere",
+            addressLine2 = "Some district",
+            town = "Somewhere",
+            postcode = "AB123CD",
+            notes = "some arbitrary notes",
+            name = "invalid PDU",
+            localAuthorityAreaId = UUID.fromString("a5f52443-6b55-498c-a697-7c6fad70cc3f"),
+            probationRegionId = user.probationRegion.id,
+            characteristicIds = mutableListOf(),
+            status = PropertyStatus.pending,
+            pdu = "Non-existent PDU",
+            probationDeliveryUnitId = null,
+          ),
+        )
+        .exchange()
+        .expectStatus()
+        .is4xxClientError
+        .expectBody()
+        .jsonPath("title").isEqualTo("Bad Request")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("$.pdu")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("doesNotExist")
     }
   }
 
