@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -107,6 +108,8 @@ data class DomainEventEntity(
         objectMapper.readValue(this.data, T::class.java)
       T::class == PlacementApplicationWithdrawnEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN ->
         objectMapper.readValue(this.data, T::class.java)
+      T::class == PlacementApplicationAllocatedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED ->
+        objectMapper.readValue(this.data, T::class.java)
       T::class == MatchRequestWithdrawnEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN ->
         objectMapper.readValue(this.data, T::class.java)
       T::class == AssessmentAllocatedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED ->
@@ -142,6 +145,7 @@ enum class DomainEventType {
   APPROVED_PREMISES_ASSESSMENT_APPEALED,
   APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
   APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
+  APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED,
   APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
   APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
   CAS2_APPLICATION_SUBMITTED,

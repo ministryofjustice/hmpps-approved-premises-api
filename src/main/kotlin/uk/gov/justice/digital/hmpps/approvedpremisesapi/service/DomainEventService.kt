@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRe
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
@@ -53,6 +54,7 @@ class DomainEventService(
   @Value("\${url-templates.api.cas1.application-withdrawn-event-detail}") private val applicationWithdrawnDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas1.assessment-appealed-event-detail}") private val assessmentAppealedDetailUrlTemplate: String,
   @Value("\${url-templates.api.cas1.placement-application-withdrawn-event-detail}") private val placementApplicationWithdrawnDetailUrlTemplate: UrlTemplate,
+  @Value("\${url-templates.api.cas1.placement-application-allocated-event-detail}") private val placementApplicationAllocatedDetailUrlTemplate: UrlTemplate,
   @Value("\${url-templates.api.cas1.match-request-withdrawn-event-detail}") private val matchRequestWithdrawnDetailUrlTemplate: UrlTemplate,
   @Value("\${url-templates.api.cas1.assessment-allocated-event-detail}") private val assessmentAllocatedUrlTemplate: UrlTemplate,
   @Value("\${url-templates.api.cas1.request-for-placement-created-event-detail}") private val requestForPlacementCreatedUrlTemplate: UrlTemplate,
@@ -70,6 +72,7 @@ class DomainEventService(
   fun getBookingChangedEvent(id: UUID) = get<BookingChangedEnvelope>(id)
   fun getApplicationWithdrawnEvent(id: UUID) = get<ApplicationWithdrawnEnvelope>(id)
   fun getPlacementApplicationWithdrawnEvent(id: UUID) = get<PlacementApplicationWithdrawnEnvelope>(id)
+  fun getPlacementApplicationAllocatedEvent(id: UUID) = get<PlacementApplicationAllocatedEnvelope>(id)
   fun getMatchRequestWithdrawnEvent(id: UUID) = get<MatchRequestWithdrawnEnvelope>(id)
   fun getAssessmentAppealedEvent(id: UUID) = get<AssessmentAppealedEnvelope>(id)
   fun getAssessmentAllocatedEvent(id: UUID) = get<AssessmentAllocatedEnvelope>(id)
@@ -224,6 +227,17 @@ class DomainEventService(
     )
 
   @Transactional
+  fun savePlacementApplicationAllocatedEvent(domainEvent: DomainEvent<PlacementApplicationAllocatedEnvelope>) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      typeName = "approved-premises.placement-application.allocated",
+      typeDescription = "An Approved Premises Request for Placement has been allocated",
+      detailUrl = placementApplicationAllocatedDetailUrlTemplate.resolve("eventId", domainEvent.id.toString()),
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+    )
+
+  @Transactional
   fun saveMatchRequestWithdrawnEvent(domainEvent: DomainEvent<MatchRequestWithdrawnEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
@@ -330,6 +344,7 @@ class DomainEventService(
     ApplicationWithdrawnEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN
     AssessmentAppealedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED
     PlacementApplicationWithdrawnEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN
+    PlacementApplicationAllocatedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED
     MatchRequestWithdrawnEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN
     AssessmentAllocatedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED
     RequestForPlacementCreatedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED

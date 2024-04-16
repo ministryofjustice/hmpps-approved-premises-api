@@ -156,6 +156,7 @@ class PlacementApplicationService(
     val newPlacementApplication = currentPlacementApplication.copy(
       id = UUID.randomUUID(),
       reallocatedAt = null,
+      allocatedAt = currentPlacementApplication.reallocatedAt,
       allocatedToUser = assigneeUser,
       createdAt = dateTimeNow,
       dueAt = null,
@@ -164,6 +165,10 @@ class PlacementApplicationService(
     newPlacementApplication.dueAt = taskDeadlineService.getDeadline(newPlacementApplication)
 
     placementApplicationRepository.save(newPlacementApplication)
+    cas1PlacementApplicationDomainEventService.placementApplicationAllocated(
+      newPlacementApplication,
+      userService.getUserForRequest(),
+    )
 
     val newPlacementDates = placementDateRepository.saveAll(
       currentPlacementApplication.placementDates.map {
@@ -305,6 +310,10 @@ class PlacementApplicationService(
       cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication)
       if (baselinePlacementApplication.allocatedToUser != null) {
         cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication)
+        cas1PlacementApplicationDomainEventService.placementApplicationAllocated(
+          placementApplication,
+          userService.getUserForRequest(),
+        )
       }
     }
 

@@ -134,6 +134,7 @@ url-templates:
       application-withdrawn-event-detail: http://api/events/application-withdrawn/#eventId
       assessment-appealed-event-detail: http://api/events/assessment-appealed/#eventId
       assessment-allocated-event-detail: http://api/events/assessment-allocated/#eventId
+      placement-application-allocated-event-detail: http://api/events/placement-application-allocated/#eventId
     cas2:
       application-submitted-event-detail: http://api/events/cas2/application-submitted/#eventId
     cas3:

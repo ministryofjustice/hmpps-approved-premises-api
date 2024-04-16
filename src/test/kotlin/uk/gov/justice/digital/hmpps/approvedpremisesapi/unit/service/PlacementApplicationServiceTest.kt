@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service
 
 import io.mockk.Called
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions
@@ -177,8 +179,9 @@ class PlacementApplicationServiceTest {
 
       every { userService.getDeliusUserNameForRequest() } returns "theUsername"
       every { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(any(), any()) } returns Unit
-      every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } returns Unit
-      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } just Runs
+      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } just Runs
+      every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), user) } just Runs
 
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
@@ -206,8 +209,9 @@ class PlacementApplicationServiceTest {
 
       every { userService.getDeliusUserNameForRequest() } returns "theUsername"
       every { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(any(), any()) } returns Unit
-      every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } returns Unit
-      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } just Runs
+      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } just Runs
+      every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), user) } just Runs
 
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
@@ -231,6 +235,7 @@ class PlacementApplicationServiceTest {
 
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp, user) }
       verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp) }
     }
 
@@ -244,8 +249,9 @@ class PlacementApplicationServiceTest {
 
       every { userService.getDeliusUserNameForRequest() } returns "theUsername"
       every { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(any(), any()) } returns Unit
-      every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(any()) } returns Unit
-      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(any()) } returns Unit
+      every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(any()) } just Runs
+      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(any()) } just Runs
+      every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), user) } just Runs
 
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
@@ -271,6 +277,7 @@ class PlacementApplicationServiceTest {
       assertThat(updatedPlacementApp1.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp1, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp1) }
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp1, user) }
       verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp1) }
 
       val updatedPlacementApp2 = updatedPlacementApplications[1]
@@ -279,6 +286,7 @@ class PlacementApplicationServiceTest {
       assertThat(updatedPlacementApp2.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp2, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp2) }
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp2, user) }
       verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp2) }
 
       val updatedPlacementApp3 = updatedPlacementApplications[2]
@@ -287,6 +295,7 @@ class PlacementApplicationServiceTest {
       assertThat(updatedPlacementApp3.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp3, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp3) }
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp3, user) }
       verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp3) }
     }
   }
@@ -400,6 +409,7 @@ class PlacementApplicationServiceTest {
 
   @Nested
   inner class ReallocateApplicationTest {
+    private val currentRequestUser = UserEntityFactory().withDefaultProbationRegion().produce()
     private val assigneeUser = UserEntityFactory().withDefaultProbationRegion().produce()
 
     private val application = ApprovedPremisesApplicationEntityFactory()
@@ -472,6 +482,9 @@ class PlacementApplicationServiceTest {
         )
       } answers { newPlacementDates }
 
+      every { userService.getUserForRequest() } returns currentRequestUser
+      every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), currentRequestUser) } just Runs
+
       val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
@@ -483,6 +496,7 @@ class PlacementApplicationServiceTest {
       assertThat(previousPlacementApplication.reallocatedAt).isNotNull
 
       verify { placementApplicationRepository.save(match { it.allocatedToUser == assigneeUser }) }
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(match { it.allocatedToUser == assigneeUser }, currentRequestUser) }
 
       val newPlacementApplication = validationResult.entity
 
@@ -539,7 +553,10 @@ class PlacementApplicationServiceTest {
         )
       } answers { newPlacementDates }
 
-      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(any()) } returns Unit
+      every { userService.getUserForRequest() } returns currentRequestUser
+
+      every { cas1PlacementApplicationEmailService.placementApplicationAllocated(any()) } just Runs
+      every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), currentRequestUser) } just Runs
 
       val result = placementApplicationService.reallocateApplication(assigneeUser, previousPlacementApplication.id)
 
@@ -552,6 +569,7 @@ class PlacementApplicationServiceTest {
       assertThat(previousPlacementApplication.reallocatedAt).isNotNull
 
       verify { placementApplicationRepository.save(match { it.allocatedToUser == assigneeUser }) }
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(match { it.allocatedToUser == assigneeUser }, currentRequestUser) }
 
       val newPlacementApplication = validationResult.entity
 

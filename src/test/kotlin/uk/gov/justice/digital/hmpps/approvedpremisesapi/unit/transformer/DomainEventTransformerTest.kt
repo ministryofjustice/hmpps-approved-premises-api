@@ -5,12 +5,15 @@ import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult.Failure
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 
 class DomainEventTransformerTest {
@@ -49,6 +52,61 @@ class DomainEventTransformerTest {
     assertThat(result.forenames).isEqualTo("theForenames")
     assertThat(result.surname).isEqualTo("theSurname")
     assertThat(result.username).isEqualTo("theUsername")
+  }
+
+  @Test
+  fun `toStaffMember(UserEntity) returns successfully`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .withDeliusStaffCode("theStaffCode")
+      .withDeliusStaffIdentifier(22L)
+      .withName("theForenames theSurname")
+      .withDeliusUsername("theUsername")
+      .produce()
+
+    val staffDetails = StaffUserDetailsFactory()
+      .withStaffCode("theStaffCode")
+      .withStaffIdentifier(22L)
+      .withForenames("theForenames")
+      .withSurname("theSurname")
+      .withUsername("theUsername")
+      .produce()
+
+    every { communityApiClient.getStaffUserDetails(user.deliusUsername) } returns ClientResult.Success(HttpStatus.OK, staffDetails)
+
+    val result = domainEventTransformerService.toStaffMember(user)
+
+    assertThat(result.staffCode).isEqualTo("theStaffCode")
+    assertThat(result.staffIdentifier).isEqualTo(22L)
+    assertThat(result.forenames).isEqualTo("theForenames")
+    assertThat(result.surname).isEqualTo("theSurname")
+    assertThat(result.username).isEqualTo("theUsername")
+  }
+
+  @Test
+  fun `toStaffMember(UserEntity) fails`() {
+    val user = UserEntityFactory()
+      .withUnitTestControlProbationRegion()
+      .withDeliusStaffCode("theStaffCode")
+      .withDeliusStaffIdentifier(22L)
+      .withName("theForenames theSurname")
+      .withDeliusUsername("theUsername")
+      .produce()
+
+    val response = ClientResult.Failure.StatusCode<StaffUserDetails>(
+      HttpMethod.GET,
+      "/",
+      HttpStatus.BAD_REQUEST,
+      "",
+    )
+
+    val expectedException = response.toException()
+
+    every { communityApiClient.getStaffUserDetails(user.deliusUsername) } returns response
+
+    val exception = assertThrows<RuntimeException> { domainEventTransformerService.toStaffMember(user) }
+
+    assertThat(exception.message).isEqualTo(expectedException.message)
   }
 
   @Test

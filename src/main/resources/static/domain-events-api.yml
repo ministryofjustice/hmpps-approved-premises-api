@@ -382,6 +382,33 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /events/placement-application-allocated/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "'Manage' events"
+      summary: A 'placement-application-allocated' event
+      responses:
+        '200':
+          description: The 'placement-application-allocated' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlacementApplicationAllocatedEnvelope'
+        404:
+          description: No 'placement-application-allocated' event found for the provided `eventId`
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /events/match-request-withdrawn/{eventId}:
     parameters:
       - name: eventId
@@ -855,6 +882,55 @@ components:
         - withdrawnAt
         - withdrawnBy
         - withdrawalReason
+    PlacementApplicationAllocatedEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          type: string
+          example: approved-premises.placement-application.allocated
+        eventDetails:
+          $ref: '#/components/schemas/PlacementApplicationAllocated'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
+    PlacementApplicationAllocated:
+      type: object
+      properties:
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
+        placementApplicationId:
+          $ref: '#/components/schemas/PlacementApplicationId'
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        allocatedAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+        allocatedTo:
+          $ref: '#/components/schemas/StaffMember'
+        allocatedBy:
+          $ref: '#/components/schemas/StaffMember'
+        placementDates:
+          type: array
+          items:
+            $ref: '#/components/schemas/DatePeriod'
+      required:
+        - applicationId
+        - applicationUrl
+        - placementApplicationId
+        - personReference
+        - allocatedAt
+        - placementDates
     MatchRequestWithdrawnEnvelope:
       type: object
       properties:

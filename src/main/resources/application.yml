@@ -213,6 +213,7 @@ url-templates:
       application-withdrawn-event-detail: http://localhost:3000/events/application-withdrawn/#eventId
       assessment-appealed-event-detail: http://localhost:3000/events/assessment-appealed/#eventId
       placement-application-withdrawn-event-detail: http://localhost:3000/events/placement-application-withdrawn/#eventId
+      placement-application-allocated-event-detail: http://localhost:3000/events/placement-application-allocated/#eventId
       match-request-withdrawn-event-detail: http://localhost:3000/events/match-request-withdrawn/#eventId
       assessment-allocated-event-detail: http://localhost:3000/events/assessment-allocated/#eventId
       request-for-placement-created-event-detail: http://localhost:3000/events/request-for-placement-created/#eventId
