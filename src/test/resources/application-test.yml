@@ -208,3 +208,4 @@ notify:
     cas2assessors: "assessors@example.com"
 
 feature-flags:
+  cas1-use-ap-delius-context-api-for-offences: true

@@ -263,3 +263,4 @@ pagination:
     booking-search-page-size: 10
 
 feature-flags:
+  cas1-use-ap-delius-context-api-for-offences: false
