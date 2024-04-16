@@ -229,7 +229,7 @@ class PeopleController(
   }
 
   override fun peopleCrnOffencesGet(crn: String): ResponseEntity<List<ActiveOffence>> {
-    getOffenderDetailsIgnoringLaoQualification(crn)
+    ensureCallerCanAccessOffender(crn)
 
     val convictionsResult = offenderService.getConvictions(crn)
     val activeConvictions = extractEntityFromCasResult(convictionsResult).filter { it.active }
@@ -243,6 +243,10 @@ class PeopleController(
     is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
     is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
     is AuthorisableActionResult.Success -> authorisableActionResult.entity
+  }
+
+  private fun ensureCallerCanAccessOffender(crn: String) {
+    getOffenderDetailsIgnoringLaoQualification(crn)
   }
 
   private fun getOffenderDetailsIgnoringLaoQualification(crn: String): OffenderDetailSummary {
