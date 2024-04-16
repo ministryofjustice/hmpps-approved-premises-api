@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
 import java.time.OffsetDateTime
@@ -200,7 +201,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
 
             val statusUpdate = cas2StatusUpdateEntityFactory.produceAndPersist {
-              withLabel("older status update")
+              withLabel("a status update")
               withApplication(secondApplicationEntity)
               withAssessor(externalUserEntityFactory.produceAndPersist())
             }
@@ -459,19 +460,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 )
               }
 
-              // add two status updates to the first submitted application
-              cas2StatusUpdateEntityFactory.produceAndPersist {
-                withLabel("older status update")
-                withApplication(cas2ApplicationRepository.findById(userBPrisonAApplicationIds.first()).get())
-                withAssessor(assessor)
-              }
-              // this is the one that should be returned as lastStatusUpdate
-              cas2StatusUpdateEntityFactory.produceAndPersist {
-                withStatusId(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
-                withLabel("more recent status update")
-                withApplication(cas2ApplicationRepository.findById(userBPrisonAApplicationIds.first()).get())
-                withAssessor(assessor)
-              }
+              addStatusUpdates(userBPrisonAApplicationIds.first(), assessor)
 
               val userCPrisonB = nomisUserEntityFactory.produceAndPersist {
                 withActiveCaseloadId("another prison")
@@ -564,19 +553,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 )
               }
 
-              // add two status updates to the first submitted application
-              cas2StatusUpdateEntityFactory.produceAndPersist {
-                withLabel("older status update")
-                withApplication(cas2ApplicationRepository.findById(userBPrisonAApplicationIds.first()).get())
-                withAssessor(assessor)
-              }
-              // this is the one that should be returned as lastStatusUpdate
-              cas2StatusUpdateEntityFactory.produceAndPersist {
-                withStatusId(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
-                withLabel("more recent status update")
-                withApplication(cas2ApplicationRepository.findById(userBPrisonAApplicationIds.first()).get())
-                withAssessor(assessor)
-              }
+              addStatusUpdates(userBPrisonAApplicationIds.first(), assessor)
 
               val rawResponseBody = webTestClient.get()
                 .uri("/cas2/applications?isSubmitted=true&prisonCode=${userAPrisonA.activeCaseloadId}")
@@ -684,6 +661,21 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
   }
 
+  private fun addStatusUpdates(applicationId: UUID, assessor: ExternalUserEntity) {
+    cas2StatusUpdateEntityFactory.produceAndPersist {
+      withLabel("older status update")
+      withApplication(cas2ApplicationRepository.findById(applicationId).get())
+      withAssessor(assessor)
+    }
+    // this is the one that should be returned as latestStatusUpdate
+    cas2StatusUpdateEntityFactory.produceAndPersist {
+      withStatusId(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
+      withLabel("more recent status update")
+      withApplication(cas2ApplicationRepository.findById(applicationId).get())
+      withAssessor(assessor)
+    }
+  }
+
   @Nested
   inner class GetToIndexUsingIsSubmitted {
 
@@ -719,19 +711,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 )
               }
 
-              // add two status updates to the first submitted application
-              cas2StatusUpdateEntityFactory.produceAndPersist {
-                withLabel("older status update")
-                withApplication(cas2ApplicationRepository.findById(submittedIds.first()).get())
-                withAssessor(assessor)
-              }
-              // this is the one that should be returned as lastStatusUpdate
-              cas2StatusUpdateEntityFactory.produceAndPersist {
-                withStatusId(UUID.fromString("c74c3e54-52d8-4aa2-86f6-05190985efee"))
-                withLabel("more recent status update")
-                withApplication(cas2ApplicationRepository.findById(submittedIds.first()).get())
-                withAssessor(assessor)
-              }
+              addStatusUpdates(submittedIds.first(), assessor)
 
               // create 4 x un-submitted in-progress applications for this user
               repeat(4) {
