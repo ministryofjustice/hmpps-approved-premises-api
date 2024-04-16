@@ -41,13 +41,11 @@ class ApplicationsTransformer(
 
   fun transformJpaSummaryToSummary(
     jpaSummary: Cas2ApplicationSummary,
-    personInfo:
-      PersonInfoResult.Success,
+    personName: String,
   ): uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary {
     return uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
       .Cas2ApplicationSummary(
         id = jpaSummary.getId(),
-        person = personTransformer.transformModelToPersonApi(personInfo),
         createdByUserId = jpaSummary.getCreatedByUserId(),
         createdAt = jpaSummary.getCreatedAt().toInstant(),
         submittedAt = jpaSummary.getSubmittedAt()?.toInstant(),
@@ -55,6 +53,7 @@ class ApplicationsTransformer(
         latestStatusUpdate = statusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(jpaSummary),
         type = "CAS2",
         hdcEligibilityDate = jpaSummary.getHdcEligibilityDate(),
+        personName = personName,
       )
   }
 

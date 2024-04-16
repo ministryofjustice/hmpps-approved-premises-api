@@ -166,12 +166,13 @@ class ApplicationsTransformerTest {
 
       val result = applicationsTransformer.transformJpaSummaryToSummary(
         application,
-        mockk(),
+        "person name",
       )
 
       assertThat(result.id).isEqualTo(application.getId())
       assertThat(result.createdByUserId).isEqualTo(application.getCreatedByUserId())
       assertThat(result.risks).isNull()
+      assertThat(result.personName).isEqualTo("person name")
       assertThat(result.hdcEligibilityDate).isNull()
       assertThat(result.latestStatusUpdate).isNull()
     }
@@ -197,12 +198,13 @@ class ApplicationsTransformerTest {
 
       val result = applicationsTransformer.transformJpaSummaryToSummary(
         application,
-        mockk(),
+        "person name",
       )
 
       assertThat(result.id).isEqualTo(application.getId())
       assertThat(result.status).isEqualTo(ApplicationStatus.submitted)
       assertThat(result.hdcEligibilityDate).isEqualTo("2023-04-29")
+      assertThat(result.personName).isEqualTo("person name")
       assertThat(result.latestStatusUpdate?.label).isEqualTo("my latest status update")
       assertThat(result.latestStatusUpdate?.statusId).isEqualTo(UUID.fromString("ae544aee-7170-4794-99fb-703090cbc7db"))
     }
