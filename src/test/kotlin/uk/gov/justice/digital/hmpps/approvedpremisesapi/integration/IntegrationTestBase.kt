@@ -237,7 +237,7 @@ import java.util.TimeZone
 import java.util.UUID
 
 object WiremockPortHolder {
-  private val possiblePorts = 57830..57880
+  private val possiblePorts = (57830..57880).shuffled()
 
   private var port: Int? = null
   private var channel: FileChannel? = null
