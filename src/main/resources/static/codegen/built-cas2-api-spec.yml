@@ -4000,6 +4000,38 @@ components:
         - createdAt
         - typeCode
         - typeDescription
+    PersonalTimeline:
+      type: object
+      properties:
+        applications:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationTimeline'
+      required:
+        - applications
+    ApplicationTimeline:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
+        createdBy:
+          $ref: '#/components/schemas/User'
+        timelineEvents:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineEvent'
+      required:
+        - id
+        - createdAt
+        - status
+        - createdBy
+        - timelineEvents
     TimelineEvent:
       type: object
       properties:

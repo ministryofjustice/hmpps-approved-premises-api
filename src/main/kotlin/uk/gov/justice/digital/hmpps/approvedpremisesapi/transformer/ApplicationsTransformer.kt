@@ -40,29 +40,6 @@ class ApplicationsTransformer(
   private val apAreaTransformer: ApAreaTransformer,
   private val cas1ApplicationUserDetailsTransformer: Cas1ApplicationUserDetailsTransformer,
 ) {
-
-  final val applicationStatuses = mapOf(
-    ApiApprovedPremisesApplicationStatus.assesmentInProgress to ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS,
-    ApiApprovedPremisesApplicationStatus.started to ApprovedPremisesApplicationStatus.STARTED,
-    ApiApprovedPremisesApplicationStatus.submitted to ApprovedPremisesApplicationStatus.SUBMITTED,
-    ApiApprovedPremisesApplicationStatus.rejected to ApprovedPremisesApplicationStatus.REJECTED,
-    ApiApprovedPremisesApplicationStatus.awaitingAssesment to ApprovedPremisesApplicationStatus.AWAITING_ASSESSMENT,
-    ApiApprovedPremisesApplicationStatus.unallocatedAssesment to ApprovedPremisesApplicationStatus.UNALLOCATED_ASSESSMENT,
-    ApiApprovedPremisesApplicationStatus.awaitingPlacement to ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
-    ApiApprovedPremisesApplicationStatus.placementAllocated to ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED,
-    ApiApprovedPremisesApplicationStatus.inapplicable to ApprovedPremisesApplicationStatus.INAPPLICABLE,
-    ApiApprovedPremisesApplicationStatus.withdrawn to ApprovedPremisesApplicationStatus.WITHDRAWN,
-    ApiApprovedPremisesApplicationStatus.requestedFurtherInformation to ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION,
-    ApiApprovedPremisesApplicationStatus.pendingPlacementRequest to ApprovedPremisesApplicationStatus.PENDING_PLACEMENT_REQUEST,
-  )
-
-  val reversedStatusMap: Map<ApprovedPremisesApplicationStatus, ApiApprovedPremisesApplicationStatus> =
-    this.applicationStatuses.entries.associateBy({ it.value }) { it.key }
-
-  fun transformApiApprovedPremisesApplicationStatusToJpa(
-    apiStatus: ApiApprovedPremisesApplicationStatus?,
-  ): ApprovedPremisesApplicationStatus? = this.applicationStatuses[apiStatus]
-
   fun transformJpaToApi(jpa: ApplicationEntity, personInfo: PersonInfoResult): Application {
     val latestAssessment = jpa.getLatestAssessment()
 
@@ -88,7 +65,7 @@ class ApplicationsTransformer(
         } else {
           null
         },
-        status = this.reversedStatusMap[jpa.status] ?: ApiApprovedPremisesApplicationStatus.started,
+        status = jpa.status.apiValue,
         assessmentDecision = transformJpaDecisionToApi(latestAssessment?.decision),
         assessmentId = latestAssessment?.id,
         assessmentDecisionDate = latestAssessment?.submittedAt?.toLocalDate(),
@@ -213,8 +190,7 @@ class ApplicationsTransformer(
   }
 
   private fun getStatusFromSummary(entity: DomainApprovedPremisesApplicationSummary): ApiApprovedPremisesApplicationStatus =
-    this.reversedStatusMap[ApprovedPremisesApplicationStatus.valueOf(entity.getStatus())]
-      ?: throw RuntimeException("Application ${entity.getId()} has no status")
+    ApprovedPremisesApplicationStatus.valueOf(entity.getStatus()).apiValue
 
   fun transformJpaDecisionToApi(decision: AssessmentDecision?) = when (decision) {
     AssessmentDecision.ACCEPTED -> uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision.accepted

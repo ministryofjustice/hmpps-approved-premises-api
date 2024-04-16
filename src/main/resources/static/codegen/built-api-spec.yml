@@ -1485,6 +1485,35 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /people/{crn}/timeline:
+    get:
+      summary: Returns a timeline of all applications for a Person.
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch the timeline for
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/PersonalTimeline'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /premises/{premisesId}/lost-beds:
     post:
       tags:
@@ -7949,6 +7978,38 @@ components:
         - createdAt
         - typeCode
         - typeDescription
+    PersonalTimeline:
+      type: object
+      properties:
+        applications:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationTimeline'
+      required:
+        - applications
+    ApplicationTimeline:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
+        createdBy:
+          $ref: '#/components/schemas/User'
+        timelineEvents:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineEvent'
+      required:
+        - id
+        - createdAt
+        - status
+        - createdBy
+        - timelineEvents
     TimelineEvent:
       type: object
       properties:

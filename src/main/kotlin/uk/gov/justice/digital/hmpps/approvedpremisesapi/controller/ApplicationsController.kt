@@ -64,6 +64,7 @@ import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationSummary as JPAApplicationSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus.Companion as DomainApprovedPremisesApplicationStatus
 
 @Service
 @Suppress("LongParameterList", "TooManyFunctions")
@@ -108,7 +109,7 @@ class ApplicationsController(
       throw ForbiddenProblem()
     }
     val user = userService.getUserForRequest()
-    val statusTransformed = applicationsTransformer.transformApiApprovedPremisesApplicationStatusToJpa(status)
+    val statusTransformed = status?.let { DomainApprovedPremisesApplicationStatus.valueOf(it) }
 
     val (applications, metadata) =
       applicationService.getAllApprovedPremisesApplications(

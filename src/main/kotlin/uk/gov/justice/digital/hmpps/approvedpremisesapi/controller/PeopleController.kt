@@ -16,13 +16,17 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAlert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonalTimeline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PrisonCaseNote
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ForbiddenProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
@@ -32,6 +36,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonalTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
 
@@ -48,6 +53,8 @@ class PeopleController(
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val convictionTransformer: ConvictionTransformer,
   private val userService: UserService,
+  private val applicationService: ApplicationService,
+  private val personalTimelineTransformer: PersonalTimelineTransformer,
 ) : PeopleApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -236,6 +243,27 @@ class PeopleController(
     return ResponseEntity.ok(
       activeConvictions.flatMap(convictionTransformer::transformToApi),
     )
+  }
+
+  override fun peopleCrnTimelineGet(crn: String): ResponseEntity<PersonalTimeline> {
+    val user = userService.getUserForRequest()
+
+    val personInfo = offenderService.getInfoForPerson(crn, user.deliusUsername, user.hasQualification(UserQualification.LAO))
+
+    val personalTimeline = when (personInfo) {
+      is PersonInfoResult.NotFound -> throw NotFoundProblem(crn, "Offender")
+      is PersonInfoResult.Unknown -> throw personInfo.throwable ?: RuntimeException("Could not retrieve person info for CRN: $crn")
+      is PersonInfoResult.Success -> {
+        val applicationsAndTimelineEvents = applicationService
+          .getApplicationsForCrn(crn, ServiceName.approvedPremises)
+          .map { it as ApprovedPremisesApplicationEntity }
+          .associateWith { applicationService.getApplicationTimeline(it.id) }
+
+        personalTimelineTransformer.transformApplicationsAndTimelineEvents(applicationsAndTimelineEvents)
+      }
+    }
+
+    return ResponseEntity.ok(personalTimeline)
   }
 
   private fun <T> getSuccessEntityOrThrow(crn: String, authorisableActionResult: AuthorisableActionResult<T>): T = when (authorisableActionResult) {
