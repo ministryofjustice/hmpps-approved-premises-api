@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
 @Service
 class PeopleController(
@@ -231,7 +232,7 @@ class PeopleController(
     getOffenderDetailsIgnoringLaoQualification(crn)
 
     val convictionsResult = offenderService.getConvictions(crn)
-    val activeConvictions = getSuccessEntityOrThrow(crn, convictionsResult).filter { it.active }
+    val activeConvictions = extractEntityFromCasResult(convictionsResult).filter { it.active }
 
     return ResponseEntity.ok(
       activeConvictions.flatMap(convictionTransformer::transformToApi),

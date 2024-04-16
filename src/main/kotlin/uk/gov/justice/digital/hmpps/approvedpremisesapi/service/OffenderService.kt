@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNot
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import java.io.OutputStream
 import java.time.LocalDate
@@ -459,20 +460,18 @@ class OffenderService(
     return AuthorisableActionResult.Success(riskToTheIndividual)
   }
 
-  fun getConvictions(crn: String): AuthorisableActionResult<List<Conviction>> {
-    val convictionsResult = communityApiClient.getConvictions(crn)
-
-    val convictions = when (convictionsResult) {
+  fun getConvictions(crn: String): CasResult<List<Conviction>> {
+    val convictions = when (val convictionsResult = communityApiClient.getConvictions(crn)) {
       is ClientResult.Success -> convictionsResult.body
       is ClientResult.Failure.StatusCode -> when (convictionsResult.status) {
-        HttpStatus.NOT_FOUND -> return AuthorisableActionResult.NotFound()
-        HttpStatus.FORBIDDEN -> return AuthorisableActionResult.Unauthorised()
+        HttpStatus.NOT_FOUND -> return CasResult.NotFound(entityType = "Person", id = crn)
+        HttpStatus.FORBIDDEN -> return CasResult.Unauthorised()
         else -> convictionsResult.throwException()
       }
       is ClientResult.Failure -> convictionsResult.throwException()
     }
 
-    return AuthorisableActionResult.Success(convictions)
+    return CasResult.Success(convictions)
   }
 
   fun getDocuments(crn: String): AuthorisableActionResult<GroupedDocuments> {

@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulConvictionsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTransformer
 
-class PersonOffencesTest : IntegrationTestBase() {
+class PersonOffencesTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var convictionTransformer: ConvictionTransformer
 
@@ -55,7 +55,7 @@ class PersonOffencesTest : IntegrationTestBase() {
 
   @Test
   fun `Getting offences for a CRN that does not exist returns 404`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User` { _, jwt ->
       val crn = "CRN123"
 
       CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
@@ -71,9 +71,9 @@ class PersonOffencesTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Getting offences for a CRN returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+  fun `Getting offences for a CRN returns OK with only active offences`() {
+    `Given a User` { _, jwt ->
+      `Given an Offender` { offenderDetails, _ ->
 
         val activeConviction = ConvictionFactory()
           .withConvictionId(12345)
