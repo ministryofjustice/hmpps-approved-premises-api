@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.TestInfo
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
@@ -242,6 +243,8 @@ object WiremockPortHolder {
   private var port: Int? = null
   private var channel: FileChannel? = null
 
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   fun getPort(): Int {
     synchronized(this) {
       if (port != null) {
@@ -249,6 +252,7 @@ object WiremockPortHolder {
       }
 
       possiblePorts.forEach { portToTry ->
+        log.info("Trying Wiremock port: $portToTry")
         val lockFilePath = Paths.get("${System.getProperty("java.io.tmpdir")}${System.getProperty("file.separator")}ap-int-port-lock-$portToTry.lock")
 
         try {
@@ -256,11 +260,13 @@ object WiremockPortHolder {
           channel!!.position(0)
 
           if (channel!!.tryLock() == null) {
+            log.info("Port $portToTry is in use")
             channel!!.close()
             channel = null
             return@forEach
           }
 
+          log.info("Using Wiremock port: $portToTry")
           port = portToTry
 
           return portToTry
