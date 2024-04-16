@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.OffenderSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.UserAccessService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.sql.Timestamp
 import java.time.Instant
@@ -119,6 +120,77 @@ class ApplicationServiceTest {
       assertThat(metadata?.pageSize).isEqualTo(10)
       assertThat(metadata?.totalPages).isEqualTo(10)
       assertThat(metadata?.totalResults).isEqualTo(100)
+    }
+  }
+
+  @Nested
+  inner class GetApplicationsWithPrisonCode {
+    val applicationSummary = object : Cas2ApplicationSummary {
+      override fun getId() = UUID.fromString("2f838a8c-dffc-48a3-9536-f0e95985e809")
+      override fun getCrn() = randomStringMultiCaseWithNumbers(6)
+      override fun getNomsNumber() = randomStringMultiCaseWithNumbers(6)
+      override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
+      override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
+      override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
+      override fun getHdcEligibilityDate() = LocalDate.parse("2023-04-29")
+      override fun getLatestStatusUpdateLabel(): String? = null
+      override fun getLatestStatusUpdateStatusId(): UUID? = null
+    }
+    val page = mockk<Page<Cas2ApplicationSummary>>()
+    val pageCriteria = PageCriteria(sortBy = "submitted_at", sortDirection = SortDirection.asc, page = 3)
+    val user = NomisUserEntityFactory().produce()
+    val prisonCode = "PRISONCODE"
+
+    fun testPrisonCodeWithIsSubmitted(isSubmitted: Boolean?) {
+      every { page.content } returns listOf(applicationSummary)
+      every { page.totalPages } returns 10
+      every { page.totalElements } returns 100
+
+      val (applicationSummaries, _) = applicationService.getApplications(prisonCode, isSubmitted, user, pageCriteria)
+
+      assertThat(applicationSummaries).isEqualTo(listOf(applicationSummary))
+    }
+
+    @Test
+    fun `return submitted prison applications when prisonCode is specified and isSubmitted is null`() {
+      PaginationConfig(defaultPageSize = 10).postInit()
+
+      every {
+        mockApplicationRepository.findAllCas2ApplicationSummariesByPrison(
+          prisonCode,
+          getPageable(pageCriteria),
+        )
+      } returns page
+
+      testPrisonCodeWithIsSubmitted(null)
+    }
+
+    @Test
+    fun `return submitted prison applications when prisonCode is specified and isSubmitted is true`() {
+      PaginationConfig(defaultPageSize = 10).postInit()
+
+      every {
+        mockApplicationRepository.findSubmittedCas2ApplicationSummariesByPrison(
+          prisonCode,
+          getPageable(pageCriteria),
+        )
+      } returns page
+
+      testPrisonCodeWithIsSubmitted(true)
+    }
+
+    @Test
+    fun `return submitted prison applications when prisonCode is specified and isSubmitted is false`() {
+      PaginationConfig(defaultPageSize = 10).postInit()
+
+      every {
+        mockApplicationRepository.findUnsubmittedCas2ApplicationSummariesByPrison(
+          prisonCode,
+          getPageable(pageCriteria),
+        )
+      } returns page
+
+      testPrisonCodeWithIsSubmitted(false)
     }
   }
 
