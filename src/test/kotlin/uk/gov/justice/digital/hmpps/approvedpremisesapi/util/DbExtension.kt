@@ -27,6 +27,8 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
       TableData("spatial_ref_sys"),
     )
 
+    private val log = LoggerFactory.getLogger(this::class.java)
+
     private lateinit var INITIAL_DB_STATE: Map<TableData, TableResults>
   }
 
@@ -53,7 +55,9 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
   private fun setupDatabase(context: ExtensionContext?) {
     val applicationContext = SpringExtension.getApplicationContext(context!!)
     val dataSource = getDatasource(applicationContext)
+    log.info("Cleaning database...")
     cleanDatabase(dataSource)
+    log.info("Setting initial database state...")
     setInitialDatabaseState(dataSource)
   }
 
@@ -108,7 +112,11 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
           }
         }
         connection.prepareStatement("SET CONSTRAINTS ALL DEFERRED;").execute()
-        INITIAL_DB_STATE.values.forEach { it.insert(connection) }
+        INITIAL_DB_STATE.values.forEach {
+          if (it.results.isNotEmpty()) {
+            it.insert(connection)
+          }
+        }
         connection.commit()
       }
     } catch (e: SQLException) {
@@ -194,7 +202,7 @@ class DbExtension : BeforeAllCallback, BeforeEachCallback {
   data class TableResults(val tableData: TableData, val columns: List<String>, val results: List<Map<String, Any>>) {
     fun insert(connection: Connection) {
       val sql = "INSERT INTO ${tableData.fullyQualifiedTableName} ($columnNamesSql) VALUES ($valueParametersSql);"
-      println(sql)
+      log.info("Inserting ${results.count()} record(s) into ${tableData.fullyQualifiedTableName}")
       val statement = connection.prepareStatement(sql)
 
       results.forEach { result ->
