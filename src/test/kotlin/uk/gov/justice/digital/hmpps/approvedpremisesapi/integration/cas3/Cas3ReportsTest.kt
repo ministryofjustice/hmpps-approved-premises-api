@@ -71,7 +71,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
-class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
+class Cas3ReportsTest : IntegrationTestBase() {
   @Autowired
   lateinit var bookingTransformer: BookingTransformer
 
@@ -86,7 +86,7 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
-  fun `Get bookings report for all regions returns 403 Forbidden if user does not have all regions access`(reportType: Cas3ReportType) {
+  fun `Get report for all regions returns 403 Forbidden if user does not have all regions access`(reportType: Cas3ReportType) {
     `Given a User`(roles = listOf(CAS3_ASSESSOR)) { _, jwt ->
       webTestClient.get()
         .uri("/cas3/reports/$reportType?startDate=2023-04-01&endDate=2023-04-02")
@@ -100,7 +100,7 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
-  fun `Get bookings report for a region returns 403 Forbidden if user cannot access the specified region`(reportType: Cas3ReportType) {
+  fun `Get report for a region returns 403 Forbidden if user cannot access the specified region`(reportType: Cas3ReportType) {
     `Given a User`(roles = listOf(CAS3_ASSESSOR)) { _, jwt ->
       webTestClient.get()
         .uri("/cas3/reports/$reportType?startDate=2023-04-01&endDate=2023-04-02&probationRegionId=${UUID.randomUUID()}")
@@ -148,12 +148,12 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
-  fun `Get report returns 400 if start date is later than end date`() {
+  fun `Get report returns 400 if start date is later than end date`(reportType: Cas3ReportType) {
     `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       val startDate = "2023-08-03"
       val endDate = "2023-08-02"
       webTestClient.get()
-        .uri("/cas3/reports/booking?startDate=$startDate&endDate=$endDate&probationRegionId=${user.probationRegion.id}")
+        .uri("/cas3/reports/$reportType?startDate=$startDate&endDate=$endDate&probationRegionId=${user.probationRegion.id}")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
@@ -166,10 +166,10 @@ class TransitionalAccommodationReferralReportsTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
-  fun `Get report returns 400 if mandatory dates are not provided`() {
+  fun `Get report returns 400 if mandatory dates are not provided`(reportType: Cas3ReportType) {
     `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       webTestClient.get()
-        .uri("/cas3/reports/booking?probationRegionId=${user.probationRegion.id}")
+        .uri("/cas3/reports/$reportType?probationRegionId=${user.probationRegion.id}")
         .header("Authorization", "Bearer $jwt")
         .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
         .exchange()
