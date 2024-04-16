@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulAlertsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
 
-class PersonAcctAlertsTest : IntegrationTestBase() {
+class PersonAcctAlertsTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var alertTransformer: AlertTransformer
 

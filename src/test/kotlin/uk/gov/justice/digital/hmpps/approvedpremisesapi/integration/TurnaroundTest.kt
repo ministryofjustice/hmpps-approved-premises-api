@@ -9,7 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
 import java.util.UUID
 
-class TurnaroundTest : IntegrationTestBase() {
+class TurnaroundTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Create Turnaround returns 404 Not Found if the premises was not found`() {
     `Given a User` { _, jwt ->

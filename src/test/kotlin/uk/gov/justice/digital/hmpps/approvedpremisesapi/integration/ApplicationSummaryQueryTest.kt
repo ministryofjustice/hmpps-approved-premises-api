@@ -16,9 +16,9 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
 
   @Test
   fun `findNonWithdrawnApprovedPremisesSummariesForUser query works as described`() {
-    `Given a User` { user, jwt ->
+    `Given a User` { user, _ ->
       `Given a User` { differentUser, _ ->
-        `Given an Offender` { offenderDetails, inmateDetails ->
+        `Given an Offender` { offenderDetails, _ ->
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
@@ -111,8 +111,8 @@ class ApplicationSummaryQueryTest : IntegrationTestBase() {
 
   @Test
   fun `findAllTemporaryAccommodationSummariesCreatedByUser query works as described`() {
-    `Given a User` { user, jwt ->
-      `Given an Offender` { offenderDetails, inmateDetails ->
+    `Given a User` { user, _ ->
+      `Given an Offender` { offenderDetails, _ ->
         val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
           withPermissiveSchema()
         }

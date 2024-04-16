@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DocumentTransformer
 import java.time.LocalDateTime
 
-class ApplicationDocumentsTest : IntegrationTestBase() {
+class ApplicationDocumentsTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var documentTransformer: DocumentTransformer
 

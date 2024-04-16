@@ -108,7 +108,7 @@ class PersonSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Searching for a CRN returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User` { _, jwt ->
       `Given an Offender`(
         offenderDetailsConfigBlock = {
           withCrn("CRN")
@@ -168,7 +168,7 @@ class PersonSearchTest : IntegrationTestBase() {
 
   @Test
   fun `Searching for a CRN without a NomsNumber returns OK with correct body`() {
-    `Given a User` { userEntity, jwt ->
+    `Given a User` { _, jwt ->
       `Given an Offender`(
         offenderDetailsConfigBlock = {
           withCrn("CRN")

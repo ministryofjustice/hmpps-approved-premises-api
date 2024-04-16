@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulConvictionsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTransformer
 
-class PersonOffencesTest : IntegrationTestBase() {
+class PersonOffencesTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var convictionTransformer: ConvictionTransformer
 

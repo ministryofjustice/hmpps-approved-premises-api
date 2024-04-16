@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.AP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
 
-class PersonOASysSelectionTest : IntegrationTestBase() {
+class PersonOASysSelectionTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var needsDetailsTransformer: NeedsDetailsTransformer
 

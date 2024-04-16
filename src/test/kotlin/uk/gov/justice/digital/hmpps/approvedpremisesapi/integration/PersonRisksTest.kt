@@ -34,7 +34,7 @@ import java.time.OffsetDateTime
 import java.time.ZonedDateTime
 import java.util.UUID
 
-class PersonRisksTest : IntegrationTestBase() {
+class PersonRisksTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Getting risks by CRN without a JWT returns 401`() {
     webTestClient.get()

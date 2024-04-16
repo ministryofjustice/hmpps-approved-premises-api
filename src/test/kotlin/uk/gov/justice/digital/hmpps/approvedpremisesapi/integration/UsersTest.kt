@@ -22,7 +22,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransfor
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
-class UsersTest : IntegrationTestBase() {
+class UsersTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var userTransformer: UserTransformer
 

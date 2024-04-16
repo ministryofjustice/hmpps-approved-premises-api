@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Co
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockSuccessfulAdjudicationsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 
-class PersonAdjudicationsTest : IntegrationTestBase() {
+class PersonAdjudicationsTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var adjudicationTransformer: AdjudicationTransformer
 
