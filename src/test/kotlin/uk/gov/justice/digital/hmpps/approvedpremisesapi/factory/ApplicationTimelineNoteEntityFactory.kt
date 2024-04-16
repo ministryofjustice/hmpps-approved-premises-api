@@ -12,7 +12,7 @@ import java.util.UUID
 class ApplicationTimelineNoteEntityFactory : Factory<ApplicationTimelineNoteEntity> {
   private var id: Yielded<UUID> = { UUID.randomUUID() }
   private var applicationId: Yielded<UUID> = { UUID.randomUUID() }
-  private var createdBy: Yielded<UserEntity>? = null
+  private var createdBy: Yielded<UserEntity?>? = null
   private var createdAt: Yielded<OffsetDateTime> = { OffsetDateTime.now().randomDateTimeBefore(30) }
   private var body: Yielded<String> = { randomStringUpperCase(12) }
 
@@ -24,7 +24,7 @@ class ApplicationTimelineNoteEntityFactory : Factory<ApplicationTimelineNoteEnti
     this.applicationId = { applicationId }
   }
 
-  fun withCreatedBy(createdBy: UserEntity) = apply {
+  fun withCreatedBy(createdBy: UserEntity?) = apply {
     this.createdBy = { createdBy }
   }
 
@@ -39,7 +39,7 @@ class ApplicationTimelineNoteEntityFactory : Factory<ApplicationTimelineNoteEnti
   override fun produce(): ApplicationTimelineNoteEntity = ApplicationTimelineNoteEntity(
     id = this.id(),
     applicationId = this.applicationId(),
-    createdBy = this.createdBy?.invoke() ?: throw RuntimeException("Must provide a createdBy User"),
+    createdBy = this.createdBy?.invoke(),
     createdAt = this.createdAt(),
     body = this.body(),
   )

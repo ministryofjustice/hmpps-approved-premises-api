@@ -48,7 +48,7 @@ class ApprovedPremisesAssessmentEntityFactory : Factory<ApprovedPremisesAssessme
     this.data = { data }
   }
 
-  fun withDocument(document: String) = apply {
+  fun withDocument(document: String?) = apply {
     this.document = { document }
   }
 

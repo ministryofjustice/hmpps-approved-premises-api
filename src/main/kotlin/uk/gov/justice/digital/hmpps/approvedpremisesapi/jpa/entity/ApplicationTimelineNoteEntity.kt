@@ -22,7 +22,7 @@ data class ApplicationTimelineNoteEntity(
   val applicationId: UUID,
   @ManyToOne
   @JoinColumn(name = "created_by_user_id")
-  val createdBy: UserEntity,
+  val createdBy: UserEntity?,
   val createdAt: OffsetDateTime,
   val body: String,
 )

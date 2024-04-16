@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.doyaaaaaken.kotlincsv.dsl.csvReader
 import org.apache.commons.io.FileUtils
 import org.springframework.context.ApplicationContext
@@ -48,6 +49,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1ApAreaEmailAddressSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingAdhocPropertySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1FurtherInfoBugFixSeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1RemoveAssessmentDetailsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2ApplicationsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.Cas2AutoScript
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas2.ExternalUsersSeedJob
@@ -56,7 +58,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas2.JsonSchemaS
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.findRootCause
 import java.io.File
 import java.io.IOException
+import java.nio.file.Path
 import javax.annotation.PostConstruct
+import kotlin.io.path.absolutePathString
 
 @Service
 class SeedService(
@@ -234,6 +238,13 @@ class SeedService(
           filename,
           applicationContext.getBean(AssessmentRepository::class.java),
         )
+
+        SeedFileType.approvedPremisesRedactAssessmentDetails -> Cas1RemoveAssessmentDetailsSeedJob(
+          filename,
+          applicationContext.getBean(AssessmentRepository::class.java),
+          applicationContext.getBean(ObjectMapper::class.java),
+          applicationContext.getBean(ApplicationService::class.java),
+        )
       }
 
       transactionTemplate.executeWithoutResult { processJob(job, resolveCsvPath) }
@@ -248,6 +259,7 @@ class SeedService(
     // During processing, the CSV file is processed one row at a time to avoid OOM issues.
     // It is preferable to fail fast rather than processing half of a file before stopping,
     // so we first do a full pass but only deserializing each row
+    seedLogger.info("Processing CSV file ${Path.of(job.resolveCsvPath()).absolutePathString()}")
     enforcePresenceOfRequiredHeaders(job, resolveCsvPath)
     ensureCsvCanBeDeserialized(job, resolveCsvPath)
     processCsv(job, resolveCsvPath)
