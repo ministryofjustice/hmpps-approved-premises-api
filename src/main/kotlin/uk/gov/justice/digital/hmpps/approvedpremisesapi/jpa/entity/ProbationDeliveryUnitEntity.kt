@@ -16,6 +16,8 @@ interface ProbationDeliveryUnitRepository : JpaRepository<ProbationDeliveryUnitE
   fun findByIdAndProbationRegion_Id(id: UUID, probationRegionId: UUID): ProbationDeliveryUnitEntity?
 
   fun findByNameAndProbationRegion_Id(name: String, probationRegionId: UUID): ProbationDeliveryUnitEntity?
+
+  fun findByDeliusCode(deliusCode: String): ProbationDeliveryUnitEntity?
 }
 
 @Entity

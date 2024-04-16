@@ -4,6 +4,7 @@ import io.github.bluegroundltd.kfactory.Factory
 import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualificationAssignmentEntity
@@ -25,6 +26,7 @@ class UserEntityFactory : Factory<UserEntity> {
   private var applications: Yielded<MutableList<ApplicationEntity>> = { mutableListOf() }
   private var qualifications: Yielded<MutableList<UserQualificationAssignmentEntity>> = { mutableListOf() }
   private var probationRegion: Yielded<ProbationRegionEntity>? = null
+  private var probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity>? = null
   private var isActive: Yielded<Boolean> = { true }
   private var apArea: Yielded<ApAreaEntity?> = { null }
   private var teamCodes: Yielded<List<String>?> = { null }
@@ -79,6 +81,10 @@ class UserEntityFactory : Factory<UserEntity> {
     this.probationRegion = probationRegion
   }
 
+  fun withProbationDeliveryUnit(probationDeliveryUnit: Yielded<ProbationDeliveryUnitEntity>) = apply {
+    this.probationDeliveryUnit = probationDeliveryUnit
+  }
+
   fun withDefaults() = withDefaultProbationRegion()
   fun withDefaultProbationRegion() =
     withYieldedProbationRegion {
@@ -128,6 +134,7 @@ class UserEntityFactory : Factory<UserEntity> {
     roles = mutableListOf(),
     qualifications = this.qualifications(),
     probationRegion = this.probationRegion?.invoke() ?: throw RuntimeException("A probation region must be provided"),
+    probationDeliveryUnit = this.probationDeliveryUnit?.invoke(),
     isActive = this.isActive(),
     apArea = this.apArea(),
     teamCodes = this.teamCodes(),

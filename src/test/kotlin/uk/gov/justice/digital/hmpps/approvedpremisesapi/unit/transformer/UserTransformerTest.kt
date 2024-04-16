@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole.CAS3_REPORTER
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addQualificationForUnitTest
@@ -40,9 +41,10 @@ import java.util.UUID.randomUUID
 
 class UserTransformerTest {
   private val probationRegionTransformer = mockk<ProbationRegionTransformer>()
+  private val probationDeliveryUnitTransformer = mockk<ProbationDeliveryUnitTransformer>()
   private val apAreaTransformer = mockk<ApAreaTransformer>()
 
-  private val userTransformer = UserTransformer(probationRegionTransformer, apAreaTransformer)
+  private val userTransformer = UserTransformer(probationRegionTransformer, probationDeliveryUnitTransformer, apAreaTransformer)
 
   private val apArea = ApArea(randomUUID(), "someIdentifier", "someName")
 
