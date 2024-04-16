@@ -19,13 +19,13 @@ class BedSummaryQueryTest : IntegrationTestBase() {
 
   @BeforeEach
   fun setup() {
-    var probationRegion = probationRegionEntityFactory.produceAndPersist {
+    val probationRegion = probationRegionEntityFactory.produceAndPersist {
       withYieldedApArea {
         apAreaEntityFactory.produceAndPersist()
       }
     }
 
-    var localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
     this.premises = approvedPremisesEntityFactory.produceAndPersist {
       withProbationRegion(probationRegion)

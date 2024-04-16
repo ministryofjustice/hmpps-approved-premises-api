@@ -30,7 +30,7 @@ import java.time.OffsetDateTime
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentDecision as ApiAssessmentDecision
 
-class AppealsTest : IntegrationTestBase() {
+class AppealsTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Get appeal without JWT returns 401`() {
     webTestClient.get()

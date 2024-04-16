@@ -2,7 +2,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 
-class AuthTest : IntegrationTestBase() {
+class AuthTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Providing no JWT to a secured endpoint returns 401`() {
     webTestClient.get()

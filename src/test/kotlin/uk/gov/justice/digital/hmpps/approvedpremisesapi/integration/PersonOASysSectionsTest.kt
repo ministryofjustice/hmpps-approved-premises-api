@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.AP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
 
-class PersonOASysSectionsTest : IntegrationTestBase() {
+class PersonOASysSectionsTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var oaSysSectionsTransformer: OASysSectionsTransformer
 

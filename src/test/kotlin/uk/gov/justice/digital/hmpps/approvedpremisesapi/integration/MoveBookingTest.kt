@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.util.UUID
 
-class MoveBookingTest : IntegrationTestBase() {
+class MoveBookingTest : InitialiseDatabasePerClassTestBase() {
 
   lateinit var premises: PremisesEntity
   lateinit var booking: BookingEntity

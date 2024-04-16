@@ -12,7 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import java.time.LocalDate
 
-class CalendarTest : IntegrationTestBase() {
+class CalendarTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `Requesting Calendar without JWT returns 401`() {
     webTestClient.get()

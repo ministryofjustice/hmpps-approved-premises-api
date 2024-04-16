@@ -949,6 +949,13 @@ abstract class IntegrationTestBase {
   fun loadPreemptiveCacheForInmateDetails(nomsNumber: String) = prisonsApiClient.getInmateDetailsWithCall(nomsNumber)
 }
 
+/**
+ * If an integration test extends this class instead of IntegrationTestBase,
+ * the database will only be populated once and will not be 'reset' between
+ * tests
+ *
+ * This should be used where possible as tests will run significantly faster
+ */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Tag("isPerClass")
 abstract class InitialiseDatabasePerClassTestBase : IntegrationTestBase() {

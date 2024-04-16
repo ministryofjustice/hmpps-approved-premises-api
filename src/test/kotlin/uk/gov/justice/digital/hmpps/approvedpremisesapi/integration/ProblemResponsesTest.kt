@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.util.UUID
 
-class ProblemResponsesTest : IntegrationTestBase() {
+class ProblemResponsesTest : InitialiseDatabasePerClassTestBase() {
   @Test
   fun `An invalid request body will return a 400 when the expected body root is an object and an array is provided`() {
     val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()

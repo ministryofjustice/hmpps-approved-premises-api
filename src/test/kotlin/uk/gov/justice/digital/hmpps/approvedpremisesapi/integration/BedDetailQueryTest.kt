@@ -11,28 +11,28 @@ class BedDetailQueryTest : IntegrationTestBase() {
 
   @Test
   fun `summary works as expected`() {
-    var probationRegion = probationRegionEntityFactory.produceAndPersist {
+    val probationRegion = probationRegionEntityFactory.produceAndPersist {
       withYieldedApArea {
         apAreaEntityFactory.produceAndPersist()
       }
     }
 
-    var localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
-    var premises = approvedPremisesEntityFactory.produceAndPersist {
+    val premises = approvedPremisesEntityFactory.produceAndPersist {
       withProbationRegion(probationRegion)
       withLocalAuthorityArea(localAuthorityArea)
     }
 
-    var room = roomEntityFactory.produceAndPersist {
+    val room = roomEntityFactory.produceAndPersist {
       withPremises(premises)
     }
 
-    var bed = bedEntityFactory.produceAndPersist {
+    val bed = bedEntityFactory.produceAndPersist {
       withRoom(room)
     }
 
-    var result = realBedRepository.getDetailById(bed.id)!!
+    val result = realBedRepository.getDetailById(bed.id)!!
 
     assertThat(result.id).isEqualTo(bed.id)
     assertThat(result.name).isEqualTo(bed.name)

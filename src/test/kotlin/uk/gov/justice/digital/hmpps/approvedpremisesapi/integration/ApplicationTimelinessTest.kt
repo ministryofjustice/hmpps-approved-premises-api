@@ -17,7 +17,7 @@ class ApplicationTimelinessTest : IntegrationTestBase() {
   @Autowired
   lateinit var applicationTimelinessEntityRepository: ApplicationTimelinessEntityRepository
 
-  @Test()
+  @Test
   fun `it returns application timeliness data`() {
     val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
       withPermissiveSchema()

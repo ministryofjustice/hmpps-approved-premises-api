@@ -9,18 +9,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntit
 import java.time.LocalDate
 import java.util.UUID
 
-class BedSummaryTest : IntegrationTestBase() {
+class BedSummaryTest : InitialiseDatabasePerClassTestBase() {
   lateinit var premises: PremisesEntity
 
   @BeforeEach
   fun setup() {
-    var probationRegion = probationRegionEntityFactory.produceAndPersist {
+    val probationRegion = probationRegionEntityFactory.produceAndPersist {
       withYieldedApArea {
         apAreaEntityFactory.produceAndPersist()
       }
     }
 
-    var localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+    val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
 
     this.premises = approvedPremisesEntityFactory.produceAndPersist {
       withProbationRegion(probationRegion)

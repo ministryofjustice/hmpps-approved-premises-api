@@ -62,7 +62,7 @@ class PlacementMetricsTest : IntegrationTestBase() {
     }
   }
 
-  @Test()
+  @Test
   fun `it returns placement metrics`() {
     `Given a User`(roles = listOf(UserRole.CAS1_REPORT_VIEWER)) { user, jwt ->
       val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
