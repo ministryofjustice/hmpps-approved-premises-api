@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Ap
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.RoomEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -1349,279 +1350,186 @@ class PremisesTest {
   }
 
   @Nested
-  inner class GetAllPremises : IntegrationTestBase() {
+  inner class GetAllPremises : InitialiseDatabasePerClassTestBase() {
     @Autowired
     lateinit var premisesTransformer: PremisesTransformer
 
+    private lateinit var user: UserEntity
+    private lateinit var region: ProbationRegionEntity
+    private lateinit var jwt: String
+    private lateinit var cas1Premises: MutableMap<ProbationRegionEntity, List<ApprovedPremisesEntity>>
+    private lateinit var cas3Premises: MutableMap<ProbationRegionEntity, List<TemporaryAccommodationPremisesEntity>>
+
+    @BeforeAll
+    fun setup() {
+      val userArgs = `Given a User`()
+
+      user = userArgs.first
+      jwt = userArgs.second
+      region = user.probationRegion
+
+      cas1Premises = mutableMapOf()
+      cas3Premises = mutableMapOf()
+
+      cas3Premises[region] = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion { region }
+        withService("CAS3")
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(region)
+          }
+        }
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 2, bedsPerRoom = 10)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
+
+      cas1Premises[region] = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion { region }
+        withService("CAS1")
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 2, 10)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
+
+      // Add some extra premises in both services for other regions that shouldn't be returned
+      val otherRegion = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea {
+          apAreaEntityFactory.produceAndPersist()
+        }
+      }
+
+      cas3Premises[otherRegion] = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion { otherRegion }
+        withService("CAS3")
+        withYieldedProbationDeliveryUnit {
+          probationDeliveryUnitFactory.produceAndPersist {
+            withProbationRegion(otherRegion)
+          }
+        }
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 2, 10)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
+
+      cas1Premises[otherRegion] = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion { otherRegion }
+        withService("CAS1")
+      }.onEach {
+        addRoomsAndBeds(it, roomCount = 1, 20)
+        addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
+      }
+    }
+
     @Test
     fun `Get all Premises returns OK with correct body`() {
-      `Given a User` { _, jwt ->
-        val cas1Premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-          withService("CAS1")
-        }.onEach { addRoomsAndBeds(it, roomCount = 5, bedsPerRoom = 4) }
+      val premises = mutableListOf<PremisesEntity>()
+      premises.addAll(cas1Premises.values.flatten())
+      premises.addAll(cas3Premises.values.flatten())
 
-        val cas3Premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-          withService("CAS3")
-        }.onEach {
-          addRoomsAndBeds(it, roomCount = 4, bedsPerRoom = 5)
-          addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-        }
+      val expectedJson = objectMapper.writeValueAsString(
+        premises.map {
+          premisesTransformer.transformJpaToApi(it, 20, 20)
+        },
+      )
 
-        val premises = cas1Premises + cas3Premises
-
-        val expectedJson = objectMapper.writeValueAsString(
-          premises.map {
-            premisesTransformer.transformJpaToApi(it, 20, 20)
-          },
-        )
-
-        webTestClient.get()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(expectedJson)
-      }
+      webTestClient.get()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
     }
 
     @Test
     fun `Get Premises for CAS1 returns OK with correct body`() {
-      `Given a User` { _, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-          withService("CAS1")
-        }.onEach {
-          addRoomsAndBeds(it, roomCount = 5, bedsPerRoom = 4)
-          addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-        }
+      val expectedJson = objectMapper.writeValueAsString(
+        cas1Premises.values.flatten().map {
+          premisesTransformer.transformJpaToApi(it, 20, 20)
+        },
+      )
 
-        // Add some extra premises for the other service that shouldn't be returned
-        temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-          withService("CAS3")
-        }.onEach {
-          addRoomsAndBeds(it, roomCount = 6, bedsPerRoom = 4)
-          addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-        }
-
-        val expectedJson = objectMapper.writeValueAsString(
-          premises.map {
-            premisesTransformer.transformJpaToApi(it, 20, 20)
-          },
-        )
-
-        webTestClient.get()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", "approved-premises")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(expectedJson)
-      }
+      webTestClient.get()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", "approved-premises")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
     }
 
     @Test
     fun `Get Premises for all regions in CAS3 returns 403 Forbidden`() {
-      `Given a User` { user, jwt ->
-        webTestClient.get()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", "temporary-accommodation")
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
+      webTestClient.get()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", "temporary-accommodation")
+        .exchange()
+        .expectStatus()
+        .isForbidden
     }
 
     @Test
     fun `Get Premises in CAS3 for a region that's not the user's region returns 403 Forbidden`() {
-      `Given a User` { user, jwt ->
-        webTestClient.get()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", "temporary-accommodation")
-          .header("X-User-Region", UUID.randomUUID().toString())
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
+      webTestClient.get()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", "temporary-accommodation")
+        .header("X-User-Region", UUID.randomUUID().toString())
+        .exchange()
+        .expectStatus()
+        .isForbidden
     }
 
     @Test
     fun `Get Premises for a single region returns OK with correct body`() {
-      `Given a User` { _, jwt ->
-        val regionId = UUID.randomUUID()
+      val premises = mutableListOf<PremisesEntity>()
+      premises.addAll(cas1Premises[region]!!.toList())
+      premises.addAll(cas3Premises[region]!!.toList())
 
-        val region = probationRegionEntityFactory.produceAndPersist {
-          withId(regionId)
-          withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
-        }
+      val expectedJson = objectMapper.writeValueAsString(
+        premises.map {
+          premisesTransformer.transformJpaToApi(it, 20, 20)
+        },
+      )
 
-        val cas3Premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { region }
-          withService("CAS3")
-          withYieldedProbationDeliveryUnit {
-            probationDeliveryUnitFactory.produceAndPersist {
-              withProbationRegion(region)
-            }
-          }
-        }.onEach {
-          addRoomsAndBeds(it, roomCount = 2, bedsPerRoom = 10)
-          addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-        }
-
-        val cas1Premises = approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { region }
-          withService("CAS1")
-        }.onEach {
-          addRoomsAndBeds(it, roomCount = 2, 10)
-          addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-        }
-
-        // Add some extra premises in both services for other regions that shouldn't be returned
-        val otherRegion = probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea {
-            apAreaEntityFactory.produceAndPersist()
-          }
-        }
-
-        temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { otherRegion }
-          withService("CAS3")
-          withYieldedProbationDeliveryUnit {
-            probationDeliveryUnitFactory.produceAndPersist {
-              withProbationRegion(otherRegion)
-            }
-          }
-        }.onEach {
-          addRoomsAndBeds(it, roomCount = 2, 10)
-          addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-        }
-
-        approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion { otherRegion }
-          withService("CAS1")
-        }.onEach {
-          addRoomsAndBeds(it, roomCount = 1, 20)
-          addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-        }
-
-        val expectedPremises = cas1Premises + cas3Premises
-
-        val expectedJson = objectMapper.writeValueAsString(
-          expectedPremises.map {
-            premisesTransformer.transformJpaToApi(it, 20, 20)
-          },
-        )
-
-        webTestClient.get()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-User-Region", "$regionId")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(expectedJson)
-      }
+      webTestClient.get()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-User-Region", "${region.id}")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
     }
 
     @Test
     fun `Get Premises for a single region and particular service returns OK with correct body`() {
-      `Given a User` { user, jwt ->
-        val premises = temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withProbationRegion(user.probationRegion)
-          withService("CAS3")
-          withYieldedProbationDeliveryUnit {
-            probationDeliveryUnitFactory.produceAndPersist {
-              withProbationRegion(user.probationRegion)
-            }
-          }
-        }.onEach {
-          addRoomsAndBeds(it, roomCount = 20, 1)
-          addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-        }
+      val expectedJson = objectMapper.writeValueAsString(
+        cas3Premises[region]!!.map {
+          premisesTransformer.transformJpaToApi(it, 20, 20)
+        },
+      )
 
-        // Add some extra premises in the same region but in Approved Premises that shouldn't be returned
-        approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withProbationRegion(user.probationRegion)
-          withService("CAS1")
-        }.onEach {
-          addRoomsAndBeds(it, roomCount = 5, 4)
-          addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-        }
-
-        // Add some extra premises in both services for other regions that shouldn't be returned
-        val otherProbationRegion = probationRegionEntityFactory.produceAndPersist {
-          withYieldedApArea {
-            apAreaEntityFactory.produceAndPersist()
-          }
-        }
-
-        temporaryAccommodationPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withProbationRegion(otherProbationRegion)
-          withService("CAS3")
-          withYieldedProbationDeliveryUnit {
-            probationDeliveryUnitFactory.produceAndPersist {
-              withProbationRegion(otherProbationRegion)
-            }
-          }
-        }.onEach {
-          addRoomsAndBeds(it, roomCount = 4, 5)
-          addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-        }
-
-        approvedPremisesEntityFactory.produceAndPersistMultiple(5) {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withProbationRegion(otherProbationRegion)
-          withService("CAS1")
-        }.onEach {
-          addRoomsAndBeds(it, roomCount = 4, 5)
-          addRoomsAndBeds(it, roomCount = 1, bedsPerRoom = 1, isActive = false)
-        }
-
-        val expectedJson = objectMapper.writeValueAsString(
-          premises.map {
-            premisesTransformer.transformJpaToApi(it, 20, 20)
-          },
-        )
-
-        webTestClient.get()
-          .uri("/premises")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", "temporary-accommodation")
-          .header("X-User-Region", "${user.probationRegion.id}")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(expectedJson)
-      }
+      webTestClient.get()
+        .uri("/premises")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", "temporary-accommodation")
+        .header("X-User-Region", "${user.probationRegion.id}")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(expectedJson)
     }
   }
 
