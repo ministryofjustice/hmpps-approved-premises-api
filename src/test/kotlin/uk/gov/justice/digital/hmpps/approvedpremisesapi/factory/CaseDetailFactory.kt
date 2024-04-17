@@ -24,6 +24,10 @@ class CaseDetailFactory : Factory<CaseDetail> {
   var registrations: Yielded<List<Registration>> = { listOf(RegistrationFactory().produce()) }
   var mappaDetail: Yielded<MappaDetail> = { MappaDetailFactory().produce() }
 
+  fun withOffences(offences: List<Offence>) = apply {
+    this.offences = { offences }
+  }
+
   fun withCase(case: CaseSummary) = apply {
     this.case = { case }
   }
@@ -49,6 +53,18 @@ class CaseDetailOffenceFactory : Factory<Offence> {
   var date: Yielded<LocalDate> = { LocalDate.now() }
   var main: Yielded<Boolean> = { false }
   var eventNumber: Yielded<String> = { randomStringLowerCase(10) }
+
+  fun withDescription(description: String) = apply {
+    this.description = { description }
+  }
+
+  fun withDate(date: LocalDate) = apply {
+    this.date = { date }
+  }
+
+  fun withEventNumber(eventNumber: String) = apply {
+    this.eventNumber = { eventNumber }
+  }
 
   override fun produce(): Offence = Offence(
     description = this.description(),

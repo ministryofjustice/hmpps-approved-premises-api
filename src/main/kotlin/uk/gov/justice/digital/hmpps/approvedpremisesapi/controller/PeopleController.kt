@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PeopleApiDelegate
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ActiveOffenceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AdjudicationTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTransformer
@@ -49,6 +51,8 @@ class PeopleController(
   private val oaSysSectionsTransformer: OASysSectionsTransformer,
   private val convictionTransformer: ConvictionTransformer,
   private val userService: UserService,
+  private val activeOffenceTransformer: ActiveOffenceTransformer,
+  @Value("\${feature-flags.cas1-use-ap-delius-context-api-for-offences}") private val useApDeliusContextApiForOffences: Boolean,
 ) : PeopleApiDelegate {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -231,12 +235,15 @@ class PeopleController(
   override fun peopleCrnOffencesGet(crn: String): ResponseEntity<List<ActiveOffence>> {
     ensureCallerCanAccessOffender(crn)
 
-    val convictionsResult = offenderService.getConvictions(crn)
-    val activeConvictions = extractEntityFromCasResult(convictionsResult).filter { it.active }
-
-    return ResponseEntity.ok(
-      activeConvictions.flatMap(convictionTransformer::transformToApi),
-    )
+    if (useApDeliusContextApiForOffences) {
+      val offencesResult = offenderService.getActiveOffences(crn)
+      val offences = extractEntityFromCasResult(offencesResult)
+      return ResponseEntity.ok(offences.map(activeOffenceTransformer::transformToApi))
+    } else {
+      val convictionsResult = offenderService.getConvictions(crn)
+      val activeConvictions = extractEntityFromCasResult(convictionsResult).filter { it.active }
+      return ResponseEntity.ok(activeConvictions.flatMap(convictionTransformer::transformToApi))
+    }
   }
 
   private fun <T> getSuccessEntityOrThrow(crn: String, authorisableActionResult: AuthorisableActionResult<T>): T = when (authorisableActionResult) {

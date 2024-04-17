@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Convicti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Offence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
@@ -460,6 +461,7 @@ class OffenderService(
     return AuthorisableActionResult.Success(riskToTheIndividual)
   }
 
+  @Deprecated("Use getOffences")
   fun getConvictions(crn: String): CasResult<List<Conviction>> {
     val convictions = when (val convictionsResult = communityApiClient.getConvictions(crn)) {
       is ClientResult.Success -> convictionsResult.body
@@ -472,6 +474,20 @@ class OffenderService(
     }
 
     return CasResult.Success(convictions)
+  }
+
+  fun getActiveOffences(crn: String): CasResult<List<Offence>> {
+    val caseDetails = when (val caseDetailsResult = apDeliusContextApiClient.getCaseDetail(crn)) {
+      is ClientResult.Success -> caseDetailsResult.body
+      is ClientResult.Failure.StatusCode -> when (caseDetailsResult.status) {
+        HttpStatus.NOT_FOUND -> return CasResult.NotFound(entityType = "CaseDetail", id = crn)
+        HttpStatus.FORBIDDEN -> return CasResult.Unauthorised()
+        else -> caseDetailsResult.throwException()
+      }
+      is ClientResult.Failure -> caseDetailsResult.throwException()
+    }
+
+    return CasResult.Success(caseDetails.offences)
   }
 
   fun getDocuments(crn: String): AuthorisableActionResult<GroupedDocuments> {

@@ -2,13 +2,17 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ActiveOffence
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailOffenceFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ConvictionFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulCaseDetailCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockSuccessfulConvictionsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTransformer
+import java.time.LocalDate
 
 class PersonOffencesTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
@@ -115,7 +119,38 @@ class PersonOffencesTest : InitialiseDatabasePerClassTestBase() {
           )
           .produce()
 
-        CommunityAPI_mockSuccessfulConvictionsCall(offenderDetails.otherIds.crn, listOf(activeConviction, inactiveConviction))
+        APDeliusContext_mockSuccessfulCaseDetailCall(
+          offenderDetails.otherIds.crn,
+          CaseDetailFactory()
+            .withOffences(
+              listOf(
+                CaseDetailOffenceFactory()
+                  .withEventNumber("the delius event number 1")
+                  .withDescription("the offence description 1")
+                  .withDate(LocalDate.of(2023, 1, 2))
+                  .produce(),
+                CaseDetailOffenceFactory()
+                  .withEventNumber("the delius event number 2")
+                  .withDescription("the offence description 2")
+                  .withDate(LocalDate.of(2024, 3, 4))
+                  .produce(),
+              ),
+            )
+            .produce(),
+        )
+
+        val expectedValues = listOf(
+          ActiveOffence(
+            deliusEventNumber = "the delius event number 1",
+            offenceDescription = "the offence description 1",
+            offenceDate = LocalDate.of(2023, 1, 2),
+          ),
+          ActiveOffence(
+            deliusEventNumber = "the delius event number 2",
+            offenceDescription = "the offence description 2",
+            offenceDate = LocalDate.of(2024, 3, 4),
+          ),
+        )
 
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/offences")
@@ -125,7 +160,7 @@ class PersonOffencesTest : InitialiseDatabasePerClassTestBase() {
           .isOk
           .expectBody()
           .json(
-            objectMapper.writeValueAsString(convictionTransformer.transformToApi(activeConviction)),
+            objectMapper.writeValueAsString(expectedValues),
           )
       }
     }
