@@ -520,6 +520,7 @@ class ApplicationTest : IntegrationTestBase() {
                 ),
                 submittedAt = null,
                 isWithdrawn = false,
+                hasRequestsForPlacement = false,
               ),
             ),
           ),

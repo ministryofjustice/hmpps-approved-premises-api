@@ -191,6 +191,7 @@ class ApplicationServiceTest {
         override fun getStatus(): String = ApprovedPremisesApplicationStatus.started.toString()
         override fun getIsWithdrawn(): Boolean = false
         override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
+        override fun getHasRequestsForPlacement(): Boolean = false
       },
     )
 

@@ -61,7 +61,11 @@ SELECT
     apa.status as status,
     apa.risk_ratings -> 'tier' -> 'value' ->> 'level' as tier,
     apa.is_withdrawn as isWithdrawn,
-    apa.release_type as releaseType
+    apa.release_type as releaseType,
+    (
+        (select count(1) from placement_applications where application_id = a.id) > 0 OR 
+        (select count(1) from placement_requests where application_id = a.id) > 0
+    ) as hasRequestsForPlacement
 FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
 WHERE apa.is_inapplicable IS NOT TRUE 
@@ -173,7 +177,11 @@ SELECT
     apa.arrival_date as arrivalDate,
     apa.status as status,
     CAST(apa.risk_ratings AS TEXT) as riskRatings,
-    apa.is_withdrawn as isWithdrawn
+    apa.is_withdrawn as isWithdrawn,
+    (
+        (select count(1) from placement_applications where application_id = a.id) > 0 OR 
+        (select count(1) from placement_requests where application_id = a.id) > 0
+    ) as hasRequestsForPlacement
 FROM approved_premises_applications apa
 LEFT JOIN applications a ON a.id = apa.id
 WHERE a.created_by_user_id = :userId 
@@ -495,6 +503,7 @@ interface ApprovedPremisesApplicationSummary : ApplicationSummary {
   fun getStatus(): String
   fun getIsWithdrawn(): Boolean
   fun getReleaseType(): String?
+  fun getHasRequestsForPlacement(): Boolean
 }
 
 interface TemporaryAccommodationApplicationSummary : ApplicationSummary {

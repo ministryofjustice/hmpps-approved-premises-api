@@ -346,6 +346,7 @@ class ApplicationsTransformerTest {
       override fun getStatus(): String = jpaStatus.toString()
       override fun getIsWithdrawn(): Boolean = true
       override fun getReleaseType(): String = ReleaseTypeOption.licence.toString()
+      override fun getHasRequestsForPlacement(): Boolean = true
     }
     every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson
 
@@ -366,6 +367,7 @@ class ApplicationsTransformerTest {
     assertThat(result.type).isEqualTo("CAS1")
     assertThat(result.tier).isEqualTo(application.getTier())
     assertThat(result.isWithdrawn).isEqualTo(true)
+    assertThat(result.hasRequestsForPlacement).isEqualTo(true)
   }
 
   @ParameterizedTest
@@ -391,6 +393,7 @@ class ApplicationsTransformerTest {
       override fun getStatus(): String = ApprovedPremisesApplicationStatus.SUBMITTED.toString()
       override fun getIsWithdrawn(): Boolean = true
       override fun getReleaseType(): String? = releaseTypeOption?.let { releaseTypeOption.toString() }
+      override fun getHasRequestsForPlacement(): Boolean = true
     }
 
     every { mockPersonTransformer.transformModelToPersonApi(mockPersonInfoResult) } returns mockPerson
