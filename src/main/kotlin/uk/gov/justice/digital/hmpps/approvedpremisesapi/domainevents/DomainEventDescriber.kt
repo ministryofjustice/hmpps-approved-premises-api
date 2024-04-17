@@ -13,7 +13,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toWeekAndDayDurationString
 import java.time.LocalDate
 import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import java.util.UUID
+import javax.xml.datatype.DatatypeConstants.DAYS
 
 @Component
 class DomainEventDescriber(
@@ -103,7 +105,7 @@ class DomainEventDescriber(
       val eventDetails = ev.eventDetails
       buildAllocationMessage(
         entityDescription = "The assessment",
-        allocatedBy =  eventDetails.allocatedBy,
+        allocatedBy = eventDetails.allocatedBy,
         allocatedTo = eventDetails.allocatedTo,
       )
     }
@@ -128,7 +130,11 @@ class DomainEventDescriber(
     val event = domainEventService.getPlacementApplicationAllocatedEvent(domainEventSummary.id())
 
     return event.describe { data ->
-      "A request for placement was allocated"
+      val details = data.eventDetails
+      val dates = details.placementDates[0]
+      val duration = ChronoUnit.DAYS.between(dates.startDate, dates.endDate)
+      buildAllocationMessage("A request for placement", details.allocatedBy, details.allocatedTo) + " for assessment. " +
+        buildRequestForPlacementDescription(dates.startDate, duration.toInt())
     }
   }
 

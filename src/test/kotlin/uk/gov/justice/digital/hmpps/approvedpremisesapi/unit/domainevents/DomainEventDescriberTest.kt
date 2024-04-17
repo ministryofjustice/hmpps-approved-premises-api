@@ -469,8 +469,20 @@ class DomainEventDescriberTest {
     )
   }
 
-  @Test
-  fun `Returns expected description for placement application allocated event`() {
+  @ParameterizedTest
+  @CsvSource(
+    value = [
+      ",,A request for placement was automatically allocated to an unknown user for assessment",
+      "Alan,,A request for placement was automatically allocated to Alan A for assessment",
+      ",Brenda,A request for placement was allocated to an unknown user by Brenda B for assessment",
+      "Carol,Derek,A request for placement was allocated to Carol C by Derek D for assessment",
+    ],
+  )
+  fun `Returns expected description for placement application allocated event`(
+    allocatedTo: String?,
+    allocatedBy: String?,
+    expectedAllocationDescription: String,
+  ) {
     val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED)
 
     every { mockDomainEventService.getPlacementApplicationAllocatedEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
@@ -478,13 +490,38 @@ class DomainEventDescriberTest {
         id = it,
         timestamp = Instant.now(),
         eventType = "approved-premises.placement-application.allocated",
-        eventDetails = PlacementApplicationAllocatedFactory().produce(),
+        eventDetails = PlacementApplicationAllocatedFactory()
+          .withPlacementDates(
+            listOf(
+              DatePeriod(
+                LocalDate.of(2025, 3, 12),
+                LocalDate.of(2025, 3, 20),
+              ),
+            ),
+          )
+          .withAllocatedTo(
+            allocatedTo?.let { allocatedTo ->
+              StaffMemberFactory()
+                .withForenames(allocatedTo)
+                .withSurname(allocatedTo.first().toString())
+                .produce()
+            },
+          )
+          .withAllocatedBy(
+            allocatedBy?.let { allocatedBy ->
+              StaffMemberFactory()
+                .withForenames(allocatedBy)
+                .withSurname(allocatedBy.first().toString())
+                .produce()
+            },
+          )
+          .produce(),
       )
     }
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("A request for placement was allocated")
+    assertThat(result).isEqualTo("$expectedAllocationDescription. The placement request is for Wednesday 12 March 2025 to Thursday 20 March 2025 (1 week and 1 day)")
   }
 
   private fun <T> buildDomainEvent(builder: (UUID) -> T): DomainEvent<T> {
