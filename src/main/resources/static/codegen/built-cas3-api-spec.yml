@@ -1978,6 +1978,8 @@ components:
             hdcEligibilityDate:
               type: string
               format: date
+            personName:
+              type: string
           required:
             - createdByUserId
             - status
