@@ -180,7 +180,7 @@ class ApplicationTimelineTransformerTest {
 
     every { mockDomainEventDescriber.getDescription(domainEvent) } returns "Some event"
 
-    Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
+    assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
         id = domainEvent.id,
         type = TimelineEventType.approvedPremisesBookingMade,
@@ -276,6 +276,7 @@ class ApplicationTimelineTransformerTest {
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED to TimelineEventType.approvedPremisesAssessmentAllocated,
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN to TimelineEventType.approvedPremisesPlacementApplicationWithdrawn,
       DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN to TimelineEventType.approvedPremisesMatchRequestWithdrawn,
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED to TimelineEventType.approvedPremisesPlacementApplicationAllocated,
     )
   }
 }

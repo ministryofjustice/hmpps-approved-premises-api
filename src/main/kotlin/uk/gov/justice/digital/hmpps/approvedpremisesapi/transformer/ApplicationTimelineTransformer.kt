@@ -111,6 +111,7 @@ class ApplicationTimelineTransformer(
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> TimelineEventType.approvedPremisesPlacementApplicationWithdrawn
       DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> TimelineEventType.approvedPremisesMatchRequestWithdrawn
       DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED -> TimelineEventType.approvedPremisesRequestForPlacementCreated
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED -> TimelineEventType.approvedPremisesPlacementApplicationAllocated
       else -> throw IllegalArgumentException("Cannot map $domainEventType, only CAS1 is currently supported")
     }
   }

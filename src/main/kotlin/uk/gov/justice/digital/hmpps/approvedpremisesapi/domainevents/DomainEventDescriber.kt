@@ -38,6 +38,7 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> buildPlacementApplicationWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> buildMatchRequestWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED -> buildRequestForPlacementCreatedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED -> buildPlacementApplicationAllocatedDescription(domainEventSummary)
       else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
     }
   }
@@ -124,6 +125,14 @@ class DomainEventDescriber(
           " for dates " + dates.joinToString(", ") { "${it.startDate.toUiFormat()} to ${it.endDate.toUiFormat()}" }
         } else { "" } +
         ". The reason was: '$reasonDescription'"
+    }
+  }
+
+  private fun buildPlacementApplicationAllocatedDescription(domainEventSummary: DomainEventSummary): String? {
+    val event = domainEventService.getPlacementApplicationAllocatedEvent(domainEventSummary.id())
+
+    return event.describe { data ->
+      "A request for placement was allocated"
     }
   }
 
