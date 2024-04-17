@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomInt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomNumberChars
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringUpperCase
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 
@@ -34,6 +35,7 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
   private var notes: Yielded<MutableList<Cas2ApplicationNoteEntity>> = { mutableListOf() }
   private var assessment: Yielded<Cas2AssessmentEntity?> = { null }
   private var referringPrisonCode: Yielded<String?> = { null }
+  private var hdcEligibilityDate: Yielded<LocalDate?> = { null }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -99,6 +101,10 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     this.referringPrisonCode = { referringPrisonCode }
   }
 
+  fun withHdcEligibilityDate(hdcEligibilityDate: LocalDate) = apply {
+    this.hdcEligibilityDate = { hdcEligibilityDate }
+  }
+
   override fun produce(): Cas2ApplicationEntity = Cas2ApplicationEntity(
     id = this.id(),
     crn = this.crn(),
@@ -115,5 +121,6 @@ class Cas2ApplicationEntityFactory : Factory<Cas2ApplicationEntity> {
     notes = this.notes(),
     assessment = this.assessment(),
     referringPrisonCode = this.referringPrisonCode(),
+    hdcEligibilityDate = this.hdcEligibilityDate(),
   )
 }
