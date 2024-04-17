@@ -22,20 +22,30 @@ import javax.persistence.OneToMany
 import javax.persistence.OneToOne
 import javax.persistence.Table
 
+const val submittedApplicationSummaryFields = ",\n" +
+    "    a.hdc_eligibility_date as hdcEligibilityDate,\n" +
+    "    a.noms_number as nomsNumber,\n" +
+  "    asu.label as latestStatusUpdateLabel,\n" +
+  "    CAST(asu.status_id AS TEXT) as latestStatusUpdateStatusId"
+
+const val unsubmittedApplicationSummaryFields = "" +
+  "    CAST(a.id AS TEXT) as id,\n" +
+  "    a.crn,\n" +
+  "    CAST(a.created_by_user_id AS TEXT) as createdByUserId,\n" +
+  "    a.created_at as createdAt,\n" +
+  "    a.submitted_at as submittedAt"
+
+const val submittedAndUnsubmittedApplicationSummaryFields =
+  unsubmittedApplicationSummaryFields + submittedApplicationSummaryFields
+
 @Suppress("TooManyFunctions")
 @Repository
 interface Cas2ApplicationRepository : JpaRepository<Cas2ApplicationEntity, UUID> {
 
   @Query(
     """
-SELECT
-    CAST(a.id AS TEXT) as id,
-    a.crn,
-    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
-    a.created_at as createdAt,
-    a.submitted_at as submittedAt,
-    asu.label as latestStatusUpdateLabel,
-    CAST(asu.status_id AS TEXT) as latestStatusUpdateStatusId
+SELECT 
+    $submittedAndUnsubmittedApplicationSummaryFields
 FROM cas_2_applications a
 LEFT JOIN
     (SELECT DISTINCT ON (application_id) su.application_id, 
@@ -60,13 +70,7 @@ ORDER BY createdAt DESC
   @Query(
     """
 SELECT
-    CAST(a.id AS TEXT) as id,
-    a.crn,
-    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
-    a.created_at as createdAt,
-    a.submitted_at as submittedAt,
-    asu.label as latestStatusUpdateLabel,
-    CAST(asu.status_id AS TEXT) as latestStatusUpdateStatusId
+    $submittedAndUnsubmittedApplicationSummaryFields
 FROM cas_2_applications a
     LEFT JOIN
         (SELECT DISTINCT ON (application_id) su.application_id, 
@@ -91,13 +95,7 @@ ORDER BY createdAt DESC
   @Query(
     """
 SELECT
-    CAST(a.id AS TEXT) as id,
-    a.crn,
-    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
-    a.created_at as createdAt,
-    a.submitted_at as submittedAt,
-    asu.label as latestStatusUpdateLabel,
-    CAST(asu.status_id AS TEXT) as latestStatusUpdateStatusId
+    $submittedAndUnsubmittedApplicationSummaryFields
 FROM cas_2_applications a
 LEFT JOIN
     (SELECT DISTINCT ON (application_id) su.application_id, 
@@ -124,13 +122,7 @@ ORDER BY createdAt DESC
   @Query(
     """
 SELECT
-    CAST(a.id AS TEXT) as id,
-    a.crn,
-    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
-    a.created_at as createdAt,
-    a.submitted_at as submittedAt,
-    asu.label as latestStatusUpdateLabel,
-    CAST(asu.status_id AS TEXT) as latestStatusUpdateStatusId
+    $submittedAndUnsubmittedApplicationSummaryFields
 FROM cas_2_applications a
 LEFT JOIN
     (SELECT DISTINCT ON (application_id) su.application_id, 
@@ -157,11 +149,7 @@ ORDER BY createdAt DESC
   @Query(
     """
 SELECT
-    CAST(a.id AS TEXT) as id,
-    a.crn,
-    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
-    a.created_at as createdAt,
-    a.submitted_at as submittedAt
+    $unsubmittedApplicationSummaryFields
 FROM cas_2_applications a
 WHERE a.created_by_user_id = :userId
 AND a.submitted_at IS NULL
@@ -175,11 +163,7 @@ ORDER BY createdAt DESC
   @Query(
     """
 SELECT
-    CAST(a.id AS TEXT) as id,
-    a.crn,
-    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
-    a.created_at as createdAt,
-    a.submitted_at as submittedAt
+    $unsubmittedApplicationSummaryFields
 FROM cas_2_applications a
 WHERE a.referring_prison_code = :prisonCode
 AND a.submitted_at IS NULL
@@ -193,13 +177,14 @@ ORDER BY createdAt DESC
   @Query(
     """
 SELECT
-    CAST(a.id AS TEXT) as id,
-    a.crn,
-    a.noms_number as nomsNumber,
-    CAST(a.created_by_user_id AS TEXT) as createdByUserId,
-    a.created_at as createdAt,
-    a.submitted_at as submittedAt
+    $submittedAndUnsubmittedApplicationSummaryFields
 FROM cas_2_applications a
+LEFT JOIN
+    (SELECT DISTINCT ON (application_id) su.application_id, 
+      su.label, su.status_id
+    FROM cas_2_status_updates su
+    ORDER BY su.application_id, su.created_at DESC) as asu
+ON a.id = asu.application_id
 WHERE a.submitted_at IS NOT NULL
 """,
     countQuery =
