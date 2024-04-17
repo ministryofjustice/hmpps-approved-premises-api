@@ -18,11 +18,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringLowerCase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.UUID
-
+@SuppressWarnings("LargeClass")
 class BedSearchTest : IntegrationTestBase() {
 
   @Nested
@@ -1167,6 +1168,160 @@ class BedSearchTest : IntegrationTestBase() {
         val searchPdu = createTemporaryAccommodationWithBedSpaceEndDate(searchStartDate, bedEndDate)
 
         searchTemporaryAccommodationBedSpaceAndAssertNoAvailability(jwt, searchStartDate, durationDays, searchPdu.name)
+      }
+    }
+
+    @Test
+    fun `Searching for a Temporary Accommodation Bed should return bed matches searching pdu`() {
+      val probationRegion = probationRegionEntityFactory.produceAndPersist {
+        withYieldedApArea {
+          apAreaEntityFactory.produceAndPersist()
+        }
+      }
+
+      val searchPdu = probationDeliveryUnitFactory.produceAndPersist {
+        withName(randomStringLowerCase(8))
+        withProbationRegion(probationRegion)
+      }
+
+      val pduTwo = probationDeliveryUnitFactory.produceAndPersist {
+        withName(randomStringLowerCase(8))
+        withProbationRegion(probationRegion)
+      }
+
+      `Given a User`(
+        probationRegion = probationRegion,
+      ) { _, jwt ->
+        val searchStartDate = LocalDate.parse("2024-03-12")
+        val durationDays = 7
+        val localAuthorityArea = localAuthorityEntityFactory.produceAndPersist()
+
+        val premisesOne = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withProbationRegion(probationRegion)
+          withLocalAuthorityArea(localAuthorityArea)
+          withProbationDeliveryUnit(searchPdu)
+          withProbationRegion(probationRegion)
+          withStatus(PropertyStatus.active)
+        }
+
+        val roomOne = roomEntityFactory.produceAndPersist {
+          withPremises(premisesOne)
+        }
+
+        val bedOne = bedEntityFactory.produceAndPersist {
+          withName("Bed One")
+          withEndDate { searchStartDate.plusDays(20) }
+          withRoom(roomOne)
+        }
+
+        val roomTwo = roomEntityFactory.produceAndPersist {
+          withPremises(premisesOne)
+        }
+
+        val bedTwo = bedEntityFactory.produceAndPersist {
+          withName("Bed Two")
+          withRoom(roomTwo)
+        }
+
+        val premisesTwo = temporaryAccommodationPremisesEntityFactory.produceAndPersist {
+          withProbationRegion(probationRegion)
+          withLocalAuthorityArea(localAuthorityArea)
+          withProbationDeliveryUnit(pduTwo)
+          withProbationRegion(probationRegion)
+          withStatus(PropertyStatus.active)
+        }
+
+        val roomThree = roomEntityFactory.produceAndPersist {
+          withPremises(premisesTwo)
+        }
+
+        bedEntityFactory.produceAndPersist {
+          withName("Bed Three")
+          withEndDate { searchStartDate.plusDays(40) }
+          withRoom(roomThree)
+        }
+
+        val roomFour = roomEntityFactory.produceAndPersist {
+          withPremises(premisesTwo)
+        }
+
+        bedEntityFactory.produceAndPersist {
+          withName("Bed Four")
+          withRoom(roomFour)
+        }
+
+        webTestClient.post()
+          .uri("/beds/search")
+          .header("Authorization", "Bearer $jwt")
+          .bodyValue(
+            TemporaryAccommodationBedSearchParameters(
+              startDate = searchStartDate,
+              durationDays = durationDays,
+              serviceName = "temporary-accommodation",
+              probationDeliveryUnit = searchPdu.name,
+            ),
+          )
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              BedSearchResults(
+                resultsRoomCount = 2,
+                resultsPremisesCount = 1,
+                resultsBedCount = 2,
+                results = listOf(
+                  TemporaryAccommodationBedSearchResult(
+                    premises = BedSearchResultPremisesSummary(
+                      id = premisesOne.id,
+                      name = premisesOne.name,
+                      addressLine1 = premisesOne.addressLine1,
+                      postcode = premisesOne.postcode,
+                      characteristics = listOf(),
+                      addressLine2 = premisesOne.addressLine2,
+                      town = premisesOne.town,
+                      bedCount = 2,
+                    ),
+                    room = BedSearchResultRoomSummary(
+                      id = roomOne.id,
+                      name = roomOne.name,
+                      characteristics = listOf(),
+                    ),
+                    bed = BedSearchResultBedSummary(
+                      id = bedOne.id,
+                      name = bedOne.name,
+                    ),
+                    serviceName = ServiceName.temporaryAccommodation,
+                    overlaps = listOf(),
+                  ),
+                  TemporaryAccommodationBedSearchResult(
+                    premises = BedSearchResultPremisesSummary(
+                      id = premisesOne.id,
+                      name = premisesOne.name,
+                      addressLine1 = premisesOne.addressLine1,
+                      postcode = premisesOne.postcode,
+                      characteristics = listOf(),
+                      addressLine2 = premisesOne.addressLine2,
+                      town = premisesOne.town,
+                      bedCount = 2,
+                    ),
+                    room = BedSearchResultRoomSummary(
+                      id = roomTwo.id,
+                      name = roomTwo.name,
+                      characteristics = listOf(),
+                    ),
+                    bed = BedSearchResultBedSummary(
+                      id = bedTwo.id,
+                      name = bedTwo.name,
+                    ),
+                    serviceName = ServiceName.temporaryAccommodation,
+                    overlaps = listOf(),
+                  ),
+                ),
+              ),
+            ),
+          )
       }
     }
 
