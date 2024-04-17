@@ -182,8 +182,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .expectStatus()
         .isBadRequest
         .expectBody()
-        .jsonPath("$.detail").isEqualTo("Start Date $startDate cannot be the same as End Date $endDate")
-        .jsonPath("invalid-params[0].errorType").isEqualTo("sameAsEndDate")
+        .jsonPath("$.detail").isEqualTo("Start Date $startDate cannot be after End Date $endDate")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("afterEndDate")
         .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.startDate")
     }
   }
