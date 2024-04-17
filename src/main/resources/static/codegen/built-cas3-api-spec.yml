@@ -388,6 +388,7 @@ components:
         - not_started
         - in_progress
         - complete
+        - info_requested
     TaskSortField:
       type: string
       enum:

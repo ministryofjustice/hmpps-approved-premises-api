@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDec
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.ApprovedPremisesApplicationStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskTier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskWithStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ApAreaTransformer
@@ -179,6 +180,22 @@ class TaskTransformerTest {
       assertThat(result.status).isEqualTo(TaskStatus.complete)
       assertThat(result.outcome).isEqualTo(apiDecision)
       assertThat(result.outcomeRecordedAt).isEqualTo(submittedAt.toInstant())
+    }
+
+    @Test
+    fun `Assessment awaiting information request is correctly transformed`() {
+      val application = applicationFactory
+        .withStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
+        .produce()
+      val assessment = assessmentFactory
+        .withDecision(null)
+        .withData("{\"test\": \"data\"}")
+        .withApplication(application)
+        .produce()
+
+      val result = taskTransformer.transformAssessmentToTask(assessment, "First Last")
+
+      assertThat(result.status).isEqualTo(TaskStatus.infoRequested)
     }
 
     @Test
