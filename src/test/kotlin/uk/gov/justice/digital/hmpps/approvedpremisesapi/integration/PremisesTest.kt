@@ -32,9 +32,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APDeliusContext_mockSuccessfulStaffMembersCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addCaseSummaryToBulkResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_addResponseToUserAccessCall
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockCaseSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.ApDeliusContext_mockUserAccess
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.LostBedsEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PremisesEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.StaffMembersPage
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.BookingTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PremisesTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RoomTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
@@ -1873,7 +1874,118 @@ class PremisesTest {
   }
 
   @Nested
-  inner class GetPremisesSummary : IntegrationTestBase() {
+  inner class GetPremisesSummary : InitialiseDatabasePerClassTestBase() {
+    @Autowired
+    lateinit var bookingTransformer: BookingTransformer
+
+    private lateinit var premises: ApprovedPremisesEntity
+    private lateinit var lostBeds: List<LostBedsEntity>
+    private lateinit var rooms: List<RoomEntity>
+    private lateinit var bookings: List<BookingEntity>
+
+    private var totalBeds = 20
+    private var startDate = LocalDate.now()
+
+    @BeforeAll
+    fun setup() {
+      premises = approvedPremisesEntityFactory.produceAndPersist() {
+        withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+        withYieldedProbationRegion {
+          probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+        }
+      }
+
+      rooms = addRoomsAndBeds(premises, roomCount = 4, 5)
+      addRoomsAndBeds(premises, roomCount = 1, bedsPerRoom = 1, isActive = false)
+
+      val pendingBookingEntity = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(startDate.plusDays(1))
+        withDepartureDate(startDate.plusDays(3))
+        withStaffKeyWorkerCode(null)
+      }
+
+      lostBeds = mutableListOf(
+        lostBedsEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withStartDate(startDate.plusDays(1))
+          withEndDate(startDate.plusDays(2))
+          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withBed(rooms[0].beds[0])
+        },
+        lostBedsEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withStartDate(startDate.plusDays(1))
+          withEndDate(startDate.plusDays(2))
+          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+          withBed(rooms[1].beds[0])
+        },
+      )
+
+      val cancelledLostBed = lostBedsEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withStartDate(startDate.plusDays(1))
+        withEndDate(startDate.plusDays(2))
+        withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
+        withBed(rooms[2].beds[0])
+      }
+
+      cancelledLostBed.cancellation = lostBedCancellationEntityFactory.produceAndPersist {
+        withLostBed(cancelledLostBed)
+      }
+
+      lostBeds += cancelledLostBed
+
+      val arrivedBookingEntity = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(startDate)
+        withDepartureDate(startDate.plusDays(2))
+        withStaffKeyWorkerCode(null)
+        withBed(rooms.first().beds.first())
+      }
+
+      arrivedBookingEntity.arrivals = mutableListOf(
+        arrivalEntityFactory.produceAndPersist {
+          withBooking(arrivedBookingEntity)
+        },
+      )
+
+      val nonArrivedBookingEntity = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(startDate.plusDays(3))
+        withDepartureDate(startDate.plusDays(5))
+        withStaffKeyWorkerCode(null)
+        withBed(rooms.first().beds.first())
+      }
+
+      nonArrivedBookingEntity.nonArrival = nonArrivalEntityFactory.produceAndPersist {
+        withBooking(nonArrivedBookingEntity)
+        withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
+      }
+
+      val cancelledBookingEntity = bookingEntityFactory.produceAndPersist {
+        withPremises(premises)
+        withArrivalDate(startDate.plusDays(4))
+        withDepartureDate(startDate.plusDays(6))
+        withStaffKeyWorkerCode(null)
+        withBed(rooms.first().beds.first())
+      }
+
+      cancelledBookingEntity.cancellations = mutableListOf(
+        cancellationEntityFactory.produceAndPersist {
+          withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
+          withBooking(cancelledBookingEntity)
+        },
+      )
+
+      bookings = listOf(
+        pendingBookingEntity,
+        arrivedBookingEntity,
+        nonArrivedBookingEntity,
+        cancelledBookingEntity,
+      )
+    }
+
     @Test
     fun `Get Premises Summary without JWT returns 401`() {
       webTestClient.get()
@@ -1901,68 +2013,18 @@ class PremisesTest {
     @EnumSource(value = UserRole::class, names = ["CAS1_MANAGER", "CAS1_MATCHER", "CAS1_WORKFLOW_MANAGER"])
     fun `Get Premises Summary by ID returns OK with correct body`(role: UserRole) {
       `Given a User`(roles = listOf(role)) { user, jwt ->
-
-        val premises = approvedPremisesEntityFactory.produceAndPersist() {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-        }
-
-        val rooms = addRoomsAndBeds(premises, roomCount = 4, 5)
-        addRoomsAndBeds(premises, roomCount = 1, bedsPerRoom = 1, isActive = false)
-
-        val bookings = bookingEntityFactory.produceAndPersistMultiple(5) {
-          withNomsNumber("26")
-          withPremises(premises)
-          withBed(rooms.first().beds.first())
-        }
-
         bookings.forEach {
-          ApDeliusContext_mockCaseSummary(
+          ApDeliusContext_addCaseSummaryToBulkResponse(
             CaseSummaryFactory()
               .withCrn(it.crn)
               .produce(),
           )
-          ApDeliusContext_mockUserAccess(
+          ApDeliusContext_addResponseToUserAccessCall(
             CaseAccessFactory()
               .withCrn(it.crn)
               .produce(),
             user.deliusUsername,
           )
-        }
-
-        val cancelledBooking = bookingEntityFactory.produceAndPersist() {
-          withNomsNumber("1234")
-          withPremises(premises)
-          withBed(null)
-        }
-
-        cancellationEntityFactory.produceAndPersist {
-          withBooking(cancelledBooking)
-          withYieldedReason {
-            cancellationReasonEntityFactory.produceAndPersist()
-          }
-        }
-
-        arrivalEntityFactory.produceAndPersist {
-          withBooking(bookings[1])
-        }
-
-        departureEntityFactory.produceAndPersist {
-          withBooking(bookings[2])
-          withYieldedReason { departureReasonEntityFactory.produceAndPersist() }
-          withYieldedMoveOnCategory { moveOnCategoryEntityFactory.produceAndPersist() }
-        }
-
-        cancellationEntityFactory.produceAndPersist {
-          withBooking(bookings[3])
-          withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
-        }
-
-        nonArrivalEntityFactory.produceAndPersist {
-          withBooking(bookings[4])
-          withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
         }
 
         webTestClient.get()
@@ -1973,17 +2035,17 @@ class PremisesTest {
           .isOk
           .expectBody()
           .jsonPath("$.id").isEqualTo("${premises.id}")
-          .jsonPath("$.name").isEqualTo("${premises.name}")
-          .jsonPath("$.apCode").isEqualTo("${premises.apCode}")
-          .jsonPath("$.postcode").isEqualTo("${premises.postcode}")
+          .jsonPath("$.name").isEqualTo(premises.name)
+          .jsonPath("$.apCode").isEqualTo(premises.apCode)
+          .jsonPath("$.postcode").isEqualTo(premises.postcode)
           .jsonPath("$.bedCount").isEqualTo("20")
-          .jsonPath("$.availableBedsForToday").isEqualTo("17")
+          .jsonPath("$.availableBedsForToday").isEqualTo("19")
           .jsonPath("$.bookings").isArray
           .jsonPath("$.bookings[0].id").isEqualTo(bookings[0].id.toString())
           .jsonPath("$.bookings[0].arrivalDate").isEqualTo(bookings[0].arrivalDate.toString())
           .jsonPath("$.bookings[0].departureDate").isEqualTo(bookings[0].departureDate.toString())
           .jsonPath("$.bookings[0].person.crn").isEqualTo(bookings[0].crn)
-          .jsonPath("$.bookings[0].bed.id").isEqualTo(bookings[0].bed!!.id.toString())
+          .jsonPath("$.bookings[0].bed").isEmpty()
           .jsonPath("$.bookings[0].status").isEqualTo(BookingStatus.awaitingMinusArrival.value)
           .jsonPath("$.bookings[1].id").isEqualTo(bookings[1].id.toString())
           .jsonPath("$.bookings[1].arrivalDate").isEqualTo(bookings[1].arrivalDate.toString())
@@ -1996,25 +2058,13 @@ class PremisesTest {
           .jsonPath("$.bookings[2].departureDate").isEqualTo(bookings[2].departureDate.toString())
           .jsonPath("$.bookings[2].person.crn").isEqualTo(bookings[2].crn)
           .jsonPath("$.bookings[2].bed.id").isEqualTo(bookings[2].bed!!.id.toString())
-          .jsonPath("$.bookings[2].status").isEqualTo(BookingStatus.departed.value)
+          .jsonPath("$.bookings[2].status").isEqualTo(BookingStatus.notMinusArrived.value)
           .jsonPath("$.bookings[3].id").isEqualTo(bookings[3].id.toString())
           .jsonPath("$.bookings[3].arrivalDate").isEqualTo(bookings[3].arrivalDate.toString())
           .jsonPath("$.bookings[3].departureDate").isEqualTo(bookings[3].departureDate.toString())
           .jsonPath("$.bookings[3].person.crn").isEqualTo(bookings[3].crn)
           .jsonPath("$.bookings[3].bed.id").isEqualTo(bookings[3].bed!!.id.toString())
           .jsonPath("$.bookings[3].status").isEqualTo(BookingStatus.cancelled.value)
-          .jsonPath("$.bookings[4].id").isEqualTo(bookings[4].id.toString())
-          .jsonPath("$.bookings[4].arrivalDate").isEqualTo(bookings[4].arrivalDate.toString())
-          .jsonPath("$.bookings[4].departureDate").isEqualTo(bookings[4].departureDate.toString())
-          .jsonPath("$.bookings[4].person.crn").isEqualTo(bookings[4].crn)
-          .jsonPath("$.bookings[4].bed.id").isEqualTo(bookings[4].bed!!.id.toString())
-          .jsonPath("$.bookings[4].status").isEqualTo(BookingStatus.notMinusArrived.value)
-          .jsonPath("$.bookings[5].id").isEqualTo(cancelledBooking.id.toString())
-          .jsonPath("$.bookings[5].arrivalDate").isEqualTo(cancelledBooking.arrivalDate.toString())
-          .jsonPath("$.bookings[5].departureDate").isEqualTo(cancelledBooking.departureDate.toString())
-          .jsonPath("$.bookings[5].person.crn").isEqualTo(cancelledBooking.crn)
-          .jsonPath("$.bookings[5].bed").isEmpty
-          .jsonPath("$.bookings[5].status").isEqualTo(BookingStatus.cancelled.value)
           .jsonPath("$.dateCapacities").isArray
           .jsonPath("$.dateCapacities[0]").isNotEmpty
       }
@@ -2023,103 +2073,6 @@ class PremisesTest {
     @Test
     fun `Get Premises Summary by ID returns the correct capacity data`() {
       `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-        val premises = approvedPremisesEntityFactory.produceAndPersist() {
-          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-          withYieldedProbationRegion {
-            probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-          }
-        }
-
-        val totalBeds = 20
-        val rooms = addRoomsAndBeds(premises, roomCount = 4, 5)
-        addRoomsAndBeds(premises, roomCount = 1, bedsPerRoom = 1, isActive = false)
-
-        val startDate = LocalDate.now()
-
-        val pendingBookingEntity = bookingEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withArrivalDate(startDate.plusDays(1))
-          withDepartureDate(startDate.plusDays(3))
-          withStaffKeyWorkerCode(null)
-        }
-
-        val lostBeds = mutableListOf(
-          lostBedsEntityFactory.produceAndPersist {
-            withPremises(premises)
-            withStartDate(startDate.plusDays(1))
-            withEndDate(startDate.plusDays(2))
-            withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
-            withBed(rooms[0].beds[0])
-          },
-          lostBedsEntityFactory.produceAndPersist {
-            withPremises(premises)
-            withStartDate(startDate.plusDays(1))
-            withEndDate(startDate.plusDays(2))
-            withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
-            withBed(rooms[1].beds[0])
-          },
-        )
-
-        val cancelledLostBed = lostBedsEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withStartDate(startDate.plusDays(1))
-          withEndDate(startDate.plusDays(2))
-          withYieldedReason { lostBedReasonEntityFactory.produceAndPersist() }
-          withBed(rooms[2].beds[0])
-        }
-
-        cancelledLostBed.cancellation = lostBedCancellationEntityFactory.produceAndPersist {
-          withLostBed(cancelledLostBed)
-        }
-
-        lostBeds += cancelledLostBed
-
-        val arrivedBookingEntity = bookingEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withArrivalDate(startDate)
-          withDepartureDate(startDate.plusDays(2))
-          withStaffKeyWorkerCode(null)
-        }
-
-        arrivedBookingEntity.arrivals = mutableListOf(
-          arrivalEntityFactory.produceAndPersist {
-            withBooking(arrivedBookingEntity)
-          },
-        )
-
-        val nonArrivedBookingEntity = bookingEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withArrivalDate(startDate.plusDays(3))
-          withDepartureDate(startDate.plusDays(5))
-          withStaffKeyWorkerCode(null)
-        }
-
-        nonArrivedBookingEntity.nonArrival = nonArrivalEntityFactory.produceAndPersist {
-          withBooking(nonArrivedBookingEntity)
-          withYieldedReason { nonArrivalReasonEntityFactory.produceAndPersist() }
-        }
-
-        val cancelledBookingEntity = bookingEntityFactory.produceAndPersist {
-          withPremises(premises)
-          withArrivalDate(startDate.plusDays(4))
-          withDepartureDate(startDate.plusDays(6))
-          withStaffKeyWorkerCode(null)
-        }
-
-        cancelledBookingEntity.cancellations = mutableListOf(
-          cancellationEntityFactory.produceAndPersist {
-            withYieldedReason { cancellationReasonEntityFactory.produceAndPersist() }
-            withBooking(cancelledBookingEntity)
-          },
-        )
-
-        val bookings = listOf(
-          pendingBookingEntity,
-          arrivedBookingEntity,
-          nonArrivedBookingEntity,
-          cancelledBookingEntity,
-        )
-
         bookings.forEach {
           ApDeliusContext_addCaseSummaryToBulkResponse(
             CaseSummaryFactory()
@@ -2157,8 +2110,6 @@ class PremisesTest {
             .filter { it.arrivalDate <= date && it.departureDate > date }
           (totalBeds - bookingsForToday.count()) - lostBedsForToday.count()
         }
-
-        println(responseBody.dateCapacities)
 
         assertThat(responseBody.dateCapacities?.get(0)).isEqualTo(
           DateCapacity(date = startDate, getTotalBedsForDate(startDate)),
