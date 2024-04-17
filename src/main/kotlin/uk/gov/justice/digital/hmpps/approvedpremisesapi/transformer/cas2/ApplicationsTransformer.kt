@@ -55,6 +55,8 @@ class ApplicationsTransformer(
         latestStatusUpdate = statusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(jpaSummary),
         type = "CAS2",
         hdcEligibilityDate = jpaSummary.getHdcEligibilityDate(),
+        crn = jpaSummary.getCrn(),
+        nomsNumber = jpaSummary.getNomsNumber(),
         personName = (personInfo as PersonInfoResult.Success.Full).offenderDetailSummary.firstName +
           " " + personInfo.offenderDetailSummary.surname,
       )
