@@ -1847,10 +1847,13 @@ components:
               type: boolean
             releaseType:
               $ref: '#/components/schemas/ReleaseTypeOption'
+            hasRequestsForPlacement:
+              type: boolean
           required:
             - createdByUserId
             - status
             - isWithdrawn
+            - hasRequestsForPlacement
     TemporaryAccommodationApplicationSummary:
       allOf:
         - $ref: '#/components/schemas/ApplicationSummary'

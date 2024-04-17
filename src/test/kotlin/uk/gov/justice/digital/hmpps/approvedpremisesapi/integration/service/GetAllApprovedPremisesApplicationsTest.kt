@@ -24,6 +24,7 @@ import java.sql.Timestamp
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
+import java.util.UUID
 import kotlin.random.Random
 
 class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBase() {
@@ -33,6 +34,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
   private lateinit var crn1: String
   private lateinit var crn2: String
   private lateinit var apArea: ApAreaEntity
+  private lateinit var applicationIdsWithRequestsForPlacement: List<UUID>
 
   var name = "Search by name"
 
@@ -49,6 +51,10 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
           apArea = apAreaEntityFactory.produceAndPersist()
 
           val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withPermissiveSchema()
+          }
+
+          val assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist {
             withPermissiveSchema()
           }
 
@@ -129,6 +135,50 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
               },
             )
           }
+
+          val applicationWithPlacementRequest = allApplications.find { it.status == ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT }
+
+          val assessment = approvedPremisesAssessmentEntityFactory.produceAndPersist {
+            withApplication(applicationWithPlacementRequest!!)
+            withAssessmentSchema(assessmentSchema)
+          }
+
+          placementRequestFactory.produceAndPersist {
+            withApplication(applicationWithPlacementRequest!!)
+            withAssessment(assessment)
+            withPlacementRequirements(
+              placementRequirementsFactory.produceAndPersist {
+                withApplication(allApplications[0])
+                withAssessment(assessment)
+                withPostcodeDistrict(
+                  postCodeDistrictFactory.produceAndPersist(),
+                )
+                withDesirableCriteria(
+                  characteristicEntityFactory.produceAndPersistMultiple(5),
+                )
+                withEssentialCriteria(
+                  characteristicEntityFactory.produceAndPersistMultiple(3),
+                )
+              },
+            )
+          }
+
+          val applicationWithPlacementApplication = allApplications.find { it.status == ApprovedPremisesApplicationStatus.PLACEMENT_ALLOCATED }
+
+          placementApplicationFactory.produceAndPersist {
+            withApplication(applicationWithPlacementApplication!!)
+            withCreatedByUser(userEntity)
+            withSchemaVersion(
+              approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+            )
+          }
+
+          applicationIdsWithRequestsForPlacement = listOf(
+            applicationWithPlacementRequest!!.id,
+            applicationWithPlacementApplication!!.id,
+          )
         }
       }
     }
@@ -287,6 +337,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
       this.getTier() == applicationEntity.riskRatings?.tier?.value.toString() &&
       this.getStatus() == applicationEntity.status.toString() &&
       this.getIsWithdrawn() == applicationEntity.isWithdrawn &&
-      this.getReleaseType() == applicationEntity.releaseType.toString()
+      this.getReleaseType() == applicationEntity.releaseType.toString() &&
+      this.getHasRequestsForPlacement() == applicationIdsWithRequestsForPlacement.contains(applicationEntity.id)
   }
 }

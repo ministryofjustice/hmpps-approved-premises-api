@@ -131,6 +131,7 @@ class ApplicationsTransformer(
         tier = domain.getTier(),
         isWithdrawn = domain.getIsWithdrawn(),
         releaseType = domain.getReleaseType()?.let { ReleaseTypeOption.valueOf(it) },
+        hasRequestsForPlacement = domain.getHasRequestsForPlacement(),
       )
     }
 
