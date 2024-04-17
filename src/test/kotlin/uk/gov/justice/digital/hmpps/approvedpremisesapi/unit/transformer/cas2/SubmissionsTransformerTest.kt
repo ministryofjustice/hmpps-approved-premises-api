@@ -125,6 +125,7 @@ class SubmissionsTransformerTest {
         override fun getCrn() = "CRN123"
         override fun getNomsNumber() = "NOMS456"
         override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
+        override fun getCreatedByUserName() = "first last"
         override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
         override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
         override fun getHdcEligibilityDate() = LocalDate.parse("2023-04-29")
