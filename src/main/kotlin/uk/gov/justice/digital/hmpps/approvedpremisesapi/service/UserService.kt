@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -30,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PaginationMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.UserWorkload
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserTeamMembership
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
@@ -56,6 +59,7 @@ class UserService(
   private val probationRegionRepository: ProbationRegionRepository,
   private val probationAreaProbationRegionMappingRepository: ProbationAreaProbationRegionMappingRepository,
   private val cas1UserMappingService: Cas1UserMappingService,
+  private val probationDeliveryUnitRepository: ProbationDeliveryUnitRepository,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -223,6 +227,12 @@ class UserService(
       }
     }
 
+    deliusUser.teams?.firstOrNull()?.let { team ->
+      probationDeliveryUnitRepository.findByDeliusCode(team.borough.code)?.let { probationDeliveryUnit ->
+        user.probationDeliveryUnit = probationDeliveryUnit
+      }
+    }
+
     if (forService == ServiceName.approvedPremises) {
       user.apArea = cas1UserMappingService.determineApArea(user.probationRegion, deliusUser)
     }
@@ -284,6 +294,8 @@ class UserService(
       }
     }
 
+    val staffProbationDeliveryUnit = findProbationDeliveryUnit(staffUserDetails.teams)
+
     val apArea = cas1UserMappingService.determineApArea(staffProbationRegion, staffUserDetails)
 
     return userRepository.save(
@@ -299,6 +311,7 @@ class UserService(
         roles = mutableListOf(),
         qualifications = mutableListOf(),
         probationRegion = staffProbationRegion,
+        probationDeliveryUnit = staffProbationDeliveryUnit,
         isActive = true,
         apArea = apArea,
         teamCodes = staffUserDetails.getTeamCodes(),
@@ -311,6 +324,10 @@ class UserService(
   private fun findProbationRegionFromArea(probationArea: StaffProbationArea): ProbationRegionEntity? {
     return probationAreaProbationRegionMappingRepository
       .findByProbationAreaDeliusCode(probationArea.code)?.probationRegion
+  }
+
+  private fun findProbationDeliveryUnit(teams: List<StaffUserTeamMembership>?): ProbationDeliveryUnitEntity? {
+    return teams?.firstOrNull()?.borough?.let { probationDeliveryUnitRepository.findByDeliusCode(it.code) }
   }
 
   fun addRoleToUser(user: UserEntity, role: UserRole) {

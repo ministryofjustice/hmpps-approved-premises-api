@@ -257,6 +257,8 @@ data class UserEntity(
   @ManyToOne
   var probationRegion: ProbationRegionEntity,
   @ManyToOne
+  var probationDeliveryUnit: ProbationDeliveryUnitEntity?,
+  @ManyToOne
   @JoinColumn(name = "ap_area_id")
   var apArea: ApAreaEntity?,
   @Convert(converter = StringListConverter::class)

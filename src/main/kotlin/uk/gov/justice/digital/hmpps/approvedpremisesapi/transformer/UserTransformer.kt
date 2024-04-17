@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualificat
 @Component
 class UserTransformer(
   private val probationRegionTransformer: ProbationRegionTransformer,
+  private val probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer,
   private val apAreaTransformer: ApAreaTransformer,
 ) {
 
@@ -64,6 +65,7 @@ class UserTransformer(
       isActive = jpa.isActive,
       roles = jpa.roles.distinctBy { it.role }.mapNotNull(::transformTemporaryAccommodationRoleToApi),
       region = probationRegionTransformer.transformJpaToApi(jpa.probationRegion),
+      probationDeliveryUnit = jpa.probationDeliveryUnit?.let { probationDeliveryUnitTransformer.transformJpaToApi(it) },
       service = ServiceName.temporaryAccommodation.value,
     )
     ServiceName.cas2 -> throw RuntimeException("CAS2 not supported")

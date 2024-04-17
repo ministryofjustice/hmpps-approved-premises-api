@@ -18,12 +18,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationAreaProbationRegionMappingEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationDeliveryUnitEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserRoleAssignmentEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationAreaProbationRegionMappingRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationDeliveryUnitRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ProbationRegionRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
@@ -32,6 +34,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualifica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRoleAssignmentRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.StaffUserDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
@@ -41,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1UserMappingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.getTeamCodes
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
@@ -54,6 +58,7 @@ class UserServiceTest {
   private val mockUserQualificationAssignmentRepository = mockk<UserQualificationAssignmentRepository>()
   private val mockProbationRegionRepository = mockk<ProbationRegionRepository>()
   private val mockProbationAreaProbationRegionMappingRepository = mockk<ProbationAreaProbationRegionMappingRepository>()
+  private val mockProbationDeliveryUnitRepository = mockk<ProbationDeliveryUnitRepository>()
   private val mockCas1UserMappingService = mockk<Cas1UserMappingService>()
 
   private val userService = UserService(
@@ -68,6 +73,7 @@ class UserServiceTest {
     mockProbationRegionRepository,
     mockProbationAreaProbationRegionMappingRepository,
     mockCas1UserMappingService,
+    mockProbationDeliveryUnitRepository,
   )
 
   @Nested
@@ -91,7 +97,11 @@ class UserServiceTest {
     @Test
     fun `getExistingUserOrCreate creates new user`() {
       val username = "SOMEPERSON"
-
+      val pduDeliusCode = randomStringMultiCaseWithNumbers(7)
+      val brought = KeyValue(
+        code = pduDeliusCode,
+        description = randomStringMultiCaseWithNumbers(10),
+      )
       every { mockUserRepository.findByDeliusUsername(username) } returns null
       every { mockUserRepository.save(any()) } answers { it.invocation.args[0] as UserEntity }
 
@@ -103,8 +113,8 @@ class UserServiceTest {
         .withProbationAreaCode("AREACODE")
         .withTeams(
           listOf(
-            StaffUserTeamMembershipFactory().withCode("TC1").produce(),
-            StaffUserTeamMembershipFactory().withCode("TC2").produce(),
+            StaffUserTeamMembershipFactory().withCode("TC1").withBorough(brought).produce(),
+            StaffUserTeamMembershipFactory().withCode("TC2").withBorough(brought).produce(),
           ),
         )
         .produce()
@@ -127,11 +137,17 @@ class UserServiceTest {
 
       every { mockCas1UserMappingService.determineApArea(probationRegion, deliusUser) } returns apArea
 
+      every { mockProbationDeliveryUnitRepository.findByDeliusCode(pduDeliusCode) } returns ProbationDeliveryUnitEntityFactory()
+        .withProbationRegion(probationRegion)
+        .withDeliusCode(pduDeliusCode)
+        .produce()
+
       val result = userService.getExistingUserOrCreate(username)
 
       assertThat(result.name).isEqualTo("Jim Jimmerson")
       assertThat(result.teamCodes).isEqualTo(listOf("TC1", "TC2"))
       assertThat(result.apArea).isEqualTo(apArea)
+      assertThat(result.probationDeliveryUnit?.deliusCode).isEqualTo(pduDeliusCode)
       assertThat(result.createdAt).isWithinTheLastMinute()
 
       verify(exactly = 1) { mockCommunityApiClient.getStaffUserDetails(username) }
@@ -507,6 +523,27 @@ class UserServiceTest {
       assertUserUpdated(user, deliusUser, probationRegion, forService)
     }
 
+    @ParameterizedTest
+    @EnumSource(ServiceName::class)
+    fun `it updates the user entity if the probation delivery unit have been updated in delius`(forService: ServiceName) {
+      val user = userFactory.produce()
+
+      val deliusUser = staffUserDetailsFactory
+        .withTeams(
+          listOf(
+            StaffUserTeamMembershipFactory().withBorough(
+              KeyValue(
+                code = randomStringMultiCaseWithNumbers(7),
+                description = randomStringMultiCaseWithNumbers(10),
+              ),
+            ).produce(),
+          ),
+        )
+        .produce()
+
+      assertUserUpdated(user, deliusUser, probationRegion, forService)
+    }
+
     private fun assertUserUpdated(
       user: UserEntity,
       deliusUser: StaffUserDetails,
@@ -526,6 +563,18 @@ class UserServiceTest {
         .withProbationAreaDeliusCode(probationRegion.deliusCode)
         .produce()
 
+      var pduId: UUID? = null
+      if (deliusUser.teams?.firstOrNull()?.borough?.code != null) {
+        pduId = UUID.fromString("99bc8c9c-ce26-4f0e-b994-a3b566c57b61")
+        every {
+          deliusUser.teams?.firstOrNull()?.borough?.code?.let { mockProbationDeliveryUnitRepository.findByDeliusCode(it) }
+        } returns ProbationDeliveryUnitEntityFactory()
+          .withId(pduId)
+          .withDeliusCode(randomStringMultiCaseWithNumbers(8))
+          .withProbationRegion(probationRegion)
+          .produce()
+      }
+
       val newApAreaForCas1 = ApAreaEntityFactory().produce()
       if (forService == ServiceName.approvedPremises) {
         every { mockCas1UserMappingService.determineApArea(probationRegion, deliusUser) } returns newApAreaForCas1
@@ -543,6 +592,7 @@ class UserServiceTest {
       assertThat(entity.telephoneNumber).isEqualTo(deliusUser.telephoneNumber)
       assertThat(entity.deliusStaffCode).isEqualTo(deliusUser.staffCode)
       assertThat(entity.probationRegion.name).isEqualTo(probationRegion.name)
+      assertThat(entity.probationDeliveryUnit?.id).isEqualTo(pduId)
       assertThat(entity.teamCodes).isEqualTo(deliusUser.getTeamCodes())
 
       if (forService == ServiceName.approvedPremises) {

@@ -10,15 +10,19 @@ import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationDeliveryUnit
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ProbationRegion
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TemporaryAccommodationUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserRolesAndQualifications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserTeamMembershipFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.KeyValue
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.UserTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomStringMultiCaseWithNumbers
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UserQualification as APIUserQualification
 
@@ -209,6 +213,10 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
     val name = "$forename $surname"
     val email = "foo@bar.com"
     val telephoneNumber = "123445677"
+    val brought = KeyValue(
+      code = randomStringMultiCaseWithNumbers(7),
+      description = randomStringMultiCaseWithNumbers(10),
+    )
 
     val jwt = jwtAuthHelper.createAuthorizationCodeJwt(
       subject = deliusUsername,
@@ -220,6 +228,12 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
       withYieldedApArea { apAreaEntityFactory.produceAndPersist() }
     }
 
+    val probationDeliveryUnit = probationDeliveryUnitFactory.produceAndPersist {
+      withDeliusCode(brought.code)
+      withName(brought.description)
+      withProbationRegion(region)
+    }
+
     userEntityFactory.produceAndPersist {
       withId(id)
       withDeliusUsername(deliusUsername)
@@ -227,6 +241,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
       withEmail(email)
       withTelephoneNumber(telephoneNumber)
       withYieldedProbationRegion { region }
+      withProbationDeliveryUnit { probationDeliveryUnit }
     }
 
     mockStaffUserInfoCommunityApiCall(
@@ -236,6 +251,9 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
         .withUsername(deliusUsername)
         .withEmail(email)
         .withTelephoneNumber(telephoneNumber)
+        .withTeams(
+          listOf(StaffUserTeamMembershipFactory().withBorough(brought).produce()),
+        )
         .produce(),
     )
 
@@ -254,6 +272,7 @@ class UsersTest : InitialiseDatabasePerClassTestBase() {
           TemporaryAccommodationUser(
             id = id,
             region = ProbationRegion(region.id, region.name),
+            probationDeliveryUnit = ProbationDeliveryUnit(probationDeliveryUnit.id, probationDeliveryUnit.name),
             deliusUsername = deliusUsername,
             name = name,
             email = email,

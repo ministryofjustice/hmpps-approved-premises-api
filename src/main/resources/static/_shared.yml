@@ -2879,6 +2879,8 @@ components:
           type: boolean
         region:
           $ref: '#/components/schemas/ProbationRegion'
+        probationDeliveryUnit:
+          $ref: '#/components/schemas/ProbationDeliveryUnit'
       discriminator:
         propertyName: service
         mapping:
