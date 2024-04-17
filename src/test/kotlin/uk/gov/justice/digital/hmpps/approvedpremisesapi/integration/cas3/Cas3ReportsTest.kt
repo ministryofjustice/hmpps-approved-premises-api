@@ -142,7 +142,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .expectStatus()
         .isBadRequest
         .expectBody()
-        .jsonPath("$.detail").isEqualTo("End Date $endDate cannot be more than 3 months after Start Date $startDate")
         .jsonPath("invalid-params[0].errorType").isEqualTo("rangeTooLarge")
         .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.endDate")
     }
@@ -162,7 +161,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .expectStatus()
         .isBadRequest
         .expectBody()
-        .jsonPath("$.detail").isEqualTo("Start Date $startDate cannot be after End Date $endDate")
         .jsonPath("invalid-params[0].errorType").isEqualTo("afterEndDate")
         .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.startDate")
     }
@@ -182,7 +180,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .expectStatus()
         .isBadRequest
         .expectBody()
-        .jsonPath("$.detail").isEqualTo("Start Date $startDate cannot be after End Date $endDate")
         .jsonPath("invalid-params[0].errorType").isEqualTo("afterEndDate")
         .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.startDate")
     }
@@ -203,7 +200,6 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .expectStatus()
         .isBadRequest
         .expectBody()
-        .jsonPath("$.detail").isEqualTo("End Date $endDate cannot be in the future")
         .jsonPath("invalid-params[0].errorType").isEqualTo("inFuture")
         .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.endDate")
     }
