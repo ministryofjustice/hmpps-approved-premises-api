@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2Applicati
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ExternalUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.randomDateTimeBefore
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
 import kotlin.math.sign
@@ -189,6 +190,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
               withCrn(offenderDetails.otherIds.crn)
               withData("{}")
               withCreatedAt(OffsetDateTime.parse("2024-01-03T16:10:00+01:00"))
+              withHdcEligibilityDate(LocalDate.now().plusMonths(3))
             }
 
             val secondApplicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
