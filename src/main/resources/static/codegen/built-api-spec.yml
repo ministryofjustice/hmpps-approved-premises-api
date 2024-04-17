@@ -6425,6 +6425,12 @@ components:
             hdcEligibilityDate:
               type: string
               format: date
+            personName:
+              type: string
+            crn:
+              type: string
+            nomsNumber:
+              type: string
           required:
             - createdByUserId
             - status
