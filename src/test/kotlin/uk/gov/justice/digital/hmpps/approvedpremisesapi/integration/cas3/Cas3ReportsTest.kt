@@ -190,6 +190,27 @@ class Cas3ReportsTest : IntegrationTestBase() {
 
   @ParameterizedTest
   @EnumSource(value = Cas3ReportType::class)
+  fun `Get report returns 400 if end date is in the future`(reportType: Cas3ReportType) {
+    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+      val today = LocalDate.now()
+      val startDate = "2023-08-02"
+      val endDate = today.plusDays(1)
+      webTestClient.get()
+        .uri("/cas3/reports/$reportType?startDate=$startDate&endDate=$endDate&probationRegionId=${user.probationRegion.id}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("$.detail").isEqualTo("End Date $endDate cannot be in the future")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("inFuture")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.endDate")
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = Cas3ReportType::class)
   fun `Get report returns 400 if mandatory dates are not provided`(reportType: Cas3ReportType) {
     `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
       webTestClient.get()
@@ -1050,7 +1071,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           )
 
           webTestClient.get()
-            .uri("/cas3/reports/referral?startDate=2025-01-01&endDate=2025-01-30&probationRegionId=${user.probationRegion.id}")
+            .uri("/cas3/reports/referral?startDate=2024-03-01&endDate=2024-03-30&probationRegionId=${user.probationRegion.id}")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
             .exchange()

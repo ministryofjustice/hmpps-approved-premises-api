@@ -125,12 +125,17 @@ class ReportsController(
     validateRequestedDates(startDate, endDate)
   }
 
+  @SuppressWarnings("ThrowsCount")
   private fun validateRequestedDates(startDate: LocalDate, endDate: LocalDate) {
     when {
       startDate.isEqual(endDate) -> throw BadRequestProblem(invalidParams = mapOf("$.startDate" to "sameAsEndDate"), errorDetail = "Start Date $startDate cannot be the same as End Date $endDate")
       startDate.isAfter(endDate) -> throw BadRequestProblem(invalidParams = mapOf("$.startDate" to "afterEndDate"), errorDetail = "Start Date $startDate cannot be after End Date $endDate")
+      endDate.isAfter(LocalDate.now()) -> throw BadRequestProblem(invalidParams = mapOf("$.endDate" to "inFuture"), errorDetail = "End Date $endDate cannot be in the future")
       ChronoUnit.MONTHS.between(startDate, endDate)
-        .toInt() > MAXIMUM_REPORT_DURATION_IN_MONTHS -> throw BadRequestProblem(invalidParams = mapOf("$.endDate" to "rangeTooLarge"), errorDetail = "End Date $endDate cannot be more than $MAXIMUM_REPORT_DURATION_IN_MONTHS months after Start Date $startDate")
+        .toInt() > MAXIMUM_REPORT_DURATION_IN_MONTHS -> throw BadRequestProblem(
+        invalidParams = mapOf("$.endDate" to "rangeTooLarge"),
+        errorDetail = "End Date $endDate cannot be more than $MAXIMUM_REPORT_DURATION_IN_MONTHS months after Start Date $startDate",
+      )
     }
   }
 
