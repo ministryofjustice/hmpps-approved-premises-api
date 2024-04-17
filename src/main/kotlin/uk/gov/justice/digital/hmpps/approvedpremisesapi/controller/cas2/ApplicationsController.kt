@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.cas2.ApplicationsCas2Delegate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
@@ -26,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import java.net.URI
 import java.util.UUID
 import javax.transaction.Transactional
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary as ModelCas2ApplicationSummary
 
 @Service(
   "uk.gov.justice.digital.hmpps.approvedpremisesapi.controller.cas2" +
@@ -44,7 +44,7 @@ class ApplicationsController(
     isSubmitted: Boolean?,
     page: Int?,
     prisonCode: String?,
-  ): ResponseEntity<List<ApplicationSummary>> {
+  ): ResponseEntity<List<ModelCas2ApplicationSummary>> {
     val user = userService.getUserForRequest()
 
     prisonCode?.let { if (prisonCode != user.activeCaseloadId) throw ForbiddenProblem() }
@@ -141,7 +141,7 @@ class ApplicationsController(
     .hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary,
     user: NomisUserEntity,
   ):
-    ApplicationSummary {
+    ModelCas2ApplicationSummary {
     val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn())
 
     return applicationsTransformer.transformJpaSummaryToSummary(application, personInfo)
