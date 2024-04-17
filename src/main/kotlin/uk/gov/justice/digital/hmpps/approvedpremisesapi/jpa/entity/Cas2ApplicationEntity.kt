@@ -25,6 +25,7 @@ import javax.persistence.Table
 const val SUBMITTED_APPLICATION_SUMMARY_FIELDS =
   """
     ,
+    a.hdc_eligibility_date as hdcEligibilityDate,
     a.noms_number as nomsNumber,
     asu.label as latestStatusUpdateLabel,
     CAST(asu.status_id AS TEXT) as latestStatusUpdateStatusId
