@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.NoticeTypeMigr
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.NoticeTypeMigrationJobApplicationRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.TaskDueMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersFromCommunityApiJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersPduFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationRepository
 import javax.persistence.EntityManager
@@ -46,6 +47,7 @@ class MigrationJobService(
   @Async
   fun runMigrationJobAsync(migrationJobType: MigrationJobType) = runMigrationJob(migrationJobType, 50)
 
+  @SuppressWarnings("CyclomaticComplexMethod")
   fun runMigrationJob(migrationJobType: MigrationJobType, pageSize: Int = 10) {
     migrationLogger.info("Starting migration job request: $migrationJobType")
 
@@ -121,6 +123,12 @@ class MigrationJobService(
           applicationContext.getBean(OffenderService::class.java),
           applicationContext.getBean(EntityManager::class.java),
           pageSize,
+          applicationContext.getBean(MigrationLogger::class.java),
+        )
+
+        MigrationJobType.allUsersPduFromCommunityApi -> UpdateAllUsersPduFromCommunityApiJob(
+          applicationContext.getBean(UserRepository::class.java),
+          applicationContext.getBean(UserService::class.java),
           applicationContext.getBean(MigrationLogger::class.java),
         )
       }
