@@ -259,7 +259,7 @@ class PeopleController(
           .map { it as ApprovedPremisesApplicationEntity }
           .associateWith { applicationService.getApplicationTimeline(it.id) }
 
-        personalTimelineTransformer.transformApplicationsAndTimelineEvents(applicationsAndTimelineEvents)
+        personalTimelineTransformer.transformApplicationsAndTimelineEvents(personInfo, applicationsAndTimelineEvents)
       }
     }
 

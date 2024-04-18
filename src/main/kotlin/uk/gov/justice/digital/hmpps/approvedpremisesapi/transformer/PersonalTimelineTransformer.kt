@@ -6,14 +6,18 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonalTimeli
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 
 @Component
 class PersonalTimelineTransformer(
   private val userTransformer: UserTransformer,
+  private val personTransformer: PersonTransformer,
 ) {
   fun transformApplicationsAndTimelineEvents(
+    personInfoResult: PersonInfoResult,
     applicationsAndTimelineEvents: Map<ApprovedPremisesApplicationEntity, List<TimelineEvent>>,
   ) = PersonalTimeline(
+    person = personTransformer.transformModelToPersonApi(personInfoResult),
     applications = applicationsAndTimelineEvents.map { transformApplication(it.key, it.value) },
   )
 
