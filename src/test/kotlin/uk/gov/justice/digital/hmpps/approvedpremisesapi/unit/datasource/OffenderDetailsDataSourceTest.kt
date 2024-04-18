@@ -11,7 +11,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.ApDeliusContextApiOffenderDetailsDataSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderDetailsDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseAccessFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseSummaryFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
@@ -24,10 +24,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asOffenderDetailSum
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asUserOffenderAccess
 import java.util.stream.Stream
 
-class ApDeliusContextApiOffenderDetailsDataSourceTest {
+class OffenderDetailsDataSourceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
 
-  private val apDeliusContextApiOffenderDetailsDataSource = ApDeliusContextApiOffenderDetailsDataSource(mockApDeliusContextApiClient)
+  private val offenderDetailsDataSource = OffenderDetailsDataSource(mockApDeliusContextApiClient)
 
   @ParameterizedTest
   @MethodSource("cacheableOffenderDetailSummaryClientResults")
@@ -37,7 +37,7 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
     every { mockApDeliusContextApiClient.getSummariesForCrns(listOf("SOME-CRN")) } returns
       expectedResult.map { CaseSummaries(listOf(it.asCaseSummary())) }
 
-    val result = apDeliusContextApiOffenderDetailsDataSource.getOffenderDetailSummary("SOME-CRN")
+    val result = offenderDetailsDataSource.getOffenderDetailSummary("SOME-CRN")
 
     assertThat(result).isEqualTo(expectedResult)
   }
@@ -48,7 +48,7 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
       mockApDeliusContextApiClient.getSummariesForCrns(listOf("SOME-CRN"))
     } returns ClientResult.Success(HttpStatus.OK, CaseSummaries(cases = emptyList()), true)
 
-    val result = apDeliusContextApiOffenderDetailsDataSource.getOffenderDetailSummary("SOME-CRN")
+    val result = offenderDetailsDataSource.getOffenderDetailSummary("SOME-CRN")
 
     assertThat(result).isInstanceOf(ClientResult.Failure.StatusCode::class.java)
     assertThat((result as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
@@ -72,7 +72,7 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
       false,
     )
 
-    val results = apDeliusContextApiOffenderDetailsDataSource.getOffenderDetailSummaries(crns)
+    val results = offenderDetailsDataSource.getOffenderDetailSummaries(crns)
 
     assertThat(results).isEqualTo(expectedResults)
   }
@@ -84,7 +84,7 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
     val cacheTimeoutClientResult = cacheTimeoutClientResult<CaseSummaries>()
     every { mockApDeliusContextApiClient.getSummariesForCrns(crns) } returns cacheTimeoutClientResult
 
-    val results = apDeliusContextApiOffenderDetailsDataSource.getOffenderDetailSummaries(crns)
+    val results = offenderDetailsDataSource.getOffenderDetailSummaries(crns)
     assertThat(results).hasSize(3)
     assertThat(results["CRN-A"]).isEqualTo(cacheTimeoutClientResult)
     assertThat(results["CRN-B"]).isEqualTo(cacheTimeoutClientResult)
@@ -105,7 +105,7 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
       false,
     )
 
-    val results = apDeliusContextApiOffenderDetailsDataSource.getOffenderDetailSummaries(crns)
+    val results = offenderDetailsDataSource.getOffenderDetailSummaries(crns)
 
     assertThat(results).hasSize(3)
 
@@ -130,7 +130,7 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
     every { mockApDeliusContextApiClient.getUserAccessForCrns("DELIUS-USER", listOf("SOME-CRN")) } returns
       expectedResult.map { UserAccess(listOf(it.asCaseAccess("SOME-CRN"))) }
 
-    val result = apDeliusContextApiOffenderDetailsDataSource.getUserAccessForOffenderCrn("DELIUS-USER", "SOME-CRN")
+    val result = offenderDetailsDataSource.getUserAccessForOffenderCrn("DELIUS-USER", "SOME-CRN")
 
     assertThat(result).isEqualTo(expectedResult)
   }
@@ -141,7 +141,7 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
       mockApDeliusContextApiClient.getUserAccessForCrns("DELIUS-USER", listOf("SOME-CRN"))
     } returns ClientResult.Success(HttpStatus.OK, UserAccess(access = emptyList()), true)
 
-    val result = apDeliusContextApiOffenderDetailsDataSource.getUserAccessForOffenderCrn("DELIUS-USER", "SOME-CRN")
+    val result = offenderDetailsDataSource.getUserAccessForOffenderCrn("DELIUS-USER", "SOME-CRN")
 
     assertThat(result).isInstanceOf(ClientResult.Failure.StatusCode::class.java)
     assertThat((result as ClientResult.Failure.StatusCode).status).isEqualTo(HttpStatus.NOT_FOUND)
@@ -164,7 +164,7 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
       false,
     )
 
-    val results = apDeliusContextApiOffenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", crns)
+    val results = offenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", crns)
 
     assertThat(results).isEqualTo(expectedResults)
   }
@@ -176,7 +176,7 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
     val cacheTimeoutClientResult = cacheTimeoutClientResult<UserAccess>()
     every { mockApDeliusContextApiClient.getUserAccessForCrns("DELIUS-USER", crns) } returns cacheTimeoutClientResult
 
-    val results = apDeliusContextApiOffenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", crns)
+    val results = offenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", crns)
     assertThat(results).hasSize(3)
     assertThat(results["CRN-A"]).isEqualTo(cacheTimeoutClientResult)
     assertThat(results["CRN-B"]).isEqualTo(cacheTimeoutClientResult)
@@ -197,7 +197,7 @@ class ApDeliusContextApiOffenderDetailsDataSourceTest {
       false,
     )
 
-    val results = apDeliusContextApiOffenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", crns)
+    val results = offenderDetailsDataSource.getUserAccessForOffenderCrns("DELIUS-USER", crns)
 
     assertThat(results).hasSize(3)
     val crnAResult = results["CRN-A"]
