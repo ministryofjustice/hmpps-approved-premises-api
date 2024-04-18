@@ -71,17 +71,17 @@ class DomainEventDescriber(
 
   private fun buildPersonArrivedDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getPersonArrivedEvent(domainEventSummary.id())
-    return event.describe { "The person moved into the premises on ${LocalDate.ofInstant(it.eventDetails.arrivedAt, ZoneOffset.UTC)}" }
+    return event.describe { "The person moved into the premises on ${LocalDate.ofInstant(it.eventDetails.arrivedAt, ZoneOffset.UTC).toUiFormat()}" }
   }
 
   private fun buildPersonNotArrivedDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getPersonNotArrivedEvent(domainEventSummary.id())
-    return event.describe { "The person was due to move into the premises on ${it.eventDetails.expectedArrivalOn} but did not arrive" }
+    return event.describe { "The person was due to move into the premises on ${it.eventDetails.expectedArrivalOn.toUiFormat()} but did not arrive" }
   }
 
   private fun buildPersonDepartedDescription(domainEventSummary: DomainEventSummary): String? {
     val event = domainEventService.getPersonDepartedEvent(domainEventSummary.id())
-    return event.describe { "The person moved out of the premises on ${LocalDate.ofInstant(it.eventDetails.departedAt, ZoneOffset.UTC)}" }
+    return event.describe { "The person moved out of the premises on ${LocalDate.ofInstant(it.eventDetails.departedAt, ZoneOffset.UTC).toUiFormat()}" }
   }
 
   private fun buildBookingNotMadeDescription(domainEventSummary: DomainEventSummary): String? {
