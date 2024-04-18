@@ -838,6 +838,44 @@ class PlacementRequestServiceTest {
       verify { applicationService wasNot Called }
     }
 
+    @Test
+    fun `withdrawPlacementRequest doesnt updates application status if triggered by seed job`() {
+      every { userAccessService.userMayWithdrawPlacementRequest(user, placementRequest) } returns true
+      every { placementRequestRepository.findByIdOrNull(placementRequestId) } returns placementRequest
+      every { placementRequestRepository.save(any()) } answers { it.invocation.args[0] as PlacementRequestEntity }
+      every { cas1PlacementRequestEmailService.placementRequestWithdrawn(any(), any()) } returns Unit
+      every { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(any(), any()) } returns Unit
+      every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
+
+      val withdrawnPlacementRequest = createValidPlacementRequest(application, user)
+      withdrawnPlacementRequest.isWithdrawn = true
+
+      val reallocatedPlacementRequest = createValidPlacementRequest(application, user)
+      reallocatedPlacementRequest.reallocatedAt = OffsetDateTime.now()
+
+      every {
+        placementRequestRepository.findByApplication(application)
+      } returns listOf(
+        withdrawnPlacementRequest,
+        reallocatedPlacementRequest,
+      )
+
+      val result = placementRequestService.withdrawPlacementRequest(
+        placementRequestId,
+        PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
+        WithdrawalContext(
+          user,
+          WithdrawableEntityType.PlacementRequest,
+          placementRequestId,
+          triggeredBySeedJob = true,
+        ),
+      )
+
+      assertThat(result is CasResult.Success).isTrue
+
+      verify { applicationService wasNot Called }
+    }
+
     @ParameterizedTest
     @EnumSource(value = WithdrawableEntityType::class, names = ["Booking", "PlacementRequest"], mode = EnumSource.Mode.EXCLUDE)
     fun `withdrawPlacementRequest sets correct reason if withdrawal triggered by other entity and user permissions not checked`(triggeringEntity: WithdrawableEntityType) {

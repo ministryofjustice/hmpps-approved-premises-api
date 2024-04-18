@@ -196,6 +196,7 @@ data class WithdrawalContext(
   val triggeringUser: UserEntity?,
   val triggeringEntityType: WithdrawableEntityType,
   val triggeringEntityId: UUID,
+  val triggeredBySeedJob: Boolean = false,
 )
 
 data class WithdrawableEntity(
