@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.recursive.comparison.RecursiveComparisonConfiguration
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -46,21 +47,18 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.math.ceil
 
-class TasksTest : IntegrationTestBase() {
-  @Autowired
-  lateinit var taskTransformer: TaskTransformer
-
-  @Autowired
-  lateinit var userTransformer: UserTransformer
-
-  @BeforeEach
-  fun stubBankHolidaysApi() {
-    GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
-  }
-
+class TasksTest {
   @SuppressWarnings("LargeClass")
   @Nested
-  inner class GetTasksTest {
+  inner class GetTasksTest : IntegrationTestBase() {
+    @Autowired
+    lateinit var taskTransformer: TaskTransformer
+
+    @BeforeEach
+    fun stubBankHolidaysApi() {
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+    }
+
     @Test
     fun `Get all tasks without JWT returns 401`() {
       webTestClient.get()
@@ -132,1177 +130,6 @@ class TasksTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isBadRequest
-      }
-    }
-
-    @Nested
-    inner class FilterByType {
-      private lateinit var tasks: Map<TaskType, List<Task>>
-      lateinit var jwt: String
-
-      @BeforeEach
-      fun setup() {
-        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-          `Given a User` { otherUser, _ ->
-            `Given an Offender` { offenderDetails, _ ->
-              this.jwt = jwt
-
-              val (task1, _) = `Given a Placement Request`(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-
-              val (task2, _) = `Given an Assessment for Approved Premises`(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-
-              val (task3, _) = `Given a Placement Request`(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-
-              val task4 = `Given a Placement Application`(
-                createdByUser = user,
-                allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-
-              val (task5) = `Given an Assessment for Approved Premises`(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-
-              val placementRequests = listOf(
-                taskTransformer.transformPlacementRequestToTask(
-                  task1,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-                taskTransformer.transformPlacementRequestToTask(
-                  task3,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-              )
-
-              val placementApplications = listOf(
-                taskTransformer.transformPlacementApplicationToTask(
-                  task4,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-              )
-
-              val assessments = listOf(
-                taskTransformer.transformAssessmentToTask(
-                  task2,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-                taskTransformer.transformAssessmentToTask(
-                  task5,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-              )
-
-              tasks = mapOf(
-                TaskType.assessment to assessments,
-                TaskType.placementApplication to placementApplications,
-                TaskType.placementRequest to placementRequests,
-              )
-            }
-          }
-        }
-      }
-
-      @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
-      fun `Get all tasks filters by a single type`(taskType: TaskType) {
-        val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=${taskType.value}"
-        val expectedTasks = tasks[taskType]!!.sortedBy { it.dueDate }
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              expectedTasks,
-            ),
-          )
-      }
-
-      @ParameterizedTest
-      @CsvSource("assessment,placementRequest", "assessment,placementApplication", "placementRequest,placementApplication", "placementApplication,placementRequest")
-      fun `Get all tasks filters by multiple types`(taskType1: TaskType, taskType2: TaskType) {
-        val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=${taskType1.value}&types=${taskType2.value}"
-        val expectedTasks = listOf(
-          tasks[taskType1]!!,
-          tasks[taskType2]!!,
-        ).flatten().sortedBy { it.dueDate }
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              expectedTasks,
-            ),
-          )
-      }
-
-      @Test
-      fun `Get all tasks returns all task types`() {
-        val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=Assessment&types=PlacementRequest&types=PlacementApplication"
-        val expectedTasks = listOf(
-          tasks[TaskType.assessment]!!,
-          tasks[TaskType.placementRequest]!!,
-          tasks[TaskType.placementApplication]!!,
-        ).flatten().sortedBy { it.dueDate }
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              expectedTasks,
-            ),
-          )
-      }
-
-      @Test
-      fun `Get all tasks returns all task types by default`() {
-        val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc"
-        val expectedTasks = listOf(
-          tasks[TaskType.assessment]!!,
-          tasks[TaskType.placementRequest]!!,
-          tasks[TaskType.placementApplication]!!,
-        ).flatten().sortedBy { it.dueDate }
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              expectedTasks,
-            ),
-          )
-      }
-    }
-
-    @Nested
-    inner class FilterByApArea {
-      private lateinit var tasks: Map<TaskType, List<Task>>
-
-      lateinit var jwt: String
-      lateinit var apArea: ApAreaEntity
-
-      @BeforeEach
-      fun setup() {
-        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-          `Given a User` { otherUser, _ ->
-            `Given an Offender` { offenderDetails, _ ->
-              this.jwt = jwt
-
-              apArea = `Given an AP Area`()
-              val apArea2 = `Given an AP Area`()
-
-              val (assessment) = `Given an Assessment for Approved Premises`(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-                apArea = apArea,
-              )
-
-              `Given an Assessment for Approved Premises`(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-                apArea = apArea2,
-              )
-
-              val placementApplication = `Given a Placement Application`(
-                createdByUser = user,
-                allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-                apArea = apArea,
-              )
-
-              `Given a Placement Application`(
-                createdByUser = user,
-                allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-                apArea = apArea2,
-              )
-
-              val (placementRequest) = `Given a Placement Request`(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-                apArea = apArea,
-              )
-
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-                apArea = apArea2,
-              )
-
-              val assessments = listOf(
-                taskTransformer.transformAssessmentToTask(
-                  assessment,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-              )
-
-              val placementApplications = listOf(
-                taskTransformer.transformPlacementApplicationToTask(
-                  placementApplication,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-              )
-
-              val placementRequests = listOf(
-                taskTransformer.transformPlacementRequestToTask(
-                  placementRequest,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-              )
-
-              tasks = mapOf(
-                TaskType.assessment to assessments,
-                TaskType.placementApplication to placementApplications,
-                TaskType.placementRequest to placementRequests,
-              )
-            }
-          }
-        }
-      }
-
-      @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
-      fun `it filters by Ap Area and task type`(taskType: TaskType) {
-        val expectedTasks = tasks[taskType]
-        val url = "/tasks?type=${taskType.value}&apAreaId=${apArea.id}"
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              expectedTasks,
-            ),
-          )
-      }
-
-      @Test
-      fun `it filters by all areas with no task type`() {
-        val expectedTasks = listOf(
-          tasks[TaskType.assessment]!!,
-          tasks[TaskType.placementRequest]!!,
-          tasks[TaskType.placementApplication]!!,
-        ).flatten().sortedBy { it.dueDate }
-
-        webTestClient.get()
-          .uri("/tasks?apAreaId=${apArea.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              expectedTasks,
-            ),
-          )
-      }
-    }
-
-    @Nested
-    inner class FilterByUser {
-      private lateinit var tasks: Map<TaskType, List<Task>>
-
-      lateinit var jwt: String
-      lateinit var user: UserEntity
-
-      @BeforeEach
-      fun setup() {
-        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-          `Given a User` { otherUser, _ ->
-            `Given an Offender` { offenderDetails, _ ->
-              this.jwt = jwt
-              this.user = user
-
-              val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
-                allocatedToUser = user,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-
-              `Given an Assessment for Approved Premises`(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-              )
-
-              val allocatablePlacementApplication = `Given a Placement Application`(
-                createdByUser = user,
-                allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-
-              `Given a Placement Application`(
-                createdByUser = user,
-                allocatedToUser = otherUser,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-
-              `Given a Placement Request`(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-
-              val (allocatablePlacementRequest) = `Given a Placement Request`(
-                placementRequestAllocatedTo = user,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-
-              val assessments = listOf(
-                taskTransformer.transformAssessmentToTask(
-                  allocatableAssessment,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-              )
-
-              val placementApplications = listOf(
-                taskTransformer.transformPlacementApplicationToTask(
-                  allocatablePlacementApplication,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-              )
-
-              val placementRequests = listOf(
-                taskTransformer.transformPlacementRequestToTask(
-                  allocatablePlacementRequest,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-              )
-
-              tasks = mapOf(
-                TaskType.assessment to assessments,
-                TaskType.placementApplication to placementApplications,
-                TaskType.placementRequest to placementRequests,
-              )
-            }
-          }
-        }
-      }
-
-      @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
-      fun `it filters by user and task type`(taskType: TaskType) {
-        val expectedTasks = tasks[taskType]
-        val url = "/tasks?type=${taskType.value}&allocatedToUserId=${user.id}"
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              expectedTasks,
-            ),
-          )
-      }
-
-      @Test
-      fun `it filters by user with all tasks`() {
-        val expectedTasks = listOf(
-          tasks[TaskType.assessment]!!,
-          tasks[TaskType.placementRequest]!!,
-          tasks[TaskType.placementApplication]!!,
-        ).flatten().sortedBy { it.dueDate }
-
-        val url = "/tasks?allocatedToUserId=${user.id}"
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              expectedTasks,
-            ),
-          )
-      }
-    }
-
-    @Nested
-    inner class Pagination {
-      private val pageSize = 1
-      private lateinit var counts: Map<TaskType, Map<String, Int>>
-
-      lateinit var jwt: String
-
-      @BeforeEach
-      fun setup() {
-        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-          `Given a User` { otherUser, _ ->
-            `Given an Offender` { offenderDetails, _ ->
-              this.jwt = jwt
-
-              counts = mapOf(
-                TaskType.assessment to mapOf(
-                  "allocated" to 2,
-                  "unallocated" to 3,
-                ),
-                TaskType.placementRequest to mapOf(
-                  "allocated" to 2,
-                  "unallocated" to 4,
-                ),
-                TaskType.placementApplication to mapOf(
-                  "allocated" to 3,
-                  "unallocated" to 2,
-                ),
-              )
-
-              `Given an Assessment for Temporary Accommodation`(
-                createdByUser = otherUser,
-                allocatedToUser = null,
-              )
-
-              repeat(counts[TaskType.assessment]!!["allocated"]!!) {
-                `Given an Assessment for Approved Premises`(
-                  allocatedToUser = otherUser,
-                  createdByUser = otherUser,
-                  crn = offenderDetails.otherIds.crn,
-                )
-              }
-
-              repeat(counts[TaskType.assessment]!!["unallocated"]!!) {
-                `Given an Assessment for Approved Premises`(
-                  null,
-                  createdByUser = otherUser,
-                  crn = offenderDetails.otherIds.crn,
-                )
-              }
-
-              repeat(counts[TaskType.placementRequest]!!["allocated"]!!) {
-                `Given a Placement Request`(
-                  placementRequestAllocatedTo = otherUser,
-                  assessmentAllocatedTo = otherUser,
-                  createdByUser = user,
-                  crn = offenderDetails.otherIds.crn,
-                )
-              }
-
-              repeat(counts[TaskType.placementRequest]!!["unallocated"]!!) {
-                `Given a Placement Request`(
-                  null,
-                  assessmentAllocatedTo = otherUser,
-                  createdByUser = user,
-                  crn = offenderDetails.otherIds.crn,
-                )
-              }
-
-              repeat(counts[TaskType.placementApplication]!!["allocated"]!!) {
-                `Given a Placement Application`(
-                  createdByUser = user,
-                  allocatedToUser = user,
-                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withPermissiveSchema()
-                  },
-                  crn = offenderDetails.otherIds.crn,
-                  submittedAt = OffsetDateTime.now(),
-                )
-              }
-
-              repeat(counts[TaskType.placementApplication]!!["unallocated"]!!) {
-                `Given a Placement Application`(
-                  createdByUser = user,
-                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withPermissiveSchema()
-                  },
-                  crn = offenderDetails.otherIds.crn,
-                  submittedAt = OffsetDateTime.now(),
-                )
-              }
-            }
-          }
-        }
-      }
-
-      @ParameterizedTest
-      @CsvSource(
-        "assessment,allocated,1", "assessment,allocated,2", "assessment,unallocated,1", "assessment,unallocated,1",
-        "placementRequest,allocated,1", "placementRequest,allocated,2", "placementRequest,unallocated,1", "placementRequest,unallocated,2",
-        "placementApplication,allocated,1", "placementApplication,allocated,2", "placementApplication,unallocated,1", "placementApplication,unallocated,2",
-      )
-      fun `get all tasks returns page counts when taskType and allocated filter are set`(taskType: TaskType, allocatedFilter: String, pageNumber: String) {
-        val itemCount = counts[taskType]!![allocatedFilter]!!
-        val url = "/tasks?type=${taskType.value}&perPage=$pageSize&page=$pageNumber&allocatedFilter=$allocatedFilter"
-
-        expectCountHeaders(url, pageNumber.toInt(), itemCount)
-      }
-
-      @ParameterizedTest
-      @CsvSource(
-        "allocated,1",
-        "allocated,2",
-        "unallocated,1",
-        "unallocated,1",
-      )
-      fun `get all tasks returns page counts for all tasks when allocated filter is set`(allocatedFilter: String, pageNumber: String) {
-        val itemCount = listOf(
-          counts[TaskType.assessment]!![allocatedFilter]!!,
-          counts[TaskType.placementRequest]!![allocatedFilter]!!,
-          counts[TaskType.placementApplication]!![allocatedFilter]!!,
-        ).sum()
-
-        val url = "/tasks?&page=$pageNumber&perPage=$pageSize&allocatedFilter=$allocatedFilter"
-
-        expectCountHeaders(url, pageNumber.toInt(), itemCount)
-      }
-
-      @ParameterizedTest
-      @ValueSource(ints = [1, 2])
-      fun `get all tasks returns page count when no allocated filter is set`(pageNumber: Int) {
-        val itemCount = listOf(
-          counts[TaskType.assessment]!!["allocated"]!!,
-          counts[TaskType.assessment]!!["unallocated"]!!,
-          counts[TaskType.placementRequest]!!["allocated"]!!,
-          counts[TaskType.placementRequest]!!["unallocated"]!!,
-          counts[TaskType.placementApplication]!!["allocated"]!!,
-          counts[TaskType.placementApplication]!!["unallocated"]!!,
-        ).sum()
-
-        expectCountHeaders("/tasks?&page=$pageNumber&perPage=$pageSize", pageNumber, itemCount)
-      }
-
-      private fun expectCountHeaders(url: String, pageNumber: Int, itemCount: Int) {
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectHeader().valueEquals("X-Pagination-CurrentPage", pageNumber.toLong())
-          .expectHeader().valueEquals("X-Pagination-TotalPages", expectedTotalPages(itemCount))
-          .expectHeader().valueEquals("X-Pagination-TotalResults", itemCount.toLong())
-          .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
-      }
-
-      private fun expectedTotalPages(count: Int) = ceil(count.toDouble() / pageSize).toLong()
-    }
-
-    @Nested
-    inner class FilterQualification {
-      lateinit var jwt: String
-
-      lateinit var tasks: Map<TaskType, Map<UserQualification, List<Task>>>
-
-      @BeforeEach
-      fun setup() {
-        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-          `Given a User` { otherUser, _ ->
-            `Given an Offender` { offenderDetails, _ ->
-              this.jwt = jwt
-
-              val assessmentTasks = mutableMapOf<UserQualification, List<Task>>()
-              val placementRequestTasks = mutableMapOf<UserQualification, List<Task>>()
-              val placementApplicationTasks = mutableMapOf<UserQualification, List<Task>>()
-
-              fun createAssessmentTask(requiredQualification: UserQualification?, noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard): Task {
-                val (assessment) = `Given an Assessment for Approved Premises`(
-                  allocatedToUser = otherUser,
-                  createdByUser = otherUser,
-                  crn = offenderDetails.otherIds.crn,
-                  requiredQualification = requiredQualification,
-                  noticeType = noticeType,
-                )
-
-                return taskTransformer.transformAssessmentToTask(
-                  assessment,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                )
-              }
-
-              fun createPlacementRequestTask(requiredQualification: UserQualification?, noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard): Task {
-                val (placementRequest, _) = `Given a Placement Request`(
-                  placementRequestAllocatedTo = otherUser,
-                  assessmentAllocatedTo = otherUser,
-                  createdByUser = user,
-                  crn = offenderDetails.otherIds.crn,
-                  requiredQualification = requiredQualification,
-                  noticeType = noticeType,
-                )
-
-                return taskTransformer.transformPlacementRequestToTask(
-                  placementRequest,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                )
-              }
-
-              fun createPlacementApplicationTask(requiredQualification: UserQualification?, noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard): Task {
-                val placementApplication = `Given a Placement Application`(
-                  createdByUser = user,
-                  allocatedToUser = user,
-                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withPermissiveSchema()
-                  },
-                  crn = offenderDetails.otherIds.crn,
-                  submittedAt = OffsetDateTime.now(),
-                  requiredQualification = requiredQualification,
-                  noticeType = noticeType,
-                )
-
-                return taskTransformer.transformPlacementApplicationToTask(
-                  placementApplication,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                )
-              }
-
-              listOf(
-                UserQualification.WOMENS,
-                UserQualification.ESAP,
-                UserQualification.PIPE,
-                UserQualification.RECOVERY_FOCUSED,
-                UserQualification.MENTAL_HEALTH_SPECIALIST,
-              ).forEach { qualification ->
-                assessmentTasks[qualification] = listOf(
-                  createAssessmentTask(qualification),
-                )
-                placementRequestTasks[qualification] = listOf(
-                  createPlacementRequestTask(qualification),
-                )
-                placementApplicationTasks[qualification] = listOf(
-                  createPlacementApplicationTask(qualification),
-                )
-              }
-
-              assessmentTasks[UserQualification.EMERGENCY] = listOf(
-                createAssessmentTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
-                createAssessmentTask(null, Cas1ApplicationTimelinessCategory.emergency),
-              )
-              placementRequestTasks[UserQualification.EMERGENCY] = listOf(
-                createPlacementRequestTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
-                createPlacementRequestTask(null, Cas1ApplicationTimelinessCategory.emergency),
-              )
-              placementApplicationTasks[UserQualification.EMERGENCY] = listOf(
-                createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
-                createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.emergency),
-              )
-
-              tasks = mapOf(
-                TaskType.assessment to assessmentTasks,
-                TaskType.placementRequest to placementRequestTasks,
-                TaskType.placementApplication to placementApplicationTasks,
-              )
-            }
-          }
-        }
-      }
-
-      @ParameterizedTest
-      @CsvSource(
-        "assessment,WOMENS",
-        "assessment,PIPE",
-        "assessment,ESAP",
-        "assessment,EMERGENCY",
-        "assessment,RECOVERY_FOCUSED",
-        "assessment,MENTAL_HEALTH_SPECIALIST",
-
-        "placementRequest,WOMENS",
-        "placementRequest,PIPE",
-        "placementRequest,ESAP",
-        "placementRequest,EMERGENCY",
-        "placementRequest,RECOVERY_FOCUSED",
-        "placementRequest,MENTAL_HEALTH_SPECIALIST",
-
-        "placementApplication,WOMENS",
-        "placementApplication,PIPE",
-        "placementApplication,ESAP",
-        "placementApplication,EMERGENCY",
-        "placementApplication,RECOVERY_FOCUSED",
-        "placementApplication,MENTAL_HEALTH_SPECIALIST",
-      )
-      fun `Get all tasks filters by task type and required qualification`(taskType: TaskType, qualification: UserQualification) {
-        val url = "/tasks?type=${taskType.value}&requiredQualification=${qualification.name.lowercase()}"
-        val expectedTasks = tasks[taskType]!![qualification]!!
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              expectedTasks,
-            ),
-          )
-      }
-
-      @ParameterizedTest
-      @EnumSource(value = UserQualification::class, names = ["WOMENS", "EMERGENCY", "ESAP", "PIPE", "RECOVERY_FOCUSED", "MENTAL_HEALTH_SPECIALIST"])
-      fun `Get all tasks required qualification`(qualification: UserQualification) {
-        val url = "/tasks?requiredQualification=${qualification.name.lowercase()}"
-        val expectedTasks = listOf(
-          tasks[TaskType.assessment]!![qualification]!!,
-          tasks[TaskType.placementRequest]!![qualification]!!,
-          tasks[TaskType.placementApplication]!![qualification]!!,
-        ).flatten()
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              expectedTasks,
-            ),
-          )
-      }
-    }
-
-    @Nested
-    inner class FilterByNameOrCrn {
-      lateinit var jwt: String
-      lateinit var crn: String
-
-      private lateinit var nameMatchTasks: Map<TaskType, Task>
-      private lateinit var crnMatchTasks: Map<TaskType, Task>
-
-      @BeforeEach
-      fun setup() {
-        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-          `Given a User` { otherUser, _ ->
-            `Given an Offender` { offenderDetails1, _ ->
-              `Given an Offender` { offenderDetails2, _ ->
-                this.jwt = jwt
-                this.crn = offenderDetails2.otherIds.crn
-
-                val (assessment1, _) = `Given an Assessment for Approved Premises`(
-                  allocatedToUser = otherUser,
-                  createdByUser = otherUser,
-                  crn = offenderDetails1.otherIds.crn,
-                  name = "SOMEONE",
-                )
-
-                val (assessment2, _) = `Given an Assessment for Approved Premises`(
-                  allocatedToUser = otherUser,
-                  createdByUser = otherUser,
-                  crn = offenderDetails2.otherIds.crn,
-                  name = "ANOTHER",
-                )
-
-                val (placementRequest1, _) = `Given a Placement Request`(
-                  placementRequestAllocatedTo = otherUser,
-                  assessmentAllocatedTo = otherUser,
-                  createdByUser = user,
-                  crn = offenderDetails1.otherIds.crn,
-                  name = "SOMEONE",
-                )
-
-                val (placementRequest2, _) = `Given a Placement Request`(
-                  placementRequestAllocatedTo = otherUser,
-                  assessmentAllocatedTo = otherUser,
-                  createdByUser = user,
-                  crn = offenderDetails2.otherIds.crn,
-                  name = "ANOTHER",
-                )
-
-                val placementApplication1 = `Given a Placement Application`(
-                  createdByUser = user,
-                  allocatedToUser = user,
-                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withPermissiveSchema()
-                  },
-                  crn = offenderDetails1.otherIds.crn,
-                  name = "SOMEONE",
-                  submittedAt = OffsetDateTime.now(),
-                )
-
-                val placementApplication2 = `Given a Placement Application`(
-                  createdByUser = user,
-                  allocatedToUser = user,
-                  schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                    withPermissiveSchema()
-                  },
-                  crn = offenderDetails2.otherIds.crn,
-                  submittedAt = OffsetDateTime.now(),
-                  name = "ANOTHER",
-                )
-
-                nameMatchTasks = mapOf(
-                  TaskType.assessment to taskTransformer.transformAssessmentToTask(
-                    assessment1,
-                    "${offenderDetails1.firstName} ${offenderDetails1.surname}",
-                  ),
-                  TaskType.placementApplication to taskTransformer.transformPlacementApplicationToTask(
-                    placementApplication1,
-                    "${offenderDetails1.firstName} ${offenderDetails1.surname}",
-                  ),
-                  TaskType.placementRequest to taskTransformer.transformPlacementRequestToTask(
-                    placementRequest1,
-                    "${offenderDetails1.firstName} ${offenderDetails1.surname}",
-                  ),
-                )
-
-                crnMatchTasks = mapOf(
-                  TaskType.assessment to taskTransformer.transformAssessmentToTask(
-                    assessment2,
-                    "${offenderDetails2.firstName} ${offenderDetails2.surname}",
-                  ),
-                  TaskType.placementApplication to taskTransformer.transformPlacementApplicationToTask(
-                    placementApplication2,
-                    "${offenderDetails2.firstName} ${offenderDetails2.surname}",
-                  ),
-                  TaskType.placementRequest to taskTransformer.transformPlacementRequestToTask(
-                    placementRequest2,
-                    "${offenderDetails2.firstName} ${offenderDetails2.surname}",
-                  ),
-                )
-              }
-            }
-          }
-        }
-      }
-
-      @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
-      fun `Get all tasks filters by name and task type`(taskType: TaskType) {
-        val url = "/tasks?type=${taskType.value}&crnOrName=someone"
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              listOf(nameMatchTasks[taskType]),
-            ),
-          )
-      }
-
-      @ParameterizedTest
-      @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
-      fun `Get all tasks filters by CRN and task type`(taskType: TaskType) {
-        val url = "/tasks?type=${taskType.value}&crnOrName=$crn"
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              listOf(crnMatchTasks[taskType]),
-            ),
-          )
-      }
-
-      @Test
-      fun `Get all tasks filters by name without task type`() {
-        val url = "/tasks?crnOrName=someone"
-        val expectedTasks = listOf(
-          nameMatchTasks[TaskType.assessment],
-          nameMatchTasks[TaskType.placementRequest],
-          nameMatchTasks[TaskType.placementApplication],
-        )
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              expectedTasks,
-            ),
-          )
-      }
-
-      @Test
-      fun `Get all tasks filters by CRN without task type`() {
-        val url = "/tasks?crnOrName=$crn"
-        val expectedTasks = listOf(
-          crnMatchTasks[TaskType.assessment],
-          crnMatchTasks[TaskType.placementRequest],
-          crnMatchTasks[TaskType.placementApplication],
-        )
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              expectedTasks,
-            ),
-          )
-      }
-    }
-
-    @Nested
-    inner class FilterByCompleted {
-      lateinit var jwt: String
-      lateinit var crn: String
-
-      private lateinit var incompleteTasks: List<Task>
-      private lateinit var completeTasks: List<Task>
-
-      @BeforeEach
-      fun setup() {
-        `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
-          `Given a User` { otherUser, _ ->
-            `Given an Offender` { offenderDetails, _ ->
-              this.jwt = jwt
-              this.crn = offenderDetails.otherIds.crn
-
-              val (assessment1, _) = `Given an Assessment for Approved Premises`(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-                createdAt = OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS),
-              )
-
-              val (assessment2, _) = `Given an Assessment for Approved Premises`(
-                allocatedToUser = otherUser,
-                createdByUser = otherUser,
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-
-              val (placementRequest1, _) = `Given a Placement Request`(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-
-              val (placementRequest2, _) = `Given a Placement Request`(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-                booking = bookingEntityFactory.produceAndPersist {
-                  withPremises(
-                    approvedPremisesEntityFactory.produceAndPersist {
-                      withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                      withYieldedProbationRegion {
-                        probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
-                      }
-                    },
-                  )
-                },
-              )
-
-              val (placementRequest3, _) = `Given a Placement Request`(
-                placementRequestAllocatedTo = otherUser,
-                assessmentAllocatedTo = otherUser,
-                createdByUser = user,
-                crn = offenderDetails.otherIds.crn,
-              )
-
-              placementRequest3.bookingNotMades = mutableListOf(
-                bookingNotMadeFactory.produceAndPersist {
-                  withPlacementRequest(placementRequest3)
-                },
-              )
-
-              val placementApplication1 = `Given a Placement Application`(
-                createdByUser = otherUser,
-                allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-              )
-
-              val placementApplication2 = `Given a Placement Application`(
-                createdByUser = otherUser,
-                allocatedToUser = user,
-                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withPermissiveSchema()
-                },
-                crn = offenderDetails.otherIds.crn,
-                submittedAt = OffsetDateTime.now(),
-                decision = PlacementApplicationDecision.ACCEPTED,
-              )
-
-              incompleteTasks = listOf(
-                taskTransformer.transformAssessmentToTask(
-                  assessment1,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-                taskTransformer.transformPlacementRequestToTask(
-                  placementRequest1,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-                taskTransformer.transformPlacementApplicationToTask(
-                  placementApplication1,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-              )
-
-              completeTasks = listOf(
-                taskTransformer.transformAssessmentToTask(
-                  assessment2,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-                taskTransformer.transformAssessmentToTask(
-                  placementRequest1.assessment,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-                taskTransformer.transformAssessmentToTask(
-                  placementRequest2.assessment,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-                taskTransformer.transformAssessmentToTask(
-                  placementRequest3.assessment,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-                taskTransformer.transformAssessmentToTask(
-                  assessmentTestRepository.findAllByApplication(placementApplication1.application)[0],
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-                taskTransformer.transformAssessmentToTask(
-                  assessmentTestRepository.findAllByApplication(placementApplication2.application)[0],
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-                taskTransformer.transformPlacementRequestToTask(
-                  placementRequest2,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-                taskTransformer.transformPlacementRequestToTask(
-                  placementRequest3,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-                taskTransformer.transformPlacementApplicationToTask(
-                  placementApplication2,
-                  "${offenderDetails.firstName} ${offenderDetails.surname}",
-                ),
-              )
-            }
-          }
-        }
-      }
-
-      @Test
-      fun `Get all tasks shows incomplete tasks by default`() {
-        val url = "/tasks"
-
-        webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .json(
-            objectMapper.writeValueAsString(
-              incompleteTasks,
-            ),
-          )
-      }
-
-      @Test
-      fun `Get all tasks shows allows showing completed tasks`() {
-        val url = "/tasks?isCompleted=true"
-
-        objectMapper.setDateFormat(SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss"))
-
-        val rawResponseBody = webTestClient.get()
-          .uri(url)
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
-
-        val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Task>>() {})
-
-        assertThat(responseBody)
-          .usingRecursiveFieldByFieldElementComparator(
-            RecursiveComparisonConfiguration.builder().withComparatorForType(
-              { a: Instant, b: Instant -> a.truncatedTo(ChronoUnit.MILLIS).compareTo(b.truncatedTo(ChronoUnit.MILLIS)) },
-              Instant::class.java,
-            ).build(),
-          )
-          .hasSameElementsAs(completeTasks)
       }
     }
 
@@ -1402,7 +229,1207 @@ class TasksTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class GetTaskTest {
+  inner class FilterByType : InitialiseDatabasePerClassTestBase() {
+    private lateinit var tasks: Map<TaskType, List<Task>>
+    lateinit var jwt: String
+
+    @Autowired
+    lateinit var taskTransformer: TaskTransformer
+
+    @BeforeAll
+    fun stubBankHolidaysApi() {
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+    }
+
+    @BeforeAll
+    fun setup() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            this.jwt = jwt
+
+            val (task1, _) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val (task2, _) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val (task3, _) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val task4 = `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+            )
+
+            val (task5) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val placementRequests = listOf(
+              taskTransformer.transformPlacementRequestToTask(
+                task1,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformPlacementRequestToTask(
+                task3,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+            )
+
+            val placementApplications = listOf(
+              taskTransformer.transformPlacementApplicationToTask(
+                task4,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+            )
+
+            val assessments = listOf(
+              taskTransformer.transformAssessmentToTask(
+                task2,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformAssessmentToTask(
+                task5,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+            )
+
+            tasks = mapOf(
+              TaskType.assessment to assessments,
+              TaskType.placementApplication to placementApplications,
+              TaskType.placementRequest to placementRequests,
+            )
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
+    fun `Get all tasks filters by a single type`(taskType: TaskType) {
+      val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=${taskType.value}"
+      val expectedTasks = tasks[taskType]!!.sortedBy { it.dueDate }
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            expectedTasks,
+          ),
+        )
+    }
+
+    @ParameterizedTest
+    @CsvSource("assessment,placementRequest", "assessment,placementApplication", "placementRequest,placementApplication", "placementApplication,placementRequest")
+    fun `Get all tasks filters by multiple types`(taskType1: TaskType, taskType2: TaskType) {
+      val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=${taskType1.value}&types=${taskType2.value}"
+      val expectedTasks = listOf(
+        tasks[taskType1]!!,
+        tasks[taskType2]!!,
+      ).flatten().sortedBy { it.dueDate }
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            expectedTasks,
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks returns all task types`() {
+      val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc&types=Assessment&types=PlacementRequest&types=PlacementApplication"
+      val expectedTasks = listOf(
+        tasks[TaskType.assessment]!!,
+        tasks[TaskType.placementRequest]!!,
+        tasks[TaskType.placementApplication]!!,
+      ).flatten().sortedBy { it.dueDate }
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            expectedTasks,
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks returns all task types by default`() {
+      val url = "/tasks?page=1&sortBy=createdAt&sortDirection=asc"
+      val expectedTasks = listOf(
+        tasks[TaskType.assessment]!!,
+        tasks[TaskType.placementRequest]!!,
+        tasks[TaskType.placementApplication]!!,
+      ).flatten().sortedBy { it.dueDate }
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            expectedTasks,
+          ),
+        )
+    }
+  }
+
+  @Nested
+  inner class FilterByApArea : InitialiseDatabasePerClassTestBase() {
+    private lateinit var tasks: Map<TaskType, List<Task>>
+
+    lateinit var jwt: String
+    lateinit var apArea: ApAreaEntity
+
+    @Autowired
+    lateinit var taskTransformer: TaskTransformer
+
+    @BeforeAll
+    fun setup() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            this.jwt = jwt
+
+            apArea = `Given an AP Area`()
+            val apArea2 = `Given an AP Area`()
+
+            val (assessment) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea,
+            )
+
+            `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea2,
+            )
+
+            val placementApplication = `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+              apArea = apArea,
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+              apArea = apArea2,
+            )
+
+            val (placementRequest) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea,
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+              apArea = apArea2,
+            )
+
+            val assessments = listOf(
+              taskTransformer.transformAssessmentToTask(
+                assessment,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+            )
+
+            val placementApplications = listOf(
+              taskTransformer.transformPlacementApplicationToTask(
+                placementApplication,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+            )
+
+            val placementRequests = listOf(
+              taskTransformer.transformPlacementRequestToTask(
+                placementRequest,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+            )
+
+            tasks = mapOf(
+              TaskType.assessment to assessments,
+              TaskType.placementApplication to placementApplications,
+              TaskType.placementRequest to placementRequests,
+            )
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
+    fun `it filters by Ap Area and task type`(taskType: TaskType) {
+      val expectedTasks = tasks[taskType]
+      val url = "/tasks?type=${taskType.value}&apAreaId=${apArea.id}"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            expectedTasks,
+          ),
+        )
+    }
+
+    @Test
+    fun `it filters by all areas with no task type`() {
+      val expectedTasks = listOf(
+        tasks[TaskType.assessment]!!,
+        tasks[TaskType.placementRequest]!!,
+        tasks[TaskType.placementApplication]!!,
+      ).flatten().sortedBy { it.dueDate }
+
+      webTestClient.get()
+        .uri("/tasks?apAreaId=${apArea.id}")
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            expectedTasks,
+          ),
+        )
+    }
+  }
+
+  @Nested
+  inner class FilterByUser : InitialiseDatabasePerClassTestBase() {
+    private lateinit var tasks: Map<TaskType, List<Task>>
+
+    lateinit var jwt: String
+    lateinit var user: UserEntity
+
+    @Autowired
+    lateinit var taskTransformer: TaskTransformer
+
+    @BeforeAll
+    fun setup() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            this.jwt = jwt
+            this.user = user
+
+            val (allocatableAssessment) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = user,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val allocatablePlacementApplication = `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+            )
+
+            `Given a Placement Application`(
+              createdByUser = user,
+              allocatedToUser = otherUser,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+            )
+
+            `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val (allocatablePlacementRequest) = `Given a Placement Request`(
+              placementRequestAllocatedTo = user,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val assessments = listOf(
+              taskTransformer.transformAssessmentToTask(
+                allocatableAssessment,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+            )
+
+            val placementApplications = listOf(
+              taskTransformer.transformPlacementApplicationToTask(
+                allocatablePlacementApplication,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+            )
+
+            val placementRequests = listOf(
+              taskTransformer.transformPlacementRequestToTask(
+                allocatablePlacementRequest,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+            )
+
+            tasks = mapOf(
+              TaskType.assessment to assessments,
+              TaskType.placementApplication to placementApplications,
+              TaskType.placementRequest to placementRequests,
+            )
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
+    fun `it filters by user and task type`(taskType: TaskType) {
+      val expectedTasks = tasks[taskType]
+      val url = "/tasks?type=${taskType.value}&allocatedToUserId=${user.id}"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            expectedTasks,
+          ),
+        )
+    }
+
+    @Test
+    fun `it filters by user with all tasks`() {
+      val expectedTasks = listOf(
+        tasks[TaskType.assessment]!!,
+        tasks[TaskType.placementRequest]!!,
+        tasks[TaskType.placementApplication]!!,
+      ).flatten().sortedBy { it.dueDate }
+
+      val url = "/tasks?allocatedToUserId=${user.id}"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            expectedTasks,
+          ),
+        )
+    }
+  }
+
+  @Nested
+  inner class Pagination : InitialiseDatabasePerClassTestBase() {
+    private val pageSize = 1
+    private lateinit var counts: Map<TaskType, Map<String, Int>>
+
+    lateinit var jwt: String
+
+    @BeforeAll
+    fun setup() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            this.jwt = jwt
+
+            counts = mapOf(
+              TaskType.assessment to mapOf(
+                "allocated" to 2,
+                "unallocated" to 3,
+              ),
+              TaskType.placementRequest to mapOf(
+                "allocated" to 2,
+                "unallocated" to 4,
+              ),
+              TaskType.placementApplication to mapOf(
+                "allocated" to 3,
+                "unallocated" to 2,
+              ),
+            )
+
+            `Given an Assessment for Temporary Accommodation`(
+              createdByUser = otherUser,
+              allocatedToUser = null,
+            )
+
+            repeat(counts[TaskType.assessment]!!["allocated"]!!) {
+              `Given an Assessment for Approved Premises`(
+                allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            repeat(counts[TaskType.assessment]!!["unallocated"]!!) {
+              `Given an Assessment for Approved Premises`(
+                null,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            repeat(counts[TaskType.placementRequest]!!["allocated"]!!) {
+              `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            repeat(counts[TaskType.placementRequest]!!["unallocated"]!!) {
+              `Given a Placement Request`(
+                null,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+              )
+            }
+
+            repeat(counts[TaskType.placementApplication]!!["allocated"]!!) {
+              `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+              )
+            }
+
+            repeat(counts[TaskType.placementApplication]!!["unallocated"]!!) {
+              `Given a Placement Application`(
+                createdByUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+              )
+            }
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      "assessment,allocated,1", "assessment,allocated,2", "assessment,unallocated,1", "assessment,unallocated,1",
+      "placementRequest,allocated,1", "placementRequest,allocated,2", "placementRequest,unallocated,1", "placementRequest,unallocated,2",
+      "placementApplication,allocated,1", "placementApplication,allocated,2", "placementApplication,unallocated,1", "placementApplication,unallocated,2",
+    )
+    fun `get all tasks returns page counts when taskType and allocated filter are set`(taskType: TaskType, allocatedFilter: String, pageNumber: String) {
+      val itemCount = counts[taskType]!![allocatedFilter]!!
+      val url = "/tasks?type=${taskType.value}&perPage=$pageSize&page=$pageNumber&allocatedFilter=$allocatedFilter"
+
+      expectCountHeaders(url, pageNumber.toInt(), itemCount)
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      "allocated,1",
+      "allocated,2",
+      "unallocated,1",
+      "unallocated,1",
+    )
+    fun `get all tasks returns page counts for all tasks when allocated filter is set`(allocatedFilter: String, pageNumber: String) {
+      val itemCount = listOf(
+        counts[TaskType.assessment]!![allocatedFilter]!!,
+        counts[TaskType.placementRequest]!![allocatedFilter]!!,
+        counts[TaskType.placementApplication]!![allocatedFilter]!!,
+      ).sum()
+
+      val url = "/tasks?&page=$pageNumber&perPage=$pageSize&allocatedFilter=$allocatedFilter"
+
+      expectCountHeaders(url, pageNumber.toInt(), itemCount)
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [1, 2])
+    fun `get all tasks returns page count when no allocated filter is set`(pageNumber: Int) {
+      val itemCount = listOf(
+        counts[TaskType.assessment]!!["allocated"]!!,
+        counts[TaskType.assessment]!!["unallocated"]!!,
+        counts[TaskType.placementRequest]!!["allocated"]!!,
+        counts[TaskType.placementRequest]!!["unallocated"]!!,
+        counts[TaskType.placementApplication]!!["allocated"]!!,
+        counts[TaskType.placementApplication]!!["unallocated"]!!,
+      ).sum()
+
+      expectCountHeaders("/tasks?&page=$pageNumber&perPage=$pageSize", pageNumber, itemCount)
+    }
+
+    private fun expectCountHeaders(url: String, pageNumber: Int, itemCount: Int) {
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader().valueEquals("X-Pagination-CurrentPage", pageNumber.toLong())
+        .expectHeader().valueEquals("X-Pagination-TotalPages", expectedTotalPages(itemCount))
+        .expectHeader().valueEquals("X-Pagination-TotalResults", itemCount.toLong())
+        .expectHeader().valueEquals("X-Pagination-PageSize", pageSize.toLong())
+    }
+
+    private fun expectedTotalPages(count: Int) = ceil(count.toDouble() / pageSize).toLong()
+  }
+
+  @Nested
+  inner class FilterQualification : InitialiseDatabasePerClassTestBase() {
+    lateinit var jwt: String
+
+    lateinit var tasks: Map<TaskType, Map<UserQualification, List<Task>>>
+
+    @Autowired
+    lateinit var taskTransformer: TaskTransformer
+
+    @BeforeAll
+    fun setup() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            this.jwt = jwt
+
+            val assessmentTasks = mutableMapOf<UserQualification, List<Task>>()
+            val placementRequestTasks = mutableMapOf<UserQualification, List<Task>>()
+            val placementApplicationTasks = mutableMapOf<UserQualification, List<Task>>()
+
+            fun createAssessmentTask(requiredQualification: UserQualification?, noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard): Task {
+              val (assessment) = `Given an Assessment for Approved Premises`(
+                allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails.otherIds.crn,
+                requiredQualification = requiredQualification,
+                noticeType = noticeType,
+              )
+
+              return taskTransformer.transformAssessmentToTask(
+                assessment,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              )
+            }
+
+            fun createPlacementRequestTask(requiredQualification: UserQualification?, noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard): Task {
+              val (placementRequest, _) = `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails.otherIds.crn,
+                requiredQualification = requiredQualification,
+                noticeType = noticeType,
+              )
+
+              return taskTransformer.transformPlacementRequestToTask(
+                placementRequest,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              )
+            }
+
+            fun createPlacementApplicationTask(requiredQualification: UserQualification?, noticeType: Cas1ApplicationTimelinessCategory? = Cas1ApplicationTimelinessCategory.standard): Task {
+              val placementApplication = `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+                requiredQualification = requiredQualification,
+                noticeType = noticeType,
+              )
+
+              return taskTransformer.transformPlacementApplicationToTask(
+                placementApplication,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              )
+            }
+
+            listOf(
+              UserQualification.WOMENS,
+              UserQualification.ESAP,
+              UserQualification.PIPE,
+              UserQualification.RECOVERY_FOCUSED,
+              UserQualification.MENTAL_HEALTH_SPECIALIST,
+            ).forEach { qualification ->
+              assessmentTasks[qualification] = listOf(
+                createAssessmentTask(qualification),
+              )
+              placementRequestTasks[qualification] = listOf(
+                createPlacementRequestTask(qualification),
+              )
+              placementApplicationTasks[qualification] = listOf(
+                createPlacementApplicationTask(qualification),
+              )
+            }
+
+            assessmentTasks[UserQualification.EMERGENCY] = listOf(
+              createAssessmentTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
+              createAssessmentTask(null, Cas1ApplicationTimelinessCategory.emergency),
+            )
+            placementRequestTasks[UserQualification.EMERGENCY] = listOf(
+              createPlacementRequestTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
+              createPlacementRequestTask(null, Cas1ApplicationTimelinessCategory.emergency),
+            )
+            placementApplicationTasks[UserQualification.EMERGENCY] = listOf(
+              createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.shortNotice),
+              createPlacementApplicationTask(null, Cas1ApplicationTimelinessCategory.emergency),
+            )
+
+            tasks = mapOf(
+              TaskType.assessment to assessmentTasks,
+              TaskType.placementRequest to placementRequestTasks,
+              TaskType.placementApplication to placementApplicationTasks,
+            )
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @CsvSource(
+      "assessment,WOMENS",
+      "assessment,PIPE",
+      "assessment,ESAP",
+      "assessment,EMERGENCY",
+      "assessment,RECOVERY_FOCUSED",
+      "assessment,MENTAL_HEALTH_SPECIALIST",
+
+      "placementRequest,WOMENS",
+      "placementRequest,PIPE",
+      "placementRequest,ESAP",
+      "placementRequest,EMERGENCY",
+      "placementRequest,RECOVERY_FOCUSED",
+      "placementRequest,MENTAL_HEALTH_SPECIALIST",
+
+      "placementApplication,WOMENS",
+      "placementApplication,PIPE",
+      "placementApplication,ESAP",
+      "placementApplication,EMERGENCY",
+      "placementApplication,RECOVERY_FOCUSED",
+      "placementApplication,MENTAL_HEALTH_SPECIALIST",
+    )
+    fun `Get all tasks filters by task type and required qualification`(taskType: TaskType, qualification: UserQualification) {
+      val url = "/tasks?type=${taskType.value}&requiredQualification=${qualification.name.lowercase()}"
+      val expectedTasks = tasks[taskType]!![qualification]!!
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            expectedTasks,
+          ),
+        )
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserQualification::class, names = ["WOMENS", "EMERGENCY", "ESAP", "PIPE", "RECOVERY_FOCUSED", "MENTAL_HEALTH_SPECIALIST"])
+    fun `Get all tasks required qualification`(qualification: UserQualification) {
+      val url = "/tasks?requiredQualification=${qualification.name.lowercase()}"
+      val expectedTasks = listOf(
+        tasks[TaskType.assessment]!![qualification]!!,
+        tasks[TaskType.placementRequest]!![qualification]!!,
+        tasks[TaskType.placementApplication]!![qualification]!!,
+      ).flatten()
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            expectedTasks,
+          ),
+        )
+    }
+  }
+
+  @Nested
+  inner class FilterByNameOrCrn : InitialiseDatabasePerClassTestBase() {
+    lateinit var jwt: String
+    lateinit var crn: String
+
+    private lateinit var nameMatchTasks: Map<TaskType, Task>
+    private lateinit var crnMatchTasks: Map<TaskType, Task>
+
+    @Autowired
+    lateinit var taskTransformer: TaskTransformer
+
+    @BeforeAll
+    fun setup() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails1, _ ->
+            `Given an Offender` { offenderDetails2, _ ->
+              this.jwt = jwt
+              this.crn = offenderDetails2.otherIds.crn
+
+              val (assessment1, _) = `Given an Assessment for Approved Premises`(
+                allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails1.otherIds.crn,
+                name = "SOMEONE",
+              )
+
+              val (assessment2, _) = `Given an Assessment for Approved Premises`(
+                allocatedToUser = otherUser,
+                createdByUser = otherUser,
+                crn = offenderDetails2.otherIds.crn,
+                name = "ANOTHER",
+              )
+
+              val (placementRequest1, _) = `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails1.otherIds.crn,
+                name = "SOMEONE",
+              )
+
+              val (placementRequest2, _) = `Given a Placement Request`(
+                placementRequestAllocatedTo = otherUser,
+                assessmentAllocatedTo = otherUser,
+                createdByUser = user,
+                crn = offenderDetails2.otherIds.crn,
+                name = "ANOTHER",
+              )
+
+              val placementApplication1 = `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails1.otherIds.crn,
+                name = "SOMEONE",
+                submittedAt = OffsetDateTime.now(),
+              )
+
+              val placementApplication2 = `Given a Placement Application`(
+                createdByUser = user,
+                allocatedToUser = user,
+                schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withPermissiveSchema()
+                },
+                crn = offenderDetails2.otherIds.crn,
+                submittedAt = OffsetDateTime.now(),
+                name = "ANOTHER",
+              )
+
+              nameMatchTasks = mapOf(
+                TaskType.assessment to taskTransformer.transformAssessmentToTask(
+                  assessment1,
+                  "${offenderDetails1.firstName} ${offenderDetails1.surname}",
+                ),
+                TaskType.placementApplication to taskTransformer.transformPlacementApplicationToTask(
+                  placementApplication1,
+                  "${offenderDetails1.firstName} ${offenderDetails1.surname}",
+                ),
+                TaskType.placementRequest to taskTransformer.transformPlacementRequestToTask(
+                  placementRequest1,
+                  "${offenderDetails1.firstName} ${offenderDetails1.surname}",
+                ),
+              )
+
+              crnMatchTasks = mapOf(
+                TaskType.assessment to taskTransformer.transformAssessmentToTask(
+                  assessment2,
+                  "${offenderDetails2.firstName} ${offenderDetails2.surname}",
+                ),
+                TaskType.placementApplication to taskTransformer.transformPlacementApplicationToTask(
+                  placementApplication2,
+                  "${offenderDetails2.firstName} ${offenderDetails2.surname}",
+                ),
+                TaskType.placementRequest to taskTransformer.transformPlacementRequestToTask(
+                  placementRequest2,
+                  "${offenderDetails2.firstName} ${offenderDetails2.surname}",
+                ),
+              )
+            }
+          }
+        }
+      }
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
+    fun `Get all tasks filters by name and task type`(taskType: TaskType) {
+      val url = "/tasks?type=${taskType.value}&crnOrName=someone"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            listOf(nameMatchTasks[taskType]),
+          ),
+        )
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = TaskType::class, names = ["assessment", "placementRequest", "placementApplication"])
+    fun `Get all tasks filters by CRN and task type`(taskType: TaskType) {
+      val url = "/tasks?type=${taskType.value}&crnOrName=$crn"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            listOf(crnMatchTasks[taskType]),
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks filters by name without task type`() {
+      val url = "/tasks?crnOrName=someone"
+      val expectedTasks = listOf(
+        nameMatchTasks[TaskType.assessment],
+        nameMatchTasks[TaskType.placementRequest],
+        nameMatchTasks[TaskType.placementApplication],
+      )
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            expectedTasks,
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks filters by CRN without task type`() {
+      val url = "/tasks?crnOrName=$crn"
+      val expectedTasks = listOf(
+        crnMatchTasks[TaskType.assessment],
+        crnMatchTasks[TaskType.placementRequest],
+        crnMatchTasks[TaskType.placementApplication],
+      )
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            expectedTasks,
+          ),
+        )
+    }
+  }
+
+  @Nested
+  inner class FilterByCompleted : InitialiseDatabasePerClassTestBase() {
+    lateinit var jwt: String
+    lateinit var crn: String
+
+    private lateinit var incompleteTasks: List<Task>
+    private lateinit var completeTasks: List<Task>
+
+    @Autowired
+    lateinit var taskTransformer: TaskTransformer
+
+    @BeforeAll
+    fun setup() {
+      `Given a User`(roles = listOf(UserRole.CAS1_WORKFLOW_MANAGER)) { user, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            this.jwt = jwt
+            this.crn = offenderDetails.otherIds.crn
+
+            val (assessment1, _) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              createdAt = OffsetDateTime.now().truncatedTo(ChronoUnit.MICROS),
+            )
+
+            val (assessment2, _) = `Given an Assessment for Approved Premises`(
+              allocatedToUser = otherUser,
+              createdByUser = otherUser,
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+            )
+
+            val (placementRequest1, _) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            val (placementRequest2, _) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+              booking = bookingEntityFactory.produceAndPersist {
+                withPremises(
+                  approvedPremisesEntityFactory.produceAndPersist {
+                    withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+                    withYieldedProbationRegion {
+                      probationRegionEntityFactory.produceAndPersist { withYieldedApArea { apAreaEntityFactory.produceAndPersist() } }
+                    }
+                  },
+                )
+              },
+            )
+
+            val (placementRequest3, _) = `Given a Placement Request`(
+              placementRequestAllocatedTo = otherUser,
+              assessmentAllocatedTo = otherUser,
+              createdByUser = user,
+              crn = offenderDetails.otherIds.crn,
+            )
+
+            placementRequest3.bookingNotMades = mutableListOf(
+              bookingNotMadeFactory.produceAndPersist {
+                withPlacementRequest(placementRequest3)
+              },
+            )
+
+            val placementApplication1 = `Given a Placement Application`(
+              createdByUser = otherUser,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+            )
+
+            val placementApplication2 = `Given a Placement Application`(
+              createdByUser = otherUser,
+              allocatedToUser = user,
+              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withPermissiveSchema()
+              },
+              crn = offenderDetails.otherIds.crn,
+              submittedAt = OffsetDateTime.now(),
+              decision = PlacementApplicationDecision.ACCEPTED,
+            )
+
+            incompleteTasks = listOf(
+              taskTransformer.transformAssessmentToTask(
+                assessment1,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformPlacementRequestToTask(
+                placementRequest1,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformPlacementApplicationToTask(
+                placementApplication1,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+            )
+
+            completeTasks = listOf(
+              taskTransformer.transformAssessmentToTask(
+                assessment2,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformAssessmentToTask(
+                placementRequest1.assessment,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformAssessmentToTask(
+                placementRequest2.assessment,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformAssessmentToTask(
+                placementRequest3.assessment,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformAssessmentToTask(
+                assessmentTestRepository.findAllByApplication(placementApplication1.application)[0],
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformAssessmentToTask(
+                assessmentTestRepository.findAllByApplication(placementApplication2.application)[0],
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformPlacementRequestToTask(
+                placementRequest2,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformPlacementRequestToTask(
+                placementRequest3,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+              taskTransformer.transformPlacementApplicationToTask(
+                placementApplication2,
+                "${offenderDetails.firstName} ${offenderDetails.surname}",
+              ),
+            )
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get all tasks shows incomplete tasks by default`() {
+      val url = "/tasks"
+
+      webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectBody()
+        .json(
+          objectMapper.writeValueAsString(
+            incompleteTasks,
+          ),
+        )
+    }
+
+    @Test
+    fun `Get all tasks shows allows showing completed tasks`() {
+      val url = "/tasks?isCompleted=true"
+
+      objectMapper.setDateFormat(SimpleDateFormat("yyyy-mm-dd'T'HH:mm:ss"))
+
+      val rawResponseBody = webTestClient.get()
+        .uri(url)
+        .header("Authorization", "Bearer $jwt")
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult<String>()
+        .responseBody
+        .blockFirst()
+
+      val responseBody = objectMapper.readValue(rawResponseBody, object : TypeReference<List<Task>>() {})
+
+      assertThat(responseBody)
+        .usingRecursiveFieldByFieldElementComparator(
+          RecursiveComparisonConfiguration.builder().withComparatorForType(
+            { a: Instant, b: Instant -> a.truncatedTo(ChronoUnit.MILLIS).compareTo(b.truncatedTo(ChronoUnit.MILLIS)) },
+            Instant::class.java,
+          ).build(),
+        )
+        .hasSameElementsAs(completeTasks)
+    }
+  }
+
+  @Nested
+  inner class GetTaskTest : IntegrationTestBase() {
+    @Autowired
+    lateinit var taskTransformer: TaskTransformer
+
+    @Autowired
+    lateinit var userTransformer: UserTransformer
+
     @Test
     fun `Get a Task for an application without JWT returns 401`() {
       webTestClient.get()
@@ -1844,7 +1871,18 @@ class TasksTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class ReallocateTaskTest {
+  inner class ReallocateTaskTest : IntegrationTestBase() {
+    @Autowired
+    lateinit var taskTransformer: TaskTransformer
+
+    @Autowired
+    lateinit var userTransformer: UserTransformer
+
+    @BeforeEach
+    fun stubBankHolidaysApi() {
+      GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse()
+    }
+
     @Test
     fun `Reallocate application to different assessor without JWT returns 401`() {
       webTestClient.post()
@@ -2143,7 +2181,7 @@ class TasksTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class DeallocateTaskTest {
+  inner class DeallocateTaskTest : IntegrationTestBase() {
     @Test
     fun `Deallocate assessment without JWT returns 401 Unauthorized`() {
       webTestClient.delete()
