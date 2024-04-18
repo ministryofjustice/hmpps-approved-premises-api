@@ -13,7 +13,9 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toWeekAndDayDurationString
 import java.time.LocalDate
 import java.time.ZoneOffset
+import java.time.temporal.ChronoUnit
 import java.util.UUID
+import javax.xml.datatype.DatatypeConstants.DAYS
 
 @Component
 class DomainEventDescriber(
@@ -101,15 +103,11 @@ class DomainEventDescriber(
     val event = domainEventService.getAssessmentAllocatedEvent(domainEventSummary.id())
     return event.describe { ev ->
       val eventDetails = ev.eventDetails
-      val automatic = eventDetails.allocatedBy == null
-      val prelude = if (automatic) {
-        "The assessment was automatically allocated to"
-      } else {
-        "The assessment was allocated to"
-      }
-      val allocatedTo = eventDetails.allocatedTo?.name ?: "an unknown user"
-      val allocatedBy = eventDetails.allocatedBy?.let { "by ${it.name}" } ?: ""
-      "$prelude $allocatedTo $allocatedBy".trim()
+      buildAllocationMessage(
+        entityDescription = "The assessment",
+        allocatedBy = eventDetails.allocatedBy,
+        allocatedTo = eventDetails.allocatedTo,
+      )
     }
   }
 
@@ -132,7 +130,11 @@ class DomainEventDescriber(
     val event = domainEventService.getPlacementApplicationAllocatedEvent(domainEventSummary.id())
 
     return event.describe { data ->
-      "A request for placement was allocated"
+      val details = data.eventDetails
+      val dates = details.placementDates[0]
+      val duration = ChronoUnit.DAYS.between(dates.startDate, dates.endDate)
+      buildAllocationMessage("A request for placement", details.allocatedBy, details.allocatedTo) + " for assessment. " +
+        buildRequestForPlacementDescription(dates.startDate, duration.toInt())
     }
   }
 
@@ -155,8 +157,6 @@ class DomainEventDescriber(
 
     return event.describe { data ->
       val details = data.eventDetails
-      val duration = details.duration.toLong()
-      val endDate = details.expectedArrival.plusDays(duration)
 
       val description = when (details.requestForPlacementType) {
         RequestForPlacementType.initial -> "A placement was automatically requested after the application was assessed"
@@ -165,8 +165,25 @@ class DomainEventDescriber(
         RequestForPlacementType.additionalPlacement -> "A placement was requested with the reason 'An additional placement on an existing application'"
       }
 
-      "$description. The placement request is for ${details.expectedArrival.toUiFormat()} to ${endDate.toUiFormat()} (${toWeekAndDayDurationString(details.duration)})"
+      "$description. ${buildRequestForPlacementDescription(details.expectedArrival, details.duration)}"
     }
+  }
+
+  private fun buildAllocationMessage(entityDescription: String, allocatedBy: StaffMember?, allocatedTo: StaffMember?): String {
+    val automatic = allocatedBy == null
+    val prelude = if (automatic) {
+      "$entityDescription was automatically allocated to"
+    } else {
+      "$entityDescription was allocated to"
+    }
+    val allocatedToDescription = allocatedTo?.name ?: "an unknown user"
+    val allocatedByDescription = allocatedBy?.let { "by ${it.name}" } ?: ""
+    return "$prelude $allocatedToDescription $allocatedByDescription".trim()
+  }
+
+  private fun buildRequestForPlacementDescription(expectedArrival: LocalDate, duration: Int): String {
+    val endDate = expectedArrival.plusDays(duration.toLong())
+    return "The placement request is for ${expectedArrival.toUiFormat()} to ${endDate.toUiFormat()} (${toWeekAndDayDurationString(duration)})"
   }
 
   private fun DomainEventSummary.id(): UUID = UUID.fromString(this.id)

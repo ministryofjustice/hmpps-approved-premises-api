@@ -166,8 +166,8 @@ class PlacementApplicationService(
 
     placementApplicationRepository.save(newPlacementApplication)
     cas1PlacementApplicationDomainEventService.placementApplicationAllocated(
-      newPlacementApplication,
-      userService.getUserForRequest(),
+      placementApplication = newPlacementApplication,
+      allocatedByUser = userService.getUserForRequest(),
     )
 
     val newPlacementDates = placementDateRepository.saveAll(
@@ -311,8 +311,8 @@ class PlacementApplicationService(
       if (baselinePlacementApplication.allocatedToUser != null) {
         cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication)
         cas1PlacementApplicationDomainEventService.placementApplicationAllocated(
-          placementApplication,
-          userService.getUserForRequest(),
+          placementApplication = placementApplication,
+          allocatedByUser = null,
         )
       }
     }
