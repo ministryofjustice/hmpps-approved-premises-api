@@ -181,7 +181,7 @@ class PlacementApplicationServiceTest {
       every { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(any(), any()) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } just Runs
       every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } just Runs
-      every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), user) } just Runs
+      every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), null) } just Runs
 
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
@@ -211,7 +211,7 @@ class PlacementApplicationServiceTest {
       every { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(any(), any()) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(placementApplication) } just Runs
       every { cas1PlacementApplicationEmailService.placementApplicationAllocated(placementApplication) } just Runs
-      every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), user) } just Runs
+      every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), null) } just Runs
 
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
@@ -235,7 +235,7 @@ class PlacementApplicationServiceTest {
 
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp) }
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp, user) }
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp, null) }
       verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp) }
     }
 
@@ -251,7 +251,7 @@ class PlacementApplicationServiceTest {
       every { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(any(), any()) } returns Unit
       every { cas1PlacementApplicationEmailService.placementApplicationSubmitted(any()) } just Runs
       every { cas1PlacementApplicationEmailService.placementApplicationAllocated(any()) } just Runs
-      every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), user) } just Runs
+      every { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(any(), null) } just Runs
 
       val result = placementApplicationService.submitApplication(
         placementApplication.id,
@@ -277,7 +277,7 @@ class PlacementApplicationServiceTest {
       assertThat(updatedPlacementApp1.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp1, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp1) }
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp1, user) }
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp1, null) }
       verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp1) }
 
       val updatedPlacementApp2 = updatedPlacementApplications[1]
@@ -286,7 +286,7 @@ class PlacementApplicationServiceTest {
       assertThat(updatedPlacementApp2.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp2, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp2) }
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp2, user) }
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp2, null) }
       verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp2) }
 
       val updatedPlacementApp3 = updatedPlacementApplications[2]
@@ -295,7 +295,7 @@ class PlacementApplicationServiceTest {
       assertThat(updatedPlacementApp3.submissionGroupId).isEqualTo(firstSubmissionGroupId)
       verify { cas1PlacementApplicationDomainEventService.placementApplicationSubmitted(updatedPlacementApp3, "theUsername") }
       verify { cas1PlacementApplicationEmailService.placementApplicationAllocated(updatedPlacementApp3) }
-      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp3, user) }
+      verify { cas1PlacementApplicationDomainEventService.placementApplicationAllocated(updatedPlacementApp3, null) }
       verify { cas1PlacementApplicationEmailService.placementApplicationSubmitted(updatedPlacementApp3) }
     }
   }

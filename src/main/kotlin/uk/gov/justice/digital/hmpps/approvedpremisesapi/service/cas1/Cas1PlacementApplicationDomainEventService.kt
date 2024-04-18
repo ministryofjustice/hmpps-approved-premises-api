@@ -130,7 +130,7 @@ class Cas1PlacementApplicationDomainEventService(
     )
   }
 
-  fun placementApplicationAllocated(placementApplication: PlacementApplicationEntity, allocatedByUser: UserEntity) {
+  fun placementApplicationAllocated(placementApplication: PlacementApplicationEntity, allocatedByUser: UserEntity?) {
     val allocatedAt = requireNotNull(placementApplication.allocatedAt)
     val allocatedToUser = requireNotNull(placementApplication.allocatedToUser)
 
@@ -148,7 +148,7 @@ class Cas1PlacementApplicationDomainEventService(
       ),
       allocatedAt = allocatedAt.toInstant(),
       allocatedTo = domainEventTransformer.toStaffMember(allocatedToUser),
-      allocatedBy = domainEventTransformer.toStaffMember(allocatedByUser),
+      allocatedBy = allocatedByUser?.let { domainEventTransformer.toStaffMember(it) },
       placementDates = placementApplication.placementDates.map {
         DatePeriod(
           it.expectedArrival,
