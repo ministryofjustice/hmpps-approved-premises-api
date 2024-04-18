@@ -3546,11 +3546,14 @@ components:
     PersonalTimeline:
       type: object
       properties:
+        person:
+          $ref: '#/components/schemas/Person'
         applications:
           type: array
           items:
             $ref: '#/components/schemas/ApplicationTimeline'
       required:
+        - person
         - applications
     ApplicationTimeline:
       type: object

@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApplicationTimeline
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesApplicationStatus
@@ -17,8 +18,13 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventU
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Application`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 
 class PersonalTimelineTest : IntegrationTestBase() {
+  @Autowired
+  lateinit var personTransformer: PersonTransformer
+
   @Test
   fun `Getting a personal timeline for a CRN without a JWT returns 401`() {
     webTestClient.get()
@@ -114,12 +120,18 @@ class PersonalTimelineTest : IntegrationTestBase() {
   @Test
   fun `Getting a personal timeline for a CRN returns OK with correct body`() {
     `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
         `Given an Application`(userEntity, crn = offenderDetails.otherIds.crn) { application ->
           val domainEvents = domainEventFactory.produceAndPersistMultiple(2) {
             withCrn(offenderDetails.otherIds.crn)
             withApplicationId(application.id)
           }
+
+          val personInfoResult = PersonInfoResult.Success.Full(
+            crn = offenderDetails.otherIds.crn,
+            offenderDetailSummary = offenderDetails,
+            inmateDetail = inmateDetails,
+          )
 
           webTestClient.get()
             .uri("/people/${offenderDetails.otherIds.crn}/timeline")
@@ -131,6 +143,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 PersonalTimeline(
+                  person = personTransformer.transformModelToPersonApi(personInfoResult),
                   applications = listOf(
                     ApplicationTimeline(
                       id = application.id,
@@ -197,7 +210,13 @@ class PersonalTimelineTest : IntegrationTestBase() {
   @Test
   fun `Getting a personal timeline for a CRN with no applications returns OK with correct body`() {
     `Given a User` { _, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+      `Given an Offender` { offenderDetails, inmateDetails ->
+        val personInfoResult = PersonInfoResult.Success.Full(
+          crn = offenderDetails.otherIds.crn,
+          offenderDetailSummary = offenderDetails,
+          inmateDetail = inmateDetails,
+        )
+
         webTestClient.get()
           .uri("/people/${offenderDetails.otherIds.crn}/timeline")
           .header("Authorization", "Bearer $jwt")
@@ -208,6 +227,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
           .json(
             objectMapper.writeValueAsString(
               PersonalTimeline(
+                person = personTransformer.transformModelToPersonApi(personInfoResult),
                 applications = emptyList(),
               ),
             ),
@@ -230,6 +250,12 @@ class PersonalTimelineTest : IntegrationTestBase() {
             withApplicationId(application.id)
           }
 
+          val personInfoResult = PersonInfoResult.Success.Full(
+            crn = offenderDetails.otherIds.crn,
+            offenderDetailSummary = offenderDetails,
+            inmateDetail = null,
+          )
+
           webTestClient.get()
             .uri("/people/${offenderDetails.otherIds.crn}/timeline")
             .header("Authorization", "Bearer $jwt")
@@ -240,6 +266,7 @@ class PersonalTimelineTest : IntegrationTestBase() {
             .json(
               objectMapper.writeValueAsString(
                 PersonalTimeline(
+                  person = personTransformer.transformModelToPersonApi(personInfoResult),
                   applications = listOf(
                     ApplicationTimeline(
                       id = application.id,
