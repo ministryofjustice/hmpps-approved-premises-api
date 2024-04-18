@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import java.time.OffsetDateTime
 import java.util.UUID
 import javax.persistence.Column
@@ -169,15 +170,21 @@ enum class PlacementApplicationDecision(val apiValue: ApiPlacementApplicationDec
   }
 }
 
-enum class PlacementApplicationWithdrawalReason {
-  DUPLICATE_PLACEMENT_REQUEST,
-  ALTERNATIVE_PROVISION_IDENTIFIED,
-  WITHDRAWN_BY_PP,
-  CHANGE_IN_CIRCUMSTANCES,
-  CHANGE_IN_RELEASE_DECISION,
-  NO_CAPACITY_DUE_TO_LOST_BED,
-  NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION,
-  NO_CAPACITY,
-  ERROR_IN_PLACEMENT_REQUEST,
-  RELATED_APPLICATION_WITHDRAWN,
+enum class PlacementApplicationWithdrawalReason(val apiValue: WithdrawPlacementRequestReason) {
+  DUPLICATE_PLACEMENT_REQUEST(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+  ALTERNATIVE_PROVISION_IDENTIFIED(WithdrawPlacementRequestReason.alternativeProvisionIdentified),
+  WITHDRAWN_BY_PP(WithdrawPlacementRequestReason.withdrawnByPP),
+  CHANGE_IN_CIRCUMSTANCES(WithdrawPlacementRequestReason.changeInCircumstances),
+  CHANGE_IN_RELEASE_DECISION(WithdrawPlacementRequestReason.changeInReleaseDecision),
+  NO_CAPACITY_DUE_TO_LOST_BED(WithdrawPlacementRequestReason.noCapacityDueToLostBed),
+  NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION(WithdrawPlacementRequestReason.noCapacityDueToPlacementPrioritisation),
+  NO_CAPACITY(WithdrawPlacementRequestReason.noCapacity),
+  ERROR_IN_PLACEMENT_REQUEST(WithdrawPlacementRequestReason.errorInPlacementRequest),
+  RELATED_APPLICATION_WITHDRAWN(WithdrawPlacementRequestReason.relatedApplicationWithdrawn),
+  ;
+
+  companion object {
+    fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementApplicationWithdrawalReason? =
+      PlacementApplicationWithdrawalReason.entries.firstOrNull { it.apiValue == apiValue }
+  }
 }
