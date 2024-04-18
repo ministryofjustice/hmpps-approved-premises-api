@@ -56,7 +56,7 @@ class PlacementApplicationService(
 
   var log: Logger = LoggerFactory.getLogger(this::class.java)
 
-  fun getAllPlacementApplicationEntitiesForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
+  fun getAllActivePlacementApplicationsForApplicationId(applicationId: UUID): List<PlacementApplicationEntity> {
     return placementApplicationRepository.findAllSubmittedNonReallocatedAndNonWithdrawnApplicationsForApplicationId(
       applicationId,
     )

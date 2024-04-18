@@ -101,7 +101,7 @@ class Cas1WithdrawableTreeBuilderTest {
     setupWithdrawableState(placementApplication2, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = true))
 
     every {
-      placementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(application.id)
+      placementApplicationService.getAllActivePlacementApplicationsForApplicationId(application.id)
     } returns listOf(placementApp1, placementApplication2)
 
     val adhocBooking1 = createBooking(adhoc = true)
@@ -166,7 +166,7 @@ Application(), withdrawable:Y, mayDirectlyWithdraw:Y, BLOCKED
     setupWithdrawableState(placementApp2PlacementRequest1Booking, WithdrawableState(withdrawable = true, userMayDirectlyWithdraw = false))
 
     every {
-      placementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(application.id)
+      placementApplicationService.getAllActivePlacementApplicationsForApplicationId(application.id)
     } returns listOf(placementApp1, placementApp2)
 
     every { bookingService.getAllAdhocOrUnknownForApplication(application) } returns emptyList()

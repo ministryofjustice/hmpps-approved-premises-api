@@ -514,7 +514,7 @@ class ApplicationsController(
     } else { emptyList() }
 
     val placementApplicationEntities =
-      placementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(applicationId)
+      placementApplicationService.getAllActivePlacementApplicationsForApplicationId(applicationId)
     val additionalPlacementRequests = placementApplicationEntities.map {
       placementApplicationTransformer.transformJpaToApi(it)
     }
