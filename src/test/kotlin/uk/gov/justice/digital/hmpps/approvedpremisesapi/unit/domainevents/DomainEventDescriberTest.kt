@@ -47,6 +47,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.OffsetDateTime
@@ -134,7 +135,7 @@ class DomainEventDescriberTest {
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("The person moved into the premises on $arrivalDate")
+    assertThat(result).isEqualTo("The person moved into the premises on ${arrivalDate.toUiFormat()}")
   }
 
   @ParameterizedTest
@@ -155,7 +156,7 @@ class DomainEventDescriberTest {
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("The person was due to move into the premises on $expectedArrivalDate but did not arrive")
+    assertThat(result).isEqualTo("The person was due to move into the premises on ${expectedArrivalDate.toUiFormat()} but did not arrive")
   }
 
   @ParameterizedTest
@@ -176,7 +177,7 @@ class DomainEventDescriberTest {
 
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
-    assertThat(result).isEqualTo("The person moved out of the premises on $departureDate")
+    assertThat(result).isEqualTo("The person moved out of the premises on ${departureDate.toUiFormat()}")
   }
 
   @ParameterizedTest
