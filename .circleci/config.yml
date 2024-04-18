@@ -136,7 +136,7 @@ jobs:
             - gradle-
       - run:
           name: Build project
-          command: ./gradlew assemble --build-cache && ./gradlew assemble testClasses --build-cache
+          command: ./gradlew assemble testClasses --build-cache
       - save_cache:
           paths:
             - ~/.gradle

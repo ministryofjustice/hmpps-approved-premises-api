@@ -39,6 +39,7 @@
     <ID>CyclomaticComplexMethod:GetAllApprovedPremisesApplicationsTest.kt$GetAllApprovedPremisesApplicationsTest$private fun ApprovedPremisesApplicationSummary.matches(applicationEntity: ApprovedPremisesApplicationEntity): Boolean</ID>
     <ID>MaxLineLength:AssessmentServiceTest.kt$AssessmentServiceTest.ReallocateAssessment$fun</ID>
     <ID>ReturnCount:PlacementRequestService.kt$PlacementRequestService$fun reallocatePlacementRequest( assigneeUser: UserEntity, id: UUID, ): AuthorisableActionResult&lt;ValidatableActionResult&lt;PlacementRequestEntity>></ID>
+    <ID>LongMethod:UserAllocationsEngineTest.kt$UserAllocationsEngineTest$@BeforeAll fun setup()</ID>
   </ManuallySuppressedIssues>
   <CurrentIssues>
     <ID>ComplexCondition:BookingService.kt$BookingService$booking.service == ServiceName.approvedPremises.value &amp;&amp; booking.application != null &amp;&amp; user != null &amp;&amp; !arrivedAndDepartedDomainEventsDisabled</ID>
