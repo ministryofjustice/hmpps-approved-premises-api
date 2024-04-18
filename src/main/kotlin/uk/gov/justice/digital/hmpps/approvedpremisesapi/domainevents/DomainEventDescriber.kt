@@ -17,6 +17,7 @@ import java.time.temporal.ChronoUnit
 import java.util.UUID
 import javax.xml.datatype.DatatypeConstants.DAYS
 
+@SuppressWarnings("TooManyFunctions")
 @Component
 class DomainEventDescriber(
   private val domainEventService: DomainEventService,
@@ -33,7 +34,7 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> buildPersonDepartedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> buildBookingNotMadeDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> buildBookingCancelledDescription(domainEventSummary)
-      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> "The placement had its arrival or departure date changed"
+      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> buildBookingChangedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> buildApplicationWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> buildAssessmentAppealedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED -> buildAssessmentAllocatedDescription(domainEventSummary)
@@ -65,6 +66,14 @@ class DomainEventDescriber(
     val event = domainEventService.getBookingMadeEvent(domainEventSummary.id())
     return event.describe {
       "A placement at ${it.eventDetails.premises.name} was booked for " +
+        "${it.eventDetails.arrivalOn.toUiFormat()} to ${it.eventDetails.departureOn.toUiFormat()}"
+    }
+  }
+
+  private fun buildBookingChangedDescription(domainEventSummary: DomainEventSummary): String? {
+    val event = domainEventService.getBookingChangedEvent(domainEventSummary.id())
+    return event.describe {
+      "A placement at ${it.eventDetails.premises.name} had its arrival and/or departure date changed to " +
         "${it.eventDetails.arrivalOn.toUiFormat()} to ${it.eventDetails.departureOn.toUiFormat()}"
     }
   }

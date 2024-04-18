@@ -2725,7 +2725,7 @@ class ApplicationTest : IntegrationTestBase() {
           "The person moved out of the premises on Monday 1 April 2024",
           "A placement was not made for the placement request. The reason was: no suitable premises",
           "The placement was cancelled. The reason was: 'additional sentencing'",
-          "The placement had its arrival or departure date changed",
+          "A placement at The Premises had its arrival and/or departure date changed to Tuesday 2 January 2029 to Friday 5 January 2029",
           "The application was assessed and accepted",
         )
 
@@ -2770,7 +2770,7 @@ class ApplicationTest : IntegrationTestBase() {
           "The person moved out of the premises on Monday 1 April 2024",
           "A placement was not made for the placement request. The reason was: no suitable premises",
           "The placement was cancelled. The reason was: 'additional sentencing'",
-          "The placement had its arrival or departure date changed",
+          "A placement at The Premises had its arrival and/or departure date changed to Tuesday 2 January 2029 to Friday 5 January 2029",
           "The application was assessed and accepted",
         )
 
@@ -3149,6 +3149,13 @@ class ApplicationTest : IntegrationTestBase() {
               eventType = "approved-premises.booking.changed",
               eventDetails = BookingChangedFactory()
                 .withApplicationId(applicationId)
+                .withArrivalOn(LocalDate.of(2029, 1, 2))
+                .withDepartureOn(LocalDate.of(2029, 1, 5))
+                .withPremises(
+                  EventPremisesFactory()
+                    .withName("The Premises")
+                    .produce(),
+                )
                 .produce(),
             ),
           )
