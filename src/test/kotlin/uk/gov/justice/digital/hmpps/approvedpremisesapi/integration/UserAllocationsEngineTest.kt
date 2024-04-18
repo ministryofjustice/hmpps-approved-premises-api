@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.AllocationType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UserAllocationsEngine
 import java.time.OffsetDateTime
 
-class UserAllocationsEngineTest : IntegrationTestBase() {
+class UserAllocationsEngineTest : InitialiseDatabasePerClassTestBase() {
   @Autowired
   lateinit var realUserRepository: UserRepository
 
@@ -39,7 +39,7 @@ class UserAllocationsEngineTest : IntegrationTestBase() {
   lateinit var excludedAssessor: UserEntity
   lateinit var excludedPlacementApplicationMatcher: UserEntity
 
-  @BeforeEach
+  @BeforeAll
   fun setup() {
     applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist()
     assessmentSchema = approvedPremisesAssessmentJsonSchemaEntityFactory.produceAndPersist()
