@@ -210,6 +210,31 @@ class UserService(
     return AuthorisableActionResult.Success(user)
   }
 
+  @SuppressWarnings("TooGenericExceptionThrown")
+  fun updateUserPduFromCommunityApiById(id: UUID): AuthorisableActionResult<UserEntity> {
+    val user = userRepository.findByIdOrNull(id) ?: return AuthorisableActionResult.NotFound()
+
+    val deliusUser = when (val staffUserDetailsResponse = communityApiClient.getStaffUserDetails(user.deliusUsername)) {
+      is ClientResult.Success -> staffUserDetailsResponse.body
+      is ClientResult.Failure -> staffUserDetailsResponse.throwException()
+    }
+
+    if (deliusUser.teams?.firstOrNull()?.borough?.code != null && user.probationDeliveryUnit?.deliusCode !== deliusUser.teams.firstOrNull()?.borough?.code) {
+      when (val probationDeliveryUnit = findProbationDeliveryUnit(deliusUser.teams)) {
+        null -> {
+          throw Exception("Unable to find community API borough code ${deliusUser.teams.first().borough.code} in CAS")
+        }
+
+        else -> {
+          user.probationDeliveryUnit = probationDeliveryUnit
+          userRepository.save(user)
+        }
+      }
+    }
+
+    return AuthorisableActionResult.Success(user)
+  }
+
   fun updateUser(
     user: UserEntity,
     deliusUser: StaffUserDetails,
