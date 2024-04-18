@@ -142,7 +142,8 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .expectStatus()
         .isBadRequest
         .expectBody()
-        .jsonPath("$.detail").isEqualTo("End Date $endDate cannot be more than 3 months after Start Date $startDate")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("rangeTooLarge")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.endDate")
     }
   }
 
@@ -160,7 +161,47 @@ class Cas3ReportsTest : IntegrationTestBase() {
         .expectStatus()
         .isBadRequest
         .expectBody()
-        .jsonPath("$.detail").isEqualTo("Start Date $startDate cannot be after End Date $endDate")
+        .jsonPath("invalid-params[0].errorType").isEqualTo("afterEndDate")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.startDate")
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = Cas3ReportType::class)
+  fun `Get report returns 400 if start date is the same as end date`(reportType: Cas3ReportType) {
+    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+      val startDate = "2023-08-02"
+      val endDate = "2023-08-02"
+      webTestClient.get()
+        .uri("/cas3/reports/$reportType?startDate=$startDate&endDate=$endDate&probationRegionId=${user.probationRegion.id}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("invalid-params[0].errorType").isEqualTo("afterEndDate")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.startDate")
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = Cas3ReportType::class)
+  fun `Get report returns 400 if end date is in the future`(reportType: Cas3ReportType) {
+    `Given a User`(roles = listOf(CAS3_ASSESSOR)) { user, jwt ->
+      val today = LocalDate.now()
+      val startDate = "2023-08-02"
+      val endDate = today.plusDays(1)
+      webTestClient.get()
+        .uri("/cas3/reports/$reportType?startDate=$startDate&endDate=$endDate&probationRegionId=${user.probationRegion.id}")
+        .header("Authorization", "Bearer $jwt")
+        .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+        .exchange()
+        .expectStatus()
+        .isBadRequest
+        .expectBody()
+        .jsonPath("invalid-params[0].errorType").isEqualTo("inFuture")
+        .jsonPath("invalid-params[0].propertyName").isEqualTo("\$.endDate")
     }
   }
 
@@ -1026,7 +1067,7 @@ class Cas3ReportsTest : IntegrationTestBase() {
           )
 
           webTestClient.get()
-            .uri("/cas3/reports/referral?startDate=2025-01-01&endDate=2025-01-30&probationRegionId=${user.probationRegion.id}")
+            .uri("/cas3/reports/referral?startDate=2024-03-01&endDate=2024-03-30&probationRegionId=${user.probationRegion.id}")
             .header("Authorization", "Bearer $jwt")
             .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
             .exchange()
