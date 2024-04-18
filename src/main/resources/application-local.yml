@@ -44,10 +44,6 @@ seed:
 assign-default-region-to-users-with-unknown-region: true
 preemptive-cache-logging-enabled: true
 
-data-sources:
-  offender-details: community_api
-  offender-risks: community_api
-
 user-allocations:
   rules:
     legacy-allocator:

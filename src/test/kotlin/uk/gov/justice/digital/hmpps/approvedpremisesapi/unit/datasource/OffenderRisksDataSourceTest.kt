@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApDeliusContextAp
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ApOASysContextApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.HMPPSTierApiClient
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.ApDeliusContextApiOffenderRisksDataSource
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.datasource.OffenderRisksDataSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.CaseDetailFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RoshRatingsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.RiskStatus
@@ -26,12 +26,12 @@ import java.time.OffsetDateTime
 import java.time.ZonedDateTime
 import java.util.UUID
 
-class ApDeliusContextApiOffenderRisksDataSourceTest {
+class OffenderRisksDataSourceTest {
   private val mockApDeliusContextApiClient = mockk<ApDeliusContextApiClient>()
   private val mockApOASysContextApiClient = mockk<ApOASysContextApiClient>()
   private val mockHMPPSTierApiClient = mockk<HMPPSTierApiClient>()
 
-  private val apDeliusContextApiOffenderRisksDataSource = ApDeliusContextApiOffenderRisksDataSource(
+  private val apDeliusContextApiOffenderRisksDataSource = OffenderRisksDataSource(
     mockApDeliusContextApiClient,
     mockApOASysContextApiClient,
     mockHMPPSTierApiClient,

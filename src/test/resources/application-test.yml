@@ -168,10 +168,6 @@ manual-bookings-domain-events-disabled: false
 
 upstream-timeout-ms: 2000
 
-data-sources:
-  offender-details: ap_delius_context_api
-  offender-risks: ap_delius_context_api
-
 migration-job:
   throttle-enabled: false
 
