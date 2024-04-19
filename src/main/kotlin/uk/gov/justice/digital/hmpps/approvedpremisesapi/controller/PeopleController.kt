@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.controller
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
-import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.PeopleApiDelegate
@@ -56,7 +55,6 @@ class PeopleController(
   private val applicationService: ApplicationService,
   private val personalTimelineTransformer: PersonalTimelineTransformer,
 ) : PeopleApiDelegate {
-  private val log = LoggerFactory.getLogger(this::class.java)
 
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
     val user = userService.getUserForRequest()
@@ -142,7 +140,7 @@ class PeopleController(
   }
 
   override fun peopleCrnOasysSelectionGet(crn: String): ResponseEntity<List<OASysSection>> {
-    getOffenderDetailsIgnoringLaoQualification(crn)
+    ensureUserCanAccessOffenderInfo(crn)
 
     val needsResult = offenderService.getOASysNeeds(crn)
 
@@ -156,7 +154,7 @@ class PeopleController(
   }
 
   override fun peopleCrnOasysSectionsGet(crn: String, selectedSections: List<Int>?): ResponseEntity<OASysSections> {
-    getOffenderDetailsIgnoringLaoQualification(crn)
+    ensureUserCanAccessOffenderInfo(crn)
 
     val needs = getSuccessEntityOrThrow(crn, offenderService.getOASysNeeds(crn))
 
@@ -193,7 +191,7 @@ class PeopleController(
   }
 
   override fun peopleCrnOasysRiskToSelfGet(crn: String): ResponseEntity<OASysRiskToSelf> {
-    getOffenderDetailsIgnoringLaoQualification(crn)
+    ensureUserCanAccessOffenderInfo(crn)
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
@@ -214,7 +212,7 @@ class PeopleController(
   }
 
   override fun peopleCrnOasysRoshGet(crn: String): ResponseEntity<OASysRiskOfSeriousHarm> {
-    getOffenderDetailsIgnoringLaoQualification(crn)
+    ensureUserCanAccessOffenderInfo(crn)
 
     return runBlocking(context = Dispatchers.IO) {
       val offenceDetailsResult = async {
@@ -235,7 +233,7 @@ class PeopleController(
   }
 
   override fun peopleCrnOffencesGet(crn: String): ResponseEntity<List<ActiveOffence>> {
-    getOffenderDetailsIgnoringLaoQualification(crn)
+    ensureUserCanAccessOffenderInfo(crn)
 
     val convictionsResult = offenderService.getConvictions(crn)
     val activeConvictions = getSuccessEntityOrThrow(crn, convictionsResult).filter { it.active }
@@ -270,6 +268,10 @@ class PeopleController(
     is AuthorisableActionResult.NotFound -> throw NotFoundProblem(crn, "Person")
     is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
     is AuthorisableActionResult.Success -> authorisableActionResult.entity
+  }
+
+  private fun ensureUserCanAccessOffenderInfo(crn: String) {
+    getOffenderDetailsIgnoringLaoQualification(crn)
   }
 
   private fun getOffenderDetailsIgnoringLaoQualification(crn: String): OffenderDetailSummary {
