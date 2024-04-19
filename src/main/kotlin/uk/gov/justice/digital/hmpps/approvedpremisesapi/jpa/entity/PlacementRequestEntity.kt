@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawPlacementRequestReason
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -229,16 +230,22 @@ data class PlacementRequestEntity(
   fun isForApplicationsArrivalDate() = placementApplication == null
 }
 
-enum class PlacementRequestWithdrawalReason {
-  DUPLICATE_PLACEMENT_REQUEST,
-  ALTERNATIVE_PROVISION_IDENTIFIED,
-  WITHDRAWN_BY_PP,
-  CHANGE_IN_CIRCUMSTANCES,
-  CHANGE_IN_RELEASE_DECISION,
-  NO_CAPACITY_DUE_TO_LOST_BED,
-  NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION,
-  NO_CAPACITY,
-  ERROR_IN_PLACEMENT_REQUEST,
-  RELATED_APPLICATION_WITHDRAWN,
-  RELATED_PLACEMENT_APPLICATION_WITHDRAWN,
+enum class PlacementRequestWithdrawalReason(val apiValue: WithdrawPlacementRequestReason) {
+  DUPLICATE_PLACEMENT_REQUEST(WithdrawPlacementRequestReason.duplicatePlacementRequest),
+  ALTERNATIVE_PROVISION_IDENTIFIED(WithdrawPlacementRequestReason.alternativeProvisionIdentified),
+  WITHDRAWN_BY_PP(WithdrawPlacementRequestReason.withdrawnByPP),
+  CHANGE_IN_CIRCUMSTANCES(WithdrawPlacementRequestReason.changeInCircumstances),
+  CHANGE_IN_RELEASE_DECISION(WithdrawPlacementRequestReason.changeInReleaseDecision),
+  NO_CAPACITY_DUE_TO_LOST_BED(WithdrawPlacementRequestReason.noCapacityDueToLostBed),
+  NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION(WithdrawPlacementRequestReason.noCapacityDueToPlacementPrioritisation),
+  NO_CAPACITY(WithdrawPlacementRequestReason.noCapacity),
+  ERROR_IN_PLACEMENT_REQUEST(WithdrawPlacementRequestReason.errorInPlacementRequest),
+  RELATED_APPLICATION_WITHDRAWN(WithdrawPlacementRequestReason.relatedApplicationWithdrawn),
+  RELATED_PLACEMENT_APPLICATION_WITHDRAWN(WithdrawPlacementRequestReason.relatedPlacementApplicationWithdrawn),
+  ;
+
+  companion object {
+    fun valueOf(apiValue: WithdrawPlacementRequestReason): PlacementRequestWithdrawalReason? =
+      PlacementRequestWithdrawalReason.entries.firstOrNull { it.apiValue == apiValue }
+  }
 }

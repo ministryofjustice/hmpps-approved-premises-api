@@ -3785,6 +3785,54 @@ components:
           $ref: '#/components/schemas/WithdrawPlacementRequestReason'
       required:
         - reason
+    RequestForPlacement:
+      type: object
+      properties:
+        id:
+          type: string
+          description: |
+            If `type` is `"manual"`, provides the `PlacementApplication` ID.
+            If `type` is `"automatic"` this field provides a `PlacementRequest` ID.
+          format: uuid
+        createdByUserId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        submittedAt:
+          type: string
+          format: date-time
+        requestReviewedAt:
+          type: string
+          description: |
+            If `type` is `"manual"`, provides the value of `PlacementApplication.decisionMadeAt`.
+            If `type` is `"automatic"` this field provides the value of `PlacementRequest.assessmentCompletedAt`.
+          format: date-time
+        document:
+          $ref: '#/components/schemas/AnyValue'
+        isWithdrawn:
+          type: boolean
+        withdrawalReason:
+          $ref: '#/components/schemas/WithdrawPlacementRequestReason'
+        type:
+          $ref: '#/components/schemas/RequestForPlacementType'
+        placementDates:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlacementDates'
+      required:
+        - id
+        - createdByUserId
+        - createdAt
+        - isWithdrawn
+        - type
+        - placementDates
+    RequestForPlacementType:
+      type: string
+      enum:
+        - manual
+        - automatic
     PlacementRequest:
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'

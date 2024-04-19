@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplicationTimelineNote
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewWithdrawal
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SubmitApplication
@@ -51,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.HttpAuthService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.OffenderService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementApplicationService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.RequestForPlacementService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.UserService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableService
@@ -84,6 +86,7 @@ class ApplicationsController(
   private val appealService: AppealService,
   private val appealTransformer: AppealTransformer,
   private val placementRequestService: PlacementRequestService,
+  private val requestForPlacementService: RequestForPlacementService,
 ) : ApplicationsApiDelegate {
 
   override fun applicationsGet(xServiceName: ServiceName?): ResponseEntity<List<ApplicationSummary>> {
@@ -333,6 +336,31 @@ class ApplicationsController(
     return ResponseEntity(events, HttpStatus.OK)
   }
 
+  override fun applicationsApplicationIdRequestsForPlacementGet(applicationId: UUID): ResponseEntity<List<RequestForPlacement>> {
+    val requestsForPlacement = when (val result = requestForPlacementService.getRequestsForPlacementByApplication(applicationId)) {
+      is AuthorisableActionResult.Success -> result.entity
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "Application")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+    }
+
+    return ResponseEntity.ok(requestsForPlacement)
+  }
+
+  override fun applicationsApplicationIdRequestsForPlacementRequestForPlacementIdGet(
+    applicationId: UUID,
+    requestForPlacementId: UUID,
+  ): ResponseEntity<RequestForPlacement> {
+    val application = applicationService.getApplication(applicationId) ?: throw NotFoundProblem(applicationId, "Application")
+
+    val requestForPlacement = when (val result = requestForPlacementService.getRequestForPlacement(application, requestForPlacementId)) {
+      is AuthorisableActionResult.Success -> result.entity
+      is AuthorisableActionResult.NotFound -> throw NotFoundProblem(applicationId, "RequestForPlacement")
+      is AuthorisableActionResult.Unauthorised -> throw ForbiddenProblem()
+    }
+
+    return ResponseEntity.ok(requestForPlacement)
+  }
+
   override fun applicationsApplicationIdSubmissionPost(
     applicationId: UUID,
     submitApplication: SubmitApplication,
@@ -514,7 +542,7 @@ class ApplicationsController(
     } else { emptyList() }
 
     val placementApplicationEntities =
-      placementApplicationService.getAllPlacementApplicationEntitiesForApplicationId(applicationId)
+      placementApplicationService.getAllActivePlacementApplicationsForApplicationId(applicationId)
     val additionalPlacementRequests = placementApplicationEntities.map {
       placementApplicationTransformer.transformJpaToApi(it)
     }
