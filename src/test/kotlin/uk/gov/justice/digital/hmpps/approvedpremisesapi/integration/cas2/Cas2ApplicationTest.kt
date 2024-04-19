@@ -1036,6 +1036,41 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
           }
         }
+
+        @Test
+        fun `Get single unsubmitted application returns 403`() {
+          `Given a CAS2 POM User` { userEntity, jwt ->
+            `Given an Offender` { offenderDetails, inmateDetails ->
+              cas2ApplicationJsonSchemaRepository.deleteAll()
+
+              val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
+                .produceAndPersist {
+                  withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+                  withSchema(
+                    schema,
+                  )
+                }
+
+              val otherUser = nomisUserEntityFactory.produceAndPersist {
+                withActiveCaseloadId(userEntity.activeCaseloadId!!)
+              }
+
+              val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(newestJsonSchema)
+                withCrn(offenderDetails.otherIds.crn)
+                withCreatedByUser(otherUser)
+                withReferringPrisonCode(userEntity.activeCaseloadId!!)
+              }
+
+              webTestClient.get()
+                .uri("/cas2/applications/${applicationEntity.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isForbidden
+            }
+          }
+        }
       }
     }
   }
