@@ -130,6 +130,34 @@ fun IntegrationTestBase.`Given a CAS2 POM User`(
   block(user, jwt)
 }
 
+fun IntegrationTestBase.`Given a CAS2 Licence Case Admin User`(
+  id: UUID = UUID.randomUUID(),
+  nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
+  block: (nomisUserEntity: NomisUserEntity, jwt: String) -> Unit,
+) {
+  val nomisUserDetailsFactory = NomisUserDetailFactory()
+
+  if (nomisUserDetailsConfigBlock != null) {
+    nomisUserDetailsConfigBlock(nomisUserDetailsFactory)
+  }
+
+  val nomisUserDetails = nomisUserDetailsFactory.produce()
+
+  val user = nomisUserEntityFactory.produceAndPersist {
+    withId(id)
+    withNomisUsername(nomisUserDetails.username)
+    withEmail(nomisUserDetails.primaryEmail)
+    withName("${nomisUserDetails.firstName} ${nomisUserDetails.lastName}")
+    withActiveCaseloadId(nomisUserDetails.activeCaseloadId!!)
+  }
+
+  val jwt = jwtAuthHelper.createValidNomisAuthorisationCodeJwt(nomisUserDetails.username, listOf("ROLE_LICENCE_CA"))
+
+  NomisUserRoles_mockSuccessfulGetUserDetailsCall(jwt, nomisUserDetails)
+
+  block(user, jwt)
+}
+
 fun IntegrationTestBase.`Given a CAS2 Assessor`(
   id: UUID = UUID.randomUUID(),
   block: (externalUserEntity: ExternalUserEntity, jwt: String) -> Unit,
