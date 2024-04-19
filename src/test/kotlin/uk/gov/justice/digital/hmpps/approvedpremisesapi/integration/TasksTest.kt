@@ -1684,53 +1684,53 @@ class TasksTest {
                 ) { placementApplication ->
                   val numAssessmentsPending = 3
                   repeat(numAssessmentsPending) {
-                    createTask(TaskType.assessment, null, allocatableUser, user, offenderDetails.otherIds.crn)
+                    createAssessment(null, allocatableUser, user, offenderDetails.otherIds.crn)
                   }
 
                   val numPlacementApplicationsPending = 4
                   repeat(numPlacementApplicationsPending) {
-                    createTask(TaskType.placementApplication, null, allocatableUser, user, offenderDetails.otherIds.crn)
+                    createPlacementApplication(null, allocatableUser, user, offenderDetails.otherIds.crn)
                   }
 
                   val numPlacementRequestsPending = 2
                   repeat(numPlacementRequestsPending) {
-                    createTask(TaskType.placementRequest, null, allocatableUser, user, offenderDetails.otherIds.crn)
+                    createPlacementRequest(null, allocatableUser, user, offenderDetails.otherIds.crn)
                   }
 
                   val numAssessmentsCompletedBetween1And7DaysAgo = 4
                   repeat(numAssessmentsCompletedBetween1And7DaysAgo) {
                     val days = kotlin.random.Random.nextInt(1, 7).toLong()
-                    createTask(TaskType.assessment, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                    createAssessment(OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
                   }
 
                   val numPlacementApplicationsCompletedBetween1And7DaysAgo = 2
                   repeat(numPlacementApplicationsCompletedBetween1And7DaysAgo) {
                     val days = kotlin.random.Random.nextInt(1, 7).toLong()
-                    createTask(TaskType.placementApplication, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                    createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
                   }
 
                   val numPlacementRequestsCompletedBetween1And7DaysAgo = 1
                   repeat(numPlacementRequestsCompletedBetween1And7DaysAgo) {
                     val days = kotlin.random.Random.nextInt(1, 7).toLong()
-                    createTask(TaskType.placementRequest, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                    createPlacementRequest(OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
                   }
 
                   val numAssessmentsCompletedBetween8And30DaysAgo = 4
                   repeat(numAssessmentsCompletedBetween8And30DaysAgo) {
                     val days = kotlin.random.Random.nextInt(8, 30).toLong()
-                    createTask(TaskType.assessment, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                    createAssessment(OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
                   }
 
                   val numPlacementApplicationsCompletedBetween8And30DaysAgo = 3
                   repeat(numPlacementApplicationsCompletedBetween8And30DaysAgo) {
                     val days = kotlin.random.Random.nextInt(8, 30).toLong()
-                    createTask(TaskType.placementApplication, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                    createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
                   }
 
                   val numPlacementRequestsCompletedBetween8And30DaysAgo = 2
                   repeat(numPlacementRequestsCompletedBetween8And30DaysAgo) {
                     val days = kotlin.random.Random.nextInt(8, 30).toLong()
-                    createTask(TaskType.placementRequest, OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                    createPlacementRequest(OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
                   }
 
                   val numPendingTasks = listOf(
@@ -1805,68 +1805,61 @@ class TasksTest {
       }
     }
 
-    private fun createTask(taskType: TaskType, completedAt: OffsetDateTime?, allocatedUser: UserEntity, createdByUser: UserEntity, crn: String) {
-      (
-        when (taskType) {
-          TaskType.assessment -> {
-            if (completedAt != null) {
-              `Given an Assessment for Approved Premises`(
-                allocatedToUser = allocatedUser,
-                createdByUser = createdByUser,
-                crn = crn,
-                decision = null,
-                reallocated = false,
-                submittedAt = completedAt,
-              )
-            } else {
-              `Given an Assessment for Approved Premises`(
-                allocatedToUser = allocatedUser,
-                createdByUser = createdByUser,
-                crn = crn,
-                decision = null,
-                reallocated = false,
-                submittedAt = null,
-              )
-            }
-          }
-          TaskType.placementRequest -> {
-            val booking = if (completedAt != null) {
-              val premises = approvedPremisesEntityFactory.produceAndPersist {
-                withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
-                withProbationRegion(createdByUser.probationRegion)
-              }
-              bookingEntityFactory.produceAndPersist {
-                withPremises(premises)
-                withCreatedAt(completedAt)
-              }
-            } else {
-              null
-            }
-
-            `Given a Placement Request`(
-              placementRequestAllocatedTo = allocatedUser,
-              assessmentAllocatedTo = createdByUser,
-              createdByUser = createdByUser,
-              crn = crn,
-              booking = booking,
-            )
-          }
-          TaskType.placementApplication -> {
-            `Given a Placement Application`(
-              createdByUser = createdByUser,
-              allocatedToUser = allocatedUser,
-              schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withPermissiveSchema()
-              },
-              submittedAt = completedAt,
-              crn = crn,
-            )
-          }
-          else -> {
-            null
-          }
-        }
+    private fun createAssessment(completedAt: OffsetDateTime?, allocatedUser: UserEntity, createdByUser: UserEntity, crn: String) {
+      if (completedAt != null) {
+        `Given an Assessment for Approved Premises`(
+          allocatedToUser = allocatedUser,
+          createdByUser = createdByUser,
+          crn = crn,
+          decision = null,
+          reallocated = false,
+          submittedAt = completedAt,
         )
+      } else {
+        `Given an Assessment for Approved Premises`(
+          allocatedToUser = allocatedUser,
+          createdByUser = createdByUser,
+          crn = crn,
+          decision = null,
+          reallocated = false,
+          submittedAt = null,
+        )
+      }
+    }
+
+    private fun createPlacementRequest(completedAt: OffsetDateTime?, allocatedUser: UserEntity, createdByUser: UserEntity, crn: String) {
+      val booking = if (completedAt != null) {
+        val premises = approvedPremisesEntityFactory.produceAndPersist {
+          withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
+          withProbationRegion(createdByUser.probationRegion)
+        }
+        bookingEntityFactory.produceAndPersist {
+          withPremises(premises)
+          withCreatedAt(completedAt)
+        }
+      } else {
+        null
+      }
+
+      `Given a Placement Request`(
+        placementRequestAllocatedTo = allocatedUser,
+        assessmentAllocatedTo = createdByUser,
+        createdByUser = createdByUser,
+        crn = crn,
+        booking = booking,
+      )
+    }
+
+    private fun createPlacementApplication(completedAt: OffsetDateTime?, allocatedUser: UserEntity, createdByUser: UserEntity, crn: String) {
+      `Given a Placement Application`(
+        createdByUser = createdByUser,
+        allocatedToUser = allocatedUser,
+        schema = approvedPremisesPlacementApplicationJsonSchemaEntityFactory.produceAndPersist {
+          withPermissiveSchema()
+        },
+        submittedAt = completedAt,
+        crn = crn,
+      )
     }
   }
 
