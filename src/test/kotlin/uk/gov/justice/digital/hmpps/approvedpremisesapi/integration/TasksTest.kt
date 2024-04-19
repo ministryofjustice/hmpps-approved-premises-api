@@ -34,6 +34,10 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Give
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.GovUKBankHolidaysAPI_mockSuccessfullCallWithEmptyResponse
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.ACCEPTED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.REJECTED
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAW
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision.WITHDRAWN_BY_PP
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserQualification
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserRole
@@ -1682,55 +1686,62 @@ class TasksTest {
                   crn = offenderDetails.otherIds.crn,
 
                 ) { placementApplication ->
+                  val crn = offenderDetails.otherIds.crn
                   val numAssessmentsPending = 3
                   repeat(numAssessmentsPending) {
-                    createAssessment(null, allocatableUser, user, offenderDetails.otherIds.crn)
+                    createAssessment(null, allocatableUser, user, crn)
                   }
+                  createAssessment(null, allocatableUser, user, crn, isWithdrawn = true)
 
                   val numPlacementApplicationsPending = 4
                   repeat(numPlacementApplicationsPending) {
-                    createPlacementApplication(null, allocatableUser, user, offenderDetails.otherIds.crn)
+                    createPlacementApplication(null, allocatableUser, user, crn)
                   }
+                  createPlacementApplication(null, allocatableUser, user, crn, decision = ACCEPTED)
+                  createPlacementApplication(null, allocatableUser, user, crn, decision = REJECTED)
+                  createPlacementApplication(null, allocatableUser, user, crn, decision = WITHDRAW)
+                  createPlacementApplication(null, allocatableUser, user, crn, decision = WITHDRAWN_BY_PP)
 
                   val numPlacementRequestsPending = 2
                   repeat(numPlacementRequestsPending) {
-                    createPlacementRequest(null, allocatableUser, user, offenderDetails.otherIds.crn)
+                    createPlacementRequest(null, allocatableUser, user, crn)
                   }
+                  createPlacementRequest(null, allocatableUser, user, crn, isWithdrawn = true)
 
                   val numAssessmentsCompletedBetween1And7DaysAgo = 4
                   repeat(numAssessmentsCompletedBetween1And7DaysAgo) {
                     val days = kotlin.random.Random.nextInt(1, 7).toLong()
-                    createAssessment(OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                    createAssessment(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
                   }
 
                   val numPlacementApplicationsCompletedBetween1And7DaysAgo = 2
                   repeat(numPlacementApplicationsCompletedBetween1And7DaysAgo) {
                     val days = kotlin.random.Random.nextInt(1, 7).toLong()
-                    createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                    createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
                   }
 
                   val numPlacementRequestsCompletedBetween1And7DaysAgo = 1
                   repeat(numPlacementRequestsCompletedBetween1And7DaysAgo) {
                     val days = kotlin.random.Random.nextInt(1, 7).toLong()
-                    createPlacementRequest(OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                    createPlacementRequest(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
                   }
 
                   val numAssessmentsCompletedBetween8And30DaysAgo = 4
                   repeat(numAssessmentsCompletedBetween8And30DaysAgo) {
                     val days = kotlin.random.Random.nextInt(8, 30).toLong()
-                    createAssessment(OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                    createAssessment(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
                   }
 
                   val numPlacementApplicationsCompletedBetween8And30DaysAgo = 3
                   repeat(numPlacementApplicationsCompletedBetween8And30DaysAgo) {
                     val days = kotlin.random.Random.nextInt(8, 30).toLong()
-                    createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                    createPlacementApplication(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
                   }
 
                   val numPlacementRequestsCompletedBetween8And30DaysAgo = 2
                   repeat(numPlacementRequestsCompletedBetween8And30DaysAgo) {
                     val days = kotlin.random.Random.nextInt(8, 30).toLong()
-                    createPlacementRequest(OffsetDateTime.now().minusDays(days), allocatableUser, user, offenderDetails.otherIds.crn)
+                    createPlacementRequest(OffsetDateTime.now().minusDays(days), allocatableUser, user, crn)
                   }
 
                   val numPendingTasks = listOf(
@@ -1805,29 +1816,31 @@ class TasksTest {
       }
     }
 
-    private fun createAssessment(completedAt: OffsetDateTime?, allocatedUser: UserEntity, createdByUser: UserEntity, crn: String) {
-      if (completedAt != null) {
-        `Given an Assessment for Approved Premises`(
-          allocatedToUser = allocatedUser,
-          createdByUser = createdByUser,
-          crn = crn,
-          decision = null,
-          reallocated = false,
-          submittedAt = completedAt,
-        )
-      } else {
-        `Given an Assessment for Approved Premises`(
-          allocatedToUser = allocatedUser,
-          createdByUser = createdByUser,
-          crn = crn,
-          decision = null,
-          reallocated = false,
-          submittedAt = null,
-        )
-      }
+    private fun createAssessment(
+      completedAt: OffsetDateTime?,
+      allocatedUser: UserEntity,
+      createdByUser: UserEntity,
+      crn: String,
+      isWithdrawn: Boolean = false,
+    ) {
+      `Given an Assessment for Approved Premises`(
+        allocatedToUser = allocatedUser,
+        createdByUser = createdByUser,
+        crn = crn,
+        decision = null,
+        reallocated = false,
+        submittedAt = completedAt,
+        isWithdrawn = isWithdrawn,
+      )
     }
 
-    private fun createPlacementRequest(completedAt: OffsetDateTime?, allocatedUser: UserEntity, createdByUser: UserEntity, crn: String) {
+    private fun createPlacementRequest(
+      completedAt: OffsetDateTime?,
+      allocatedUser: UserEntity,
+      createdByUser: UserEntity,
+      crn: String,
+      isWithdrawn: Boolean = false,
+    ) {
       val booking = if (completedAt != null) {
         val premises = approvedPremisesEntityFactory.produceAndPersist {
           withYieldedLocalAuthorityArea { localAuthorityEntityFactory.produceAndPersist() }
@@ -1847,10 +1860,17 @@ class TasksTest {
         createdByUser = createdByUser,
         crn = crn,
         booking = booking,
+        isWithdrawn = isWithdrawn,
       )
     }
 
-    private fun createPlacementApplication(completedAt: OffsetDateTime?, allocatedUser: UserEntity, createdByUser: UserEntity, crn: String) {
+    private fun createPlacementApplication(
+      completedAt: OffsetDateTime?,
+      allocatedUser: UserEntity,
+      createdByUser: UserEntity,
+      crn: String,
+      decision: PlacementApplicationDecision? = null,
+    ) {
       `Given a Placement Application`(
         createdByUser = createdByUser,
         allocatedToUser = allocatedUser,
@@ -1859,6 +1879,7 @@ class TasksTest {
         },
         submittedAt = completedAt,
         crn = crn,
+        decision = decision,
       )
     }
   }
