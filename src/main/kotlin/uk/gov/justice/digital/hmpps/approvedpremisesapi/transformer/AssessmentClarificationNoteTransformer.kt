@@ -22,5 +22,6 @@ class AssessmentClarificationNoteTransformer {
     type = TimelineEventType.approvedPremisesInformationRequest,
     occurredAt = jpa.createdAt.toInstant(),
     associatedUrls = emptyList(),
+    content = jpa.query,
   )
 }

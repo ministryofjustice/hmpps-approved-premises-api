@@ -2792,6 +2792,7 @@ class ApplicationTest : IntegrationTestBase() {
             it.id.toString(),
             it.createdAt.toInstant(),
             associatedUrls = emptyList(),
+            content = it.query,
           )
         }
 
