@@ -3422,6 +3422,28 @@ components:
         - offenceDescription
         - offenceId
         - convictionId
+    Offence:
+      type: object
+      properties:
+        code:
+          type: string
+        active:
+          type: boolean
+        main:
+          type: boolean
+        deliusEventNumber:
+          type: string
+          example: "7"
+        description:
+          type: string
+        offenceDate:
+          type: string
+          format: date
+      required:
+        - deliusEventNumber
+        - offenceDescription
+        - offenceId
+        - convictionId
     DocumentLevel:
       type: string
       description: The level at which a Document is associated - i.e. to the Offender or to a specific Conviction

@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.Convicti
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.GroupedDocuments
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.UserOffenderAccess
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.DeliusContextOffence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.NeedsDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.OffenceDetails
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.oasyscontext.RiskManagementPlan
@@ -38,6 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.CaseNot
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.prisonsapi.InmateDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.AuthorisableActionResult
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.asCaseSummary
 import java.io.OutputStream
 import java.time.LocalDate
@@ -474,6 +476,17 @@ class OffenderService(
 
     return AuthorisableActionResult.Success(convictions)
   }
+
+  fun getActiveOffences(crn: String): CasResult<List<DeliusContextOffence>> =
+    when (val caseDetailResult = apDeliusContextApiClient.getCaseDetail(crn)) {
+      is ClientResult.Success -> CasResult.Success(caseDetailResult.body.offences)
+      is ClientResult.Failure.StatusCode -> when (caseDetailResult.status) {
+        HttpStatus.NOT_FOUND -> CasResult.NotFound()
+        HttpStatus.FORBIDDEN -> CasResult.Unauthorised()
+        else -> caseDetailResult.throwException()
+      }
+      is ClientResult.Failure -> caseDetailResult.throwException()
+    }
 
   fun getDocuments(crn: String): AuthorisableActionResult<GroupedDocuments> {
     val documentsResult = communityApiClient.getDocuments(crn)

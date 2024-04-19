@@ -27,6 +27,13 @@ fun IntegrationTestBase.APDeliusContext_mockSuccessfulCaseDetailCall(crn: String
     responseBody = response,
   )
 
+fun IntegrationTestBase.ApDeliusContext_mockNotFoundCaseDetailCall(crn: String) {
+  mockUnsuccessfulGetCall(
+    url = "/probation-cases/$crn/details",
+    responseStatus = 404,
+  )
+}
+
 fun IntegrationTestBase.APDeliusContext_mockSuccessfulStaffDetailsCall(staffCode: String, staffUserDetails: StaffUserDetails) =
   mockSuccessfulGetCallWithJsonResponse(
     url = "/secure/staff/staffCode/$staffCode",

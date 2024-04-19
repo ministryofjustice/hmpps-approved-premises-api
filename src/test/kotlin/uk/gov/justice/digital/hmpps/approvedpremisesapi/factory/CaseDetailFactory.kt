@@ -20,7 +20,7 @@ import java.time.ZonedDateTime
 
 class CaseDetailFactory : Factory<CaseDetail> {
   var case: Yielded<CaseSummary> = { CaseSummaryFactory().produce() }
-  var offences: Yielded<List<DeliusContextOffence>> = { listOf(CaseDetailOffenceFactory().produce()) }
+  var offences: Yielded<List<DeliusContextOffence>> = { listOf(DeliusContextOffenceFactory().produce()) }
   var registrations: Yielded<List<Registration>> = { listOf(RegistrationFactory().produce()) }
   var mappaDetail: Yielded<MappaDetail> = { MappaDetailFactory().produce() }
 
@@ -30,6 +30,10 @@ class CaseDetailFactory : Factory<CaseDetail> {
 
   fun withRegistrations(registrations: List<Registration>) = apply {
     this.registrations = { registrations }
+  }
+
+  fun withOffences(offences: List<DeliusContextOffence>) = apply {
+    this.offences = { offences }
   }
 
   fun withMappaDetail(mappaDetail: MappaDetail) = apply {
@@ -44,7 +48,7 @@ class CaseDetailFactory : Factory<CaseDetail> {
   )
 }
 
-class CaseDetailOffenceFactory : Factory<DeliusContextOffence> {
+class DeliusContextOffenceFactory : Factory<DeliusContextOffence> {
   var description: Yielded<String> = { randomStringLowerCase(10) }
   var code: Yielded<String> = { randomStringLowerCase(10) }
   var date: Yielded<LocalDate> = { LocalDate.now() }

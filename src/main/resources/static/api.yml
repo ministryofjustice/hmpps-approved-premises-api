@@ -1455,6 +1455,7 @@ paths:
   /people/{crn}/offences:
     get:
       summary: Returns all active offences for a Person.
+      deprecated: Ideally v2 of this endpoint should be used, noting that certain fields are no longer returned
       parameters:
         - name: crn
           in: path
@@ -1471,6 +1472,37 @@ paths:
                 type: array
                 items:
                   $ref: '_shared.yml#/components/schemas/ActiveOffence'
+        401:
+          $ref: '_shared.yml#/components/responses/401Response'
+        403:
+          $ref: '_shared.yml#/components/responses/403Response'
+        404:
+          description: invalid CRN
+          content:
+            'application/json':
+              schema:
+                $ref: '_shared.yml#/components/schemas/Problem'
+        500:
+          $ref: '_shared.yml#/components/responses/500Response'
+  /people/{crn}/offences/v2:
+    get:
+      summary: Returns all active offences for a Person.
+      parameters:
+        - name: crn
+          in: path
+          description: CRN of the Person to fetch active offences for
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '_shared.yml#/components/schemas/Offence'
         401:
           $ref: '_shared.yml#/components/responses/401Response'
         403:

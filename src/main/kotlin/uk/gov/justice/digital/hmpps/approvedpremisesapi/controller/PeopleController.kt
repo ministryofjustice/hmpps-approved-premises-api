@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskOfSer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysRiskToSelf
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.OASysSections
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Offence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Person
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonAcctAlert
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PersonRisks
@@ -34,10 +35,12 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.AlertTransfo
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ConvictionTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NeedsDetailsTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OASysSectionsTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.OffenceTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonalTimelineTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PrisonCaseNoteTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.RisksTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 
 @Service
 class PeopleController(
@@ -54,6 +57,7 @@ class PeopleController(
   private val userService: UserService,
   private val applicationService: ApplicationService,
   private val personalTimelineTransformer: PersonalTimelineTransformer,
+  private val offenceTransformer: OffenceTransformer,
 ) : PeopleApiDelegate {
 
   override fun peopleSearchGet(crn: String): ResponseEntity<Person> {
@@ -232,6 +236,7 @@ class PeopleController(
     }
   }
 
+  @Deprecated("Ideally the V2 version of this API should be used")
   override fun peopleCrnOffencesGet(crn: String): ResponseEntity<List<ActiveOffence>> {
     ensureUserCanAccessOffenderInfo(crn)
 
@@ -240,6 +245,16 @@ class PeopleController(
 
     return ResponseEntity.ok(
       activeConvictions.flatMap(convictionTransformer::transformToApi),
+    )
+  }
+
+  override fun peopleCrnOffencesV2Get(crn: String): ResponseEntity<List<Offence>> {
+    ensureUserCanAccessOffenderInfo(crn)
+
+    val offences = extractEntityFromCasResult(offenderService.getActiveOffences(crn))
+
+    return ResponseEntity.ok(
+      offences.map(offenceTransformer::transformToApi),
     )
   }
 
