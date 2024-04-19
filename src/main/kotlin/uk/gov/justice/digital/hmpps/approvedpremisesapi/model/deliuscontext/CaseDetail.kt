@@ -5,7 +5,7 @@ import java.time.ZonedDateTime
 
 data class CaseDetail(
   val case: CaseSummary,
-  val offences: List<Offence>,
+  val offences: List<DeliusContextOffence>,
   val registrations: List<Registration>,
   val mappaDetail: MappaDetail?,
 )
@@ -52,11 +52,12 @@ data class Profile(
   val religion: String?,
 )
 
-data class Offence(
+data class DeliusContextOffence(
   val description: String,
   val date: LocalDate?,
   val main: Boolean,
   val eventNumber: String,
+  val code: String,
 )
 
 data class Registration(

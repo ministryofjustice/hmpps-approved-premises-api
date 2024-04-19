@@ -5,11 +5,11 @@ import io.github.bluegroundltd.kfactory.Yielded
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community.OffenderDetailSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.CaseSummary
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.DeliusContextOffence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Manager
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.MappaDetail
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Name
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Offence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Profile
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Registration
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.deliuscontext.Team
@@ -20,7 +20,7 @@ import java.time.ZonedDateTime
 
 class CaseDetailFactory : Factory<CaseDetail> {
   var case: Yielded<CaseSummary> = { CaseSummaryFactory().produce() }
-  var offences: Yielded<List<Offence>> = { listOf(CaseDetailOffenceFactory().produce()) }
+  var offences: Yielded<List<DeliusContextOffence>> = { listOf(CaseDetailOffenceFactory().produce()) }
   var registrations: Yielded<List<Registration>> = { listOf(RegistrationFactory().produce()) }
   var mappaDetail: Yielded<MappaDetail> = { MappaDetailFactory().produce() }
 
@@ -44,17 +44,19 @@ class CaseDetailFactory : Factory<CaseDetail> {
   )
 }
 
-class CaseDetailOffenceFactory : Factory<Offence> {
+class CaseDetailOffenceFactory : Factory<DeliusContextOffence> {
   var description: Yielded<String> = { randomStringLowerCase(10) }
+  var code: Yielded<String> = { randomStringLowerCase(10) }
   var date: Yielded<LocalDate> = { LocalDate.now() }
   var main: Yielded<Boolean> = { false }
   var eventNumber: Yielded<String> = { randomStringLowerCase(10) }
 
-  override fun produce(): Offence = Offence(
+  override fun produce(): DeliusContextOffence = DeliusContextOffence(
     description = this.description(),
     date = this.date(),
     main = this.main(),
     eventNumber = this.eventNumber(),
+    code = this.code(),
   )
 }
 
