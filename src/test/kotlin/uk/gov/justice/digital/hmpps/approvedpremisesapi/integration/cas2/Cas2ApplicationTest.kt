@@ -10,6 +10,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
@@ -23,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Licence Case Admin User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
@@ -74,12 +77,13 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
   @Nested
   inner class ControlsOnExternalUsers {
-    @Test
-    fun `creating an application is forbidden to external users based on role`() {
+    @ParameterizedTest
+    @ValueSource(strings = ["ROLE_LICENCE_CA", "ROLE_CAS2_ASSESSOR", "ROLE_CAS2_MI"])
+    fun `creating an application is forbidden to external users based on role`(role: String) {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_CAS2_ASSESSOR"),
+        roles = listOf(role),
       )
 
       webTestClient.post()
@@ -90,12 +94,13 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         .isForbidden
     }
 
-    @Test
-    fun `updating an application is forbidden to external users based on role`() {
+    @ParameterizedTest
+    @ValueSource(strings = ["ROLE_LICENCE_CA", "ROLE_CAS2_ASSESSOR", "ROLE_CAS2_MI"])
+    fun `updating an application is forbidden to external users based on role`(role: String) {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_CAS2_ASSESSOR"),
+        roles = listOf(role),
       )
 
       webTestClient.put()
@@ -616,6 +621,80 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isForbidden()
+        }
+      }
+    }
+
+    @Nested
+    inner class AsLicenceCaseAdminUser {
+      @Test
+      fun `Get all submitted applications using prisonCode returns 200 with correct body`() {
+        `Given a CAS2 Assessor` { assessor, _ ->
+          `Given a CAS2 Licence Case Admin User` { caseAdminPrisonA, jwt ->
+            `Given an Offender` { offenderDetails, _ ->
+              cas2ApplicationJsonSchemaRepository.deleteAll()
+
+              val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.now())
+                withId(UUID.randomUUID())
+              }
+
+              val pomUserPrisonA = nomisUserEntityFactory.produceAndPersist {
+                withActiveCaseloadId(caseAdminPrisonA.activeCaseloadId!!)
+              }
+
+              val userBPrisonAApplicationIds = mutableListOf<UUID>()
+
+              repeat(6) {
+                userBPrisonAApplicationIds.add(
+                  cas2ApplicationEntityFactory.produceAndPersist {
+                    withApplicationSchema(applicationSchema)
+                    withCreatedByUser(pomUserPrisonA)
+                    withCrn(offenderDetails.otherIds.crn)
+                    withData("{}")
+                    withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
+                    withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
+                    withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
+                  }.id,
+                )
+              }
+
+              val pomUserPrisonB = nomisUserEntityFactory.produceAndPersist {
+                withActiveCaseloadId("other_prison")
+              }
+
+              val otherPrisonApplication = cas2ApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(applicationSchema)
+                withCreatedByUser(pomUserPrisonB)
+                withCrn(offenderDetails.otherIds.crn)
+                withData("{}")
+                withCreatedAt(OffsetDateTime.now())
+                withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
+                withReferringPrisonCode("other_prison")
+              }
+
+              val rawResponseBody = webTestClient.get()
+                .uri("/cas2/applications?isSubmitted=true&prisonCode=${caseAdminPrisonA.activeCaseloadId}")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.cas2.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .returnResult<String>()
+                .responseBody
+                .blockFirst()
+
+              val responseBody =
+                objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+              val returnedApplicationIds = responseBody.map { it.id }.toSet()
+
+              Assertions.assertThat(returnedApplicationIds).isEqualTo(userBPrisonAApplicationIds.toSet())
+              Assertions.assertThat(returnedApplicationIds).noneMatch {
+                otherPrisonApplication.id == it
+              }
+            }
+          }
         }
       }
     }
