@@ -350,8 +350,10 @@ class PlacementRequestService(
 
     placementRequestRepository.save(placementRequest)
 
-    val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementRequest
-    updateApplicationStatusOnWithdrawal(placementRequest, isUserRequestedWithdrawal)
+    if (!withdrawalContext.triggeredBySeedJob) {
+      val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementRequest
+      updateApplicationStatusOnWithdrawal(placementRequest, isUserRequestedWithdrawal)
+    }
 
     cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest, withdrawalContext.triggeringUser)
     cas1PlacementRequestDomainEventService.placementRequestWithdrawn(placementRequest, withdrawalContext)
