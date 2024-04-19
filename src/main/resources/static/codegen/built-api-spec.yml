@@ -6485,6 +6485,8 @@ components:
             createdByUserId:
               type: string
               format: uuid
+            createdByUserName:
+              type: string
             status:
               $ref: '#/components/schemas/ApplicationStatus'
             latestStatusUpdate:

@@ -49,6 +49,7 @@ class ApplicationsTransformer(
         id = jpaSummary.getId(),
         person = personTransformer.transformModelToPersonApi(personInfo),
         createdByUserId = jpaSummary.getCreatedByUserId(),
+        createdByUserName = jpaSummary.getCreatedByUserName(),
         createdAt = jpaSummary.getCreatedAt().toInstant(),
         submittedAt = jpaSummary.getSubmittedAt()?.toInstant(),
         status = getStatusFromSummary(jpaSummary),

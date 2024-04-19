@@ -235,7 +235,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
                 firstApplicationEntity.createdAt.toInstant() == it.createdAt &&
                 firstApplicationEntity.createdByUser.id == it.createdByUserId &&
                 firstApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-                firstApplicationEntity.hdcEligibilityDate == it.hdcEligibilityDate
+                firstApplicationEntity.hdcEligibilityDate == it.hdcEligibilityDate &&
+                firstApplicationEntity.createdByUser.name == it.createdByUserName
             }
 
             Assertions.assertThat(responseBody).noneMatch {

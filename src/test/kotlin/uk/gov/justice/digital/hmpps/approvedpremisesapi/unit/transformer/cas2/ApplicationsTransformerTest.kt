@@ -155,6 +155,7 @@ class ApplicationsTransformerTest {
         override fun getCrn() = "CRNNUM"
         override fun getNomsNumber() = "NOMNUM"
         override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
+        override fun getCreatedByUserName() = "first last"
         override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
         override fun getSubmittedAt() = null
         override fun getHdcEligibilityDate() = null
@@ -182,6 +183,7 @@ class ApplicationsTransformerTest {
       assertThat(result.nomsNumber).isEqualTo(application.getNomsNumber())
       assertThat(result.hdcEligibilityDate).isNull()
       assertThat(result.latestStatusUpdate).isNull()
+      assertThat(result.createdByUserName).isEqualTo("first last")
     }
 
     @Test
@@ -191,6 +193,7 @@ class ApplicationsTransformerTest {
         override fun getCrn() = "CRNNUM"
         override fun getNomsNumber() = "NOMNUM"
         override fun getCreatedByUserId() = UUID.fromString("836a9460-b177-433a-a0d9-262509092c9f")
+        override fun getCreatedByUserName() = "first last"
         override fun getCreatedAt() = Timestamp(Instant.parse("2023-04-19T13:25:00+01:00").toEpochMilli())
         override fun getSubmittedAt() = Timestamp(Instant.parse("2023-04-19T13:25:30+01:00").toEpochMilli())
         override fun getHdcEligibilityDate() = LocalDate.parse("2023-04-29")
@@ -221,6 +224,7 @@ class ApplicationsTransformerTest {
       assertThat(result.nomsNumber).isEqualTo(application.getNomsNumber())
       assertThat(result.latestStatusUpdate?.label).isEqualTo("my latest status update")
       assertThat(result.latestStatusUpdate?.statusId).isEqualTo(UUID.fromString("ae544aee-7170-4794-99fb-703090cbc7db"))
+      assertThat(result.createdByUserName).isEqualTo("first last")
     }
   }
 }

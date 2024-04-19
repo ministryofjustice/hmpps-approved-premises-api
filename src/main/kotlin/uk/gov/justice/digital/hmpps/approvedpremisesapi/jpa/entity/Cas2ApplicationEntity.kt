@@ -36,6 +36,7 @@ const val UNSUBMITTED_APPLICATION_SUMMARY_FIELDS =
     CAST(a.id AS TEXT) as id,
     a.crn,
     CAST(a.created_by_user_id AS TEXT) as createdByUserId,
+    nu.name as createdByUserName,
     a.created_at as createdAt,
     a.submitted_at as submittedAt
   """
@@ -58,6 +59,7 @@ LEFT JOIN
     FROM cas_2_status_updates su
     ORDER BY su.application_id, su.created_at DESC) as asu
 ON a.id = asu.application_id
+JOIN nomis_users nu ON nu.id = a.created_by_user_id
 WHERE a.created_by_user_id = :userId
 ORDER BY createdAt DESC
 """,
@@ -83,6 +85,7 @@ FROM cas_2_applications a
         FROM cas_2_status_updates su
         ORDER BY su.application_id, su.created_at DESC) as asu
 ON a.id = asu.application_id
+JOIN nomis_users nu ON nu.id = a.created_by_user_id
 WHERE a.referring_prison_code = :prisonCode
 ORDER BY createdAt DESC
 """,
@@ -108,6 +111,7 @@ LEFT JOIN
     FROM cas_2_status_updates su
     ORDER BY su.application_id, su.created_at DESC) as asu
 ON a.id = asu.application_id
+JOIN nomis_users nu ON nu.id = a.created_by_user_id
 WHERE a.created_by_user_id = :userId
 AND a.submitted_at IS NOT NULL
 ORDER BY createdAt DESC
@@ -135,6 +139,7 @@ LEFT JOIN
     FROM cas_2_status_updates su
     ORDER BY su.application_id, su.created_at DESC) as asu
 ON a.id = asu.application_id
+JOIN nomis_users nu ON nu.id = a.created_by_user_id
 WHERE a.referring_prison_code = :prisonCode
 AND a.submitted_at IS NOT NULL
 ORDER BY createdAt DESC
@@ -156,6 +161,7 @@ ORDER BY createdAt DESC
 SELECT
     $UNSUBMITTED_APPLICATION_SUMMARY_FIELDS
 FROM cas_2_applications a
+JOIN nomis_users nu ON nu.id = a.created_by_user_id
 WHERE a.created_by_user_id = :userId
 AND a.submitted_at IS NULL
 ORDER BY createdAt DESC
@@ -170,6 +176,7 @@ ORDER BY createdAt DESC
 SELECT
     $UNSUBMITTED_APPLICATION_SUMMARY_FIELDS
 FROM cas_2_applications a
+JOIN nomis_users nu ON nu.id = a.created_by_user_id
 WHERE a.referring_prison_code = :prisonCode
 AND a.submitted_at IS NULL
 ORDER BY createdAt DESC
@@ -190,6 +197,7 @@ LEFT JOIN
     FROM cas_2_status_updates su
     ORDER BY su.application_id, su.created_at DESC) as asu
 ON a.id = asu.application_id
+JOIN nomis_users nu ON nu.id = a.created_by_user_id
 WHERE a.submitted_at IS NOT NULL
 """,
     countQuery =
@@ -276,6 +284,7 @@ interface AppSummary {
   fun getCrn(): String
   fun getNomsNumber(): String
   fun getCreatedByUserId(): UUID
+  fun getCreatedByUserName(): String
   fun getCreatedAt(): Timestamp
   fun getSubmittedAt(): Timestamp?
   fun getHdcEligibilityDate(): LocalDate?
