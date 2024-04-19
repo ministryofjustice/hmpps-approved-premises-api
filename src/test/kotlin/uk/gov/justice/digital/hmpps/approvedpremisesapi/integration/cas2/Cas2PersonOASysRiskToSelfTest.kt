@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.OffenceDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.RiskToTheIndividualFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulOffenceDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.APOASysContext_mockSuccessfulRiskToTheIndividualCall
@@ -60,7 +60,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
 
   @Test
   fun `Getting Risk To Self for a CRN that does not exist returns 404`() {
-    `Given a CAS2 User` { userEntity, jwt ->
+    `Given a CAS2 POM User` { userEntity, jwt ->
       val crn = "CRN123"
 
       CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
@@ -77,7 +77,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
 
   @Test
   fun `Getting Risk to Self for a CRN returns OK with correct body`() {
-    `Given a CAS2 User` { userEntity, jwt ->
+    `Given a CAS2 POM User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val offenceDetails = OffenceDetailsFactory().produce()
         APOASysContext_mockSuccessfulOffenceDetailsCall(offenderDetails.otherIds.crn, offenceDetails)
@@ -106,7 +106,7 @@ class Cas2PersonOASysRiskToSelfTest : IntegrationTestBase() {
 
   @Test
   fun `Getting Risk to Self when upstream times out returns 404`() {
-    `Given a CAS2 User` { userEntity, jwt ->
+    `Given a CAS2 POM User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val risksToTheIndividual = RiskToTheIndividualFactory().produce()
         APOASysContext_mockUnsuccessfulRisksToTheIndividualCallWithDelay(offenderDetails.otherIds.crn, risksToTheIndividual, 2500)

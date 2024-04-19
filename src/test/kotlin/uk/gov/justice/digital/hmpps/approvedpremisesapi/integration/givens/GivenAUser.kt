@@ -102,7 +102,7 @@ fun IntegrationTestBase.`Given a User`(
   return block(user, jwt)
 }
 
-fun IntegrationTestBase.`Given a CAS2 User`(
+fun IntegrationTestBase.`Given a CAS2 POM User`(
   id: UUID = UUID.randomUUID(),
   nomisUserDetailsConfigBlock: (NomisUserDetailFactory.() -> Unit)? = null,
   block: (nomisUserEntity: NomisUserEntity, jwt: String) -> Unit,
