@@ -4404,6 +4404,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PlacementDates'
+        status:
+          $ref: '#/components/schemas/RequestForPlacementStatus'
       required:
         - id
         - createdByUserId
@@ -4411,11 +4413,22 @@ components:
         - isWithdrawn
         - type
         - placementDates
+        - status
     RequestForPlacementType:
       type: string
       enum:
         - manual
         - automatic
+    RequestForPlacementStatus:
+      type: string
+      enum:
+        - request_rejected
+        - request_submitted
+        - awaiting_match
+        - request_withdrawn
+        - placement_booked
+        - person_not_arrived
+        - person_departed
     PlacementRequest:
       allOf:
         - $ref: '#/components/schemas/PlacementRequirements'
