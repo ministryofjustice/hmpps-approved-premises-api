@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas3
 
 import io.gatling.javaapi.core.CoreDsl
 import io.gatling.javaapi.http.HttpDsl

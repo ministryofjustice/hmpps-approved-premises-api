@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.simulations
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.simulations.cas3
 
 import io.gatling.javaapi.core.CoreDsl.constantUsersPerSec
 import io.gatling.javaapi.core.CoreDsl.exec
@@ -9,14 +9,14 @@ import io.gatling.javaapi.core.Simulation
 import io.gatling.javaapi.http.HttpDsl.http
 import io.gatling.javaapi.http.HttpDsl.status
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.createTemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.createTemporaryAccommodationBooking
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.createTemporaryAccommodationPremises
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.createTemporaryAccommodationRoom
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.getProbationDeliveryUnit
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.getUserProbationRegion
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.submitTemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.updateTemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas3.createTemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas3.createTemporaryAccommodationBooking
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas3.createTemporaryAccommodationPremises
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas3.createTemporaryAccommodationRoom
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas3.getProbationDeliveryUnit
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas3.getUserProbationRegion
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas3.submitTemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas3.updateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.authorizeUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.getUUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.withAuthorizedUserHttpProtocol
@@ -106,7 +106,7 @@ class BookingsTimeSimulation : Simulation() {
 
   private val setupBooking = scenario("Setup booking")
     .exec(
-      authorizeUser(),
+      authorizeUser("cas3"),
       createArrivalDate,
       getUserProbationRegion,
       getProbationDeliveryUnit,
@@ -139,13 +139,13 @@ class BookingsTimeSimulation : Simulation() {
 
   private val bookingsSearchJourney = scenario("Bookings search journey")
     .exec(
-      authorizeUser(),
+      authorizeUser("cas3"),
       bookingSearch,
     )
 
   private val bookingsReportDownloadJourney = scenario("Bookings report journey")
     .exec(
-      authorizeUser(),
+      authorizeUser("cas3"),
       createReportDate,
       getUserProbationRegion,
       downloadBookingsReport,

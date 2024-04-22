@@ -21,8 +21,8 @@ To run a specific test define the FQN of the simulation:
 This requires some configuration, which can be done through environment variables:
 ```shell
 GATLING_BASE_URL="https://approved-premises-api-{env}.hmpps.service.justice.gov.uk" \
-GATLING_USERNAME="{your username}" \
-GATLING_PASSWORD="{your password}" \
+GATLING_CAS3_USERNAME="{your username}" \
+GATLING_CAS3_PASSWORD="{your password}" \
 GATLING_HMPPS_AUTH_BASE_URL="https://sign-in-{env}.hmpps.service.justice.gov.uk" \
 ./gradlew gatlingRun
 ```

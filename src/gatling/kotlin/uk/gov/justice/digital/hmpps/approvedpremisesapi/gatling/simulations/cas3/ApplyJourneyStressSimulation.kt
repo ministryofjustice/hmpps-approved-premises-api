@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.simulations
+package uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.simulations.cas3
 
 import io.gatling.javaapi.core.CoreDsl
 import io.gatling.javaapi.core.CoreDsl.constantUsersPerSec
@@ -7,9 +7,9 @@ import io.gatling.javaapi.core.CoreDsl.scenario
 import io.gatling.javaapi.core.CoreDsl.stressPeakUsers
 import io.gatling.javaapi.core.Session
 import io.gatling.javaapi.core.Simulation
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.createTemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.submitTemporaryAccommodationApplication
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.updateTemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas3.createTemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas3.submitTemporaryAccommodationApplication
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas3.updateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.authorizeUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.getUUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.withAuthorizedUserHttpProtocol
@@ -43,7 +43,7 @@ class ApplyJourneyStressSimulation : Simulation() {
 
   private val temporaryAccommodationApplyJourney = scenario("Apply journey for Temporary Accommodation")
     .exec(
-      authorizeUser(),
+      authorizeUser("cas3"),
       createTemporaryAccommodationApplication,
       updateTemporaryAccommodationApplication,
       submitTemporaryAccommodationApplication,
