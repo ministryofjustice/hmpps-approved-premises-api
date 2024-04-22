@@ -330,7 +330,7 @@ class ApprovedPremisesApplicationEntity(
   var isWithdrawn: Boolean,
   var withdrawalReason: String?,
   var otherWithdrawalReason: String?,
-  val convictionId: Long,
+  val convictionId: Long?,
   val eventNumber: String,
   val offenceId: String,
   nomsNumber: String?,
