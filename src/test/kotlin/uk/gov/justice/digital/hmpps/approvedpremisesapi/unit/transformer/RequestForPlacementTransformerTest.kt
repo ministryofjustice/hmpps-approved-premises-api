@@ -9,13 +9,17 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequestEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementRequirementsEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementDateEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -87,6 +91,129 @@ class RequestForPlacementTransformerTest {
 
       verify(exactly = 1) { objectMapper.readTree(placementApplication.document) }
     }
+
+    @Test
+    fun `Derives the correct status for a withdrawn placement application`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .withDecisionMadeAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .withDecision(PlacementApplicationDecision.WITHDRAW)
+        .withWithdrawalReason(randomOf(PlacementApplicationWithdrawalReason.entries))
+        .produce()
+
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication)
+
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
+    }
+
+    @Test
+    fun `Derives the correct status for a placement application with a booking`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .withDecisionMadeAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .withDecision(PlacementApplicationDecision.ACCEPTED)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .produce()
+
+      val placementRequirements = PlacementRequirementsEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withPlacementRequirements(placementRequirements)
+        .produce()
+        .apply {
+          application.placementRequests = mutableListOf(this)
+        }
+
+      val premises = ApprovedPremisesEntityFactory()
+        .withDefaults()
+        .produce()
+
+      BookingEntityFactory()
+        .withApplication(application)
+        .withPlacementRequest(placementRequest)
+        .withPremises(premises)
+        .produce()
+        .apply {
+          placementRequest.booking = this
+        }
+
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication)
+
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.placementBooked)
+    }
+
+    @Test
+    fun `Derives the correct status for a rejected placement application`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .withDecisionMadeAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .withDecision(PlacementApplicationDecision.REJECTED)
+        .produce()
+
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication)
+
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestRejected)
+    }
+
+    @Test
+    fun `Derives the correct status for a submitted placement application`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .produce()
+
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication)
+
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
+    }
+
+    @Test
+    fun `Derives the correct status for an unsubmitted placement application`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .produce()
+
+      val result = requestForPlacementTransformer.transformPlacementApplicationEntityToApi(placementApplication)
+
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
+    }
   }
 
   @Nested
@@ -128,6 +255,178 @@ class RequestForPlacementTransformerTest {
       assertThat(result.requestReviewedAt).isEqualTo(placementRequest.assessment.submittedAt?.toInstant())
       assertThat(result.document).isNull()
       assertThat(result.withdrawalReason).isEqualTo(placementRequest.withdrawalReason?.apiValue)
+    }
+
+    @Test
+    fun `Derives the correct status for a withdrawn placement request`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .produce()
+
+      val placementRequirements = PlacementRequirementsEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withPlacementRequirements(placementRequirements)
+        .withIsWithdrawn(true)
+        .withWithdrawalReason(randomOf(PlacementRequestWithdrawalReason.entries))
+        .produce()
+
+      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest)
+
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestWithdrawn)
+    }
+
+    @Test
+    fun `Derives the correct status for a placement request with a booking`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .produce()
+
+      val placementRequirements = PlacementRequirementsEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withPlacementRequirements(placementRequirements)
+        .produce()
+
+      val premises = ApprovedPremisesEntityFactory()
+        .withDefaults()
+        .produce()
+
+      BookingEntityFactory()
+        .withApplication(application)
+        .withPlacementRequest(placementRequest)
+        .withPremises(premises)
+        .produce()
+        .apply {
+          placementRequest.booking = this
+        }
+
+      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest)
+
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.placementBooked)
+    }
+
+    @Test
+    fun `Derives the correct status for a rejected placement request`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .withDecisionMadeAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .withDecision(PlacementApplicationDecision.REJECTED)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .produce()
+
+      val placementRequirements = PlacementRequirementsEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withPlacementRequirements(placementRequirements)
+        .withPlacementApplication(placementApplication)
+        .produce()
+
+      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest)
+
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestRejected)
+    }
+
+    @Test
+    fun `Derives the correct status for a submitted placement request`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .produce()
+
+      val placementRequirements = PlacementRequirementsEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withPlacementRequirements(placementRequirements)
+        .withPlacementApplication(placementApplication)
+        .produce()
+
+      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest)
+
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.requestSubmitted)
+    }
+
+    @Test
+    fun `Derives the correct status for an unsubmitted placement request`() {
+      val application = ApprovedPremisesApplicationEntityFactory()
+        .withCreatedByUser(user)
+        .produce()
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withDefaults()
+        .withApplication(application)
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(application)
+        .withSubmittedAt(OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS))
+        .produce()
+
+      val placementRequirements = PlacementRequirementsEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .produce()
+
+      val placementRequest = PlacementRequestEntityFactory()
+        .withApplication(application)
+        .withAssessment(assessment)
+        .withPlacementRequirements(placementRequirements)
+        .withPlacementApplication(placementApplication)
+        .produce()
+
+      val result = requestForPlacementTransformer.transformPlacementRequestEntityToApi(placementRequest)
+
+      assertThat(result.status).isEqualTo(RequestForPlacementStatus.awaitingMatch)
     }
   }
 }
