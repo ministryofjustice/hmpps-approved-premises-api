@@ -242,7 +242,8 @@ class DomainEventService(
   fun getAllDomainEventsForApplication(applicationId: UUID) =
     domainEventRepository.findAllTimelineEventsByApplicationId(applicationId).distinctBy { it.id }
 
-  private fun saveAndEmit(
+  @Transactional
+  fun saveAndEmit(
     domainEvent: DomainEvent<*>,
     detailUrl: String,
     crn: String,

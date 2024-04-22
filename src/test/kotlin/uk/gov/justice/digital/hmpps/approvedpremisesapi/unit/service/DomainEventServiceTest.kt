@@ -146,6 +146,149 @@ class DomainEventServiceTest {
     )
   }
 
+  @ParameterizedTest
+  @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+  fun `saveAndEmit persists event and emits event to SNS`(domainEventType: DomainEventType) {
+    val id = UUID.randomUUID()
+    val applicationId = UUID.randomUUID()
+    val bookingId = UUID.randomUUID()
+    val crn = "CRN"
+    val occurredAt = Instant.now()
+    val data = createDomainEventOfType(domainEventType)
+    val detailUrl = "http://localhost"
+    val nomsNumber = "123"
+
+    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = occurredAt,
+      data = data,
+    )
+
+    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
+
+    domainEventService.saveAndEmit(domainEventToSave, detailUrl, crn, nomsNumber, bookingId, true)
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == domainEventType &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
+        },
+      )
+    }
+
+    verify(exactly = 1) {
+      domainEventWorkerMock.emitEvent(
+        match {
+          it.eventType == domainEventType.typeName &&
+            it.version == 1 &&
+            it.description == domainEventType.typeDescription &&
+            it.detailUrl == detailUrl &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.additionalInformation.applicationId == applicationId &&
+            it.personReference.identifiers.any { it.type == "CRN" && it.value == crn } &&
+            it.personReference.identifiers.any { it.type == "NOMS" && it.value == nomsNumber }
+        },
+        domainEventToSave.id,
+      )
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+  fun `saveAndEmit persists event and does not emit event if emit is false`(domainEventType: DomainEventType) {
+    val id = UUID.randomUUID()
+    val applicationId = UUID.randomUUID()
+    val bookingId = UUID.randomUUID()
+    val crn = "CRN"
+    val occurredAt = Instant.now()
+    val data = createDomainEventOfType(domainEventType)
+    val detailUrl = "http://localhost"
+    val nomsNumber = "123"
+
+    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = occurredAt,
+      data = data,
+    )
+
+    domainEventService.saveAndEmit(domainEventToSave, detailUrl, crn, nomsNumber, bookingId, false)
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == domainEventType &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
+        },
+      )
+    }
+
+    verify(exactly = 0) {
+      domainEventWorkerMock.emitEvent(any(), any())
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+  fun `saveAndEmit does not emit event to SNS if event fails to persist to database`(domainEventType: DomainEventType) {
+    val id = UUID.randomUUID()
+    val applicationId = UUID.randomUUID()
+    val bookingId = UUID.randomUUID()
+    val crn = "CRN"
+    val occurredAt = Instant.now()
+    val data = createDomainEventOfType(domainEventType)
+    val detailUrl = "http://localhost"
+    val nomsNumber = "123"
+
+    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
+
+    val domainEventToSave = DomainEvent(
+      id = id,
+      applicationId = applicationId,
+      crn = crn,
+      occurredAt = occurredAt,
+      data = data,
+    )
+
+    try {
+      domainEventService.saveAndEmit(domainEventToSave, detailUrl, crn, nomsNumber, bookingId, true)
+    } catch (_: Exception) {
+    }
+
+    verify(exactly = 1) {
+      domainEventRespositoryMock.save(
+        match {
+          it.id == domainEventToSave.id &&
+            it.type == domainEventType &&
+            it.crn == domainEventToSave.crn &&
+            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+            it.triggeredByUserId == user.id
+        },
+      )
+    }
+
+    verify(exactly = 0) {
+      domainEventWorkerMock.emitEvent(any(), any())
+    }
+  }
+
   private fun fetchGetterForType(type: DomainEventType): (UUID) -> DomainEvent<out Any>? {
     return mapOf(
       DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED to domainEventService::getApplicationSubmittedDomainEvent,
