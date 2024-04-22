@@ -207,7 +207,7 @@ jobs:
       - store_artifacts:
           path: build/reports/tests
   integration_test:
-    parallelism: 6
+    parallelism: 7
     environment:
       _JAVA_OPTIONS: "-Xmx1g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
