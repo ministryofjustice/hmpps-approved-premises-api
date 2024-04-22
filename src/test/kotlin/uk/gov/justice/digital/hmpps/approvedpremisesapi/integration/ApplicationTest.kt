@@ -160,31 +160,34 @@ class ApplicationTest : IntegrationTestBase() {
     clearMocks(realApplicationRepository)
   }
 
-  @Test
-  fun `Get all applications without JWT returns 401`() {
-    webTestClient.get()
-      .uri("/applications")
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
+  @Nested
+  inner class GetAllApplications {
 
-  @Test
-  fun `Get all applications returns 200 - when user has no roles returns applications managed by their teams`() {
-    `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-      },
-    ) { userEntity, jwt ->
-      `Given a User` { otherUser, _ ->
-        `Given an Offender` { offenderDetails, _ ->
-          `Given an Offender` { otherOffenderDetails, _ ->
-            approvedPremisesApplicationJsonSchemaRepository.deleteAll()
+    @Test
+    fun `Get all applications without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/applications")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
 
-            val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-              withSchema(
-                """
+    @Test
+    fun `Get all applications returns 200 - when user has no roles returns applications managed by their teams`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
+        },
+      ) { userEntity, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            `Given an Offender` { otherOffenderDetails, _ ->
+              approvedPremisesApplicationJsonSchemaRepository.deleteAll()
+
+              val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+                withSchema(
+                  """
           {
             "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
             "${"\$id"}": "https://example.com/product.schema.json",
@@ -200,13 +203,13 @@ class ApplicationTest : IntegrationTestBase() {
             "required": [ "thingId" ]
           }
           """,
-              )
-            }
+                )
+              }
 
-            val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
-              withSchema(
-                """
+              val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
+                withSchema(
+                  """
               {
                 "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
                 "${"\$id"}": "https://example.com/product.schema.json",
@@ -216,499 +219,342 @@ class ApplicationTest : IntegrationTestBase() {
                 "properties": { }
               }
             """,
-              )
-            }
+                )
+              }
 
-            val upToDateApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(newestJsonSchema)
-              withCrn(offenderDetails.otherIds.crn)
-              withCreatedByUser(userEntity)
-              withData(
-                """
+              val upToDateApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(newestJsonSchema)
+                withCrn(offenderDetails.otherIds.crn)
+                withCreatedByUser(userEntity)
+                withData(
+                  """
                 {
                    "thingId": 123
                 }
               """,
-              )
-            }
+                )
+              }
 
-            upToDateApplicationEntityManagedByTeam.teamCodes += applicationTeamCodeRepository.save(
-              ApplicationTeamCodeEntity(
-                id = UUID.randomUUID(),
-                application = upToDateApplicationEntityManagedByTeam,
-                teamCode = "TEAM1",
-              ),
-            )
-
-            val outdatedApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(olderJsonSchema)
-              withCreatedByUser(userEntity)
-              withCrn(offenderDetails.otherIds.crn)
-              withData("{}")
-            }
-
-            outdatedApplicationEntityManagedByTeam.teamCodes += applicationTeamCodeRepository.save(
-              ApplicationTeamCodeEntity(
-                id = UUID.randomUUID(),
-                application = outdatedApplicationEntityManagedByTeam,
-                teamCode = "TEAM1",
-              ),
-            )
-
-            val outdatedApplicationEntityNotManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
-              withApplicationSchema(olderJsonSchema)
-              withCreatedByUser(otherUser)
-              withCrn(otherOffenderDetails.otherIds.crn)
-              withData("{}")
-            }
-
-            CommunityAPI_mockOffenderUserAccessCall(
-              userEntity.deliusUsername,
-              offenderDetails.otherIds.crn,
-              inclusion = false,
-              exclusion = false,
-            )
-
-            val rawResponseBody = webTestClient.get()
-              .uri("/applications")
-              .header("Authorization", "Bearer $jwt")
-              .exchange()
-              .expectStatus()
-              .isOk
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val responseBody =
-              objectMapper.readValue(
-                rawResponseBody,
-                object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
+              upToDateApplicationEntityManagedByTeam.teamCodes += applicationTeamCodeRepository.save(
+                ApplicationTeamCodeEntity(
+                  id = UUID.randomUUID(),
+                  application = upToDateApplicationEntityManagedByTeam,
+                  teamCode = "TEAM1",
+                ),
               )
 
-            assertThat(responseBody).anyMatch {
-              outdatedApplicationEntityManagedByTeam.id == it.id &&
-                outdatedApplicationEntityManagedByTeam.crn == it.person.crn &&
-                outdatedApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
-                outdatedApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
-                outdatedApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt
-            }
+              val outdatedApplicationEntityManagedByTeam = approvedPremisesApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(olderJsonSchema)
+                withCreatedByUser(userEntity)
+                withCrn(offenderDetails.otherIds.crn)
+                withData("{}")
+              }
 
-            assertThat(responseBody).anyMatch {
-              upToDateApplicationEntityManagedByTeam.id == it.id &&
-                upToDateApplicationEntityManagedByTeam.crn == it.person.crn &&
-                upToDateApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
-                upToDateApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
-                upToDateApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt
-            }
+              outdatedApplicationEntityManagedByTeam.teamCodes += applicationTeamCodeRepository.save(
+                ApplicationTeamCodeEntity(
+                  id = UUID.randomUUID(),
+                  application = outdatedApplicationEntityManagedByTeam,
+                  teamCode = "TEAM1",
+                ),
+              )
 
-            assertThat(responseBody).noneMatch {
-              outdatedApplicationEntityNotManagedByTeam.id == it.id
-            }
-          }
-        }
-      }
-    }
-  }
+              val outdatedApplicationEntityNotManagedByTeam =
+                approvedPremisesApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(olderJsonSchema)
+                  withCreatedByUser(otherUser)
+                  withCrn(otherOffenderDetails.otherIds.crn)
+                  withData("{}")
+                }
 
-  @Test
-  fun `Get all applications returns 200 - when user is CAS3_ASSESSOR then returns submitted applications in region`() {
-    `Given a Probation Region` { probationRegion ->
-      `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR), probationRegion = probationRegion) { assessorUser, jwt ->
-          `Given an Offender` { offenderDetails, _ ->
-            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+              CommunityAPI_mockOffenderUserAccessCall(
+                userEntity.deliusUsername,
+                offenderDetails.otherIds.crn,
+                inclusion = false,
+                exclusion = false,
+              )
 
-            val applicationSchema = createApplicationSchema()
+              val rawResponseBody = webTestClient.get()
+                .uri("/applications")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isOk
+                .returnResult<String>()
+                .responseBody
+                .blockFirst()
 
-            val dateTime = OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00")
-            val application =
-              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, dateTime)
+              val responseBody =
+                objectMapper.readValue(
+                  rawResponseBody,
+                  object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
+                )
 
-            val notSubmittedApplication =
-              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
+              assertThat(responseBody).anyMatch {
+                outdatedApplicationEntityManagedByTeam.id == it.id &&
+                  outdatedApplicationEntityManagedByTeam.crn == it.person.crn &&
+                  outdatedApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
+                  outdatedApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
+                  outdatedApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt
+              }
 
-            val otherProbationRegion = probationRegionEntityFactory.produceAndPersist {
-              withYieldedApArea {
-                apAreaEntityFactory.produceAndPersist()
+              assertThat(responseBody).anyMatch {
+                upToDateApplicationEntityManagedByTeam.id == it.id &&
+                  upToDateApplicationEntityManagedByTeam.crn == it.person.crn &&
+                  upToDateApplicationEntityManagedByTeam.createdAt.toInstant() == it.createdAt &&
+                  upToDateApplicationEntityManagedByTeam.createdByUser.id == it.createdByUserId &&
+                  upToDateApplicationEntityManagedByTeam.submittedAt?.toInstant() == it.submittedAt
+              }
+
+              assertThat(responseBody).noneMatch {
+                outdatedApplicationEntityNotManagedByTeam.id == it.id
               }
             }
+          }
+        }
+      }
+    }
 
-            val notInRegionApplication =
-              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, otherProbationRegion, dateTime)
+    @Test
+    fun `Get all applications returns 200 - when user is CAS3_ASSESSOR then returns submitted applications in region`() {
+      `Given a Probation Region` { probationRegion ->
+        `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
+          `Given a User`(
+            roles = listOf(UserRole.CAS3_ASSESSOR),
+            probationRegion = probationRegion
+          ) { assessorUser, jwt ->
+            `Given an Offender` { offenderDetails, _ ->
+              temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-            CommunityAPI_mockOffenderUserAccessCall(
-              assessorUser.deliusUsername,
-              offenderDetails.otherIds.crn,
-              inclusion = false,
-              exclusion = false,
-            )
+              val applicationSchema = createApplicationSchema()
 
-            val rawResponseBody = webTestClient.get()
-              .uri("/applications")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-              .exchange()
-              .expectStatus()
-              .isOk
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
+              val dateTime = OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00")
+              val application =
+                createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, dateTime)
 
-            val responseBody =
-              objectMapper.readValue(
-                rawResponseBody,
-                object : TypeReference<List<TemporaryAccommodationApplicationSummary>>() {},
+              val notSubmittedApplication =
+                createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
+
+              val otherProbationRegion = probationRegionEntityFactory.produceAndPersist {
+                withYieldedApArea {
+                  apAreaEntityFactory.produceAndPersist()
+                }
+              }
+
+              val notInRegionApplication =
+                createTempApplicationEntity(
+                  applicationSchema,
+                  otherUser,
+                  offenderDetails,
+                  otherProbationRegion,
+                  dateTime
+                )
+
+              CommunityAPI_mockOffenderUserAccessCall(
+                assessorUser.deliusUsername,
+                offenderDetails.otherIds.crn,
+                inclusion = false,
+                exclusion = false,
               )
 
-            assertThat(responseBody).anyMatch {
-              application.id == it.id && application.crn == it.person.crn &&
-                application.createdAt.toInstant() == it.createdAt &&
-                application.createdByUser.id == it.createdByUserId &&
-                application.submittedAt?.toInstant() == it.submittedAt
-            }
+              val rawResponseBody = webTestClient.get()
+                .uri("/applications")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .returnResult<String>()
+                .responseBody
+                .blockFirst()
 
-            assertThat(responseBody).noneMatch {
-              notInRegionApplication.id == it.id
-            }
+              val responseBody =
+                objectMapper.readValue(
+                  rawResponseBody,
+                  object : TypeReference<List<TemporaryAccommodationApplicationSummary>>() {},
+                )
 
-            assertThat(responseBody).noneMatch {
-              notSubmittedApplication.id == it.id
+              assertThat(responseBody).anyMatch {
+                application.id == it.id && application.crn == it.person.crn &&
+                  application.createdAt.toInstant() == it.createdAt &&
+                  application.createdByUser.id == it.createdByUserId &&
+                  application.submittedAt?.toInstant() == it.submittedAt
+              }
+
+              assertThat(responseBody).noneMatch {
+                notInRegionApplication.id == it.id
+              }
+
+              assertThat(responseBody).noneMatch {
+                notSubmittedApplication.id == it.id
+              }
             }
           }
         }
       }
     }
-  }
 
-  private fun createTempApplicationEntity(
-    applicationSchema: TemporaryAccommodationApplicationJsonSchemaEntity,
-    user: UserEntity,
-    offenderDetails: OffenderDetailSummary,
-    probationRegion: ProbationRegionEntity,
-    submittedAt: OffsetDateTime?,
-  ): TemporaryAccommodationApplicationEntity {
-    return temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-      withApplicationSchema(applicationSchema)
-      withCreatedByUser(user)
-      withSubmittedAt(submittedAt)
-      withCrn(offenderDetails.otherIds.crn)
-      withData("{}")
-      withProbationRegion(probationRegion)
+    private fun createTempApplicationEntity(
+      applicationSchema: TemporaryAccommodationApplicationJsonSchemaEntity,
+      user: UserEntity,
+      offenderDetails: OffenderDetailSummary,
+      probationRegion: ProbationRegionEntity,
+      submittedAt: OffsetDateTime?,
+    ): TemporaryAccommodationApplicationEntity {
+      return temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+        withApplicationSchema(applicationSchema)
+        withCreatedByUser(user)
+        withSubmittedAt(submittedAt)
+        withCrn(offenderDetails.otherIds.crn)
+        withData("{}")
+        withProbationRegion(probationRegion)
+      }
     }
-  }
 
-  private fun createApplicationSchema(): TemporaryAccommodationApplicationJsonSchemaEntity {
-    return temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-      withAddedAt(OffsetDateTime.now())
-      withId(UUID.randomUUID())
+    private fun createApplicationSchema(): TemporaryAccommodationApplicationJsonSchemaEntity {
+      return temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+        withAddedAt(OffsetDateTime.now())
+        withId(UUID.randomUUID())
+      }
     }
-  }
 
-  @Test
-  fun `Get all applications returns 200 for TA - when user is CAS3_REFERRER then returns all applications for user`() {
-    `Given a Probation Region` { probationRegion ->
-      `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
-        `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { referrerUser, jwt ->
-          `Given an Offender` { offenderDetails, _ ->
-            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+    @Test
+    fun `Get all applications returns 200 for TA - when user is CAS3_REFERRER then returns all applications for user`() {
+      `Given a Probation Region` { probationRegion ->
+        `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
+          `Given a User`(
+            roles = listOf(UserRole.CAS3_REFERRER),
+            probationRegion = probationRegion
+          ) { referrerUser, jwt ->
+            `Given an Offender` { offenderDetails, _ ->
+              temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-              withAddedAt(OffsetDateTime.now())
-              withId(UUID.randomUUID())
-            }
+              val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.now())
+                withId(UUID.randomUUID())
+              }
 
-            val application =
-              createTempApplicationEntity(applicationSchema, referrerUser, offenderDetails, probationRegion, null)
+              val application =
+                createTempApplicationEntity(applicationSchema, referrerUser, offenderDetails, probationRegion, null)
 
-            val anotherUsersApplication =
-              createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
+              val anotherUsersApplication =
+                createTempApplicationEntity(applicationSchema, otherUser, offenderDetails, probationRegion, null)
 
-            CommunityAPI_mockOffenderUserAccessCall(
-              referrerUser.deliusUsername,
-              offenderDetails.otherIds.crn,
-              inclusion = false,
-              exclusion = false,
-            )
-
-            val rawResponseBody = webTestClient.get()
-              .uri("/applications")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-              .exchange()
-              .expectStatus()
-              .isOk
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            val responseBody =
-              objectMapper.readValue(
-                rawResponseBody,
-                object : TypeReference<List<TemporaryAccommodationApplicationSummary>>() {},
+              CommunityAPI_mockOffenderUserAccessCall(
+                referrerUser.deliusUsername,
+                offenderDetails.otherIds.crn,
+                inclusion = false,
+                exclusion = false,
               )
 
-            assertThat(responseBody).anyMatch {
-              application.id == it.id &&
-                application.crn == it.person.crn &&
-                application.createdAt.toInstant() == it.createdAt &&
-                application.createdByUser.id == it.createdByUserId &&
-                application.submittedAt?.toInstant() == it.submittedAt
-            }
+              val rawResponseBody = webTestClient.get()
+                .uri("/applications")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .returnResult<String>()
+                .responseBody
+                .blockFirst()
 
-            assertThat(responseBody).noneMatch {
-              anotherUsersApplication.id == it.id
+              val responseBody =
+                objectMapper.readValue(
+                  rawResponseBody,
+                  object : TypeReference<List<TemporaryAccommodationApplicationSummary>>() {},
+                )
+
+              assertThat(responseBody).anyMatch {
+                application.id == it.id &&
+                  application.crn == it.person.crn &&
+                  application.createdAt.toInstant() == it.createdAt &&
+                  application.createdByUser.id == it.createdByUserId &&
+                  application.submittedAt?.toInstant() == it.submittedAt
+              }
+
+              assertThat(responseBody).noneMatch {
+                anotherUsersApplication.id == it.id
+              }
             }
           }
         }
       }
     }
-  }
 
-  @Test
-  fun `Get list of applications returns limited information when a person cannot be found`() {
-    `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-      },
-    ) { userEntity, jwt ->
-      val crn = "X1234"
+    @Test
+    fun `Get all applications returns limited information when a person cannot be found`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
+        },
+      ) { userEntity, jwt ->
+        val crn = "X1234"
 
-      val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
-      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-      loadPreemptiveCacheForOffenderDetails(crn)
+        val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+        CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+        loadPreemptiveCacheForOffenderDetails(crn)
 
-      CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, crn, inclusion = false, exclusion = false)
+        CommunityAPI_mockOffenderUserAccessCall(userEntity.deliusUsername, crn, inclusion = false, exclusion = false)
 
-      ApDeliusContext_mockUserAccess(
-        CaseAccessFactory()
-          .withCrn(crn)
-          .produce(),
-        userEntity.deliusUsername,
-      )
+        ApDeliusContext_mockUserAccess(
+          CaseAccessFactory()
+            .withCrn(crn)
+            .produce(),
+          userEntity.deliusUsername,
+        )
 
-      webTestClient.get()
-        .uri("/applications")
-        .header("Authorization", "Bearer $jwt")
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectBody()
-        .json(
-          objectMapper.writeValueAsString(
-            listOf(
-              ApprovedPremisesApplicationSummary(
-                createdByUserId = userEntity.id,
-                status = ApiApprovedPremisesApplicationStatus.started,
-                type = "CAS1",
-                id = application.id,
-                person = UnknownPerson(
-                  crn = crn,
-                  type = PersonType.unknownPerson,
+        webTestClient.get()
+          .uri("/applications")
+          .header("Authorization", "Bearer $jwt")
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .json(
+            objectMapper.writeValueAsString(
+              listOf(
+                ApprovedPremisesApplicationSummary(
+                  createdByUserId = userEntity.id,
+                  status = ApiApprovedPremisesApplicationStatus.started,
+                  type = "CAS1",
+                  id = application.id,
+                  person = UnknownPerson(
+                    crn = crn,
+                    type = PersonType.unknownPerson,
+                  ),
+                  createdAt = application.createdAt.toInstant(),
+                  isWomensApplication = null,
+                  isPipeApplication = false,
+                  isEmergencyApplication = null,
+                  isEsapApplication = null,
+                  arrivalDate = null,
+                  risks = PersonRisks(
+                    crn = crn,
+                    roshRisks = RoshRisksEnvelope(RiskEnvelopeStatus.notFound),
+                    tier = RiskTierEnvelope(RiskEnvelopeStatus.notFound),
+                    flags = FlagsEnvelope(RiskEnvelopeStatus.notFound),
+                    mappa = MappaEnvelope(RiskEnvelopeStatus.notFound),
+                  ),
+                  submittedAt = null,
+                  isWithdrawn = false,
+                  hasRequestsForPlacement = false,
                 ),
-                createdAt = application.createdAt.toInstant(),
-                isWomensApplication = null,
-                isPipeApplication = false,
-                isEmergencyApplication = null,
-                isEsapApplication = null,
-                arrivalDate = null,
-                risks = PersonRisks(
-                  crn = crn,
-                  roshRisks = RoshRisksEnvelope(RiskEnvelopeStatus.notFound),
-                  tier = RiskTierEnvelope(RiskEnvelopeStatus.notFound),
-                  flags = FlagsEnvelope(RiskEnvelopeStatus.notFound),
-                  mappa = MappaEnvelope(RiskEnvelopeStatus.notFound),
-                ),
-                submittedAt = null,
-                isWithdrawn = false,
-                hasRequestsForPlacement = false,
               ),
             ),
-          ),
-        )
-    }
-  }
-
-  @Test
-  fun `Get list of applications returns successfully when a person has no NOMS number`() {
-    `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-      },
-    ) { userEntity, jwt ->
-      `Given an Offender`(
-        offenderDetailsConfigBlock = { withoutNomsNumber() },
-      ) { offenderDetails, _ ->
-        val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
-
-        CommunityAPI_mockOffenderUserAccessCall(
-          userEntity.deliusUsername,
-          offenderDetails.otherIds.crn,
-          inclusion = false,
-          exclusion = false,
-        )
-
-        val rawResponseBody = webTestClient.get()
-          .uri("/applications")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
-
-        val responseBody =
-          objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
-
-        assertThat(responseBody).matches {
-          val person = it[0].person as FullPerson
-
-          application.id == it[0].id &&
-            application.crn == person.crn &&
-            person.nomsNumber == null &&
-            person.status == PersonStatus.unknown &&
-            person.prisonName == null
-        }
+          )
       }
     }
-  }
 
-  @Test
-  fun `Get list of applications returns successfully when the person cannot be fetched from the prisons API`() {
-    `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-      },
-    ) { userEntity, jwt ->
-      val crn = "X1234"
-
-      `Given an Offender`(
-        offenderDetailsConfigBlock = {
-          withCrn(crn)
-          withNomsNumber("ABC123")
+    @Test
+    fun `Get all applications returns successfully when a person has no NOMS number`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
         },
-      ) { _, _ ->
-        val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
-
-        val rawResponseBody = webTestClient.get()
-          .uri("/applications")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
-
-        val responseBody =
-          objectMapper.readValue(rawResponseBody, object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
-
-        assertThat(responseBody).matches {
-          val person = it[0].person as FullPerson
-
-          application.id == it[0].id &&
-            application.crn == person.crn &&
-            person.nomsNumber == null &&
-            person.status == PersonStatus.unknown &&
-            person.prisonName == null
-        }
-      }
-    }
-  }
-
-  @Test
-  fun `Get single application without JWT returns 401`() {
-    webTestClient.get()
-      .uri("/applications/9b785e59-b85c-4be0-b271-d9ac287684b6")
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
-
-  @Test
-  fun `Get single application returns 200 with correct body`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-        approvedPremisesApplicationJsonSchemaRepository.deleteAll()
-
-        val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-          withSchema(
-            """
-        {
-          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
-          "${"\$id"}": "https://example.com/product.schema.json",
-          "title": "Thing",
-          "description": "A thing",
-          "type": "object",
-          "properties": {
-            "thingId": {
-              "description": "The unique identifier for a thing",
-              "type": "integer"
-            }
-          },
-          "required": [ "thingId" ]
-        }
-        """,
-          )
-        }
-
-        val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(newestJsonSchema)
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedByUser(userEntity)
-          withData(
-            """
-          {
-             "thingId": 123
-          }
-          """,
-          )
-        }
-
-        CommunityAPI_mockOffenderUserAccessCall(
-          userEntity.deliusUsername,
-          offenderDetails.otherIds.crn,
-          inclusion = false,
-          exclusion = false,
-        )
-
-        val rawResponseBody = webTestClient.get()
-          .uri("/applications/${applicationEntity.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
-
-        val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
-
-        assertThat(responseBody).matches {
-          applicationEntity.id == it.id && applicationEntity.crn == it.person.crn &&
-            applicationEntity.createdAt.toInstant() == it.createdAt &&
-            applicationEntity.createdByUser.id == it.createdByUserId &&
-            applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-            serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-            newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
-        }
-      }
-    }
-  }
-
-  @Test
-  fun `Get single application returns 403 when caller not in a managing team and user is not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`() {
-    `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM2").produce()))
-      },
-    ) { userEntity, jwt ->
-      `Given a User` { otherUser, _ ->
-        `Given an Offender` { offenderDetails, _ ->
-          val crn = "X1234"
-
-          val application = produceAndPersistBasicApplication(crn, otherUser, "TEAM1")
+      ) { userEntity, jwt ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = { withoutNomsNumber() },
+        ) { offenderDetails, _ ->
+          val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
 
           CommunityAPI_mockOffenderUserAccessCall(
             userEntity.deliusUsername,
@@ -717,116 +563,103 @@ class ApplicationTest : IntegrationTestBase() {
             exclusion = false,
           )
 
-          webTestClient.get()
-            .uri("/applications/${application.id}")
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications")
             .header("Authorization", "Bearer $jwt")
             .exchange()
             .expectStatus()
-            .isForbidden
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody =
+            objectMapper.readValue(
+              rawResponseBody,
+              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
+
+          assertThat(responseBody).matches {
+            val person = it[0].person as FullPerson
+
+            application.id == it[0].id &&
+              application.crn == person.crn &&
+              person.nomsNumber == null &&
+              person.status == PersonStatus.unknown &&
+              person.prisonName == null
+          }
         }
       }
     }
-  }
 
-  @Test
-  fun `Get single application returns successfully when a person has no NOMS number`() {
-    `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-      },
-    ) { userEntity, jwt ->
-      `Given an Offender`(
-        offenderDetailsConfigBlock = { withoutNomsNumber() },
-      ) { offenderDetails, _ ->
-        val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
-
-        CommunityAPI_mockOffenderUserAccessCall(
-          userEntity.deliusUsername,
-          offenderDetails.otherIds.crn,
-          inclusion = false,
-          exclusion = false,
-        )
-
-        val rawResponseBody = webTestClient.get()
-          .uri("/applications/${application.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
-
-        val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
-
-        assertThat(responseBody.person is FullPerson).isTrue
-        assertThat(responseBody).matches {
-          val person = it.person as FullPerson
-
-          application.id == it.id &&
-            application.crn == person.crn &&
-            person.nomsNumber == null &&
-            person.status == PersonStatus.unknown &&
-            person.prisonName == null
-        }
-      }
-    }
-  }
-
-  @Test
-  fun `Get single application returns successfully when the person cannot be fetched from the prisons API`() {
-    `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
-      },
-    ) { userEntity, jwt ->
-      val crn = "X1234"
-
-      `Given an Offender`(
-        offenderDetailsConfigBlock = {
-          withCrn(crn)
-          withNomsNumber("ABC123")
+    @Test
+    fun `Get all applications returns successfully when the person cannot be fetched from the prisons API`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
         },
-      ) { _, _ ->
-        val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+      ) { userEntity, jwt ->
+        val crn = "X1234"
 
-        val rawResponseBody = webTestClient.get()
-          .uri("/applications/${application.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withCrn(crn)
+            withNomsNumber("ABC123")
+          },
+        ) { _, _ ->
+          val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
 
-        val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
 
-        assertThat(responseBody.person is FullPerson).isTrue
+          val responseBody =
+            objectMapper.readValue(
+              rawResponseBody,
+              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
 
-        assertThat(responseBody).matches {
-          val person = it.person as FullPerson
+          assertThat(responseBody).matches {
+            val person = it[0].person as FullPerson
 
-          application.id == it.id &&
-            application.crn == person.crn &&
-            person.nomsNumber == null &&
-            person.status == PersonStatus.unknown &&
-            person.prisonName == null
+            application.id == it[0].id &&
+              application.crn == person.crn &&
+              person.nomsNumber == null &&
+              person.status == PersonStatus.unknown &&
+              person.prisonName == null
+          }
         }
       }
     }
+
+    @Test
+    fun `Get single application without JWT returns 401`() {
+      webTestClient.get()
+        .uri("/applications/9b785e59-b85c-4be0-b271-d9ac287684b6")
+        .exchange()
+        .expectStatus()
+        .isUnauthorized
+    }
+
   }
 
-  @Test
-  fun `Get single online application returns 200 non-upgradable outdated application marked as such`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-        approvedPremisesApplicationJsonSchemaRepository.deleteAll()
+  @Nested
+  inner class Cas1GetApplication {
 
-        approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-          withSchema(
-            """
+    @Test
+    fun `Get single application returns 200 with correct body`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          approvedPremisesApplicationJsonSchemaRepository.deleteAll()
+
+          val newestJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+            withSchema(
+              """
         {
           "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
           "${"\$id"}": "https://example.com/product.schema.json",
@@ -842,13 +675,205 @@ class ApplicationTest : IntegrationTestBase() {
           "required": [ "thingId" ]
         }
         """,
-          )
-        }
+            )
+          }
 
-        val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
-          withSchema(
-            """
+          val applicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(newestJsonSchema)
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withData(
+              """
+          {
+             "thingId": 123
+          }
+          """,
+            )
+          }
+
+          CommunityAPI_mockOffenderUserAccessCall(
+            userEntity.deliusUsername,
+            offenderDetails.otherIds.crn,
+            inclusion = false,
+            exclusion = false,
+          )
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/${applicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+
+          assertThat(responseBody).matches {
+            applicationEntity.id == it.id && applicationEntity.crn == it.person.crn &&
+              applicationEntity.createdAt.toInstant() == it.createdAt &&
+              applicationEntity.createdByUser.id == it.createdByUserId &&
+              applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
+              serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
+              newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single application returns 403 when caller not in a managing team and user is not one of roles WORKFLOW_MANAGER, ASSESSOR, MATCHER, MANAGER`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM2").produce()))
+        },
+      ) { userEntity, jwt ->
+        `Given a User` { otherUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val crn = "X1234"
+
+            val application = produceAndPersistBasicApplication(crn, otherUser, "TEAM1")
+
+            CommunityAPI_mockOffenderUserAccessCall(
+              userEntity.deliusUsername,
+              offenderDetails.otherIds.crn,
+              inclusion = false,
+              exclusion = false,
+            )
+
+            webTestClient.get()
+              .uri("/applications/${application.id}")
+              .header("Authorization", "Bearer $jwt")
+              .exchange()
+              .expectStatus()
+              .isForbidden
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single application returns successfully when a person has no NOMS number`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
+        },
+      ) { userEntity, jwt ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = { withoutNomsNumber() },
+        ) { offenderDetails, _ ->
+          val application = produceAndPersistBasicApplication(offenderDetails.otherIds.crn, userEntity, "TEAM1")
+
+          CommunityAPI_mockOffenderUserAccessCall(
+            userEntity.deliusUsername,
+            offenderDetails.otherIds.crn,
+            inclusion = false,
+            exclusion = false,
+          )
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/${application.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+
+          assertThat(responseBody.person is FullPerson).isTrue
+          assertThat(responseBody).matches {
+            val person = it.person as FullPerson
+
+            application.id == it.id &&
+              application.crn == person.crn &&
+              person.nomsNumber == null &&
+              person.status == PersonStatus.unknown &&
+              person.prisonName == null
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single application returns successfully when the person cannot be fetched from the prisons API`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withTeams(listOf(StaffUserTeamMembershipFactory().withCode("TEAM1").produce()))
+        },
+      ) { userEntity, jwt ->
+        val crn = "X1234"
+
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withCrn(crn)
+            withNomsNumber("ABC123")
+          },
+        ) { _, _ ->
+          val application = produceAndPersistBasicApplication(crn, userEntity, "TEAM1")
+
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/${application.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
+
+          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
+
+          assertThat(responseBody.person is FullPerson).isTrue
+
+          assertThat(responseBody).matches {
+            val person = it.person as FullPerson
+
+            application.id == it.id &&
+              application.crn == person.crn &&
+              person.nomsNumber == null &&
+              person.status == PersonStatus.unknown &&
+              person.prisonName == null
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Get single online application returns 200 non-upgradable outdated application marked as such`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          approvedPremisesApplicationJsonSchemaRepository.deleteAll()
+
+          approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+            withSchema(
+              """
+        {
+          "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
+          "${"\$id"}": "https://example.com/product.schema.json",
+          "title": "Thing",
+          "description": "A thing",
+          "type": "object",
+          "properties": {
+            "thingId": {
+              "description": "The unique identifier for a thing",
+              "type": "integer"
+            }
+          },
+          "required": [ "thingId" ]
+        }
+        """,
+            )
+          }
+
+          val olderJsonSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.parse("2022-09-21T09:45:00+01:00"))
+            withSchema(
+              """
         {
           "${"\$schema"}": "https://json-schema.org/draft/2020-12/schema",
           "${"\$id"}": "https://example.com/product.schema.json",
@@ -858,110 +883,55 @@ class ApplicationTest : IntegrationTestBase() {
           "properties": { }
         }
         """,
+            )
+          }
+
+          val nonUpgradableApplicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
+            withApplicationSchema(olderJsonSchema)
+            withCrn(offenderDetails.otherIds.crn)
+            withCreatedByUser(userEntity)
+            withData("{}")
+          }
+
+          CommunityAPI_mockOffenderUserAccessCall(
+            userEntity.deliusUsername,
+            offenderDetails.otherIds.crn,
+            inclusion = false,
+            exclusion = false,
           )
-        }
 
-        val nonUpgradableApplicationEntity = approvedPremisesApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(olderJsonSchema)
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedByUser(userEntity)
-          withData("{}")
-        }
+          val rawResponseBody = webTestClient.get()
+            .uri("/applications/${nonUpgradableApplicationEntity.id}")
+            .header("Authorization", "Bearer $jwt")
+            .exchange()
+            .expectStatus()
+            .isOk
+            .returnResult<String>()
+            .responseBody
+            .blockFirst()
 
-        CommunityAPI_mockOffenderUserAccessCall(
-          userEntity.deliusUsername,
-          offenderDetails.otherIds.crn,
-          inclusion = false,
-          exclusion = false,
-        )
+          val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
 
-        val rawResponseBody = webTestClient.get()
-          .uri("/applications/${nonUpgradableApplicationEntity.id}")
-          .header("Authorization", "Bearer $jwt")
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
-
-        val responseBody = objectMapper.readValue(rawResponseBody, ApprovedPremisesApplication::class.java)
-
-        assertThat(responseBody).matches {
-          nonUpgradableApplicationEntity.id == it.id &&
-            nonUpgradableApplicationEntity.crn == it.person.crn &&
-            nonUpgradableApplicationEntity.createdAt.toInstant() == it.createdAt &&
-            nonUpgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
-            nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-            serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
-            olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+          assertThat(responseBody).matches {
+            nonUpgradableApplicationEntity.id == it.id &&
+              nonUpgradableApplicationEntity.crn == it.person.crn &&
+              nonUpgradableApplicationEntity.createdAt.toInstant() == it.createdAt &&
+              nonUpgradableApplicationEntity.createdByUser.id == it.createdByUserId &&
+              nonUpgradableApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
+              serializableToJsonNode(nonUpgradableApplicationEntity.data) == serializableToJsonNode(it.data) &&
+              olderJsonSchema.id == it.schemaVersion && it.outdatedSchema
+          }
         }
       }
     }
+
   }
 
-  @Test
-  fun `Get single application returns 200 with correct body for Temporary Accommodation when requesting user created application`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-        temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+  inner class Cas3GetApplication {
 
-        val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-          withSchema("{}")
-        }
-
-        val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-          withApplicationSchema(newestJsonSchema)
-          withCrn(offenderDetails.otherIds.crn)
-          withCreatedByUser(userEntity)
-          withProbationRegion(userEntity.probationRegion)
-          withData(
-            """
-            {
-               "thingId": 123
-            }
-            """,
-          )
-        }
-
-        CommunityAPI_mockOffenderUserAccessCall(
-          userEntity.deliusUsername,
-          offenderDetails.otherIds.crn,
-          inclusion = false,
-          exclusion = false,
-        )
-
-        val rawResponseBody = webTestClient.get()
-          .uri("/applications/${applicationEntity.id}")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .exchange()
-          .expectStatus()
-          .isOk
-          .returnResult<String>()
-          .responseBody
-          .blockFirst()
-
-        val responseBody = objectMapper.readValue(rawResponseBody, TemporaryAccommodationApplication::class.java)
-
-        assertThat(responseBody).matches {
-          applicationEntity.id == it.id &&
-            applicationEntity.crn == it.person.crn &&
-            applicationEntity.createdAt.toInstant() == it.createdAt &&
-            applicationEntity.createdByUser.id == it.createdByUserId &&
-            applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
-            serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
-            newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
-        }
-      }
-    }
-  }
-
-  @Test
-  fun `Get single application returns 200 with correct body for Temporary Accommodation when a user with the CAS3_ASSESSOR role requests a submitted application in their region`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given a User`(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
+    @Test
+    fun `Get single application returns 200 with correct body for Temporary Accommodation when requesting user created application`() {
+      `Given a User` { userEntity, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
@@ -973,15 +943,14 @@ class ApplicationTest : IntegrationTestBase() {
           val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
             withApplicationSchema(newestJsonSchema)
             withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(createdByUser)
-            withProbationRegion(createdByUser.probationRegion)
-            withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
+            withCreatedByUser(userEntity)
+            withProbationRegion(userEntity.probationRegion)
             withData(
               """
-              {
-                 "thingId": 123
-              }
-              """,
+            {
+               "thingId": 123
+            }
+            """,
             )
           }
 
@@ -1017,98 +986,160 @@ class ApplicationTest : IntegrationTestBase() {
         }
       }
     }
-  }
 
-  @Test
-  fun `Get single application returns 403 Forbidden for Temporary Accommodation when a user with the CAS3_ASSESSOR role requests an application not in their region`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
-      `Given a User` { createdByUser, _ ->
-        `Given an Offender` { offenderDetails, _ ->
-          temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+    @Test
+    fun `Get single application returns 200 with correct body for Temporary Accommodation when a user with the CAS3_ASSESSOR role requests a submitted application in their region`() {
+      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        `Given a User`(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-          val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-            withSchema("{}")
-          }
+            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withSchema("{}")
+            }
 
-          val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(newestJsonSchema)
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(createdByUser)
-            withProbationRegion(createdByUser.probationRegion)
-            withSubmittedAt(OffsetDateTime.now())
-            withData(
-              """
+            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(createdByUser)
+              withProbationRegion(createdByUser.probationRegion)
+              withSubmittedAt(OffsetDateTime.parse("2023-06-01T12:34:56.789+01:00"))
+              withData(
+                """
               {
                  "thingId": 123
               }
               """,
+              )
+            }
+
+            CommunityAPI_mockOffenderUserAccessCall(
+              userEntity.deliusUsername,
+              offenderDetails.otherIds.crn,
+              inclusion = false,
+              exclusion = false,
             )
+
+            val rawResponseBody = webTestClient.get()
+              .uri("/applications/${applicationEntity.id}")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+              .exchange()
+              .expectStatus()
+              .isOk
+              .returnResult<String>()
+              .responseBody
+              .blockFirst()
+
+            val responseBody = objectMapper.readValue(rawResponseBody, TemporaryAccommodationApplication::class.java)
+
+            assertThat(responseBody).matches {
+              applicationEntity.id == it.id &&
+                applicationEntity.crn == it.person.crn &&
+                applicationEntity.createdAt.toInstant() == it.createdAt &&
+                applicationEntity.createdByUser.id == it.createdByUserId &&
+                applicationEntity.submittedAt?.toInstant() == it.submittedAt &&
+                serializableToJsonNode(applicationEntity.data) == serializableToJsonNode(it.data) &&
+                newestJsonSchema.id == it.schemaVersion && !it.outdatedSchema
+            }
           }
-
-          CommunityAPI_mockOffenderUserAccessCall(
-            userEntity.deliusUsername,
-            offenderDetails.otherIds.crn,
-            inclusion = false,
-            exclusion = false,
-          )
-
-          webTestClient.get()
-            .uri("/applications/${applicationEntity.id}")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-            .exchange()
-            .expectStatus()
-            .isForbidden
         }
       }
     }
-  }
 
-  @Test
-  fun `Get single application returns 403 Forbidden for Temporary Accommodation when a user without the CAS3_ASSESSOR role requests an application not created by them`() {
-    `Given a User` { userEntity, jwt ->
-      `Given a User`(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
-        `Given an Offender` { offenderDetails, _ ->
-          temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+    @Test
+    fun `Get single application returns 403 Forbidden for Temporary Accommodation when a user with the CAS3_ASSESSOR role requests an application not in their region`() {
+      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { userEntity, jwt ->
+        `Given a User` { createdByUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
 
-          val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
-            withSchema("{}")
-          }
+            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withSchema("{}")
+            }
 
-          val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withApplicationSchema(newestJsonSchema)
-            withCrn(offenderDetails.otherIds.crn)
-            withCreatedByUser(createdByUser)
-            withProbationRegion(createdByUser.probationRegion)
-            withSubmittedAt(OffsetDateTime.now())
-            withData(
-              """
+            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(createdByUser)
+              withProbationRegion(createdByUser.probationRegion)
+              withSubmittedAt(OffsetDateTime.now())
+              withData(
+                """
               {
                  "thingId": 123
               }
               """,
+              )
+            }
+
+            CommunityAPI_mockOffenderUserAccessCall(
+              userEntity.deliusUsername,
+              offenderDetails.otherIds.crn,
+              inclusion = false,
+              exclusion = false,
             )
+
+            webTestClient.get()
+              .uri("/applications/${applicationEntity.id}")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+              .exchange()
+              .expectStatus()
+              .isForbidden
           }
-
-          CommunityAPI_mockOffenderUserAccessCall(
-            userEntity.deliusUsername,
-            offenderDetails.otherIds.crn,
-            inclusion = false,
-            exclusion = false,
-          )
-
-          webTestClient.get()
-            .uri("/applications/${applicationEntity.id}")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-            .exchange()
-            .expectStatus()
-            .isForbidden
         }
       }
     }
+
+    @Test
+    fun `Get single application returns 403 Forbidden for Temporary Accommodation when a user without the CAS3_ASSESSOR role requests an application not created by them`() {
+      `Given a User` { userEntity, jwt ->
+        `Given a User`(probationRegion = userEntity.probationRegion) { createdByUser, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
+
+            val newestJsonSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+              withSchema("{}")
+            }
+
+            val applicationEntity = temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withApplicationSchema(newestJsonSchema)
+              withCrn(offenderDetails.otherIds.crn)
+              withCreatedByUser(createdByUser)
+              withProbationRegion(createdByUser.probationRegion)
+              withSubmittedAt(OffsetDateTime.now())
+              withData(
+                """
+              {
+                 "thingId": 123
+              }
+              """,
+              )
+            }
+
+            CommunityAPI_mockOffenderUserAccessCall(
+              userEntity.deliusUsername,
+              offenderDetails.otherIds.crn,
+              inclusion = false,
+              exclusion = false,
+            )
+
+            webTestClient.get()
+              .uri("/applications/${applicationEntity.id}")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+              .exchange()
+              .expectStatus()
+              .isForbidden
+          }
+        }
+      }
+    }
+
   }
 
   @Nested
@@ -1432,470 +1463,477 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Create new application without JWT returns 401`() {
-    webTestClient.post()
-      .uri("/applications")
-      .exchange()
-      .expectStatus()
-      .isUnauthorized
-  }
+  inner class Cas1CreateApplication {
 
-  @Test
-  fun `Create new application returns 404 when a person cannot be found`() {
-    `Given a User` { _, jwt ->
-      val crn = "X1234"
-
-      CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
-      loadPreemptiveCacheForOffenderDetails(crn)
-
-      approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-        withAddedAt(OffsetDateTime.now())
-        withId(UUID.randomUUID())
-      }
-
+    @Test
+    fun `Create new application without JWT returns 401`() {
       webTestClient.post()
         .uri("/applications")
-        .header("Authorization", "Bearer $jwt")
-        .bodyValue(
-          NewApplication(
-            crn = crn,
-          ),
-        )
         .exchange()
         .expectStatus()
-        .isNotFound
-        .expectBody()
-        .jsonPath("$.detail").isEqualTo("No Offender with an ID of $crn could be found")
+        .isUnauthorized
     }
-  }
 
-  @Test
-  fun `Create new application returns 500 and does not create Application without team codes when write to team code table fails`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    @Test
+    fun `Create new application returns 404 when a person cannot be found`() {
+      `Given a User` { _, jwt ->
+        val crn = "X1234"
 
-        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn,
-          ManagingTeamsResponse(
-            teamCodes = listOf(offenderDetails.otherIds.crn),
-          ),
-        )
-
-        every { realApplicationTeamCodeRepository.save(any()) } throws RuntimeException("Database Error")
-
-        webTestClient.post()
-          .uri("/applications")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewApplication(
-              crn = offenderDetails.otherIds.crn,
-              convictionId = 123,
-              deliusEventNumber = "1",
-              offenceId = "789",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .is5xxServerError
-
-        assertThat(approvedPremisesApplicationRepository.findAll().none { it.crn == offenderDetails.otherIds.crn })
-      }
-    }
-  }
-
-  @Test
-  fun `Create new application returns 201 with correct body and Location header`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.now())
-          withId(UUID.randomUUID())
-        }
-
-        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn,
-          ManagingTeamsResponse(
-            teamCodes = listOf("TEAM1"),
-          ),
-        )
-
-        APOASysContext_mockSuccessfulNeedsDetailsCall(
-          offenderDetails.otherIds.crn,
-          NeedsDetailsFactory().produce(),
-        )
-
-        val result = webTestClient.post()
-          .uri("/applications")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewApplication(
-              crn = offenderDetails.otherIds.crn,
-              convictionId = 123,
-              deliusEventNumber = "1",
-              offenceId = "789",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isCreated
-          .returnResult(ApprovedPremisesApplication::class.java)
-
-        assertThat(result.responseHeaders["Location"]).anyMatch {
-          it.matches(Regex("/applications/.+"))
-        }
-
-        assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn &&
-            it.schemaVersion == applicationSchema.id
-        }
-      }
-    }
-  }
-
-  @Test
-  fun `Create new application without risks returns 201 with correct body and Location header`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-        val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.now())
-          withId(UUID.randomUUID())
-        }
-
-        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn,
-          ManagingTeamsResponse(
-            teamCodes = listOf("TEAM1"),
-          ),
-        )
-
-        APOASysContext_mockSuccessfulNeedsDetailsCall(
-          offenderDetails.otherIds.crn,
-          NeedsDetailsFactory().produce(),
-        )
-
-        val result = webTestClient.post()
-          .uri("/applications?createWithRisks=false")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewApplication(
-              crn = offenderDetails.otherIds.crn,
-              convictionId = 123,
-              deliusEventNumber = "1",
-              offenceId = "789",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isCreated
-          .returnResult(ApprovedPremisesApplication::class.java)
-
-        assertThat(result.responseHeaders["Location"]).anyMatch {
-          it.matches(Regex("/applications/.+"))
-        }
-
-        assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn &&
-            it.schemaVersion == applicationSchema.id
-        }
-      }
-    }
-  }
-
-  @Test
-  fun `Create new application returns successfully when a person has no NOMS number`() {
-    `Given a User` { _, jwt ->
-      `Given an Offender`(
-        offenderDetailsConfigBlock = { withoutNomsNumber() },
-      ) { offenderDetails, _ ->
-        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn,
-          ManagingTeamsResponse(
-            teamCodes = listOf(offenderDetails.otherIds.crn),
-          ),
-        )
+        CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
+        loadPreemptiveCacheForOffenderDetails(crn)
 
         approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
           withAddedAt(OffsetDateTime.now())
           withId(UUID.randomUUID())
         }
 
-        val result = webTestClient.post()
-          .uri("/applications")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewApplication(
-              crn = offenderDetails.otherIds.crn,
-              convictionId = 123,
-              deliusEventNumber = "1",
-              offenceId = "789",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isCreated
-          .returnResult(ApprovedPremisesApplication::class.java)
-
-        assertThat(result.responseHeaders["Location"]).anyMatch {
-          it.matches(Regex("/applications/.+"))
-        }
-
-        assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn
-        }
-      }
-    }
-  }
-
-  @Test
-  fun `Create new application returns successfully when the person cannot be fetched from the prisons API`() {
-    `Given a User` { userEntity, jwt ->
-      `Given an Offender`(
-        offenderDetailsConfigBlock = {
-          withNomsNumber("ABC123")
-        },
-      ) { offenderDetails, _ ->
-        APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
-          offenderDetails.otherIds.crn,
-          ManagingTeamsResponse(
-            teamCodes = listOf(offenderDetails.otherIds.crn),
-          ),
-        )
-
-        val result = webTestClient.post()
-          .uri("/applications")
-          .header("Authorization", "Bearer $jwt")
-          .bodyValue(
-            NewApplication(
-              crn = offenderDetails.otherIds.crn,
-              convictionId = 123,
-              deliusEventNumber = "1",
-              offenceId = "789",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isCreated
-          .returnResult(ApprovedPremisesApplication::class.java)
-
-        assertThat(result.responseHeaders["Location"]).anyMatch {
-          it.matches(Regex("/applications/.+"))
-        }
-
-        assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn
-        }
-      }
-    }
-  }
-
-  @Test
-  fun `Create new application for Temporary Accommodation returns 403 when user isn't  CAS3_REFERRER role`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
         webTestClient.post()
           .uri("/applications")
           .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
           .bodyValue(
             NewApplication(
-              crn = offenderDetails.otherIds.crn,
-              convictionId = 123,
-              deliusEventNumber = "1",
-              offenceId = "789",
+              crn = crn,
             ),
           )
           .exchange()
           .expectStatus()
-          .isForbidden
+          .isNotFound
+          .expectBody()
+          .jsonPath("$.detail").isEqualTo("No Offender with an ID of $crn could be found")
+      }
+    }
+
+    @Test
+    fun `Create new application returns 500 and does not create Application without team codes when write to team code table fails`() {
+      `Given a User` { _, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+
+          APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+            offenderDetails.otherIds.crn,
+            ManagingTeamsResponse(
+              teamCodes = listOf(offenderDetails.otherIds.crn),
+            ),
+          )
+
+          every { realApplicationTeamCodeRepository.save(any()) } throws RuntimeException("Database Error")
+
+          webTestClient.post()
+            .uri("/applications")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .is5xxServerError
+
+          assertThat(approvedPremisesApplicationRepository.findAll().none { it.crn == offenderDetails.otherIds.crn })
+        }
+      }
+    }
+
+    @Test
+    fun `Create new application returns 201 with correct body and Location header`() {
+      `Given a User` { _, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+          }
+
+          APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+            offenderDetails.otherIds.crn,
+            ManagingTeamsResponse(
+              teamCodes = listOf("TEAM1"),
+            ),
+          )
+
+          APOASysContext_mockSuccessfulNeedsDetailsCall(
+            offenderDetails.otherIds.crn,
+            NeedsDetailsFactory().produce(),
+          )
+
+          val result = webTestClient.post()
+            .uri("/applications")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(ApprovedPremisesApplication::class.java)
+
+          assertThat(result.responseHeaders["Location"]).anyMatch {
+            it.matches(Regex("/applications/.+"))
+          }
+
+          assertThat(result.responseBody.blockFirst()).matches {
+            it.person.crn == offenderDetails.otherIds.crn &&
+              it.schemaVersion == applicationSchema.id
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Create new application without risks returns 201 with correct body and Location header`() {
+      `Given a User` { _, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+          }
+
+          APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+            offenderDetails.otherIds.crn,
+            ManagingTeamsResponse(
+              teamCodes = listOf("TEAM1"),
+            ),
+          )
+
+          APOASysContext_mockSuccessfulNeedsDetailsCall(
+            offenderDetails.otherIds.crn,
+            NeedsDetailsFactory().produce(),
+          )
+
+          val result = webTestClient.post()
+            .uri("/applications?createWithRisks=false")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(ApprovedPremisesApplication::class.java)
+
+          assertThat(result.responseHeaders["Location"]).anyMatch {
+            it.matches(Regex("/applications/.+"))
+          }
+
+          assertThat(result.responseBody.blockFirst()).matches {
+            it.person.crn == offenderDetails.otherIds.crn &&
+              it.schemaVersion == applicationSchema.id
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Create new application returns successfully when a person has no NOMS number`() {
+      `Given a User` { _, jwt ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = { withoutNomsNumber() },
+        ) { offenderDetails, _ ->
+          APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+            offenderDetails.otherIds.crn,
+            ManagingTeamsResponse(
+              teamCodes = listOf(offenderDetails.otherIds.crn),
+            ),
+          )
+
+          approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+          }
+
+          val result = webTestClient.post()
+            .uri("/applications")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(ApprovedPremisesApplication::class.java)
+
+          assertThat(result.responseHeaders["Location"]).anyMatch {
+            it.matches(Regex("/applications/.+"))
+          }
+
+          assertThat(result.responseBody.blockFirst()).matches {
+            it.person.crn == offenderDetails.otherIds.crn
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Create new application returns successfully when the person cannot be fetched from the prisons API`() {
+      `Given a User` { userEntity, jwt ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withNomsNumber("ABC123")
+          },
+        ) { offenderDetails, _ ->
+          APDeliusContext_mockSuccessfulTeamsManagingCaseCall(
+            offenderDetails.otherIds.crn,
+            ManagingTeamsResponse(
+              teamCodes = listOf(offenderDetails.otherIds.crn),
+            ),
+          )
+
+          val result = webTestClient.post()
+            .uri("/applications")
+            .header("Authorization", "Bearer $jwt")
+            .bodyValue(
+              NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(ApprovedPremisesApplication::class.java)
+
+          assertThat(result.responseHeaders["Location"]).anyMatch {
+            it.matches(Regex("/applications/.+"))
+          }
+
+          assertThat(result.responseBody.blockFirst()).matches {
+            it.person.crn == offenderDetails.otherIds.crn
+          }
+        }
       }
     }
   }
 
-  @Test
-  fun `Create new application for Temporary Accommodation returns 201 with correct body and Location header`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.now())
-          withId(UUID.randomUUID())
-        }
+  inner class Cas3CreateApplication {
 
-        val offenceId = "789"
-
-        val result = webTestClient.post()
-          .uri("/applications")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewApplication(
-              crn = offenderDetails.otherIds.crn,
-              convictionId = 123,
-              deliusEventNumber = "1",
-              offenceId = offenceId,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isCreated
-          .returnResult(TemporaryAccommodationApplication::class.java)
-
-        assertThat(result.responseHeaders["Location"]).anyMatch {
-          it.matches(Regex("/applications/.+"))
-        }
-
-        assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn &&
-            it.schemaVersion == applicationSchema.id &&
-            it.offenceId == offenceId
+    @Test
+    fun `Create new application for Temporary Accommodation returns 403 when user isn't  CAS3_REFERRER role`() {
+      `Given a User`(roles = listOf(UserRole.CAS3_ASSESSOR)) { _, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          webTestClient.post()
+            .uri("/applications")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isForbidden
         }
       }
     }
-  }
 
-  @Test
-  fun `Should get 403 forbidden error when create new application for Temporary Accommodation with user CAS3_REPORTER`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_REPORTER)) { _, jwt ->
-      `Given an Offender` { offenderDetails, _ ->
+    @Test
+    fun `Create new application for Temporary Accommodation returns 201 with correct body and Location header`() {
+      `Given a User`(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+          }
 
-        webTestClient.post()
-          .uri("/applications")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewApplication(
-              crn = offenderDetails.otherIds.crn,
-              convictionId = 123,
-              deliusEventNumber = "1",
-              offenceId = "789",
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isForbidden
-      }
-    }
-  }
+          val offenceId = "789"
 
-  @Test
-  fun `Create new application for Temporary Accommodation returns successfully when a person has no NOMS number`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
-      `Given an Offender`(
-        offenderDetailsConfigBlock = { withoutNomsNumber() },
-      ) { offenderDetails, _ ->
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.now())
-          withId(UUID.randomUUID())
-        }
+          val result = webTestClient.post()
+            .uri("/applications")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = offenceId,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(TemporaryAccommodationApplication::class.java)
 
-        val offenceId = "789"
+          assertThat(result.responseHeaders["Location"]).anyMatch {
+            it.matches(Regex("/applications/.+"))
+          }
 
-        val result = webTestClient.post()
-          .uri("/applications")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewApplication(
-              crn = offenderDetails.otherIds.crn,
-              convictionId = 123,
-              deliusEventNumber = "1",
-              offenceId = offenceId,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isCreated
-          .returnResult(TemporaryAccommodationApplication::class.java)
-
-        assertThat(result.responseHeaders["Location"]).anyMatch {
-          it.matches(Regex("/applications/.+"))
-        }
-
-        assertThat(result.responseBody.blockFirst()).matches {
-          it.person.crn == offenderDetails.otherIds.crn &&
-            it.schemaVersion == applicationSchema.id &&
-            it.offenceId == offenceId
+          assertThat(result.responseBody.blockFirst()).matches {
+            it.person.crn == offenderDetails.otherIds.crn &&
+              it.schemaVersion == applicationSchema.id &&
+              it.offenceId == offenceId
+          }
         }
       }
     }
-  }
 
-  @Test
-  fun `Create new application for Temporary Accommodation returns 201 with correct body and store prison-name in DB`() {
-    `Given a User`(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
-      val agencyName = "HMP Bristol"
-      `Given an Offender`(
-        offenderDetailsConfigBlock = {
-          withCrn("CRN")
-          withDateOfBirth(LocalDate.parse("1985-05-05"))
-          withNomsNumber("NOMS321")
-          withFirstName("James")
-          withLastName("Someone")
-          withGender("Male")
-          withEthnicity("White British")
-          withNationality("English")
-          withReligionOrBelief("Judaism")
-          withGenderIdentity("Prefer to self-describe")
-          withSelfDescribedGenderIdentity("This is a self described identity")
-        },
-        inmateDetailsConfigBlock = {
-          withOffenderNo("NOMS321")
-          withCustodyStatus(InmateStatus.IN)
-          withAssignedLivingUnit(
-            AssignedLivingUnit(
-              agencyId = "BRI",
-              locationId = 5,
-              description = "B-2F-004",
-              agencyName = agencyName,
-            ),
-          )
-        },
-      ) { offenderDetails, _ ->
-        val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-          withAddedAt(OffsetDateTime.now())
-          withId(UUID.randomUUID())
+    @Test
+    fun `Should get 403 forbidden error when create new application for Temporary Accommodation with user CAS3_REPORTER`() {
+      `Given a User`(roles = listOf(UserRole.CAS3_REPORTER)) { _, jwt ->
+        `Given an Offender` { offenderDetails, _ ->
+
+          webTestClient.post()
+            .uri("/applications")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = "789",
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isForbidden
         }
-
-        val offenceId = "789"
-
-        val result = webTestClient.post()
-          .uri("/applications")
-          .header("Authorization", "Bearer $jwt")
-          .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-          .bodyValue(
-            NewApplication(
-              crn = offenderDetails.otherIds.crn,
-              convictionId = 123,
-              deliusEventNumber = "1",
-              offenceId = offenceId,
-            ),
-          )
-          .exchange()
-          .expectStatus()
-          .isCreated
-          .returnResult(TemporaryAccommodationApplication::class.java)
-
-        assertThat(result.responseHeaders["Location"]).anyMatch {
-          it.matches(Regex("/applications/.+"))
-        }
-
-        val blockFirst = result.responseBody.blockFirst()
-        assertThat(blockFirst).matches {
-          it.person.crn == offenderDetails.otherIds.crn &&
-            it.schemaVersion == applicationSchema.id &&
-            it.offenceId == offenceId
-        }
-
-        val accommodationApplicationEntity =
-          temporaryAccommodationApplicationRepository.findByIdOrNull(blockFirst.id)
-        assertThat(accommodationApplicationEntity!!.prisonNameOnCreation).isNotNull()
-        assertThat(accommodationApplicationEntity!!.prisonNameOnCreation).isEqualTo(agencyName)
       }
     }
+
+    @Test
+    fun `Create new application for Temporary Accommodation returns successfully when a person has no NOMS number`() {
+      `Given a User`(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
+        `Given an Offender`(
+          offenderDetailsConfigBlock = { withoutNomsNumber() },
+        ) { offenderDetails, _ ->
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+          }
+
+          val offenceId = "789"
+
+          val result = webTestClient.post()
+            .uri("/applications")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = offenceId,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(TemporaryAccommodationApplication::class.java)
+
+          assertThat(result.responseHeaders["Location"]).anyMatch {
+            it.matches(Regex("/applications/.+"))
+          }
+
+          assertThat(result.responseBody.blockFirst()).matches {
+            it.person.crn == offenderDetails.otherIds.crn &&
+              it.schemaVersion == applicationSchema.id &&
+              it.offenceId == offenceId
+          }
+        }
+      }
+    }
+
+    @Test
+    fun `Create new application for Temporary Accommodation returns 201 with correct body and store prison-name in DB`() {
+      `Given a User`(roles = listOf(UserRole.CAS3_REFERRER)) { _, jwt ->
+        val agencyName = "HMP Bristol"
+        `Given an Offender`(
+          offenderDetailsConfigBlock = {
+            withCrn("CRN")
+            withDateOfBirth(LocalDate.parse("1985-05-05"))
+            withNomsNumber("NOMS321")
+            withFirstName("James")
+            withLastName("Someone")
+            withGender("Male")
+            withEthnicity("White British")
+            withNationality("English")
+            withReligionOrBelief("Judaism")
+            withGenderIdentity("Prefer to self-describe")
+            withSelfDescribedGenderIdentity("This is a self described identity")
+          },
+          inmateDetailsConfigBlock = {
+            withOffenderNo("NOMS321")
+            withCustodyStatus(InmateStatus.IN)
+            withAssignedLivingUnit(
+              AssignedLivingUnit(
+                agencyId = "BRI",
+                locationId = 5,
+                description = "B-2F-004",
+                agencyName = agencyName,
+              ),
+            )
+          },
+        ) { offenderDetails, _ ->
+          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+            withAddedAt(OffsetDateTime.now())
+            withId(UUID.randomUUID())
+          }
+
+          val offenceId = "789"
+
+          val result = webTestClient.post()
+            .uri("/applications")
+            .header("Authorization", "Bearer $jwt")
+            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+            .bodyValue(
+              NewApplication(
+                crn = offenderDetails.otherIds.crn,
+                convictionId = 123,
+                deliusEventNumber = "1",
+                offenceId = offenceId,
+              ),
+            )
+            .exchange()
+            .expectStatus()
+            .isCreated
+            .returnResult(TemporaryAccommodationApplication::class.java)
+
+          assertThat(result.responseHeaders["Location"]).anyMatch {
+            it.matches(Regex("/applications/.+"))
+          }
+
+          val blockFirst = result.responseBody.blockFirst()
+          assertThat(blockFirst).matches {
+            it.person.crn == offenderDetails.otherIds.crn &&
+              it.schemaVersion == applicationSchema.id &&
+              it.offenceId == offenceId
+          }
+
+          val accommodationApplicationEntity =
+            temporaryAccommodationApplicationRepository.findByIdOrNull(blockFirst.id)
+          assertThat(accommodationApplicationEntity!!.prisonNameOnCreation).isNotNull()
+          assertThat(accommodationApplicationEntity!!.prisonNameOnCreation).isEqualTo(agencyName)
+        }
+      }
+    }
+
   }
 
   @Nested
-  inner class UpdateApplicationCas1 {
+  inner class Cas1UpdateApplicationCas {
     @Test
     fun `Update existing AP application returns 200 with correct body`() {
       `Given a User` { submittingUser, jwt ->
@@ -1964,7 +2002,7 @@ class ApplicationTest : IntegrationTestBase() {
   }
 
   @Nested
-  inner class SubmitApplicationCas1 {
+  inner class Cas1SubmitApplication {
 
     @Test
     fun `Submit application returns 200, creates and allocates an assessment, saves a domain event, emits an SNS event`() {
@@ -2423,143 +2461,148 @@ class ApplicationTest : IntegrationTestBase() {
     }
   }
 
-  @Test
-  fun `Submit Temporary Accommodation application returns 200`() {
-    `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory().produce(),
-          ),
-        )
-      },
-    ) { submittingUser, jwt ->
-      `Given a User` { _, _ ->
-        `Given an Offender` { offenderDetails, _ ->
-          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
-          val offenderName = "${offenderDetails.firstName} ${offenderDetails.surname}"
+  inner class Cas3SubmitApplication {
 
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-            withSchema(schemaText())
+    @Test
+    fun `Submit Temporary Accommodation application returns 200`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withTeams(
+            listOf(
+              StaffUserTeamMembershipFactory().produce(),
+            ),
+          )
+        },
+      ) { submittingUser, jwt ->
+        `Given a User` { _, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+            val offenderName = "${offenderDetails.firstName} ${offenderDetails.surname}"
+
+            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(schemaText())
+            }
+
+            temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withId(applicationId)
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(submittingUser)
+              withProbationRegion(submittingUser.probationRegion)
+              withName(offenderName)
+              withData(
+                """
+                {}
+              """,
+              )
+            }
+
+            webTestClient.post()
+              .uri("/applications/$applicationId/submission")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+              .bodyValue(
+                SubmitTemporaryAccommodationApplication(
+                  translatedDocument = {},
+                  type = "CAS3",
+                  arrivalDate = LocalDate.now(),
+                  summaryData = object {
+                    val num = 50
+                    val text = "Hello world!"
+                  },
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+
+            val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
+            val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
+
+            assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
+            assertThat(persistedApplication.name).isEqualTo(offenderName)
           }
-
-          temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withId(applicationId)
-            withApplicationSchema(applicationSchema)
-            withCreatedByUser(submittingUser)
-            withProbationRegion(submittingUser.probationRegion)
-            withName(offenderName)
-            withData(
-              """
-              {}
-            """,
-            )
-          }
-
-          webTestClient.post()
-            .uri("/applications/$applicationId/submission")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-            .bodyValue(
-              SubmitTemporaryAccommodationApplication(
-                translatedDocument = {},
-                type = "CAS3",
-                arrivalDate = LocalDate.now(),
-                summaryData = object {
-                  val num = 50
-                  val text = "Hello world!"
-                },
-              ),
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
-
-          val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
-          val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
-
-          assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
-          assertThat(persistedApplication.name).isEqualTo(offenderName)
         }
       }
     }
-  }
 
-  @Test
-  fun `Submit Temporary Accommodation application returns 200 with optionl elements in the request`() {
-    `Given a User`(
-      staffUserDetailsConfigBlock = {
-        withTeams(
-          listOf(
-            StaffUserTeamMembershipFactory().produce(),
-          ),
-        )
-      },
-    ) { submittingUser, jwt ->
-      `Given a User` { _, _ ->
-        `Given an Offender` { offenderDetails, _ ->
-          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+    @Test
+    fun `Submit Temporary Accommodation application returns 200 with optionl elements in the request`() {
+      `Given a User`(
+        staffUserDetailsConfigBlock = {
+          withTeams(
+            listOf(
+              StaffUserTeamMembershipFactory().produce(),
+            ),
+          )
+        },
+      ) { submittingUser, jwt ->
+        `Given a User` { _, _ ->
+          `Given an Offender` { offenderDetails, _ ->
+            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
-          val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
-            withAddedAt(OffsetDateTime.now())
-            withId(UUID.randomUUID())
-            withSchema(schemaText())
-          }
+            val applicationSchema = temporaryAccommodationApplicationJsonSchemaEntityFactory.produceAndPersist {
+              withAddedAt(OffsetDateTime.now())
+              withId(UUID.randomUUID())
+              withSchema(schemaText())
+            }
 
-          temporaryAccommodationApplicationEntityFactory.produceAndPersist {
-            withCrn(offenderDetails.otherIds.crn)
-            withId(applicationId)
-            withApplicationSchema(applicationSchema)
-            withCreatedByUser(submittingUser)
-            withProbationRegion(submittingUser.probationRegion)
-            withPdu("Probation Delivery Unit Test")
-            withHasHistoryOfSexualOffence(true)
-            withIsConcerningSexualBehaviour(true)
-            withIsConcerningArsonBehaviour(true)
-            withData(
-              """
+            temporaryAccommodationApplicationEntityFactory.produceAndPersist {
+              withCrn(offenderDetails.otherIds.crn)
+              withId(applicationId)
+              withApplicationSchema(applicationSchema)
+              withCreatedByUser(submittingUser)
+              withProbationRegion(submittingUser.probationRegion)
+              withPdu("Probation Delivery Unit Test")
+              withHasHistoryOfSexualOffence(true)
+              withIsConcerningSexualBehaviour(true)
+              withIsConcerningArsonBehaviour(true)
+              withData(
+                """
               {}
             """,
-            )
+              )
+            }
+
+            webTestClient.post()
+              .uri("/applications/$applicationId/submission")
+              .header("Authorization", "Bearer $jwt")
+              .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
+              .bodyValue(
+                SubmitTemporaryAccommodationApplication(
+                  translatedDocument = {},
+                  type = "CAS3",
+                  arrivalDate = LocalDate.now(),
+                  summaryData = object {
+                    val num = 50
+                    val text = "Hello world!"
+                  },
+                  personReleaseDate = LocalDate.now(),
+                  pdu = "Probation Delivery Unit Test",
+                  isHistoryOfSexualOffence = true,
+                  isConcerningSexualBehaviour = true,
+                  isConcerningArsonBehaviour = true,
+                  dutyToReferOutcome = "Accepted – Prevention/ Relief Duty",
+                ),
+              )
+              .exchange()
+              .expectStatus()
+              .isOk
+
+            val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
+            val persistedAssessment =
+              persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
+
+            assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
+            assertThat(persistedApplication.personReleaseDate).isEqualTo(LocalDate.now())
+            assertThat(persistedApplication.dutyToReferOutcome).isEqualTo("Accepted – Prevention/ Relief Duty")
           }
-
-          webTestClient.post()
-            .uri("/applications/$applicationId/submission")
-            .header("Authorization", "Bearer $jwt")
-            .header("X-Service-Name", ServiceName.temporaryAccommodation.value)
-            .bodyValue(
-              SubmitTemporaryAccommodationApplication(
-                translatedDocument = {},
-                type = "CAS3",
-                arrivalDate = LocalDate.now(),
-                summaryData = object {
-                  val num = 50
-                  val text = "Hello world!"
-                },
-                personReleaseDate = LocalDate.now(),
-                pdu = "Probation Delivery Unit Test",
-                isHistoryOfSexualOffence = true,
-                isConcerningSexualBehaviour = true,
-                isConcerningArsonBehaviour = true,
-                dutyToReferOutcome = "Accepted – Prevention/ Relief Duty",
-              ),
-            )
-            .exchange()
-            .expectStatus()
-            .isOk
-
-          val persistedApplication = temporaryAccommodationApplicationRepository.findByIdOrNull(applicationId)!!
-          val persistedAssessment = persistedApplication.getLatestAssessment() as TemporaryAccommodationAssessmentEntity
-
-          assertThat(persistedAssessment.summaryData).isEqualTo("{\"num\":50,\"text\":\"Hello world!\"}")
-          assertThat(persistedApplication.personReleaseDate).isEqualTo(LocalDate.now())
-          assertThat(persistedApplication.dutyToReferOutcome).isEqualTo("Accepted – Prevention/ Relief Duty")
         }
       }
     }
+
   }
 
   private fun schemaText(): String {
