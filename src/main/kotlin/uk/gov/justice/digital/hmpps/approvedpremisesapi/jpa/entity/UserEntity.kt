@@ -141,6 +141,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
           a.allocated_to_user_id = u.id
           and a.reallocated_at is null
           and a.submitted_at is null
+          and a.is_withdrawn != true
       ) as pendingAssessments,
       (
         SELECT
@@ -171,6 +172,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
           placement_application.allocated_to_user_id = u.id
           and placement_application.reallocated_at is null
           and placement_application.submitted_at is null
+          and placement_application.decision is null
       ) as pendingPlacementApplications,
       (
         SELECT
@@ -201,6 +203,7 @@ interface UserRepository : JpaRepository<UserEntity, UUID>, JpaSpecificationExec
           placement_request.allocated_to_user_id = u.id
           and placement_request.booking_id is null
           and placement_request.reallocated_at is null
+          and placement_request.is_withdrawn != true
       ) as pendingPlacementRequests,
       (
         SELECT
