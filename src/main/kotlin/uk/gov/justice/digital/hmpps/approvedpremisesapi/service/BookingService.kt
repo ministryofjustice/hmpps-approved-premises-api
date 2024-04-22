@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DestinationProvider
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MoveOnCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrived
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
@@ -557,7 +558,7 @@ class BookingService(
         data = BookingMadeEnvelope(
           id = domainEventId,
           timestamp = bookingCreatedAt.toInstant(),
-          eventType = "approved-premises.booking.made",
+          eventType = EventType.bookingMade,
           eventDetails = BookingMade(
             applicationId = applicationId,
             applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
@@ -631,7 +632,7 @@ class BookingService(
         data = BookingChangedEnvelope(
           id = domainEventId,
           timestamp = bookingChangedAt.toInstant(),
-          eventType = "approved-premises.booking.changed",
+          eventType = EventType.bookingChanged,
           eventDetails = BookingChanged(
             applicationId = applicationId,
             applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
@@ -899,7 +900,7 @@ class BookingService(
           data = PersonArrivedEnvelope(
             id = domainEventId,
             timestamp = occurredAt.toInstant(),
-            eventType = "approved-premises.person.arrived",
+            eventType = EventType.personArrived,
             eventDetails = PersonArrived(
               applicationId = applicationId,
               applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
@@ -1100,7 +1101,7 @@ class BookingService(
           data = PersonNotArrivedEnvelope(
             id = domainEventId,
             timestamp = occurredAt.toInstant(),
-            eventType = "approved-premises.person.not-arrived",
+            eventType = EventType.personNotArrived,
             eventDetails = PersonNotArrived(
               applicationId = applicationId,
               applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
@@ -1327,7 +1328,7 @@ class BookingService(
         data = BookingCancelledEnvelope(
           id = domainEventId,
           timestamp = dateTime.toInstant(),
-          eventType = "approved-premises.booking.cancelled",
+          eventType = EventType.bookingCancelled,
           eventDetails = BookingCancelled(
             applicationId = applicationId,
             applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),
@@ -1565,7 +1566,7 @@ class BookingService(
           data = PersonDepartedEnvelope(
             id = domainEventId,
             timestamp = occurredAt.toInstant(),
-            eventType = "approved-premises.person.departed",
+            eventType = EventType.personDeparted,
             eventDetails = PersonDeparted(
               applicationId = applicationId,
               applicationUrl = applicationUrlTemplate.replace("#id", applicationId.toString()),

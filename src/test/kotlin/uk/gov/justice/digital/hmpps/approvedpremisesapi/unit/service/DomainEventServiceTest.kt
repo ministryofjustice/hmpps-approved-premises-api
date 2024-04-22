@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
@@ -118,7 +119,7 @@ class DomainEventServiceTest {
     val data = ApplicationSubmittedEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.application.submitted",
+      eventType = EventType.applicationSubmitted,
       eventDetails = ApplicationSubmittedFactory().produce(),
     )
 
@@ -160,7 +161,7 @@ class DomainEventServiceTest {
       data = ApplicationSubmittedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.application.submitted",
+        eventType = EventType.applicationSubmitted,
         eventDetails = ApplicationSubmittedFactory().produce(),
       ),
     )
@@ -185,7 +186,7 @@ class DomainEventServiceTest {
     verify(exactly = 1) {
       domainEventWorkerMock.emitEvent(
         match {
-          it.eventType == "approved-premises.application.submitted" &&
+          it.eventType == EventType.applicationSubmitted.value &&
             it.version == 1 &&
             it.description == "An application has been submitted for an Approved Premises placement" &&
             it.detailUrl == "http://api/events/application-submitted/$id" &&
@@ -216,7 +217,7 @@ class DomainEventServiceTest {
       data = ApplicationSubmittedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.application.submitted",
+        eventType = EventType.applicationSubmitted,
         eventDetails = ApplicationSubmittedFactory().produce(),
       ),
     )
@@ -263,7 +264,7 @@ class DomainEventServiceTest {
     val data = ApplicationAssessedEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.application.assessed",
+      eventType = EventType.applicationAssessed,
       eventDetails = ApplicationAssessedFactory().produce(),
     )
 
@@ -305,7 +306,7 @@ class DomainEventServiceTest {
       data = ApplicationAssessedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.application.assessed",
+        eventType = EventType.applicationAssessed,
         eventDetails = ApplicationAssessedFactory().produce(),
       ),
     )
@@ -330,7 +331,7 @@ class DomainEventServiceTest {
     verify(exactly = 1) {
       domainEventWorkerMock.emitEvent(
         match {
-          it.eventType == "approved-premises.application.assessed" &&
+          it.eventType == EventType.applicationAssessed.value &&
             it.version == 1 &&
             it.description == "An application has been assessed for an Approved Premises placement" &&
             it.detailUrl == "http://api/events/application-assessed/$id" &&
@@ -361,7 +362,7 @@ class DomainEventServiceTest {
       data = ApplicationAssessedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.application.assessed",
+        eventType = EventType.applicationAssessed,
         eventDetails = ApplicationAssessedFactory().produce(),
       ),
     )
@@ -408,7 +409,7 @@ class DomainEventServiceTest {
     val data = BookingMadeEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.booking.made",
+      eventType = EventType.bookingMade,
       eventDetails = BookingMadeFactory().produce(),
     )
 
@@ -450,7 +451,7 @@ class DomainEventServiceTest {
       data = BookingMadeEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.booking.made",
+        eventType = EventType.bookingMade,
         eventDetails = BookingMadeFactory().produce(),
       ),
     )
@@ -475,7 +476,7 @@ class DomainEventServiceTest {
     verify(exactly = 1) {
       domainEventWorkerMock.emitEvent(
         match {
-          it.eventType == "approved-premises.booking.made" &&
+          it.eventType == EventType.bookingMade.value &&
             it.version == 1 &&
             it.description == "An Approved Premises booking has been made" &&
             it.detailUrl == "http://api/events/booking-made/$id" &&
@@ -506,7 +507,7 @@ class DomainEventServiceTest {
       data = BookingMadeEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.booking.made",
+        eventType = EventType.bookingMade,
         eventDetails = BookingMadeFactory().produce(),
       ),
     )
@@ -553,7 +554,7 @@ class DomainEventServiceTest {
     val data = BookingChangedEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.booking.changed",
+      eventType = EventType.bookingChanged,
       eventDetails = BookingChangedFactory().produce(),
     )
 
@@ -597,7 +598,7 @@ class DomainEventServiceTest {
       data = BookingChangedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.booking.changed",
+        eventType = EventType.bookingChanged,
         eventDetails = BookingChangedFactory().produce(),
       ),
     )
@@ -623,7 +624,7 @@ class DomainEventServiceTest {
     verify(exactly = 1) {
       domainEventWorkerMock.emitEvent(
         match {
-          it.eventType == "approved-premises.booking.changed" &&
+          it.eventType == EventType.bookingChanged.value &&
             it.version == 1 &&
             it.description == "An Approved Premises Booking has been changed" &&
             it.detailUrl == "http://api/events/booking-changed/$id" &&
@@ -654,7 +655,7 @@ class DomainEventServiceTest {
       data = BookingChangedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.booking.changed",
+        eventType = EventType.bookingChanged,
         eventDetails = BookingChangedFactory().produce(),
       ),
     )
@@ -701,7 +702,7 @@ class DomainEventServiceTest {
     val data = BookingCancelledEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.booking.cancelled",
+      eventType = EventType.bookingCancelled,
       eventDetails = BookingCancelledFactory().produce(),
     )
 
@@ -743,7 +744,7 @@ class DomainEventServiceTest {
       data = BookingCancelledEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.booking.cancelled",
+        eventType = EventType.bookingCancelled,
         eventDetails = BookingCancelledFactory().produce(),
       ),
     )
@@ -769,7 +770,7 @@ class DomainEventServiceTest {
     verify(exactly = 1) {
       domainEventWorkerMock.emitEvent(
         match {
-          it.eventType == "approved-premises.booking.cancelled" &&
+          it.eventType == EventType.bookingCancelled.value &&
             it.version == 1 &&
             it.description == "An Approved Premises Booking has been cancelled" &&
             it.detailUrl == "http://api/events/booking-cancelled/$id" &&
@@ -800,7 +801,7 @@ class DomainEventServiceTest {
       data = BookingCancelledEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.booking.cancelled",
+        eventType = EventType.bookingCancelled,
         eventDetails = BookingCancelledFactory().produce(),
       ),
     )
@@ -847,7 +848,7 @@ class DomainEventServiceTest {
     val data = PersonArrivedEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.person.arrived",
+      eventType = EventType.personArrived,
       eventDetails = PersonArrivedFactory().produce(),
     )
 
@@ -889,7 +890,7 @@ class DomainEventServiceTest {
       data = PersonArrivedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.person.arrived",
+        eventType = EventType.personArrived,
         eventDetails = PersonArrivedFactory().produce(),
       ),
     )
@@ -915,7 +916,7 @@ class DomainEventServiceTest {
     verify(exactly = 1) {
       domainEventWorkerMock.emitEvent(
         match {
-          it.eventType == "approved-premises.person.arrived" &&
+          it.eventType == EventType.personArrived.value &&
             it.version == 1 &&
             it.description == "Someone has arrived at an Approved Premises for their Booking" &&
             it.detailUrl == "http://api/events/person-arrived/$id" &&
@@ -946,7 +947,7 @@ class DomainEventServiceTest {
       data = PersonArrivedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.person.arrived",
+        eventType = EventType.personArrived,
         eventDetails = PersonArrivedFactory().produce(),
       ),
     )
@@ -989,7 +990,7 @@ class DomainEventServiceTest {
       data = PersonArrivedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.person.arrived",
+        eventType = EventType.personArrived,
         eventDetails = PersonArrivedFactory().produce(),
       ),
     )
@@ -1032,7 +1033,7 @@ class DomainEventServiceTest {
     val data = PersonNotArrivedEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.person.not-arrived",
+      eventType = EventType.personNotArrived,
       eventDetails = PersonNotArrivedFactory().produce(),
     )
 
@@ -1076,7 +1077,7 @@ class DomainEventServiceTest {
     val data = MatchRequestWithdrawnEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.match-request.withdrawn",
+      eventType = EventType.matchRequestWithdrawn,
       eventDetails = MatchRequestWithdrawnFactory().produce(),
     )
 
@@ -1120,7 +1121,7 @@ class DomainEventServiceTest {
     val data = PlacementApplicationWithdrawnEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.placement-application.withdrawn",
+      eventType = EventType.placementApplicationWithdrawn,
       eventDetails = PlacementApplicationWithdrawnFactory().produce(),
     )
 
@@ -1164,7 +1165,7 @@ class DomainEventServiceTest {
     val data = RequestForPlacementCreatedEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.request-for-placement.created",
+      eventType = EventType.requestForPlacementCreated,
       eventDetails = RequestForPlacementCreatedFactory().produce(),
     )
 
@@ -1206,7 +1207,7 @@ class DomainEventServiceTest {
       data = PersonNotArrivedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.person.not-arrived",
+        eventType = EventType.personNotArrived,
         eventDetails = PersonNotArrivedFactory().produce(),
       ),
     )
@@ -1232,7 +1233,7 @@ class DomainEventServiceTest {
     verify(exactly = 1) {
       domainEventWorkerMock.emitEvent(
         match {
-          it.eventType == "approved-premises.person.not-arrived" &&
+          it.eventType == EventType.personNotArrived.value &&
             it.version == 1 &&
             it.description == "Someone has failed to arrive at an Approved Premises for their Booking" &&
             it.detailUrl == "http://api/events/person-not-arrived/$id" &&
@@ -1263,7 +1264,7 @@ class DomainEventServiceTest {
       data = PersonNotArrivedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.person.not-arrived",
+        eventType = EventType.personNotArrived,
         eventDetails = PersonNotArrivedFactory().produce(),
       ),
     )
@@ -1306,7 +1307,7 @@ class DomainEventServiceTest {
       data = PersonNotArrivedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.person.not-arrived",
+        eventType = EventType.personNotArrived,
         eventDetails = PersonNotArrivedFactory().produce(),
       ),
     )
@@ -1351,7 +1352,7 @@ class DomainEventServiceTest {
     val data = PersonDepartedEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.person.departed",
+      eventType = EventType.personDeparted,
       eventDetails = PersonDepartedFactory().produce(),
     )
 
@@ -1393,7 +1394,7 @@ class DomainEventServiceTest {
       data = PersonDepartedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.person.departed",
+        eventType = EventType.personDeparted,
         eventDetails = PersonDepartedFactory().produce(),
       ),
     )
@@ -1419,7 +1420,7 @@ class DomainEventServiceTest {
     verify(exactly = 1) {
       domainEventWorkerMock.emitEvent(
         match {
-          it.eventType == "approved-premises.person.departed" &&
+          it.eventType == EventType.personDeparted.value &&
             it.version == 1 &&
             it.description == "Someone has left an Approved Premises" &&
             it.detailUrl == "http://api/events/person-departed/$id" &&
@@ -1450,7 +1451,7 @@ class DomainEventServiceTest {
       data = PersonDepartedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.person.departed",
+        eventType = EventType.personDeparted,
         eventDetails = PersonDepartedFactory().produce(),
       ),
     )
@@ -1493,7 +1494,7 @@ class DomainEventServiceTest {
       data = PersonDepartedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.person.departed",
+        eventType = EventType.personDeparted,
         eventDetails = PersonDepartedFactory().produce(),
       ),
     )
@@ -1538,7 +1539,7 @@ class DomainEventServiceTest {
     val data = BookingNotMadeEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.booking.not-made",
+      eventType = EventType.bookingNotMade,
       eventDetails = BookingNotMadeFactory().produce(),
     )
 
@@ -1580,7 +1581,7 @@ class DomainEventServiceTest {
       data = BookingNotMadeEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.booking.not-made",
+        eventType = EventType.bookingNotMade,
         eventDetails = BookingNotMadeFactory().produce(),
       ),
     )
@@ -1605,7 +1606,7 @@ class DomainEventServiceTest {
     verify(exactly = 1) {
       domainEventWorkerMock.emitEvent(
         match {
-          it.eventType == "approved-premises.booking.not-made" &&
+          it.eventType == EventType.bookingNotMade.value &&
             it.version == 1 &&
             it.description == "It was not possible to create a Booking on this attempt" &&
             it.detailUrl == "http://api/events/booking-not-made/$id" &&
@@ -1636,7 +1637,7 @@ class DomainEventServiceTest {
       data = BookingNotMadeEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.booking.not-made",
+        eventType = EventType.bookingNotMade,
         eventDetails = BookingNotMadeFactory().produce(),
       ),
     )
@@ -1683,7 +1684,7 @@ class DomainEventServiceTest {
     val data = ApplicationWithdrawnEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.application.withdrawn",
+      eventType = EventType.applicationWithdrawn,
       eventDetails = ApplicationWithdrawnFactory().produce(),
     )
 
@@ -1725,7 +1726,7 @@ class DomainEventServiceTest {
       data = ApplicationWithdrawnEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.application.withdrawn",
+        eventType = EventType.applicationWithdrawn,
         eventDetails = ApplicationWithdrawnFactory().produce(),
       ),
     )
@@ -1750,7 +1751,7 @@ class DomainEventServiceTest {
     verify(exactly = 1) {
       domainEventWorkerMock.emitEvent(
         match {
-          it.eventType == "approved-premises.application.withdrawn" &&
+          it.eventType == EventType.applicationWithdrawn.value &&
             it.version == 1 &&
             it.description == "An Approved Premises Application has been withdrawn" &&
             it.detailUrl == "http://api/events/application-withdrawn/$id" &&
@@ -1781,7 +1782,7 @@ class DomainEventServiceTest {
       data = ApplicationWithdrawnEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.application.withdrawn",
+        eventType = EventType.applicationWithdrawn,
         eventDetails = ApplicationWithdrawnFactory().produce(),
       ),
     )
@@ -1821,7 +1822,7 @@ class DomainEventServiceTest {
       data = ApplicationWithdrawnEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.application.withdrawn",
+        eventType = EventType.applicationWithdrawn,
         eventDetails = ApplicationWithdrawnFactory().produce(),
       ),
     )
@@ -1868,7 +1869,7 @@ class DomainEventServiceTest {
     val data = AssessmentAppealedEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.assessment.appealed",
+      eventType = EventType.assessmentAppealed,
       eventDetails = AssessmentAppealedFactory().produce(),
     )
 
@@ -1910,7 +1911,7 @@ class DomainEventServiceTest {
       data = AssessmentAppealedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.assessment.appealed",
+        eventType = EventType.assessmentAppealed,
         eventDetails = AssessmentAppealedFactory().produce(),
       ),
     )
@@ -1935,7 +1936,7 @@ class DomainEventServiceTest {
     verify(exactly = 1) {
       domainEventWorkerMock.emitEvent(
         match {
-          it.eventType == "approved-premises.assessment.appealed" &&
+          it.eventType == EventType.assessmentAppealed.value &&
             it.version == 1 &&
             it.description == "An Approved Premises Assessment has been appealed" &&
             it.detailUrl == "http://api/events/assessment-appealed/$id" &&
@@ -1966,7 +1967,7 @@ class DomainEventServiceTest {
       data = AssessmentAppealedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.assessment.appealed",
+        eventType = EventType.assessmentAppealed,
         eventDetails = AssessmentAppealedFactory().produce(),
       ),
     )
@@ -2011,7 +2012,7 @@ class DomainEventServiceTest {
       data = PlacementApplicationWithdrawnEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.placement-application.withdrawn",
+        eventType = EventType.placementApplicationWithdrawn,
         eventDetails = PlacementApplicationWithdrawnFactory().produce(),
       ),
     )
@@ -2036,7 +2037,7 @@ class DomainEventServiceTest {
     verify(exactly = 1) {
       domainEventWorkerMock.emitEvent(
         match { snsEvent ->
-          snsEvent.eventType == "approved-premises.placement-application.withdrawn" &&
+          snsEvent.eventType == EventType.placementApplicationWithdrawn.value &&
             snsEvent.version == 1 &&
             snsEvent.description == "An Approved Premises Request for Placement has been withdrawn" &&
             snsEvent.detailUrl == "http://api/events/placement-application-withdrawn/$id" &&
@@ -2067,7 +2068,7 @@ class DomainEventServiceTest {
       data = PlacementApplicationWithdrawnEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.placement-application.withdrawn",
+        eventType = EventType.placementApplicationWithdrawn,
         eventDetails = PlacementApplicationWithdrawnFactory().produce(),
       ),
     )
@@ -2112,7 +2113,7 @@ class DomainEventServiceTest {
       data = MatchRequestWithdrawnEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.match-request.withdrawn",
+        eventType = EventType.matchRequestWithdrawn,
         eventDetails = MatchRequestWithdrawnFactory().produce(),
       ),
     )
@@ -2137,7 +2138,7 @@ class DomainEventServiceTest {
     verify(exactly = 1) {
       domainEventWorkerMock.emitEvent(
         match { snsEvent ->
-          snsEvent.eventType == "approved-premises.match-request.withdrawn" &&
+          snsEvent.eventType == EventType.matchRequestWithdrawn.value &&
             snsEvent.version == 1 &&
             snsEvent.description == "An Approved Premises Match Request has been withdrawn" &&
             snsEvent.detailUrl == "http://api/events/match-request-withdrawn/$id" &&
@@ -2168,7 +2169,7 @@ class DomainEventServiceTest {
       data = MatchRequestWithdrawnEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.match-request.withdrawn",
+        eventType = EventType.matchRequestWithdrawn,
         eventDetails = MatchRequestWithdrawnFactory().produce(),
       ),
     )
@@ -2215,7 +2216,7 @@ class DomainEventServiceTest {
     val data = AssessmentAllocatedEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.assessment.appealed",
+      eventType = EventType.assessmentAppealed,
       eventDetails = AssessmentAllocatedFactory().produce(),
     )
 
@@ -2257,7 +2258,7 @@ class DomainEventServiceTest {
       data = AssessmentAllocatedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.assessment.allocated",
+        eventType = EventType.assessmentAllocated,
         eventDetails = AssessmentAllocatedFactory().produce(),
       ),
     )
@@ -2282,7 +2283,7 @@ class DomainEventServiceTest {
     verify(exactly = 1) {
       domainEventWorkerMock.emitEvent(
         match {
-          it.eventType == "approved-premises.assessment.allocated" &&
+          it.eventType == EventType.assessmentAllocated.value &&
             it.version == 1 &&
             it.description == "An Approved Premises Assessment has been allocated" &&
             it.detailUrl == "http://api/events/assessment-allocated/$id" &&
@@ -2313,7 +2314,7 @@ class DomainEventServiceTest {
       data = AssessmentAllocatedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.assessment.allocated",
+        eventType = EventType.assessmentAllocated,
         eventDetails = AssessmentAllocatedFactory().produce(),
       ),
     )
@@ -2358,7 +2359,7 @@ class DomainEventServiceTest {
       data = RequestForPlacementCreatedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.request-for-placement.created",
+        eventType = EventType.requestForPlacementCreated,
         eventDetails = RequestForPlacementCreatedFactory().produce(),
       ),
     )
@@ -2383,7 +2384,7 @@ class DomainEventServiceTest {
     verify(exactly = 1) {
       domainEventWorkerMock.emitEvent(
         match { snsEvent ->
-          snsEvent.eventType == "approved-premises.request-for-placement.created" &&
+          snsEvent.eventType == EventType.requestForPlacementCreated.value &&
             snsEvent.version == 1 &&
             snsEvent.description == "An Approved Premises Request for Placement has been created" &&
             snsEvent.detailUrl == "http://api/events/request-for-placement-created/$id" &&
@@ -2414,7 +2415,7 @@ class DomainEventServiceTest {
       data = RequestForPlacementCreatedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.placement-request-created-request.withdrawn",
+        eventType = EventType.requestForPlacementCreated,
         eventDetails = RequestForPlacementCreatedFactory().produce(),
       ),
     )
@@ -2461,7 +2462,7 @@ class DomainEventServiceTest {
     val data = PlacementApplicationAllocatedEnvelope(
       id = id,
       timestamp = occurredAt.toInstant(),
-      eventType = "approved-premises.assessment.appealed",
+      eventType = EventType.assessmentAppealed,
       eventDetails = PlacementApplicationAllocatedFactory().produce(),
     )
 
@@ -2503,7 +2504,7 @@ class DomainEventServiceTest {
       data = PlacementApplicationAllocatedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.assessment.allocated",
+        eventType = EventType.assessmentAllocated,
         eventDetails = PlacementApplicationAllocatedFactory().produce(),
       ),
     )
@@ -2559,7 +2560,7 @@ class DomainEventServiceTest {
       data = PlacementApplicationAllocatedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.placement-application.allocated",
+        eventType = EventType.placementApplicationAllocated,
         eventDetails = PlacementApplicationAllocatedFactory().produce(),
       ),
     )

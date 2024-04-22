@@ -9,6 +9,7 @@ import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
@@ -107,7 +108,7 @@ class Cas1AssessmentDomainEventServiceTest {
                 it.crn == assessment.application.crn
               )
 
-            val envelopeMatches = envelope.eventType == "approved-premises.assessment.allocated"
+            val envelopeMatches = envelope.eventType == EventType.assessmentAllocated
 
             val allocatedToUserDetailsMatch =
               assertStaffMemberDetailsMatch(eventDetails.allocatedTo, assigneeUserStaffDetails)

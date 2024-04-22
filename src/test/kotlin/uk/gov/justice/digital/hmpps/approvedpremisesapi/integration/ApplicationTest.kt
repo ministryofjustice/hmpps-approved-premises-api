@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
@@ -2909,7 +2910,7 @@ class ApplicationTest : IntegrationTestBase() {
             ApplicationAssessedEnvelope(
               id = UUID.randomUUID(),
               timestamp = Instant.now(),
-              eventType = "approved-premises.application.assessed",
+              eventType = EventType.applicationAssessed,
               eventDetails = ApplicationAssessedFactory()
                 .withApplicationId(applicationId)
                 .withDecision("accepted")
@@ -2941,7 +2942,7 @@ class ApplicationTest : IntegrationTestBase() {
             BookingMadeEnvelope(
               id = UUID.randomUUID(),
               timestamp = Instant.now(),
-              eventType = "approved-premises.booking.made",
+              eventType = EventType.bookingMade,
               eventDetails = BookingMadeFactory()
                 .withApplicationId(applicationId)
                 .withBookingId(booking.id)
@@ -3045,7 +3046,7 @@ class ApplicationTest : IntegrationTestBase() {
             ApplicationSubmittedEnvelope(
               id = UUID.randomUUID(),
               timestamp = Instant.now(),
-              eventType = "approved-premises.application.submitted",
+              eventType = EventType.applicationSubmitted,
               eventDetails = ApplicationSubmittedFactory()
                 .withApplicationId(applicationId)
                 .produce(),
@@ -3056,7 +3057,7 @@ class ApplicationTest : IntegrationTestBase() {
             ApplicationAssessedEnvelope(
               id = UUID.randomUUID(),
               timestamp = Instant.now(),
-              eventType = "approved-premises.application.assessed",
+              eventType = EventType.applicationAssessed,
               eventDetails = ApplicationAssessedFactory()
                 .withDecision("accepted")
                 .withApplicationId(applicationId)
@@ -3068,7 +3069,7 @@ class ApplicationTest : IntegrationTestBase() {
             BookingMadeEnvelope(
               id = UUID.randomUUID(),
               timestamp = Instant.now(),
-              eventType = "approved-premises.booking.made",
+              eventType = EventType.bookingMade,
               eventDetails = BookingMadeFactory()
                 .withApplicationId(applicationId)
                 .withArrivalOn(LocalDate.parse("2024-01-01"))
@@ -3086,7 +3087,7 @@ class ApplicationTest : IntegrationTestBase() {
             PersonArrivedEnvelope(
               id = UUID.randomUUID(),
               timestamp = Instant.now(),
-              eventType = "approved-premises.person.arrived",
+              eventType = EventType.personArrived,
               eventDetails = PersonArrivedFactory()
                 .withApplicationId(applicationId)
                 .withArrivedAt(Instant.parse("2024-01-01T12:34:56.789Z"))
@@ -3098,7 +3099,7 @@ class ApplicationTest : IntegrationTestBase() {
             PersonNotArrivedEnvelope(
               id = UUID.randomUUID(),
               timestamp = Instant.now(),
-              eventType = "approved-premises.person.not-arrived",
+              eventType = EventType.personNotArrived,
               eventDetails = PersonNotArrivedFactory()
                 .withApplicationId(applicationId)
                 .withExpectedArrivalOn(LocalDate.parse("2024-01-01"))
@@ -3110,7 +3111,7 @@ class ApplicationTest : IntegrationTestBase() {
             PersonDepartedEnvelope(
               id = UUID.randomUUID(),
               timestamp = Instant.now(),
-              eventType = "approved-premises.person.departed",
+              eventType = EventType.personDeparted,
               eventDetails = PersonDepartedFactory()
                 .withApplicationId(applicationId)
                 .withDepartedAt(Instant.parse("2024-04-01T12:34:56.789Z"))
@@ -3122,7 +3123,7 @@ class ApplicationTest : IntegrationTestBase() {
             BookingNotMadeEnvelope(
               id = UUID.randomUUID(),
               timestamp = Instant.now(),
-              eventType = "approved-premises.booking.not-made",
+              eventType = EventType.bookingNotMade,
               eventDetails = BookingNotMadeFactory()
                 .withApplicationId(applicationId)
                 .withFailureDescription("no suitable premises")
@@ -3134,7 +3135,7 @@ class ApplicationTest : IntegrationTestBase() {
             BookingCancelledEnvelope(
               id = UUID.randomUUID(),
               timestamp = Instant.now(),
-              eventType = "approved-premises.booking.cancelled",
+              eventType = EventType.bookingCancelled,
               eventDetails = BookingCancelledFactory()
                 .withApplicationId(applicationId)
                 .withCancellationReason("additional sentencing")
@@ -3146,7 +3147,7 @@ class ApplicationTest : IntegrationTestBase() {
             BookingChangedEnvelope(
               id = UUID.randomUUID(),
               timestamp = Instant.now(),
-              eventType = "approved-premises.booking.changed",
+              eventType = EventType.bookingChanged,
               eventDetails = BookingChangedFactory()
                 .withApplicationId(applicationId)
                 .withArrivalOn(LocalDate.of(2029, 1, 2))
@@ -3164,7 +3165,7 @@ class ApplicationTest : IntegrationTestBase() {
             ApplicationWithdrawnEnvelope(
               id = UUID.randomUUID(),
               timestamp = Instant.now(),
-              eventType = "approved-premises.application.withdrawn",
+              eventType = EventType.applicationWithdrawn,
               eventDetails = ApplicationWithdrawnFactory()
                 .withApplicationId(applicationId)
                 .produce(),

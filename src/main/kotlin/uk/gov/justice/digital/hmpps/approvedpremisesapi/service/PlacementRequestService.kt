@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMade
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
@@ -444,7 +445,7 @@ class PlacementRequestService(
         data = BookingNotMadeEnvelope(
           id = domainEventId,
           timestamp = bookingNotCreatedAt.toInstant(),
-          eventType = "approved-premises.booking.not-made",
+          eventType = EventType.bookingNotMade,
           eventDetails = BookingNotMade(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate.replace("#id", application.id.toString()),

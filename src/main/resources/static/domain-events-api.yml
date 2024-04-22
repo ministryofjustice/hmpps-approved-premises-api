@@ -630,8 +630,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.application.submitted
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/ApplicationSubmitted'
       required:
@@ -719,8 +718,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.application.withdrawn
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/ApplicationWithdrawn'
       required:
@@ -777,8 +775,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.application.assessed
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/ApplicationAssessed'
       required:
@@ -838,8 +835,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.placement-application.withdrawn
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/PlacementApplicationWithdrawn'
       required:
@@ -892,8 +888,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.placement-application.allocated
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/PlacementApplicationAllocated'
       required:
@@ -941,8 +936,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.match-request.withdrawn
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/MatchRequestWithdrawn'
       required:
@@ -997,8 +991,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.booking.made
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/BookingMade'
       required:
@@ -1071,8 +1064,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.booking.changed
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/BookingChanged'
       required:
@@ -1130,8 +1122,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.booking.not-made
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/BookingNotMade'
       required:
@@ -1181,8 +1172,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.booking.cancelled
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/BookingCancelled'
       required:
@@ -1233,8 +1223,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.booking.extended
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/BookingExtended'
       required:
@@ -1296,8 +1285,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.person.arrived
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/PersonArrived'
       required:
@@ -1358,8 +1346,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.person.not-arrived
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/PersonNotArrived'
       required:
@@ -1418,8 +1405,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.person.departed
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/PersonDeparted'
       required:
@@ -1488,8 +1474,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.assessment.allocated
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/AssessmentAllocated'
       required:
@@ -1535,8 +1520,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.assessment.appealed
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/AssessmentAppealed'
       required:
@@ -1593,8 +1577,7 @@ components:
           example: '2022-11-30T14:53:44'
           format: date-time
         eventType:
-          type: string
-          example: approved-premises.request-for-placement.created
+          $ref: '#/components/schemas/EventType'
         eventDetails:
           $ref: '#/components/schemas/RequestForPlacementCreated'
       required:
@@ -1757,3 +1740,40 @@ components:
       required:
         - startDate
         - endDate
+    EventType:
+      description: The type of an event
+      type: string
+      enum:
+          - approved-premises.application.submitted
+          - approved-premises.application.assessed
+          - approved-premises.booking.made
+          - approved-premises.person.arrived
+          - approved-premises.person.not-arrived
+          - approved-premises.person.departed
+          - approved-premises.booking.not-made
+          - approved-premises.booking.cancelled
+          - approved-premises.booking.changed
+          - approved-premises.application.withdrawn
+          - approved-premises.assessment.appealed
+          - approved-premises.assessment.allocated
+          - approved-premises.placement-application.withdrawn
+          - approved-premises.placement-application.allocated
+          - approved-premises.match-request.withdrawn
+          - approved-premises.request-for-placement.created
+      x-enum-varnames:
+        - applicationSubmitted
+        - applicationAssessed
+        - bookingMade
+        - personArrived
+        - personNotArrived
+        - personDeparted
+        - bookingNotMade
+        - bookingCancelled
+        - bookingChanged
+        - applicationWithdrawn
+        - assessmentAppealed
+        - assessmentAllocated
+        - placementApplicationWithdrawn
+        - placementApplicationAllocated
+        - matchRequestWithdrawn
+        - requestForPlacementCreated

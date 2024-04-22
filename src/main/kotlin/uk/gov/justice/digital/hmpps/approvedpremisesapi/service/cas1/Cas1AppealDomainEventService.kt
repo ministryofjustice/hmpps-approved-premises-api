@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealed
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -44,7 +45,7 @@ class Cas1AppealDomainEventService(
         data = AssessmentAppealedEnvelope(
           id = id,
           timestamp = timestamp,
-          eventType = "approved-premises.assessment.appealed",
+          eventType = EventType.assessmentAppealed,
           eventDetails = AssessmentAppealed(
             applicationId = appeal.application.id,
             applicationUrl = applicationUrlTemplate.resolve("id", appeal.application.id.toString()),

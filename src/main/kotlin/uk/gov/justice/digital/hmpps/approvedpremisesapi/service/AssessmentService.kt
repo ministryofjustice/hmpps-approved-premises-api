@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedAssessedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
@@ -477,7 +478,7 @@ class AssessmentService(
         data = ApplicationAssessedEnvelope(
           id = domainEventId,
           timestamp = acceptedAt.toInstant(),
-          eventType = "approved-premises.application.assessed",
+          eventType = EventType.applicationAssessed,
           eventDetails = ApplicationAssessed(
             applicationId = application.id,
             applicationUrl = applicationUrlTemplate
@@ -604,7 +605,7 @@ class AssessmentService(
           data = ApplicationAssessedEnvelope(
             id = domainEventId,
             timestamp = rejectedAt.toInstant(),
-            eventType = "approved-premises.application.assessed",
+            eventType = EventType.applicationAssessed,
             eventDetails = ApplicationAssessed(
               applicationId = application.id,
               applicationUrl = applicationUrlTemplate

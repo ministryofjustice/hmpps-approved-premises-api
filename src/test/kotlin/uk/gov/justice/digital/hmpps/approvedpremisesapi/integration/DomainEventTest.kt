@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
@@ -85,7 +86,7 @@ class DomainEventTest : IntegrationTestBase() {
     val envelopedData = ApplicationSubmittedEnvelope(
       id = eventId,
       timestamp = Instant.now(),
-      eventType = "approved-premises.application.submitted",
+      eventType = EventType.applicationSubmitted,
       eventDetails = ApplicationSubmittedFactory().produce(),
     )
 
@@ -142,7 +143,7 @@ class DomainEventTest : IntegrationTestBase() {
     val envelopedData = ApplicationAssessedEnvelope(
       id = eventId,
       timestamp = Instant.now(),
-      eventType = "approved-premises.application.assessed",
+      eventType = EventType.applicationAssessed,
       eventDetails = ApplicationAssessedFactory().produce(),
     )
 
@@ -199,7 +200,7 @@ class DomainEventTest : IntegrationTestBase() {
     val envelopedData = BookingMadeEnvelope(
       id = eventId,
       timestamp = Instant.now(),
-      eventType = "approved-premises.booking.made",
+      eventType = EventType.bookingMade,
       eventDetails = BookingMadeFactory().produce(),
     )
 
@@ -256,7 +257,7 @@ class DomainEventTest : IntegrationTestBase() {
     val envelopedData = BookingCancelledEnvelope(
       id = eventId,
       timestamp = Instant.now(),
-      eventType = "approved-premises.booking.cancelled",
+      eventType = EventType.bookingCancelled,
       eventDetails = BookingCancelledFactory().produce(),
     )
 
@@ -313,7 +314,7 @@ class DomainEventTest : IntegrationTestBase() {
     val envelopedData = BookingChangedEnvelope(
       id = eventId,
       timestamp = Instant.now(),
-      eventType = "approved-premises.booking.changed",
+      eventType = EventType.bookingChanged,
       eventDetails = BookingChangedFactory().produce(),
     )
 
@@ -370,7 +371,7 @@ class DomainEventTest : IntegrationTestBase() {
     val envelopedData = PersonArrivedEnvelope(
       id = eventId,
       timestamp = Instant.now(),
-      eventType = "approved-premises.person.arrived",
+      eventType = EventType.personArrived,
       eventDetails = PersonArrivedFactory().produce(),
     )
 
@@ -427,7 +428,7 @@ class DomainEventTest : IntegrationTestBase() {
     val envelopedData = PersonNotArrivedEnvelope(
       id = eventId,
       timestamp = Instant.now(),
-      eventType = "approved-premises.person.not-arrived",
+      eventType = EventType.personNotArrived,
       eventDetails = PersonNotArrivedFactory().produce(),
     )
 
@@ -484,7 +485,7 @@ class DomainEventTest : IntegrationTestBase() {
     val envelopedData = PersonDepartedEnvelope(
       id = eventId,
       timestamp = Instant.now(),
-      eventType = "approved-premises.person.departed",
+      eventType = EventType.personDeparted,
       eventDetails = PersonDepartedFactory().produce(),
     )
 
@@ -541,7 +542,7 @@ class DomainEventTest : IntegrationTestBase() {
     val envelopedData = BookingNotMadeEnvelope(
       id = eventId,
       timestamp = Instant.now(),
-      eventType = "approved-premises.booking.not-made",
+      eventType = EventType.bookingNotMade,
       eventDetails = BookingNotMadeFactory().produce(),
     )
 
@@ -598,7 +599,7 @@ class DomainEventTest : IntegrationTestBase() {
     val envelopedData = ApplicationWithdrawnEnvelope(
       id = eventId,
       timestamp = Instant.now(),
-      eventType = "approved-premises.application.withdrawn",
+      eventType = EventType.applicationWithdrawn,
       eventDetails = ApplicationWithdrawnFactory().produce(),
     )
 
@@ -655,7 +656,7 @@ class DomainEventTest : IntegrationTestBase() {
     val envelopedData = AssessmentAppealedEnvelope(
       id = eventId,
       timestamp = Instant.now(),
-      eventType = "approved-premises.assessment.appealed",
+      eventType = EventType.assessmentAppealed,
       eventDetails = AssessmentAppealedFactory().produce(),
     )
 
@@ -712,7 +713,7 @@ class DomainEventTest : IntegrationTestBase() {
     val envelopedData = PlacementApplicationWithdrawnEnvelope(
       id = eventId,
       timestamp = Instant.now(),
-      eventType = "approved-premises.placement-application.withdrawn",
+      eventType = EventType.applicationWithdrawn,
       eventDetails = PlacementApplicationWithdrawnFactory().produce(),
     )
 
@@ -769,7 +770,7 @@ class DomainEventTest : IntegrationTestBase() {
     val envelopedData = PlacementApplicationAllocatedEnvelope(
       id = eventId,
       timestamp = Instant.now(),
-      eventType = "approved-premises.placement-application.allocated",
+      eventType = EventType.placementApplicationAllocated,
       eventDetails = PlacementApplicationAllocatedFactory().produce(),
     )
 
@@ -816,7 +817,7 @@ class DomainEventTest : IntegrationTestBase() {
     val envelopedData = AssessmentAllocatedEnvelope(
       id = eventId,
       timestamp = Instant.now(),
-      eventType = "approved-premises.assessment.allocated",
+      eventType = EventType.assessmentAllocated,
       eventDetails = AssessmentAllocatedFactory().produce(),
     )
 

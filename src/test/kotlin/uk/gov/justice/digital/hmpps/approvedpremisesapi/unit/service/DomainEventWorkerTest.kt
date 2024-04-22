@@ -19,6 +19,7 @@ import org.springframework.retry.policy.SimpleRetryPolicy
 import org.springframework.retry.support.RetryTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationSubmittedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
@@ -123,7 +124,7 @@ class DomainEventWorkerTest {
       data = ApplicationAssessedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.application.assessed",
+        eventType = EventType.applicationAssessed,
         eventDetails = ApplicationAssessedFactory().produce(),
       ),
     )
@@ -183,7 +184,7 @@ class DomainEventWorkerTest {
       data = ApplicationAssessedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.application.assessed",
+        eventType = EventType.applicationAssessed,
         eventDetails = ApplicationAssessedFactory().produce(),
       ),
     )
@@ -241,7 +242,7 @@ class DomainEventWorkerTest {
       data = ApplicationAssessedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.application.assessed",
+        eventType = EventType.applicationAssessed,
         eventDetails = ApplicationAssessedFactory().produce(),
       ),
     )
@@ -289,7 +290,7 @@ class DomainEventWorkerTest {
       data = ApplicationSubmittedEnvelope(
         id = id,
         timestamp = occurredAt.toInstant(),
-        eventType = "approved-premises.application.submitted",
+        eventType = EventType.applicationSubmitted,
         eventDetails = ApplicationSubmittedFactory().produce(),
       ),
     )

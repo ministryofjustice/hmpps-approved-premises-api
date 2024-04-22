@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAllocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAllocatedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
@@ -50,7 +51,7 @@ class Cas1AssessmentDomainEventService(
         data = AssessmentAllocatedEnvelope(
           id = id,
           timestamp = occurredAt,
-          eventType = "approved-premises.assessment.allocated",
+          eventType = EventType.assessmentAllocated,
           eventDetails = AssessmentAllocated(
             assessmentId = assessment.id,
             assessmentUrl = assessmentUrlTemplate.resolve("id", assessment.id.toString()),

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
@@ -176,7 +177,7 @@ class DailyMetricsReportGeneratorTest {
           ApplicationSubmittedEnvelope(
             id = UUID.randomUUID(),
             timestamp = date.toLocalDateTime().toInstant(),
-            eventType = "approved-premises.application.submitted",
+            eventType = EventType.applicationSubmitted,
             eventDetails = ApplicationSubmittedFactory()
               .withSubmittedByStaffMember(
                 StaffMemberFactory()
@@ -199,7 +200,7 @@ class DailyMetricsReportGeneratorTest {
           ApplicationAssessedEnvelope(
             id = UUID.randomUUID(),
             timestamp = date.toLocalDateTime().toInstant(),
-            eventType = "approved-premises.application.submitted",
+            eventType = EventType.applicationAssessed,
             eventDetails = ApplicationAssessedFactory()
               .withAssessedBy(
                 ApplicationAssessedAssessedByFactory()
@@ -224,7 +225,7 @@ class DailyMetricsReportGeneratorTest {
         BookingMadeEnvelope(
           id = UUID.randomUUID(),
           timestamp = date.toLocalDateTime().toInstant(),
-          eventType = "approved-premises.application.submitted",
+          eventType = EventType.bookingMade,
           eventDetails = BookingMadeFactory()
             .withBookedBy(
               BookingMadeBookedByFactory()
