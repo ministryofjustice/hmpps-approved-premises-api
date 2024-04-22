@@ -105,8 +105,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "accommodation.cas3.booking.cancelled",
-      typeDescription = "A booking for a Transitional Accommodation premises has been cancelled",
       detailUrl = bookingCancelledDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -119,8 +117,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "accommodation.cas3.booking.confirmed",
-      typeDescription = "A booking has been confirmed for a Transitional Accommodation premises",
       detailUrl = bookingConfirmedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -133,8 +129,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "accommodation.cas3.booking.provisionally-made",
-      typeDescription = "A booking has been provisionally made for a Transitional Accommodation premises",
       detailUrl = bookingProvisionallyMadeDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -147,8 +141,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "accommodation.cas3.person.arrived",
-      typeDescription = "Someone has arrived at a Transitional Accommodation premises for their booking",
       detailUrl = personArrivedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -161,8 +153,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "accommodation.cas3.person.arrived.updated",
-      typeDescription = "Someone has changed arrival date at a Transitional Accommodation premises for their booking",
       detailUrl = personArrivedUpdatedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -175,8 +165,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = EventType.personDeparted.value,
-      typeDescription = "Someone has left a Transitional Accommodation premises",
       detailUrl = personDepartedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -189,8 +177,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = EventType.referralSubmitted.value,
-      typeDescription = "A referral for Transitional Accommodation has been submitted",
       detailUrl = referralSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -203,8 +189,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = EventType.personDepartureUpdated.value,
-      typeDescription = "Person has updated departure date of Transitional Accommodation premises",
       detailUrl = personDepartureUpdatedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -213,12 +197,14 @@ class DomainEventService(
 
   private fun <T : CAS3Event> saveAndEmit(
     domainEvent: DomainEvent<T>,
-    typeName: String,
-    typeDescription: String,
     detailUrl: String,
     crn: String,
     nomsNumber: String?,
   ) {
+    val enumType = enumTypeFromDataType(domainEvent.data::class)
+    val typeName = enumType.typeName
+    val typeDescription = enumType.typeDescription
+
     domainEventRepository.save(
       DomainEventEntity(
         id = domainEvent.id,
@@ -290,8 +276,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "accommodation.cas3.booking.cancelled.updated",
-      typeDescription = "A cancelled booking for a Transitional Accommodation premises has been updated",
       detailUrl = bookingCancelledUpdatedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
