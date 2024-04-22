@@ -139,10 +139,8 @@
       "hasPhyHealthNeeds": "yes",
       "needsDetail": "Mr Bertrand is in a wheelchair",
       "canClimbStairs": "no",
-      "isReceivingTreatment": "no",
-      "treatmentDetail": "",
-      "hasPhyHealthMedication": "no",
-      "medicationDetail": "",
+      "isReceivingMedicationOrTreatment": "no",
+      "medicationOrTreatmentDetail": "",
       "canLiveIndependently": "yes",
       "indyLivingDetail": "",
       "requiresAdditionalSupport": "yes",
@@ -151,6 +149,7 @@
     "mental-health": {
       "hasMentalHealthNeeds": "yes",
       "needsDetail": "Mr Bertrand has a history of schizophrenic episodes and also suffers from epilepsy",
+      "needsPresentation": "He presents with withdrawal and occasionally erratic behaviour.",
       "isEngagedWithCommunity": "no",
       "isEngagedWithServicesInCustody": "yes",
       "canManageMedication": "notPrescribedMedication",
@@ -264,12 +263,6 @@
       "hasCellShareComments": "no",
       "cellShareInformationDetail": ""
     },
-    "behaviour-notes-data": [
-      {
-        "behaviourDetail": "Mr Bertrand was involved in a violent dispute in 2020 in HMP Bristol but there was no adjudication"
-      }
-    ],
-    "behaviour-notes": {},
     "additional-risk-information": {
       "hasAdditionalInformation": "no",
       "additionalInformationDetail": ""
