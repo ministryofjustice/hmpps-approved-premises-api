@@ -40,6 +40,8 @@
     <ID>MaxLineLength:AssessmentServiceTest.kt$AssessmentServiceTest.ReallocateAssessment$fun</ID>
     <ID>ReturnCount:PlacementRequestService.kt$PlacementRequestService$fun reallocatePlacementRequest( assigneeUser: UserEntity, id: UUID, ): AuthorisableActionResult&lt;ValidatableActionResult&lt;PlacementRequestEntity>></ID>
     <ID>LongMethod:UserAllocationsEngineTest.kt$UserAllocationsEngineTest$@BeforeAll fun setup()</ID>
+    <ID>CyclomaticComplexMethod:DomainEventsController.kt$DomainEventsController$@Suppress("UNCHECKED_CAST") // Safe as the return type is constant and not likely to change at runtime private inline fun &lt;reified T> getDomainEvent(eventId: UUID): ResponseEntity&lt;T></ID>
+    <ID>TooGenericExceptionThrown:DomainEventsController.kt$DomainEventsController$throw RuntimeException("Only CAS1 events are supported")</ID>
   </ManuallySuppressedIssues>
   <CurrentIssues>
     <ID>ComplexCondition:BookingService.kt$BookingService$booking.service == ServiceName.approvedPremises.value &amp;&amp; booking.application != null &amp;&amp; user != null &amp;&amp; !arrivedAndDepartedDomainEventsDisabled</ID>

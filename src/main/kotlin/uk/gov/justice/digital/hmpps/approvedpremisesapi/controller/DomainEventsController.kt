@@ -26,108 +26,59 @@ import java.util.UUID
 class DomainEventsController(
   private val domainEventService: DomainEventService,
 ) : EventsApiDelegate {
-  override fun eventsApplicationSubmittedEventIdGet(eventId: UUID): ResponseEntity<ApplicationSubmittedEnvelope> {
-    val event = domainEventService.getApplicationSubmittedDomainEvent(eventId)
-      ?: throw NotFoundProblem(eventId, "DomainEvent")
+  override fun eventsApplicationSubmittedEventIdGet(eventId: UUID) = getDomainEvent<ApplicationSubmittedEnvelope>(eventId)
 
-    return ResponseEntity.ok(event.data)
-  }
+  override fun eventsBookingCancelledEventIdGet(eventId: UUID) = getDomainEvent<BookingCancelledEnvelope>(eventId)
 
-  override fun eventsBookingCancelledEventIdGet(eventId: UUID): ResponseEntity<BookingCancelledEnvelope> {
-    val event = domainEventService.getBookingCancelledEvent(eventId)
-      ?: throw NotFoundProblem(eventId, "DomainEvent")
+  override fun eventsBookingChangedEventIdGet(eventId: UUID) = getDomainEvent<BookingChangedEnvelope>(eventId)
 
-    return ResponseEntity.ok(event.data)
-  }
+  override fun eventsApplicationAssessedEventIdGet(eventId: UUID) = getDomainEvent<ApplicationAssessedEnvelope>(eventId)
 
-  override fun eventsBookingChangedEventIdGet(eventId: UUID): ResponseEntity<BookingChangedEnvelope> {
-    val event = domainEventService.getBookingChangedEvent(eventId)
-      ?: throw NotFoundProblem(eventId, "DomainEvent")
+  override fun eventsBookingMadeEventIdGet(eventId: UUID) = getDomainEvent<BookingMadeEnvelope>(eventId)
 
-    return ResponseEntity.ok(event.data)
-  }
+  override fun eventsPersonArrivedEventIdGet(eventId: UUID) = getDomainEvent<PersonArrivedEnvelope>(eventId)
 
-  override fun eventsApplicationAssessedEventIdGet(eventId: UUID): ResponseEntity<ApplicationAssessedEnvelope> {
-    val event = domainEventService.getApplicationAssessedDomainEvent(eventId)
-      ?: throw NotFoundProblem(eventId, "DomainEvent")
+  override fun eventsPersonNotArrivedEventIdGet(eventId: UUID) = getDomainEvent<PersonNotArrivedEnvelope>(eventId)
 
-    return ResponseEntity.ok(event.data)
-  }
+  override fun eventsPersonDepartedEventIdGet(eventId: UUID) = getDomainEvent<PersonDepartedEnvelope>(eventId)
 
-  override fun eventsBookingMadeEventIdGet(eventId: UUID): ResponseEntity<BookingMadeEnvelope> {
-    val event = domainEventService.getBookingMadeEvent(eventId)
-      ?: throw NotFoundProblem(eventId, "DomainEvent")
+  override fun eventsBookingNotMadeEventIdGet(eventId: UUID) = getDomainEvent<BookingNotMadeEnvelope>(eventId)
 
-    return ResponseEntity.ok(event.data)
-  }
+  override fun eventsApplicationWithdrawnEventIdGet(eventId: UUID) = getDomainEvent<ApplicationWithdrawnEnvelope>(eventId)
 
-  override fun eventsPersonArrivedEventIdGet(eventId: UUID): ResponseEntity<PersonArrivedEnvelope> {
-    val event = domainEventService.getPersonArrivedEvent(eventId)
-      ?: throw NotFoundProblem(eventId, "DomainEvent")
+  override fun eventsPlacementApplicationWithdrawnEventIdGet(eventId: UUID) = getDomainEvent<PlacementApplicationWithdrawnEnvelope>(eventId)
 
-    return ResponseEntity.ok(event.data)
-  }
+  override fun eventsPlacementApplicationAllocatedEventIdGet(eventId: UUID) = getDomainEvent<PlacementApplicationAllocatedEnvelope>(eventId)
 
-  override fun eventsPersonNotArrivedEventIdGet(eventId: UUID): ResponseEntity<PersonNotArrivedEnvelope> {
-    val event = domainEventService.getPersonNotArrivedEvent(eventId)
-      ?: throw NotFoundProblem(eventId, "DomainEvent")
+  override fun eventsMatchRequestWithdrawnEventIdGet(eventId: UUID) = getDomainEvent<MatchRequestWithdrawnEnvelope>(eventId)
 
-    return ResponseEntity.ok(event.data)
-  }
+  override fun eventsAssessmentAppealedEventIdGet(eventId: UUID) = getDomainEvent<AssessmentAppealedEnvelope>(eventId)
 
-  override fun eventsPersonDepartedEventIdGet(eventId: UUID): ResponseEntity<PersonDepartedEnvelope> {
-    val event = domainEventService.getPersonDepartedEvent(eventId)
-      ?: throw NotFoundProblem(eventId, "DomainEvent")
+  override fun eventsAssessmentAllocatedEventIdGet(eventId: UUID) = getDomainEvent<AssessmentAllocatedEnvelope>(eventId)
 
-    return ResponseEntity.ok(event.data)
-  }
+  @Suppress("UNCHECKED_CAST") // Safe as the return type is constant and not likely to change at runtime
+  private inline fun <reified T> getDomainEvent(eventId: UUID): ResponseEntity<T> {
+    val serviceMethod = when (T::class) {
+      AssessmentAllocatedEnvelope::class -> domainEventService::getAssessmentAllocatedEvent
+      AssessmentAppealedEnvelope::class -> domainEventService::getAssessmentAppealedEvent
+      MatchRequestWithdrawnEnvelope::class -> domainEventService::getMatchRequestWithdrawnEvent
+      ApplicationWithdrawnEnvelope::class -> domainEventService::getApplicationWithdrawnEvent
+      ApplicationAssessedEnvelope::class -> domainEventService::getApplicationAssessedDomainEvent
+      BookingMadeEnvelope::class -> domainEventService::getBookingMadeEvent
+      ApplicationSubmittedEnvelope::class -> domainEventService::getApplicationSubmittedDomainEvent
+      PlacementApplicationWithdrawnEnvelope::class -> domainEventService::getPlacementApplicationWithdrawnEvent
+      BookingCancelledEnvelope::class -> domainEventService::getBookingCancelledEvent
+      BookingChangedEnvelope::class -> domainEventService::getBookingChangedEvent
+      BookingNotMadeEnvelope::class -> domainEventService::getBookingNotMadeEvent
+      PersonArrivedEnvelope::class -> domainEventService::getPersonArrivedEvent
+      PersonDepartedEnvelope::class -> domainEventService::getPersonDepartedEvent
+      PlacementApplicationAllocatedEnvelope::class -> domainEventService::getPlacementApplicationAllocatedEvent
+      PersonNotArrivedEnvelope::class -> domainEventService::getPersonNotArrivedEvent
+      else -> throw RuntimeException("Only CAS1 events are supported")
+    }
 
-  override fun eventsBookingNotMadeEventIdGet(eventId: UUID): ResponseEntity<BookingNotMadeEnvelope> {
-    val event = domainEventService.getBookingNotMadeEvent(eventId)
-      ?: throw NotFoundProblem(eventId, "DomainEvent")
+    val event = serviceMethod(eventId) ?: throw NotFoundProblem(eventId, "DomainEvent")
 
-    return ResponseEntity.ok(event.data)
-  }
-
-  override fun eventsApplicationWithdrawnEventIdGet(eventId: UUID): ResponseEntity<ApplicationWithdrawnEnvelope> {
-    val event = domainEventService.getApplicationWithdrawnEvent(eventId)
-      ?: throw NotFoundProblem(eventId, "DomainEvent")
-
-    return ResponseEntity.ok(event.data)
-  }
-
-  override fun eventsPlacementApplicationWithdrawnEventIdGet(eventId: UUID): ResponseEntity<PlacementApplicationWithdrawnEnvelope> {
-    val event = domainEventService.getPlacementApplicationWithdrawnEvent(eventId)
-      ?: throw NotFoundProblem(eventId, "DomainEvent")
-
-    return ResponseEntity.ok(event.data)
-  }
-
-  override fun eventsPlacementApplicationAllocatedEventIdGet(eventId: UUID): ResponseEntity<PlacementApplicationAllocatedEnvelope> {
-    val event = domainEventService.getPlacementApplicationAllocatedEvent(eventId)
-      ?: throw NotFoundProblem(eventId, "DomainEvent")
-
-    return ResponseEntity.ok(event.data)
-  }
-
-  override fun eventsMatchRequestWithdrawnEventIdGet(eventId: UUID): ResponseEntity<MatchRequestWithdrawnEnvelope> {
-    val event = domainEventService.getMatchRequestWithdrawnEvent(eventId)
-      ?: throw NotFoundProblem(eventId, "DomainEvent")
-
-    return ResponseEntity.ok(event.data)
-  }
-
-  override fun eventsAssessmentAppealedEventIdGet(eventId: UUID): ResponseEntity<AssessmentAppealedEnvelope> {
-    val event = domainEventService.getAssessmentAppealedEvent(eventId)
-      ?: throw NotFoundProblem(eventId, "DomainEvent")
-
-    return ResponseEntity.ok(event.data)
-  }
-
-  override fun eventsAssessmentAllocatedEventIdGet(eventId: UUID): ResponseEntity<AssessmentAllocatedEnvelope> {
-    val event = domainEventService.getAssessmentAllocatedEvent(eventId)
-      ?: throw NotFoundProblem(eventId, "DomainEvent")
-
-    return ResponseEntity.ok(event.data)
+    return ResponseEntity.ok(event.data) as ResponseEntity<T>
   }
 }
