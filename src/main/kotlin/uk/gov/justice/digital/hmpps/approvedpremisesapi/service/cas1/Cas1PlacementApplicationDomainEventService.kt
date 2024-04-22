@@ -88,7 +88,7 @@ class Cas1PlacementApplicationDomainEventService(
   }
 
   fun placementApplicationWithdrawn(placementApplication: PlacementApplicationEntity, withdrawalContext: WithdrawalContext) {
-    require(withdrawalContext.withdrawalTriggeredBy is WithdrawalTriggeredByUser)
+    require(withdrawalContext.withdrawalTriggeredBy is WithdrawalTriggeredByUser) { "Only withdrawals triggered by users are supported" }
     val user = withdrawalContext.withdrawalTriggeredBy.user
 
     val domainEventId = UUID.randomUUID()

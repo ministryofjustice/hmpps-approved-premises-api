@@ -192,10 +192,17 @@ data class WithdrawalContext(
   val triggeringEntityId: UUID,
 )
 
-sealed interface WithdrawalTriggeredBy
+sealed interface WithdrawalTriggeredBy {
+  fun getName(): String
+}
 
-data class WithdrawalTriggeredByUser(val user: UserEntity) : WithdrawalTriggeredBy
-class WithdrawalTriggeredBySeedJob : WithdrawalTriggeredBy
+data class WithdrawalTriggeredByUser(val user: UserEntity) : WithdrawalTriggeredBy {
+  override fun getName() = user.name
+}
+
+data object WithdrawalTriggeredBySeedJob : WithdrawalTriggeredBy {
+  override fun getName() = "Application Support"
+}
 
 data class WithdrawableEntity(
   val type: WithdrawableEntityType,

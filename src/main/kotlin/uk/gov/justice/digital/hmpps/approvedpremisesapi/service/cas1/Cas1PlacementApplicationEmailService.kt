@@ -67,9 +67,7 @@ class Cas1PlacementApplicationEmailService(
   ) {
     val personalisation = getCommonPersonalisation(placementApplication)
 
-    if (withdrawalTriggeredBy is WithdrawalTriggeredByUser) {
-      personalisation["withdrawnBy"] = withdrawalTriggeredBy.user.name
-    }
+    personalisation["withdrawnBy"] = withdrawalTriggeredBy.getName()
 
     val template = notifyConfig.templates.placementRequestWithdrawnV2
 

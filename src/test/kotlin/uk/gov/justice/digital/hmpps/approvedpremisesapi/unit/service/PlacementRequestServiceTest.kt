@@ -866,7 +866,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
         WithdrawalContext(
-          WithdrawalTriggeredBySeedJob(),
+          WithdrawalTriggeredBySeedJob,
           WithdrawableEntityType.PlacementRequest,
           placementRequestId,
         ),

@@ -52,15 +52,13 @@ class Cas1BookingEmailService(
   fun bookingWithdrawn(
     application: ApprovedPremisesApplicationEntity,
     booking: BookingEntity,
-    withdrawalTriggeredBy: WithdrawalTriggeredBy?,
+    withdrawalTriggeredBy: WithdrawalTriggeredBy,
   ) {
     val allPersonalisation =
       buildCommonPersonalisation(application, booking).toMutableMap()
 
     allPersonalisation += "region" to booking.premises.probationRegion.name
-    if (withdrawalTriggeredBy is WithdrawalTriggeredByUser) {
-      allPersonalisation["withdrawnBy"] = withdrawalTriggeredBy.user.name
-    }
+    allPersonalisation["withdrawnBy"] = withdrawalTriggeredBy.getName()
 
     val template = notifyConfig.templates.bookingWithdrawnV2
 

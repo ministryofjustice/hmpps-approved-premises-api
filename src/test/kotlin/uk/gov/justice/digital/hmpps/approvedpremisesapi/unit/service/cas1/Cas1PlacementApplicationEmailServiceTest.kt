@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementDateEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.APPLICANT_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.AREA_NAME
@@ -601,6 +602,51 @@ class Cas1PlacementApplicationEmailServiceTest {
 
       mockEmailNotificationService.assertEmailRequested(
         ASSESSOR_EMAIL,
+        notifyConfig.templates.placementRequestWithdrawnV2,
+        personalisation,
+      )
+    }
+
+    @Test
+    fun `placementApplicationWithdrawn sends an email if triggered by seed job`() {
+      val creator = createUser(emailAddress = null)
+      val applicant = createUser(emailAddress = APPLICANT_EMAIL)
+      val application = createApplicationForApplicant(applicant)
+
+      val placementApplication = PlacementApplicationEntityFactory()
+        .withApplication(application)
+        .withCreatedByUser(creator)
+        .produce()
+
+      placementApplication.placementDates = mutableListOf(
+        PlacementDateEntityFactory()
+          .withExpectedArrival(LocalDate.of(2020, 3, 12))
+          .withDuration(10)
+          .withPlacementApplication(placementApplication)
+          .produce(),
+      )
+
+      service.placementApplicationWithdrawn(
+        placementApplication = placementApplication,
+        wasBeingAssessedBy = null,
+        withdrawalTriggeredBy = WithdrawalTriggeredBySeedJob,
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(1)
+
+      val personalisation = mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to "2020-03-12",
+        "endDate" to "2020-03-22",
+        "additionalDatesSet" to "no",
+        "withdrawnBy" to "Application Support",
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
         notifyConfig.templates.placementRequestWithdrawnV2,
         personalisation,
       )

@@ -28,11 +28,8 @@ class Cas1PlacementRequestEmailService(
       "startDate" to placementRequest.expectedArrival.toString(),
       "endDate" to placementRequest.expectedDeparture().toString(),
       "additionalDatesSet" to "no",
+      "withdrawnBy" to withdrawalTriggeredBy.getName(),
     )
-
-    if (withdrawalTriggeredBy is WithdrawalTriggeredByUser) {
-      personalisation["withdrawnBy"] = withdrawalTriggeredBy.user.name
-    }
 
     if (placementRequest.isForApplicationsArrivalDate()) {
       /**

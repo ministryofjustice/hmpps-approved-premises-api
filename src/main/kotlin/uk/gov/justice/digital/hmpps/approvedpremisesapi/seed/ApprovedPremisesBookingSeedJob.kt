@@ -246,7 +246,7 @@ class ApprovedPremisesBookingSeedJob(
           notes = row.cancellationNotes,
           otherReason = null,
           withdrawalContext = WithdrawalContext(
-            withdrawalTriggeredBy = WithdrawalTriggeredBySeedJob(),
+            withdrawalTriggeredBy = WithdrawalTriggeredBySeedJob,
             triggeringEntityType = WithdrawableEntityType.Booking,
             triggeringEntityId = createdBooking.id,
           ),

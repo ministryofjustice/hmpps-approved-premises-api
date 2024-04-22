@@ -46,7 +46,7 @@ class ApprovedPremisesBookingCancelSeedJob(
       notes = null,
       otherReason = null,
       withdrawalContext = WithdrawalContext(
-        withdrawalTriggeredBy = WithdrawalTriggeredBySeedJob(),
+        withdrawalTriggeredBy = WithdrawalTriggeredBySeedJob,
         triggeringEntityType = WithdrawableEntityType.Booking,
         triggeringEntityId = booking.id,
       ),

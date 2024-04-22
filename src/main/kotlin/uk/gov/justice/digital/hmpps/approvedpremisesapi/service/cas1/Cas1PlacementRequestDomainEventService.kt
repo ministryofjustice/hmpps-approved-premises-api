@@ -94,7 +94,7 @@ class Cas1PlacementRequestDomainEventService(
       return
     }
 
-    require(withdrawalContext.withdrawalTriggeredBy is WithdrawalTriggeredByUser)
+    require(withdrawalContext.withdrawalTriggeredBy is WithdrawalTriggeredByUser) { "Only withdrawals triggered by users are supported" }
     val user = withdrawalContext.withdrawalTriggeredBy.user
 
     val domainEventId = UUID.randomUUID()

@@ -46,7 +46,7 @@ class Cas1WithdrawPlacementRequestSeedJob(
       placementRequestId = id,
       userProvidedReason = row.withdrawalReason,
       withdrawalContext = WithdrawalContext(
-        withdrawalTriggeredBy = WithdrawalTriggeredBySeedJob(),
+        withdrawalTriggeredBy = WithdrawalTriggeredBySeedJob,
         triggeringEntityType = WithdrawableEntityType.PlacementRequest,
         triggeringEntityId = row.placementRequestId,
       ),
