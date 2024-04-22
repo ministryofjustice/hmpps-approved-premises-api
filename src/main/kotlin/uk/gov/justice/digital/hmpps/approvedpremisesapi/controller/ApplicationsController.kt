@@ -427,7 +427,7 @@ class ApplicationsController(
     }
 
     val convictionId = when (application) {
-      is ApprovedPremisesApplicationEntity -> application.convictionId
+      is ApprovedPremisesApplicationEntity -> null
       is TemporaryAccommodationApplicationEntity -> application.convictionId
       else -> throw RuntimeException("Unsupported Application type: ${application::class.qualifiedName}")
     }

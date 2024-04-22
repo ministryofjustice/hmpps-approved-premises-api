@@ -320,7 +320,7 @@ class ApplicationTest : IntegrationTestBase() {
         `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
           `Given a User`(
             roles = listOf(UserRole.CAS3_ASSESSOR),
-            probationRegion = probationRegion
+            probationRegion = probationRegion,
           ) { assessorUser, jwt ->
             `Given an Offender` { offenderDetails, _ ->
               temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
@@ -346,7 +346,7 @@ class ApplicationTest : IntegrationTestBase() {
                   otherUser,
                   offenderDetails,
                   otherProbationRegion,
-                  dateTime
+                  dateTime,
                 )
 
               CommunityAPI_mockOffenderUserAccessCall(
@@ -423,7 +423,7 @@ class ApplicationTest : IntegrationTestBase() {
         `Given a User`(roles = listOf(UserRole.CAS3_REFERRER), probationRegion = probationRegion) { otherUser, _ ->
           `Given a User`(
             roles = listOf(UserRole.CAS3_REFERRER),
-            probationRegion = probationRegion
+            probationRegion = probationRegion,
           ) { referrerUser, jwt ->
             `Given an Offender` { offenderDetails, _ ->
               temporaryAccommodationApplicationJsonSchemaRepository.deleteAll()
@@ -576,7 +576,8 @@ class ApplicationTest : IntegrationTestBase() {
           val responseBody =
             objectMapper.readValue(
               rawResponseBody,
-              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
+              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
+            )
 
           assertThat(responseBody).matches {
             val person = it[0].person as FullPerson
@@ -621,7 +622,8 @@ class ApplicationTest : IntegrationTestBase() {
           val responseBody =
             objectMapper.readValue(
               rawResponseBody,
-              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {})
+              object : TypeReference<List<ApprovedPremisesApplicationSummary>>() {},
+            )
 
           assertThat(responseBody).matches {
             val person = it[0].person as FullPerson
@@ -644,7 +646,6 @@ class ApplicationTest : IntegrationTestBase() {
         .expectStatus()
         .isUnauthorized
     }
-
   }
 
   @Nested
@@ -924,7 +925,6 @@ class ApplicationTest : IntegrationTestBase() {
         }
       }
     }
-
   }
 
   inner class Cas3GetApplication {
@@ -1139,7 +1139,6 @@ class ApplicationTest : IntegrationTestBase() {
         }
       }
     }
-
   }
 
   @Nested
@@ -1929,7 +1928,6 @@ class ApplicationTest : IntegrationTestBase() {
         }
       }
     }
-
   }
 
   @Nested
@@ -2602,7 +2600,6 @@ class ApplicationTest : IntegrationTestBase() {
         }
       }
     }
-
   }
 
   private fun schemaText(): String {

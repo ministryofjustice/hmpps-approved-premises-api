@@ -318,7 +318,7 @@ class ApplicationService(
       isWomensApplication = null,
       isEmergencyApplication = null,
       apType = ApprovedPremisesType.NORMAL,
-      convictionId = convictionId!!,
+      convictionId = convictionId,
       eventNumber = deliusEventNumber!!,
       offenceId = offenceId!!,
       schemaUpToDate = true,
