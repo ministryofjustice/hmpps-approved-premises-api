@@ -4,15 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
@@ -289,6 +290,484 @@ class DomainEventServiceTest {
     }
   }
 
+  @Test
+  fun `saveApplicationSubmittedDomainEvent sends correct arguments to saveAndEmit`() {
+    val id = UUID.randomUUID()
+
+    val eventDetails = ApplicationSubmittedFactory().produce()
+    val domainEventEnvelope = mockk<ApplicationSubmittedEnvelope>()
+    val domainEvent = mockk<DomainEvent<ApplicationSubmittedEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any()) } returns Unit
+
+    domainEventServiceSpy.saveApplicationSubmittedDomainEvent(domainEvent)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/application-submitted/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+      )
+    }
+  }
+
+  @Test
+  fun `saveApplicationAssessedDomainEvent sends correct arguments to saveAndEmit`() {
+    val id = UUID.randomUUID()
+
+    val eventDetails = ApplicationAssessedFactory().produce()
+    val domainEventEnvelope = mockk<ApplicationAssessedEnvelope>()
+    val domainEvent = mockk<DomainEvent<ApplicationAssessedEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any()) } returns Unit
+
+    domainEventServiceSpy.saveApplicationAssessedDomainEvent(domainEvent)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/application-assessed/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+      )
+    }
+  }
+
+  @Test
+  fun `saveBookingMadeDomainEvent sends correct arguments to saveAndEmit`() {
+    val id = UUID.randomUUID()
+    val bookingId = UUID.randomUUID()
+
+    val eventDetails = BookingMadeFactory().produce()
+    val domainEventEnvelope = mockk<BookingMadeEnvelope>()
+    val domainEvent = mockk<DomainEvent<BookingMadeEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.bookingId } returns bookingId
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any()) } returns Unit
+
+    domainEventServiceSpy.saveBookingMadeDomainEvent(domainEvent)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/booking-made/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+        bookingId = bookingId,
+      )
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `savePersonArrivedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+    val id = UUID.randomUUID()
+    val bookingId = UUID.randomUUID()
+
+    val eventDetails = PersonArrivedFactory().produce()
+    val domainEventEnvelope = mockk<PersonArrivedEnvelope>()
+    val domainEvent = mockk<DomainEvent<PersonArrivedEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.bookingId } returns bookingId
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), emit) } returns Unit
+
+    domainEventServiceSpy.savePersonArrivedEvent(domainEvent, emit)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/person-arrived/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+        bookingId = bookingId,
+        emit,
+      )
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `savePersonNotArrivedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+    val id = UUID.randomUUID()
+    val bookingId = UUID.randomUUID()
+
+    val eventDetails = PersonNotArrivedFactory().produce()
+    val domainEventEnvelope = mockk<PersonNotArrivedEnvelope>()
+    val domainEvent = mockk<DomainEvent<PersonNotArrivedEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.bookingId } returns bookingId
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), emit) } returns Unit
+
+    domainEventServiceSpy.savePersonNotArrivedEvent(domainEvent, emit)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/person-not-arrived/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+        bookingId = bookingId,
+        emit,
+      )
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `savePersonDepartedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+    val id = UUID.randomUUID()
+    val bookingId = UUID.randomUUID()
+
+    val eventDetails = PersonDepartedFactory().produce()
+    val domainEventEnvelope = mockk<PersonDepartedEnvelope>()
+    val domainEvent = mockk<DomainEvent<PersonDepartedEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.bookingId } returns bookingId
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), emit) } returns Unit
+
+    domainEventServiceSpy.savePersonDepartedEvent(domainEvent, emit)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/person-departed/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+        bookingId = bookingId,
+        emit,
+      )
+    }
+  }
+
+  @Test
+  fun `saveBookingNotMadeEvent sends correct arguments to saveAndEmit`() {
+    val id = UUID.randomUUID()
+
+    val eventDetails = BookingNotMadeFactory().produce()
+    val domainEventEnvelope = mockk<BookingNotMadeEnvelope>()
+    val domainEvent = mockk<DomainEvent<BookingNotMadeEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any()) } returns Unit
+
+    domainEventServiceSpy.saveBookingNotMadeEvent(domainEvent)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/booking-not-made/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+      )
+    }
+  }
+
+  @Test
+  fun `saveBookingCancelledEvent sends correct arguments to saveAndEmit`() {
+    val id = UUID.randomUUID()
+    val bookingId = UUID.randomUUID()
+
+    val eventDetails = BookingCancelledFactory().produce()
+    val domainEventEnvelope = mockk<BookingCancelledEnvelope>()
+    val domainEvent = mockk<DomainEvent<BookingCancelledEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.bookingId } returns bookingId
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any()) } returns Unit
+
+    domainEventServiceSpy.saveBookingCancelledEvent(domainEvent)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/booking-cancelled/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+        bookingId = bookingId,
+      )
+    }
+  }
+
+  @Test
+  fun `saveBookingChangedEvent sends correct arguments to saveAndEmit`() {
+    val id = UUID.randomUUID()
+    val bookingId = UUID.randomUUID()
+
+    val eventDetails = BookingChangedFactory().produce()
+    val domainEventEnvelope = mockk<BookingChangedEnvelope>()
+    val domainEvent = mockk<DomainEvent<BookingChangedEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.bookingId } returns bookingId
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any()) } returns Unit
+
+    domainEventServiceSpy.saveBookingChangedEvent(domainEvent)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/booking-changed/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+        bookingId = bookingId,
+      )
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `saveApplicationWithdrawnEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+    val id = UUID.randomUUID()
+
+    val eventDetails = ApplicationWithdrawnFactory().produce()
+    val domainEventEnvelope = mockk<ApplicationWithdrawnEnvelope>()
+    val domainEvent = mockk<DomainEvent<ApplicationWithdrawnEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), null, emit) } returns Unit
+
+    domainEventServiceSpy.saveApplicationWithdrawnEvent(domainEvent, emit)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/application-withdrawn/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+        null,
+        emit,
+      )
+    }
+  }
+
+  @Test
+  fun `saveAssessmentAppealedEvent sends correct arguments to saveAndEmit`() {
+    val id = UUID.randomUUID()
+
+    val eventDetails = AssessmentAppealedFactory().produce()
+    val domainEventEnvelope = mockk<AssessmentAppealedEnvelope>()
+    val domainEvent = mockk<DomainEvent<AssessmentAppealedEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any()) } returns Unit
+
+    domainEventServiceSpy.saveAssessmentAppealedEvent(domainEvent)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/assessment-appealed/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+      )
+    }
+  }
+
+  @Test
+  fun `savePlacementApplicationWithdrawnEvent sends correct arguments to saveAndEmit`() {
+    val id = UUID.randomUUID()
+
+    val eventDetails = PlacementApplicationWithdrawnFactory().produce()
+    val domainEventEnvelope = mockk<PlacementApplicationWithdrawnEnvelope>()
+    val domainEvent = mockk<DomainEvent<PlacementApplicationWithdrawnEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any()) } returns Unit
+
+    domainEventServiceSpy.savePlacementApplicationWithdrawnEvent(domainEvent)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/placement-application-withdrawn/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+      )
+    }
+  }
+
+  @Test
+  fun `savePlacementApplicationAllocatedEvent sends correct arguments to saveAndEmit`() {
+    val id = UUID.randomUUID()
+
+    val eventDetails = PlacementApplicationAllocatedFactory().produce()
+    val domainEventEnvelope = mockk<PlacementApplicationAllocatedEnvelope>()
+    val domainEvent = mockk<DomainEvent<PlacementApplicationAllocatedEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any()) } returns Unit
+
+    domainEventServiceSpy.savePlacementApplicationAllocatedEvent(domainEvent)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/placement-application-allocated/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+      )
+    }
+  }
+
+  @Test
+  fun `saveMatchRequestWithdrawnEvent sends correct arguments to saveAndEmit`() {
+    val id = UUID.randomUUID()
+
+    val eventDetails = MatchRequestWithdrawnFactory().produce()
+    val domainEventEnvelope = mockk<MatchRequestWithdrawnEnvelope>()
+    val domainEvent = mockk<DomainEvent<MatchRequestWithdrawnEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any()) } returns Unit
+
+    domainEventServiceSpy.saveMatchRequestWithdrawnEvent(domainEvent)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/match-request-withdrawn/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+      )
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `saveRequestForPlacementCreatedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+    val id = UUID.randomUUID()
+
+    val eventDetails = RequestForPlacementCreatedFactory().produce()
+    val domainEventEnvelope = mockk<RequestForPlacementCreatedEnvelope>()
+    val domainEvent = mockk<DomainEvent<RequestForPlacementCreatedEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), emit) } returns Unit
+
+    domainEventServiceSpy.saveRequestForPlacementCreatedEvent(domainEvent, emit)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/request-for-placement-created/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+        bookingId = null,
+        emit,
+      )
+    }
+  }
+
+  @Test
+  fun `saveAssessmentAllocatedEvent sends correct arguments to saveAndEmit`() {
+    val id = UUID.randomUUID()
+
+    val eventDetails = AssessmentAllocatedFactory().produce()
+    val domainEventEnvelope = mockk<AssessmentAllocatedEnvelope>()
+    val domainEvent = mockk<DomainEvent<AssessmentAllocatedEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any()) } returns Unit
+
+    domainEventServiceSpy.saveAssessmentAllocatedEvent(domainEvent)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        detailUrl = "http://api/events/assessment-allocated/$id",
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+      )
+    }
+  }
+
   private fun fetchGetterForType(type: DomainEventType): (UUID) -> DomainEvent<out Any>? {
     return mapOf(
       DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED to domainEventService::getApplicationSubmittedDomainEvent,
@@ -413,1790 +892,6 @@ class DomainEventServiceTest {
         eventDetails = RequestForPlacementCreatedFactory().produce(),
       )
       else -> throw RuntimeException("Domain even type $type not supported")
-    }
-  }
-
-  @Test
-  fun `saveApplicationSubmittedDomainEvent persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = ApplicationSubmittedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.applicationSubmitted,
-        eventDetails = ApplicationSubmittedFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.saveApplicationSubmittedDomainEvent(domainEventToSave)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match {
-          it.eventType == EventType.applicationSubmitted.value &&
-            it.version == 1 &&
-            it.description == "An application has been submitted for an Approved Premises placement" &&
-            it.detailUrl == "http://api/events/application-submitted/$id" &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.additionalInformation.applicationId == applicationId &&
-            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `saveApplicationSubmittedDomainEvent does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = ApplicationSubmittedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.applicationSubmitted,
-        eventDetails = ApplicationSubmittedFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.saveApplicationSubmittedDomainEvent(domainEventToSave)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
-    }
-  }
-
-  @Test
-  fun `saveApplicationAssessedDomainEvent persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = ApplicationAssessedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.applicationAssessed,
-        eventDetails = ApplicationAssessedFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.saveApplicationAssessedDomainEvent(domainEventToSave)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match {
-          it.eventType == EventType.applicationAssessed.value &&
-            it.version == 1 &&
-            it.description == "An application has been assessed for an Approved Premises placement" &&
-            it.detailUrl == "http://api/events/application-assessed/$id" &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.additionalInformation.applicationId == applicationId &&
-            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `saveApplicationAssessedDomainEvent does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = ApplicationAssessedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.applicationAssessed,
-        eventDetails = ApplicationAssessedFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.saveApplicationAssessedDomainEvent(domainEventToSave)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
-    }
-  }
-
-  @Test
-  fun `saveBookingMadeDomainEvent persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = BookingMadeEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.bookingMade,
-        eventDetails = BookingMadeFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.saveBookingMadeDomainEvent(domainEventToSave)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match {
-          it.eventType == EventType.bookingMade.value &&
-            it.version == 1 &&
-            it.description == "An Approved Premises booking has been made" &&
-            it.detailUrl == "http://api/events/booking-made/$id" &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.additionalInformation.applicationId == applicationId &&
-            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `saveBookingMadeDomainEvent does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = BookingMadeEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.bookingMade,
-        eventDetails = BookingMadeFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.saveBookingMadeDomainEvent(domainEventToSave)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_BOOKING_MADE &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
-    }
-  }
-
-  @Test
-  fun `saveBookingChangedDomainEvent persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val bookingId = UUID.fromString("b831ead2-31ae-4907-8e1c-cad74cb9667c")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      bookingId = bookingId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = BookingChangedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.bookingChanged,
-        eventDetails = BookingChangedFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.saveBookingChangedEvent(domainEventToSave)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id &&
-            it.bookingId == bookingId
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match {
-          it.eventType == EventType.bookingChanged.value &&
-            it.version == 1 &&
-            it.description == "An Approved Premises Booking has been changed" &&
-            it.detailUrl == "http://api/events/booking-changed/$id" &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.additionalInformation.applicationId == applicationId &&
-            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `saveBookingChangedDomainEvent does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = BookingChangedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.bookingChanged,
-        eventDetails = BookingChangedFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.saveBookingChangedEvent(domainEventToSave)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
-    }
-  }
-
-  @Test
-  fun `saveBookingCancelledDomainEvent persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = BookingCancelledEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.bookingCancelled,
-        eventDetails = BookingCancelledFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.saveBookingCancelledEvent(domainEventToSave)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.bookingId == domainEventToSave.bookingId &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match {
-          it.eventType == EventType.bookingCancelled.value &&
-            it.version == 1 &&
-            it.description == "An Approved Premises Booking has been cancelled" &&
-            it.detailUrl == "http://api/events/booking-cancelled/$id" &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.additionalInformation.applicationId == applicationId &&
-            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `saveBookingCancelledDomainEvent does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = BookingCancelledEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.bookingCancelled,
-        eventDetails = BookingCancelledFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.saveBookingCancelledEvent(domainEventToSave)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
-    }
-  }
-
-  @Test
-  fun `savePersonArrivedEvent persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = PersonArrivedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.personArrived,
-        eventDetails = PersonArrivedFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.savePersonArrivedEvent(domainEventToSave, emit = true)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.bookingId == domainEventToSave.bookingId &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match {
-          it.eventType == EventType.personArrived.value &&
-            it.version == 1 &&
-            it.description == "Someone has arrived at an Approved Premises for their Booking" &&
-            it.detailUrl == "http://api/events/person-arrived/$id" &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.additionalInformation.applicationId == applicationId &&
-            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `savePersonArrivedEvent does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = PersonArrivedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.personArrived,
-        eventDetails = PersonArrivedFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.savePersonArrivedEvent(domainEventToSave, emit = true)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify { domainEventWorkerMock wasNot Called }
-  }
-
-  @Test
-  fun `savePersonArrivedEvent persists event, does not emit event to SNS if emit flag is false`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = PersonArrivedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.personArrived,
-        eventDetails = PersonArrivedFactory().produce(),
-      ),
-    )
-
-    domainEventService.savePersonArrivedEvent(domainEventToSave, emit = false)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.bookingId == domainEventToSave.bookingId &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify { domainEventWorkerMock wasNot Called }
-  }
-
-  @Test
-  fun `savePersonNotArrivedEvent persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = PersonNotArrivedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.personNotArrived,
-        eventDetails = PersonNotArrivedFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.savePersonNotArrivedEvent(domainEventToSave, emit = true)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.bookingId == domainEventToSave.bookingId &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match {
-          it.eventType == EventType.personNotArrived.value &&
-            it.version == 1 &&
-            it.description == "Someone has failed to arrive at an Approved Premises for their Booking" &&
-            it.detailUrl == "http://api/events/person-not-arrived/$id" &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.additionalInformation.applicationId == applicationId &&
-            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `savePersonNotArrivedEvent does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = PersonNotArrivedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.personNotArrived,
-        eventDetails = PersonNotArrivedFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.savePersonNotArrivedEvent(domainEventToSave, emit = true)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify { domainEventWorkerMock wasNot Called }
-  }
-
-  @Test
-  fun `savePersonNotArrivedEvent persists event, does not emit event to SNS if emit flag is false`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = PersonNotArrivedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.personNotArrived,
-        eventDetails = PersonNotArrivedFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.savePersonNotArrivedEvent(domainEventToSave, emit = false)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.bookingId == domainEventToSave.bookingId &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify { domainEventWorkerMock wasNot Called }
-  }
-
-  @Test
-  fun `savePersonDepartedEvent persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = PersonDepartedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.personDeparted,
-        eventDetails = PersonDepartedFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.savePersonDepartedEvent(domainEventToSave, emit = true)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.bookingId == domainEventToSave.bookingId &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match {
-          it.eventType == EventType.personDeparted.value &&
-            it.version == 1 &&
-            it.description == "Someone has left an Approved Premises" &&
-            it.detailUrl == "http://api/events/person-departed/$id" &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.additionalInformation.applicationId == applicationId &&
-            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `savePersonDepartedEvent does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = PersonDepartedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.personDeparted,
-        eventDetails = PersonDepartedFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.savePersonDepartedEvent(domainEventToSave, emit = true)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify { domainEventWorkerMock wasNot Called }
-  }
-
-  @Test
-  fun `savePersonDepartedEvent persists event, does not emit event to SNS if emit flag is false`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = PersonDepartedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.personDeparted,
-        eventDetails = PersonDepartedFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.savePersonDepartedEvent(domainEventToSave, emit = false)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.bookingId == domainEventToSave.bookingId &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify { domainEventWorkerMock wasNot Called }
-  }
-
-  @Test
-  fun `saveBookingNotMadeEvent persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = BookingNotMadeEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.bookingNotMade,
-        eventDetails = BookingNotMadeFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.saveBookingNotMadeEvent(domainEventToSave)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match {
-          it.eventType == EventType.bookingNotMade.value &&
-            it.version == 1 &&
-            it.description == "It was not possible to create a Booking on this attempt" &&
-            it.detailUrl == "http://api/events/booking-not-made/$id" &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.additionalInformation.applicationId == applicationId &&
-            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `saveBookingNotMadeEvent does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = BookingNotMadeEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.bookingNotMade,
-        eventDetails = BookingNotMadeFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.saveBookingNotMadeEvent(domainEventToSave)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
-    }
-  }
-
-  @Test
-  fun `saveApplicationWithdrawnEvent persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = ApplicationWithdrawnEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.applicationWithdrawn,
-        eventDetails = ApplicationWithdrawnFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.saveApplicationWithdrawnEvent(domainEventToSave, emit = true)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match {
-          it.eventType == EventType.applicationWithdrawn.value &&
-            it.version == 1 &&
-            it.description == "An Approved Premises Application has been withdrawn" &&
-            it.detailUrl == "http://api/events/application-withdrawn/$id" &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.additionalInformation.applicationId == applicationId &&
-            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `saveApplicationWithdrawnEvent does not emit event to SNS if emit parameter is false`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = ApplicationWithdrawnEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.applicationWithdrawn,
-        eventDetails = ApplicationWithdrawnFactory().produce(),
-      ),
-    )
-
-    domainEventService.saveApplicationWithdrawnEvent(domainEventToSave, emit = false)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 0) { domainEventWorkerMock.emitEvent(any(), any()) }
-  }
-
-  @Test
-  fun `saveApplicationWithdrawnEvent does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = ApplicationWithdrawnEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.applicationWithdrawn,
-        eventDetails = ApplicationWithdrawnFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.saveApplicationWithdrawnEvent(domainEventToSave, emit = true)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
-    }
-  }
-
-  @Test
-  fun `saveAssessmentAppealedEvent persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = AssessmentAppealedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.assessmentAppealed,
-        eventDetails = AssessmentAppealedFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.saveAssessmentAppealedEvent(domainEventToSave)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match {
-          it.eventType == EventType.assessmentAppealed.value &&
-            it.version == 1 &&
-            it.description == "An Approved Premises Assessment has been appealed" &&
-            it.detailUrl == "http://api/events/assessment-appealed/$id" &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.additionalInformation.applicationId == applicationId &&
-            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `saveAssessmentAppealedEvent does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = AssessmentAppealedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.assessmentAppealed,
-        eventDetails = AssessmentAppealedFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.saveAssessmentAppealedEvent(domainEventToSave)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
-    }
-  }
-
-  @Test
-  fun `savePlacementApplicationWithdrawnEvent persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = PlacementApplicationWithdrawnEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.placementApplicationWithdrawn,
-        eventDetails = PlacementApplicationWithdrawnFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.savePlacementApplicationWithdrawnEvent(domainEventToSave)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match { snsEvent ->
-          snsEvent.eventType == EventType.placementApplicationWithdrawn.value &&
-            snsEvent.version == 1 &&
-            snsEvent.description == "An Approved Premises Request for Placement has been withdrawn" &&
-            snsEvent.detailUrl == "http://api/events/placement-application-withdrawn/$id" &&
-            snsEvent.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            snsEvent.additionalInformation.applicationId == applicationId &&
-            snsEvent.personReference.identifiers.any { id -> id.type == "CRN" && id.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            snsEvent.personReference.identifiers.any { id -> id.type == "NOMS" && id.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `savePlacementApplicationWithdrawnEvent does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = PlacementApplicationWithdrawnEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.placementApplicationWithdrawn,
-        eventDetails = PlacementApplicationWithdrawnFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.savePlacementApplicationWithdrawnEvent(domainEventToSave)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
-    }
-  }
-
-  @Test
-  fun `saveMatchRequestWithdrawnEvent persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = MatchRequestWithdrawnEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.matchRequestWithdrawn,
-        eventDetails = MatchRequestWithdrawnFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.saveMatchRequestWithdrawnEvent(domainEventToSave)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match { snsEvent ->
-          snsEvent.eventType == EventType.matchRequestWithdrawn.value &&
-            snsEvent.version == 1 &&
-            snsEvent.description == "An Approved Premises Match Request has been withdrawn" &&
-            snsEvent.detailUrl == "http://api/events/match-request-withdrawn/$id" &&
-            snsEvent.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            snsEvent.additionalInformation.applicationId == applicationId &&
-            snsEvent.personReference.identifiers.any { id -> id.type == "CRN" && id.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            snsEvent.personReference.identifiers.any { id -> id.type == "NOMS" && id.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `saveMatchRequestWithdrawnEvent does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = MatchRequestWithdrawnEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.matchRequestWithdrawn,
-        eventDetails = MatchRequestWithdrawnFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.saveMatchRequestWithdrawnEvent(domainEventToSave)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
-    }
-  }
-
-  @Test
-  fun `saveAssessmentAllocatedEvent persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = AssessmentAllocatedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.assessmentAllocated,
-        eventDetails = AssessmentAllocatedFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.saveAssessmentAllocatedEvent(domainEventToSave)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match {
-          it.eventType == EventType.assessmentAllocated.value &&
-            it.version == 1 &&
-            it.description == "An Approved Premises Assessment has been allocated" &&
-            it.detailUrl == "http://api/events/assessment-allocated/$id" &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.additionalInformation.applicationId == applicationId &&
-            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `saveAssessmentAllocatedEvent does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = AssessmentAllocatedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.assessmentAllocated,
-        eventDetails = AssessmentAllocatedFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.saveAssessmentAllocatedEvent(domainEventToSave)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
-    }
-  }
-
-  @Test
-  fun `saveRequestForPlacementCreated persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = RequestForPlacementCreatedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.requestForPlacementCreated,
-        eventDetails = RequestForPlacementCreatedFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.saveRequestForPlacementCreatedEvent(domainEventToSave, emit = true)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match { snsEvent ->
-          snsEvent.eventType == EventType.requestForPlacementCreated.value &&
-            snsEvent.version == 1 &&
-            snsEvent.description == "An Approved Premises Request for Placement has been created" &&
-            snsEvent.detailUrl == "http://api/events/request-for-placement-created/$id" &&
-            snsEvent.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            snsEvent.additionalInformation.applicationId == applicationId &&
-            snsEvent.personReference.identifiers.any { id -> id.type == "CRN" && id.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            snsEvent.personReference.identifiers.any { id -> id.type == "NOMS" && id.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `saveRequestForPlacementCreated does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = RequestForPlacementCreatedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.requestForPlacementCreated,
-        eventDetails = RequestForPlacementCreatedFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.saveRequestForPlacementCreatedEvent(domainEventToSave, emit = true)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
-    }
-  }
-
-  @Test
-  fun `savePlacementApplicationAllocatedEvent persists event, emits event to SNS`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = PlacementApplicationAllocatedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.assessmentAllocated,
-        eventDetails = PlacementApplicationAllocatedFactory().produce(),
-      ),
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.savePlacementApplicationAllocatedEvent(domainEventToSave)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match {
-          it.eventType == "approved-premises.placement-application.allocated" &&
-            it.version == 1 &&
-            it.description == "An Approved Premises Request for Placement has been allocated" &&
-            it.detailUrl == "http://api/events/placement-application-allocated/$id" &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.additionalInformation.applicationId == applicationId &&
-            it.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
-            it.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
-        },
-        domainEventToSave.id,
-      )
-    }
-  }
-
-  @Test
-  fun `savePlacementApplicationAllocatedEvent does not emit event to SNS if event fails to persist to database`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = PlacementApplicationAllocatedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.placementApplicationAllocated,
-        eventDetails = PlacementApplicationAllocatedFactory().produce(),
-      ),
-    )
-
-    try {
-      domainEventService.savePlacementApplicationAllocatedEvent(domainEventToSave)
-    } catch (_: Exception) {
-    }
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        match {
-          it.id == domainEventToSave.id &&
-            it.type == DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED &&
-            it.crn == domainEventToSave.crn &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id
-        },
-      )
-    }
-
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
     }
   }
 }
