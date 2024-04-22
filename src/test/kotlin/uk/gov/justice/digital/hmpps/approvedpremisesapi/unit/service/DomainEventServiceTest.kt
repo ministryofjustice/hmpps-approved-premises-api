@@ -11,6 +11,8 @@ import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
@@ -100,48 +102,175 @@ class DomainEventServiceTest {
     every { userService.getUserForRequestOrNull() } returns user
   }
 
-  @Test
-  fun `getApplicationSubmittedDomainEvent returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
+  @ParameterizedTest
+  @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+  fun `getDomainEvent returns null when event not found`(domainEventType: DomainEventType) {
+    val id = UUID.randomUUID()
+    val method = fetchGetterForType(domainEventType)
 
     every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
 
-    assertThat(domainEventService.getApplicationSubmittedDomainEvent(id)).isNull()
+    assertThat(method.invoke(id)).isNull()
   }
 
-  @Test
-  fun `getApplicationSubmittedDomainEvent returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
+  @ParameterizedTest
+  @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+  fun `getDomainEvent returns event`(domainEventType: DomainEventType) {
+    val id = UUID.randomUUID()
+    val applicationId = UUID.randomUUID()
+    val occurredAt = OffsetDateTime.now()
     val crn = "CRN"
 
-    val data = ApplicationSubmittedEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.applicationSubmitted,
-      eventDetails = ApplicationSubmittedFactory().produce(),
-    )
+    val method = fetchGetterForType(domainEventType)
+    val data = createDomainEventOfType(domainEventType)
 
     every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
       .withId(id)
       .withApplicationId(applicationId)
       .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
+      .withType(domainEventType)
       .withData(objectMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
       .produce()
 
-    val event = domainEventService.getApplicationSubmittedDomainEvent(id)
+    val event = method.invoke(id)
+
     assertThat(event).isEqualTo(
       DomainEvent(
         id = id,
         applicationId = applicationId,
-        crn = "CRN",
+        crn = crn,
         occurredAt = occurredAt.toInstant(),
         data = data,
       ),
     )
+  }
+
+  private fun fetchGetterForType(type: DomainEventType): (UUID) -> DomainEvent<out Any>? {
+    return mapOf(
+      DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED to domainEventService::getApplicationSubmittedDomainEvent,
+      DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED to domainEventService::getApplicationAssessedDomainEvent,
+      DomainEventType.APPROVED_PREMISES_BOOKING_MADE to domainEventService::getBookingMadeEvent,
+      DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED to domainEventService::getPersonArrivedEvent,
+      DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED to domainEventService::getPersonNotArrivedEvent,
+      DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED to domainEventService::getPersonDepartedEvent,
+      DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE to domainEventService::getBookingNotMadeEvent,
+      DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED to domainEventService::getBookingCancelledEvent,
+      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED to domainEventService::getBookingChangedEvent,
+      DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN to domainEventService::getApplicationWithdrawnEvent,
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED to domainEventService::getAssessmentAppealedEvent,
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED to domainEventService::getAssessmentAllocatedEvent,
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN to domainEventService::getPlacementApplicationWithdrawnEvent,
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED to domainEventService::getPlacementApplicationAllocatedEvent,
+      DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN to domainEventService::getMatchRequestWithdrawnEvent,
+      DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED to domainEventService::getRequestForPlacementCreatedEvent,
+    )[type]!!
+  }
+
+  private fun createDomainEventOfType(type: DomainEventType): Any {
+    val id = UUID.randomUUID()
+    val timestamp = Instant.now()
+    val eventType = EventType.entries.find { it.value == type.typeName } ?: throw RuntimeException("Cannot find EventType for $type")
+
+    return when (type) {
+      DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED -> ApplicationSubmittedEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = ApplicationSubmittedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED -> ApplicationAssessedEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = ApplicationAssessedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_BOOKING_MADE -> BookingMadeEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = BookingMadeFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> PersonArrivedEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = PersonArrivedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED -> PersonNotArrivedEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = PersonNotArrivedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> PersonDepartedEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = PersonDepartedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> BookingNotMadeEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = BookingNotMadeFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> BookingCancelledEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = BookingCancelledFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> BookingChangedEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = BookingChangedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> ApplicationWithdrawnEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = ApplicationWithdrawnFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> AssessmentAppealedEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = AssessmentAppealedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED -> AssessmentAllocatedEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = AssessmentAllocatedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> PlacementApplicationWithdrawnEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = PlacementApplicationWithdrawnFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED -> PlacementApplicationAllocatedEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = PlacementApplicationAllocatedFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> MatchRequestWithdrawnEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = MatchRequestWithdrawnFactory().produce(),
+      )
+      DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED -> RequestForPlacementCreatedEnvelope(
+        id = id,
+        timestamp = timestamp,
+        eventType = eventType,
+        eventDetails = RequestForPlacementCreatedFactory().produce(),
+      )
+      else -> throw RuntimeException("Domain even type $type not supported")
+    }
   }
 
   @Test
@@ -246,50 +375,6 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getApplicationAssessedDomainEvent returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
-
-    assertThat(domainEventService.getApplicationAssessedDomainEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getApplicationAssessedDomainEvent returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    val data = ApplicationAssessedEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.applicationAssessed,
-      eventDetails = ApplicationAssessedFactory().produce(),
-    )
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val event = domainEventService.getApplicationAssessedDomainEvent(id)
-    assertThat(event).isEqualTo(
-      DomainEvent(
-        id = id,
-        applicationId = applicationId,
-        crn = "CRN",
-        occurredAt = occurredAt.toInstant(),
-        data = data,
-      ),
-    )
-  }
-
-  @Test
   fun `saveApplicationAssessedDomainEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
@@ -391,50 +476,6 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getBookingMadeDomainEvent returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
-
-    assertThat(domainEventService.getBookingMadeEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getBookingMadeDomainEvent returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    val data = BookingMadeEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.bookingMade,
-      eventDetails = BookingMadeFactory().produce(),
-    )
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val event = domainEventService.getBookingMadeEvent(id)
-    assertThat(event).isEqualTo(
-      DomainEvent(
-        id = id,
-        applicationId = applicationId,
-        crn = "CRN",
-        occurredAt = occurredAt.toInstant(),
-        data = data,
-      ),
-    )
-  }
-
-  @Test
   fun `saveBookingMadeDomainEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
@@ -533,50 +574,6 @@ class DomainEventServiceTest {
     verify(exactly = 0) {
       domainEventWorkerMock.emitEvent(any(), any())
     }
-  }
-
-  @Test
-  fun `getBookingChangedDomainEvent returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
-
-    assertThat(domainEventService.getBookingChangedEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getBookingChangedDomainEvent returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    val data = BookingChangedEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.bookingChanged,
-      eventDetails = BookingChangedFactory().produce(),
-    )
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val event = domainEventService.getBookingChangedEvent(id)
-    assertThat(event).isEqualTo(
-      DomainEvent(
-        id = id,
-        applicationId = applicationId,
-        crn = "CRN",
-        occurredAt = occurredAt.toInstant(),
-        data = data,
-      ),
-    )
   }
 
   @Test
@@ -684,50 +681,6 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getBookingCancelledDomainEvent returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
-
-    assertThat(domainEventService.getBookingCancelledEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getBookingCancelledDomainEvent returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    val data = BookingCancelledEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.bookingCancelled,
-      eventDetails = BookingCancelledFactory().produce(),
-    )
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val event = domainEventService.getBookingCancelledEvent(id)
-    assertThat(event).isEqualTo(
-      DomainEvent(
-        id = id,
-        applicationId = applicationId,
-        crn = "CRN",
-        occurredAt = occurredAt.toInstant(),
-        data = data,
-      ),
-    )
-  }
-
-  @Test
   fun `saveBookingCancelledDomainEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
@@ -827,50 +780,6 @@ class DomainEventServiceTest {
     verify(exactly = 0) {
       domainEventWorkerMock.emitEvent(any(), any())
     }
-  }
-
-  @Test
-  fun `getPersonArrivedEvent returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
-
-    assertThat(domainEventService.getPersonArrivedEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getPersonArrivedEvent returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    val data = PersonArrivedEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.personArrived,
-      eventDetails = PersonArrivedFactory().produce(),
-    )
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val event = domainEventService.getPersonArrivedEvent(id)
-    assertThat(event).isEqualTo(
-      DomainEvent(
-        id = id,
-        applicationId = applicationId,
-        crn = "CRN",
-        occurredAt = occurredAt.toInstant(),
-        data = data,
-      ),
-    )
   }
 
   @Test
@@ -1012,182 +921,6 @@ class DomainEventServiceTest {
     }
 
     verify { domainEventWorkerMock wasNot Called }
-  }
-
-  @Test
-  fun `getPersonNotArrivedEvent returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
-
-    assertThat(domainEventService.getPersonNotArrivedEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getPersonNotArrivedEvent returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    val data = PersonNotArrivedEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.personNotArrived,
-      eventDetails = PersonNotArrivedFactory().produce(),
-    )
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val event = domainEventService.getPersonNotArrivedEvent(id)
-    assertThat(event).isEqualTo(
-      DomainEvent(
-        id = id,
-        applicationId = applicationId,
-        crn = "CRN",
-        occurredAt = occurredAt.toInstant(),
-        data = data,
-      ),
-    )
-  }
-
-  @Test
-  fun `getPlacementApplicationWithdrawnEvent returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
-
-    assertThat(domainEventService.getPlacementApplicationWithdrawnEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getMatchRequestWithdrawnEvent returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    val data = MatchRequestWithdrawnEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.matchRequestWithdrawn,
-      eventDetails = MatchRequestWithdrawnFactory().produce(),
-    )
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val event = domainEventService.getMatchRequestWithdrawnEvent(id)
-    assertThat(event).isEqualTo(
-      DomainEvent(
-        id = id,
-        applicationId = applicationId,
-        crn = "CRN",
-        occurredAt = occurredAt.toInstant(),
-        data = data,
-      ),
-    )
-  }
-
-  @Test
-  fun `getMatchRequestWithdrawnEvent returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
-
-    assertThat(domainEventService.getMatchRequestWithdrawnEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getPlacementApplicationNotArrivedEvent returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    val data = PlacementApplicationWithdrawnEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.placementApplicationWithdrawn,
-      eventDetails = PlacementApplicationWithdrawnFactory().produce(),
-    )
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val event = domainEventService.getPlacementApplicationWithdrawnEvent(id)
-    assertThat(event).isEqualTo(
-      DomainEvent(
-        id = id,
-        applicationId = applicationId,
-        crn = "CRN",
-        occurredAt = occurredAt.toInstant(),
-        data = data,
-      ),
-    )
-  }
-
-  @Test
-  fun `getRequestForPlacementCreated returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
-
-    assertThat(domainEventService.getRequestForPlacementCreatedEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getRequestForPlacementCreated returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    val data = RequestForPlacementCreatedEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.requestForPlacementCreated,
-      eventDetails = RequestForPlacementCreatedFactory().produce(),
-    )
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val event = domainEventService.getRequestForPlacementCreatedEvent(id)
-    assertThat(event).isEqualTo(
-      DomainEvent(
-        id = id,
-        applicationId = applicationId,
-        crn = "CRN",
-        occurredAt = occurredAt.toInstant(),
-        data = data,
-      ),
-    )
   }
 
   @Test
@@ -1334,50 +1067,6 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getPersonDepartedEvent returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
-
-    assertThat(domainEventService.getPersonDepartedEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getPersonDepartedEvent returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    val data = PersonDepartedEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.personDeparted,
-      eventDetails = PersonDepartedFactory().produce(),
-    )
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val event = domainEventService.getPersonDepartedEvent(id)
-    assertThat(event).isEqualTo(
-      DomainEvent(
-        id = id,
-        applicationId = applicationId,
-        crn = "CRN",
-        occurredAt = occurredAt.toInstant(),
-        data = data,
-      ),
-    )
-  }
-
-  @Test
   fun `savePersonDepartedEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
@@ -1521,50 +1210,6 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getBookingNotMadeEvent returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
-
-    assertThat(domainEventService.getBookingMadeEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getBookingNotMadeEvent returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    val data = BookingNotMadeEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.bookingNotMade,
-      eventDetails = BookingNotMadeFactory().produce(),
-    )
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val event = domainEventService.getBookingNotMadeEvent(id)
-    assertThat(event).isEqualTo(
-      DomainEvent(
-        id = id,
-        applicationId = applicationId,
-        crn = "CRN",
-        occurredAt = occurredAt.toInstant(),
-        data = data,
-      ),
-    )
-  }
-
-  @Test
   fun `saveBookingNotMadeEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
@@ -1663,50 +1308,6 @@ class DomainEventServiceTest {
     verify(exactly = 0) {
       domainEventWorkerMock.emitEvent(any(), any())
     }
-  }
-
-  @Test
-  fun `getApplicationWithdrawnEvent returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
-
-    assertThat(domainEventService.getApplicationWithdrawnEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getApplicationWithdrawnEvent returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    val data = ApplicationWithdrawnEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.applicationWithdrawn,
-      eventDetails = ApplicationWithdrawnFactory().produce(),
-    )
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val event = domainEventService.getApplicationWithdrawnEvent(id)
-    assertThat(event).isEqualTo(
-      DomainEvent(
-        id = id,
-        applicationId = applicationId,
-        crn = "CRN",
-        occurredAt = occurredAt.toInstant(),
-        data = data,
-      ),
-    )
   }
 
   @Test
@@ -1848,50 +1449,6 @@ class DomainEventServiceTest {
     verify(exactly = 0) {
       domainEventWorkerMock.emitEvent(any(), any())
     }
-  }
-
-  @Test
-  fun `getAssessmentAppealedEvent returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
-
-    assertThat(domainEventService.getAssessmentAppealedEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getAssessmentAppealedEvent returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    val data = AssessmentAppealedEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.assessmentAppealed,
-      eventDetails = AssessmentAppealedFactory().produce(),
-    )
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val event = domainEventService.getAssessmentAppealedEvent(id)
-    assertThat(event).isEqualTo(
-      DomainEvent(
-        id = id,
-        applicationId = applicationId,
-        crn = "CRN",
-        occurredAt = occurredAt.toInstant(),
-        data = data,
-      ),
-    )
   }
 
   @Test
@@ -2198,50 +1755,6 @@ class DomainEventServiceTest {
   }
 
   @Test
-  fun `getAssessmentAllocatedEvent returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
-
-    assertThat(domainEventService.getAssessmentAllocatedEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getAssessmentAllocatedEvent returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    val data = AssessmentAllocatedEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.assessmentAppealed,
-      eventDetails = AssessmentAllocatedFactory().produce(),
-    )
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val event = domainEventService.getAssessmentAllocatedEvent(id)
-    assertThat(event).isEqualTo(
-      DomainEvent(
-        id = id,
-        applicationId = applicationId,
-        crn = "CRN",
-        occurredAt = occurredAt.toInstant(),
-        data = data,
-      ),
-    )
-  }
-
-  @Test
   fun `saveAssessmentAllocatedEvent persists event, emits event to SNS`() {
     val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
     val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
@@ -2441,50 +1954,6 @@ class DomainEventServiceTest {
     verify(exactly = 0) {
       domainEventWorkerMock.emitEvent(any(), any())
     }
-  }
-
-  @Test
-  fun `getPlacementApplicationAllocatedEvent returns null when event does not exist`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
-
-    assertThat(domainEventService.getPlacementApplicationAllocatedEvent(id)).isNull()
-  }
-
-  @Test
-  fun `getPlacementApplicationAllocatedEvent returns event`() {
-    val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
-    val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
-    val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
-    val crn = "CRN"
-
-    val data = PlacementApplicationAllocatedEnvelope(
-      id = id,
-      timestamp = occurredAt.toInstant(),
-      eventType = EventType.assessmentAppealed,
-      eventDetails = PlacementApplicationAllocatedFactory().produce(),
-    )
-
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withType(DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
-
-    val event = domainEventService.getPlacementApplicationAllocatedEvent(id)
-    assertThat(event).isEqualTo(
-      DomainEvent(
-        id = id,
-        applicationId = applicationId,
-        crn = "CRN",
-        occurredAt = occurredAt.toInstant(),
-        data = data,
-      ),
-    )
   }
 
   @Test
