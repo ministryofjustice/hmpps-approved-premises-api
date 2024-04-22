@@ -68,7 +68,7 @@ class WithdrawableService(
     }
 
     val withdrawalContext = WithdrawalContext(
-      triggeringUser = user,
+      withdrawalTriggeredBy = WithdrawalTriggeredByUser(user),
       triggeringEntityType = WithdrawableEntityType.Application,
       triggeringEntityId = applicationId,
     )
@@ -91,7 +91,7 @@ class WithdrawableService(
       ?: return CasResult.NotFound()
 
     val withdrawalContext = WithdrawalContext(
-      triggeringUser = user,
+      withdrawalTriggeredBy = WithdrawalTriggeredByUser(user),
       triggeringEntityType = WithdrawableEntityType.PlacementRequest,
       triggeringEntityId = placementRequestId,
     )
@@ -114,7 +114,7 @@ class WithdrawableService(
       ?: return CasResult.NotFound()
 
     val withdrawalContext = WithdrawalContext(
-      triggeringUser = user,
+      withdrawalTriggeredBy = WithdrawalTriggeredByUser(user),
       triggeringEntityType = WithdrawableEntityType.PlacementApplication,
       triggeringEntityId = placementApplicationId,
     )
@@ -137,7 +137,7 @@ class WithdrawableService(
     otherReason: String?,
   ): CasResult<CancellationEntity> {
     val withdrawalContext = WithdrawalContext(
-      triggeringUser = user,
+      withdrawalTriggeredBy = WithdrawalTriggeredByUser(user),
       triggeringEntityType = WithdrawableEntityType.Booking,
       triggeringEntityId = booking.id,
     )
@@ -187,17 +187,15 @@ class WithdrawableService(
 }
 
 data class WithdrawalContext(
-  /**
-   * Ideally this would not be nullable, but we have seed jobs that cancel bookings
-   * that don't have an associated user. This would be an issue if seed jobs cancel
-   * any elements that can cascade withdrawals, as we assume the user is provided
-   * in these cases
-   */
-  val triggeringUser: UserEntity?,
+  val withdrawalTriggeredBy: WithdrawalTriggeredBy,
   val triggeringEntityType: WithdrawableEntityType,
   val triggeringEntityId: UUID,
-  val triggeredBySeedJob: Boolean = false,
 )
+
+sealed interface WithdrawalTriggeredBy
+
+data class WithdrawalTriggeredByUser(val user: UserEntity) : WithdrawalTriggeredBy
+class WithdrawalTriggeredBySeedJob : WithdrawalTriggeredBy
 
 data class WithdrawableEntity(
   val type: WithdrawableEntityType,

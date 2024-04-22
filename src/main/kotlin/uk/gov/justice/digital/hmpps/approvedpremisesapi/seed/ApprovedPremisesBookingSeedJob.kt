@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAcco
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromValidatableActionResult
@@ -245,7 +246,7 @@ class ApprovedPremisesBookingSeedJob(
           notes = row.cancellationNotes,
           otherReason = null,
           withdrawalContext = WithdrawalContext(
-            triggeringUser = null,
+            withdrawalTriggeredBy = WithdrawalTriggeredBySeedJob(),
             triggeringEntityType = WithdrawableEntityType.Booking,
             triggeringEntityId = createdBooking.id,
           ),

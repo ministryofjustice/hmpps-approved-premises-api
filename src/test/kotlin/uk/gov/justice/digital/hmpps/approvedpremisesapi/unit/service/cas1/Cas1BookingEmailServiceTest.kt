@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.APPLICANT_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.AP_AREA_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.CASE_MANAGER_EMAIL
@@ -206,7 +207,7 @@ class Cas1BookingEmailServiceTest {
         caseManagerNotApplicant = true,
       )
 
-      service.bookingWithdrawn(application, booking, withdrawingUser)
+      service.bookingWithdrawn(application, booking, WithdrawalTriggeredByUser(withdrawingUser))
 
       val expectedPersonalisation = mapOf(
         "apName" to PREMISES_NAME,
@@ -267,7 +268,7 @@ class Cas1BookingEmailServiceTest {
         departureDate = LocalDate.of(2023, 2, 14),
       )
 
-      service.bookingWithdrawn(application, booking, withdrawingUser)
+      service.bookingWithdrawn(application, booking, WithdrawalTriggeredByUser(withdrawingUser))
 
       mockEmailNotificationService.assertNoEmailsRequested()
     }

@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableTreeNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -277,7 +278,7 @@ class Cas1WithdrawableServiceTest {
       every {
         cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(
           tree,
-          WithdrawalContext(user, WithdrawableEntityType.Application, application.id),
+          WithdrawalContext(WithdrawalTriggeredByUser(user), WithdrawableEntityType.Application, application.id),
         )
       } returns Unit
 
@@ -297,7 +298,7 @@ class Cas1WithdrawableServiceTest {
       verify {
         cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(
           tree,
-          WithdrawalContext(user, WithdrawableEntityType.Application, application.id),
+          WithdrawalContext(WithdrawalTriggeredByUser(user), WithdrawableEntityType.Application, application.id),
         )
       }
     }
@@ -422,7 +423,7 @@ class Cas1WithdrawableServiceTest {
         ),
       )
 
-      val context = WithdrawalContext(user, WithdrawableEntityType.PlacementRequest, placementRequest.id)
+      val context = WithdrawalContext(WithdrawalTriggeredByUser(user), WithdrawableEntityType.PlacementRequest, placementRequest.id)
 
       every {
         cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
@@ -538,7 +539,7 @@ class Cas1WithdrawableServiceTest {
         placementApplicationService.withdrawPlacementApplication(any(), any(), any())
       } returns CasResult.Success(placementApplication)
 
-      val context = WithdrawalContext(user, WithdrawableEntityType.PlacementApplication, placementApplication.id)
+      val context = WithdrawalContext(WithdrawalTriggeredByUser(user), WithdrawableEntityType.PlacementApplication, placementApplication.id)
 
       every {
         cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)
@@ -654,7 +655,7 @@ class Cas1WithdrawableServiceTest {
         bookingService.createCas1Cancellation(any(), any(), any(), any(), any(), any())
       } returns CasResult.Success(CancellationEntityFactory().withDefaults().withBooking(booking).produce())
 
-      val context = WithdrawalContext(user, WithdrawableEntityType.Booking, booking.id)
+      val context = WithdrawalContext(WithdrawalTriggeredByUser(user), WithdrawableEntityType.Booking, booking.id)
 
       every {
         cas1WithdrawableTreeOperations.withdrawDescendantsOfRootNode(tree, context)

@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ApplicationServi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequestService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.javaConstantNameToSentence
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toUiFormat
@@ -45,10 +46,9 @@ class Cas1WithdrawPlacementRequestSeedJob(
       placementRequestId = id,
       userProvidedReason = row.withdrawalReason,
       withdrawalContext = WithdrawalContext(
-        triggeringUser = null,
+        withdrawalTriggeredBy = WithdrawalTriggeredBySeedJob(),
         triggeringEntityType = WithdrawableEntityType.PlacementRequest,
         triggeringEntityId = row.placementRequestId,
-        triggeredBySeedJob = true,
       ),
     )
 

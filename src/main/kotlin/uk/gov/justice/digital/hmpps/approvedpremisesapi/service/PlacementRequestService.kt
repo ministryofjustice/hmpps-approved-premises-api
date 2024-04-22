@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getMetadata
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.getPageable
@@ -350,12 +351,12 @@ class PlacementRequestService(
 
     placementRequestRepository.save(placementRequest)
 
-    if (!withdrawalContext.triggeredBySeedJob) {
+    if (withdrawalContext.withdrawalTriggeredBy is WithdrawalTriggeredByUser) {
       val isUserRequestedWithdrawal = withdrawalContext.triggeringEntityType == WithdrawableEntityType.PlacementRequest
       updateApplicationStatusOnWithdrawal(placementRequest, isUserRequestedWithdrawal)
     }
 
-    cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest, withdrawalContext.triggeringUser)
+    cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest, withdrawalContext.withdrawalTriggeredBy)
     cas1PlacementRequestDomainEventService.placementRequestWithdrawn(placementRequest, withdrawalContext)
 
     return CasResult.Success(toPlacementRequestAndCancellations(placementRequest))

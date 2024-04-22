@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Withdrawabl
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableTreeNode
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import java.util.UUID
 
 class Cas1WithdrawableTreeOperationsTest {
@@ -160,7 +161,7 @@ class Cas1WithdrawableTreeOperationsTest {
     )
 
     val context = WithdrawalContext(
-      triggeringUser = user,
+      withdrawalTriggeredBy = WithdrawalTriggeredByUser(user),
       triggeringEntityType = WithdrawableEntityType.Application,
       triggeringEntityId = application.id,
     )
@@ -334,7 +335,7 @@ class Cas1WithdrawableTreeOperationsTest {
     )
 
     val context = WithdrawalContext(
-      triggeringUser = user,
+      withdrawalTriggeredBy = WithdrawalTriggeredByUser(user),
       triggeringEntityType = WithdrawableEntityType.Application,
       triggeringEntityId = application.id,
     )
@@ -478,7 +479,7 @@ class Cas1WithdrawableTreeOperationsTest {
     )
 
     val context = WithdrawalContext(
-      triggeringUser = user,
+      withdrawalTriggeredBy = WithdrawalTriggeredByUser(user),
       triggeringEntityType = WithdrawableEntityType.Application,
       triggeringEntityId = application.id,
     )
@@ -625,7 +626,7 @@ class Cas1WithdrawableTreeOperationsTest {
     )
 
     val context = WithdrawalContext(
-      triggeringUser = user,
+      withdrawalTriggeredBy = WithdrawalTriggeredByUser(user),
       triggeringEntityType = WithdrawableEntityType.Application,
       triggeringEntityId = application.id,
     )
@@ -661,7 +662,7 @@ class Cas1WithdrawableTreeOperationsTest {
     )
 
     val context = WithdrawalContext(
-      triggeringUser = user,
+      withdrawalTriggeredBy = WithdrawalTriggeredByUser(user),
       triggeringEntityType = WithdrawableEntityType.Application,
       triggeringEntityId = application.id,
     )

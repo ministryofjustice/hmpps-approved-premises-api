@@ -245,7 +245,7 @@ class PlacementApplicationService(
     cas1PlacementApplicationEmailService.placementApplicationWithdrawn(
       placementApplication = placementApplication,
       wasBeingAssessedBy = wasBeingAssessedBy,
-      withdrawingUser = withdrawalContext.triggeringUser,
+      withdrawalTriggeredBy = withdrawalContext.withdrawalTriggeredBy,
     )
 
     return CasResult.Success(savedApplication)

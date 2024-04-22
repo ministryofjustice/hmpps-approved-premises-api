@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.PlacementDateEnt
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.APPLICANT_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.AREA_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementApplicationEmailServiceTest.TestConstants.ASSESSOR_EMAIL
@@ -368,7 +369,7 @@ class Cas1PlacementApplicationEmailServiceTest {
       service.placementApplicationWithdrawn(
         placementApplication = placementApplication,
         wasBeingAssessedBy = assessor,
-        withdrawingUser = withdrawnByUser,
+        withdrawalTriggeredBy = WithdrawalTriggeredByUser(withdrawnByUser),
       )
 
       mockEmailNotificationService.assertNoEmailsRequested()
@@ -395,7 +396,7 @@ class Cas1PlacementApplicationEmailServiceTest {
       service.placementApplicationWithdrawn(
         placementApplication = placementApplication,
         wasBeingAssessedBy = null,
-        withdrawingUser = withdrawnByUser,
+        withdrawalTriggeredBy = WithdrawalTriggeredByUser(withdrawnByUser),
       )
 
       mockEmailNotificationService.assertEmailRequestCount(1)
@@ -440,7 +441,7 @@ class Cas1PlacementApplicationEmailServiceTest {
       service.placementApplicationWithdrawn(
         placementApplication = placementApplication,
         wasBeingAssessedBy = null,
-        withdrawingUser = withdrawnByUser,
+        withdrawalTriggeredBy = WithdrawalTriggeredByUser(withdrawnByUser),
       )
 
       mockEmailNotificationService.assertEmailRequestCount(1)
@@ -484,7 +485,7 @@ class Cas1PlacementApplicationEmailServiceTest {
       service.placementApplicationWithdrawn(
         placementApplication = placementApplication,
         wasBeingAssessedBy = null,
-        withdrawingUser = withdrawnByUser,
+        withdrawalTriggeredBy = WithdrawalTriggeredByUser(withdrawnByUser),
       )
 
       mockEmailNotificationService.assertEmailRequestCount(2)
@@ -537,7 +538,7 @@ class Cas1PlacementApplicationEmailServiceTest {
       service.placementApplicationWithdrawn(
         placementApplication = placementApplication,
         wasBeingAssessedBy = assessor,
-        withdrawingUser = withdrawnByUser,
+        withdrawalTriggeredBy = WithdrawalTriggeredByUser(withdrawnByUser),
       )
 
       mockEmailNotificationService.assertEmailRequestCount(1)
@@ -589,7 +590,7 @@ class Cas1PlacementApplicationEmailServiceTest {
       service.placementApplicationWithdrawn(
         placementApplication = placementApplication,
         wasBeingAssessedBy = assessor,
-        withdrawingUser = withdrawnByUser,
+        withdrawalTriggeredBy = WithdrawalTriggeredByUser(withdrawnByUser),
       )
 
       mockEmailNotificationService.assertEmailRequestCount(1)

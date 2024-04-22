@@ -135,6 +135,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.WorkingDayServic
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.util.addRoleForUnitTest
 import java.time.Instant
 import java.time.LocalDate
@@ -2146,7 +2147,7 @@ class BookingServiceTest {
         notes = "notes",
         otherReason = null,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.Booking,
           bookingEntity.id,
         ),
@@ -2175,7 +2176,7 @@ class BookingServiceTest {
         notes = "notes",
         otherReason = null,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.Booking,
           bookingEntity.id,
         ),
@@ -2208,7 +2209,7 @@ class BookingServiceTest {
         notes = "notes",
         otherReason = null,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.Booking,
           bookingEntity.id,
         ),
@@ -2241,7 +2242,7 @@ class BookingServiceTest {
         notes = "notes",
         otherReason = null,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.Booking,
           bookingEntity.id,
         ),
@@ -2270,7 +2271,7 @@ class BookingServiceTest {
         notes = "notes",
         otherReason = null,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.Booking,
           bookingEntity.id,
         ),
@@ -2310,7 +2311,7 @@ class BookingServiceTest {
         notes = "notes",
         otherReason = "Other reason",
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.Booking,
           bookingEntity.id,
         ),
@@ -2362,7 +2363,7 @@ class BookingServiceTest {
       every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
       every { mockApplicationService.updateApprovedPremisesApplicationStatus(any(), any()) } returns Unit
 
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, user) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, WithdrawalTriggeredByUser(user)) } returns Unit
 
       val cancelledAt = LocalDate.parse("2022-08-25")
       val notes = "notes"
@@ -2374,7 +2375,7 @@ class BookingServiceTest {
         notes = notes,
         otherReason = null,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.Booking,
           bookingEntity.id,
         ),
@@ -2451,7 +2452,7 @@ class BookingServiceTest {
 
       every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
       every { mockApplicationService.updateApprovedPremisesApplicationStatus(any(), any()) } returns Unit
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, user) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, WithdrawalTriggeredByUser(user)) } returns Unit
 
       val cancelledAt = LocalDate.parse("2022-08-25")
       val notes = "notes"
@@ -2463,7 +2464,7 @@ class BookingServiceTest {
         notes = notes,
         otherReason = null,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.Booking,
           bookingEntity.id,
         ),
@@ -2471,7 +2472,7 @@ class BookingServiceTest {
 
       assertThat(result).isInstanceOf(CasResult.Success::class.java)
 
-      verify(exactly = 1) { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, user) }
+      verify(exactly = 1) { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, WithdrawalTriggeredByUser(user)) }
     }
 
     @Test
@@ -2513,7 +2514,7 @@ class BookingServiceTest {
         notes = notes,
         otherReason = null,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.Booking,
           bookingEntity.id,
         ),
@@ -2596,7 +2597,7 @@ class BookingServiceTest {
         notes = notes,
         otherReason = null,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.Booking,
           bookingEntity.id,
         ),
@@ -2685,7 +2686,7 @@ class BookingServiceTest {
         notes = "notes",
         otherReason = null,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.Booking,
           bookingEntity.id,
         ),
@@ -2741,7 +2742,7 @@ class BookingServiceTest {
         notes = "notes",
         otherReason = null,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           triggeringEntity,
           bookingEntity.id,
         ),
@@ -2788,7 +2789,7 @@ class BookingServiceTest {
         )
       } returns Unit
 
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, user) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, WithdrawalTriggeredByUser(user)) } returns Unit
 
       val cancelledBooking1 = BookingEntityFactory()
         .withPremises(premises)
@@ -2834,7 +2835,7 @@ class BookingServiceTest {
         notes = "notes",
         otherReason = null,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.Booking,
           bookingEntity.id,
         ),
@@ -2883,7 +2884,7 @@ class BookingServiceTest {
         )
       } returns Unit
 
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, user) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, WithdrawalTriggeredByUser(user)) } returns Unit
 
       val cancelledBooking1 = BookingEntityFactory()
         .withPremises(premises)
@@ -2917,7 +2918,7 @@ class BookingServiceTest {
         notes = "notes",
         otherReason = null,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.Booking,
           bookingEntity.id,
         ),
@@ -2960,7 +2961,7 @@ class BookingServiceTest {
           ApprovedPremisesApplicationStatus.AWAITING_PLACEMENT,
         )
       } returns Unit
-      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, user) } returns Unit
+      every { mockCas1BookingEmailService.bookingWithdrawn(application, bookingEntity, WithdrawalTriggeredByUser(user)) } returns Unit
 
       every { mockBookingRepository.findAllByApplication(application) } returns emptyList()
 
@@ -2971,7 +2972,7 @@ class BookingServiceTest {
         notes = "notes",
         otherReason = null,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.PlacementApplication,
           bookingEntity.id,
         ),

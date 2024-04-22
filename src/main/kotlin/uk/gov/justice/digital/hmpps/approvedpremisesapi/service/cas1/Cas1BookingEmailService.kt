@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Constants.DAYS_IN_WEEK
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -53,14 +52,14 @@ class Cas1BookingEmailService(
   fun bookingWithdrawn(
     application: ApprovedPremisesApplicationEntity,
     booking: BookingEntity,
-    withdrawingUser: UserEntity?,
+    withdrawalTriggeredBy: WithdrawalTriggeredBy?,
   ) {
     val allPersonalisation =
       buildCommonPersonalisation(application, booking).toMutableMap()
 
     allPersonalisation += "region" to booking.premises.probationRegion.name
-    if (withdrawingUser != null) {
-      allPersonalisation["withdrawnBy"] = withdrawingUser.name
+    if (withdrawalTriggeredBy is WithdrawalTriggeredByUser) {
+      allPersonalisation["withdrawnBy"] = withdrawalTriggeredBy.user.name
     }
 
     val template = notifyConfig.templates.bookingWithdrawnV2
