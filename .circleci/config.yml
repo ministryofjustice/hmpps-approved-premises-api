@@ -142,9 +142,12 @@ jobs:
             - ~/.gradle
           key: gradle-{{ checksum "build.gradle.kts" }}
       - persist_to_workspace:
-          root: .
+          root: ~/
           paths:
-            - ./*
+            - project/*
+            - project/**/*
+            - .gradle/*
+            - .gradle/**/*
   code_linting_check_with_ktlint:
     environment:
       _JAVA_OPTIONS: "-Xmx3g"
@@ -152,9 +155,8 @@ jobs:
     docker:
       - image: cimg/openjdk:17.0
     steps:
-      - checkout
       - attach_workspace:
-          at: .
+          at: ~/
       - run:
           name: Run ktlintCheck
           command: ./gradlew ktlintCheck
@@ -165,9 +167,8 @@ jobs:
     docker:
       - image: cimg/openjdk:17.0
     steps:
-      - checkout
       - attach_workspace:
-          at: .
+          at: ~/
       - run:
           name: Run detekt
           command: ./gradlew detekt
@@ -179,9 +180,8 @@ jobs:
     executor:
       name: unit-test-gradle
     steps:
-      - checkout
       - attach_workspace:
-          at: .
+          at: ~/
       - run:
           name: Run unit tests
           # Use "./gradlew test" instead if tests are not run in parallel
@@ -207,7 +207,7 @@ jobs:
       - store_artifacts:
           path: build/reports/tests
   integration_test:
-    parallelism: 6
+    parallelism: 7
     environment:
       _JAVA_OPTIONS: "-Xmx1g"
       GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.workers.max=2"
@@ -216,9 +216,8 @@ jobs:
     executor:
       name: integration-test-gradle
     steps:
-      - checkout
       - attach_workspace:
-          at: .
+          at: ~/
       - run:
           name: Run tests in parallel
           # Use "./gradlew test" instead if tests are not run in parallel
