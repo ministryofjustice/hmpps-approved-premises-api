@@ -171,7 +171,7 @@ class DomainEventServiceTest {
 
     every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
-    domainEventService.saveAndEmit(domainEventToSave, detailUrl, crn, nomsNumber, bookingId, true)
+    domainEventService.saveAndEmit(domainEventToSave, domainEventType, detailUrl, crn, nomsNumber, bookingId, true)
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(
@@ -225,7 +225,7 @@ class DomainEventServiceTest {
       data = data,
     )
 
-    domainEventService.saveAndEmit(domainEventToSave, detailUrl, crn, nomsNumber, bookingId, false)
+    domainEventService.saveAndEmit(domainEventToSave, domainEventType, detailUrl, crn, nomsNumber, bookingId, false)
 
     verify(exactly = 1) {
       domainEventRespositoryMock.save(
@@ -268,7 +268,7 @@ class DomainEventServiceTest {
     )
 
     try {
-      domainEventService.saveAndEmit(domainEventToSave, detailUrl, crn, nomsNumber, bookingId, true)
+      domainEventService.saveAndEmit(domainEventToSave, domainEventType, detailUrl, crn, nomsNumber, bookingId, true)
     } catch (_: Exception) {
     }
 
@@ -311,6 +311,7 @@ class DomainEventServiceTest {
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
         detailUrl = "http://api/events/application-submitted/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
@@ -339,6 +340,7 @@ class DomainEventServiceTest {
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
         detailUrl = "http://api/events/application-assessed/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
@@ -362,13 +364,14 @@ class DomainEventServiceTest {
 
     val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any()) } returns Unit
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), any()) } returns Unit
 
     domainEventServiceSpy.saveBookingMadeDomainEvent(domainEvent)
 
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
         detailUrl = "http://api/events/booking-made/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
@@ -394,13 +397,14 @@ class DomainEventServiceTest {
 
     val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), emit) } returns Unit
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), any(), emit) } returns Unit
 
     domainEventServiceSpy.savePersonArrivedEvent(domainEvent, emit)
 
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
         detailUrl = "http://api/events/person-arrived/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
@@ -427,13 +431,14 @@ class DomainEventServiceTest {
 
     val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), emit) } returns Unit
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), any(), emit) } returns Unit
 
     domainEventServiceSpy.savePersonNotArrivedEvent(domainEvent, emit)
 
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
         detailUrl = "http://api/events/person-not-arrived/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
@@ -460,13 +465,14 @@ class DomainEventServiceTest {
 
     val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), emit) } returns Unit
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), any(), emit) } returns Unit
 
     domainEventServiceSpy.savePersonDepartedEvent(domainEvent, emit)
 
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
         detailUrl = "http://api/events/person-departed/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
@@ -497,6 +503,7 @@ class DomainEventServiceTest {
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
         detailUrl = "http://api/events/booking-not-made/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
@@ -520,13 +527,14 @@ class DomainEventServiceTest {
 
     val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any()) } returns Unit
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), any()) } returns Unit
 
     domainEventServiceSpy.saveBookingCancelledEvent(domainEvent)
 
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED,
         detailUrl = "http://api/events/booking-cancelled/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
@@ -551,13 +559,14 @@ class DomainEventServiceTest {
 
     val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any()) } returns Unit
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), any()) } returns Unit
 
     domainEventServiceSpy.saveBookingChangedEvent(domainEvent)
 
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
         detailUrl = "http://api/events/booking-changed/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
@@ -581,13 +590,14 @@ class DomainEventServiceTest {
 
     val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), null, emit) } returns Unit
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), null, emit) } returns Unit
 
     domainEventServiceSpy.saveApplicationWithdrawnEvent(domainEvent, emit)
 
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
         detailUrl = "http://api/events/application-withdrawn/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
@@ -618,6 +628,7 @@ class DomainEventServiceTest {
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED,
         detailUrl = "http://api/events/assessment-appealed/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
@@ -646,6 +657,7 @@ class DomainEventServiceTest {
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
         detailUrl = "http://api/events/placement-application-withdrawn/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
@@ -674,6 +686,7 @@ class DomainEventServiceTest {
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED,
         detailUrl = "http://api/events/placement-application-allocated/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
@@ -702,6 +715,7 @@ class DomainEventServiceTest {
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
         detailUrl = "http://api/events/match-request-withdrawn/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
@@ -724,13 +738,14 @@ class DomainEventServiceTest {
 
     val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), emit) } returns Unit
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), any(), any(), emit) } returns Unit
 
     domainEventServiceSpy.saveRequestForPlacementCreatedEvent(domainEvent, emit)
 
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
         detailUrl = "http://api/events/request-for-placement-created/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
@@ -761,6 +776,7 @@ class DomainEventServiceTest {
     verify {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
         detailUrl = "http://api/events/assessment-allocated/$id",
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
