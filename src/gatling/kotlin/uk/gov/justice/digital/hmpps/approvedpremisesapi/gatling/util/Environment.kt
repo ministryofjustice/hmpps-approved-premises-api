@@ -7,8 +7,8 @@ val CRN = System.getenv("GATLING_CRN") ?: "X320741"
 val CAS1_USERNAME = System.getenv("GATLING_CAS1_USERNAME") ?: "JimSnowLdap"
 val CAS1_PASSWORD = System.getenv("GATLING_CAS1_PASSWORD") ?: "secret"
 
-val CAS2_USERNAME = System.getenv("GATLING_CAS2_USERNAME") ?: ""
-val CAS2_PASSWORD = System.getenv("GATLING_CAS2_PASSWORD") ?: ""
+val CAS2_USERNAME = System.getenv("GATLING_CAS2_USERNAME") ?: "POM_USER"
+val CAS2_PASSWORD = System.getenv("GATLING_CAS2_PASSWORD") ?: "password123456"
 
 val CAS3_USERNAME = System.getenv("GATLING_CAS3_USERNAME") ?: "JimSnowLdap"
 val CAS3_PASSWORD = System.getenv("GATLING_CAS3_PASSWORD") ?: "secret"
