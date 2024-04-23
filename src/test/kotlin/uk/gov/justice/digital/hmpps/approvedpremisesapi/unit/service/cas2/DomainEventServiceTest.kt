@@ -10,12 +10,14 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationStatusUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationStatusUpdatedEventDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.cas2.Cas2ApplicationSubmittedEventDetailsFactory
@@ -35,6 +37,7 @@ import java.util.UUID
 class DomainEventServiceTest {
   private val domainEventRepositoryMock = mockk<DomainEventRepository>()
   private val hmppsQueueServiceMock = mockk<HmppsQueueService>()
+  private val mockDomainEventUrlConfig = mockk<DomainEventUrlConfig>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -42,14 +45,20 @@ class DomainEventServiceTest {
     registerKotlinModule()
   }
 
+  private val detailUrl = "http://example.com/123"
+
   private val domainEventService = DomainEventService(
     objectMapper = objectMapper,
     domainEventRepository = domainEventRepositoryMock,
     hmppsQueueService = hmppsQueueServiceMock,
     emitDomainEventsEnabled = true,
-    cas2ApplicationSubmittedDetailUrlTemplate = "http://api/events/cas2/application-submitted/#eventId",
-    cas2ApplicationStatusUpdatedDetailUrlTemplate = "http://api/events/cas2/application-status-updated/#eventId",
+    mockDomainEventUrlConfig,
   )
+
+  @BeforeEach
+  fun setup() {
+    every { mockDomainEventUrlConfig.getUrlForDomainEventId(any(), any()) } returns detailUrl
+  }
 
   @Nested
   inner class ApplicationSubmitted {
@@ -154,13 +163,17 @@ class DomainEventServiceTest {
               deserializedMessage.eventType == "applications.cas2.application.submitted" &&
                 deserializedMessage.version == 1 &&
                 deserializedMessage.description == "An application has been submitted for a CAS2 placement" &&
-                deserializedMessage.detailUrl == "http://api/events/cas2/application-submitted/$id" &&
+                deserializedMessage.detailUrl == detailUrl &&
                 deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
                 deserializedMessage.additionalInformation.applicationId == applicationId &&
                 deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms } &&
                 deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn }
             },
           )
+        }
+
+        verify(exactly = 1) {
+          mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS2_APPLICATION_SUBMITTED, domainEventToSave.id)
         }
       }
 
@@ -221,8 +234,7 @@ class DomainEventServiceTest {
           domainEventRepository = domainEventRepositoryMock,
           hmppsQueueService = hmppsQueueServiceMock,
           emitDomainEventsEnabled = false,
-          cas2ApplicationSubmittedDetailUrlTemplate = "http://api/events/cas2/application-submitted/#eventId",
-          cas2ApplicationStatusUpdatedDetailUrlTemplate = "http://api/events/cas2/application-status-updated/#eventId",
+          mockDomainEventUrlConfig,
         )
 
         val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
@@ -328,13 +340,17 @@ class DomainEventServiceTest {
               deserializedMessage.eventType == "applications.cas2.application.status-updated" &&
                 deserializedMessage.version == 1 &&
                 deserializedMessage.description == "An assessor has updated the status of a CAS2 application" &&
-                deserializedMessage.detailUrl == "http://api/events/cas2/application-status-updated/$id" &&
+                deserializedMessage.detailUrl == detailUrl &&
                 deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
                 deserializedMessage.additionalInformation.applicationId == applicationId &&
                 deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms } &&
                 deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn }
             },
           )
+        }
+
+        verify(exactly = 1) {
+          mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED, domainEventToSave.id)
         }
       }
 
@@ -345,8 +361,7 @@ class DomainEventServiceTest {
           domainEventRepository = domainEventRepositoryMock,
           hmppsQueueService = hmppsQueueServiceMock,
           emitDomainEventsEnabled = false,
-          cas2ApplicationSubmittedDetailUrlTemplate = "http://api/events/cas2/application-submitted/#eventId",
-          cas2ApplicationStatusUpdatedDetailUrlTemplate = "http://api/events/cas2/application-status-updated/#eventId",
+          mockDomainEventUrlConfig,
         )
 
         val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")

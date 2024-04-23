@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -29,7 +30,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReferenceCollection
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -42,22 +42,7 @@ class DomainEventService(
   val domainEventWorker: ConfiguredDomainEventWorker,
   private val userService: UserService,
   @Value("\${domain-events.cas1.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
-  @Value("\${url-templates.api.cas1.application-submitted-event-detail}") private val applicationSubmittedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas1.application-assessed-event-detail}") private val applicationAssessedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas1.booking-made-event-detail}") private val bookingMadeDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas1.person-arrived-event-detail}") private val personArrivedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas1.person-not-arrived-event-detail}") private val personNotArrivedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas1.person-departed-event-detail}") private val personDepartedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas1.booking-not-made-event-detail}") private val bookingNotMadeDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas1.booking-cancelled-event-detail}") private val bookingCancelledDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas1.booking-changed-event-detail}") private val bookingChangedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas1.application-withdrawn-event-detail}") private val applicationWithdrawnDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas1.assessment-appealed-event-detail}") private val assessmentAppealedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas1.placement-application-withdrawn-event-detail}") private val placementApplicationWithdrawnDetailUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.api.cas1.placement-application-allocated-event-detail}") private val placementApplicationAllocatedDetailUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.api.cas1.match-request-withdrawn-event-detail}") private val matchRequestWithdrawnDetailUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.api.cas1.assessment-allocated-event-detail}") private val assessmentAllocatedUrlTemplate: UrlTemplate,
-  @Value("\${url-templates.api.cas1.request-for-placement-created-event-detail}") private val requestForPlacementCreatedUrlTemplate: UrlTemplate,
+  private val domainEventUrlConfig: DomainEventUrlConfig,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -89,7 +74,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
-      detailUrl = applicationSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -99,7 +83,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
-      detailUrl = applicationAssessedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -109,7 +92,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
-      detailUrl = bookingMadeDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       bookingId = domainEvent.bookingId,
@@ -120,7 +102,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
-      detailUrl = personArrivedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       bookingId = domainEvent.bookingId,
@@ -132,7 +113,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
-      detailUrl = personNotArrivedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       bookingId = domainEvent.bookingId,
@@ -144,7 +124,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
-      detailUrl = personDepartedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       bookingId = domainEvent.bookingId,
@@ -156,7 +135,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
-      detailUrl = bookingNotMadeDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -166,7 +144,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED,
-      detailUrl = bookingCancelledDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       bookingId = domainEvent.bookingId,
@@ -177,7 +154,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
-      detailUrl = bookingChangedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       bookingId = domainEvent.bookingId,
@@ -188,7 +164,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
-      detailUrl = applicationWithdrawnDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       emit = emit,
@@ -199,7 +174,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED,
-      detailUrl = assessmentAppealedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -209,7 +183,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
-      detailUrl = placementApplicationWithdrawnDetailUrlTemplate.resolve("eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -219,7 +192,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED,
-      detailUrl = placementApplicationAllocatedDetailUrlTemplate.resolve("eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -229,7 +201,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
-      detailUrl = matchRequestWithdrawnDetailUrlTemplate.resolve("eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -239,7 +210,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
-      detailUrl = requestForPlacementCreatedUrlTemplate.resolve("eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       emit = emit,
@@ -250,7 +220,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
-      detailUrl = assessmentAllocatedUrlTemplate.resolve("eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -262,12 +231,12 @@ class DomainEventService(
   fun saveAndEmit(
     domainEvent: DomainEvent<*>,
     eventType: DomainEventType,
-    detailUrl: String,
     crn: String,
     nomsNumber: String,
     bookingId: UUID? = null,
     emit: Boolean = true,
   ) {
+    val detailUrl = domainEventUrlConfig.getUrlForDomainEventId(eventType, domainEvent.id)
     val typeName = eventType.typeName
     val typeDescription = eventType.typeDescription
 

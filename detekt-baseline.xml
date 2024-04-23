@@ -44,6 +44,13 @@
     <ID>TooGenericExceptionThrown:DomainEventsController.kt$DomainEventsController$throw RuntimeException("Only CAS1 events are supported")</ID>
     <ID>TooGenericExceptionThrown:DomainEventServiceTest.kt$DomainEventServiceTest$throw RuntimeException("Cannot find EventType for $type")</ID>
     <ID>TooGenericExceptionThrown:DomainEventServiceTest.kt$DomainEventServiceTest$throw RuntimeException("Domain even type $type not supported")</ID>
+    <ID>UseCheckOrError:DomainEventUrlConfig.kt$DomainEventUrlConfig$throw IllegalStateException("")</ID>
+    <ID>UseCheckOrError:DomainEventUrlConfig.kt$DomainEventUrlConfig$throw IllegalStateException("Missing CAS1 Url Config")</ID>
+    <ID>CyclomaticComplexMethod:DomainEventUrlConfig.kt$DomainEventUrlConfig$fun getUrlForDomainEventType(domainEventType: DomainEventType): String</ID>
+    <ID>UseCheckOrError:DomainEventUrlConfig.kt$DomainEventUrlConfig$throw IllegalStateException("Missing URL for $domainEventType")</ID>
+    <ID>CyclomaticComplexMethod:DomainEventUrlConfig.kt$DomainEventUrlConfig$fun getUrlForDomainEventType(domainEventType: DomainEventType): UrlTemplate</ID>
+    <ID>CyclomaticComplexMethod:DomainEventUrlConfig.kt$DomainEventUrlConfig$fun getUrlForDomainEventType(domainEventType: DomainEventType, eventId: UUID): String</ID>
+    <ID>CyclomaticComplexMethod:DomainEventUrlConfig.kt$DomainEventUrlConfig$fun getUrlForDomainEventId(domainEventType: DomainEventType, eventId: UUID): String</ID>
   </ManuallySuppressedIssues>
   <CurrentIssues>
     <ID>ComplexCondition:BookingService.kt$BookingService$booking.service == ServiceName.approvedPremises.value &amp;&amp; booking.application != null &amp;&amp; user != null &amp;&amp; !arrivedAndDepartedDomainEventsDisabled</ID>
