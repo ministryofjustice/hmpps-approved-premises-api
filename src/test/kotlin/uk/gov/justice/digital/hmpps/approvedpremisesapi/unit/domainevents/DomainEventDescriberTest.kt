@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
@@ -79,7 +80,7 @@ class DomainEventDescriberTest {
       ApplicationAssessedEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.application.assessed",
+        eventType = EventType.applicationAssessed,
         eventDetails = ApplicationAssessedFactory()
           .withDecision(decision)
           .produce(),
@@ -101,7 +102,7 @@ class DomainEventDescriberTest {
       BookingMadeEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.booking.made",
+        eventType = EventType.bookingMade,
         eventDetails = BookingMadeFactory()
           .withArrivalOn(arrivalDate)
           .withDepartureOn(departureDate)
@@ -128,7 +129,7 @@ class DomainEventDescriberTest {
       PersonArrivedEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.person.arrived",
+        eventType = EventType.personArrived,
         eventDetails = PersonArrivedFactory()
           .withArrivedAt(arrivalDate.atTime(12, 34, 56).toInstant(ZoneOffset.UTC))
           .produce(),
@@ -149,7 +150,7 @@ class DomainEventDescriberTest {
       PersonNotArrivedEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.person.not-arrived",
+        eventType = EventType.personNotArrived,
         eventDetails = PersonNotArrivedFactory()
           .withExpectedArrivalOn(expectedArrivalDate)
           .produce(),
@@ -170,7 +171,7 @@ class DomainEventDescriberTest {
       PersonDepartedEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.person.departed",
+        eventType = EventType.personDeparted,
         eventDetails = PersonDepartedFactory()
           .withDepartedAt(departureDate.atTime(12, 34, 56).toInstant(ZoneOffset.UTC))
           .produce(),
@@ -191,7 +192,7 @@ class DomainEventDescriberTest {
       BookingNotMadeEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.booking.not-made",
+        eventType = EventType.bookingNotMade,
         eventDetails = BookingNotMadeFactory()
           .withFailureDescription(reason)
           .produce(),
@@ -212,7 +213,7 @@ class DomainEventDescriberTest {
       BookingCancelledEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.booking.cancelled",
+        eventType = EventType.bookingCancelled,
         eventDetails = BookingCancelledFactory()
           .withCancellationReason(reason)
           .produce(),
@@ -235,7 +236,7 @@ class DomainEventDescriberTest {
       BookingChangedEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.booking.changed",
+        eventType = EventType.bookingChanged,
         eventDetails = BookingChangedFactory()
           .withArrivalOn(arrivalDate)
           .withDepartureOn(departureDate)
@@ -261,7 +262,7 @@ class DomainEventDescriberTest {
       ApplicationWithdrawnEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.application.withdrawn",
+        eventType = EventType.applicationWithdrawn,
         eventDetails = ApplicationWithdrawnFactory()
           .withWithdrawalReason("change_in_circumstances_new_application_to_be_submitted")
           .withOtherWithdrawalReason(null)
@@ -282,7 +283,7 @@ class DomainEventDescriberTest {
       ApplicationWithdrawnEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.application.withdrawn",
+        eventType = EventType.applicationWithdrawn,
         eventDetails = ApplicationWithdrawnFactory()
           .withWithdrawalReason("the main withdrawal reason")
           .withOtherWithdrawalReason("additional reason")
@@ -304,7 +305,7 @@ class DomainEventDescriberTest {
       AssessmentAppealedEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.assessment.appealed",
+        eventType = EventType.assessmentAppealed,
         eventDetails = AssessmentAppealedFactory()
           .withDecision(AppealDecision.valueOf(decision))
           .withDecisionDetail(reason)
@@ -337,7 +338,7 @@ class DomainEventDescriberTest {
       AssessmentAllocatedEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.assessment.appealed",
+        eventType = EventType.assessmentAllocated,
         eventDetails = AssessmentAllocatedFactory()
           .withAllocatedTo(
             allocatedTo?.let { allocatedTo ->
@@ -372,7 +373,7 @@ class DomainEventDescriberTest {
       PlacementApplicationWithdrawnEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.placement-application.withdrawn",
+        eventType = EventType.placementApplicationWithdrawn,
         eventDetails = PlacementApplicationWithdrawnFactory()
           .withWithdrawalReason(PlacementApplicationWithdrawalReason.RELATED_APPLICATION_WITHDRAWN.toString())
           .produce(),
@@ -392,7 +393,7 @@ class DomainEventDescriberTest {
       PlacementApplicationWithdrawnEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.placement-application.withdrawn",
+        eventType = EventType.placementApplicationWithdrawn,
         eventDetails = PlacementApplicationWithdrawnFactory()
           .withWithdrawalReason(PlacementApplicationWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST.toString())
           .withPlacementDates(
@@ -421,7 +422,7 @@ class DomainEventDescriberTest {
       MatchRequestWithdrawnEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.match-request.withdrawn",
+        eventType = EventType.matchRequestWithdrawn,
         eventDetails = MatchRequestWithdrawnFactory()
           .withWithdrawalReason(PlacementRequestWithdrawalReason.NO_CAPACITY_DUE_TO_PLACEMENT_PRIORITISATION.toString())
           .withDatePeriod(DatePeriod(LocalDate.of(2024, 1, 2), LocalDate.of(2024, 3, 4)))
@@ -450,7 +451,7 @@ class DomainEventDescriberTest {
       RequestForPlacementCreatedEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.request-for-placement.created",
+        eventType = EventType.requestForPlacementCreated,
         eventDetails = RequestForPlacementCreatedFactory()
           .withRequestForPlacementType(type)
           .withExpectedArrival(LocalDate.of(2025, 3, 12))
@@ -475,7 +476,7 @@ class DomainEventDescriberTest {
       RequestForPlacementCreatedEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.request-for-placement.created",
+        eventType = EventType.requestForPlacementCreated,
         eventDetails = RequestForPlacementCreatedFactory()
           .withRequestForPlacementType(RequestForPlacementType.initial)
           .withExpectedArrival(LocalDate.of(2025, 3, 12))
@@ -512,7 +513,7 @@ class DomainEventDescriberTest {
       PlacementApplicationAllocatedEnvelope(
         id = it,
         timestamp = Instant.now(),
-        eventType = "approved-premises.placement-application.allocated",
+        eventType = EventType.placementApplicationAllocated,
         eventDetails = PlacementApplicationAllocatedFactory()
           .withPlacementDates(
             listOf(

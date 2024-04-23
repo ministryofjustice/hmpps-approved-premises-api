@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Region
@@ -99,7 +100,7 @@ class Cas1ApplicationDomainEventService(
         data = ApplicationSubmittedEnvelope(
           id = domainEventId,
           timestamp = eventOccurredAt.toInstant(),
-          eventType = "approved-premises.application.submitted",
+          eventType = EventType.applicationSubmitted,
           eventDetails = getApplicationSubmittedForDomainEvent(
             application,
             offenderDetails,
@@ -129,7 +130,7 @@ class Cas1ApplicationDomainEventService(
         data = ApplicationWithdrawnEnvelope(
           id = domainEventId,
           timestamp = eventOccurredAt,
-          eventType = "approved-premises.application.withdrawn",
+          eventType = EventType.applicationWithdrawn,
           eventDetails = getApplicationWithdrawn(application, withdrawingUser, eventOccurredAt),
         ),
       ),

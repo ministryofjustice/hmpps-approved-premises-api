@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedAssessedByFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
@@ -106,7 +107,7 @@ class DailyMetricsReportTest : IntegrationTestBase() {
               ApplicationSubmittedEnvelope(
                 id = UUID.randomUUID(),
                 timestamp = LocalDate.of(year, month, 1).toLocalDateTime().toInstant(),
-                eventType = "approved-premises.application.submitted",
+                eventType = EventType.applicationSubmitted,
                 eventDetails = ApplicationSubmittedFactory()
                   .withSubmittedByStaffMember(
                     StaffMemberFactory()
@@ -130,7 +131,7 @@ class DailyMetricsReportTest : IntegrationTestBase() {
               ApplicationAssessedEnvelope(
                 id = UUID.randomUUID(),
                 timestamp = LocalDate.of(year, month, 1).toLocalDateTime().toInstant(),
-                eventType = "approved-premises.application.submitted",
+                eventType = EventType.applicationSubmitted,
                 eventDetails = ApplicationAssessedFactory()
                   .withAssessedBy(
                     ApplicationAssessedAssessedByFactory()
@@ -157,7 +158,7 @@ class DailyMetricsReportTest : IntegrationTestBase() {
               BookingMadeEnvelope(
                 id = UUID.randomUUID(),
                 timestamp = LocalDate.of(year, month, 1).toLocalDateTime().toInstant(),
-                eventType = "approved-premises.application.submitted",
+                eventType = EventType.applicationSubmitted,
                 eventDetails = BookingMadeFactory()
                   .withBookedBy(
                     BookingMadeBookedByFactory()

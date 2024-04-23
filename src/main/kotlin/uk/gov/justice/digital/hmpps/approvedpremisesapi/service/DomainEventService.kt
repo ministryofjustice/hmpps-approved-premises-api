@@ -88,8 +88,7 @@ class DomainEventService(
   fun saveApplicationSubmittedDomainEvent(domainEvent: DomainEvent<ApplicationSubmittedEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.application.submitted",
-      typeDescription = "An application has been submitted for an Approved Premises placement",
+      eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
       detailUrl = applicationSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -99,8 +98,7 @@ class DomainEventService(
   fun saveApplicationAssessedDomainEvent(domainEvent: DomainEvent<ApplicationAssessedEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.application.assessed",
-      typeDescription = "An application has been assessed for an Approved Premises placement",
+      eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
       detailUrl = applicationAssessedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -110,8 +108,7 @@ class DomainEventService(
   fun saveBookingMadeDomainEvent(domainEvent: DomainEvent<BookingMadeEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.booking.made",
-      typeDescription = "An Approved Premises booking has been made",
+      eventType = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
       detailUrl = bookingMadeDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -122,8 +119,7 @@ class DomainEventService(
   fun savePersonArrivedEvent(domainEvent: DomainEvent<PersonArrivedEnvelope>, emit: Boolean) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.person.arrived",
-      typeDescription = "Someone has arrived at an Approved Premises for their Booking",
+      eventType = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
       detailUrl = personArrivedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -135,8 +131,7 @@ class DomainEventService(
   fun savePersonNotArrivedEvent(domainEvent: DomainEvent<PersonNotArrivedEnvelope>, emit: Boolean) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.person.not-arrived",
-      typeDescription = "Someone has failed to arrive at an Approved Premises for their Booking",
+      eventType = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
       detailUrl = personNotArrivedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -148,8 +143,7 @@ class DomainEventService(
   fun savePersonDepartedEvent(domainEvent: DomainEvent<PersonDepartedEnvelope>, emit: Boolean) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.person.departed",
-      typeDescription = "Someone has left an Approved Premises",
+      eventType = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
       detailUrl = personDepartedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -161,8 +155,7 @@ class DomainEventService(
   fun saveBookingNotMadeEvent(domainEvent: DomainEvent<BookingNotMadeEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.booking.not-made",
-      typeDescription = "It was not possible to create a Booking on this attempt",
+      eventType = DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
       detailUrl = bookingNotMadeDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -172,8 +165,7 @@ class DomainEventService(
   fun saveBookingCancelledEvent(domainEvent: DomainEvent<BookingCancelledEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.booking.cancelled",
-      typeDescription = "An Approved Premises Booking has been cancelled",
+      eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED,
       detailUrl = bookingCancelledDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -184,8 +176,7 @@ class DomainEventService(
   fun saveBookingChangedEvent(domainEvent: DomainEvent<BookingChangedEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.booking.changed",
-      typeDescription = "An Approved Premises Booking has been changed",
+      eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
       detailUrl = bookingChangedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -196,8 +187,7 @@ class DomainEventService(
   fun saveApplicationWithdrawnEvent(domainEvent: DomainEvent<ApplicationWithdrawnEnvelope>, emit: Boolean) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.application.withdrawn",
-      typeDescription = "An Approved Premises Application has been withdrawn",
+      eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
       detailUrl = applicationWithdrawnDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -208,8 +198,7 @@ class DomainEventService(
   fun saveAssessmentAppealedEvent(domainEvent: DomainEvent<AssessmentAppealedEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.assessment.appealed",
-      typeDescription = "An Approved Premises Assessment has been appealed",
+      eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED,
       detailUrl = assessmentAppealedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -219,8 +208,7 @@ class DomainEventService(
   fun savePlacementApplicationWithdrawnEvent(domainEvent: DomainEvent<PlacementApplicationWithdrawnEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.placement-application.withdrawn",
-      typeDescription = "An Approved Premises Request for Placement has been withdrawn",
+      eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
       detailUrl = placementApplicationWithdrawnDetailUrlTemplate.resolve("eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -230,8 +218,7 @@ class DomainEventService(
   fun savePlacementApplicationAllocatedEvent(domainEvent: DomainEvent<PlacementApplicationAllocatedEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.placement-application.allocated",
-      typeDescription = "An Approved Premises Request for Placement has been allocated",
+      eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED,
       detailUrl = placementApplicationAllocatedDetailUrlTemplate.resolve("eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -241,8 +228,7 @@ class DomainEventService(
   fun saveMatchRequestWithdrawnEvent(domainEvent: DomainEvent<MatchRequestWithdrawnEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.match-request.withdrawn",
-      typeDescription = "An Approved Premises Match Request has been withdrawn",
+      eventType = DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
       detailUrl = matchRequestWithdrawnDetailUrlTemplate.resolve("eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -252,8 +238,7 @@ class DomainEventService(
   fun saveRequestForPlacementCreatedEvent(domainEvent: DomainEvent<RequestForPlacementCreatedEnvelope>, emit: Boolean) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.request-for-placement.created",
-      typeDescription = "An Approved Premises Request for Placement has been created",
+      eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
       detailUrl = requestForPlacementCreatedUrlTemplate.resolve("eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -264,8 +249,7 @@ class DomainEventService(
   fun saveAssessmentAllocatedEvent(domainEvent: DomainEvent<AssessmentAllocatedEnvelope>) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "approved-premises.assessment.allocated",
-      typeDescription = "An Approved Premises Assessment has been allocated",
+      eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
       detailUrl = assessmentAllocatedUrlTemplate.resolve("eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
@@ -274,16 +258,19 @@ class DomainEventService(
   fun getAllDomainEventsForApplication(applicationId: UUID) =
     domainEventRepository.findAllTimelineEventsByApplicationId(applicationId).distinctBy { it.id }
 
-  private fun saveAndEmit(
+  @Transactional
+  fun saveAndEmit(
     domainEvent: DomainEvent<*>,
-    typeName: String,
-    typeDescription: String,
+    eventType: DomainEventType,
     detailUrl: String,
     crn: String,
     nomsNumber: String,
     bookingId: UUID? = null,
     emit: Boolean = true,
   ) {
+    val typeName = eventType.typeName
+    val typeDescription = eventType.typeDescription
+
     domainEventRepository.save(
       DomainEventEntity(
         id = domainEvent.id,
@@ -291,7 +278,7 @@ class DomainEventService(
         assessmentId = domainEvent.assessmentId,
         bookingId = bookingId,
         crn = domainEvent.crn,
-        type = enumTypeFromDataType(domainEvent.data!!::class.java),
+        type = eventType,
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
         data = objectMapper.writeValueAsString(domainEvent.data),
@@ -328,26 +315,5 @@ class DomainEventService(
       ),
       domainEvent.id,
     )
-  }
-
-  @SuppressWarnings("CyclomaticComplexMethod")
-  private fun <T> enumTypeFromDataType(type: Class<T>) = when (type) {
-    ApplicationSubmittedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
-    ApplicationAssessedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED
-    BookingMadeEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_MADE
-    PersonArrivedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED
-    PersonNotArrivedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED
-    PersonDepartedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED
-    BookingNotMadeEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE
-    BookingCancelledEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED
-    BookingChangedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED
-    ApplicationWithdrawnEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN
-    AssessmentAppealedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED
-    PlacementApplicationWithdrawnEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN
-    PlacementApplicationAllocatedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED
-    MatchRequestWithdrawnEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN
-    AssessmentAllocatedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED
-    RequestForPlacementCreatedEnvelope::class.java -> DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED
-    else -> throw RuntimeException("Unrecognised domain event type: ${type.name}")
   }
 }

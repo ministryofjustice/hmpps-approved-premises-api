@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawn
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
@@ -70,7 +71,7 @@ class Cas1PlacementRequestDomainEventService(
         data = RequestForPlacementCreatedEnvelope(
           id = domainEventId,
           timestamp = eventOccurredAt,
-          eventType = "approved-premises.request-for-placement.created",
+          eventType = EventType.requestForPlacementCreated,
           eventDetails = eventDetails,
         ),
       ),
@@ -129,7 +130,7 @@ class Cas1PlacementRequestDomainEventService(
         data = MatchRequestWithdrawnEnvelope(
           id = domainEventId,
           timestamp = eventOccurredAt,
-          eventType = "approved-premises.match-request.withdrawn",
+          eventType = EventType.matchRequestWithdrawn,
           eventDetails = matchRequestEntity,
         ),
       ),

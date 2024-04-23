@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DatePeriod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationAllocated
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationAllocatedEnvelope
@@ -79,7 +80,7 @@ class Cas1PlacementApplicationDomainEventService(
         data = RequestForPlacementCreatedEnvelope(
           id = domainEventId,
           timestamp = eventOccurredAt,
-          eventType = "approved-premises.request-for-placement.created",
+          eventType = EventType.requestForPlacementCreated,
           eventDetails = eventDetails,
         ),
       ),
@@ -124,7 +125,7 @@ class Cas1PlacementApplicationDomainEventService(
         data = PlacementApplicationWithdrawnEnvelope(
           id = domainEventId,
           timestamp = eventOccurredAt,
-          eventType = "approved-premises.placement-application.withdrawn",
+          eventType = EventType.placementApplicationWithdrawn,
           eventDetails = eventDetails,
         ),
       ),
@@ -167,7 +168,7 @@ class Cas1PlacementApplicationDomainEventService(
         data = PlacementApplicationAllocatedEnvelope(
           id = domainEventId,
           timestamp = eventOccurredAt,
-          eventType = "approved-premises.placement-application.allocated",
+          eventType = EventType.placementApplicationAllocated,
           eventDetails = placementApplicationAllocated,
         ),
       ),

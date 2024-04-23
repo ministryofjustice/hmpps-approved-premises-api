@@ -71,8 +71,6 @@ class DomainEventService(
   fun saveCas2ApplicationSubmittedDomainEvent(domainEvent: DomainEvent<Cas2ApplicationSubmittedEvent>) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "applications.cas2.application.submitted",
-      typeDescription = "An application has been submitted for a CAS2 placement",
       detailUrl = cas2ApplicationSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       personReference = domainEvent.data.eventDetails.personReference,
     )
@@ -81,20 +79,19 @@ class DomainEventService(
   fun saveCas2ApplicationStatusUpdatedDomainEvent(domainEvent: DomainEvent<Cas2ApplicationStatusUpdatedEvent>) =
     saveAndEmit(
       domainEvent = domainEvent,
-      typeName = "applications.cas2.application.status-updated",
-      typeDescription = "An assessor has updated the status of a CAS2 application",
       detailUrl = cas2ApplicationStatusUpdatedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       personReference = domainEvent.data.eventDetails.personReference,
-
     )
 
   private fun <T : Cas2Event> saveAndEmit(
     domainEvent: DomainEvent<T>,
-    typeName: String,
-    typeDescription: String,
     detailUrl: String,
     personReference: PersonReference,
   ) {
+    val enumType = enumTypeFromDataType(domainEvent.data::class)
+    val typeName = enumType.typeName
+    val typeDescription = enumType.typeDescription
+
     domainEventRepository.save(
       DomainEventEntity(
         id = domainEvent.id,

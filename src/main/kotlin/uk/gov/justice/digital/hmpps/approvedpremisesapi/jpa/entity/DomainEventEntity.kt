@@ -30,6 +30,9 @@ import javax.persistence.EnumType
 import javax.persistence.Enumerated
 import javax.persistence.Id
 import javax.persistence.Table
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.EventType as Cas2EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType as Cas3EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType as Cas1EventType
 
 @Repository
 interface DomainEventRepository : JpaRepository<DomainEventEntity, UUID> {
@@ -131,32 +134,32 @@ data class DomainEventEntity(
   }
 }
 
-enum class DomainEventType {
-  APPROVED_PREMISES_APPLICATION_SUBMITTED,
-  APPROVED_PREMISES_APPLICATION_ASSESSED,
-  APPROVED_PREMISES_BOOKING_MADE,
-  APPROVED_PREMISES_PERSON_ARRIVED,
-  APPROVED_PREMISES_PERSON_NOT_ARRIVED,
-  APPROVED_PREMISES_PERSON_DEPARTED,
-  APPROVED_PREMISES_BOOKING_NOT_MADE,
-  APPROVED_PREMISES_BOOKING_CANCELLED,
-  APPROVED_PREMISES_BOOKING_CHANGED,
-  APPROVED_PREMISES_APPLICATION_WITHDRAWN,
-  APPROVED_PREMISES_ASSESSMENT_APPEALED,
-  APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
-  APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
-  APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED,
-  APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
-  APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
-  CAS2_APPLICATION_SUBMITTED,
-  CAS2_APPLICATION_STATUS_UPDATED,
-  CAS3_BOOKING_CANCELLED,
-  CAS3_BOOKING_CONFIRMED,
-  CAS3_BOOKING_PROVISIONALLY_MADE,
-  CAS3_PERSON_ARRIVED,
-  CAS3_PERSON_ARRIVED_UPDATED,
-  CAS3_PERSON_DEPARTED,
-  CAS3_REFERRAL_SUBMITTED,
-  CAS3_PERSON_DEPARTURE_UPDATED,
-  CAS3_BOOKING_CANCELLED_UPDATED,
+enum class DomainEventType(val typeName: String, val typeDescription: String) {
+  APPROVED_PREMISES_APPLICATION_SUBMITTED(Cas1EventType.applicationSubmitted.value, "An application has been submitted for an Approved Premises placement"),
+  APPROVED_PREMISES_APPLICATION_ASSESSED(Cas1EventType.applicationAssessed.value, "An application has been assessed for an Approved Premises placement"),
+  APPROVED_PREMISES_BOOKING_MADE(Cas1EventType.bookingMade.value, "An Approved Premises booking has been made"),
+  APPROVED_PREMISES_PERSON_ARRIVED(Cas1EventType.personArrived.value, "Someone has arrived at an Approved Premises for their Booking"),
+  APPROVED_PREMISES_PERSON_NOT_ARRIVED(Cas1EventType.personNotArrived.value, "Someone has failed to arrive at an Approved Premises for their Booking"),
+  APPROVED_PREMISES_PERSON_DEPARTED(Cas1EventType.personDeparted.value, "Someone has left an Approved Premises"),
+  APPROVED_PREMISES_BOOKING_NOT_MADE(Cas1EventType.bookingNotMade.value, "It was not possible to create a Booking on this attempt"),
+  APPROVED_PREMISES_BOOKING_CANCELLED(Cas1EventType.bookingCancelled.value, "An Approved Premises Booking has been cancelled"),
+  APPROVED_PREMISES_BOOKING_CHANGED(Cas1EventType.bookingChanged.value, "An Approved Premises Booking has been changed"),
+  APPROVED_PREMISES_APPLICATION_WITHDRAWN(Cas1EventType.applicationWithdrawn.value, "An Approved Premises Application has been withdrawn"),
+  APPROVED_PREMISES_ASSESSMENT_APPEALED(Cas1EventType.assessmentAppealed.value, "An Approved Premises Assessment has been appealed"),
+  APPROVED_PREMISES_ASSESSMENT_ALLOCATED(Cas1EventType.assessmentAllocated.value, "An Approved Premises Assessment has been allocated"),
+  APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN(Cas1EventType.placementApplicationWithdrawn.value, "An Approved Premises Request for Placement has been withdrawn"),
+  APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED(Cas1EventType.placementApplicationAllocated.value, "An Approved Premises Request for Placement has been allocated"),
+  APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN(Cas1EventType.matchRequestWithdrawn.value, "An Approved Premises Match Request has been withdrawn"),
+  APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED(Cas1EventType.requestForPlacementCreated.value, "An Approved Premises Request for Placement has been created"),
+  CAS2_APPLICATION_SUBMITTED(Cas2EventType.applicationSubmitted.value, "An application has been submitted for a CAS2 placement"),
+  CAS2_APPLICATION_STATUS_UPDATED(Cas2EventType.applicationStatusUpdated.value, "An assessor has updated the status of a CAS2 application"),
+  CAS3_BOOKING_CANCELLED(Cas3EventType.bookingCancelled.value, "A booking for a Transitional Accommodation premises has been cancelled"),
+  CAS3_BOOKING_CONFIRMED(Cas3EventType.bookingConfirmed.value, "A booking has been confirmed for a Transitional Accommodation premises"),
+  CAS3_BOOKING_PROVISIONALLY_MADE(Cas3EventType.bookingProvisionallyMade.value, "A booking has been provisionally made for a Transitional Accommodation premises"),
+  CAS3_PERSON_ARRIVED(Cas3EventType.personArrived.value, "Someone has arrived at a Transitional Accommodation premises for their booking"),
+  CAS3_PERSON_ARRIVED_UPDATED(Cas3EventType.personArrivedUpdated.value, "Someone has changed arrival date at a Transitional Accommodation premises for their booking"),
+  CAS3_PERSON_DEPARTED(Cas3EventType.personDeparted.value, "Someone has left a Transitional Accommodation premises"),
+  CAS3_REFERRAL_SUBMITTED(Cas3EventType.referralSubmitted.value, "A referral for Transitional Accommodation has been submitted"),
+  CAS3_PERSON_DEPARTURE_UPDATED(Cas3EventType.personDepartureUpdated.value, "Person has updated departure date of Transitional Accommodation premises"),
+  CAS3_BOOKING_CANCELLED_UPDATED(Cas3EventType.bookingCancelledUpdated.value, "A cancelled booking for a Transitional Accommodation premises has been updated"),
 }
