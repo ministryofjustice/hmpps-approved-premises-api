@@ -6,7 +6,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
@@ -62,21 +61,9 @@ class Cas1AssessmentDomainEventService(
               crn = assessment.application.crn,
               noms = assessment.application.nomsNumber ?: "Unknown NOMS Number",
             ),
-            allocatedTo = StaffMember(
-              staffCode = allocatedToStaffDetails.staffCode,
-              staffIdentifier = allocatedToStaffDetails.staffIdentifier,
-              forenames = allocatedToStaffDetails.staff.forenames,
-              surname = allocatedToStaffDetails.staff.surname,
-              username = allocatedToStaffDetails.username,
-            ),
+            allocatedTo = allocatedToStaffDetails.toStaffMember(),
             allocatedBy = allocatingUserStaffDetails?.let {
-              StaffMember(
-                staffCode = allocatingUserStaffDetails.staffCode,
-                staffIdentifier = allocatingUserStaffDetails.staffIdentifier,
-                forenames = allocatingUserStaffDetails.staff.forenames,
-                surname = allocatingUserStaffDetails.staff.surname,
-                username = allocatingUserStaffDetails.username,
-              )
+              allocatingUserStaffDetails.toStaffMember()
             },
           ),
         ),
