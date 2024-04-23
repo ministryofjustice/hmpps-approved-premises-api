@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.FurtherInformationRequestedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
@@ -43,6 +44,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCa
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingChangedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.FurtherInformationRequestedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MatchRequestWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
@@ -754,6 +756,36 @@ class DomainEventServiceTest {
         eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
         crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
+      )
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = [true, false])
+  fun `saveFurtherInformationRequestedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+    val id = UUID.randomUUID()
+
+    val eventDetails = FurtherInformationRequestedFactory().produce()
+    val domainEventEnvelope = mockk<FurtherInformationRequestedEnvelope>()
+    val domainEvent = mockk<DomainEvent<FurtherInformationRequestedEnvelope>>()
+
+    every { domainEvent.id } returns id
+    every { domainEvent.data } returns domainEventEnvelope
+    every { domainEventEnvelope.eventDetails } returns eventDetails
+
+    val domainEventServiceSpy = spyk(domainEventService)
+
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), null, emit) } returns Unit
+
+    domainEventServiceSpy.saveFurtherInformationRequestedEvent(domainEvent, emit)
+
+    verify {
+      domainEventServiceSpy.saveAndEmit(
+        domainEvent = domainEvent,
+        eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
+        crn = eventDetails.personReference.crn,
+        nomsNumber = eventDetails.personReference.noms,
+        emit = emit,
       )
     }
   }

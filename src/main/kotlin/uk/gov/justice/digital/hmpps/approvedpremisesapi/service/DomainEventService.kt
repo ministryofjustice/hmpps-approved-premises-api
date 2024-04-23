@@ -226,6 +226,16 @@ class DomainEventService(
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
+  @Transactional
+  fun saveFurtherInformationRequestedEvent(domainEvent: DomainEvent<FurtherInformationRequestedEnvelope>, emit: Boolean = true) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      emit = emit,
+    )
+
   fun getAllDomainEventsForApplication(applicationId: UUID) =
     domainEventRepository.findAllTimelineEventsByApplicationId(applicationId).distinctBy { it.id }
 
