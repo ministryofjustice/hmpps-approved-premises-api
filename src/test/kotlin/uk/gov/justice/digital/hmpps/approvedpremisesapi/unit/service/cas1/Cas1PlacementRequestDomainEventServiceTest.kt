@@ -5,6 +5,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DatePeriod
@@ -23,6 +24,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.PlacementRequest
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestDomainEventService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.DomainEventTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestDomainEventServiceTest.TestConstants.CRN
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
@@ -136,6 +139,24 @@ class Cas1PlacementRequestDomainEventServiceTest {
   inner class PlacementRequestWithdrawn {
 
     @Test
+    fun `it errors if triggered by seed job`() {
+      val withdrawnBy = WithdrawnByFactory().produce()
+      every { domainEventTransformer.toWithdrawnBy(user) } returns withdrawnBy
+      every { domainEventService.saveMatchRequestWithdrawnEvent(any()) } returns Unit
+
+      assertThatThrownBy {
+        service.placementRequestWithdrawn(
+          placementRequest,
+          withdrawalContext = WithdrawalContext(
+            WithdrawalTriggeredBySeedJob,
+            WithdrawableEntityType.PlacementApplication,
+            placementRequest.id,
+          ),
+        )
+      }.hasMessage("Only withdrawals triggered by users are supported")
+    }
+
+    @Test
     fun `it creates a domain event if for the applications arrival date`() {
       val withdrawnBy = WithdrawnByFactory().produce()
       every { domainEventTransformer.toWithdrawnBy(user) } returns withdrawnBy
@@ -144,7 +165,7 @@ class Cas1PlacementRequestDomainEventServiceTest {
       service.placementRequestWithdrawn(
         placementRequest,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.PlacementApplication,
           placementRequest.id,
         ),
@@ -218,7 +239,7 @@ class Cas1PlacementRequestDomainEventServiceTest {
       service.placementRequestWithdrawn(
         placementRequest,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.PlacementApplication,
           placementRequest.id,
         ),

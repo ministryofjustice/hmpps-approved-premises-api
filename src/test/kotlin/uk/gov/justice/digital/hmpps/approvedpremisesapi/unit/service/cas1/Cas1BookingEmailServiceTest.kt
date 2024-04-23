@@ -17,6 +17,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1BookingEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.APPLICANT_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.AP_AREA_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1BookingEmailServiceTest.TestConstants.CASE_MANAGER_EMAIL
@@ -206,7 +208,7 @@ class Cas1BookingEmailServiceTest {
         caseManagerNotApplicant = true,
       )
 
-      service.bookingWithdrawn(application, booking, withdrawingUser)
+      service.bookingWithdrawn(application, booking, WithdrawalTriggeredByUser(withdrawingUser))
 
       val expectedPersonalisation = mapOf(
         "apName" to PREMISES_NAME,
@@ -267,9 +269,63 @@ class Cas1BookingEmailServiceTest {
         departureDate = LocalDate.of(2023, 2, 14),
       )
 
-      service.bookingWithdrawn(application, booking, withdrawingUser)
+      service.bookingWithdrawn(application, booking, WithdrawalTriggeredByUser(withdrawingUser))
 
       mockEmailNotificationService.assertNoEmailsRequested()
+    }
+
+    @Test
+    fun `bookingWithdrawn sends email when triggered by seed job`() {
+      val applicant = UserEntityFactory()
+        .withUnitTestControlProbationRegion()
+        .withEmail(APPLICANT_EMAIL)
+        .produce()
+
+      val (application, booking) = createApplicationAndBooking(
+        applicant,
+        premises,
+        arrivalDate = LocalDate.of(2023, 2, 1),
+        departureDate = LocalDate.of(2023, 2, 14),
+        caseManagerNotApplicant = true,
+      )
+
+      service.bookingWithdrawn(application, booking, WithdrawalTriggeredBySeedJob)
+
+      val expectedPersonalisation = mapOf(
+        "apName" to PREMISES_NAME,
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to CRN,
+        "startDate" to "2023-02-01",
+        "endDate" to "2023-02-14",
+        "region" to REGION_NAME,
+        "withdrawnBy" to "Application Support",
+      )
+
+      mockEmailNotificationService.assertEmailRequestCount(4)
+      mockEmailNotificationService.assertEmailRequested(
+        APPLICANT_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        CASE_MANAGER_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        PREMISES_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+      )
+
+      mockEmailNotificationService.assertEmailRequested(
+        AP_AREA_EMAIL,
+        notifyConfig.templates.bookingWithdrawnV2,
+        expectedPersonalisation,
+      )
     }
   }
 

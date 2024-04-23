@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.NotifyConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.UserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.EmailNotifier
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.UrlTemplate
 
@@ -17,7 +16,7 @@ class Cas1PlacementRequestEmailService(
 ) {
   fun placementRequestWithdrawn(
     placementRequest: PlacementRequestEntity,
-    withdrawingUser: UserEntity?,
+    withdrawalTriggeredBy: WithdrawalTriggeredBy,
   ) {
     val application = placementRequest.application
 
@@ -29,11 +28,8 @@ class Cas1PlacementRequestEmailService(
       "startDate" to placementRequest.expectedArrival.toString(),
       "endDate" to placementRequest.expectedDeparture().toString(),
       "additionalDatesSet" to "no",
+      "withdrawnBy" to withdrawalTriggeredBy.getName(),
     )
-
-    if (withdrawingUser != null) {
-      personalisation["withdrawnBy"] = withdrawingUser.name
-    }
 
     if (placementRequest.isForApplicationsArrivalDate()) {
       /**

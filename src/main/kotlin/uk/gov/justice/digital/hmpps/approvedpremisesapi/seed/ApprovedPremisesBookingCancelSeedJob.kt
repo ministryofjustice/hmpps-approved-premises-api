@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.results.CasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.BookingService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
 import java.time.LocalDate
 import java.util.UUID
 
@@ -45,7 +46,7 @@ class ApprovedPremisesBookingCancelSeedJob(
       notes = null,
       otherReason = null,
       withdrawalContext = WithdrawalContext(
-        triggeringUser = null,
+        withdrawalTriggeredBy = WithdrawalTriggeredBySeedJob,
         triggeringEntityType = WithdrawableEntityType.Booking,
         triggeringEntityId = booking.id,
       ),

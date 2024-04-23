@@ -52,6 +52,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementApplicationEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromCasResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.isWithinTheLastMinute
 import java.time.LocalDate
@@ -790,7 +791,7 @@ class PlacementApplicationServiceTest {
         .produce()
 
       val withdrawalContext = WithdrawalContext(
-        user,
+        WithdrawalTriggeredByUser(user),
         WithdrawableEntityType.PlacementApplication,
         placementApplication.id,
       )
@@ -811,7 +812,7 @@ class PlacementApplicationServiceTest {
 
       assertThat(entity.decision).isEqualTo(PlacementApplicationDecision.WITHDRAW)
 
-      verify { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(placementApplication, allocatedTo, user) }
+      verify { cas1PlacementApplicationEmailService.placementApplicationWithdrawn(placementApplication, allocatedTo, WithdrawalTriggeredByUser(user)) }
     }
 
     @Test
@@ -833,7 +834,7 @@ class PlacementApplicationServiceTest {
         placementApplication.id,
         PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.Application,
           placementApplication.id,
         ),
@@ -864,7 +865,7 @@ class PlacementApplicationServiceTest {
           placementApplication.id,
           PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
           withdrawalContext = WithdrawalContext(
-            user,
+            WithdrawalTriggeredByUser(user),
             triggeringEntity,
             placementApplication.id,
           ),
@@ -887,7 +888,7 @@ class PlacementApplicationServiceTest {
         placementApplication.id,
         PlacementApplicationWithdrawalReason.ALTERNATIVE_PROVISION_IDENTIFIED,
         withdrawalContext = WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.PlacementApplication,
           placementApplication.id,
         ),

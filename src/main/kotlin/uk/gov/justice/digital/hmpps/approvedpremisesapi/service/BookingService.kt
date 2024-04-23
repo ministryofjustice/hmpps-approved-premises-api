@@ -88,6 +88,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableState
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.extractEntityFromNestedAuthorisableValidatableActionResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toLocalDateTime
 import java.time.Instant
@@ -1157,7 +1159,7 @@ class BookingService(
    *
    * 1. The entity is withdrawable, and error if not
    * 2. The user is allowed to withdraw it, and error if not
-   * 3. If withdrawn, all descdents entities are withdrawn, where applicable
+   * 3. If withdrawn, all descendants entities are withdrawn, where applicable
    */
   @SuppressWarnings("ReturnCount")
   @Transactional
@@ -1208,7 +1210,10 @@ class BookingService(
 
     createPlacementRequestIfBookingAppealed(reason, booking)
 
-    val user = withdrawalContext.triggeringUser
+    val user = when (withdrawalContext.withdrawalTriggeredBy) {
+      is WithdrawalTriggeredBySeedJob -> null
+      is WithdrawalTriggeredByUser -> withdrawalContext.withdrawalTriggeredBy.user
+    }
     if (shouldCreateDomainEventForBooking(booking, user)) {
       createCas1CancellationDomainEvent(booking, user, cancelledAt, reason)
     }
@@ -1221,9 +1226,9 @@ class BookingService(
     val application = booking.application as ApprovedPremisesApplicationEntity?
     application?.let {
       cas1BookingEmailService.bookingWithdrawn(
-        it,
-        booking,
-        withdrawalContext.triggeringUser,
+        application = it,
+        booking = booking,
+        withdrawalTriggeredBy = withdrawalContext.withdrawalTriggeredBy,
       )
     }
 

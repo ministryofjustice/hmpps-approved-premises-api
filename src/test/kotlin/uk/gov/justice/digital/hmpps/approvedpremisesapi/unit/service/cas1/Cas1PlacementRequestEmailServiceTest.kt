@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremi
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.APPLICANT_EMAIL
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.AREA_NAME
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1.Cas1PlacementRequestEmailServiceTest.TestConstants.CASE_MANAGER_EMAIL
@@ -55,7 +57,7 @@ class Cas1PlacementRequestEmailServiceTest {
     val application = createApplication(apAreaEmail = null)
     val placementRequest = createPlacementRequest(application, booking = null)
 
-    service.placementRequestWithdrawn(placementRequest, withdrawingUser)
+    service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
 
     mockEmailNotificationService.assertNoEmailsRequested()
   }
@@ -69,7 +71,7 @@ class Cas1PlacementRequestEmailServiceTest {
       .produce()
     val placementRequest = createPlacementRequest(application, booking)
 
-    service.placementRequestWithdrawn(placementRequest, withdrawingUser)
+    service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
 
     mockEmailNotificationService.assertNoEmailsRequested()
   }
@@ -79,7 +81,7 @@ class Cas1PlacementRequestEmailServiceTest {
     val application = createApplication(apAreaEmail = CRU_EMAIL)
     val placementRequest = createPlacementRequest(application, booking = null)
 
-    service.placementRequestWithdrawn(placementRequest, withdrawingUser)
+    service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
 
     mockEmailNotificationService.assertEmailRequestCount(1)
 
@@ -114,7 +116,7 @@ class Cas1PlacementRequestEmailServiceTest {
       hasPlacementApplication = false,
     )
 
-    service.placementRequestWithdrawn(placementRequest, withdrawingUser)
+    service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
 
     mockEmailNotificationService.assertNoEmailsRequested()
   }
@@ -136,13 +138,13 @@ class Cas1PlacementRequestEmailServiceTest {
       hasPlacementApplication = true,
     )
 
-    service.placementRequestWithdrawn(placementRequest, withdrawingUser)
+    service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
 
     mockEmailNotificationService.assertNoEmailsRequested()
   }
 
   @Test
-  fun `placementRequestWithdrawn sends placement request withdrawn email to applicant if placement request not linked to placement application `() {
+  fun `placementRequestWithdrawn sends placement request withdrawn email to applicant if placement request not linked to placement application`() {
     val application = createApplication(
       applicantEmail = APPLICANT_EMAIL,
     )
@@ -157,7 +159,7 @@ class Cas1PlacementRequestEmailServiceTest {
       hasPlacementApplication = false,
     )
 
-    service.placementRequestWithdrawn(placementRequest, withdrawingUser)
+    service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
 
     mockEmailNotificationService.assertEmailRequestCount(1)
     mockEmailNotificationService.assertEmailRequested(
@@ -193,7 +195,7 @@ class Cas1PlacementRequestEmailServiceTest {
       hasPlacementApplication = false,
     )
 
-    service.placementRequestWithdrawn(placementRequest, withdrawingUser)
+    service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(withdrawingUser))
 
     mockEmailNotificationService.assertEmailRequestCount(2)
     mockEmailNotificationService.assertEmailRequested(
@@ -221,6 +223,41 @@ class Cas1PlacementRequestEmailServiceTest {
         "startDate" to placementRequest.expectedArrival.toString(),
         "endDate" to placementRequest.expectedDeparture().toString(),
         "withdrawnBy" to WITHDRAWING_USER_NAME,
+        "additionalDatesSet" to "no",
+      ),
+    )
+  }
+
+  @Test
+  fun `placementRequestWithdrawn uses hard coded withdrawn by if triggered by seed job`() {
+    val application = createApplication(
+      applicantEmail = APPLICANT_EMAIL,
+    )
+    val booking = BookingEntityFactory()
+      .withApplication(application)
+      .withDefaultPremises()
+      .produce()
+
+    val placementRequest = createPlacementRequest(
+      application,
+      booking,
+      hasPlacementApplication = false,
+    )
+
+    service.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredBySeedJob)
+
+    mockEmailNotificationService.assertEmailRequestCount(1)
+    mockEmailNotificationService.assertEmailRequested(
+      APPLICANT_EMAIL,
+      notifyConfig.templates.placementRequestWithdrawnV2,
+      mapOf(
+        "applicationUrl" to "http://frontend/applications/${application.id}",
+        "applicationTimelineUrl" to "http://frontend/applications/${application.id}?tab=timeline",
+        "crn" to TestConstants.CRN,
+        "applicationArea" to AREA_NAME,
+        "startDate" to placementRequest.expectedArrival.toString(),
+        "endDate" to placementRequest.expectedDeparture().toString(),
+        "withdrawnBy" to "Application Support",
         "additionalDatesSet" to "no",
       ),
     )

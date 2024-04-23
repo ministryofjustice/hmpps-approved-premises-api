@@ -76,6 +76,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1PlacementRequestEmailService
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawableEntityType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalContext
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredBySeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.WithdrawalTriggeredByUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PageCriteria
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.PaginationConfig
 import java.time.LocalDate
@@ -662,7 +664,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
         WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.PlacementRequest,
           placementRequestId,
         ),
@@ -689,7 +691,7 @@ class PlacementRequestServiceTest {
       every { cancellationRepository.getCancellationsForApplicationId(any()) } returns emptyList()
 
       val withdrawalContext = WithdrawalContext(
-        user,
+        WithdrawalTriggeredByUser(user),
         WithdrawableEntityType.PlacementRequest,
         placementRequestId,
       )
@@ -712,7 +714,7 @@ class PlacementRequestServiceTest {
         )
       }
 
-      verify { cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest, user) }
+      verify { cas1PlacementRequestEmailService.placementRequestWithdrawn(placementRequest, WithdrawalTriggeredByUser(user)) }
       verify { cas1PlacementRequestDomainEventService.placementRequestWithdrawn(placementRequest, withdrawalContext) }
     }
 
@@ -745,7 +747,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
         WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.PlacementRequest,
           placementRequestId,
         ),
@@ -790,7 +792,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
         WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.PlacementRequest,
           placementRequestId,
         ),
@@ -827,7 +829,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
         WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.Application,
           placementRequestId,
         ),
@@ -864,10 +866,9 @@ class PlacementRequestServiceTest {
         placementRequestId,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
         WithdrawalContext(
-          user,
+          WithdrawalTriggeredBySeedJob,
           WithdrawableEntityType.PlacementRequest,
           placementRequestId,
-          triggeredBySeedJob = true,
         ),
       )
 
@@ -890,7 +891,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         providedReason,
         WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           triggeringEntity,
           placementRequestId,
         ),
@@ -942,7 +943,7 @@ class PlacementRequestServiceTest {
           placementRequestId,
           providedReason,
           WithdrawalContext(
-            user,
+            WithdrawalTriggeredByUser(user),
             triggeringEntity,
             placementRequestId,
           ),
@@ -962,7 +963,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         PlacementRequestWithdrawalReason.WITHDRAWN_BY_PP,
         WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.PlacementRequest,
           placementRequestId,
         ),
@@ -990,7 +991,7 @@ class PlacementRequestServiceTest {
         placementRequestId,
         PlacementRequestWithdrawalReason.DUPLICATE_PLACEMENT_REQUEST,
         WithdrawalContext(
-          user,
+          WithdrawalTriggeredByUser(user),
           WithdrawableEntityType.PlacementRequest,
           placementRequestId,
         ),
