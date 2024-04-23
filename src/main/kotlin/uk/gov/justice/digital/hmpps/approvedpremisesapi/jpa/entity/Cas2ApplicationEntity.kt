@@ -26,15 +26,15 @@ const val SUBMITTED_APPLICATION_SUMMARY_FIELDS =
   """
     ,
     a.hdc_eligibility_date as hdcEligibilityDate,
-    a.noms_number as nomsNumber,
     asu.label as latestStatusUpdateLabel,
     CAST(asu.status_id AS TEXT) as latestStatusUpdateStatusId
   """
 
-const val UNSUBMITTED_APPLICATION_SUMMARY_FIELDS =
+const val DEFAULT_APPLICATION_SUMMARY_FIELDS =
   """
     CAST(a.id AS TEXT) as id,
     a.crn,
+    a.noms_number as nomsNumber,
     CAST(a.created_by_user_id AS TEXT) as createdByUserId,
     nu.name as createdByUserName,
     a.created_at as createdAt,
@@ -42,7 +42,7 @@ const val UNSUBMITTED_APPLICATION_SUMMARY_FIELDS =
   """
 
 const val ALL_APPLICATION_SUMMARY_FIELDS =
-  UNSUBMITTED_APPLICATION_SUMMARY_FIELDS + SUBMITTED_APPLICATION_SUMMARY_FIELDS
+  DEFAULT_APPLICATION_SUMMARY_FIELDS + SUBMITTED_APPLICATION_SUMMARY_FIELDS
 
 @Suppress("TooManyFunctions")
 @Repository
@@ -159,7 +159,7 @@ ORDER BY createdAt DESC
   @Query(
     """
 SELECT
-    $UNSUBMITTED_APPLICATION_SUMMARY_FIELDS
+    $DEFAULT_APPLICATION_SUMMARY_FIELDS
 FROM cas_2_applications a
 JOIN nomis_users nu ON nu.id = a.created_by_user_id
 WHERE a.created_by_user_id = :userId
@@ -174,7 +174,7 @@ ORDER BY createdAt DESC
   @Query(
     """
 SELECT
-    $UNSUBMITTED_APPLICATION_SUMMARY_FIELDS
+    $DEFAULT_APPLICATION_SUMMARY_FIELDS
 FROM cas_2_applications a
 JOIN nomis_users nu ON nu.id = a.created_by_user_id
 WHERE a.referring_prison_code = :prisonCode
