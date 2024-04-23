@@ -269,4 +269,5 @@ pagination:
   cas3:
     booking-search-page-size: 10
 
-feature-flags:
+flipt:
+  enabled: false

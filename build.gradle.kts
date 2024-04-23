@@ -65,6 +65,10 @@ dependencies {
   implementation("io.arrow-kt:arrow-core:1.2.1")
   implementation("io.github.s-sathish:redlock-java:1.0.4")
 
+  implementation("io.flipt:flipt-java:1.1.0") {
+    exclude("org.apache.httpcomponents", "httpclient")
+  }
+
   testImplementation("io.github.bluegroundltd:kfactory:1.0.0")
   testImplementation("io.mockk:mockk:1.13.9")
   testImplementation("io.jsonwebtoken:jjwt-api:0.11.5")

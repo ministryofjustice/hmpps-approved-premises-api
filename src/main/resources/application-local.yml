@@ -67,5 +67,3 @@ user-allocations:
       enabled: true
     female-assessments:
       enabled: true
-
-feature-flags:
