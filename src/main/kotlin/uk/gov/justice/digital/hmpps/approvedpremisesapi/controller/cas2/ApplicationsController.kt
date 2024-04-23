@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.SortDirection
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.NomisUserEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.BadRequestProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.ConflictProblem
@@ -55,7 +56,7 @@ class ApplicationsController(
 
     return ResponseEntity.ok().headers(
       metadata?.toHeaders(),
-    ).body(applications.map { getPersonDetailAndTransformToSummary(it, user) })
+    ).body(getPersonNamesAndTransformToSummaries(applications))
   }
 
   override fun applicationsApplicationIdGet(applicationId: UUID):
@@ -136,15 +137,15 @@ class ApplicationsController(
     return ResponseEntity.ok(getPersonDetailAndTransform(updatedApplication, user))
   }
 
-  private fun getPersonDetailAndTransformToSummary(
-    application: uk.gov.justice.digital
-    .hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary,
-    user: NomisUserEntity,
-  ):
-    ModelCas2ApplicationSummary {
-    val personInfo = offenderService.getInfoForPersonOrThrowInternalServerError(application.getCrn())
+  private fun getPersonNamesAndTransformToSummaries(applicationSummaries: List<Cas2ApplicationSummary>):
+    List<uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary> {
+    val crns = applicationSummaries.map { it.getCrn() }
 
-    return applicationsTransformer.transformJpaSummaryToSummary(application, personInfo)
+    val personNamesMap = offenderService.getMapOfPersonNamesAndCrns(crns)
+
+    return applicationSummaries.map { application ->
+      applicationsTransformer.transformJpaSummaryToSummary(application, personNamesMap[application.getCrn()]!!)
+    }
   }
 
   private fun getPersonDetailAndTransform(

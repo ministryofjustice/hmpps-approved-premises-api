@@ -41,13 +41,11 @@ class ApplicationsTransformer(
 
   fun transformJpaSummaryToSummary(
     jpaSummary: Cas2ApplicationSummary,
-    personInfo:
-      PersonInfoResult.Success,
+    personName: String,
   ): uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2ApplicationSummary {
     return uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model
       .Cas2ApplicationSummary(
         id = jpaSummary.getId(),
-        person = personTransformer.transformModelToPersonApi(personInfo),
         createdByUserId = jpaSummary.getCreatedByUserId(),
         createdByUserName = jpaSummary.getCreatedByUserName(),
         createdAt = jpaSummary.getCreatedAt().toInstant(),
@@ -58,8 +56,7 @@ class ApplicationsTransformer(
         hdcEligibilityDate = jpaSummary.getHdcEligibilityDate(),
         crn = jpaSummary.getCrn(),
         nomsNumber = jpaSummary.getNomsNumber(),
-        personName = (personInfo as PersonInfoResult.Success.Full).offenderDetailSummary.firstName +
-          " " + personInfo.offenderDetailSummary.surname,
+        personName = personName,
       )
   }
 

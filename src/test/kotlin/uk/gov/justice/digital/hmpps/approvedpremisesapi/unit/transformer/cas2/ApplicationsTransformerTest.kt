@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2ApplicationE
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.Cas2StatusUpdateEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.NomisUserEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationSummary
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.PersonInfoResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NomisUserTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.PersonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.cas2.StatusUpdateTransformer
@@ -165,14 +164,9 @@ class ApplicationsTransformerTest {
 
       every { mockStatusUpdateTransformer.transformJpaSummaryToLatestStatusUpdateApi(any()) } returns null
 
-      val mockPersonInfo = mockk<PersonInfoResult.Success.Full>()
-
-      every { mockPersonInfo.offenderDetailSummary.firstName } returns "firstName"
-      every { mockPersonInfo.offenderDetailSummary.surname } returns "surname"
-
       val result = applicationsTransformer.transformJpaSummaryToSummary(
         application,
-        mockPersonInfo,
+        "firstName surname",
       )
 
       assertThat(result.id).isEqualTo(application.getId())
@@ -206,14 +200,9 @@ class ApplicationsTransformerTest {
         label = application.getLatestStatusUpdateLabel(),
       )
 
-      val mockPersonInfo = mockk<PersonInfoResult.Success.Full>()
-
-      every { mockPersonInfo.offenderDetailSummary.firstName } returns "firstName"
-      every { mockPersonInfo.offenderDetailSummary.surname } returns "surname"
-
       val result = applicationsTransformer.transformJpaSummaryToSummary(
         application,
-        mockPersonInfo,
+        "firstName surname",
       )
 
       assertThat(result.id).isEqualTo(application.getId())

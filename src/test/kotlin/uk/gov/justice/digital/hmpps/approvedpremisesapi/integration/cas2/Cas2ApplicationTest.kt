@@ -229,9 +229,12 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             val responseBody =
               objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
 
+            // check transformers were able to return all fields
             Assertions.assertThat(responseBody).anyMatch {
               firstApplicationEntity.id == it.id &&
-                firstApplicationEntity.crn == it.person.crn &&
+                firstApplicationEntity.crn == it.crn &&
+                firstApplicationEntity.nomsNumber == it.nomsNumber &&
+                "${offenderDetails.firstName} ${offenderDetails.surname}" == it.personName &&
                 firstApplicationEntity.createdAt.toInstant() == it.createdAt &&
                 firstApplicationEntity.createdByUser.id == it.createdByUserId &&
                 firstApplicationEntity.submittedAt?.toInstant() == it.submittedAt &&
@@ -325,7 +328,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `Get list of applications returns 500 when a person cannot be found`() {
+    fun `When a person is not found, returns 200 with placeholder text`() {
       `Given a CAS2 User`() { userEntity, jwt ->
         val crn = "X1234"
 
@@ -338,55 +341,9 @@ class Cas2ApplicationTest : IntegrationTestBase() {
           .header("Authorization", "Bearer $jwt")
           .exchange()
           .expectStatus()
-          .is5xxServerError
+          .isOk
           .expectBody()
-          .jsonPath("$.detail").isEqualTo("Unable to get Person via crn: $crn")
-      }
-    }
-
-    @Test
-    fun `Get list of applications returns successfully when the person cannot be fetched from the prisons API`() {
-      `Given a CAS2 User` { userEntity, jwt ->
-        val crn = "X1234"
-
-        `Given an Offender`(
-          offenderDetailsConfigBlock = {
-            withCrn(crn)
-            withNomsNumber("ABC123")
-          },
-        ) { offenderDetails, _ ->
-          val application = produceAndPersistBasicApplication(crn, userEntity)
-
-          PrisonAPI_mockNotFoundInmateDetailsCall(offenderDetails.otherIds.nomsNumber!!)
-          loadPreemptiveCacheForInmateDetails(offenderDetails.otherIds.nomsNumber!!)
-
-          val rawResponseBody = webTestClient.get()
-            .uri("/cas2/applications")
-            .header("Authorization", "Bearer $jwt")
-            .exchange()
-            .expectStatus()
-            .isOk
-            .returnResult<String>()
-            .responseBody
-            .blockFirst()
-
-          val responseBody =
-            objectMapper.readValue(
-              rawResponseBody,
-              object :
-                TypeReference<List<Cas2ApplicationSummary>>() {},
-            )
-
-          Assertions.assertThat(responseBody).matches {
-            val person = it[0].person as FullPerson
-
-            application.id == it[0].id &&
-              application.crn == person.crn &&
-              person.nomsNumber == null &&
-              person.status == PersonStatus.unknown &&
-              person.prisonName == null
-          }
-        }
+          .jsonPath("$[0].personName").isEqualTo("Person Not Found")
       }
     }
 
