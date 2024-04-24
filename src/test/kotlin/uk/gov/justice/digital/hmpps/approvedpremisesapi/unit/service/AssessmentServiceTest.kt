@@ -585,11 +585,27 @@ class AssessmentServiceTest {
         OffenderDetailsSummaryFactory().produce(),
       )
 
-      val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, "clarification note")
+      every { cas1AssessmentDomainEventService.furtherInformationRequested(any(), any()) } just Runs
+
+      val text = "clarification note"
+      val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, text)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
 
-      verify(exactly = 1) { assessmentClarificationNoteRepositoryMock.save(any()) }
+      verify(exactly = 1) {
+        assessmentClarificationNoteRepositoryMock.save(
+          match {
+            it.assessment == assessment &&
+              it.createdByUser == user &&
+              it.query == text && it.hasDomainEvent
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        cas1AssessmentDomainEventService.furtherInformationRequested(assessment, result.entity)
+      }
     }
 
     @Test
@@ -633,11 +649,27 @@ class AssessmentServiceTest {
         OffenderDetailsSummaryFactory().produce(),
       )
 
-      val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, "clarification note")
+      every { cas1AssessmentDomainEventService.furtherInformationRequested(any(), any()) } just Runs
+
+      val text = "clarification note"
+      val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, text)
 
       assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
 
-      verify(exactly = 1) { assessmentClarificationNoteRepositoryMock.save(any()) }
+      verify(exactly = 1) {
+        assessmentClarificationNoteRepositoryMock.save(
+          match {
+            it.assessment == assessment &&
+              it.createdByUser == user &&
+              it.query == text && it.hasDomainEvent
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        cas1AssessmentDomainEventService.furtherInformationRequested(assessment, result.entity)
+      }
     }
   }
 

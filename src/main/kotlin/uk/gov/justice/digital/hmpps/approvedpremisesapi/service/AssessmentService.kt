@@ -859,8 +859,11 @@ class AssessmentService(
         query = text,
         response = null,
         responseReceivedOn = null,
+        hasDomainEvent = true,
       ),
     )
+
+    cas1AssessmentDomainEventService.furtherInformationRequested(assessment, clarificationNoteEntity)
 
     return AuthorisableActionResult.Success(clarificationNoteEntity)
   }

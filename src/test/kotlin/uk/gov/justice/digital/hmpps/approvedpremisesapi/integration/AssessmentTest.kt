@@ -2436,7 +2436,7 @@ class AssessmentTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create clarification note returns 200 with correct body`() {
+  fun `Create clarification note returns 200 with correct body and creates and emits a domain event`() {
     `Given a User` { userEntity, jwt ->
       `Given an Offender` { offenderDetails, inmateDetails ->
         val applicationSchema = approvedPremisesApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -2449,6 +2449,7 @@ class AssessmentTest : IntegrationTestBase() {
 
         val application = approvedPremisesApplicationEntityFactory.produceAndPersist {
           withCrn(offenderDetails.otherIds.crn)
+          withNomsNumber(offenderDetails.otherIds.nomsNumber)
           withCreatedByUser(userEntity)
           withApplicationSchema(applicationSchema)
         }
@@ -2472,6 +2473,21 @@ class AssessmentTest : IntegrationTestBase() {
           .isOk
           .expectBody()
           .jsonPath("$.query").isEqualTo("some text")
+
+        val emittedMessage =
+          domainEventAsserter.blockForEmittedDomainEvent(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED.typeName)
+
+        assertThat(emittedMessage.description).isEqualTo(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED.typeDescription)
+        assertThat(emittedMessage.additionalInformation.applicationId).isEqualTo(assessment.application.id)
+        assertThat(emittedMessage.personReference.identifiers).containsExactlyInAnyOrder(
+          SnsEventPersonReference("CRN", offenderDetails.otherIds.crn),
+          SnsEventPersonReference("NOMS", offenderDetails.otherIds.nomsNumber!!),
+        )
+
+        domainEventAsserter.assertDomainEventOfTypeStored(
+          application.id,
+          DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
+        )
       }
     }
   }
