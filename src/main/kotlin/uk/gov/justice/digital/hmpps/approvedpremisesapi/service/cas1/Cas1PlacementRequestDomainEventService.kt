@@ -67,6 +67,7 @@ class Cas1PlacementRequestDomainEventService(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
+        nomsNumber = application.nomsNumber,
         occurredAt = eventOccurredAt,
         data = RequestForPlacementCreatedEnvelope(
           id = domainEventId,
@@ -126,6 +127,7 @@ class Cas1PlacementRequestDomainEventService(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
+        nomsNumber = application.nomsNumber,
         occurredAt = eventOccurredAt,
         data = MatchRequestWithdrawnEnvelope(
           id = domainEventId,

@@ -77,6 +77,7 @@ class DomainEventServiceTest {
       fun `returns event`() {
         val id = UUID.fromString("c3b98c67-065a-408d-abea-a252f1d70981")
         val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
+        val nomsNumber = "theNomsNumber"
         val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
         val crn = "CRN"
 
@@ -94,6 +95,7 @@ class DomainEventServiceTest {
           .withType(DomainEventType.CAS2_APPLICATION_SUBMITTED)
           .withData(objectMapper.writeValueAsString(data))
           .withOccurredAt(occurredAt)
+          .withNomsNumber(nomsNumber)
           .produce()
 
         val event = domainEventService.getCas2ApplicationSubmittedDomainEvent(id)
@@ -104,6 +106,7 @@ class DomainEventServiceTest {
             crn = "CRN",
             occurredAt = occurredAt.toInstant(),
             data = data,
+            nomsNumber = nomsNumber,
           ),
         )
       }
@@ -117,6 +120,7 @@ class DomainEventServiceTest {
         val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
         val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
         val crn = "CRN"
+        val nomsNumber = "theNomsNumber"
 
         every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
@@ -128,6 +132,7 @@ class DomainEventServiceTest {
           id = id,
           applicationId = applicationId,
           crn = crn,
+          nomsNumber = nomsNumber,
           occurredAt = occurredAt.toInstant(),
           data = Cas2ApplicationSubmittedEvent(
             id = id,
@@ -148,6 +153,7 @@ class DomainEventServiceTest {
               it.id == domainEventToSave.id &&
                 it.type == DomainEventType.CAS2_APPLICATION_SUBMITTED &&
                 it.crn == domainEventToSave.crn &&
+                it.nomsNumber == domainEventToSave.nomsNumber &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
                 it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
                 it.triggeredByUserId == null
@@ -183,6 +189,7 @@ class DomainEventServiceTest {
         val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
         val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
         val crn = "CRN"
+        val nomsNumber = "theNomsNumber"
 
         every { domainEventRepositoryMock.save(any()) } throws RuntimeException("A database exception")
 
@@ -194,6 +201,7 @@ class DomainEventServiceTest {
           id = id,
           applicationId = applicationId,
           crn = crn,
+          nomsNumber = nomsNumber,
           occurredAt = Instant.now(),
           data = Cas2ApplicationSubmittedEvent(
             id = id,
@@ -215,6 +223,7 @@ class DomainEventServiceTest {
               it.id == domainEventToSave.id &&
                 it.type == DomainEventType.CAS2_APPLICATION_SUBMITTED &&
                 it.crn == domainEventToSave.crn &&
+                it.nomsNumber == domainEventToSave.nomsNumber &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
                 it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
                 it.triggeredByUserId == null
@@ -241,6 +250,7 @@ class DomainEventServiceTest {
         val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
         val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
         val crn = "CRN"
+        val nomsNumber = "theNomsNumber"
 
         every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
@@ -252,6 +262,7 @@ class DomainEventServiceTest {
           id = id,
           applicationId = applicationId,
           crn = crn,
+          nomsNumber = nomsNumber,
           occurredAt = Instant.now(),
           data = Cas2ApplicationSubmittedEvent(
             id = id,
@@ -269,6 +280,7 @@ class DomainEventServiceTest {
               it.id == domainEventToSave.id &&
                 it.type == DomainEventType.CAS2_APPLICATION_SUBMITTED &&
                 it.crn == domainEventToSave.crn &&
+                it.nomsNumber == domainEventToSave.nomsNumber &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
                 it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
                 it.triggeredByUserId == null
@@ -294,6 +306,7 @@ class DomainEventServiceTest {
         val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
         val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
         val crn = "CRN"
+        val nomsNumber = "theNomsNumber"
 
         every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
@@ -305,6 +318,7 @@ class DomainEventServiceTest {
           id = id,
           applicationId = applicationId,
           crn = crn,
+          nomsNumber = nomsNumber,
           occurredAt = Instant.now(),
           data = Cas2ApplicationStatusUpdatedEvent(
             id = id,
@@ -325,6 +339,7 @@ class DomainEventServiceTest {
               it.id == domainEventToSave.id &&
                 it.type == DomainEventType.CAS2_APPLICATION_STATUS_UPDATED &&
                 it.crn == domainEventToSave.crn &&
+                it.nomsNumber == domainEventToSave.nomsNumber &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
                 it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
                 it.triggeredByUserId == null
@@ -368,6 +383,7 @@ class DomainEventServiceTest {
         val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
         val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
         val crn = "CRN"
+        val nomsNumber = "theNomsNumber"
 
         every { domainEventRepositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
@@ -379,6 +395,7 @@ class DomainEventServiceTest {
           id = id,
           applicationId = applicationId,
           crn = crn,
+          nomsNumber = nomsNumber,
           occurredAt = Instant.now(),
           data = Cas2ApplicationStatusUpdatedEvent(
             id = id,
@@ -396,6 +413,7 @@ class DomainEventServiceTest {
               it.id == domainEventToSave.id &&
                 it.type == DomainEventType.CAS2_APPLICATION_STATUS_UPDATED &&
                 it.crn == domainEventToSave.crn &&
+                it.nomsNumber == domainEventToSave.nomsNumber &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
                 it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
                 it.triggeredByUserId == null
@@ -414,6 +432,7 @@ class DomainEventServiceTest {
         val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
         val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
         val crn = "CRN"
+        val nomsNumber = "theNomsNumber"
 
         every { domainEventRepositoryMock.save(any()) } throws RuntimeException("A database exception")
 
@@ -425,6 +444,7 @@ class DomainEventServiceTest {
           id = id,
           applicationId = applicationId,
           crn = crn,
+          nomsNumber = nomsNumber,
           occurredAt = Instant.now(),
           data = Cas2ApplicationStatusUpdatedEvent(
             id = id,
@@ -446,6 +466,7 @@ class DomainEventServiceTest {
               it.id == domainEventToSave.id &&
                 it.type == DomainEventType.CAS2_APPLICATION_STATUS_UPDATED &&
                 it.crn == domainEventToSave.crn &&
+                it.nomsNumber == domainEventToSave.nomsNumber &&
                 it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
                 it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
                 it.triggeredByUserId == null
@@ -476,6 +497,7 @@ class DomainEventServiceTest {
         val applicationId = UUID.fromString("a831ead2-31ae-4907-8e1c-cad74cb9667b")
         val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
         val crn = "CRN"
+        val nomsNumber = "theNomsNumber"
 
         val data = Cas2ApplicationStatusUpdatedEvent(
           id = id,
@@ -488,6 +510,7 @@ class DomainEventServiceTest {
           .withId(id)
           .withApplicationId(applicationId)
           .withCrn(crn)
+          .withNomsNumber(nomsNumber)
           .withType(DomainEventType.CAS2_APPLICATION_STATUS_UPDATED)
           .withData(objectMapper.writeValueAsString(data))
           .withOccurredAt(occurredAt)
@@ -499,6 +522,7 @@ class DomainEventServiceTest {
             id = id,
             applicationId = applicationId,
             crn = "CRN",
+            nomsNumber = nomsNumber,
             occurredAt = occurredAt.toInstant(),
             data = data,
           ),

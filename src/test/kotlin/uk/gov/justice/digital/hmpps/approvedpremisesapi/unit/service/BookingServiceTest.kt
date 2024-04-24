@@ -29,7 +29,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DestinationProvider
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Premises
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
@@ -645,6 +644,7 @@ class BookingServiceTest {
 
             it.applicationId == application.id &&
               it.crn == bookingEntity.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               it.bookingId == bookingEntity.id
             data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
@@ -731,6 +731,7 @@ class BookingServiceTest {
 
             it.applicationId == application.id &&
               it.crn == bookingEntity.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
@@ -821,6 +822,7 @@ class BookingServiceTest {
 
             it.applicationId == application.id &&
               it.crn == bookingEntity.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               it.bookingId == bookingEntity.id
             data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
@@ -1331,6 +1333,7 @@ class BookingServiceTest {
 
             it.applicationId == application.id &&
               it.crn == bookingEntity.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               it.occurredAt == arrivalDateTime &&
               it.bookingId == bookingEntity.id &&
               data.applicationId == application.id &&
@@ -1414,6 +1417,7 @@ class BookingServiceTest {
 
             it.applicationId == application.id &&
               it.crn == bookingEntity.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               it.occurredAt == arrivalDateTime &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
@@ -1507,6 +1511,7 @@ class BookingServiceTest {
 
             it.applicationId == application.id &&
               it.crn == bookingEntity.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               it.occurredAt == arrivalDateTime &&
               it.bookingId == bookingEntity.id &&
               data.applicationId == application.id &&
@@ -1883,11 +1888,12 @@ class BookingServiceTest {
         mockDomainEventService.savePersonNotArrivedEvent(
           emit = true,
           domainEvent = match {
-            val data = (it.data as PersonNotArrivedEnvelope).eventDetails
+            val data = it.data.eventDetails
             val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
 
             it.applicationId == application.id &&
               it.crn == bookingEntity.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               it.bookingId == bookingEntity.id &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
@@ -1975,11 +1981,12 @@ class BookingServiceTest {
         mockDomainEventService.savePersonNotArrivedEvent(
           emit = true,
           domainEvent = match {
-            val data = (it.data as PersonNotArrivedEnvelope).eventDetails
+            val data = it.data.eventDetails
             val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
 
             it.applicationId == application.id &&
               it.crn == bookingEntity.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
@@ -2072,11 +2079,12 @@ class BookingServiceTest {
         mockDomainEventService.savePersonNotArrivedEvent(
           emit = false,
           domainEvent = match {
-            val data = (it.data as PersonNotArrivedEnvelope).eventDetails
+            val data = it.data.eventDetails
             val approvedPremises = bookingEntity.premises as ApprovedPremisesEntity
 
             it.applicationId == application.id &&
               it.crn == bookingEntity.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               it.bookingId == bookingEntity.id &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
@@ -2395,6 +2403,7 @@ class BookingServiceTest {
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
@@ -2534,6 +2543,7 @@ class BookingServiceTest {
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
@@ -3641,10 +3651,11 @@ class BookingServiceTest {
       verify(exactly = 1) {
         mockDomainEventService.saveBookingChangedEvent(
           match {
-            val data = (it.data as BookingChangedEnvelope).eventDetails
+            val data = it.data.eventDetails
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               it.bookingId == bookingEntity.id &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
@@ -3715,10 +3726,11 @@ class BookingServiceTest {
       verify(exactly = 1) {
         mockDomainEventService.saveBookingChangedEvent(
           match {
-            val data = (it.data as BookingChangedEnvelope).eventDetails
+            val data = it.data.eventDetails
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               it.bookingId == bookingEntity.id &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
@@ -4357,10 +4369,11 @@ class BookingServiceTest {
       verify(exactly = 1) {
         mockDomainEventService.saveBookingMadeDomainEvent(
           match {
-            val data = (it.data as BookingMadeEnvelope).eventDetails
+            val data = (it.data).eventDetails
 
             it.applicationId == application.id &&
               it.crn == crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
@@ -4419,10 +4432,11 @@ class BookingServiceTest {
       verify(exactly = 1) {
         mockDomainEventService.saveBookingMadeDomainEvent(
           match {
-            val data = (it.data as BookingMadeEnvelope).eventDetails
+            val data = it.data.eventDetails
 
             it.applicationId == existingApplication.id &&
               it.crn == crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               data.applicationId == existingApplication.id &&
               data.applicationUrl == "http://frontend/applications/${existingApplication.id}" &&
               data.personReference == PersonReference(
@@ -4484,6 +4498,7 @@ class BookingServiceTest {
 
             it.applicationId == existingApplication.id &&
               it.crn == crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               data.applicationId == existingApplication.id &&
               data.applicationUrl == "http://frontend/applications/${existingApplication.id}" &&
               data.personReference == PersonReference(
@@ -7316,10 +7331,11 @@ class BookingServiceTest {
       verify(exactly = 1) {
         mockDomainEventService.saveBookingChangedEvent(
           match {
-            val data = (it.data as BookingChangedEnvelope).eventDetails
+            val data = it.data.eventDetails
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               it.bookingId == booking.id &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
@@ -7397,6 +7413,7 @@ class BookingServiceTest {
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               it.bookingId == booking.id &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&

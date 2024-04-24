@@ -1460,6 +1460,7 @@ class AssessmentServiceTest {
           it.applicationId == assessment.application.id &&
             it.assessmentId == assessment.id &&
             it.crn == assessment.application.crn &&
+            it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
             data.applicationId == assessment.application.id &&
             data.applicationUrl == "http://frontend/applications/${assessment.application.id}" &&
             data.personReference == PersonReference(

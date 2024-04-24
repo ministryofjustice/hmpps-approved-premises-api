@@ -440,6 +440,7 @@ class PlacementRequestService(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
+        nomsNumber = offenderDetails.otherIds.nomsNumber,
         occurredAt = bookingNotCreatedAt.toInstant(),
         data = BookingNotMadeEnvelope(
           id = domainEventId,

@@ -552,6 +552,7 @@ class PlacementRequestServiceTest {
 
           it.applicationId == application.id &&
             it.crn == application.crn &&
+            it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
             data.applicationId == application.id &&
             data.applicationUrl == "http://frontend/applications/${application.id}" &&
             data.personReference == PersonReference(

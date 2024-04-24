@@ -209,7 +209,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
-      crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       emit = emit,
     )
@@ -237,6 +236,7 @@ class DomainEventService(
         data = objectMapper.writeValueAsString(domainEvent.data),
         service = "CAS1",
         triggeredByUserId = userService.getUserForRequestOrNull()?.id,
+        nomsNumber = nomsNumber,
       ),
     )
 

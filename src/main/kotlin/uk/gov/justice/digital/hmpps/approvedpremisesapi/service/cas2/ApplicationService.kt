@@ -305,6 +305,7 @@ class ApplicationService(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
+        nomsNumber = application.nomsNumber,
         occurredAt = eventOccurredAt.toInstant(),
         data = Cas2ApplicationSubmittedEvent(
           id = domainEventId,

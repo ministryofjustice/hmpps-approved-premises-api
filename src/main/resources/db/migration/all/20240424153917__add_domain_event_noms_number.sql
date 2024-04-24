@@ -1,0 +1,1 @@
+ALTER TABLE domain_events ADD COLUMN noms_number text NULL;

@@ -96,6 +96,7 @@ class Cas1ApplicationDomainEventService(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
+        nomsNumber = offenderDetails.otherIds.nomsNumber,
         occurredAt = eventOccurredAt.toInstant(),
         data = ApplicationSubmittedEnvelope(
           id = domainEventId,
@@ -126,6 +127,7 @@ class Cas1ApplicationDomainEventService(
         id = domainEventId,
         applicationId = application.id,
         crn = application.crn,
+        nomsNumber = application.nomsNumber,
         occurredAt = eventOccurredAt,
         data = ApplicationWithdrawnEnvelope(
           id = domainEventId,

@@ -112,6 +112,7 @@ class DomainEventServiceTest {
     val applicationId = UUID.randomUUID()
     val occurredAt = OffsetDateTime.now()
     val crn = "CRN"
+    val nomsNumber = "theNomsNumber"
 
     val method = fetchGetterForType(domainEventType)
     val data = createDomainEventOfType(domainEventType)
@@ -120,6 +121,7 @@ class DomainEventServiceTest {
       .withId(id)
       .withApplicationId(applicationId)
       .withCrn(crn)
+      .withNomsNumber(nomsNumber)
       .withType(domainEventType)
       .withData(objectMapper.writeValueAsString(data))
       .withOccurredAt(occurredAt)
@@ -132,6 +134,7 @@ class DomainEventServiceTest {
         id = id,
         applicationId = applicationId,
         crn = crn,
+        nomsNumber = nomsNumber,
         occurredAt = occurredAt.toInstant(),
         data = data,
       ),
@@ -145,9 +148,9 @@ class DomainEventServiceTest {
     val applicationId = UUID.randomUUID()
     val bookingId = UUID.randomUUID()
     val crn = "CRN"
+    val nomsNumber = "theNomsNumber"
     val occurredAt = Instant.now()
     val data = createDomainEventOfType(domainEventType)
-    val nomsNumber = "123"
 
     every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
@@ -155,6 +158,7 @@ class DomainEventServiceTest {
       id = id,
       applicationId = applicationId,
       crn = crn,
+      nomsNumber = nomsNumber,
       occurredAt = occurredAt,
       data = data,
       bookingId = bookingId,
@@ -170,6 +174,7 @@ class DomainEventServiceTest {
           assertThat(it.id).isEqualTo(id)
           assertThat(it.type).isEqualTo(domainEventType)
           assertThat(it.crn).isEqualTo(crn)
+          assertThat(it.nomsNumber).isEqualTo(nomsNumber)
           assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
           assertThat(it.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data))
           assertThat(it.triggeredByUserId).isEqualTo(user.id)
@@ -206,9 +211,9 @@ class DomainEventServiceTest {
     val applicationId = UUID.randomUUID()
     val bookingId = UUID.randomUUID()
     val crn = "CRN"
+    val nomsNumber = "123"
     val occurredAt = Instant.now()
     val data = createDomainEventOfType(domainEventType)
-    val nomsNumber = "123"
 
     every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
@@ -216,6 +221,7 @@ class DomainEventServiceTest {
       id = id,
       applicationId = applicationId,
       crn = crn,
+      nomsNumber = nomsNumber,
       occurredAt = occurredAt,
       data = data,
       bookingId = bookingId,
@@ -229,6 +235,7 @@ class DomainEventServiceTest {
           assertThat(it.id).isEqualTo(id)
           assertThat(it.type).isEqualTo(domainEventType)
           assertThat(it.crn).isEqualTo(crn)
+          assertThat(it.nomsNumber).isEqualTo(nomsNumber)
           assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
           assertThat(it.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data))
           assertThat(it.triggeredByUserId).isEqualTo(user.id)
@@ -249,9 +256,9 @@ class DomainEventServiceTest {
     val applicationId = UUID.randomUUID()
     val bookingId = UUID.randomUUID()
     val crn = "CRN"
+    val nomsNumber = "123"
     val occurredAt = Instant.now()
     val data = createDomainEventOfType(domainEventType)
-    val nomsNumber = "123"
 
     every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
 
@@ -259,6 +266,7 @@ class DomainEventServiceTest {
       id = id,
       applicationId = applicationId,
       crn = crn,
+      nomsNumber = nomsNumber,
       occurredAt = occurredAt,
       data = data,
       bookingId = bookingId,
@@ -275,6 +283,7 @@ class DomainEventServiceTest {
           it.id == domainEventToSave.id &&
             it.type == domainEventType &&
             it.crn == crn &&
+            it.nomsNumber == nomsNumber &&
             it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
             it.triggeredByUserId == user.id &&
@@ -746,7 +755,7 @@ class DomainEventServiceTest {
 
     val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), any(), null, emit) } returns Unit
+    every { domainEventServiceSpy.saveAndEmit(any(), any(), any(), emit) } returns Unit
 
     domainEventServiceSpy.saveFurtherInformationRequestedEvent(domainEvent, emit)
 
@@ -754,7 +763,6 @@ class DomainEventServiceTest {
       domainEventServiceSpy.saveAndEmit(
         domainEvent = domainEvent,
         eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
-        crn = eventDetails.personReference.crn,
         nomsNumber = eventDetails.personReference.noms,
         emit = emit,
       )

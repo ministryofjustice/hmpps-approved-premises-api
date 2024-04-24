@@ -473,6 +473,7 @@ class AssessmentService(
         applicationId = application.id,
         assessmentId = assessment.id,
         crn = application.crn,
+        nomsNumber = offenderDetails.otherIds.nomsNumber,
         occurredAt = acceptedAt.toInstant(),
         data = ApplicationAssessedEnvelope(
           id = domainEventId,
@@ -594,6 +595,7 @@ class AssessmentService(
           applicationId = application.id,
           assessmentId = assessment.id,
           crn = application.crn,
+          nomsNumber = offenderDetails?.otherIds?.nomsNumber,
           occurredAt = rejectedAt.toInstant(),
           data = ApplicationAssessedEnvelope(
             id = domainEventId,

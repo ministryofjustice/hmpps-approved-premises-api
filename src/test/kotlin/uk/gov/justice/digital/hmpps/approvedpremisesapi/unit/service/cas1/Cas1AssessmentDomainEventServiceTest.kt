@@ -111,7 +111,8 @@ class Cas1AssessmentDomainEventServiceTest {
             val rootDomainEventDataMatches = (
               it.assessmentId == assessment.id &&
                 it.applicationId == assessment.application.id &&
-                it.crn == assessment.application.crn
+                it.crn == assessment.application.crn &&
+                it.nomsNumber == assessment.application.nomsNumber
               )
 
             val envelopeMatches = envelope.eventType == EventType.assessmentAllocated
@@ -212,7 +213,8 @@ class Cas1AssessmentDomainEventServiceTest {
             val rootDomainEventDataMatches = (
               it.assessmentId == assessment.id &&
                 it.applicationId == assessment.application.id &&
-                it.crn == assessment.application.crn
+                it.crn == assessment.application.crn &&
+                it.nomsNumber == assessment.application.nomsNumber
               )
 
             val envelopeMatches = envelope.eventType == EventType.informationRequestMade
