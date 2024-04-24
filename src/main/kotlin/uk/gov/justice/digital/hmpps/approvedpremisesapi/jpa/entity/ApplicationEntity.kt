@@ -81,6 +81,9 @@ AND (
 AND (
     (CAST(:apAreaId AS uuid) IS NULL) OR (apa.ap_area_id = :apAreaId)
 )
+AND (
+    (:releaseType IS NULL) OR (apa.release_type = :releaseType)
+)
 """,
     countQuery = """
     SELECT COUNT(*)
@@ -99,6 +102,9 @@ AND (
       AND (
           (CAST(:apAreaId AS uuid) IS NULL) OR (apa.ap_area_id = :apAreaId)
       )
+      AND (
+          (:releaseType IS NULL) OR (apa.release_type = :releaseType)
+      )
     """,
     nativeQuery = true,
   )
@@ -108,6 +114,7 @@ AND (
     statusProvided: Boolean,
     status: List<String>,
     apAreaId: UUID?,
+    releaseType: String?,
   ): Page<ApprovedPremisesApplicationSummary>
 
   @Query("SELECT a FROM ApplicationEntity a WHERE TYPE(a) = :type AND a.createdByUser.id = :id")
