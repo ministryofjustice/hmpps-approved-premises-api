@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Ca
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2ApplicationSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.Cas2Event
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas2.model.PersonReference
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -35,8 +36,7 @@ class DomainEventService(
   private val domainEventRepository: DomainEventRepository,
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.cas2.emit-enabled}") private val emitDomainEventsEnabled: Boolean,
-  @Value("\${url-templates.api.cas2.application-submitted-event-detail}") private val cas2ApplicationSubmittedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas2.application-status-updated-event-detail}") private val cas2ApplicationStatusUpdatedDetailUrlTemplate: String,
+  private val domainEventUrlConfig: DomainEventUrlConfig,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -71,7 +71,6 @@ class DomainEventService(
   fun saveCas2ApplicationSubmittedDomainEvent(domainEvent: DomainEvent<Cas2ApplicationSubmittedEvent>) =
     saveAndEmit(
       domainEvent = domainEvent,
-      detailUrl = cas2ApplicationSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       personReference = domainEvent.data.eventDetails.personReference,
     )
 
@@ -79,18 +78,17 @@ class DomainEventService(
   fun saveCas2ApplicationStatusUpdatedDomainEvent(domainEvent: DomainEvent<Cas2ApplicationStatusUpdatedEvent>) =
     saveAndEmit(
       domainEvent = domainEvent,
-      detailUrl = cas2ApplicationStatusUpdatedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       personReference = domainEvent.data.eventDetails.personReference,
     )
 
   private fun <T : Cas2Event> saveAndEmit(
     domainEvent: DomainEvent<T>,
-    detailUrl: String,
     personReference: PersonReference,
   ) {
     val enumType = enumTypeFromDataType(domainEvent.data::class)
     val typeName = enumType.typeName
     val typeDescription = enumType.typeDescription
+    val detailUrl = domainEventUrlConfig.getUrlForDomainEventId(enumType, domainEvent.id)
 
     domainEventRepository.save(
       DomainEventEntity(

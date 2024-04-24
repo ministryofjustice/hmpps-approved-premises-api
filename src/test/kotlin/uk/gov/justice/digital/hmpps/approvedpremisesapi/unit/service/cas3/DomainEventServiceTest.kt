@@ -11,6 +11,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3BookingCancelledEvent
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.BookingEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.DomainEventEntityFactory
@@ -58,6 +60,7 @@ class DomainEventServiceTest {
   private val domainEventRepositoryMock = mockk<DomainEventRepository>()
   private val domainEventBuilderMock = mockk<DomainEventBuilder>()
   private val hmppsQueueServiceMock = mockk<HmppsQueueService>()
+  private val mockDomainEventUrlConfig = mockk<DomainEventUrlConfig>()
 
   private val objectMapper = ObjectMapper().apply {
     registerModule(Jdk8Module())
@@ -73,8 +76,15 @@ class DomainEventServiceTest {
     }
     .produce()
 
+  private val detailUrl = "http://example.com/123"
+
   private val domainEventService = buildService(emitDomainEventsEnabled = EventType.entries)
   private val domainEventServiceEmittingDisabled = buildService(emitDomainEventsEnabled = listOf())
+
+  @BeforeEach
+  fun setup() {
+    every { mockDomainEventUrlConfig.getUrlForDomainEventId(any(), any()) } returns detailUrl
+  }
 
   private fun buildService(emitDomainEventsEnabled: List<EventType>) = DomainEventService(
     objectMapper = objectMapper,
@@ -82,15 +92,7 @@ class DomainEventServiceTest {
     domainEventBuilder = domainEventBuilderMock,
     hmppsQueueService = hmppsQueueServiceMock,
     emitDomainEventsEnabled = emitDomainEventsEnabled,
-    bookingCancelledDetailUrlTemplate = "http://api/events/cas3/booking-cancelled/#eventId",
-    bookingCancelledUpdatedDetailUrlTemplate = "http://api/events/cas3/booking-cancelled-updated/#eventId",
-    bookingConfirmedDetailUrlTemplate = "http://api/events/cas3/booking-confirmed/#eventId",
-    bookingProvisionallyMadeDetailUrlTemplate = "http://api/events/cas3/booking-provisionally-made/#eventId",
-    personArrivedDetailUrlTemplate = "http://api/events/cas3/person-arrived/#eventId",
-    personDepartedDetailUrlTemplate = "http://api/events/cas3/person-departed/#eventId",
-    referralSubmittedDetailUrlTemplate = "http://api/events/cas3/referral-submitted/#eventId",
-    personDepartureUpdatedDetailUrlTemplate = "http://api/events/cas3/person-departure-updated/#eventId",
-    personArrivedUpdatedDetailUrlTemplate = "http://api/events/cas3/person-arrived-updated/#eventId",
+    mockDomainEventUrlConfig,
   )
 
   @Test
@@ -229,13 +231,17 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "accommodation.cas3.booking.cancelled" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "A booking for a Transitional Accommodation premises has been cancelled" &&
-            deserializedMessage.detailUrl == "http://api/events/cas3/booking-cancelled/$id" &&
+            deserializedMessage.detailUrl == detailUrl &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
       )
+    }
+
+    verify(exactly = 1) {
+      mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS3_BOOKING_CANCELLED, domainEventToSave.id)
     }
   }
 
@@ -482,13 +488,17 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "accommodation.cas3.booking.confirmed" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "A booking has been confirmed for a Transitional Accommodation premises" &&
-            deserializedMessage.detailUrl == "http://api/events/cas3/booking-confirmed/$id" &&
+            deserializedMessage.detailUrl == detailUrl &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
       )
+    }
+
+    verify(exactly = 1) {
+      mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS3_BOOKING_CONFIRMED, domainEventToSave.id)
     }
   }
 
@@ -738,13 +748,17 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "accommodation.cas3.booking.provisionally-made" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "A booking has been provisionally made for a Transitional Accommodation premises" &&
-            deserializedMessage.detailUrl == "http://api/events/cas3/booking-provisionally-made/$id" &&
+            deserializedMessage.detailUrl == detailUrl &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
       )
+    }
+
+    verify(exactly = 1) {
+      mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS3_BOOKING_PROVISIONALLY_MADE, domainEventToSave.id)
     }
   }
 
@@ -996,13 +1010,17 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "accommodation.cas3.person.arrived" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "Someone has arrived at a Transitional Accommodation premises for their booking" &&
-            deserializedMessage.detailUrl == "http://api/events/cas3/person-arrived/$id" &&
+            deserializedMessage.detailUrl == detailUrl &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
       )
+    }
+
+    verify(exactly = 1) {
+      mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS3_PERSON_ARRIVED, domainEventToSave.id)
     }
   }
 
@@ -1213,13 +1231,17 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "accommodation.cas3.person.departed" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "Someone has left a Transitional Accommodation premises" &&
-            deserializedMessage.detailUrl == "http://api/events/cas3/person-departed/$id" &&
+            deserializedMessage.detailUrl == detailUrl &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
       )
+    }
+
+    verify(exactly = 1) {
+      mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS3_PERSON_DEPARTED, domainEventToSave.id)
     }
   }
 
@@ -1441,13 +1463,17 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "accommodation.cas3.referral.submitted" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "A referral for Transitional Accommodation has been submitted" &&
-            deserializedMessage.detailUrl == "http://api/events/cas3/referral-submitted/$id" &&
+            deserializedMessage.detailUrl == detailUrl &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
       )
+    }
+
+    verify(exactly = 1) {
+      mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS3_REFERRAL_SUBMITTED, domainEventToSave.id)
     }
   }
 
@@ -1618,13 +1644,17 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "accommodation.cas3.person.departed.updated" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "Person has updated departure date of Transitional Accommodation premises" &&
-            deserializedMessage.detailUrl == "http://api/events/cas3/person-departure-updated/$id" &&
+            deserializedMessage.detailUrl == detailUrl &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
       )
+    }
+
+    verify(exactly = 1) {
+      mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED, domainEventToSave.id)
     }
   }
 
@@ -1701,13 +1731,17 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "accommodation.cas3.person.departed.updated" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "Person has updated departure date of Transitional Accommodation premises" &&
-            deserializedMessage.detailUrl == "http://api/events/cas3/person-departure-updated/$id" &&
+            deserializedMessage.detailUrl == detailUrl &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
       )
+    }
+
+    verify(exactly = 1) {
+      mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED, domainEventToSave.id)
     }
   }
 
@@ -1826,13 +1860,17 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "accommodation.cas3.booking.cancelled.updated" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "A cancelled booking for a Transitional Accommodation premises has been updated" &&
-            deserializedMessage.detailUrl == "http://api/events/cas3/booking-cancelled-updated/$id" &&
+            deserializedMessage.detailUrl == detailUrl &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
       )
+    }
+
+    verify(exactly = 1) {
+      mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED, domainEventToSave.id)
     }
   }
 
@@ -1875,13 +1913,17 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "accommodation.cas3.booking.cancelled.updated" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "A cancelled booking for a Transitional Accommodation premises has been updated" &&
-            deserializedMessage.detailUrl == "http://api/events/cas3/booking-cancelled-updated/$id" &&
+            deserializedMessage.detailUrl == detailUrl &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
       )
+    }
+
+    verify(exactly = 1) {
+      mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED, domainEventToSave.id)
     }
   }
 
@@ -2037,13 +2079,17 @@ class DomainEventServiceTest {
           deserializedMessage.eventType == "accommodation.cas3.person.arrived.updated" &&
             deserializedMessage.version == 1 &&
             deserializedMessage.description == "Someone has changed arrival date at a Transitional Accommodation premises for their booking" &&
-            deserializedMessage.detailUrl == "http://api/events/cas3/person-arrived-updated/$id" &&
+            deserializedMessage.detailUrl == detailUrl &&
             deserializedMessage.occurredAt.toInstant() == domainEventToSave.occurredAt &&
             deserializedMessage.additionalInformation.applicationId == applicationId &&
             deserializedMessage.personReference.identifiers.any { it.type == "CRN" && it.value == domainEventToSave.data.eventDetails.personReference.crn } &&
             deserializedMessage.personReference.identifiers.any { it.type == "NOMS" && it.value == domainEventToSave.data.eventDetails.personReference.noms }
         },
       )
+    }
+
+    verify(exactly = 1) {
+      mockDomainEventUrlConfig.getUrlForDomainEventId(DomainEventType.CAS3_PERSON_ARRIVED_UPDATED, domainEventToSave.id)
     }
   }
 

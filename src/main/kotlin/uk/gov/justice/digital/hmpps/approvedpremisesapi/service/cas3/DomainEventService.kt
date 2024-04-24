@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CA
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3PersonDepartureUpdatedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.CAS3ReferralSubmittedEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.cas3.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.DomainEventUrlConfig
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventRepository
@@ -46,15 +47,7 @@ class DomainEventService(
   private val domainEventBuilder: DomainEventBuilder,
   private val hmppsQueueService: HmppsQueueService,
   @Value("\${domain-events.cas3.emit-enabled}") private val emitDomainEventsEnabled: List<EventType>,
-  @Value("\${url-templates.api.cas3.booking-cancelled-event-detail}") private val bookingCancelledDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas3.booking-cancelled-updated-event-detail}") private val bookingCancelledUpdatedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas3.booking-confirmed-event-detail}") private val bookingConfirmedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas3.booking-provisionally-made-event-detail}") private val bookingProvisionallyMadeDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas3.person-arrived-event-detail}") private val personArrivedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas3.person-departed-event-detail}") private val personDepartedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas3.referral-submitted-event-detail}") private val referralSubmittedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas3.person-departure-updated-event-detail}") private val personDepartureUpdatedDetailUrlTemplate: String,
-  @Value("\${url-templates.api.cas3.person-arrived-updated-event-detail}") private val personArrivedUpdatedDetailUrlTemplate: String,
+  private val domainEventUrlConfig: DomainEventUrlConfig,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -105,7 +98,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      detailUrl = bookingCancelledDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -117,7 +109,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      detailUrl = bookingConfirmedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -129,7 +120,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      detailUrl = bookingProvisionallyMadeDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -141,7 +131,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      detailUrl = personArrivedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -153,7 +142,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      detailUrl = personArrivedUpdatedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -165,7 +153,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      detailUrl = personDepartedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -177,7 +164,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      detailUrl = referralSubmittedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -189,7 +175,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      detailUrl = personDepartureUpdatedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
@@ -197,13 +182,13 @@ class DomainEventService(
 
   private fun <T : CAS3Event> saveAndEmit(
     domainEvent: DomainEvent<T>,
-    detailUrl: String,
     crn: String,
     nomsNumber: String?,
   ) {
     val enumType = enumTypeFromDataType(domainEvent.data::class)
     val typeName = enumType.typeName
     val typeDescription = enumType.typeDescription
+    val detailUrl = domainEventUrlConfig.getUrlForDomainEventId(enumType, domainEvent.id)
 
     domainEventRepository.save(
       DomainEventEntity(
@@ -276,7 +261,6 @@ class DomainEventService(
 
     saveAndEmit(
       domainEvent = domainEvent,
-      detailUrl = bookingCancelledUpdatedDetailUrlTemplate.replace("#eventId", domainEvent.id.toString()),
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
