@@ -19,6 +19,7 @@ class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarification
   private var query: Yielded<String> = { randomStringMultiCaseWithNumbers(20) }
   private var response: Yielded<String?> = { null }
   private var responseReceivedOn: Yielded<LocalDate?> = { null }
+  private var hasDomainEvent: Yielded<Boolean> = { false }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -48,6 +49,10 @@ class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarification
     this.responseReceivedOn = { responseReceivedOn }
   }
 
+  fun withHasDomainEvent(hasDomainEvent: Boolean) = apply {
+    this.hasDomainEvent = { hasDomainEvent }
+  }
+
   override fun produce(): AssessmentClarificationNoteEntity = AssessmentClarificationNoteEntity(
     id = this.id(),
     assessment = this.assessment?.invoke() ?: throw RuntimeException("Must provide an assessment"),
@@ -56,5 +61,6 @@ class AssessmentClarificationNoteEntityFactory : Factory<AssessmentClarification
     query = this.query(),
     response = this.response(),
     responseReceivedOn = this.responseReceivedOn(),
+    hasDomainEvent = this.hasDomainEvent(),
   )
 }
