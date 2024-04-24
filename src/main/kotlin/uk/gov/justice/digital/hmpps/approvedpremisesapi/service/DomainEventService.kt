@@ -96,7 +96,6 @@ class DomainEventService(
       eventType = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
-      bookingId = domainEvent.bookingId,
     )
 
   @Transactional
@@ -106,7 +105,6 @@ class DomainEventService(
       eventType = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
-      bookingId = domainEvent.bookingId,
       emit = emit,
     )
 
@@ -117,7 +115,6 @@ class DomainEventService(
       eventType = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
-      bookingId = domainEvent.bookingId,
       emit = emit,
     )
 
@@ -128,7 +125,6 @@ class DomainEventService(
       eventType = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
-      bookingId = domainEvent.bookingId,
       emit = emit,
     )
 
@@ -148,7 +144,6 @@ class DomainEventService(
       eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
-      bookingId = domainEvent.bookingId,
     )
 
   @Transactional
@@ -158,7 +153,6 @@ class DomainEventService(
       eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
-      bookingId = domainEvent.bookingId,
     )
 
   @Transactional
@@ -245,7 +239,6 @@ class DomainEventService(
     eventType: DomainEventType,
     crn: String,
     nomsNumber: String,
-    bookingId: UUID? = null,
     emit: Boolean = true,
   ) {
     val detailUrl = domainEventUrlConfig.getUrlForDomainEventId(eventType, domainEvent.id)
@@ -257,7 +250,7 @@ class DomainEventService(
         id = domainEvent.id,
         applicationId = domainEvent.applicationId,
         assessmentId = domainEvent.assessmentId,
-        bookingId = bookingId,
+        bookingId = domainEvent.bookingId,
         crn = domainEvent.crn,
         type = eventType,
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
