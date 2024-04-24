@@ -133,8 +133,12 @@ url-templates:
       booking-changed-event-detail: http://api/events/booking-changed/#eventId
       application-withdrawn-event-detail: http://api/events/application-withdrawn/#eventId
       assessment-appealed-event-detail: http://api/events/assessment-appealed/#eventId
-      assessment-allocated-event-detail: http://api/events/assessment-allocated/#eventId
+      placement-application-withdrawn-event-detail: http://api/events/placement-application-withdrawn/#eventId
       placement-application-allocated-event-detail: http://api/events/placement-application-allocated/#eventId
+      match-request-withdrawn-event-detail: http://api/events/match-request-withdrawn/#eventId
+      assessment-allocated-event-detail: http://api/events/assessment-allocated/#eventId
+      request-for-placement-created-event-detail: http://api/events/request-for-placement-created/#eventId
+      assessment-info-requested-detail: http://api/events/further-information-requested/#eventId
     cas2:
       application-submitted-event-detail: http://api/events/cas2/application-submitted/#eventId
     cas3:

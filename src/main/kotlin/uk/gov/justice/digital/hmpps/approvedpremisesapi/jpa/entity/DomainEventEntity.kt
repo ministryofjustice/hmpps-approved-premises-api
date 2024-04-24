@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.FurtherInformationRequestedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
@@ -119,6 +120,8 @@ data class DomainEventEntity(
         objectMapper.readValue(this.data, T::class.java)
       T::class == RequestForPlacementCreatedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED ->
         objectMapper.readValue(this.data, T::class.java)
+      T::class == FurtherInformationRequestedEnvelope::class && this.type == DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED ->
+        objectMapper.readValue(this.data, T::class.java)
       else -> throw RuntimeException("Unsupported DomainEventData type ${T::class.qualifiedName}/${this.type.name}")
     }
 
@@ -147,6 +150,7 @@ enum class DomainEventType(val typeName: String, val typeDescription: String) {
   APPROVED_PREMISES_APPLICATION_WITHDRAWN(Cas1EventType.applicationWithdrawn.value, "An Approved Premises Application has been withdrawn"),
   APPROVED_PREMISES_ASSESSMENT_APPEALED(Cas1EventType.assessmentAppealed.value, "An Approved Premises Assessment has been appealed"),
   APPROVED_PREMISES_ASSESSMENT_ALLOCATED(Cas1EventType.assessmentAllocated.value, "An Approved Premises Assessment has been allocated"),
+  APPROVED_PREMISES_ASSESSMENT_INFO_REQUEST(Cas1EventType.informationRequestMade.value, "An information request has been made for an Approved Premises Assessment"),
   APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN(Cas1EventType.placementApplicationWithdrawn.value, "An Approved Premises Request for Placement has been withdrawn"),
   APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED(Cas1EventType.placementApplicationAllocated.value, "An Approved Premises Request for Placement has been allocated"),
   APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN(Cas1EventType.matchRequestWithdrawn.value, "An Approved Premises Match Request has been withdrawn"),

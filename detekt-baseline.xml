@@ -48,8 +48,10 @@
     <ID>UseCheckOrError:DomainEventUrlConfig.kt$DomainEventUrlConfig$throw IllegalStateException("Missing CAS1 Url Config")</ID>
     <ID>CyclomaticComplexMethod:DomainEventUrlConfig.kt$DomainEventUrlConfig$fun getUrlForDomainEventType(domainEventType: DomainEventType): String</ID>
     <ID>UseCheckOrError:DomainEventUrlConfig.kt$DomainEventUrlConfig$throw IllegalStateException("Missing URL for $domainEventType")</ID>
-    <ID>CyclomaticComplexMethod:DomainEventUrlConfig.kt$DomainEventUrlConfig$fun getUrlForDomainEventType(domainEventType: DomainEventType): UrlTemplate</ID>
-    <ID>CyclomaticComplexMethod:DomainEventUrlConfig.kt$DomainEventUrlConfig$fun getUrlForDomainEventType(domainEventType: DomainEventType, eventId: UUID): String</ID>
+    <ID>CyclomaticComplexMethod:DomainEventHelpers.kt$fun createDomainEventOfType(type: DomainEventType): Any</ID>
+    <ID>TooGenericExceptionThrown:DomainEventHelpers.kt$throw RuntimeException("Cannot find EventType for $type")</ID>
+    <ID>TooGenericExceptionThrown:DomainEventHelpers.kt$throw RuntimeException("Domain even type $type not supported")</ID>
+    <ID>TooGenericExceptionThrown:DomainEventHelpers.kt$throw RuntimeException("Domain event type $type not supported")</ID>
     <ID>CyclomaticComplexMethod:DomainEventUrlConfig.kt$DomainEventUrlConfig$fun getUrlForDomainEventId(domainEventType: DomainEventType, eventId: UUID): String</ID>
   </ManuallySuppressedIssues>
   <CurrentIssues>
