@@ -1,0 +1,1 @@
+ALTER TABLE "public"."assessment_clarification_notes" ADD COLUMN "has_domain_event" BOOLEAN DEFAULT FALSE NOT NULL;

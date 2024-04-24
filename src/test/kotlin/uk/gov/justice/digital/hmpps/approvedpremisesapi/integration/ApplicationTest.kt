@@ -2797,6 +2797,9 @@ class ApplicationTest : IntegrationTestBase() {
           )
         }
 
+        // Create a clarification note that already has a domain event
+        createAssessmentClarificationNote(assessment, user, 3, true)
+
         val allSummaries = summaries + informationRequestSummaries
         val expectedJson = objectMapper.writeValueAsString(
           allSummaries,
@@ -3023,6 +3026,7 @@ class ApplicationTest : IntegrationTestBase() {
       assessment: ApprovedPremisesAssessmentEntity,
       user: UserEntity,
       dayOfMonth: Int,
+      hasDomainEvent: Boolean = false,
     ): AssessmentClarificationNoteEntity {
       return assessmentClarificationNoteEntityFactory.produceAndPersist {
         withAssessment(assessment)
@@ -3030,6 +3034,7 @@ class ApplicationTest : IntegrationTestBase() {
           LocalDate.of(year, month, dayOfMonth).toLocalDateTime(),
         )
         withCreatedBy(user)
+        withHasDomainEvent(hasDomainEvent)
       }
     }
 

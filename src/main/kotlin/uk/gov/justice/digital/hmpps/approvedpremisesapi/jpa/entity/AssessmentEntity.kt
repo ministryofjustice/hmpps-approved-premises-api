@@ -422,6 +422,8 @@ data class AssessmentClarificationNoteEntity(
   var response: String?,
 
   var responseReceivedOn: LocalDate?,
+
+  var hasDomainEvent: Boolean = false,
 )
 
 @Repository
