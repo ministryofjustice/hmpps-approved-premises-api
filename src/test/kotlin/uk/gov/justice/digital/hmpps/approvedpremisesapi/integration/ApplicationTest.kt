@@ -2732,7 +2732,7 @@ class ApplicationTest : IntegrationTestBase() {
 
         val summaries = domainEvents.zip(domainEventDescriptions).map {
           TimelineEvent(
-            applicationTimelineTransformer.transformDomainEventTypeToTimelineEventType(it.first.type),
+            it.first.type.timelineEventType,
             it.first.id.toString(),
             it.first.occurredAt.toInstant(),
             associatedUrls = listOf(TimelineEventAssociatedUrl(type = TimelineEventUrlType.application, url = "http://frontend/applications/${it.first.applicationId}")),
@@ -2778,7 +2778,7 @@ class ApplicationTest : IntegrationTestBase() {
         val domainEvents = createTenDomainEvents()
         val summaries = domainEvents.zip(domainEventDescriptions).map {
           TimelineEvent(
-            applicationTimelineTransformer.transformDomainEventTypeToTimelineEventType(it.first.type),
+            it.first.type.timelineEventType,
             it.first.id.toString(),
             it.first.occurredAt.toInstant(),
             associatedUrls = listOf(TimelineEventAssociatedUrl(type = TimelineEventUrlType.application, url = "http://frontend/applications/${it.first.applicationId}")),

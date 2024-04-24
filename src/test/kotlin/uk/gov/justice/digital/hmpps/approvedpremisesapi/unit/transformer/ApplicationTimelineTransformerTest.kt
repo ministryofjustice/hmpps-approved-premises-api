@@ -7,7 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.EnumSource
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ApprovedPremisesUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
@@ -51,10 +51,8 @@ class ApplicationTimelineTransformerTest {
   ) : DomainEventSummary
 
   @ParameterizedTest
-  @MethodSource("domainEventTypeArgs")
-  fun `transformDomainEventSummaryToTimelineEvent transforms domain event correctly`(args: Pair<DomainEventType, TimelineEventType>) {
-    val (domainEventType, timelineEventType) = args
-
+  @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+  fun `transformDomainEventSummaryToTimelineEvent transforms domain event correctly`(domainEventType: DomainEventType) {
     val userJpa = UserEntityFactory().withDefaultProbationRegion().produce()
 
     val domainEvent = DomainEventSummaryImpl(
@@ -76,7 +74,7 @@ class ApplicationTimelineTransformerTest {
     val result = applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
 
     assertThat(result.id).isEqualTo(domainEvent.id)
-    assertThat(result.type).isEqualTo(timelineEventType)
+    assertThat(result.type).isEqualTo(domainEventType.timelineEventType)
     assertThat(result.occurredAt).isEqualTo(domainEvent.occurredAt.toInstant())
     assertThat(result.associatedUrls).isEmpty()
     assertThat(result.content).isEqualTo("Some event")
@@ -84,11 +82,22 @@ class ApplicationTimelineTransformerTest {
   }
 
   @Test
-  fun `transformDomainEventTypeToTimelineEventType throws error if given CAS2 domain event type`() {
-    val cas2DomainEventType = DomainEventType.CAS2_APPLICATION_SUBMITTED
+  fun `transformDomainEventSummaryToTimelineEvent throws error if given CAS2 domain event type`() {
+    val userJpa = UserEntityFactory().withDefaultProbationRegion().produce()
+    val domainEvent = DomainEventSummaryImpl(
+      id = UUID.randomUUID().toString(),
+      type = DomainEventType.CAS2_APPLICATION_SUBMITTED,
+      occurredAt = OffsetDateTime.now(),
+      bookingId = null,
+      applicationId = null,
+      assessmentId = null,
+      premisesId = null,
+      appealId = null,
+      triggeredByUser = userJpa,
+    )
 
     val exception = assertThrows<RuntimeException> {
-      applicationTimelineTransformer.transformDomainEventTypeToTimelineEventType(cas2DomainEventType)
+      applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)
     }
     Assertions.assertThat(exception.message).isEqualTo("Cannot map CAS2_APPLICATION_SUBMITTED, only CAS1 is currently supported")
   }
@@ -124,11 +133,10 @@ class ApplicationTimelineTransformerTest {
   }
 
   @ParameterizedTest
-  @MethodSource("domainEventTypeArgs")
-  fun `transformDomainEventSummaryToTimelineEvent adds appealUrl for appeal events`(args: Pair<DomainEventType, TimelineEventType>) {
+  @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+  fun `transformDomainEventSummaryToTimelineEvent adds appealUrl for appeal events`(domainEventType: DomainEventType) {
     val applicationId = UUID.randomUUID()
     val appealId = UUID.randomUUID()
-    val (domainEventType, timelineEventType) = args
     val domainEvent = DomainEventSummaryImpl(
       id = UUID.randomUUID().toString(),
       type = domainEventType,
@@ -146,7 +154,7 @@ class ApplicationTimelineTransformerTest {
     Assertions.assertThat(applicationTimelineTransformer.transformDomainEventSummaryToTimelineEvent(domainEvent)).isEqualTo(
       TimelineEvent(
         id = domainEvent.id,
-        type = timelineEventType,
+        type = domainEventType.timelineEventType,
         occurredAt = domainEvent.occurredAt.toInstant(),
         associatedUrls = if (domainEventType == DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED) {
           listOf(
@@ -256,27 +264,6 @@ class ApplicationTimelineTransformerTest {
         ),
         content = "Some event",
       ),
-    )
-  }
-
-  private companion object {
-    @JvmStatic
-    fun domainEventTypeArgs() = listOf(
-      DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED to TimelineEventType.approvedPremisesApplicationSubmitted,
-      DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED to TimelineEventType.approvedPremisesApplicationAssessed,
-      DomainEventType.APPROVED_PREMISES_BOOKING_MADE to TimelineEventType.approvedPremisesBookingMade,
-      DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED to TimelineEventType.approvedPremisesPersonArrived,
-      DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED to TimelineEventType.approvedPremisesPersonNotArrived,
-      DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED to TimelineEventType.approvedPremisesPersonDeparted,
-      DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE to TimelineEventType.approvedPremisesBookingNotMade,
-      DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED to TimelineEventType.approvedPremisesBookingCancelled,
-      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED to TimelineEventType.approvedPremisesBookingChanged,
-      DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN to TimelineEventType.approvedPremisesApplicationWithdrawn,
-      DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED to TimelineEventType.approvedPremisesAssessmentAppealed,
-      DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED to TimelineEventType.approvedPremisesAssessmentAllocated,
-      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN to TimelineEventType.approvedPremisesPlacementApplicationWithdrawn,
-      DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN to TimelineEventType.approvedPremisesMatchRequestWithdrawn,
-      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED to TimelineEventType.approvedPremisesPlacementApplicationAllocated,
     )
   }
 }
