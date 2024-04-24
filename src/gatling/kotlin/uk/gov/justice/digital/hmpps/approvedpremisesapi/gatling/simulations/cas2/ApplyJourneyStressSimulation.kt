@@ -46,7 +46,7 @@ class ApplyJourneyStressSimulation : Simulation() {
   )
 
   private val viewAllMyCas2Applications = viewAllMyCas2Applications()
-    .pause(10.seconds.toJavaDuration())
+    .pause(5.seconds.toJavaDuration())
 
   private val cas2ApplyJourney = scenario("Apply journey for CAS2")
     .exec(
@@ -60,11 +60,11 @@ class ApplyJourneyStressSimulation : Simulation() {
   init {
     setUp(
       cas2ApplyJourney.injectOpen(
-        constantUsersPerSec(50.0).during(2.minutes.toJavaDuration()).randomized(),
-        stressPeakUsers(5000).during(1.minutes.toJavaDuration()),
+        constantUsersPerSec(30.0).during(2.minutes.toJavaDuration()).randomized(),
+        stressPeakUsers(350).during(1.minutes.toJavaDuration()),
       ),
     ).assertions(
-      CoreDsl.global().responseTime().percentile(95.0).lt(40000),
+      CoreDsl.global().responseTime().max().lt(10000),
       CoreDsl.global().successfulRequests().percent().gte(100.0),
     ).withAuthorizedUserHttpProtocol()
   }
