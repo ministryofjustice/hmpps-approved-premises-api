@@ -40,3 +40,8 @@ GATLING_HMPPS_AUTH_BASE_URL="https://sign-in-{env}.hmpps.service.justice.gov.uk"
 Once Gatling has finished, it will output reports into the
 `build/reports/gatling` folder. It will also provide a link in the terminal to
 open the report directly in the browser.
+
+NB. Gatling will not clear the data it's just created so you may be left with
+thousands of rows which slows your environment down. To clear this easily you
+can wipe your API database with `docker-compose down -v` from within the AP
+tools repo.
