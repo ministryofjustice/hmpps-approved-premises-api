@@ -1775,6 +1775,12 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: releaseType
+          in: query
+          required: false
+          description: If provided, restricts the results to only those with the given release type.
+          schema:
+            $ref: '_shared.yml#/components/schemas/ReleaseTypeOption'
       responses:
         200:
           description: successful operation
