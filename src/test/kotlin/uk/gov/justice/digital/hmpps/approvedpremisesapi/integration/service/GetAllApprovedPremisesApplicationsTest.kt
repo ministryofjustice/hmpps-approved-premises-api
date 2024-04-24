@@ -442,6 +442,7 @@ class GetAllApprovedPremisesApplicationsTest : InitialiseDatabasePerClassTestBas
         ApplicationSortField.createdAt -> compareValues(a.createdAt, b.createdAt)
         ApplicationSortField.arrivalDate -> compareValues(a.arrivalDate, b.arrivalDate)
         ApplicationSortField.tier -> compareValues(a.riskRatings?.tier?.status, b.riskRatings?.tier?.status)
+        ApplicationSortField.releaseType -> compareValues(a.releaseType, b.releaseType)
       }
 
       when (sortDirection) {

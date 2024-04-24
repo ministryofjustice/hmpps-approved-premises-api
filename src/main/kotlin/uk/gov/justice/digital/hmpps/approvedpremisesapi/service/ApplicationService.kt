@@ -130,6 +130,7 @@ class ApplicationService(
       ApplicationSortField.arrivalDate -> "arrivalDate"
       ApplicationSortField.createdAt -> "a.created_at"
       ApplicationSortField.tier -> "tier"
+      ApplicationSortField.releaseType -> "releaseType"
       else -> "a.created_at"
     }
     val pageable = getPageable(sortField, sortDirection, page, pageSize)
