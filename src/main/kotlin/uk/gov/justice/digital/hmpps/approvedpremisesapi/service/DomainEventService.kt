@@ -224,18 +224,13 @@ class DomainEventService(
     nomsNumber: String,
     emit: Boolean = true,
   ) {
-    val detailUrl = domainEventUrlConfig.getUrlForDomainEventId(eventType, domainEvent.id)
-    val typeName = eventType.typeName
-    val typeDescription = eventType.typeDescription
-    val crn = domainEvent.crn
-
     domainEventRepository.save(
       DomainEventEntity(
         id = domainEvent.id,
         applicationId = domainEvent.applicationId,
         assessmentId = domainEvent.assessmentId,
         bookingId = domainEvent.bookingId,
-        crn = crn,
+        crn = domainEvent.crn,
         type = eventType,
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),
@@ -245,14 +240,25 @@ class DomainEventService(
       ),
     )
 
-    if (!emit) {
-      return
+    if (emit) {
+      emit(eventType, domainEvent, nomsNumber)
     }
+  }
 
+  private fun emit(
+    eventType: DomainEventType,
+    domainEvent: DomainEvent<*>,
+    nomsNumber: String,
+  ) {
     if (!emitDomainEventsEnabled) {
       log.info("Not emitting SNS event for domain event because domain-events.cas1.emit-enabled is not enabled")
       return
     }
+
+    val typeName = eventType.typeName
+    val typeDescription = eventType.typeDescription
+    val crn = domainEvent.crn
+    val detailUrl = domainEventUrlConfig.getUrlForDomainEventId(eventType, domainEvent.id)
 
     domainEventWorker.emitEvent(
       SnsEvent(
