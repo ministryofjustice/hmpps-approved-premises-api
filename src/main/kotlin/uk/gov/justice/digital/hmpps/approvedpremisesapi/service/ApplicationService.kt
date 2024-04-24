@@ -924,7 +924,9 @@ class ApplicationService(
 
   private fun getAllAssessmentClarificationNoteTimeLineEventsForApplication(applicationId: UUID): List<TimelineEvent> {
     val assessments = applicationRepository.findAllAssessmentsById(applicationId)
-    val allClarifications = assessments.flatMap { it.clarificationNotes }
+    val allClarifications = assessments
+      .flatMap { it.clarificationNotes }
+      .filter { !it.hasDomainEvent }
     return allClarifications.map {
       assessmentClarificationNoteTransformer.transformToTimelineEvent(it)
     }
