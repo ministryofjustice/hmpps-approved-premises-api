@@ -10,6 +10,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas2Application
@@ -23,7 +25,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApplicat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Licence Case Admin User`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given an Offender`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.CommunityAPI_mockNotFoundOffenderDetailsCall
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.PrisonAPI_mockNotFoundInmateDetailsCall
@@ -74,12 +77,13 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
   @Nested
   inner class ControlsOnExternalUsers {
-    @Test
-    fun `creating an application is forbidden to external users based on role`() {
+    @ParameterizedTest
+    @ValueSource(strings = ["ROLE_LICENCE_CA", "ROLE_CAS2_ASSESSOR", "ROLE_CAS2_MI"])
+    fun `creating an application is forbidden to external users based on role`(role: String) {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_CAS2_ASSESSOR"),
+        roles = listOf(role),
       )
 
       webTestClient.post()
@@ -90,12 +94,13 @@ class Cas2ApplicationTest : IntegrationTestBase() {
         .isForbidden
     }
 
-    @Test
-    fun `updating an application is forbidden to external users based on role`() {
+    @ParameterizedTest
+    @ValueSource(strings = ["ROLE_LICENCE_CA", "ROLE_CAS2_ASSESSOR", "ROLE_CAS2_MI"])
+    fun `updating an application is forbidden to external users based on role`(role: String) {
       val jwt = jwtAuthHelper.createClientCredentialsJwt(
         username = "username",
         authSource = "nomis",
-        roles = listOf("ROLE_CAS2_ASSESSOR"),
+        roles = listOf(role),
       )
 
       webTestClient.put()
@@ -174,8 +179,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get all applications returns 200 with correct body`() {
-      `Given a CAS2 User` { userEntity, jwt ->
-        `Given a CAS2 User` { otherUser, _ ->
+      `Given a CAS2 POM User` { userEntity, jwt ->
+        `Given a CAS2 POM User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -261,8 +266,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Get all applications with pagination returns 200 with correct body and header`() {
-      `Given a CAS2 User` { userEntity, jwt ->
-        `Given a CAS2 User` { otherUser, _ ->
+      `Given a CAS2 POM User` { userEntity, jwt ->
+        `Given a CAS2 POM User` { otherUser, _ ->
           `Given an Offender` { offenderDetails, _ ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -329,7 +334,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `When a person is not found, returns 200 with placeholder text`() {
-      `Given a CAS2 User`() { userEntity, jwt ->
+      `Given a CAS2 POM User`() { userEntity, jwt ->
         val crn = "X1234"
 
         produceAndPersistBasicApplication(crn, userEntity)
@@ -376,7 +381,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       @Test
       fun `Get all applications using prisonCode returns 200 with correct body`() {
         `Given a CAS2 Assessor` { assessor, _ ->
-          `Given a CAS2 User` { userAPrisonA, jwt ->
+          `Given a CAS2 POM User` { userAPrisonA, jwt ->
             `Given an Offender` { offenderDetails, _ ->
               cas2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -469,7 +474,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       @Test
       fun `Get all submitted applications using prisonCode returns 200 with correct body`() {
         `Given a CAS2 Assessor` { assessor, _ ->
-          `Given a CAS2 User` { userAPrisonA, jwt ->
+          `Given a CAS2 POM User` { userAPrisonA, jwt ->
             `Given an Offender` { offenderDetails, _ ->
               cas2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -541,7 +546,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       @Test
       fun `Get all unsubmitted applications using prisonCode returns 200 with correct body`() {
-        `Given a CAS2 User` { userAPrisonA, jwt ->
+        `Given a CAS2 POM User` { userAPrisonA, jwt ->
           `Given an Offender` { offenderDetails, _ ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -608,7 +613,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       @Test
       fun `Get applications using another prisonCode returns Forbidden 403`() {
-        `Given a CAS2 User` { userAPrisonA, jwt ->
+        `Given a CAS2 POM User` { userAPrisonA, jwt ->
           val rawResponseBody = webTestClient.get()
             .uri("/cas2/applications?prisonCode=${userAPrisonA.activeCaseloadId!!.reversed()}")
             .header("Authorization", "Bearer $jwt")
@@ -616,6 +621,80 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             .exchange()
             .expectStatus()
             .isForbidden()
+        }
+      }
+    }
+
+    @Nested
+    inner class AsLicenceCaseAdminUser {
+      @Test
+      fun `Get all submitted applications using prisonCode returns 200 with correct body`() {
+        `Given a CAS2 Assessor` { assessor, _ ->
+          `Given a CAS2 Licence Case Admin User` { caseAdminPrisonA, jwt ->
+            `Given an Offender` { offenderDetails, _ ->
+              cas2ApplicationJsonSchemaRepository.deleteAll()
+
+              val applicationSchema = cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                withAddedAt(OffsetDateTime.now())
+                withId(UUID.randomUUID())
+              }
+
+              val pomUserPrisonA = nomisUserEntityFactory.produceAndPersist {
+                withActiveCaseloadId(caseAdminPrisonA.activeCaseloadId!!)
+              }
+
+              val userBPrisonAApplicationIds = mutableListOf<UUID>()
+
+              repeat(6) {
+                userBPrisonAApplicationIds.add(
+                  cas2ApplicationEntityFactory.produceAndPersist {
+                    withApplicationSchema(applicationSchema)
+                    withCreatedByUser(pomUserPrisonA)
+                    withCrn(offenderDetails.otherIds.crn)
+                    withData("{}")
+                    withCreatedAt(OffsetDateTime.now().minusDays(it.toLong()))
+                    withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
+                    withReferringPrisonCode(caseAdminPrisonA.activeCaseloadId!!)
+                  }.id,
+                )
+              }
+
+              val pomUserPrisonB = nomisUserEntityFactory.produceAndPersist {
+                withActiveCaseloadId("other_prison")
+              }
+
+              val otherPrisonApplication = cas2ApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(applicationSchema)
+                withCreatedByUser(pomUserPrisonB)
+                withCrn(offenderDetails.otherIds.crn)
+                withData("{}")
+                withCreatedAt(OffsetDateTime.now())
+                withSubmittedAt(OffsetDateTime.now().randomDateTimeBefore())
+                withReferringPrisonCode("other_prison")
+              }
+
+              val rawResponseBody = webTestClient.get()
+                .uri("/cas2/applications?isSubmitted=true&prisonCode=${caseAdminPrisonA.activeCaseloadId}")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.cas2.value)
+                .exchange()
+                .expectStatus()
+                .isOk
+                .returnResult<String>()
+                .responseBody
+                .blockFirst()
+
+              val responseBody =
+                objectMapper.readValue(rawResponseBody, object : TypeReference<List<Cas2ApplicationSummary>>() {})
+
+              val returnedApplicationIds = responseBody.map { it.id }.toSet()
+
+              Assertions.assertThat(returnedApplicationIds).isEqualTo(userBPrisonAApplicationIds.toSet())
+              Assertions.assertThat(returnedApplicationIds).noneMatch {
+                otherPrisonApplication.id == it
+              }
+            }
+          }
         }
       }
     }
@@ -646,8 +725,8 @@ class Cas2ApplicationTest : IntegrationTestBase() {
     @BeforeEach
     fun setup() {
       `Given a CAS2 Assessor` { assessor, _ ->
-        `Given a CAS2 User` { userEntity, jwt ->
-          `Given a CAS2 User` { otherUser, _ ->
+        `Given a CAS2 POM User` { userEntity, jwt ->
+          `Given a CAS2 POM User` { otherUser, _ ->
             `Given an Offender` { offenderDetails, _ ->
               cas2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -802,7 +881,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       // When the application requested was created by the logged-in user
       @Test
       fun `Get single in progress application returns 200 with correct body`() {
-        `Given a CAS2 User` { userEntity, jwt ->
+        `Given a CAS2 POM User` { userEntity, jwt ->
           `Given an Offender` { offenderDetails, inmateDetails ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -853,7 +932,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       @Test
       fun `Get single application returns successfully when the offender cannot be fetched from the prisons API`() {
-        `Given a CAS2 User` { userEntity, jwt ->
+        `Given a CAS2 POM User` { userEntity, jwt ->
           val crn = "X1234"
 
           `Given an Offender`(
@@ -899,7 +978,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
       @Test
       fun `Get single submitted application returns 200 with timeline events`() {
-        `Given a CAS2 User` { userEntity, jwt ->
+        `Given a CAS2 POM User` { userEntity, jwt ->
           `Given an Offender` { offenderDetails, inmateDetails ->
             cas2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -949,7 +1028,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       inner class WhenDifferentPrison {
         @Test
         fun `Get single submitted application is forbidden`() {
-          `Given a CAS2 User` { userEntity, jwt ->
+          `Given a CAS2 POM User` { userEntity, jwt ->
             `Given an Offender` { offenderDetails, inmateDetails ->
               cas2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -990,7 +1069,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
       inner class WhenSamePrison {
         @Test
         fun `Get single submitted application returns 200 with timeline events`() {
-          `Given a CAS2 User` { userEntity, jwt ->
+          `Given a CAS2 POM User` { userEntity, jwt ->
             `Given an Offender` { offenderDetails, inmateDetails ->
               cas2ApplicationJsonSchemaRepository.deleteAll()
 
@@ -1036,6 +1115,41 @@ class Cas2ApplicationTest : IntegrationTestBase() {
             }
           }
         }
+
+        @Test
+        fun `Get single unsubmitted application returns 403`() {
+          `Given a CAS2 POM User` { userEntity, jwt ->
+            `Given an Offender` { offenderDetails, inmateDetails ->
+              cas2ApplicationJsonSchemaRepository.deleteAll()
+
+              val newestJsonSchema = cas2ApplicationJsonSchemaEntityFactory
+                .produceAndPersist {
+                  withAddedAt(OffsetDateTime.parse("2022-09-21T12:45:00+01:00"))
+                  withSchema(
+                    schema,
+                  )
+                }
+
+              val otherUser = nomisUserEntityFactory.produceAndPersist {
+                withActiveCaseloadId(userEntity.activeCaseloadId!!)
+              }
+
+              val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+                withApplicationSchema(newestJsonSchema)
+                withCrn(offenderDetails.otherIds.crn)
+                withCreatedByUser(otherUser)
+                withReferringPrisonCode(userEntity.activeCaseloadId!!)
+              }
+
+              webTestClient.get()
+                .uri("/cas2/applications/${applicationEntity.id}")
+                .header("Authorization", "Bearer $jwt")
+                .exchange()
+                .expectStatus()
+                .isForbidden
+            }
+          }
+        }
       }
     }
   }
@@ -1044,7 +1158,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   inner class PostToCreate {
     @Test
     fun `Create new application for CAS-2 returns 201 with correct body and Location header`() {
-      `Given a CAS2 User` { userEntity, jwt ->
+      `Given a CAS2 POM User` { userEntity, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           val applicationSchema =
             cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -1080,7 +1194,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
 
     @Test
     fun `Create new application returns 404 when a person cannot be found`() {
-      `Given a CAS2 User` { userEntity, jwt ->
+      `Given a CAS2 POM User` { userEntity, jwt ->
         val crn = "X1234"
 
         CommunityAPI_mockNotFoundOffenderDetailsCall(crn)
@@ -1112,7 +1226,7 @@ class Cas2ApplicationTest : IntegrationTestBase() {
   inner class PutToUpdate {
     @Test
     fun `Update existing CAS2 application returns 200 with correct body`() {
-      `Given a CAS2 User` { submittingUser, jwt ->
+      `Given a CAS2 POM User` { submittingUser, jwt ->
         `Given an Offender` { offenderDetails, _ ->
           val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
 
