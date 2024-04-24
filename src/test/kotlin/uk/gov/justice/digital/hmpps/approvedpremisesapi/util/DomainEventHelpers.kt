@@ -39,7 +39,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventTy
 import java.time.Instant
 import java.util.UUID
 
-fun createDomainEventOfType(type: DomainEventType): Any {
+fun createDomainEventOfType(type: DomainEventType, requestId: UUID = UUID.randomUUID()): Any {
   val id = UUID.randomUUID()
   val timestamp = Instant.now()
   val eventType = EventType.entries.find { it.value == type.typeName } ?: throw RuntimeException("Cannot find EventType for $type")
@@ -145,7 +145,9 @@ fun createDomainEventOfType(type: DomainEventType): Any {
       id = id,
       timestamp = timestamp,
       eventType = eventType,
-      eventDetails = FurtherInformationRequestedFactory().produce(),
+      eventDetails = FurtherInformationRequestedFactory()
+        .withRequestId(requestId)
+        .produce(),
     )
     else -> throw RuntimeException("Domain event type $type not supported")
   }
