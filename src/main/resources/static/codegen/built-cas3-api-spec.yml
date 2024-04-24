@@ -4669,6 +4669,7 @@ components:
         - tier
         - createdAt
         - arrivalDate
+        - releaseType
     RiskTierLevel:
       type: string
       enum:
