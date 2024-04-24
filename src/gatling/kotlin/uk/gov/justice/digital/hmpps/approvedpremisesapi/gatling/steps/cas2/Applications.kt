@@ -74,3 +74,9 @@ fun submitCas2Application(
       },
     ),
 )
+
+fun viewAllMyCas2Applications() = CoreDsl.exec(
+  HttpDsl.http("Get Applications")
+    .get { session -> "/cas2/applications" }
+    .header("X-Service-Name", ServiceName.cas2.value),
+)

@@ -10,6 +10,7 @@ import io.gatling.javaapi.core.Simulation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas2.createCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas2.submitCas2Application
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas2.updateCas2Application
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.steps.cas2.viewAllMyCas2Applications
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.authorizeUser
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.getUUID
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.gatling.util.withAuthorizedUserHttpProtocol
@@ -44,12 +45,16 @@ class ApplyJourneyStressSimulation : Simulation() {
     10.seconds.toJavaDuration(),
   )
 
+  private val viewAllMyCas2Applications = viewAllMyCas2Applications()
+    .pause(10.seconds.toJavaDuration())
+
   private val cas2ApplyJourney = scenario("Apply journey for CAS2")
     .exec(
       authorizeUser("cas2"),
       createCas2Application,
       updateCas2Application,
       submitCas2Application,
+      viewAllMyCas2Applications,
     )
 
   init {
