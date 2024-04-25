@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEve
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReferenceCollection
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
@@ -225,6 +226,13 @@ class DomainEventService(
     if (emit) {
       emit(domainEventEntity)
     }
+  }
+
+  fun replay(domainEventId: UUID) {
+    val domainEventEntity = domainEventRepository.findByIdOrNull(domainEventId)
+      ?: throw NotFoundProblem(domainEventId, "DomainEvent")
+
+    emit(domainEventEntity)
   }
 
   private fun emit(

@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -78,12 +80,15 @@ class DomainEventServiceTest {
   private val user = UserEntityFactory().withDefaultProbationRegion().produce()
   private val mockDomainEventUrlConfig = mockk<DomainEventUrlConfig>()
 
-  private val domainEventService = DomainEventService(
+  private val domainEventService = buildService(emitDomainEventsEnabled = true)
+  private val domainEventServiceEmitDisabled = buildService(emitDomainEventsEnabled = false)
+
+  private fun buildService(emitDomainEventsEnabled: Boolean) = DomainEventService(
     objectMapper = objectMapper,
     domainEventRepository = domainEventRespositoryMock,
     domainEventWorker = domainEventWorkerMock,
     userService = userService,
-    emitDomainEventsEnabled = true,
+    emitDomainEventsEnabled = emitDomainEventsEnabled,
     mockDomainEventUrlConfig,
   )
 
@@ -324,6 +329,92 @@ class DomainEventServiceTest {
 
       verify(exactly = 0) {
         domainEventWorkerMock.emitEvent(any(), any())
+      }
+    }
+  }
+
+  @Nested
+  inner class Replay {
+
+    @Test
+    fun `replay throws exception if domain event not found`() {
+      val id = UUID.fromString("d37c9dd3-8ec8-4362-9525-1e85bcb36e79")
+
+      every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
+
+      assertThatThrownBy {
+        domainEventService.replay(id)
+      }.hasMessage("Not Found: No DomainEvent with an ID of d37c9dd3-8ec8-4362-9525-1e85bcb36e79 could be found")
+    }
+
+    @Test
+    fun `replay doesnt emit event if emitting events is disabled`() {
+      val id = UUID.fromString("9785dd29-0e1f-467a-933e-5e731cc27adc")
+      val type = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
+      val applicationId = UUID.randomUUID()
+      val bookingId = UUID.fromString("8785dd29-0e1f-467a-933e-5e731cc27adc")
+      val crn = "CRN"
+      val nomsNumber = "theNomsNumber"
+      val occurredAt = OffsetDateTime.now()
+
+      val domainEventEntity = DomainEventEntityFactory()
+        .withId(id)
+        .withType(type)
+        .withApplicationId(applicationId)
+        .withCrn(crn)
+        .withNomsNumber(nomsNumber)
+        .withOccurredAt(occurredAt)
+        .withBookingId(bookingId)
+        .produce()
+
+      every { domainEventRespositoryMock.findByIdOrNull(id) } returns domainEventEntity
+      every { mockDomainEventUrlConfig.getUrlForDomainEventId(type, id) } returns "theCorrectUrl"
+
+      domainEventServiceEmitDisabled.replay(id)
+
+      verify { domainEventWorkerMock wasNot Called }
+    }
+
+    @Test
+    fun `replay emits event to SNS`() {
+      val id = UUID.fromString("9785dd29-0e1f-467a-933e-5e731cc27adc")
+      val type = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED
+      val applicationId = UUID.randomUUID()
+      val bookingId = UUID.fromString("8785dd29-0e1f-467a-933e-5e731cc27adc")
+      val crn = "CRN"
+      val nomsNumber = "theNomsNumber"
+      val occurredAt = OffsetDateTime.now()
+
+      val domainEventEntity = DomainEventEntityFactory()
+        .withId(id)
+        .withType(type)
+        .withApplicationId(applicationId)
+        .withCrn(crn)
+        .withNomsNumber(nomsNumber)
+        .withOccurredAt(occurredAt)
+        .withBookingId(bookingId)
+        .produce()
+
+      every { domainEventRespositoryMock.findByIdOrNull(id) } returns domainEventEntity
+      every { mockDomainEventUrlConfig.getUrlForDomainEventId(type, id) } returns "theCorrectUrl"
+      every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
+
+      domainEventService.replay(id)
+
+      verify(exactly = 1) {
+        domainEventWorkerMock.emitEvent(
+          withArg { snsEvent ->
+            assertThat(snsEvent.eventType).isEqualTo(type.typeName)
+            assertThat(snsEvent.version).isEqualTo(1)
+            assertThat(snsEvent.description).isEqualTo(type.typeDescription)
+            assertThat(snsEvent.detailUrl).isEqualTo("theCorrectUrl")
+            assertThat(snsEvent.occurredAt).isEqualTo(occurredAt)
+            assertThat(snsEvent.additionalInformation.applicationId).isEqualTo(applicationId)
+            assertThat(snsEvent.personReference.identifiers.first { it.type == "CRN" }.value).isEqualTo(crn)
+            assertThat(snsEvent.personReference.identifiers.first { it.type == "NOMS" }.value).isEqualTo(nomsNumber)
+          },
+          id,
+        )
       }
     }
   }
