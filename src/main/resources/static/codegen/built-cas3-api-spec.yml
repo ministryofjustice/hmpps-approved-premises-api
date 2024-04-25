@@ -3729,6 +3729,7 @@ components:
         - update_cas1_backfill_user_ap_area
         - update_cas3_application_offender_name
         - update_all_users_pdu_from_community_api
+        - update_information_received_domain_events
     PlacementDates:
       type: object
       properties:
