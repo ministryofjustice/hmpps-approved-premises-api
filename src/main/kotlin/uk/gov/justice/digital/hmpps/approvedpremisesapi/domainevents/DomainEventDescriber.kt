@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents
 
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEventSummary
@@ -21,6 +23,7 @@ import javax.xml.datatype.DatatypeConstants.DAYS
 @Component
 class DomainEventDescriber(
   private val domainEventService: DomainEventService,
+  private val assessmentClarificationNoteRepository: AssessmentClarificationNoteRepository,
 ) {
 
   @SuppressWarnings("CyclomaticComplexMethod")
@@ -42,7 +45,22 @@ class DomainEventDescriber(
       DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> buildMatchRequestWithdrawnDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED -> buildRequestForPlacementCreatedDescription(domainEventSummary)
       DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED -> buildPlacementApplicationAllocatedDescription(domainEventSummary)
+      DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED -> buildInfoRequestDescription(domainEventSummary)
       else -> throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported")
+    }
+  }
+
+  private fun buildInfoRequestDescription(domainEventSummary: DomainEventSummary): String? {
+    val event = domainEventService.getFurtherInformationRequestMadeEvent(domainEventSummary.id())
+
+    return event.describe { data ->
+      val assessmentClarificationNote = assessmentClarificationNoteRepository.findByIdOrNull(data.eventDetails.requestId)
+        ?: throw RuntimeException("Clarification note with ID ${data.eventDetails.requestId} not found")
+
+      """
+        A further information request was made to the applicant:
+        "${assessmentClarificationNote.query}"
+      """.trimIndent()
     }
   }
 

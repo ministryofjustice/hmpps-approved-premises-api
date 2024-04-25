@@ -460,182 +460,217 @@ class AssessmentServiceTest {
     assertThat(result is AuthorisableActionResult.NotFound).isTrue
   }
 
-  @Test
-  fun `addAssessmentClarificationNote returns not found for non-existent Assessment`() {
-    val assessmentId = UUID.randomUUID()
+  @Nested
+  inner class AddAssessmentClarificationNote {
+    @Test
+    fun `addAssessmentClarificationNote returns not found for non-existent Assessment`() {
+      val assessmentId = UUID.randomUUID()
 
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
 
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns null
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
-    val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
+      val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
 
-    assertThat(result is AuthorisableActionResult.NotFound).isTrue
-  }
-
-  @Test
-  fun `addAssessmentClarificationNote returns unauthorised when the user does not have permission to access the assessment`() {
-    val assessmentId = UUID.randomUUID()
-
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns ApprovedPremisesAssessmentEntityFactory()
-      .withId(assessmentId)
-      .withApplication(
-        ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(
-            UserEntityFactory()
-              .withYieldedProbationRegion {
-                ProbationRegionEntityFactory()
-                  .withYieldedApArea { ApAreaEntityFactory().produce() }
-                  .produce()
-              }
-              .produce(),
-          )
-          .produce(),
-      )
-      .withAllocatedToUser(
-        UserEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .produce(),
-      )
-      .produce()
-
-    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
-
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
-
-    val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
-
-    assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
-  }
-
-  @Test
-  fun `addAssessmentClarificationNote adds note to assessment allocated to different user for workflow managers`() {
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
-
-    user.roles.add(
-      UserRoleAssignmentEntityFactory()
-        .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
-        .withUser(user)
-        .produce(),
-    )
-
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(
-        ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(
-            UserEntityFactory()
-              .withYieldedProbationRegion {
-                ProbationRegionEntityFactory()
-                  .withYieldedApArea { ApAreaEntityFactory().produce() }
-                  .produce()
-              }
-              .produce(),
-          )
-          .produce(),
-      )
-      .withAllocatedToUser(
-        UserEntityFactory()
-          .withYieldedProbationRegion {
-            ProbationRegionEntityFactory()
-              .withYieldedApArea { ApAreaEntityFactory().produce() }
-              .produce()
-          }
-          .produce(),
-      )
-      .produce()
-
-    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-
-    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-
-    every { assessmentClarificationNoteRepositoryMock.save(any()) } answers {
-      it.invocation.args[0] as AssessmentClarificationNoteEntity
+      assertThat(result is AuthorisableActionResult.NotFound).isTrue
     }
 
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    @Test
+    fun `addAssessmentClarificationNote returns unauthorised when the user does not have permission to access the assessment`() {
+      val assessmentId = UUID.randomUUID()
 
-    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce(),
-    )
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
 
-    val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, "clarification note")
+      every { assessmentRepositoryMock.findByIdOrNull(assessmentId) } returns ApprovedPremisesAssessmentEntityFactory()
+        .withId(assessmentId)
+        .withApplication(
+          ApprovedPremisesApplicationEntityFactory()
+            .withCreatedByUser(
+              UserEntityFactory()
+                .withYieldedProbationRegion {
+                  ProbationRegionEntityFactory()
+                    .withYieldedApArea { ApAreaEntityFactory().produce() }
+                    .produce()
+                }
+                .produce(),
+            )
+            .produce(),
+        )
+        .withAllocatedToUser(
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce(),
+        )
+        .produce()
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
+      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns false
 
-    verify(exactly = 1) { assessmentClarificationNoteRepositoryMock.save(any()) }
-  }
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
 
-  @Test
-  fun `addAssessmentClarificationNote adds note to assessment allocated to calling user`() {
-    val user = UserEntityFactory()
-      .withYieldedProbationRegion {
-        ProbationRegionEntityFactory()
-          .withYieldedApArea { ApAreaEntityFactory().produce() }
-          .produce()
-      }
-      .produce()
+      val result = assessmentService.addAssessmentClarificationNote(user, assessmentId, "clarification note")
 
-    val assessment = ApprovedPremisesAssessmentEntityFactory()
-      .withApplication(
-        ApprovedPremisesApplicationEntityFactory()
-          .withCreatedByUser(
-            UserEntityFactory()
-              .withYieldedProbationRegion {
-                ProbationRegionEntityFactory()
-                  .withYieldedApArea { ApAreaEntityFactory().produce() }
-                  .produce()
-              }
-              .produce(),
-          )
-          .produce(),
-      )
-      .withAllocatedToUser(user)
-      .produce()
-
-    every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
-
-    every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
-
-    every { assessmentClarificationNoteRepositoryMock.save(any()) } answers {
-      it.invocation.args[0] as AssessmentClarificationNoteEntity
+      assertThat(result is AuthorisableActionResult.Unauthorised).isTrue
     }
 
-    every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+    @Test
+    fun `addAssessmentClarificationNote adds note to assessment allocated to different user for workflow managers`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
 
-    every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
-      OffenderDetailsSummaryFactory().produce(),
-    )
+      user.roles.add(
+        UserRoleAssignmentEntityFactory()
+          .withRole(UserRole.CAS1_WORKFLOW_MANAGER)
+          .withUser(user)
+          .produce(),
+      )
 
-    val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, "clarification note")
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(
+          ApprovedPremisesApplicationEntityFactory()
+            .withCreatedByUser(
+              UserEntityFactory()
+                .withYieldedProbationRegion {
+                  ProbationRegionEntityFactory()
+                    .withYieldedApArea { ApAreaEntityFactory().produce() }
+                    .produce()
+                }
+                .produce(),
+            )
+            .produce(),
+        )
+        .withAllocatedToUser(
+          UserEntityFactory()
+            .withYieldedProbationRegion {
+              ProbationRegionEntityFactory()
+                .withYieldedApArea { ApAreaEntityFactory().produce() }
+                .produce()
+            }
+            .produce(),
+        )
+        .produce()
 
-    assertThat(result is AuthorisableActionResult.Success).isTrue
+      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
 
-    verify(exactly = 1) { assessmentClarificationNoteRepositoryMock.save(any()) }
+      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
+      every { assessmentClarificationNoteRepositoryMock.save(any()) } answers {
+        it.invocation.args[0] as AssessmentClarificationNoteEntity
+      }
+
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+
+      every { cas1AssessmentDomainEventService.furtherInformationRequested(any(), any()) } just Runs
+
+      val text = "clarification note"
+      val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, text)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      verify(exactly = 1) {
+        assessmentClarificationNoteRepositoryMock.save(
+          match {
+            it.assessment == assessment &&
+              it.createdByUser == user &&
+              it.query == text && it.hasDomainEvent
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        cas1AssessmentDomainEventService.furtherInformationRequested(assessment, result.entity)
+      }
+    }
+
+    @Test
+    fun `addAssessmentClarificationNote adds note to assessment allocated to calling user`() {
+      val user = UserEntityFactory()
+        .withYieldedProbationRegion {
+          ProbationRegionEntityFactory()
+            .withYieldedApArea { ApAreaEntityFactory().produce() }
+            .produce()
+        }
+        .produce()
+
+      val assessment = ApprovedPremisesAssessmentEntityFactory()
+        .withApplication(
+          ApprovedPremisesApplicationEntityFactory()
+            .withCreatedByUser(
+              UserEntityFactory()
+                .withYieldedProbationRegion {
+                  ProbationRegionEntityFactory()
+                    .withYieldedApArea { ApAreaEntityFactory().produce() }
+                    .produce()
+                }
+                .produce(),
+            )
+            .produce(),
+        )
+        .withAllocatedToUser(user)
+        .produce()
+
+      every { userAccessServiceMock.userCanViewAssessment(any(), any()) } returns true
+
+      every { assessmentRepositoryMock.findByIdOrNull(assessment.id) } returns assessment
+
+      every { assessmentClarificationNoteRepositoryMock.save(any()) } answers {
+        it.invocation.args[0] as AssessmentClarificationNoteEntity
+      }
+
+      every { jsonSchemaServiceMock.getNewestSchema(ApprovedPremisesAssessmentJsonSchemaEntity::class.java) } returns ApprovedPremisesApplicationJsonSchemaEntityFactory().produce()
+
+      every { offenderServiceMock.getOffenderByCrn(assessment.application.crn, user.deliusUsername) } returns AuthorisableActionResult.Success(
+        OffenderDetailsSummaryFactory().produce(),
+      )
+
+      every { cas1AssessmentDomainEventService.furtherInformationRequested(any(), any()) } just Runs
+
+      val text = "clarification note"
+      val result = assessmentService.addAssessmentClarificationNote(user, assessment.id, text)
+
+      assertThat(result is AuthorisableActionResult.Success).isTrue
+      result as AuthorisableActionResult.Success
+
+      verify(exactly = 1) {
+        assessmentClarificationNoteRepositoryMock.save(
+          match {
+            it.assessment == assessment &&
+              it.createdByUser == user &&
+              it.query == text && it.hasDomainEvent
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        cas1AssessmentDomainEventService.furtherInformationRequested(assessment, result.entity)
+      }
+    }
   }
 
   @Test

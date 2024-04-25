@@ -355,6 +355,33 @@ paths:
                 $ref: '#/components/schemas/Problem'
         500:
           $ref: '#/components/responses/500Response'
+  /events/further-information-requested/{eventId}:
+    parameters:
+      - name: eventId
+        description: UUID of the event
+        in: path
+        required: true
+        schema:
+          $ref: '#/components/schemas/EventId'
+    get:
+      tags:
+        - "'Apply' events"
+      summary: A 'further-information-requested' event
+      responses:
+        '200':
+          description: The 'further-information-requested' event corresponding to the provided `eventId`
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FurtherInformationRequestedEnvelope'
+        404:
+          description: No 'person-not-arrived' event found for the provided `eventId`
+          content:
+            'application/json':
+              schema:
+                $ref: '#/components/schemas/Problem'
+        500:
+          $ref: '#/components/responses/500Response'
   /events/placement-application-withdrawn/{eventId}:
     parameters:
       - name: eventId
@@ -520,6 +547,11 @@ components:
       example: 14c80733-4b6d-4f35-b724-66955aac320c
     RequestForPlacementId:
       description: The UUID of a request for placement. Currently a proxy for PlacementApplicationId
+      type: string
+      format: uuid
+      example: 484b8b5e-6c3b-4400-b200-425bbe410713
+    RequestId:
+      description: The UUID of a further information request
       type: string
       format: uuid
       example: 484b8b5e-6c3b-4400-b200-425bbe410713
@@ -1510,6 +1542,57 @@ components:
         - applicationUrl
         - personReference
         - allocatedAt
+    FurtherInformationRequestedEnvelope:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EventId'
+        timestamp:
+          type: string
+          example: '2022-11-30T14:53:44'
+          format: date-time
+        eventType:
+          $ref: '#/components/schemas/EventType'
+        eventDetails:
+          $ref: '#/components/schemas/FurtherInformationRequested'
+      required:
+        - id
+        - timestamp
+        - eventType
+        - eventDetails
+    FurtherInformationRequested:
+      type: object
+      properties:
+        assessmentId:
+          $ref: '#/components/schemas/AssessmentId'
+        assessmentUrl:
+          $ref: '#/components/schemas/AssessmentUrl'
+        applicationId:
+          $ref: '#/components/schemas/ApplicationId'
+        applicationUrl:
+          $ref: '#/components/schemas/ApplicationUrl'
+        personReference:
+          $ref: '#/components/schemas/PersonReference'
+        requestedAt:
+          type: string
+          example: '2022-11-30T14:51:30'
+          format: date-time
+        requester:
+          $ref: '#/components/schemas/StaffMember'
+        recipient:
+          $ref: '#/components/schemas/StaffMember'
+        requestId:
+          $ref: '#/components/schemas/ApplicationId'
+      required:
+        - assessmentId
+        - assessmentUrl
+        - applicationId
+        - applicationUrl
+        - personReference
+        - requestedAt
+        - requester
+        - recipient
+        - requestId
     AssessmentAppealedEnvelope:
       type: object
       properties:
@@ -1756,6 +1839,7 @@ components:
           - approved-premises.application.withdrawn
           - approved-premises.assessment.appealed
           - approved-premises.assessment.allocated
+          - approved-premises.assessment.info-requested
           - approved-premises.placement-application.withdrawn
           - approved-premises.placement-application.allocated
           - approved-premises.match-request.withdrawn
@@ -1773,6 +1857,7 @@ components:
         - applicationWithdrawn
         - assessmentAppealed
         - assessmentAllocated
+        - informationRequestMade
         - placementApplicationWithdrawn
         - placementApplicationAllocated
         - matchRequestWithdrawn

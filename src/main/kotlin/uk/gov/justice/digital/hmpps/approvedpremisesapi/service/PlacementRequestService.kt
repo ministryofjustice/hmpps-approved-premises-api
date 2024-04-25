@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestRequestType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementRequestSortField
@@ -456,13 +455,7 @@ class PlacementRequestService(
             deliusEventNumber = application.eventNumber,
             attemptedAt = bookingNotCreatedAt.toInstant(),
             attemptedBy = BookingMadeBookedBy(
-              staffMember = StaffMember(
-                staffCode = staffDetails.staffCode,
-                staffIdentifier = staffDetails.staffIdentifier,
-                forenames = staffDetails.staff.forenames,
-                surname = staffDetails.staff.surname,
-                username = staffDetails.username,
-              ),
+              staffMember = staffDetails.toStaffMember(),
               cru = Cru(
                 name = cruService.cruNameFromProbationAreaCode(staffDetails.probationArea.code),
               ),

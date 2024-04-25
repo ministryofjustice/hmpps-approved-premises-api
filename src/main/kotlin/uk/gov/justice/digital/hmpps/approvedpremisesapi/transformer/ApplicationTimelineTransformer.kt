@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventAssociatedUrl
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.TimelineEventUrlType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
@@ -27,7 +26,7 @@ class ApplicationTimelineTransformer(
 
     return TimelineEvent(
       id = domainEventSummary.id,
-      type = transformDomainEventTypeToTimelineEventType(domainEventSummary.type),
+      type = domainEventSummary.type.timelineEventType ?: throw IllegalArgumentException("Cannot map ${domainEventSummary.type}, only CAS1 is currently supported"),
       occurredAt = domainEventSummary.occurredAt.toInstant(),
       associatedUrls = associatedUrls,
       content = domainEventDescriber.getDescription(domainEventSummary),
@@ -90,29 +89,6 @@ class ApplicationTimelineTransformer(
         assessmentUrlOrNull(domainEventSummary),
         bookingUrlOrNull(domainEventSummary),
       )
-    }
-  }
-
-  @SuppressWarnings("CyclomaticComplexMethod")
-  fun transformDomainEventTypeToTimelineEventType(domainEventType: DomainEventType): TimelineEventType {
-    return when (domainEventType) {
-      DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED -> TimelineEventType.approvedPremisesApplicationSubmitted
-      DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED -> TimelineEventType.approvedPremisesApplicationAssessed
-      DomainEventType.APPROVED_PREMISES_BOOKING_MADE -> TimelineEventType.approvedPremisesBookingMade
-      DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED -> TimelineEventType.approvedPremisesPersonArrived
-      DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED -> TimelineEventType.approvedPremisesPersonNotArrived
-      DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED -> TimelineEventType.approvedPremisesPersonDeparted
-      DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE -> TimelineEventType.approvedPremisesBookingNotMade
-      DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED -> TimelineEventType.approvedPremisesBookingCancelled
-      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED -> TimelineEventType.approvedPremisesBookingChanged
-      DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN -> TimelineEventType.approvedPremisesApplicationWithdrawn
-      DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED -> TimelineEventType.approvedPremisesAssessmentAppealed
-      DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED -> TimelineEventType.approvedPremisesAssessmentAllocated
-      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN -> TimelineEventType.approvedPremisesPlacementApplicationWithdrawn
-      DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN -> TimelineEventType.approvedPremisesMatchRequestWithdrawn
-      DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED -> TimelineEventType.approvedPremisesRequestForPlacementCreated
-      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED -> TimelineEventType.approvedPremisesPlacementApplicationAllocated
-      else -> throw IllegalArgumentException("Cannot map $domainEventType, only CAS1 is currently supported")
     }
   }
 }

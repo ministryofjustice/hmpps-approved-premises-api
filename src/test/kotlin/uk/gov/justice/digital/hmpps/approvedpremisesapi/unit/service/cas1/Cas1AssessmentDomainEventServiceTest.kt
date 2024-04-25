@@ -1,13 +1,18 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.unit.service.cas1
 
 import io.mockk.Runs
+import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.NullSource
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
@@ -16,6 +21,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClien
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApAreaEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesApplicationEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ApprovedPremisesAssessmentEntityFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.ProbationRegionEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.StaffUserDetailsFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.UserEntityFactory
@@ -147,6 +153,87 @@ class Cas1AssessmentDomainEventServiceTest {
           withArg {
             Assertions.assertThat(it.data.eventDetails.allocatedBy).isNull()
           },
+        )
+      }
+    }
+  }
+
+  @Nested
+  inner class FurtherInformationRequested {
+    @BeforeEach
+    fun setup() {
+      clearAllMocks()
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(booleans = [true, false])
+    fun `it raises a Further Information Requested Domain Event`(emit: Boolean?) {
+      val assessment = createAssessment()
+      val clarificationNoteEntity = AssessmentClarificationNoteEntityFactory()
+        .withAssessment(assessment)
+        .withCreatedBy(
+          UserEntityFactory()
+            .withUnitTestControlProbationRegion()
+            .produce(),
+        )
+        .produce()
+
+      val requesterStaffDetails = StaffUserDetailsFactory().produce()
+      val recipientStaffDetails = StaffUserDetailsFactory().produce()
+
+      every { communityApiClient.getStaffUserDetails(clarificationNoteEntity.createdByUser.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        requesterStaffDetails,
+      )
+      every { communityApiClient.getStaffUserDetails(assessment.application.createdByUser.deliusUsername) } returns ClientResult.Success(
+        HttpStatus.OK,
+        recipientStaffDetails,
+      )
+
+      val emitValue: Boolean
+
+      if (emit !== null) {
+        emitValue = emit
+        every { domainEventService.saveFurtherInformationRequestedEvent(any(), emit) } just Runs
+        service.furtherInformationRequested(assessment, clarificationNoteEntity, emit)
+      } else {
+        emitValue = true
+        every { domainEventService.saveFurtherInformationRequestedEvent(any(), true) } just Runs
+        service.furtherInformationRequested(assessment, clarificationNoteEntity)
+      }
+
+      verify(exactly = 1) {
+        domainEventService.saveFurtherInformationRequestedEvent(
+          match {
+            val envelope = it.data
+            val eventDetails = envelope.eventDetails
+
+            val rootDomainEventDataMatches = (
+              it.assessmentId == assessment.id &&
+                it.applicationId == assessment.application.id &&
+                it.crn == assessment.application.crn
+              )
+
+            val envelopeMatches = envelope.eventType == EventType.informationRequestMade
+
+            val requesterUserDetailsMatch =
+              assertStaffMemberDetailsMatch(eventDetails.requester, requesterStaffDetails)
+            val recipientUserDetailsMatch =
+              assertStaffMemberDetailsMatch(eventDetails.recipient, recipientStaffDetails)
+
+            val eventDetailsMatch = (
+              eventDetails.assessmentId == assessment.id &&
+                eventDetails.assessmentUrl == "http://frontend/assessments/${assessment.id}" &&
+                eventDetails.applicationUrl == "http://frontend/applications/${assessment.application.id}" &&
+                eventDetails.personReference.crn == assessment.application.crn &&
+                eventDetails.personReference.noms == assessment.application.nomsNumber!! &&
+                eventDetails.requestId == clarificationNoteEntity.id
+              )
+
+            rootDomainEventDataMatches && envelopeMatches && eventDetailsMatch && requesterUserDetailsMatch && recipientUserDetailsMatch
+          },
+          emitValue,
         )
       }
     }

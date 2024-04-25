@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.model.community
 
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import java.time.LocalDate
 
 data class StaffUserDetails(
@@ -11,7 +12,15 @@ data class StaffUserDetails(
   val staff: StaffNames,
   val teams: List<StaffUserTeamMembership>?,
   val probationArea: StaffProbationArea,
-)
+) {
+  fun toStaffMember() = StaffMember(
+    staffCode = this.staffCode,
+    staffIdentifier = this.staffIdentifier,
+    forenames = this.staff.forenames,
+    surname = this.staff.surname,
+    username = this.username,
+  )
+}
 
 data class StaffWithoutUsernameUserDetails(
   val staffCode: String,

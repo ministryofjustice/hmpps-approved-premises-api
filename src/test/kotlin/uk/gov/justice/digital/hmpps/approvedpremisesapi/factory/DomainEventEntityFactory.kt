@@ -75,6 +75,10 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     }
   }
 
+  fun withTriggeredByUserId(userId: UUID) = apply {
+    this.triggeredByUserId = { userId }
+  }
+
   override fun produce(): DomainEventEntity = DomainEventEntity(
     id = this.id(),
     applicationId = this.applicationId(),

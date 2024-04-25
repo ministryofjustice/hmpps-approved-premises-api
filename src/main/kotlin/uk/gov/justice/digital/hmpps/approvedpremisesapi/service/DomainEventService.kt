@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.FurtherInformationRequestedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
@@ -62,6 +63,7 @@ class DomainEventService(
   fun getAssessmentAppealedEvent(id: UUID) = get<AssessmentAppealedEnvelope>(id)
   fun getAssessmentAllocatedEvent(id: UUID) = get<AssessmentAllocatedEnvelope>(id)
   fun getRequestForPlacementCreatedEvent(id: UUID) = get<RequestForPlacementCreatedEnvelope>(id)
+  fun getFurtherInformationRequestMadeEvent(id: UUID) = get<FurtherInformationRequestedEnvelope>(id)
 
   private inline fun <reified T> get(id: UUID): DomainEvent<T>? {
     val domainEventEntity = domainEventRepository.findByIdOrNull(id) ?: return null
@@ -222,6 +224,16 @@ class DomainEventService(
       eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
       crn = domainEvent.data.eventDetails.personReference.crn,
       nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+    )
+
+  @Transactional
+  fun saveFurtherInformationRequestedEvent(domainEvent: DomainEvent<FurtherInformationRequestedEnvelope>, emit: Boolean = true) =
+    saveAndEmit(
+      domainEvent = domainEvent,
+      eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
+      crn = domainEvent.data.eventDetails.personReference.crn,
+      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
+      emit = emit,
     )
 
   fun getAllDomainEventsForApplication(applicationId: UUID) =

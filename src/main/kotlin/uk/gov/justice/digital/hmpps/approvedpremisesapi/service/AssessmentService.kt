@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Cru
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ProbationArea
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.AssessmentSortField
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Cas1ApplicationTimelinessCategory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.PlacementDates
@@ -490,13 +489,7 @@ class AssessmentService(
             deliusEventNumber = application.eventNumber,
             assessedAt = acceptedAt.toInstant(),
             assessedBy = ApplicationAssessedAssessedBy(
-              staffMember = StaffMember(
-                staffCode = staffDetails.staffCode,
-                staffIdentifier = staffDetails.staffIdentifier,
-                forenames = staffDetails.staff.forenames,
-                surname = staffDetails.staff.surname,
-                username = staffDetails.username,
-              ),
+              staffMember = staffDetails.toStaffMember(),
               probationArea = ProbationArea(
                 code = staffDetails.probationArea.code,
                 name = staffDetails.probationArea.description,
@@ -617,13 +610,7 @@ class AssessmentService(
               deliusEventNumber = application.eventNumber,
               assessedAt = rejectedAt.toInstant(),
               assessedBy = ApplicationAssessedAssessedBy(
-                staffMember = StaffMember(
-                  staffCode = staffDetails.staffCode,
-                  staffIdentifier = staffDetails.staffIdentifier,
-                  forenames = staffDetails.staff.forenames,
-                  surname = staffDetails.staff.surname,
-                  username = staffDetails.username,
-                ),
+                staffMember = staffDetails.toStaffMember(),
                 probationArea = ProbationArea(
                   code = staffDetails.probationArea.code,
                   name = staffDetails.probationArea.description,
@@ -872,8 +859,11 @@ class AssessmentService(
         query = text,
         response = null,
         responseReceivedOn = null,
+        hasDomainEvent = true,
       ),
     )
+
+    cas1AssessmentDomainEventService.furtherInformationRequested(assessment, clarificationNoteEntity)
 
     return AuthorisableActionResult.Success(clarificationNoteEntity)
   }

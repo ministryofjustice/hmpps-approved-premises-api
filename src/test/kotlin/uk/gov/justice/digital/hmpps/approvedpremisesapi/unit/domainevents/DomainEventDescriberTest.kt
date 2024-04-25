@@ -6,6 +6,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
+import org.springframework.data.repository.findByIdOrNull
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AppealDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationWithdrawnEnvelope
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.DatePeriod
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.FurtherInformationRequestedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
@@ -26,6 +28,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Placeme
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.domainevents.DomainEventDescriber
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.AssessmentClarificationNoteEntityFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.AssessmentAllocatedFactory
@@ -35,6 +38,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingCh
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.BookingNotMadeFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.EventPremisesFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.FurtherInformationRequestedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.MatchRequestWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonArrivedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PersonDepartedFactory
@@ -43,6 +47,8 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.Placement
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.PlacementApplicationWithdrawnFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.RequestForPlacementCreatedFactory
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.StaffMemberFactory
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementApplicationWithdrawalReason
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.PlacementRequestWithdrawalReason
@@ -59,8 +65,9 @@ import java.util.UUID
 
 class DomainEventDescriberTest {
   private val mockDomainEventService = mockk<DomainEventService>()
+  private val mockAssessmentClarificationNoteRepository = mockk<AssessmentClarificationNoteRepository>()
 
-  private val domainEventDescriber = DomainEventDescriber(mockDomainEventService)
+  private val domainEventDescriber = DomainEventDescriber(mockDomainEventService, mockAssessmentClarificationNoteRepository)
 
   @Test
   fun `Returns expected description for application submitted event`() {
@@ -546,6 +553,42 @@ class DomainEventDescriberTest {
     val result = domainEventDescriber.getDescription(domainEventSummary)
 
     assertThat(result).isEqualTo("$expectedAllocationDescription. The placement request is for Wednesday 12 March 2025 to Thursday 20 March 2025 (1 week and 1 day)")
+  }
+
+  @Test
+  fun `Returns a description for an info request event`() {
+    val domainEventSummary = DomainEventSummaryImpl.ofType(DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED)
+    val requestId = UUID.randomUUID()
+
+    every { mockDomainEventService.getFurtherInformationRequestMadeEvent(UUID.fromString(domainEventSummary.id)) } returns buildDomainEvent {
+      FurtherInformationRequestedEnvelope(
+        id = it,
+        timestamp = Instant.now(),
+        eventType = EventType.informationRequestMade,
+        eventDetails = FurtherInformationRequestedFactory()
+          .withRequestId(requestId)
+          .produce(),
+      )
+    }
+
+    val query = "Query goes here"
+    val assessmentClarificationNote = AssessmentClarificationNoteEntityFactory()
+      .withId(requestId)
+      .withAssessment(mockk<AssessmentEntity>())
+      .withCreatedBy(mockk<UserEntity>())
+      .withQuery(query)
+      .produce()
+
+    every { mockAssessmentClarificationNoteRepository.findByIdOrNull(requestId) } returns assessmentClarificationNote
+
+    val result = domainEventDescriber.getDescription(domainEventSummary)
+
+    assertThat(result).isEqualTo(
+      """
+      A further information request was made to the applicant:
+      "$query"
+      """.trimIndent(),
+    )
   }
 
   private fun <T> buildDomainEvent(builder: (UUID) -> T): DomainEvent<T> {

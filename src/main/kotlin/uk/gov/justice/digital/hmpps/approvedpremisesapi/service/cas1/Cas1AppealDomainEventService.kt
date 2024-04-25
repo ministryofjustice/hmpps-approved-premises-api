@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Assessm
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.AssessmentAppealedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.StaffMember
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.ClientResult
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AppealEntity
@@ -59,13 +58,7 @@ class Cas1AppealDomainEventService(
             ),
             deliusEventNumber = (appeal.application as ApprovedPremisesApplicationEntity).eventNumber,
             createdAt = timestamp,
-            createdBy = StaffMember(
-              staffCode = staffDetails.staffCode,
-              staffIdentifier = staffDetails.staffIdentifier,
-              forenames = staffDetails.staff.forenames,
-              surname = staffDetails.staff.surname,
-              username = staffDetails.username,
-            ),
+            createdBy = staffDetails.toStaffMember(),
             appealDetail = appeal.appealDetail,
             decision = parseDecision(appeal.decision),
             decisionDetail = appeal.decisionDetail,

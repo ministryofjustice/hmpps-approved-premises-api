@@ -12,12 +12,14 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Booking
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingChangedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingMadeEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.BookingNotMadeEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.FurtherInformationRequestedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.MatchRequestWithdrawnEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonDepartedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonNotArrivedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationAllocatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PlacementApplicationWithdrawnEnvelope
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.RequestForPlacementCreatedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.problem.NotFoundProblem
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.DomainEventService
 import java.util.UUID
@@ -56,6 +58,10 @@ class DomainEventsController(
 
   override fun eventsAssessmentAllocatedEventIdGet(eventId: UUID) = getDomainEvent<AssessmentAllocatedEnvelope>(eventId)
 
+  override fun eventsFurtherInformationRequestedEventIdGet(eventId: UUID) = getDomainEvent<FurtherInformationRequestedEnvelope>(eventId)
+
+  override fun eventsRequestForPlacementCreatedEventIdGet(eventId: UUID) = getDomainEvent<RequestForPlacementCreatedEnvelope>(eventId)
+
   @Suppress("UNCHECKED_CAST") // Safe as the return type is constant and not likely to change at runtime
   private inline fun <reified T> getDomainEvent(eventId: UUID): ResponseEntity<T> {
     val serviceMethod = when (T::class) {
@@ -74,6 +80,8 @@ class DomainEventsController(
       PersonDepartedEnvelope::class -> domainEventService::getPersonDepartedEvent
       PlacementApplicationAllocatedEnvelope::class -> domainEventService::getPlacementApplicationAllocatedEvent
       PersonNotArrivedEnvelope::class -> domainEventService::getPersonNotArrivedEvent
+      FurtherInformationRequestedEnvelope::class -> domainEventService::getFurtherInformationRequestMadeEvent
+      RequestForPlacementCreatedEnvelope::class -> domainEventService::getRequestForPlacementCreatedEvent
       else -> throw RuntimeException("Only CAS1 events are supported")
     }
 
