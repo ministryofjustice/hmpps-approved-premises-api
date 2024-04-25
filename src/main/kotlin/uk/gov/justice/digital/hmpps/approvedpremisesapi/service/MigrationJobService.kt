@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.MigrationJobTy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.client.CommunityApiClient
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApAreaRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas1ApplicationUserDetailsRepository
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.ApAreaMigratio
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.BookingStatusMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1BackfillUserApArea
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1FixPlacementApplicationLinksJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1InformationReceivedMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas1UserDetailsMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas2AssessmentMigrationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.Cas3UpdateApplicationOffenderNameJob
@@ -35,6 +37,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsers
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateAllUsersPduFromCommunityApiJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.migration.UpdateSentenceTypeAndSituationRepository
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
 import javax.persistence.EntityManager
 
 @Service
@@ -130,6 +133,15 @@ class MigrationJobService(
           applicationContext.getBean(UserRepository::class.java),
           applicationContext.getBean(UserService::class.java),
           applicationContext.getBean(MigrationLogger::class.java),
+        )
+
+        MigrationJobType.informationReceivedDomainEvents -> Cas1InformationReceivedMigrationJob(
+          applicationContext.getBean(Cas1AssessmentDomainEventService::class.java),
+          applicationContext.getBean(AssessmentClarificationNoteRepository::class.java),
+          applicationContext.getBean(EntityManager::class.java),
+          applicationContext.getBean(MigrationLogger::class.java),
+          applicationContext.getBean(TransactionTemplate::class.java),
+          pageSize,
         )
       }
 
