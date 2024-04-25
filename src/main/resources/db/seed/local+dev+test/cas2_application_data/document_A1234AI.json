@@ -300,11 +300,7 @@
               "answer": "no"
             },
             {
-              "question": "Are they currently receiving any medical treatment for their physical health needs?",
-              "answer": "No"
-            },
-            {
-              "question": "Are they currently receiving any medication for their physical health needs?",
+              "question": "Are they currently receiving any medication or treatment for their physical health?",
               "answer": "No"
             },
             {
@@ -327,6 +323,7 @@
               "question": "Please describe their mental health needs.",
               "answer": "Mr Bertrand has a history of schizophrenic episodes and also suffers from epilepsy"
             },
+            { "question": "How are they presenting?", "answer": "He presents with withdrawal and occasionally erratic behaviour." },
             {
               "question": "Are they engaged with any community mental health services?",
               "answer": "No"
@@ -484,10 +481,6 @@
             {
               "question": "Are there any comments to add about cell sharing?",
               "answer": "No"
-            },
-            {
-              "question": "Behaviour note 1",
-              "answer": "Mr Bertrand was involved in a violent dispute in 2020 in HMP Bristol but there was no adjudication"
             },
             {
               "question": "Is there any other risk information for Aadland Bertrand?",
