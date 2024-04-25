@@ -6,6 +6,7 @@ import org.springframework.transaction.support.TransactionTemplate
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentClarificationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.cas1.Cas1AssessmentDomainEventService
+import java.lang.RuntimeException
 import javax.persistence.EntityManager
 
 class Cas1InformationReceivedMigrationJob(
@@ -35,6 +36,9 @@ class Cas1InformationReceivedMigrationJob(
             clarificationNoteRepository.updateHasDomainEvent(clarificationNote.id)
           } catch (e: IllegalStateException) {
             migrationLogger.error(e.message ?: "An unknown error occurred")
+          } catch (e: RuntimeException) {
+            val errorMessage = e.message ?: "An unknown error occurred"
+            migrationLogger.error("Can't create domain event for ${clarificationNote.id} - $errorMessage", e)
           }
         }
       }
