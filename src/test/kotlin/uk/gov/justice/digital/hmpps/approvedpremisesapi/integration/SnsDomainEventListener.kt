@@ -36,11 +36,10 @@ class SnsDomainEventListener(private val objectMapper: ObjectMapper) {
   @BeforeTestMethod
   fun clearMessages() = messages.clear()
 
-  fun blockForMessage(eventType: DomainEventType): SnsEvent = blockForMessage(eventType.typeName)
-
-  fun blockForMessage(eventType: String): SnsEvent {
+  fun blockForMessage(eventType: DomainEventType): SnsEvent {
+    val typeName = eventType.typeName
     var waitedCount = 0
-    while (!contains(eventType)) {
+    while (!contains(typeName)) {
       if (waitedCount >= Duration.ofSeconds(15).toMillis()) {
         fail<Any>("Did not receive SQS message of type $eventType from SNS topic after 15s. Have messages of type ${messages.map { m -> m.eventType }}")
       }
@@ -50,7 +49,7 @@ class SnsDomainEventListener(private val objectMapper: ObjectMapper) {
     }
 
     synchronized(messages) {
-      return messages.first { it.eventType == eventType }
+      return messages.first { it.eventType == typeName }
     }
   }
 

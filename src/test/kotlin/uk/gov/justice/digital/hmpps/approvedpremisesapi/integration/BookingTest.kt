@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.httpmocks.Go
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.AssessmentDecision
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.BookingEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DepartureReasonEntity
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.MoveOnCategoryEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationAssessmentEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.TemporaryAccommodationPremisesEntity
@@ -718,7 +719,7 @@ class BookingTest : IntegrationTestBase() {
               .jsonPath("$.bed.id").isEqualTo(bed.id.toString())
               .jsonPath("$.bed.name").isEqualTo(bed.name)
 
-            val emittedMessage = snsDomainEventListener.blockForMessage("approved-premises.booking.made")
+            val emittedMessage = snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_BOOKING_MADE)
 
             assertThat(emittedMessage.description).isEqualTo("An Approved Premises booking has been made")
             assertThat(emittedMessage.detailUrl).matches("http://api/events/booking-made/[0-9a-fA-F]{8}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{4}\\b-[0-9a-fA-F]{12}")
@@ -2530,7 +2531,7 @@ class BookingTest : IntegrationTestBase() {
 
         assertPublishedSNSEvent(
           booking,
-          "accommodation.cas3.person.arrived",
+          DomainEventType.CAS3_PERSON_ARRIVED,
           "Someone has arrived at a Transitional Accommodation premises for their booking",
           "http://api/events/cas3/person-arrived",
         )
@@ -2602,7 +2603,7 @@ class BookingTest : IntegrationTestBase() {
 
         assertPublishedSNSEvent(
           booking,
-          "accommodation.cas3.person.arrived.updated",
+          DomainEventType.CAS3_PERSON_ARRIVED_UPDATED,
           "Someone has changed arrival date at a Transitional Accommodation premises for their booking",
           "http://api/events/cas3/person-arrived-updated",
         )
@@ -3291,7 +3292,7 @@ class BookingTest : IntegrationTestBase() {
 
       assertPublishedSNSEvent(
         booking,
-        "accommodation.cas3.booking.cancelled.updated",
+        DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED,
         "A cancelled booking for a Transitional Accommodation premises has been updated",
         "http://api/events/cas3/booking-cancelled-updated",
       )
@@ -3339,7 +3340,7 @@ class BookingTest : IntegrationTestBase() {
 
       assertPublishedSNSEvent(
         booking,
-        "accommodation.cas3.booking.cancelled",
+        DomainEventType.CAS3_BOOKING_CANCELLED,
         "A booking for a Transitional Accommodation premises has been cancelled",
         "http://api/events/cas3/booking-cancelled",
       )
@@ -3413,7 +3414,7 @@ class BookingTest : IntegrationTestBase() {
 
         assertPublishedSNSEvent(
           booking,
-          "accommodation.cas3.booking.cancelled.updated",
+          DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED,
           "A cancelled booking for a Transitional Accommodation premises has been updated",
           "http://api/events/cas3/booking-cancelled-updated",
         )
@@ -3489,7 +3490,7 @@ class BookingTest : IntegrationTestBase() {
 
         assertPublishedSNSEvent(
           booking,
-          "accommodation.cas3.booking.cancelled.updated",
+          DomainEventType.CAS3_BOOKING_CANCELLED_UPDATED,
           "A cancelled booking for a Transitional Accommodation premises has been updated",
           "http://api/events/cas3/booking-cancelled-updated",
         )
@@ -4334,7 +4335,7 @@ class BookingTest : IntegrationTestBase() {
 
         assertPublishedSNSEvent(
           booking,
-          "accommodation.cas3.person.departed.updated",
+          DomainEventType.CAS3_PERSON_DEPARTURE_UPDATED,
           "Person has updated departure date of Transitional Accommodation premises",
           "http://api/events/cas3/person-departure-updated",
         )
@@ -4366,7 +4367,7 @@ class BookingTest : IntegrationTestBase() {
         )
         assertPublishedSNSEvent(
           booking,
-          "accommodation.cas3.person.departed",
+          DomainEventType.CAS3_PERSON_DEPARTED,
           "Someone has left a Transitional Accommodation premises",
           "http://api/events/cas3/person-departed",
         )
@@ -4467,7 +4468,7 @@ class BookingTest : IntegrationTestBase() {
 
   private fun assertPublishedSNSEvent(
     booking: BookingEntity,
-    eventType: String,
+    eventType: DomainEventType,
     eventDescription: String,
     detailUrl: String,
   ) {

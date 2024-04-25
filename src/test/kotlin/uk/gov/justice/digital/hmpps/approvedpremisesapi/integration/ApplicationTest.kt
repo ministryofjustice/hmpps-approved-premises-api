@@ -2077,8 +2077,8 @@ class ApplicationTest : IntegrationTestBase() {
             assertThat(persistedAssessmentAllocatedEvent).isNotNull
             assertThat(persistedAssessmentAllocatedEvent!!.crn).isEqualTo(offenderDetails.otherIds.crn)
 
-            snsDomainEventListener.blockForMessage("approved-premises.assessment.allocated")
-            val emittedMessage = snsDomainEventListener.blockForMessage("approved-premises.application.submitted")
+            snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED)
+            val emittedMessage = snsDomainEventListener.blockForMessage(DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED)
 
             val emittedMessageDescription = "An application has been submitted for an Approved Premises placement"
             assertThat(emittedMessage.description).isEqualTo(emittedMessageDescription)

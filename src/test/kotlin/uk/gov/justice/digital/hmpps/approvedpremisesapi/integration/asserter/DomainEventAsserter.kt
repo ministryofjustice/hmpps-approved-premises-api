@@ -13,7 +13,7 @@ class DomainEventAsserter(
   val domainEventRepository: DomainEventRepository,
 ) {
 
-  fun blockForEmittedDomainEvent(eventType: String) = snsDomainEventListener.blockForMessage(eventType)
+  fun blockForEmittedDomainEvent(eventType: DomainEventType) = snsDomainEventListener.blockForMessage(eventType)
 
   fun assertDomainEventOfTypeNotStored(applicationId: UUID, eventType: DomainEventType) {
     assertThat(
