@@ -10,6 +10,7 @@ import io.mockk.spyk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -94,682 +95,694 @@ class DomainEventServiceTest {
     every { mockDomainEventUrlConfig.getUrlForDomainEventId(any(), any()) } returns detailUrl
   }
 
-  @ParameterizedTest
-  @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
-  fun `getDomainEvent returns null when event not found`(domainEventType: DomainEventType) {
-    val id = UUID.randomUUID()
-    val method = fetchGetterForType(domainEventType)
+  @Nested
+  inner class GetDomainEvents {
 
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
+    @ParameterizedTest
+    @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+    fun `getDomainEvent returns null when event not found`(domainEventType: DomainEventType) {
+      val id = UUID.randomUUID()
+      val method = fetchGetterForType(domainEventType)
 
-    assertThat(method.invoke(id)).isNull()
+      every { domainEventRespositoryMock.findByIdOrNull(id) } returns null
+
+      assertThat(method.invoke(id)).isNull()
+    }
+
+    @ParameterizedTest
+    @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+    fun `getDomainEvent returns event`(domainEventType: DomainEventType) {
+      val id = UUID.randomUUID()
+      val applicationId = UUID.randomUUID()
+      val occurredAt = OffsetDateTime.now()
+      val crn = "CRN"
+      val nomsNumber = "theNomsNumber"
+
+      val method = fetchGetterForType(domainEventType)
+      val data = createDomainEventOfType(domainEventType)
+
+      every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
+        .withId(id)
+        .withApplicationId(applicationId)
+        .withCrn(crn)
+        .withNomsNumber(nomsNumber)
+        .withType(domainEventType)
+        .withData(objectMapper.writeValueAsString(data))
+        .withOccurredAt(occurredAt)
+        .produce()
+
+      val event = method.invoke(id)
+
+      assertThat(event).isEqualTo(
+        DomainEvent(
+          id = id,
+          applicationId = applicationId,
+          crn = crn,
+          nomsNumber = nomsNumber,
+          occurredAt = occurredAt.toInstant(),
+          data = data,
+        ),
+      )
+    }
+
+    private fun fetchGetterForType(type: DomainEventType): (UUID) -> DomainEvent<out Any>? {
+      return mapOf(
+        DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED to domainEventService::getApplicationSubmittedDomainEvent,
+        DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED to domainEventService::getApplicationAssessedDomainEvent,
+        DomainEventType.APPROVED_PREMISES_BOOKING_MADE to domainEventService::getBookingMadeEvent,
+        DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED to domainEventService::getPersonArrivedEvent,
+        DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED to domainEventService::getPersonNotArrivedEvent,
+        DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED to domainEventService::getPersonDepartedEvent,
+        DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE to domainEventService::getBookingNotMadeEvent,
+        DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED to domainEventService::getBookingCancelledEvent,
+        DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED to domainEventService::getBookingChangedEvent,
+        DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN to domainEventService::getApplicationWithdrawnEvent,
+        DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED to domainEventService::getAssessmentAppealedEvent,
+        DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED to domainEventService::getAssessmentAllocatedEvent,
+        DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN to domainEventService::getPlacementApplicationWithdrawnEvent,
+        DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED to domainEventService::getPlacementApplicationAllocatedEvent,
+        DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN to domainEventService::getMatchRequestWithdrawnEvent,
+        DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED to domainEventService::getRequestForPlacementCreatedEvent,
+        DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED to domainEventService::getFurtherInformationRequestMadeEvent,
+      )[type]!!
+    }
   }
 
-  @ParameterizedTest
-  @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
-  fun `getDomainEvent returns event`(domainEventType: DomainEventType) {
-    val id = UUID.randomUUID()
-    val applicationId = UUID.randomUUID()
-    val occurredAt = OffsetDateTime.now()
-    val crn = "CRN"
-    val nomsNumber = "theNomsNumber"
+  @Nested
+  inner class SaveAndEmit {
 
-    val method = fetchGetterForType(domainEventType)
-    val data = createDomainEventOfType(domainEventType)
+    @ParameterizedTest
+    @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+    fun `saveAndEmit persists event and emits event to SNS`(domainEventType: DomainEventType) {
+      val id = UUID.randomUUID()
+      val applicationId = UUID.randomUUID()
+      val bookingId = UUID.randomUUID()
+      val crn = "CRN"
+      val nomsNumber = "theNomsNumber"
+      val occurredAt = Instant.now()
+      val data = createDomainEventOfType(domainEventType)
 
-    every { domainEventRespositoryMock.findByIdOrNull(id) } returns DomainEventEntityFactory()
-      .withId(id)
-      .withApplicationId(applicationId)
-      .withCrn(crn)
-      .withNomsNumber(nomsNumber)
-      .withType(domainEventType)
-      .withData(objectMapper.writeValueAsString(data))
-      .withOccurredAt(occurredAt)
-      .produce()
+      every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
 
-    val event = method.invoke(id)
-
-    assertThat(event).isEqualTo(
-      DomainEvent(
+      val domainEventToSave = DomainEvent(
         id = id,
         applicationId = applicationId,
         crn = crn,
         nomsNumber = nomsNumber,
-        occurredAt = occurredAt.toInstant(),
+        occurredAt = occurredAt,
         data = data,
-      ),
-    )
-  }
-
-  @ParameterizedTest
-  @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
-  fun `saveAndEmit persists event and emits event to SNS`(domainEventType: DomainEventType) {
-    val id = UUID.randomUUID()
-    val applicationId = UUID.randomUUID()
-    val bookingId = UUID.randomUUID()
-    val crn = "CRN"
-    val nomsNumber = "theNomsNumber"
-    val occurredAt = Instant.now()
-    val data = createDomainEventOfType(domainEventType)
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      nomsNumber = nomsNumber,
-      occurredAt = occurredAt,
-      data = data,
-      bookingId = bookingId,
-    )
-
-    every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
-
-    domainEventService.saveAndEmit(domainEventToSave, domainEventType, true)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        withArg {
-          assertThat(it.id).isEqualTo(id)
-          assertThat(it.type).isEqualTo(domainEventType)
-          assertThat(it.crn).isEqualTo(crn)
-          assertThat(it.nomsNumber).isEqualTo(nomsNumber)
-          assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
-          assertThat(it.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data))
-          assertThat(it.triggeredByUserId).isEqualTo(user.id)
-          assertThat(it.bookingId).isEqualTo(bookingId)
-        },
+        bookingId = bookingId,
       )
-    }
 
-    verify(exactly = 1) {
-      domainEventWorkerMock.emitEvent(
-        match {
-          it.eventType == domainEventType.typeName &&
-            it.version == 1 &&
-            it.description == domainEventType.typeDescription &&
-            it.detailUrl == detailUrl &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.additionalInformation.applicationId == applicationId &&
-            it.personReference.identifiers.any { it.type == "CRN" && it.value == crn } &&
-            it.personReference.identifiers.any { it.type == "NOMS" && it.value == nomsNumber }
-        },
-        domainEventToSave.id,
-      )
-    }
+      every { domainEventWorkerMock.emitEvent(any(), any()) } returns Unit
 
-    verify(exactly = 1) {
-      mockDomainEventUrlConfig.getUrlForDomainEventId(domainEventType, domainEventToSave.id)
-    }
-  }
-
-  @ParameterizedTest
-  @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
-  fun `saveAndEmit persists event and does not emit event if emit is false`(domainEventType: DomainEventType) {
-    val id = UUID.randomUUID()
-    val applicationId = UUID.randomUUID()
-    val bookingId = UUID.randomUUID()
-    val crn = "CRN"
-    val nomsNumber = "123"
-    val occurredAt = Instant.now()
-    val data = createDomainEventOfType(domainEventType)
-
-    every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      nomsNumber = nomsNumber,
-      occurredAt = occurredAt,
-      data = data,
-      bookingId = bookingId,
-    )
-
-    domainEventService.saveAndEmit(domainEventToSave, domainEventType, false)
-
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        withArg {
-          assertThat(it.id).isEqualTo(id)
-          assertThat(it.type).isEqualTo(domainEventType)
-          assertThat(it.crn).isEqualTo(crn)
-          assertThat(it.nomsNumber).isEqualTo(nomsNumber)
-          assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
-          assertThat(it.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data))
-          assertThat(it.triggeredByUserId).isEqualTo(user.id)
-          assertThat(it.bookingId).isEqualTo(bookingId)
-        },
-      )
-    }
-
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
-    }
-  }
-
-  @ParameterizedTest
-  @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
-  fun `saveAndEmit does not emit event to SNS if event fails to persist to database`(domainEventType: DomainEventType) {
-    val id = UUID.randomUUID()
-    val applicationId = UUID.randomUUID()
-    val bookingId = UUID.randomUUID()
-    val crn = "CRN"
-    val nomsNumber = "123"
-    val occurredAt = Instant.now()
-    val data = createDomainEventOfType(domainEventType)
-
-    every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
-
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      nomsNumber = nomsNumber,
-      occurredAt = occurredAt,
-      data = data,
-      bookingId = bookingId,
-    )
-
-    try {
       domainEventService.saveAndEmit(domainEventToSave, domainEventType, true)
-    } catch (_: Exception) {
+
+      verify(exactly = 1) {
+        domainEventRespositoryMock.save(
+          withArg {
+            assertThat(it.id).isEqualTo(id)
+            assertThat(it.type).isEqualTo(domainEventType)
+            assertThat(it.crn).isEqualTo(crn)
+            assertThat(it.nomsNumber).isEqualTo(nomsNumber)
+            assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
+            assertThat(it.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data))
+            assertThat(it.triggeredByUserId).isEqualTo(user.id)
+            assertThat(it.bookingId).isEqualTo(bookingId)
+          },
+        )
+      }
+
+      verify(exactly = 1) {
+        domainEventWorkerMock.emitEvent(
+          match {
+            it.eventType == domainEventType.typeName &&
+              it.version == 1 &&
+              it.description == domainEventType.typeDescription &&
+              it.detailUrl == detailUrl &&
+              it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+              it.additionalInformation.applicationId == applicationId &&
+              it.personReference.identifiers.any { it.type == "CRN" && it.value == crn } &&
+              it.personReference.identifiers.any { it.type == "NOMS" && it.value == nomsNumber }
+          },
+          domainEventToSave.id,
+        )
+      }
+
+      verify(exactly = 1) {
+        mockDomainEventUrlConfig.getUrlForDomainEventId(domainEventType, domainEventToSave.id)
+      }
     }
 
-    verify(exactly = 1) {
-      domainEventRespositoryMock.save(
-        withArg {
-          it.id == domainEventToSave.id &&
-            it.type == domainEventType &&
-            it.crn == crn &&
-            it.nomsNumber == nomsNumber &&
-            it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
-            it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
-            it.triggeredByUserId == user.id &&
-            it.bookingId == bookingId
-        },
+    @ParameterizedTest
+    @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+    fun `saveAndEmit persists event and does not emit event if emit is false`(domainEventType: DomainEventType) {
+      val id = UUID.randomUUID()
+      val applicationId = UUID.randomUUID()
+      val bookingId = UUID.randomUUID()
+      val crn = "CRN"
+      val nomsNumber = "123"
+      val occurredAt = Instant.now()
+      val data = createDomainEventOfType(domainEventType)
+
+      every { domainEventRespositoryMock.save(any()) } answers { it.invocation.args[0] as DomainEventEntity }
+
+      val domainEventToSave = DomainEvent(
+        id = id,
+        applicationId = applicationId,
+        crn = crn,
+        nomsNumber = nomsNumber,
+        occurredAt = occurredAt,
+        data = data,
+        bookingId = bookingId,
       )
+
+      domainEventService.saveAndEmit(domainEventToSave, domainEventType, false)
+
+      verify(exactly = 1) {
+        domainEventRespositoryMock.save(
+          withArg {
+            assertThat(it.id).isEqualTo(id)
+            assertThat(it.type).isEqualTo(domainEventType)
+            assertThat(it.crn).isEqualTo(crn)
+            assertThat(it.nomsNumber).isEqualTo(nomsNumber)
+            assertThat(it.occurredAt.toInstant()).isEqualTo(occurredAt)
+            assertThat(it.data).isEqualTo(objectMapper.writeValueAsString(domainEventToSave.data))
+            assertThat(it.triggeredByUserId).isEqualTo(user.id)
+            assertThat(it.bookingId).isEqualTo(bookingId)
+          },
+        )
+      }
+
+      verify(exactly = 0) {
+        domainEventWorkerMock.emitEvent(any(), any())
+      }
     }
 
-    verify(exactly = 0) {
-      domainEventWorkerMock.emitEvent(any(), any())
+    @ParameterizedTest
+    @EnumSource(DomainEventType::class, names = ["APPROVED_PREMISES_.+"], mode = EnumSource.Mode.MATCH_ANY)
+    fun `saveAndEmit does not emit event to SNS if event fails to persist to database`(domainEventType: DomainEventType) {
+      val id = UUID.randomUUID()
+      val applicationId = UUID.randomUUID()
+      val bookingId = UUID.randomUUID()
+      val crn = "CRN"
+      val nomsNumber = "123"
+      val occurredAt = Instant.now()
+      val data = createDomainEventOfType(domainEventType)
+
+      every { domainEventRespositoryMock.save(any()) } throws RuntimeException("A database exception")
+
+      val domainEventToSave = DomainEvent(
+        id = id,
+        applicationId = applicationId,
+        crn = crn,
+        nomsNumber = nomsNumber,
+        occurredAt = occurredAt,
+        data = data,
+        bookingId = bookingId,
+      )
+
+      try {
+        domainEventService.saveAndEmit(domainEventToSave, domainEventType, true)
+      } catch (_: Exception) {
+      }
+
+      verify(exactly = 1) {
+        domainEventRespositoryMock.save(
+          withArg {
+            it.id == domainEventToSave.id &&
+              it.type == domainEventType &&
+              it.crn == crn &&
+              it.nomsNumber == nomsNumber &&
+              it.occurredAt.toInstant() == domainEventToSave.occurredAt &&
+              it.data == objectMapper.writeValueAsString(domainEventToSave.data) &&
+              it.triggeredByUserId == user.id &&
+              it.bookingId == bookingId
+          },
+        )
+      }
+
+      verify(exactly = 0) {
+        domainEventWorkerMock.emitEvent(any(), any())
+      }
     }
   }
 
-  @Test
-  fun `saveApplicationSubmittedDomainEvent sends correct arguments to saveAndEmit`() {
-    val id = UUID.randomUUID()
+  @Nested
+  inner class SaveDomainEvents {
 
-    val eventDetails = ApplicationSubmittedFactory().produce()
-    val domainEventEnvelope = mockk<ApplicationSubmittedEnvelope>()
-    val domainEvent = mockk<DomainEvent<ApplicationSubmittedEnvelope>>()
+    @Test
+    fun `saveApplicationSubmittedDomainEvent sends correct arguments to saveAndEmit`() {
+      val id = UUID.randomUUID()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      val eventDetails = ApplicationSubmittedFactory().produce()
+      val domainEventEnvelope = mockk<ApplicationSubmittedEnvelope>()
+      val domainEvent = mockk<DomainEvent<ApplicationSubmittedEnvelope>>()
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    domainEventServiceSpy.saveApplicationSubmittedDomainEvent(domainEvent)
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
-      )
+      domainEventServiceSpy.saveApplicationSubmittedDomainEvent(domainEvent)
+
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
+        )
+      }
     }
-  }
 
-  @Test
-  fun `saveApplicationAssessedDomainEvent sends correct arguments to saveAndEmit`() {
-    val id = UUID.randomUUID()
+    @Test
+    fun `saveApplicationAssessedDomainEvent sends correct arguments to saveAndEmit`() {
+      val id = UUID.randomUUID()
 
-    val eventDetails = ApplicationAssessedFactory().produce()
-    val domainEventEnvelope = mockk<ApplicationAssessedEnvelope>()
-    val domainEvent = mockk<DomainEvent<ApplicationAssessedEnvelope>>()
+      val eventDetails = ApplicationAssessedFactory().produce()
+      val domainEventEnvelope = mockk<ApplicationAssessedEnvelope>()
+      val domainEvent = mockk<DomainEvent<ApplicationAssessedEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
 
-    domainEventServiceSpy.saveApplicationAssessedDomainEvent(domainEvent)
+      domainEventServiceSpy.saveApplicationAssessedDomainEvent(domainEvent)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
+        )
+      }
     }
-  }
 
-  @Test
-  fun `saveBookingMadeDomainEvent sends correct arguments to saveAndEmit`() {
-    val id = UUID.randomUUID()
+    @Test
+    fun `saveBookingMadeDomainEvent sends correct arguments to saveAndEmit`() {
+      val id = UUID.randomUUID()
 
-    val eventDetails = BookingMadeFactory().produce()
-    val domainEventEnvelope = mockk<BookingMadeEnvelope>()
-    val domainEvent = mockk<DomainEvent<BookingMadeEnvelope>>()
+      val eventDetails = BookingMadeFactory().produce()
+      val domainEventEnvelope = mockk<BookingMadeEnvelope>()
+      val domainEvent = mockk<DomainEvent<BookingMadeEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
 
-    domainEventServiceSpy.saveBookingMadeDomainEvent(domainEvent)
+      domainEventServiceSpy.saveBookingMadeDomainEvent(domainEvent)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
+        )
+      }
     }
-  }
 
-  @ParameterizedTest
-  @ValueSource(booleans = [true, false])
-  fun `savePersonArrivedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
-    val id = UUID.randomUUID()
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `savePersonArrivedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+      val id = UUID.randomUUID()
 
-    val eventDetails = PersonArrivedFactory().produce()
-    val domainEventEnvelope = mockk<PersonArrivedEnvelope>()
-    val domainEvent = mockk<DomainEvent<PersonArrivedEnvelope>>()
+      val eventDetails = PersonArrivedFactory().produce()
+      val domainEventEnvelope = mockk<PersonArrivedEnvelope>()
+      val domainEvent = mockk<DomainEvent<PersonArrivedEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
 
-    domainEventServiceSpy.savePersonArrivedEvent(domainEvent, emit)
+      domainEventServiceSpy.savePersonArrivedEvent(domainEvent, emit)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
-        emit,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
+          emit,
+        )
+      }
     }
-  }
 
-  @ParameterizedTest
-  @ValueSource(booleans = [true, false])
-  fun `savePersonNotArrivedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
-    val id = UUID.randomUUID()
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `savePersonNotArrivedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+      val id = UUID.randomUUID()
 
-    val eventDetails = PersonNotArrivedFactory().produce()
-    val domainEventEnvelope = mockk<PersonNotArrivedEnvelope>()
-    val domainEvent = mockk<DomainEvent<PersonNotArrivedEnvelope>>()
+      val eventDetails = PersonNotArrivedFactory().produce()
+      val domainEventEnvelope = mockk<PersonNotArrivedEnvelope>()
+      val domainEvent = mockk<DomainEvent<PersonNotArrivedEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
 
-    domainEventServiceSpy.savePersonNotArrivedEvent(domainEvent, emit)
+      domainEventServiceSpy.savePersonNotArrivedEvent(domainEvent, emit)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
-        emit,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
+          emit,
+        )
+      }
     }
-  }
 
-  @ParameterizedTest
-  @ValueSource(booleans = [true, false])
-  fun `savePersonDepartedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
-    val id = UUID.randomUUID()
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `savePersonDepartedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+      val id = UUID.randomUUID()
 
-    val eventDetails = PersonDepartedFactory().produce()
-    val domainEventEnvelope = mockk<PersonDepartedEnvelope>()
-    val domainEvent = mockk<DomainEvent<PersonDepartedEnvelope>>()
+      val eventDetails = PersonDepartedFactory().produce()
+      val domainEventEnvelope = mockk<PersonDepartedEnvelope>()
+      val domainEvent = mockk<DomainEvent<PersonDepartedEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
 
-    domainEventServiceSpy.savePersonDepartedEvent(domainEvent, emit)
+      domainEventServiceSpy.savePersonDepartedEvent(domainEvent, emit)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
-        emit,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
+          emit,
+        )
+      }
     }
-  }
 
-  @Test
-  fun `saveBookingNotMadeEvent sends correct arguments to saveAndEmit`() {
-    val id = UUID.randomUUID()
+    @Test
+    fun `saveBookingNotMadeEvent sends correct arguments to saveAndEmit`() {
+      val id = UUID.randomUUID()
 
-    val eventDetails = BookingNotMadeFactory().produce()
-    val domainEventEnvelope = mockk<BookingNotMadeEnvelope>()
-    val domainEvent = mockk<DomainEvent<BookingNotMadeEnvelope>>()
+      val eventDetails = BookingNotMadeFactory().produce()
+      val domainEventEnvelope = mockk<BookingNotMadeEnvelope>()
+      val domainEvent = mockk<DomainEvent<BookingNotMadeEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
 
-    domainEventServiceSpy.saveBookingNotMadeEvent(domainEvent)
+      domainEventServiceSpy.saveBookingNotMadeEvent(domainEvent)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
+        )
+      }
     }
-  }
 
-  @Test
-  fun `saveBookingCancelledEvent sends correct arguments to saveAndEmit`() {
-    val id = UUID.randomUUID()
+    @Test
+    fun `saveBookingCancelledEvent sends correct arguments to saveAndEmit`() {
+      val id = UUID.randomUUID()
 
-    val eventDetails = BookingCancelledFactory().produce()
-    val domainEventEnvelope = mockk<BookingCancelledEnvelope>()
-    val domainEvent = mockk<DomainEvent<BookingCancelledEnvelope>>()
+      val eventDetails = BookingCancelledFactory().produce()
+      val domainEventEnvelope = mockk<BookingCancelledEnvelope>()
+      val domainEvent = mockk<DomainEvent<BookingCancelledEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
 
-    domainEventServiceSpy.saveBookingCancelledEvent(domainEvent)
+      domainEventServiceSpy.saveBookingCancelledEvent(domainEvent)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED,
+        )
+      }
     }
-  }
 
-  @Test
-  fun `saveBookingChangedEvent sends correct arguments to saveAndEmit`() {
-    val id = UUID.randomUUID()
+    @Test
+    fun `saveBookingChangedEvent sends correct arguments to saveAndEmit`() {
+      val id = UUID.randomUUID()
 
-    val eventDetails = BookingChangedFactory().produce()
-    val domainEventEnvelope = mockk<BookingChangedEnvelope>()
-    val domainEvent = mockk<DomainEvent<BookingChangedEnvelope>>()
+      val eventDetails = BookingChangedFactory().produce()
+      val domainEventEnvelope = mockk<BookingChangedEnvelope>()
+      val domainEvent = mockk<DomainEvent<BookingChangedEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
 
-    domainEventServiceSpy.saveBookingChangedEvent(domainEvent)
+      domainEventServiceSpy.saveBookingChangedEvent(domainEvent)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
+        )
+      }
     }
-  }
 
-  @ParameterizedTest
-  @ValueSource(booleans = [true, false])
-  fun `saveApplicationWithdrawnEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
-    val id = UUID.randomUUID()
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `saveApplicationWithdrawnEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+      val id = UUID.randomUUID()
 
-    val eventDetails = ApplicationWithdrawnFactory().produce()
-    val domainEventEnvelope = mockk<ApplicationWithdrawnEnvelope>()
-    val domainEvent = mockk<DomainEvent<ApplicationWithdrawnEnvelope>>()
+      val eventDetails = ApplicationWithdrawnFactory().produce()
+      val domainEventEnvelope = mockk<ApplicationWithdrawnEnvelope>()
+      val domainEvent = mockk<DomainEvent<ApplicationWithdrawnEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
 
-    domainEventServiceSpy.saveApplicationWithdrawnEvent(domainEvent, emit)
+      domainEventServiceSpy.saveApplicationWithdrawnEvent(domainEvent, emit)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
-        emit,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
+          emit,
+        )
+      }
     }
-  }
 
-  @Test
-  fun `saveAssessmentAppealedEvent sends correct arguments to saveAndEmit`() {
-    val id = UUID.randomUUID()
+    @Test
+    fun `saveAssessmentAppealedEvent sends correct arguments to saveAndEmit`() {
+      val id = UUID.randomUUID()
 
-    val eventDetails = AssessmentAppealedFactory().produce()
-    val domainEventEnvelope = mockk<AssessmentAppealedEnvelope>()
-    val domainEvent = mockk<DomainEvent<AssessmentAppealedEnvelope>>()
+      val eventDetails = AssessmentAppealedFactory().produce()
+      val domainEventEnvelope = mockk<AssessmentAppealedEnvelope>()
+      val domainEvent = mockk<DomainEvent<AssessmentAppealedEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
-    domainEventServiceSpy.saveAssessmentAppealedEvent(domainEvent)
+      domainEventServiceSpy.saveAssessmentAppealedEvent(domainEvent)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED,
+        )
+      }
     }
-  }
 
-  @Test
-  fun `savePlacementApplicationWithdrawnEvent sends correct arguments to saveAndEmit`() {
-    val id = UUID.randomUUID()
+    @Test
+    fun `savePlacementApplicationWithdrawnEvent sends correct arguments to saveAndEmit`() {
+      val id = UUID.randomUUID()
 
-    val eventDetails = PlacementApplicationWithdrawnFactory().produce()
-    val domainEventEnvelope = mockk<PlacementApplicationWithdrawnEnvelope>()
-    val domainEvent = mockk<DomainEvent<PlacementApplicationWithdrawnEnvelope>>()
+      val eventDetails = PlacementApplicationWithdrawnFactory().produce()
+      val domainEventEnvelope = mockk<PlacementApplicationWithdrawnEnvelope>()
+      val domainEvent = mockk<DomainEvent<PlacementApplicationWithdrawnEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
-    domainEventServiceSpy.savePlacementApplicationWithdrawnEvent(domainEvent)
+      domainEventServiceSpy.savePlacementApplicationWithdrawnEvent(domainEvent)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
+        )
+      }
     }
-  }
 
-  @Test
-  fun `savePlacementApplicationAllocatedEvent sends correct arguments to saveAndEmit`() {
-    val id = UUID.randomUUID()
+    @Test
+    fun `savePlacementApplicationAllocatedEvent sends correct arguments to saveAndEmit`() {
+      val id = UUID.randomUUID()
 
-    val eventDetails = PlacementApplicationAllocatedFactory().produce()
-    val domainEventEnvelope = mockk<PlacementApplicationAllocatedEnvelope>()
-    val domainEvent = mockk<DomainEvent<PlacementApplicationAllocatedEnvelope>>()
+      val eventDetails = PlacementApplicationAllocatedFactory().produce()
+      val domainEventEnvelope = mockk<PlacementApplicationAllocatedEnvelope>()
+      val domainEvent = mockk<DomainEvent<PlacementApplicationAllocatedEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
-    domainEventServiceSpy.savePlacementApplicationAllocatedEvent(domainEvent)
+      domainEventServiceSpy.savePlacementApplicationAllocatedEvent(domainEvent)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED,
+        )
+      }
     }
-  }
 
-  @Test
-  fun `saveMatchRequestWithdrawnEvent sends correct arguments to saveAndEmit`() {
-    val id = UUID.randomUUID()
+    @Test
+    fun `saveMatchRequestWithdrawnEvent sends correct arguments to saveAndEmit`() {
+      val id = UUID.randomUUID()
 
-    val eventDetails = MatchRequestWithdrawnFactory().produce()
-    val domainEventEnvelope = mockk<MatchRequestWithdrawnEnvelope>()
-    val domainEvent = mockk<DomainEvent<MatchRequestWithdrawnEnvelope>>()
+      val eventDetails = MatchRequestWithdrawnFactory().produce()
+      val domainEventEnvelope = mockk<MatchRequestWithdrawnEnvelope>()
+      val domainEvent = mockk<DomainEvent<MatchRequestWithdrawnEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any()) } returns Unit
 
-    domainEventServiceSpy.saveMatchRequestWithdrawnEvent(domainEvent)
+      domainEventServiceSpy.saveMatchRequestWithdrawnEvent(domainEvent)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
+        )
+      }
     }
-  }
 
-  @ParameterizedTest
-  @ValueSource(booleans = [true, false])
-  fun `saveRequestForPlacementCreatedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
-    val id = UUID.randomUUID()
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `saveRequestForPlacementCreatedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+      val id = UUID.randomUUID()
 
-    val eventDetails = RequestForPlacementCreatedFactory().produce()
-    val domainEventEnvelope = mockk<RequestForPlacementCreatedEnvelope>()
-    val domainEvent = mockk<DomainEvent<RequestForPlacementCreatedEnvelope>>()
+      val eventDetails = RequestForPlacementCreatedFactory().produce()
+      val domainEventEnvelope = mockk<RequestForPlacementCreatedEnvelope>()
+      val domainEvent = mockk<DomainEvent<RequestForPlacementCreatedEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
 
-    domainEventServiceSpy.saveRequestForPlacementCreatedEvent(domainEvent, emit)
+      domainEventServiceSpy.saveRequestForPlacementCreatedEvent(domainEvent, emit)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
-        emit,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
+          emit,
+        )
+      }
     }
-  }
 
-  @Test
-  fun `saveAssessmentAllocatedEvent sends correct arguments to saveAndEmit`() {
-    val id = UUID.randomUUID()
+    @Test
+    fun `saveAssessmentAllocatedEvent sends correct arguments to saveAndEmit`() {
+      val id = UUID.randomUUID()
 
-    val eventDetails = AssessmentAllocatedFactory().produce()
-    val domainEventEnvelope = mockk<AssessmentAllocatedEnvelope>()
-    val domainEvent = mockk<DomainEvent<AssessmentAllocatedEnvelope>>()
+      val eventDetails = AssessmentAllocatedFactory().produce()
+      val domainEventEnvelope = mockk<AssessmentAllocatedEnvelope>()
+      val domainEvent = mockk<DomainEvent<AssessmentAllocatedEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), any()) } returns Unit
 
-    domainEventServiceSpy.saveAssessmentAllocatedEvent(domainEvent)
+      domainEventServiceSpy.saveAssessmentAllocatedEvent(domainEvent)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
+        )
+      }
     }
-  }
 
-  @ParameterizedTest
-  @ValueSource(booleans = [true, false])
-  fun `saveFurtherInformationRequestedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
-    val id = UUID.randomUUID()
+    @ParameterizedTest
+    @ValueSource(booleans = [true, false])
+    fun `saveFurtherInformationRequestedEvent sends correct arguments to saveAndEmit`(emit: Boolean) {
+      val id = UUID.randomUUID()
 
-    val eventDetails = FurtherInformationRequestedFactory().produce()
-    val domainEventEnvelope = mockk<FurtherInformationRequestedEnvelope>()
-    val domainEvent = mockk<DomainEvent<FurtherInformationRequestedEnvelope>>()
+      val eventDetails = FurtherInformationRequestedFactory().produce()
+      val domainEventEnvelope = mockk<FurtherInformationRequestedEnvelope>()
+      val domainEvent = mockk<DomainEvent<FurtherInformationRequestedEnvelope>>()
 
-    every { domainEvent.id } returns id
-    every { domainEvent.data } returns domainEventEnvelope
-    every { domainEventEnvelope.eventDetails } returns eventDetails
+      every { domainEvent.id } returns id
+      every { domainEvent.data } returns domainEventEnvelope
+      every { domainEventEnvelope.eventDetails } returns eventDetails
 
-    val domainEventServiceSpy = spyk(domainEventService)
+      val domainEventServiceSpy = spyk(domainEventService)
 
-    every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
+      every { domainEventServiceSpy.saveAndEmit(any(), any(), emit) } returns Unit
 
-    domainEventServiceSpy.saveFurtherInformationRequestedEvent(domainEvent, emit)
+      domainEventServiceSpy.saveFurtherInformationRequestedEvent(domainEvent, emit)
 
-    verify {
-      domainEventServiceSpy.saveAndEmit(
-        domainEvent = domainEvent,
-        eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
-        emit = emit,
-      )
+      verify {
+        domainEventServiceSpy.saveAndEmit(
+          domainEvent = domainEvent,
+          eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
+          emit = emit,
+        )
+      }
     }
-  }
-
-  private fun fetchGetterForType(type: DomainEventType): (UUID) -> DomainEvent<out Any>? {
-    return mapOf(
-      DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED to domainEventService::getApplicationSubmittedDomainEvent,
-      DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED to domainEventService::getApplicationAssessedDomainEvent,
-      DomainEventType.APPROVED_PREMISES_BOOKING_MADE to domainEventService::getBookingMadeEvent,
-      DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED to domainEventService::getPersonArrivedEvent,
-      DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED to domainEventService::getPersonNotArrivedEvent,
-      DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED to domainEventService::getPersonDepartedEvent,
-      DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE to domainEventService::getBookingNotMadeEvent,
-      DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED to domainEventService::getBookingCancelledEvent,
-      DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED to domainEventService::getBookingChangedEvent,
-      DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN to domainEventService::getApplicationWithdrawnEvent,
-      DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED to domainEventService::getAssessmentAppealedEvent,
-      DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED to domainEventService::getAssessmentAllocatedEvent,
-      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN to domainEventService::getPlacementApplicationWithdrawnEvent,
-      DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED to domainEventService::getPlacementApplicationAllocatedEvent,
-      DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN to domainEventService::getMatchRequestWithdrawnEvent,
-      DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED to domainEventService::getRequestForPlacementCreatedEvent,
-      DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED to domainEventService::getFurtherInformationRequestMadeEvent,
-    )[type]!!
   }
 }
