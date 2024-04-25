@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.jms.annotation.JmsListener
 import org.springframework.stereotype.Service
 import org.springframework.test.context.event.annotation.BeforeTestMethod
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.DomainEventType
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import java.time.Duration
 
@@ -34,6 +35,8 @@ class SnsDomainEventListener(private val objectMapper: ObjectMapper) {
 
   @BeforeTestMethod
   fun clearMessages() = messages.clear()
+
+  fun blockForMessage(eventType: DomainEventType): SnsEvent = blockForMessage(eventType.typeName)
 
   fun blockForMessage(eventType: String): SnsEvent {
     var waitedCount = 0

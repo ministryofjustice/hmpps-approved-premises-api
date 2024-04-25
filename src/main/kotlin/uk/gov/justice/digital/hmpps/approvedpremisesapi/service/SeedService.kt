@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.TemporaryAccommodat
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.UsersSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1ApAreaEmailAddressSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1BookingAdhocPropertySeedJob
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1DomainEventReplaySeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1FurtherInfoBugFixSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1RemoveAssessmentDetailsSeedJob
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.cas1.Cas1WithdrawPlacementRequestSeedJob
@@ -251,6 +252,11 @@ class SeedService(
           filename,
           applicationContext.getBean(PlacementRequestService::class.java),
           applicationContext.getBean(ApplicationService::class.java),
+        )
+
+        SeedFileType.approvedPremisesReplayDomainEvents -> Cas1DomainEventReplaySeedJob(
+          filename,
+          applicationContext.getBean(DomainEventService::class.java),
         )
       }
 
