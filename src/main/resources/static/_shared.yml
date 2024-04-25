@@ -4384,6 +4384,24 @@ components:
       required:
         - id
         - name
+    ReferralRejectionReason:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: There was not enough time to place them
+        serviceScope:
+          type: string
+        isActive:
+          type: boolean
+      required:
+        - id
+        - name
+        - serviceScope
+        - isActive
     CacheType:
       type: string
       enum:

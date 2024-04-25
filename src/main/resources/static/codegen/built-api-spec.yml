@@ -2879,6 +2879,33 @@ paths:
           $ref: '#/components/responses/403Response'
         500:
           $ref: '#/components/responses/500Response'
+  /reference-data/referral-rejection-reasons:
+    get:
+      tags:
+        - Reference Data
+      summary: Lists all referral rejection reasons
+      parameters:
+        - name: X-Service-Name
+          in: header
+          required: false
+          description: If given, only referral rejection reasons for this service will be returned
+          schema:
+            $ref: '#/components/schemas/ServiceName'
+      responses:
+        200:
+          description: successful operation
+          content:
+            'application/json':
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ReferralRejectionReason'
+        401:
+          $ref: '#/components/responses/401Response'
+        403:
+          $ref: '#/components/responses/403Response'
+        500:
+          $ref: '#/components/responses/500Response'
   /tasks:
     get:
       tags:
@@ -8991,6 +9018,24 @@ components:
       required:
         - id
         - name
+    ReferralRejectionReason:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: There was not enough time to place them
+        serviceScope:
+          type: string
+        isActive:
+          type: boolean
+      required:
+        - id
+        - name
+        - serviceScope
+        - isActive
     CacheType:
       type: string
       enum:

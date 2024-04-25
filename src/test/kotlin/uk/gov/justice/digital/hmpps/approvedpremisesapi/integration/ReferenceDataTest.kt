@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.MoveOnCatego
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.NonArrivalReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationDeliveryUnitTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ProbationRegionTransformer
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.ReferralRejectionReasonTransformer
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.transformer.StaffMemberTransformer
 import java.util.UUID
 
@@ -55,6 +56,9 @@ class ReferenceDataTest : IntegrationTestBase() {
 
   @Autowired
   lateinit var probationDeliveryUnitTransformer: ProbationDeliveryUnitTransformer
+
+  @Autowired
+  lateinit var referralRejectionReasonTransformer: ReferralRejectionReasonTransformer
 
   @Test
   fun `Get Characteristics returns 200 with correct body`() {
@@ -783,6 +787,54 @@ class ReferenceDataTest : IntegrationTestBase() {
     webTestClient.get()
       .uri("/reference-data/probation-delivery-units?probationRegionId=$probationRegionId")
       .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Referral Rejection Reason returns 200 with correct body`() {
+    referralRejectionReasonRepository.deleteAll()
+
+    val referralRejectionReasons = referralRejectionReasonEntityFactory.produceAndPersistMultiple(10)
+    val expectedJson = objectMapper.writeValueAsString(
+      referralRejectionReasons.map(referralRejectionReasonTransformer::transformJpaToApi),
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/referral-rejection-reasons")
+      .header("Authorization", "Bearer $jwt")
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody()
+      .json(expectedJson)
+  }
+
+  @Test
+  fun `Get Referral Rejection Reason for only temporary accommodation returns 200 with correct body`() {
+    referralRejectionReasonRepository.deleteAll()
+
+    referralRejectionReasonEntityFactory.produceAndPersistMultiple(10)
+
+    val expectedReferralRejectionReasons = referralRejectionReasonEntityFactory.produceAndPersistMultiple(10) {
+      withServiceScope(ServiceName.temporaryAccommodation.value)
+    }
+
+    val expectedJson = objectMapper.writeValueAsString(
+      expectedReferralRejectionReasons.map(referralRejectionReasonTransformer::transformJpaToApi),
+    )
+
+    val jwt = jwtAuthHelper.createValidAuthorizationCodeJwt()
+
+    webTestClient.get()
+      .uri("/reference-data/referral-rejection-reasons")
+      .header("Authorization", "Bearer $jwt")
+      .header("X-Service-Name", "temporary-accommodation")
       .exchange()
       .expectStatus()
       .isOk
