@@ -167,6 +167,7 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
     startAssessment()
 
     requestFurtherInformation()
+    updateAssessment()
     assertApplicationStatus(ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION)
 
     updateFurtherInformation()
@@ -278,6 +279,8 @@ class ApplicationStateTest : InitialiseDatabasePerClassTestBase() {
       .expectStatus()
       .isOk
   }
+
+  private fun updateAssessment() = startAssessment()
 
   private fun approveAssessment() {
     val application = realApplicationRepository.findByIdOrNull(applicationId) as ApprovedPremisesApplicationEntity

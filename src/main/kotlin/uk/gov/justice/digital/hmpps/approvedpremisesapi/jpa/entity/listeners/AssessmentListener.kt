@@ -23,7 +23,9 @@ class AssessmentListener {
 
   @PreUpdate
   fun preUpdate(assessment: ApprovedPremisesAssessmentEntity) {
-    if (assessment.decision == null && assessment.data != null) {
+    if ((assessment.application as ApprovedPremisesApplicationEntity).status == ApprovedPremisesApplicationStatus.REQUESTED_FURTHER_INFORMATION) {
+      return
+    } else if (assessment.decision == null && assessment.data != null) {
       (assessment.application as ApprovedPremisesApplicationEntity).status =
         ApprovedPremisesApplicationStatus.ASSESSMENT_IN_PROGRESS
     } else if (assessment.decision == AssessmentDecision.ACCEPTED) {
