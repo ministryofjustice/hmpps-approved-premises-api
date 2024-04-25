@@ -205,7 +205,7 @@ class DomainEventService(
     eventType: DomainEventType,
     emit: Boolean = true,
   ) {
-    domainEventRepository.save(
+    val domainEventEntity = domainEventRepository.save(
       DomainEventEntity(
         id = domainEvent.id,
         applicationId = domainEvent.applicationId,
@@ -223,23 +223,23 @@ class DomainEventService(
     )
 
     if (emit) {
-      emit(eventType, domainEvent, domainEvent.nomsNumber)
+      emit(domainEventEntity)
     }
   }
 
   private fun emit(
-    eventType: DomainEventType,
-    domainEvent: DomainEvent<*>,
-    nomsNumber: String?,
+    domainEvent: DomainEventEntity,
   ) {
     if (!emitDomainEventsEnabled) {
       log.info("Not emitting SNS event for domain event because domain-events.cas1.emit-enabled is not enabled")
       return
     }
 
+    val eventType = domainEvent.type
     val typeName = eventType.typeName
     val typeDescription = eventType.typeDescription
     val crn = domainEvent.crn
+    val nomsNumber = domainEvent.nomsNumber ?: "Unknown NOMS Number"
     val detailUrl = domainEventUrlConfig.getUrlForDomainEventId(eventType, domainEvent.id)
 
     domainEventWorker.emitEvent(
@@ -248,14 +248,14 @@ class DomainEventService(
         version = 1,
         description = typeDescription,
         detailUrl = detailUrl,
-        occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
+        occurredAt = domainEvent.occurredAt,
         additionalInformation = SnsEventAdditionalInformation(
           applicationId = domainEvent.applicationId,
         ),
         personReference = SnsEventPersonReferenceCollection(
           identifiers = listOf(
             SnsEventPersonReference("CRN", crn),
-            SnsEventPersonReference("NOMS", nomsNumber ?: "Unknown NOMS Number"),
+            SnsEventPersonReference("NOMS", nomsNumber),
           ),
         ),
       ),
