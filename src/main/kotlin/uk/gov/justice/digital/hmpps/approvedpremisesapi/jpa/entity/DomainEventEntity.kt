@@ -86,6 +86,7 @@ data class DomainEventEntity(
   val data: String,
   val service: String,
   val triggeredByUserId: UUID?,
+  val nomsNumber: String?,
 ) {
   final inline fun <reified T> toDomainEvent(objectMapper: ObjectMapper): DomainEvent<T> {
     val data = when {
@@ -132,6 +133,7 @@ data class DomainEventEntity(
       id = this.id,
       applicationId = this.applicationId,
       crn = this.crn,
+      nomsNumber = this.nomsNumber,
       occurredAt = this.occurredAt.toInstant(),
       data = data,
     )

@@ -64,6 +64,7 @@ class DomainEventService(
       crn = domainEventEntity.crn,
       occurredAt = domainEventEntity.occurredAt.toInstant(),
       data = data,
+      nomsNumber = domainEventEntity.nomsNumber,
     )
   }
 
@@ -97,6 +98,7 @@ class DomainEventService(
         assessmentId = domainEvent.assessmentId,
         bookingId = domainEvent.bookingId,
         crn = domainEvent.crn,
+        nomsNumber = domainEvent.nomsNumber,
         type = enumTypeFromDataType(domainEvent.data::class),
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
         createdAt = OffsetDateTime.now(),

@@ -76,8 +76,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_SUBMITTED,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
   @Transactional
@@ -85,8 +83,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_ASSESSED,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
   @Transactional
@@ -94,9 +90,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_BOOKING_MADE,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
-      bookingId = domainEvent.bookingId,
     )
 
   @Transactional
@@ -104,9 +97,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_PERSON_ARRIVED,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
-      bookingId = domainEvent.bookingId,
       emit = emit,
     )
 
@@ -115,9 +105,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_PERSON_NOT_ARRIVED,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
-      bookingId = domainEvent.bookingId,
       emit = emit,
     )
 
@@ -126,9 +113,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_PERSON_DEPARTED,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
-      bookingId = domainEvent.bookingId,
       emit = emit,
     )
 
@@ -137,8 +121,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_BOOKING_NOT_MADE,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
   @Transactional
@@ -146,9 +128,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CANCELLED,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
-      bookingId = domainEvent.bookingId,
     )
 
   @Transactional
@@ -156,9 +135,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_BOOKING_CHANGED,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
-      bookingId = domainEvent.bookingId,
     )
 
   @Transactional
@@ -166,8 +142,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_APPLICATION_WITHDRAWN,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       emit = emit,
     )
 
@@ -176,8 +150,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_APPEALED,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
   @Transactional
@@ -185,8 +157,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_WITHDRAWN,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
   @Transactional
@@ -194,8 +164,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_PLACEMENT_APPLICATION_ALLOCATED,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
   @Transactional
@@ -203,8 +171,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_MATCH_REQUEST_WITHDRAWN,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
   @Transactional
@@ -212,8 +178,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_REQUEST_FOR_PLACEMENT_CREATED,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       emit = emit,
     )
 
@@ -222,8 +186,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_ALLOCATED,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
     )
 
   @Transactional
@@ -231,8 +193,6 @@ class DomainEventService(
     saveAndEmit(
       domainEvent = domainEvent,
       eventType = DomainEventType.APPROVED_PREMISES_ASSESSMENT_INFO_REQUESTED,
-      crn = domainEvent.data.eventDetails.personReference.crn,
-      nomsNumber = domainEvent.data.eventDetails.personReference.noms,
       emit = emit,
     )
 
@@ -243,21 +203,14 @@ class DomainEventService(
   fun saveAndEmit(
     domainEvent: DomainEvent<*>,
     eventType: DomainEventType,
-    crn: String,
-    nomsNumber: String,
-    bookingId: UUID? = null,
     emit: Boolean = true,
   ) {
-    val detailUrl = domainEventUrlConfig.getUrlForDomainEventId(eventType, domainEvent.id)
-    val typeName = eventType.typeName
-    val typeDescription = eventType.typeDescription
-
     domainEventRepository.save(
       DomainEventEntity(
         id = domainEvent.id,
         applicationId = domainEvent.applicationId,
         assessmentId = domainEvent.assessmentId,
-        bookingId = bookingId,
+        bookingId = domainEvent.bookingId,
         crn = domainEvent.crn,
         type = eventType,
         occurredAt = domainEvent.occurredAt.atOffset(ZoneOffset.UTC),
@@ -265,17 +218,29 @@ class DomainEventService(
         data = objectMapper.writeValueAsString(domainEvent.data),
         service = "CAS1",
         triggeredByUserId = userService.getUserForRequestOrNull()?.id,
+        nomsNumber = domainEvent.nomsNumber,
       ),
     )
 
-    if (!emit) {
-      return
+    if (emit) {
+      emit(eventType, domainEvent, domainEvent.nomsNumber)
     }
+  }
 
+  private fun emit(
+    eventType: DomainEventType,
+    domainEvent: DomainEvent<*>,
+    nomsNumber: String?,
+  ) {
     if (!emitDomainEventsEnabled) {
       log.info("Not emitting SNS event for domain event because domain-events.cas1.emit-enabled is not enabled")
       return
     }
+
+    val typeName = eventType.typeName
+    val typeDescription = eventType.typeDescription
+    val crn = domainEvent.crn
+    val detailUrl = domainEventUrlConfig.getUrlForDomainEventId(eventType, domainEvent.id)
 
     domainEventWorker.emitEvent(
       SnsEvent(
@@ -290,7 +255,7 @@ class DomainEventService(
         personReference = SnsEventPersonReferenceCollection(
           identifiers = listOf(
             SnsEventPersonReference("CRN", crn),
-            SnsEventPersonReference("NOMS", nomsNumber),
+            SnsEventPersonReference("NOMS", nomsNumber ?: "Unknown NOMS Number"),
           ),
         ),
       ),

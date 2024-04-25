@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmitted
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedSubmittedBy
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.Ldu
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.PersonReference
@@ -83,6 +82,7 @@ class Cas1ApplicationDomainEventServiceTest {
   @Nested
   inner class ApplicationSubmitted {
 
+    @SuppressWarnings("CyclomaticComplexMethod")
     @Test
     fun `applicationSubmitted success`() {
       val situation = SituationOption.bailSentence
@@ -188,10 +188,11 @@ class Cas1ApplicationDomainEventServiceTest {
       verify(exactly = 1) {
         mockDomainEventService.saveApplicationSubmittedDomainEvent(
           match {
-            val data = (it.data as ApplicationSubmittedEnvelope).eventDetails
+            val data = it.data.eventDetails
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
+              it.nomsNumber == offenderDetails.otherIds.nomsNumber &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(
@@ -275,6 +276,7 @@ class Cas1ApplicationDomainEventServiceTest {
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
+              it.nomsNumber == application.nomsNumber &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.personReference == PersonReference(

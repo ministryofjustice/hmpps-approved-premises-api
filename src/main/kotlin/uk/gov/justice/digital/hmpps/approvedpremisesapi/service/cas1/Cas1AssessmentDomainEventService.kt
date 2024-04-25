@@ -49,6 +49,7 @@ class Cas1AssessmentDomainEventService(
         applicationId = assessment.application.id,
         assessmentId = assessment.id,
         crn = assessment.application.crn,
+        nomsNumber = assessment.application.nomsNumber,
         occurredAt = occurredAt,
         data = AssessmentAllocatedEnvelope(
           id = id,
@@ -113,6 +114,7 @@ class Cas1AssessmentDomainEventService(
       applicationId = assessment.application.id,
       assessmentId = assessment.id,
       crn = assessment.application.crn,
+      nomsNumber = assessment.application.nomsNumber,
       occurredAt = occurredAt,
       data = data,
     )

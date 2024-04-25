@@ -599,6 +599,7 @@ class DomainEventDescriberTest {
       id = id,
       applicationId = applicationId,
       crn = "SOME-CRN",
+      nomsNumber = "theNomsNumber",
       occurredAt = Instant.now(),
       data = builder(id),
     )

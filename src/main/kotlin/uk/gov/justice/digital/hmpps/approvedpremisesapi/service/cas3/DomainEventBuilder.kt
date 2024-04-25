@@ -52,6 +52,7 @@ class DomainEventBuilder(
       applicationId = application?.id,
       bookingId = booking.id,
       crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
       occurredAt = cancellation.createdAt.toInstant(),
       data = CAS3BookingCancelledEvent(
         id = domainEventId,
@@ -75,6 +76,7 @@ class DomainEventBuilder(
       applicationId = application?.id,
       bookingId = booking.id,
       crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
       occurredAt = booking.createdAt.toInstant(),
       data = CAS3BookingConfirmedEvent(
         id = domainEventId,
@@ -110,6 +112,7 @@ class DomainEventBuilder(
       applicationId = application?.id,
       bookingId = booking.id,
       crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
       occurredAt = booking.createdAt.toInstant(),
       data = CAS3BookingProvisionallyMadeEvent(
         id = domainEventId,
@@ -146,6 +149,7 @@ class DomainEventBuilder(
       applicationId = application?.id,
       bookingId = booking.id,
       crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
       occurredAt = arrival.arrivalDateTime,
       data = CAS3PersonArrivedEvent(
         id = domainEventId,
@@ -170,6 +174,7 @@ class DomainEventBuilder(
       applicationId = application?.id,
       bookingId = booking.id,
       crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
       occurredAt = departure.dateTime.toInstant(),
       data = CAS3PersonDepartedEvent(
         id = domainEventId,
@@ -190,6 +195,7 @@ class DomainEventBuilder(
       applicationId = application.id,
       bookingId = null,
       crn = application.crn,
+      nomsNumber = application.nomsNumber,
       occurredAt = application.createdAt.toInstant(),
       data = CAS3ReferralSubmittedEvent(
         id = domainEventId,
@@ -221,6 +227,7 @@ class DomainEventBuilder(
       applicationId = application?.id,
       bookingId = booking.id,
       crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
       occurredAt = departure.dateTime.toInstant(),
       data = CAS3PersonDepartureUpdatedEvent(
         id = domainEventId,
@@ -241,6 +248,7 @@ class DomainEventBuilder(
       applicationId = application?.id,
       bookingId = booking.id,
       crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
       occurredAt = cancellation.createdAt.toInstant(),
       data = CAS3BookingCancelledUpdatedEvent(
         id = domainEventId,
@@ -264,6 +272,7 @@ class DomainEventBuilder(
       applicationId = application?.id,
       bookingId = booking.id,
       crn = booking.crn,
+      nomsNumber = booking.nomsNumber,
       occurredAt = arrival.arrivalDateTime,
       data = CAS3PersonArrivedUpdatedEvent(
         id = domainEventId,

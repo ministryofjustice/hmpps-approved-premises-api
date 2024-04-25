@@ -22,6 +22,7 @@ class Cas2DomainEventFactory<T : Cas2Event, D : Any>(
   private var occurredAt: Yielded<Instant> = { Instant.now() }
   private var timestamp: Yielded<Instant> = { Instant.now() }
   private var data: Yielded<D?> = { null }
+  private var nomsNumber: Yielded<String?> = { randomStringUpperCase(8) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -55,6 +56,7 @@ class Cas2DomainEventFactory<T : Cas2Event, D : Any>(
       id = this.id(),
       applicationId = this.applicationId(),
       crn = this.crn(),
+      nomsNumber = this.nomsNumber(),
       occurredAt = this.occurredAt(),
       data = dataConstructor(
         this.data() ?: throw RuntimeException("Must provide event data"),

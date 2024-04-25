@@ -24,6 +24,7 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
   private var data: Yielded<String> = { "{}" }
   private var service: Yielded<String> = { randomOf(listOf("CAS1", "CAS2", "CAS3")) }
   private var triggeredByUserId: Yielded<UUID?> = { null }
+  private var nomsNumber: Yielded<String?> = { randomStringMultiCaseWithNumbers(8) }
 
   fun withId(id: UUID) = apply {
     this.id = { id }
@@ -79,6 +80,10 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     this.triggeredByUserId = { userId }
   }
 
+  fun withNomsNumber(nomsNumber: String?) = apply {
+    this.nomsNumber = { nomsNumber }
+  }
+
   override fun produce(): DomainEventEntity = DomainEventEntity(
     id = this.id(),
     applicationId = this.applicationId(),
@@ -91,5 +96,6 @@ class DomainEventEntityFactory : Factory<DomainEventEntity> {
     data = this.data(),
     service = this.service(),
     triggeredByUserId = this.triggeredByUserId(),
+    nomsNumber = this.nomsNumber(),
   )
 }

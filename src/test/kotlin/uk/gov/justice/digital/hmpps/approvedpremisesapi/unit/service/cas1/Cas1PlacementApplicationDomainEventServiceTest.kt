@@ -111,6 +111,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             assertThat(it.id).isNotNull()
             assertThat(it.applicationId).isEqualTo(application.id)
             assertThat(it.crn).isEqualTo(CRN)
+            assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
             assertThat(it.occurredAt).isWithinTheLastMinute()
 
             val eventDetails = it.data.eventDetails
@@ -190,6 +191,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
             assertThat(it.id).isNotNull()
             assertThat(it.applicationId).isEqualTo(application.id)
             assertThat(it.crn).isEqualTo(CRN)
+            assertThat(it.nomsNumber).isEqualTo(application.nomsNumber)
             assertThat(it.occurredAt).isWithinTheLastMinute()
 
             val eventDetails = it.data.eventDetails
@@ -343,6 +345,7 @@ class Cas1PlacementApplicationDomainEventServiceTest {
 
             it.applicationId == application.id &&
               it.crn == application.crn &&
+              it.nomsNumber == application.nomsNumber &&
               data.applicationId == application.id &&
               data.applicationUrl == "http://frontend/applications/${application.id}" &&
               data.placementApplicationId == placementApplication.id &&

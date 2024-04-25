@@ -30,6 +30,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.util.UUID
 
+@SuppressWarnings("CyclomaticComplexMethod")
 class DomainEventBuilderTest {
   private val domainEventBuilder = DomainEventBuilder(
     applicationUrlTemplate = "http://api/applications/#applicationId",
@@ -86,6 +87,7 @@ class DomainEventBuilderTest {
       it.applicationId == application.id &&
         it.bookingId == booking.id &&
         it.crn == booking.crn &&
+        it.nomsNumber == booking.nomsNumber &&
         data.personReference.crn == booking.crn &&
         data.personReference.noms == booking.nomsNumber &&
         data.bookingId == booking.id &&
@@ -151,6 +153,7 @@ class DomainEventBuilderTest {
       it.applicationId == application.id &&
         it.bookingId == booking.id &&
         it.crn == booking.crn &&
+        it.nomsNumber == booking.nomsNumber &&
         data.personReference.crn == booking.crn &&
         data.personReference.noms == booking.nomsNumber &&
         data.bookingId == booking.id &&
@@ -204,6 +207,7 @@ class DomainEventBuilderTest {
       it.applicationId == application.id &&
         it.bookingId == booking.id &&
         it.crn == booking.crn &&
+        it.nomsNumber == booking.nomsNumber &&
         data.personReference.crn == booking.crn &&
         data.personReference.noms == booking.nomsNumber &&
         data.bookingId == booking.id &&
@@ -258,6 +262,7 @@ class DomainEventBuilderTest {
       it.applicationId == application.id &&
         it.bookingId == booking.id &&
         it.crn == booking.crn &&
+        it.nomsNumber == booking.nomsNumber &&
         data.personReference.crn == booking.crn &&
         data.personReference.noms == booking.nomsNumber &&
         data.bookingId == booking.id &&
@@ -320,6 +325,7 @@ class DomainEventBuilderTest {
       it.applicationId == application.id &&
         it.bookingId == booking.id &&
         it.crn == booking.crn &&
+        it.nomsNumber == booking.nomsNumber &&
         data.personReference.crn == booking.crn &&
         data.personReference.noms == booking.nomsNumber &&
         data.deliusEventNumber == application.eventNumber &&
@@ -389,6 +395,7 @@ class DomainEventBuilderTest {
       it.applicationId == application.id &&
         it.bookingId == booking.id &&
         it.crn == booking.crn &&
+        it.nomsNumber == booking.nomsNumber &&
         data.personReference.noms == booking.nomsNumber &&
         data.deliusEventNumber == application.eventNumber &&
         data.bookingId == booking.id &&
@@ -461,6 +468,7 @@ class DomainEventBuilderTest {
       it.applicationId == application.id &&
         it.bookingId == booking.id &&
         it.crn == booking.crn &&
+        it.nomsNumber == booking.nomsNumber &&
         data.personReference.crn == booking.crn &&
         data.personReference.noms == booking.nomsNumber &&
         data.deliusEventNumber == application.eventNumber &&
@@ -540,6 +548,7 @@ class DomainEventBuilderTest {
       it.applicationId == application.id &&
         it.bookingId == booking.id &&
         it.crn == booking.crn &&
+        it.nomsNumber == booking.nomsNumber &&
         data.personReference.crn == booking.crn &&
         data.personReference.noms == booking.nomsNumber &&
         data.deliusEventNumber == application.eventNumber &&
@@ -577,6 +586,7 @@ class DomainEventBuilderTest {
       it.applicationId == application.id &&
         it.bookingId == null &&
         it.crn == application.crn &&
+        it.nomsNumber == application.nomsNumber &&
         data.personReference.crn == application.crn &&
         data.personReference.noms == application.nomsNumber &&
         data.applicationId == application.id &&
@@ -699,6 +709,7 @@ class DomainEventBuilderTest {
       it.applicationId == application.id &&
         it.bookingId == booking.id &&
         it.crn == booking.crn &&
+        it.nomsNumber == booking.nomsNumber &&
         data.personReference.crn == booking.crn &&
         data.personReference.noms == booking.nomsNumber &&
         data.bookingId == booking.id &&
@@ -758,6 +769,7 @@ class DomainEventBuilderTest {
       it.applicationId == application.id &&
         it.bookingId == booking.id &&
         it.crn == booking.crn &&
+        it.nomsNumber == booking.nomsNumber &&
         data.deliusEventNumber == application.eventNumber &&
         data.applicationId == application.id &&
         data.applicationUrl.toString() == "http://api/applications/${application.id}" &&
@@ -820,6 +832,7 @@ class DomainEventBuilderTest {
       it.applicationId == application.id &&
         it.bookingId == booking.id &&
         it.crn == booking.crn &&
+        it.nomsNumber == booking.nomsNumber &&
         data.deliusEventNumber == application.eventNumber &&
         data.applicationId == application.id &&
         data.applicationUrl.toString() == "http://api/applications/${application.id}" &&
@@ -861,6 +874,7 @@ class DomainEventBuilderTest {
 
     return eventData.bookingId == booking.id &&
       eventData.crn == booking.crn &&
+      eventData.nomsNumber == booking.nomsNumber &&
       data.personReference.crn == booking.crn &&
       data.personReference.noms == booking.nomsNumber &&
       data.bookingId == booking.id &&

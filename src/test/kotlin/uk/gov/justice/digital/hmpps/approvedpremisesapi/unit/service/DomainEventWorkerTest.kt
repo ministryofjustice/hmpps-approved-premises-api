@@ -17,12 +17,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.retry.backoff.FixedBackOffPolicy
 import org.springframework.retry.policy.SimpleRetryPolicy
 import org.springframework.retry.support.RetryTemplate
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationAssessedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.ApplicationSubmittedEnvelope
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.events.model.EventType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationAssessedFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.factory.events.ApplicationSubmittedFactory
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.DomainEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEvent
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventAdditionalInformation
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.model.domainevent.SnsEventPersonReference
@@ -32,9 +26,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.ConfiguredDomain
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.service.SyncDomainEventWorker
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
-import java.time.Instant
 import java.time.OffsetDateTime
-import java.time.ZoneOffset
 import java.util.UUID
 
 @Suppress("SwallowedException")
@@ -116,27 +108,14 @@ class DomainEventWorkerTest {
 
     every { asyncDomainEventWorker.domainTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
 
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = ApplicationAssessedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.applicationAssessed,
-        eventDetails = ApplicationAssessedFactory().produce(),
-      ),
-    )
-
     val snsEvent = SnsEvent(
       eventType = "",
       version = 1,
       description = "",
       detailUrl = "detailUrl",
-      occurredAt = domainEventToSave.occurredAt.atOffset(ZoneOffset.UTC),
+      occurredAt = occurredAt,
       additionalInformation = SnsEventAdditionalInformation(
-        applicationId = domainEventToSave.applicationId,
+        applicationId = applicationId,
       ),
       personReference = SnsEventPersonReferenceCollection(
         identifiers = listOf(
@@ -157,7 +136,7 @@ class DomainEventWorkerTest {
       retryTemplate.setBackOffPolicy(backOffPolicy)
       retryTemplate.setRetryPolicy(retryPolicy)
       asyncDomainEventWorker.retryTemplate = retryTemplate
-      asyncDomainEventWorker.emitEvent(snsEvent, domainEventToSave.id)
+      asyncDomainEventWorker.emitEvent(snsEvent, id)
     } catch (error: RuntimeException) {
       verify(exactly = AsyncDomainEventWorker.MAX_ATTEMPTS_RETRY) {
         asyncDomainEventWorker.domainTopic.snsClient.publish(
@@ -176,27 +155,14 @@ class DomainEventWorkerTest {
 
     every { asyncDomainEventWorker.domainTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
 
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = ApplicationAssessedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.applicationAssessed,
-        eventDetails = ApplicationAssessedFactory().produce(),
-      ),
-    )
-
     val snsEvent = SnsEvent(
       eventType = "",
       version = 1,
       description = "",
       detailUrl = "detailUrl",
-      occurredAt = domainEventToSave.occurredAt.atOffset(ZoneOffset.UTC),
+      occurredAt = occurredAt,
       additionalInformation = SnsEventAdditionalInformation(
-        applicationId = domainEventToSave.applicationId,
+        applicationId = applicationId,
       ),
       personReference = SnsEventPersonReferenceCollection(
         identifiers = listOf(
@@ -234,27 +200,14 @@ class DomainEventWorkerTest {
 
     every { syncDomainEventWorker.domainTopic.arn } returns "arn:aws:sns:eu-west-2:000000000000:domain-events"
 
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = ApplicationAssessedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.applicationAssessed,
-        eventDetails = ApplicationAssessedFactory().produce(),
-      ),
-    )
-
     val snsEvent = SnsEvent(
       eventType = "",
       version = 1,
       description = "",
       detailUrl = "detailUrl",
-      occurredAt = domainEventToSave.occurredAt.atOffset(ZoneOffset.UTC),
+      occurredAt = occurredAt,
       additionalInformation = SnsEventAdditionalInformation(
-        applicationId = domainEventToSave.applicationId,
+        applicationId = applicationId,
       ),
       personReference = SnsEventPersonReferenceCollection(
         identifiers = listOf(
@@ -282,27 +235,14 @@ class DomainEventWorkerTest {
     val occurredAt = OffsetDateTime.parse("2023-02-01T14:03:00+00:00")
     val crn = "CRN"
 
-    val domainEventToSave = DomainEvent(
-      id = id,
-      applicationId = applicationId,
-      crn = crn,
-      occurredAt = Instant.now(),
-      data = ApplicationSubmittedEnvelope(
-        id = id,
-        timestamp = occurredAt.toInstant(),
-        eventType = EventType.applicationSubmitted,
-        eventDetails = ApplicationSubmittedFactory().produce(),
-      ),
-    )
-
     val snsEvent = SnsEvent(
       eventType = "approved-premises.application.submitted",
       version = 1,
       description = "An application has been submitted for an Approved Premises placement",
       detailUrl = "http://api/events/application-submitted/$id",
-      occurredAt = domainEventToSave.occurredAt.atOffset(ZoneOffset.UTC),
+      occurredAt = occurredAt,
       additionalInformation = SnsEventAdditionalInformation(
-        applicationId = domainEventToSave.applicationId,
+        applicationId = applicationId,
       ),
       personReference = SnsEventPersonReferenceCollection(
         identifiers = listOf(
