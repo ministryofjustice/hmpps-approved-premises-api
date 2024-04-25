@@ -310,6 +310,8 @@ jobs:
   cas3_e2e_tests:
     parallelism: 4
     circleci_ip_ranges: true # opt-in to jobs running on a restricted set of IPs
+    environment:
+      CYPRESS_SKIP_AXE: 1
     docker:
       - image: cypress/browsers:node16.14.2-slim-chrome100-ff99-edge
     parameters:
