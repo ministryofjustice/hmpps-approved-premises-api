@@ -1982,6 +1982,7 @@ class AssessmentTest : IntegrationTestBase() {
     }
   }
 
+  @Nested
   inner class AcceptAssessment {
 
     @Test
