@@ -4427,6 +4427,7 @@ components:
         - awaiting_match
         - request_withdrawn
         - placement_booked
+        - person_arrived
         - person_not_arrived
         - person_departed
     PlacementRequest:
