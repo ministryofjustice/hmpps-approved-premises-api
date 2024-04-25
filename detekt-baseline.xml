@@ -55,6 +55,7 @@
     <ID>CyclomaticComplexMethod:DomainEventUrlConfig.kt$DomainEventUrlConfig$fun getUrlForDomainEventId(domainEventType: DomainEventType, eventId: UUID): String</ID>
     <ID>TooGenericExceptionThrown:DomainEventDescriber.kt$DomainEventDescriber$throw RuntimeException("Clarification note with ID ${data.eventDetails.requestId} not found")</ID>
     <ID>CyclomaticComplexMethod:DomainEventHelpers.kt$fun createDomainEventOfType(type: DomainEventType, requestId: UUID = UUID.randomUUID()): Any</ID>
+    <ID>TooGenericExceptionCaught:Cas1InformationReceivedMigrationJob.kt$Cas1InformationReceivedMigrationJob$e: RuntimeException</ID>
   </ManuallySuppressedIssues>
   <CurrentIssues>
     <ID>ComplexCondition:BookingService.kt$BookingService$booking.service == ServiceName.approvedPremises.value &amp;&amp; booking.application != null &amp;&amp; user != null &amp;&amp; !arrivedAndDepartedDomainEventsDisabled</ID>
