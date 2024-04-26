@@ -494,7 +494,13 @@ class OffenderService(
   ) = communityApiClient.getDocument(crn, documentId, outputStream)
 
   @SuppressWarnings("CyclomaticComplexMethod", "NestedBlockDepth", "ReturnCount")
-  fun getInfoForPerson(crn: String, deliusUsername: String, ignoreLaoRestrictions: Boolean): PersonInfoResult {
+  fun getInfoForPerson(
+    crn: String,
+    deliusUsername: String?,
+    ignoreLaoRestrictions: Boolean,
+  ): PersonInfoResult {
+    check(ignoreLaoRestrictions || deliusUsername != null) { "If ignoreLao is false, delius username must be provided " }
+
     val offenderResponse = offenderDetailsDataSource.getOffenderDetailSummary(crn)
 
     val offender = when (offenderResponse) {
@@ -512,7 +518,7 @@ class OffenderService(
     if (!ignoreLaoRestrictions) {
       if (offender.currentExclusion || offender.currentRestriction) {
         val access =
-          when (val accessResponse = offenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername, crn)) {
+          when (val accessResponse = offenderDetailsDataSource.getUserAccessForOffenderCrn(deliusUsername!!, crn)) {
             is ClientResult.Success -> accessResponse.body
             is ClientResult.Failure.StatusCode -> {
               if (accessResponse.status.equals(HttpStatus.FORBIDDEN)) {

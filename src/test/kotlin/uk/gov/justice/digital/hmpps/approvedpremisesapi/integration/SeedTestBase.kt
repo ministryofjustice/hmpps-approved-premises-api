@@ -4,6 +4,7 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.seed.SeedLogger
@@ -25,16 +26,21 @@ abstract class SeedTestBase : IntegrationTestBase() {
   lateinit var mockSeedLogger: SeedLogger
   protected val logEntries = mutableListOf<LogEntry>()
 
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   @BeforeEach
   fun setUp() {
     every { mockSeedLogger.info(any()) } answers {
       logEntries += LogEntry(it.invocation.args[0] as String, "info", null)
+      log.info(it.invocation.args[0] as String)
     }
     every { mockSeedLogger.error(any()) } answers {
       logEntries += LogEntry(it.invocation.args[0] as String, "error", null)
+      log.error(it.invocation.args[0] as String)
     }
     every { mockSeedLogger.error(any(), any()) } answers {
       logEntries += LogEntry(it.invocation.args[0] as String, "error", it.invocation.args[1] as Throwable)
+      log.info(it.invocation.args[0] as String, it.invocation.args[1] as Throwable)
     }
   }
 
