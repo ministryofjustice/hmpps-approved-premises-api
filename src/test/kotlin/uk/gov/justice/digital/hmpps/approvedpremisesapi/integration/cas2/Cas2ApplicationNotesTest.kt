@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.NewCas2Applica
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.ServiceName
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Assessor`
+import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 Licence Case Admin User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.integration.givens.`Given a CAS2 POM User`
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.Cas2ApplicationNoteRepository
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.util.toCas2UiFormat
@@ -157,84 +158,12 @@ class Cas2ApplicationNotesTest(
     inner class ControlsOnInternalUsers {
 
       @Nested
-      inner class WhenApplicationCreatedByUser {
-        @Test
-        fun `referrer create note returns 201`() {
-          val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
-          `Given a CAS2 POM User` { referrer, jwt ->
-            val applicationSchema =
-              cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                withAddedAt(OffsetDateTime.now())
-                withId(UUID.randomUUID())
-                withSchema(
-                  schema,
-                )
-              }
-
-            val application = cas2ApplicationEntityFactory.produceAndPersist {
-              withId(applicationId)
-              withCreatedByUser(referrer)
-              withApplicationSchema(applicationSchema)
-              withSubmittedAt(OffsetDateTime.now())
-            }
-
-            cas2AssessmentEntityFactory.produceAndPersist {
-              withApplication(application)
-              withNacroReferralId("OH123")
-              withAssessorName("Anne Assessor")
-            }
-
-            Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
-
-            val rawResponseBody = webTestClient.post()
-              .uri("/cas2/submissions/$applicationId/notes")
-              .header("Authorization", "Bearer $jwt")
-              .header("X-Service-Name", ServiceName.cas2.value)
-              .bodyValue(
-                NewCas2ApplicationNote(note = "New note content"),
-              )
-              .exchange()
-              .expectStatus()
-              .isCreated()
-              .returnResult<String>()
-              .responseBody
-              .blockFirst()
-
-            Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
-
-            val responseBody =
-              objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
-
-            Assertions.assertThat(responseBody.body).isEqualTo("New note content")
-
-            emailAsserter.assertEmailsRequestedCount(1)
-            emailAsserter.assertEmailRequested(
-              toEmailAddress = "assessors@example.com",
-              templateId = "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1",
-              personalisation = mapOf(
-                "nacroReferenceId" to "OH123",
-                "nacroReferenceIdInSubject" to "(OH123)",
-                "dateNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toLocalDate().toCas2UiFormat(),
-                "timeNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toCas2UiFormattedHourOfDay(),
-                "assessorName" to "Anne Assessor",
-                "applicationType" to "Home Detention Curfew (HDC)",
-                "applicationUrl" to assessmentUrlTemplate.replace("#applicationId", application.id.toString()),
-              ),
-              replyToEmailId = "cbe00c2d-387b-4283-9b9c-13c8b7a61444",
-            )
-          }
-        }
-      }
-
-      @Nested
-      inner class WhenApplicationCreatedByDifferentUser {
+      inner class WhenUserIsPom {
         @Nested
-        inner class WhenDifferentPrison {
-
+        inner class WhenApplicationCreatedByUser {
           @Test
-          fun `referrer cannot create note`() {
+          fun `referrer create note returns 201`() {
             val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
-
             `Given a CAS2 POM User` { referrer, jwt ->
               val applicationSchema =
                 cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
@@ -245,76 +174,27 @@ class Cas2ApplicationNotesTest(
                   )
                 }
 
-              val otherUser = nomisUserEntityFactory.produceAndPersist {
-                withActiveCaseloadId("another-prison")
-              }
-
-              cas2ApplicationEntityFactory.produceAndPersist {
+              val application = cas2ApplicationEntityFactory.produceAndPersist {
                 withId(applicationId)
-                withCreatedByUser(otherUser)
+                withCreatedByUser(referrer)
                 withApplicationSchema(applicationSchema)
                 withSubmittedAt(OffsetDateTime.now())
-                withReferringPrisonCode("another-prison")
-              }
-
-              Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
-
-              webTestClient.post()
-                .uri("/cas2/submissions/$applicationId/notes")
-                .header("Authorization", "Bearer $jwt")
-                .header("X-Service-Name", ServiceName.cas2.value)
-                .bodyValue(
-                  NewCas2ApplicationNote(note = "New note content"),
-                )
-                .exchange()
-                .expectStatus()
-                .isForbidden
-
-              Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
-            }
-          }
-        }
-
-        @Nested
-        inner class WhenSamePrison {
-
-          @Test
-          fun `referrer can create a note for an application they did not create`() {
-            `Given a CAS2 POM User` { referrer, jwt ->
-              val applicationSchema =
-                cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
-                  withAddedAt(OffsetDateTime.now())
-                  withId(UUID.randomUUID())
-                  withSchema(
-                    schema,
-                  )
-                }
-
-              val otherUser = nomisUserEntityFactory.produceAndPersist {
-                withActiveCaseloadId(referrer.activeCaseloadId!!)
-              }
-
-              val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
-                withApplicationSchema(applicationSchema)
-                withCreatedByUser(otherUser)
-                withSubmittedAt(OffsetDateTime.now().minusDays(1))
-                withReferringPrisonCode(referrer.activeCaseloadId!!)
               }
 
               cas2AssessmentEntityFactory.produceAndPersist {
-                withApplication(applicationEntity)
-                withNacroReferralId("OH456")
-                withAssessorName("Anne Other Assessor")
+                withApplication(application)
+                withNacroReferralId("OH123")
+                withAssessorName("Anne Assessor")
               }
 
               Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
 
               val rawResponseBody = webTestClient.post()
-                .uri("/cas2/submissions/${applicationEntity.id}/notes")
+                .uri("/cas2/submissions/$applicationId/notes")
                 .header("Authorization", "Bearer $jwt")
                 .header("X-Service-Name", ServiceName.cas2.value)
                 .bodyValue(
-                  NewCas2ApplicationNote(note = "New prison note content"),
+                  NewCas2ApplicationNote(note = "New note content"),
                 )
                 .exchange()
                 .expectStatus()
@@ -328,23 +208,344 @@ class Cas2ApplicationNotesTest(
               val responseBody =
                 objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
 
-              Assertions.assertThat(responseBody.body).isEqualTo("New prison note content")
+              Assertions.assertThat(responseBody.body).isEqualTo("New note content")
 
               emailAsserter.assertEmailsRequestedCount(1)
               emailAsserter.assertEmailRequested(
                 toEmailAddress = "assessors@example.com",
                 templateId = "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1",
                 personalisation = mapOf(
-                  "nacroReferenceId" to "OH456",
-                  "nacroReferenceIdInSubject" to "(OH456)",
+                  "nacroReferenceId" to "OH123",
+                  "nacroReferenceIdInSubject" to "(OH123)",
                   "dateNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toLocalDate().toCas2UiFormat(),
                   "timeNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toCas2UiFormattedHourOfDay(),
-                  "assessorName" to "Anne Other Assessor",
+                  "assessorName" to "Anne Assessor",
                   "applicationType" to "Home Detention Curfew (HDC)",
-                  "applicationUrl" to assessmentUrlTemplate.replace("#applicationId", applicationEntity.id.toString()),
+                  "applicationUrl" to assessmentUrlTemplate.replace("#applicationId", application.id.toString()),
                 ),
                 replyToEmailId = "cbe00c2d-387b-4283-9b9c-13c8b7a61444",
               )
+            }
+          }
+        }
+
+        @Nested
+        inner class WhenApplicationCreatedByDifferentUser {
+          @Nested
+          inner class WhenDifferentPrison {
+
+            @Test
+            fun `referrer cannot create note`() {
+              val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+              `Given a CAS2 POM User` { referrer, jwt ->
+                val applicationSchema =
+                  cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                    withAddedAt(OffsetDateTime.now())
+                    withId(UUID.randomUUID())
+                    withSchema(
+                      schema,
+                    )
+                  }
+
+                val otherUser = nomisUserEntityFactory.produceAndPersist {
+                  withActiveCaseloadId("another-prison")
+                }
+
+                cas2ApplicationEntityFactory.produceAndPersist {
+                  withId(applicationId)
+                  withCreatedByUser(otherUser)
+                  withApplicationSchema(applicationSchema)
+                  withSubmittedAt(OffsetDateTime.now())
+                  withReferringPrisonCode("another-prison")
+                }
+
+                Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
+
+                webTestClient.post()
+                  .uri("/cas2/submissions/$applicationId/notes")
+                  .header("Authorization", "Bearer $jwt")
+                  .header("X-Service-Name", ServiceName.cas2.value)
+                  .bodyValue(
+                    NewCas2ApplicationNote(note = "New note content"),
+                  )
+                  .exchange()
+                  .expectStatus()
+                  .isForbidden
+
+                Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
+              }
+            }
+          }
+
+          @Nested
+          inner class WhenSamePrison {
+
+            @Test
+            fun `referrer can create a note for an application they did not create`() {
+              `Given a CAS2 POM User` { referrer, jwt ->
+                val applicationSchema =
+                  cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                    withAddedAt(OffsetDateTime.now())
+                    withId(UUID.randomUUID())
+                    withSchema(
+                      schema,
+                    )
+                  }
+
+                val otherUser = nomisUserEntityFactory.produceAndPersist {
+                  withActiveCaseloadId(referrer.activeCaseloadId!!)
+                }
+
+                val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(applicationSchema)
+                  withCreatedByUser(otherUser)
+                  withSubmittedAt(OffsetDateTime.now().minusDays(1))
+                  withReferringPrisonCode(referrer.activeCaseloadId!!)
+                }
+
+                cas2AssessmentEntityFactory.produceAndPersist {
+                  withApplication(applicationEntity)
+                  withNacroReferralId("OH456")
+                  withAssessorName("Anne Other Assessor")
+                }
+
+                Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
+
+                val rawResponseBody = webTestClient.post()
+                  .uri("/cas2/submissions/${applicationEntity.id}/notes")
+                  .header("Authorization", "Bearer $jwt")
+                  .header("X-Service-Name", ServiceName.cas2.value)
+                  .bodyValue(
+                    NewCas2ApplicationNote(note = "New prison note content"),
+                  )
+                  .exchange()
+                  .expectStatus()
+                  .isCreated()
+                  .returnResult<String>()
+                  .responseBody
+                  .blockFirst()
+
+                Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
+
+                val responseBody =
+                  objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+
+                Assertions.assertThat(responseBody.body).isEqualTo("New prison note content")
+
+                emailAsserter.assertEmailsRequestedCount(1)
+                emailAsserter.assertEmailRequested(
+                  toEmailAddress = "assessors@example.com",
+                  templateId = "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1",
+                  personalisation = mapOf(
+                    "nacroReferenceId" to "OH456",
+                    "nacroReferenceIdInSubject" to "(OH456)",
+                    "dateNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toLocalDate().toCas2UiFormat(),
+                    "timeNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toCas2UiFormattedHourOfDay(),
+                    "assessorName" to "Anne Other Assessor",
+                    "applicationType" to "Home Detention Curfew (HDC)",
+                    "applicationUrl" to assessmentUrlTemplate.replace("#applicationId", applicationEntity.id.toString()),
+                  ),
+                  replyToEmailId = "cbe00c2d-387b-4283-9b9c-13c8b7a61444",
+                )
+              }
+            }
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenUserIsLicenceCA {
+        @Nested
+        inner class WhenApplicationCreatedByUser {
+          @Test
+          fun `referrer create note returns 201`() {
+            val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+            `Given a CAS2 Licence Case Admin User` { referrer, jwt ->
+              val applicationSchema =
+                cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                  withAddedAt(OffsetDateTime.now())
+                  withId(UUID.randomUUID())
+                  withSchema(
+                    schema,
+                  )
+                }
+
+              val application = cas2ApplicationEntityFactory.produceAndPersist {
+                withId(applicationId)
+                withCreatedByUser(referrer)
+                withApplicationSchema(applicationSchema)
+                withSubmittedAt(OffsetDateTime.now())
+              }
+
+              cas2AssessmentEntityFactory.produceAndPersist {
+                withApplication(application)
+                withNacroReferralId("OH123")
+                withAssessorName("Anne Assessor")
+              }
+
+              Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
+
+              val rawResponseBody = webTestClient.post()
+                .uri("/cas2/submissions/$applicationId/notes")
+                .header("Authorization", "Bearer $jwt")
+                .header("X-Service-Name", ServiceName.cas2.value)
+                .bodyValue(
+                  NewCas2ApplicationNote(note = "New note content"),
+                )
+                .exchange()
+                .expectStatus()
+                .isCreated()
+                .returnResult<String>()
+                .responseBody
+                .blockFirst()
+
+              Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
+
+              val responseBody =
+                objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+
+              Assertions.assertThat(responseBody.body).isEqualTo("New note content")
+
+              emailAsserter.assertEmailsRequestedCount(1)
+              emailAsserter.assertEmailRequested(
+                toEmailAddress = "assessors@example.com",
+                templateId = "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1",
+                personalisation = mapOf(
+                  "nacroReferenceId" to "OH123",
+                  "nacroReferenceIdInSubject" to "(OH123)",
+                  "dateNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toLocalDate().toCas2UiFormat(),
+                  "timeNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toCas2UiFormattedHourOfDay(),
+                  "assessorName" to "Anne Assessor",
+                  "applicationType" to "Home Detention Curfew (HDC)",
+                  "applicationUrl" to assessmentUrlTemplate.replace("#applicationId", application.id.toString()),
+                ),
+                replyToEmailId = "cbe00c2d-387b-4283-9b9c-13c8b7a61444",
+              )
+            }
+          }
+        }
+
+        @Nested
+        inner class WhenApplicationCreatedByDifferentUser {
+          @Nested
+          inner class WhenDifferentPrison {
+
+            @Test
+            fun `referrer cannot create note`() {
+              val applicationId = UUID.fromString("22ceda56-98b2-411d-91cc-ace0ab8be872")
+
+              `Given a CAS2 Licence Case Admin User` { _, jwt ->
+                val applicationSchema =
+                  cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                    withAddedAt(OffsetDateTime.now())
+                    withId(UUID.randomUUID())
+                    withSchema(
+                      schema,
+                    )
+                  }
+
+                val otherUser = nomisUserEntityFactory.produceAndPersist {
+                  withActiveCaseloadId("another-prison")
+                }
+
+                cas2ApplicationEntityFactory.produceAndPersist {
+                  withId(applicationId)
+                  withCreatedByUser(otherUser)
+                  withApplicationSchema(applicationSchema)
+                  withSubmittedAt(OffsetDateTime.now())
+                  withReferringPrisonCode("another-prison")
+                }
+
+                Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
+
+                webTestClient.post()
+                  .uri("/cas2/submissions/$applicationId/notes")
+                  .header("Authorization", "Bearer $jwt")
+                  .header("X-Service-Name", ServiceName.cas2.value)
+                  .bodyValue(
+                    NewCas2ApplicationNote(note = "New note content"),
+                  )
+                  .exchange()
+                  .expectStatus()
+                  .isForbidden
+
+                Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
+              }
+            }
+          }
+
+          @Nested
+          inner class WhenSamePrison {
+
+            @Test
+            fun `referrer can create a note for an application they did not create`() {
+              `Given a CAS2 POM User` { referrer, jwt ->
+                val applicationSchema =
+                  cas2ApplicationJsonSchemaEntityFactory.produceAndPersist {
+                    withAddedAt(OffsetDateTime.now())
+                    withId(UUID.randomUUID())
+                    withSchema(
+                      schema,
+                    )
+                  }
+
+                val otherUser = nomisUserEntityFactory.produceAndPersist {
+                  withActiveCaseloadId(referrer.activeCaseloadId!!)
+                }
+
+                val applicationEntity = cas2ApplicationEntityFactory.produceAndPersist {
+                  withApplicationSchema(applicationSchema)
+                  withCreatedByUser(otherUser)
+                  withSubmittedAt(OffsetDateTime.now().minusDays(1))
+                  withReferringPrisonCode(referrer.activeCaseloadId!!)
+                }
+
+                cas2AssessmentEntityFactory.produceAndPersist {
+                  withApplication(applicationEntity)
+                  withNacroReferralId("OH456")
+                  withAssessorName("Anne Other Assessor")
+                }
+
+                Assertions.assertThat(realNotesRepository.count()).isEqualTo(0)
+
+                val rawResponseBody = webTestClient.post()
+                  .uri("/cas2/submissions/${applicationEntity.id}/notes")
+                  .header("Authorization", "Bearer $jwt")
+                  .header("X-Service-Name", ServiceName.cas2.value)
+                  .bodyValue(
+                    NewCas2ApplicationNote(note = "New prison note content"),
+                  )
+                  .exchange()
+                  .expectStatus()
+                  .isCreated()
+                  .returnResult<String>()
+                  .responseBody
+                  .blockFirst()
+
+                Assertions.assertThat(realNotesRepository.count()).isEqualTo(1)
+
+                val responseBody =
+                  objectMapper.readValue(rawResponseBody, object : TypeReference<Cas2ApplicationNote>() {})
+
+                Assertions.assertThat(responseBody.body).isEqualTo("New prison note content")
+
+                emailAsserter.assertEmailsRequestedCount(1)
+                emailAsserter.assertEmailRequested(
+                  toEmailAddress = "assessors@example.com",
+                  templateId = "0d646bf0-d40f-4fe7-aa74-dd28b10d04f1",
+                  personalisation = mapOf(
+                    "nacroReferenceId" to "OH456",
+                    "nacroReferenceIdInSubject" to "(OH456)",
+                    "dateNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toLocalDate().toCas2UiFormat(),
+                    "timeNoteAdded" to OffsetDateTime.ofInstant(responseBody.createdAt, ZoneOffset.UTC).toCas2UiFormattedHourOfDay(),
+                    "assessorName" to "Anne Other Assessor",
+                    "applicationType" to "Home Detention Curfew (HDC)",
+                    "applicationUrl" to assessmentUrlTemplate.replace("#applicationId", applicationEntity.id.toString()),
+                  ),
+                  replyToEmailId = "cbe00c2d-387b-4283-9b9c-13c8b7a61444",
+                )
+              }
             }
           }
         }
