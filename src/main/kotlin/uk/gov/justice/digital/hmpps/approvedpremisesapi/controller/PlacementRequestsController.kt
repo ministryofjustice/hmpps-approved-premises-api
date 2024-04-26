@@ -214,7 +214,7 @@ class PlacementRequestsController(
     val personInfo = offenderService.getInfoForPerson(
       placementRequestAndCancellations.placementRequest.application.crn,
       forUser.deliusUsername,
-      ignoreLao = false,
+      ignoreLaoRestrictions = false,
     )
 
     return placementRequestDetailTransformer.transformJpaToApi(

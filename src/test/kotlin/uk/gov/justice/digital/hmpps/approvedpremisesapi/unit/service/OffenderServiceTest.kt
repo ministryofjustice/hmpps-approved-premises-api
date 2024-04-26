@@ -128,7 +128,7 @@ class OffenderServiceTest {
   }
 
   @Test
-  fun `getOffenderByCrn does not enforce LAO when ignoreLao is enabled (because user has LAO qualification)`() {
+  fun `getOffenderByCrn does not enforce LAO when ignoreLaoRestrictions is enabled (because user has LAO qualification)`() {
     val resultBody = OffenderDetailsSummaryFactory()
       .withCrn("a-crn")
       .withFirstName("Bob")
@@ -141,7 +141,7 @@ class OffenderServiceTest {
     every { mockOffenderDetailsDataSource.getOffenderDetailSummary("a-crn") } returns ClientResult.Success(HttpStatus.OK, resultBody)
     every { mockOffenderDetailsDataSource.getUserAccessForOffenderCrn("distinguished.name", "a-crn") } returns ClientResult.Success(HttpStatus.OK, accessBody)
 
-    assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name", true) is AuthorisableActionResult.Success).isTrue
+    assertThat(offenderService.getOffenderByCrn("a-crn", "distinguished.name", ignoreLaoRestrictions = true) is AuthorisableActionResult.Success).isTrue
   }
 
   @Test
@@ -707,7 +707,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `returns Restricted for LAO Offender where user does not pass check and ignoreLao is false`() {
+    fun `returns Restricted for LAO Offender where user does not pass check and ignoreLaoRestrictions is false`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
@@ -732,7 +732,7 @@ class OffenderServiceTest {
         ),
       )
 
-      val result = offenderService.getInfoForPerson(crn, deliusUsername, false)
+      val result = offenderService.getInfoForPerson(crn, deliusUsername, ignoreLaoRestrictions = false)
 
       assertThat(result is PersonInfoResult.Success.Restricted).isTrue
       result as PersonInfoResult.Success.Restricted
@@ -740,7 +740,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `returns Full for LAO Offender where user does pass check and ignoreLao is false`() {
+    fun `returns Full for LAO Offender where user does pass check and ignoreLaoRestrictions is false`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
@@ -774,7 +774,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `returns Full for LAO Offender where user does not pass check but ignoreLao is true`() {
+    fun `returns Full for LAO Offender where user does not pass check but ignoreLaoRestrictions is true`() {
       val crn = "ABC123"
       val deliusUsername = "USER"
 
@@ -802,7 +802,7 @@ class OffenderServiceTest {
         ),
       )
 
-      val result = offenderService.getInfoForPerson(crn, deliusUsername, true)
+      val result = offenderService.getInfoForPerson(crn, deliusUsername, ignoreLaoRestrictions = true)
 
       assertThat(result is PersonInfoResult.Success.Full).isTrue
       result as PersonInfoResult.Success.Full
@@ -991,7 +991,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `it ignores LAO when ignoreLao is set to true (forceApDeliusContextApi = true)`() {
+    fun `it ignores LAO when ignoreLaoRestrictions is set to true (forceApDeliusContextApi = true)`() {
       val caseAccess = listOf(
         CaseAccessFactory()
           .withCrn(crns[0])
@@ -1024,7 +1024,7 @@ class OffenderServiceTest {
         ),
       )
 
-      val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, true, true)
+      val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, ignoreLaoRestrictions = true, true)
 
       assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummariesByCrn[crns[0]]!!))
       assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummariesByCrn[crns[1]]!!))
@@ -1132,7 +1132,7 @@ class OffenderServiceTest {
     }
 
     @Test
-    fun `it ignores LAO when ignoreLao is set to true (forceApDeliusContextApi = false)`() {
+    fun `it ignores LAO when ignoreLaoRestrictions is set to true (forceApDeliusContextApi = false)`() {
       every { mockOffenderDetailsDataSource.getOffenderDetailSummaries(crns) } returns offenderSummaryResultsByCrn
 
       every {
@@ -1151,7 +1151,7 @@ class OffenderServiceTest {
           ),
       )
 
-      val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, true, false)
+      val result = offenderService.getOffenderSummariesByCrns(crns.toSet(), user.deliusUsername, ignoreLaoRestrictions = true, false)
 
       assertThat(result[0]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[0], caseSummariesByCrn[crns[0]]!!))
       assertThat(result[1]).isEqualTo(PersonSummaryInfoResult.Success.Full(crns[1], caseSummariesByCrn[crns[1]]!!))

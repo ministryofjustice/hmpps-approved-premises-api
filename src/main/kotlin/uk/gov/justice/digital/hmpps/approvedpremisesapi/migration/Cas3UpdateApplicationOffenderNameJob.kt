@@ -70,7 +70,7 @@ class Cas3UpdateApplicationOffenderNameJob(
   private fun splitAndRetrievePersonInfo(crns: Set<String>, deliusUsername: String): Map<String, PersonSummaryInfoResult> {
     val crnMap = ListUtils.partition(crns.toList(), pageSize)
       .stream().map { crns ->
-        offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername, ignoreLao = true).associateBy { it.crn }
+        offenderService.getOffenderSummariesByCrns(crns.toSet(), deliusUsername, ignoreLaoRestrictions = true).associateBy { it.crn }
       }.collect(Collectors.toList())
 
     return crnMap.flatMap { it.toList() }.toMap()
