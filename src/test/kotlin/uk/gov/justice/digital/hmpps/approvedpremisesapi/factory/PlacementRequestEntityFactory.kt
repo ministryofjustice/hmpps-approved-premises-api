@@ -51,6 +51,10 @@ class PlacementRequestEntityFactory : Factory<PlacementRequestEntity> {
     this.booking = { booking }
   }
 
+  fun withBooking(configuration: BookingEntityFactory.() -> Unit) = apply {
+    this.booking = { BookingEntityFactory().apply(configuration).produce() }
+  }
+
   fun withApplication(application: ApprovedPremisesApplicationEntity) = apply {
     this.application = { application }
   }
