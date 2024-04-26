@@ -271,10 +271,6 @@ class OffenderService(
     return AuthorisableActionResult.Success(inmateDetail)
   }
 
-  @Deprecated(message = "The 'jwt' parameter is no longer needed.", replaceWith = ReplaceWith(expression = "getRiskByCrn(crn, userDistinguishedName)"))
-  fun getRiskByCrn(crn: String, jwt: String, userDistinguishedName: String): AuthorisableActionResult<PersonRisks> =
-    getRiskByCrn(crn, userDistinguishedName)
-
   fun getRiskByCrn(crn: String, deliusUsername: String): AuthorisableActionResult<PersonRisks> {
     return when (getOffenderByCrn(crn, deliusUsername)) {
       is AuthorisableActionResult.NotFound -> AuthorisableActionResult.NotFound()

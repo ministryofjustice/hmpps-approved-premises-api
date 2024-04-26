@@ -237,7 +237,6 @@ class ApplicationService(
   fun createApprovedPremisesApplication(
     offenderDetails: OffenderDetailSummary,
     user: UserEntity,
-    jwt: String,
     convictionId: Long?,
     deliusEventNumber: String?,
     offenceId: String?,
@@ -269,7 +268,7 @@ class ApplicationService(
     var riskRatings: PersonRisks? = null
 
     if (createWithRisks == true) {
-      val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, user.deliusUsername)
+      val riskRatingsResult = offenderService.getRiskByCrn(crn, user.deliusUsername)
 
       riskRatings = when (riskRatingsResult) {
         is AuthorisableActionResult.NotFound -> return "$.crn" hasSingleValidationError "doesNotExist"
@@ -359,7 +358,6 @@ class ApplicationService(
   fun createTemporaryAccommodationApplication(
     crn: String,
     user: UserEntity,
-    jwt: String,
     convictionId: Long?,
     deliusEventNumber: String?,
     offenceId: String?,
@@ -402,7 +400,7 @@ class ApplicationService(
         var riskRatings: PersonRisks? = null
 
         if (createWithRisks == true) {
-          val riskRatingsResult = offenderService.getRiskByCrn(crn, jwt, user.deliusUsername)
+          val riskRatingsResult = offenderService.getRiskByCrn(crn, user.deliusUsername)
 
           riskRatings = when (riskRatingsResult) {
             is AuthorisableActionResult.NotFound ->
@@ -687,7 +685,6 @@ class ApplicationService(
     applicationId: UUID,
     submitApplication: SubmitApprovedPremisesApplication,
     username: String,
-    jwt: String,
     apAreaId: UUID?,
   ): AuthorisableActionResult<ValidatableActionResult<ApplicationEntity>> {
     var application = applicationRepository.findByIdOrNullWithWriteLock(
@@ -789,7 +786,7 @@ class ApplicationService(
       this.noticeType = getNoticeType(submitApplication.noticeType, submitApplication.isEmergencyApplication, this)
     }
 
-    cas1ApplicationDomainEventService.applicationSubmitted(application, submitApplication, username, jwt)
+    cas1ApplicationDomainEventService.applicationSubmitted(application, submitApplication, username)
     assessmentService.createApprovedPremisesAssessment(application)
 
     application = applicationRepository.save(application)

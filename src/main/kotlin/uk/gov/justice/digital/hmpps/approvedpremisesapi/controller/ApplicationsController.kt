@@ -32,7 +32,6 @@ import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateApproved
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.UpdateTemporaryAccommodationApplication
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.Withdrawable
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.api.model.WithdrawableType
-import uk.gov.justice.digital.hmpps.approvedpremisesapi.config.AuthAwareAuthenticationToken
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.ApprovedPremisesApplicationEntity
 import uk.gov.justice.digital.hmpps.approvedpremisesapi.jpa.entity.OfflineApplicationEntity
@@ -167,7 +166,6 @@ class ApplicationsController(
   @Transactional
   override fun applicationsPost(body: NewApplication, xServiceName: ServiceName?, createWithRisks: Boolean?):
     ResponseEntity<Application> {
-    val deliusPrincipal = httpAuthService.getDeliusPrincipalOrThrow()
     val user = userService.getUserForRequest()
 
     val personInfo =
@@ -185,7 +183,6 @@ class ApplicationsController(
       xServiceName ?: ServiceName.approvedPremises,
       personInfo,
       user,
-      deliusPrincipal,
       body,
       createWithRisks,
     )
@@ -212,7 +209,6 @@ class ApplicationsController(
     serviceName: ServiceName,
     personInfo: PersonInfoResult.Success.Full,
     user: UserEntity,
-    deliusPrincipal: AuthAwareAuthenticationToken,
     body: NewApplication,
     createWithRisks: Boolean?,
   ): ValidatableActionResult<ApplicationEntity> = when (serviceName) {
@@ -220,7 +216,6 @@ class ApplicationsController(
       applicationService.createApprovedPremisesApplication(
         personInfo.offenderDetailSummary,
         user,
-        deliusPrincipal.token.tokenValue,
         body.convictionId,
         body.deliusEventNumber,
         body.offenceId,
@@ -233,7 +228,6 @@ class ApplicationsController(
           applicationService.createTemporaryAccommodationApplication(
             body.crn,
             user,
-            deliusPrincipal.token.tokenValue,
             body.convictionId,
             body.deliusEventNumber,
             body.offenceId,
@@ -383,7 +377,6 @@ class ApplicationsController(
           applicationId,
           submitApplication,
           username,
-          deliusPrincipal.token.tokenValue,
           apAreaId,
         )
       }
