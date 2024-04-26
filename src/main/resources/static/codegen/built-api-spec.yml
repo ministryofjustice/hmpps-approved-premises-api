@@ -1760,9 +1760,11 @@ paths:
             $ref: '#/components/schemas/SortDirection'
         - name: status
           in: query
-          description: The application status
+          description: Application statuses to filter on. If none provided, all will be returned
           schema:
-            $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
+            type: array
+            items:
+              $ref: '#/components/schemas/ApprovedPremisesApplicationStatus'
         - name: sortBy
           in: query
           description: The field to sort the results by.

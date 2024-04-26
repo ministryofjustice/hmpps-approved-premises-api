@@ -76,7 +76,7 @@ AND (
       )
 )
 AND (
-    :status IS NULL OR (apa.status = :#{#status?.toString()})
+    :statusProvided is false OR apa.status IN (:status)
 )
 AND (
     (CAST(:apAreaId AS uuid) IS NULL) OR (apa.ap_area_id = :apAreaId)
@@ -94,7 +94,7 @@ AND (
         )
       )
       AND (
-          :status IS NULL OR (apa.status = :#{#status?.toString()})
+          :statusProvided is false OR apa.status IN (:status)
       )
       AND (
           (CAST(:apAreaId AS uuid) IS NULL) OR (apa.ap_area_id = :apAreaId)
@@ -105,7 +105,8 @@ AND (
   fun findAllApprovedPremisesSummaries(
     pageable: Pageable?,
     crnOrName: String?,
-    status: ApprovedPremisesApplicationStatus?,
+    statusProvided: Boolean,
+    status: List<String>,
     apAreaId: UUID?,
   ): Page<ApprovedPremisesApplicationSummary>
 
