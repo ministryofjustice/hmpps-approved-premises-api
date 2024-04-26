@@ -308,7 +308,7 @@ jobs:
           channel: << pipeline.parameters.alerts-slack-channel >>
           template: basic_fail_1
   cas3_e2e_tests:
-    parallelism: 4
+    parallelism: 5
     circleci_ip_ranges: true # opt-in to jobs running on a restricted set of IPs
     environment:
       CYPRESS_SKIP_AXE: 1
