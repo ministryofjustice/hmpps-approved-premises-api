@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.approvedpremisesapi.config
 
 import io.netty.channel.ChannelOption
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -22,8 +23,12 @@ import java.time.Duration
 class WebClientConfiguration(
   @Value("\${upstream-timeout-ms}") private val upstreamTimeoutMs: Long,
   @Value("\${case-notes-service-upstream-timeout-ms}") private val caseNotesServiceUpstreamTimeoutMs: Long,
-  @Value("\${max-response-in-memory-size-bytes}") private val maxResponseInMemorySizeBytes: Int,
+  @Value("\${web-clients.max-response-in-memory-size-bytes}") private val defaultMaxResponseInMemorySizeBytes: Int,
+  @Value("\${web-clients.prison-api-max-response-in-memory-size-bytes}") private val prisonApiMaxResponseInMemorySizeBytes: Int,
 ) {
+
+  private val log = LoggerFactory.getLogger(this::class.java)
+
   @Bean
   fun authorizedClientManager(clients: ClientRegistrationRepository): OAuth2AuthorizedClientManager {
     val service: OAuth2AuthorizedClientService = InMemoryOAuth2AuthorizedClientService(clients)
@@ -59,7 +64,7 @@ class WebClientConfiguration(
       )
       .exchangeStrategies(
         ExchangeStrategies.builder().codecs {
-          it.defaultCodecs().maxInMemorySize(maxResponseInMemorySizeBytes)
+          it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
         }.build(),
       )
       .build()
@@ -89,7 +94,7 @@ class WebClientConfiguration(
       )
       .exchangeStrategies(
         ExchangeStrategies.builder().codecs {
-          it.defaultCodecs().maxInMemorySize(maxResponseInMemorySizeBytes)
+          it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
         }.build(),
       )
       .build()
@@ -130,6 +135,8 @@ class WebClientConfiguration(
 
     oauth2Client.setDefaultClientRegistrationId("prisons-api")
 
+    log.info("Using maxInMemorySize of $prisonApiMaxResponseInMemorySizeBytes bytes for Prison API Web Client")
+
     return WebClient.builder()
       .baseUrl(prisonsApiBaseUrl)
       .clientConnector(
@@ -142,7 +149,7 @@ class WebClientConfiguration(
       )
       .exchangeStrategies(
         ExchangeStrategies.builder().codecs {
-          it.defaultCodecs().maxInMemorySize(maxResponseInMemorySizeBytes)
+          it.defaultCodecs().maxInMemorySize(prisonApiMaxResponseInMemorySizeBytes)
         }.build(),
       )
       .filter(oauth2Client)
@@ -272,7 +279,7 @@ class WebClientConfiguration(
       .filter(oauth2Client)
       .exchangeStrategies(
         ExchangeStrategies.builder().codecs {
-          it.defaultCodecs().maxInMemorySize(maxResponseInMemorySizeBytes)
+          it.defaultCodecs().maxInMemorySize(defaultMaxResponseInMemorySizeBytes)
         }.build(),
       )
       .build()
