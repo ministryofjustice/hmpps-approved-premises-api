@@ -113,7 +113,9 @@ class TaskService(
           TaskSortField.dueAt -> "due_at"
           TaskSortField.allocatedTo -> "allocated_to"
           TaskSortField.person -> "person"
-          else -> throw NotImplementedError()
+          TaskSortField.completedAt -> "completed_at"
+          TaskSortField.taskType -> "type"
+          TaskSortField.decision -> "decision"
         },
       ),
     )

@@ -47,7 +47,9 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         assessment.due_at AS due_at,
         'ASSESSMENT' AS type,
         apa.name as person,
-        u.name as allocated_to
+        u.name as allocated_to,
+        assessment.submitted_at as completed_at,
+        assessment.decision as decision
       FROM
         assessments assessment
         INNER JOIN applications application ON assessment.application_id = application.id
@@ -87,7 +89,9 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         placement_application.due_at AS due_at,
         'PLACEMENT_APPLICATION' AS type,
         apa.name as person,
-        u.name as allocated_to
+        u.name as allocated_to,
+        placement_application.submitted_at as completed_at,
+        placement_application.decision as decision
       from
         placement_applications placement_application
         INNER JOIN applications application ON placement_application.application_id = application.id
@@ -127,7 +131,17 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         placement_request.due_at AS due_at,
         'PLACEMENT_REQUEST' AS type,
         apa.name as person,
-        u.name as allocated_to
+        u.name as allocated_to,
+        CASE
+          WHEN placement_request.booking_id IS NOT NULL THEN booking.created_at
+          WHEN booking_not_made.id IS NOT NULL THEN booking_not_made.created_at
+          ELSE null
+        END as completed_at,
+        CASE
+          WHEN placement_request.booking_id IS NOT NULL THEN 'matched'
+          WHEN booking_not_made.id IS NOT NULL THEN 'unableToMatch'
+          ELSE null
+        END as decision
       FROM
         placement_requests placement_request
         INNER JOIN applications application ON placement_request.application_id = application.id
@@ -135,6 +149,7 @@ interface TaskRepository : JpaRepository<Task, UUID> {
         LEFT JOIN booking_not_mades booking_not_made ON booking_not_made.placement_request_id = placement_request.id
         LEFT JOIN ap_areas area ON area.id = apa.ap_area_id
         LEFT JOIN users u ON u.id = placement_request.allocated_to_user_id
+        LEFT JOIN bookings booking ON booking.id = placement_request.booking_id
       WHERE
         'PLACEMENT_REQUEST' IN :taskTypes
         AND placement_request.reallocated_at IS NULL
